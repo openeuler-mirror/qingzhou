@@ -1,6 +1,23 @@
 package qingzhou.app.system.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
@@ -11,11 +28,6 @@ import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.Setting, order = "1",
@@ -228,6 +240,23 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+    }
+
+    @ModelAction(
+            code = Delete.ACTION_DELETE, icon = "trash",
+            display = "name!=qingzhou",
+            batch_action = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
+            name = {"删除", "en:Delete"},
+            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+    public void delete(Request request) throws Exception {
+        getAppContext().invokeSuperAction(request);
+    }
+
+    @Override
     public void deleteData(String id) throws Exception {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
@@ -237,23 +266,6 @@ public class User extends ModelBase implements General, Validate, Option {
         } else {
             Main.getConfig().deleteUser(id);
         }
-    }
-
-    @Override
-    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
-    }
-
-    @ModelAction(
-            code = Delete.ACTION_DELETE, icon = "trash",
-            display = "name!=qingzhou",
-            batch_action = true,
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
-            name = {"删除", "en:Delete"},
-            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
-    public void delete(Request request) throws Exception {
-        getAppContext().invokeSuperAction(request);
     }
 
     private boolean passwordChanged(String password) {

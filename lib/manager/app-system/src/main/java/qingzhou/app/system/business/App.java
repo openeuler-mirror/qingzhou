@@ -1,6 +1,19 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -10,8 +23,6 @@ import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.Registry;
-
-import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "stack",
         menu = Main.Business, order = "2",
@@ -189,7 +200,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
@@ -198,6 +209,10 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_APP, instances.split(App.INSTANCE_SP));
+
+        // 不用等待下次检测不通过再移除应用，本地应用已经即可卸载掉来，远程应用在此处解除注册即可
+        Registry registry = Main.getService(Registry.class);
+        registry.unregisterApp(id);
     }
 
     @ModelAction(

@@ -52,7 +52,7 @@
     "core": {
       "console": {
         "enabled": "true",
-        "port": "9900",
+        "port": "9001",
         "contextRoot": "/console",
         "maxPostSize": "1048576000",
         "security": {
@@ -67,7 +67,7 @@
         "jmx": {
           "enabled": "false",
           "host": "",
-          "port": "7700"
+          "port": "7001"
         },
         "user": [
           {
@@ -89,14 +89,14 @@
       "registry": {
         "enabled": "true",
         "checkInterval": "5",
-        "checkTimeout": "30"
+        "checkTimeout": "4"
       },
       "agent": {
         "enabled": "false",
-        "masterUrl": "http://localhost:9900/console",
+        "masterUrl": "http://localhost:9001/console",
         "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB",
         "agentHost": "",
-        "agentPort": "5500",
+        "agentPort": "5001",
         "registerInterval": "2"
       }
     },

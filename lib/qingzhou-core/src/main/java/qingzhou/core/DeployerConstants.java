@@ -53,6 +53,7 @@ public interface DeployerConstants {
     String ACTION_INSTALL_VERSION = "ACTION_INSTALL_VERSION";
     String ACTION_UNINSTALL_VERSION = "ACTION_UNINSTALL_VERSION";
     String ACTION_CONFIRMKEY = "confirmKey";
+    String ACTION_GC = "gc";
 
     // 内部通信参数
 

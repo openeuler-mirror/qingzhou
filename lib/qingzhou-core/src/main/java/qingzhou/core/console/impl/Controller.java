@@ -11,6 +11,7 @@ import qingzhou.core.console.servlet.ServletContainer;
 import qingzhou.core.console.servlet.impl.ServletContainerImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.json.Json;
@@ -19,6 +20,7 @@ import qingzhou.logger.Logger;
 public class Controller implements Process {
     public final ModuleContext moduleContext;
     private Console console;
+    private String hostIp;
     private ProcessSequence sequence;
     private ServletContainer servletContainer;
 
@@ -32,6 +34,12 @@ public class Controller implements Process {
         String consoleJson = json.toJson(((Map<String, Object>) moduleContext.getConfig()).get("console"));
         console = json.fromJson(consoleJson, Console.class);
         if (console == null || !console.isEnabled()) return;
+
+        Map<String, String> agentConfig = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("agent");
+        if (agentConfig != null) {
+            hostIp = agentConfig.get("agentHost");
+        }
+        if (Utils.isBlank(hostIp)) hostIp = "localhost";
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),
@@ -84,7 +92,7 @@ public class Controller implements Process {
             servletContainer.addWebapp(contextPath, docBase, new Properties() {{
                 setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), AppPageData.DOWNLOAD_PAGE_ROOT_DIR).getAbsoluteFile());
             }});
-            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + console.getPort() + contextPath);
+            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://" + hostIp + ":" + console.getPort() + contextPath);
         }
 
         @Override

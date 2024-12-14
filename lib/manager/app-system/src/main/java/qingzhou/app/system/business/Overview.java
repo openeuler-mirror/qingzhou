@@ -1,5 +1,12 @@
 package qingzhou.app.system.business;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import qingzhou.api.Lang;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -12,12 +19,17 @@ import qingzhou.config.console.Console;
 import qingzhou.config.console.Jmx;
 import qingzhou.config.console.Security;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.*;
-import qingzhou.core.registry.*;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.I18nTool;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.InstanceInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.core.registry.Registry;
 import qingzhou.engine.util.Utils;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Model(code = "overview", icon = "dashboard",
         entrance = Dashboard.ACTION_DASHBOARD,
@@ -70,9 +82,9 @@ public class Overview extends ModelBase implements Dashboard {
     private Gauge[] getGauge(DataBuilder builder, Map<String, String> allInstanceHosts, Map<String, Map<String, String>> data, Lang lang) {
         List<Gauge> gauges = new ArrayList<>();
 
-        Gauge cpu = buildGauge(builder, "cpuUsed", "%", lang);
-        Gauge heap = buildGauge(builder, "heapUsed", "MB", lang);
-        Gauge disk = buildGauge(builder, "diskUsed", "GB", lang);
+        Gauge cpu = buildGauge(builder, "cpuUsed", "cpu", "%", lang);
+        Gauge heap = buildGauge(builder, "heapUsed", "heapCommitted", "MB", lang);
+        Gauge disk = buildGauge(builder, "diskUsed", "disk", "GB", lang);
 
         for (Map.Entry<String, String> entry : allInstanceHosts.entrySet()) {
             String host = entry.getValue();
@@ -83,24 +95,28 @@ public class Overview extends ModelBase implements Dashboard {
             disk.addData(new String[]{host, monitor.get("diskUsed"), monitor.get("disk")});
         }
 
+        gauges.add(cpu);
         gauges.add(heap);
         gauges.add(disk);
 
         return gauges.toArray(new Gauge[0]);
     }
 
-    private Gauge buildGauge(DataBuilder builder, String field, String unit, Lang lang) {
-        String ipKey = "ip";
-        String usedKey = "used";
-        String maxKey = "max";
-
+    private Gauge buildGauge(DataBuilder builder, String usedField, String maxField, String unit, Lang lang) {
         Gauge gauge = builder.buildData(Gauge.class);
 
         AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
         ModelInfo modelInfo = appInfo.getModelInfo(DeployerConstants.MODEL_INSTANCE);
-        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+
+        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(usedField);
+        String title = I18nTool.retrieveI18n(fieldInfo.getName()).get(lang);
         gauge.info(I18nTool.retrieveI18n(fieldInfo.getInfo()).get(lang))
-                .title(I18nTool.retrieveI18n(fieldInfo.getName()).get(lang));
+                .title(title);
+
+        String ipKey = I18nTool.retrieveI18n(modelInfo.getModelFieldInfo("host").getName()).get(lang);
+        String usedKey = title;
+        String maxKey = I18nTool.retrieveI18n(modelInfo.getModelFieldInfo(maxField).getName()).get(lang);
+
         gauge.fields(new String[]{ipKey, usedKey, maxKey}).usedKey(usedKey).maxKey(maxKey).unit(unit);
         return gauge;
     }
@@ -183,7 +199,7 @@ public class Overview extends ModelBase implements Dashboard {
         requestImpl.setActionName(Monitor.ACTION_MONITOR);
         requestImpl.setResponse(new ResponseImpl());
         Map<String, Response> invokeOnInstances = Main.getService(ActionInvoker.class)
-                .invokeOnInstances(requestImpl, allInstanceIds);
+                .invokeMultiple(requestImpl, allInstanceIds);
 
         Map<String, Map<String, String>> monitorData = new LinkedHashMap<>();
         for (String instanceId : allInstanceIds) {

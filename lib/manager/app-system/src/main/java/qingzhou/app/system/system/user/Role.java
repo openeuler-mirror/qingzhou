@@ -1,7 +1,25 @@
 package qingzhou.app.system.system.user;
 
-import qingzhou.api.*;
-import qingzhou.api.type.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.General;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.core.DeployerConstants;
@@ -10,10 +28,6 @@ import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.*;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -63,8 +77,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            batch_action = true,
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -134,14 +147,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
-        if (batchId != null && batchId.length > 0) {
-            for (String bId : batchId) {
-                Main.getConfig().deleteRole(bId);
-            }
-        } else {
-            Main.getConfig().deleteRole(id);
-        }
+        Main.getConfig().deleteRole(id);
     }
 
     @Override

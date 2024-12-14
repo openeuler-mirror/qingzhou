@@ -1,17 +1,17 @@
 package qingzhou.core.registry.impl;
 
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.InstanceInfo;
-import qingzhou.core.registry.Registry;
-import qingzhou.crypto.CryptoService;
-import qingzhou.json.Json;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
+
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.InstanceInfo;
+import qingzhou.core.registry.Registry;
+import qingzhou.crypto.CryptoService;
+import qingzhou.json.Json;
 
 class RegistryImpl implements Registry, Serializable {
     private final Json json;
@@ -50,6 +50,14 @@ class RegistryImpl implements Registry, Serializable {
                         instanceInfo,
                         System.currentTimeMillis(),
                         fingerprint));
+    }
+
+    @Override
+    public synchronized void unregisterApp(String appName) {
+        registryInfo.values().forEach(registeredInfo -> {
+            AppInfo[] newApps = Arrays.stream(registeredInfo.instanceInfo.getAppInfos()).filter(appInfo -> !appInfo.getName().equals(appName)).toArray(AppInfo[]::new);
+            registeredInfo.instanceInfo.setAppInfos(newApps);
+        });
     }
 
     @Override

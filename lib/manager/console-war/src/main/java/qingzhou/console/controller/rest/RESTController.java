@@ -113,7 +113,7 @@ public class RESTController extends HttpServlet {
             context -> {
                 RestContext restContext = (RestContext) context;
                 RequestImpl request = restContext.request;
-                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invoke(request);
+                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invokeIfDistribute(request);
                 responseMsg(instanceResult, request);
                 return true;
             }

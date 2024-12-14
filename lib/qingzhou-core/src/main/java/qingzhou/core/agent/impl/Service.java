@@ -1,5 +1,13 @@
 package qingzhou.core.agent.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.Deployer;
@@ -16,10 +24,6 @@ import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.serializer.Serializer;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 class Service implements Process {
     private final ModuleContext moduleContext;
@@ -75,8 +79,7 @@ class Service implements Process {
             }
         });
 
-        String serverUrl = "http://" + agentHost + ":" + agentPort + context.getPath();
-        logger.info("The agent service is started: " + serverUrl);
+        logger.info(String.format("The agent service is started, host: %s, port: %s", agentHost, agentPort));
     }
 
     @Override
