@@ -1,12 +1,13 @@
 package qingzhou.console.login;
 
+import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.AuthAdapter;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.rest.RESTController;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import qingzhou.core.DeployerConstants;
 
 public class AuthContextImpl implements AuthAdapter.AuthContext {
     private final Parameter parameter;
@@ -44,6 +45,7 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
 
     private User buildUser(String username) {
         User user = new User();
+        user.setType(DeployerConstants.QINGZHOU_MANAGER_USER_TYP);
         user.setName(username);
         user.setActive(true);
         user.setChangePwd(false);

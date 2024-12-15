@@ -1,4 +1,10 @@
-package qingzhou.app.oauth;
+package qingzhou.app.system.oauth;
+
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import qingzhou.api.AppContext;
 import qingzhou.api.AuthAdapter;
@@ -7,12 +13,6 @@ import qingzhou.http.HttpClient;
 import qingzhou.http.HttpMethod;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
-
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 public class TongAuthAdapter implements AuthAdapter {
     private final HttpClient httpClient;
@@ -51,9 +51,8 @@ public class TongAuthAdapter implements AuthAdapter {
         String receiveCodeUri = "/oauth/code_callback";
         if (receiveCodeUri.equals(requestUri)) {
             String code = context.getParameter("code");
-            String accessToken = getToken(code);
-
-            String user = getUser(accessToken);
+            Map<String, String> tokenInfo = getToken(code);
+            String user = getUser(tokenInfo);
             if (user != null) {
                 context.setLoginSuccessful(user);
                 return;
@@ -69,11 +68,13 @@ public class TongAuthAdapter implements AuthAdapter {
         context.redirect(toLoginUrl);
     }
 
-    private String getUser(String token) throws Exception {
+    private String getUser(Map<String, String> tokenInfo) throws Exception {
         String tokenUrl = user_uri + "?client_id=" + client_id;
 
-        HttpResponse httpResponse = httpClient.request(tokenUrl, HttpMethod.GET, new HashMap<String, String>() {{
-            put("Authorization", "Bearer " + token);
+        String accessToken = tokenInfo.get("access_token");
+        String tokenType = tokenInfo.get("token_type");
+        HttpResponse httpResponse = httpClient.request(tokenUrl, HttpMethod.GET, (byte[]) null, new HashMap<String, String>() {{
+            put("Authorization", tokenType + " " + accessToken);
             put("accept", "application/json");
         }});
         String responseText = new String(httpResponse.getResponseBody(), StandardCharsets.UTF_8);
@@ -86,7 +87,7 @@ public class TongAuthAdapter implements AuthAdapter {
         return null;
     }
 
-    private String getToken(String code) throws Exception {
+    private Map<String, String> getToken(String code) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("grant_type", "authorization_code");
         params.put("client_id", client_id);
@@ -94,7 +95,6 @@ public class TongAuthAdapter implements AuthAdapter {
         params.put("code", code);
         HttpResponse httpResponse = httpClient.request(token_uri, HttpMethod.POST, params);
         String responseText = new String(httpResponse.getResponseBody(), StandardCharsets.UTF_8);
-        Map<String, String> result = json.fromJson(responseText, Map.class);
-        return result.get("access_token");
+        return json.fromJson(responseText, Map.class);
     }
 }

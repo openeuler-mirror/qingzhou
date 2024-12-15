@@ -1,9 +1,13 @@
 package qingzhou.app.system;
 
+import java.io.File;
+import java.util.Map;
+
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.app.system.oauth.TongAuthAdapter;
 import qingzhou.config.console.Console;
 import qingzhou.config.console.impl.Config;
 import qingzhou.core.DeployerConstants;
@@ -12,9 +16,6 @@ import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.json.Json;
-
-import java.io.File;
-import java.util.Map;
 
 @App
 public class Main extends QingzhouSystemApp {
@@ -73,6 +74,10 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
 
         appContext.setActionFilter(this::doSingleAppMode);
+
+        if (Boolean.parseBoolean(appContext.getAppProperties().getProperty("oauth_enabled"))) {
+            appContext.setAuthAdapter(new TongAuthAdapter(appContext));
+        }
     }
 
     private String doSingleAppMode(Request request) {

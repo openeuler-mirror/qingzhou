@@ -192,7 +192,7 @@ class ActionInvokerImpl implements ActionInvoker {
     private Response sendRemote(Request request, String remoteUrl, Cipher cipher) throws Exception {
         byte[] resultJson = json.toJson(request).getBytes(StandardCharsets.UTF_8);
         byte[] sendContent = cipher.encrypt(resultJson);
-        HttpResponse response = moduleContext.getService(Http.class).buildHttpClient().request(remoteUrl, HttpMethod.POST, null, sendContent);
+        HttpResponse response = moduleContext.getService(Http.class).buildHttpClient().request(remoteUrl, HttpMethod.POST, sendContent, null);
         byte[] responseBody = response.getResponseBody();
         byte[] decryptedData;
         try {

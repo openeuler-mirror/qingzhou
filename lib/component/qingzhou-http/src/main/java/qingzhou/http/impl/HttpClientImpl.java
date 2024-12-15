@@ -1,10 +1,5 @@
 package qingzhou.http.impl;
 
-import qingzhou.http.HttpClient;
-import qingzhou.http.HttpMethod;
-import qingzhou.http.HttpResponse;
-
-import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -17,15 +12,25 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import qingzhou.http.HttpClient;
+import qingzhou.http.HttpMethod;
+import qingzhou.http.HttpResponse;
 
 public class HttpClientImpl implements HttpClient {
     @Override
     public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> params) throws Exception {
-        return request(url, httpMethod, null, params);
+        return request(url, httpMethod, params, null);
     }
 
     @Override
-    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> headers, Map<String, String> params) throws Exception {
+    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> params, Map<String, String> headers) throws Exception {
         StringBuilder bodyStr = new StringBuilder();
         if (params != null) {
             boolean isFirst = true;
@@ -40,15 +45,11 @@ public class HttpClientImpl implements HttpClient {
             }
         }
         byte[] bytes = bodyStr.toString().getBytes(StandardCharsets.UTF_8);
-        return send(url, httpMethod, headers, bytes);
+        return request(url, httpMethod, bytes, headers);
     }
 
     @Override
-    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> headers, byte[] body) throws Exception {
-        return send(url, httpMethod, headers, body);
-    }
-
-    private HttpResponse send(String url, HttpMethod httpMethod, Map<String, String> headers, byte[] body) throws Exception {
+    public HttpResponse request(String url, HttpMethod httpMethod, byte[] body, Map<String, String> headers) throws Exception {
         if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is null or empty");
 
         HttpURLConnection conn = buildConnection(url);
@@ -56,7 +57,6 @@ public class HttpClientImpl implements HttpClient {
 
         if (httpMethod == null) httpMethod = HttpMethod.GET;
         conn.setRequestMethod(httpMethod.name());
-
 
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
