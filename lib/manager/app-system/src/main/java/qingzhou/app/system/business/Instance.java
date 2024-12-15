@@ -109,6 +109,20 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     public double cpuUsed;
 
     @ModelField(
+            group = group_jvm,
+            field_type = FieldType.MONITOR, numeric = true,
+            name = {"使用中堆内存", "en:Heap Memory Used"},
+            info = {"当前已使用的堆内存大小，单位：MB。", "en:The amount of heap memory that is currently used, in MB."})
+    public Double heapUsed;
+
+    @ModelField(
+            group = group_jvm,
+            field_type = FieldType.MONITOR, numeric = true,
+            name = {"使用中非堆内存", "en:Non-Heap Memory Used"},
+            info = {"正在使用的非堆内存的大小，单位：MB。", "en:The size of the non-heap memory in use, in MB."})
+    public Double nonHeapUsed;
+
+    @ModelField(
             group = group_os,
             field_type = FieldType.MONITOR, numeric = true,
             name = {"硬盘使用量", "en:Disk Used"},
@@ -184,20 +198,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             name = {"死锁线程数", "en:Deadlocked Threads"},
             info = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
     public int deadlockedThreadCount;
-
-    @ModelField(
-            group = group_jvm,
-            field_type = FieldType.MONITOR, numeric = true,
-            name = {"使用中堆内存", "en:Heap Memory Used"},
-            info = {"当前已使用的堆内存大小，单位：MB。", "en:The amount of heap memory that is currently used, in MB."})
-    public Double heapUsed;
-
-    @ModelField(
-            group = group_jvm,
-            field_type = FieldType.MONITOR, numeric = true,
-            name = {"使用中非堆内存", "en:Non-Heap Memory Used"},
-            info = {"正在使用的非堆内存的大小，单位：MB。", "en:The size of the non-heap memory in use, in MB."})
-    public Double nonHeapUsed;
 
     public final String group_os = "os";
     private final String group_jvm = "jvm";

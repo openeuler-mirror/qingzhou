@@ -58,8 +58,8 @@ public class Overview extends ModelBase implements Dashboard {
     public void dashboardData(String id, DataBuilder builder) {
         Lang lang = getAppContext().getCurrentRequest().getLang();
         Map<String, String> allInstanceHosts = allInstanceHosts();
-        Map<String, Map<String, String>> data = monitorData(allInstanceHosts.keySet().toArray(new String[0]));
-        Set<String> deleteIds = allInstanceHosts.keySet().stream().filter(s -> !data.containsKey(s)).collect(Collectors.toSet());
+        Map<String, Map<String, String>> monitorData = monitorData(allInstanceHosts.keySet().toArray(new String[0]));
+        Set<String> deleteIds = allInstanceHosts.keySet().stream().filter(s -> !monitorData.containsKey(s)).collect(Collectors.toSet());
         deleteIds.forEach(allInstanceHosts::remove);
 
         String[] allAppIds = App.allIds(null);
@@ -67,16 +67,43 @@ public class Overview extends ModelBase implements Dashboard {
         // 基本信息
         Basic basic = getBasic(builder, lang);
         builder.addData(new Basic[]{basic});
+
         // 仪表板
-        builder.addData(getGauge(builder, allInstanceHosts, data, lang));
+        builder.addData(getGauge(builder, allInstanceHosts, monitorData, lang));
+
+        // 份额比例图
+        builder.addData(getShareDataset(builder, allInstanceHosts, monitorData, lang));
+
         // 热力图
         builder.addData(getMatrixHeatmap(builder, lang));
-        // 实例监控信息
-        builder.addData(getLineChart(builder, allInstanceHosts, data, lang));
 
         // 追加基本数据
         basic.addData(I18nTool.retrieveI18n(new String[]{"实例数量", "en:Number Of Instance"}).get(lang), String.valueOf(allInstanceHosts.size()));
         basic.addData(I18nTool.retrieveI18n(new String[]{"应用数量", "en:Number Of App"}).get(lang), String.valueOf(allAppIds.length));
+    }
+
+    private ShareDataset[] getShareDataset(DataBuilder builder, Map<String, String> allInstanceHosts, Map<String, Map<String, String>> data, Lang lang) {
+        List<ShareDataset> datasetList = new ArrayList<>();
+
+        AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+        ModelInfo modelInfo = appInfo.getModelInfo(DeployerConstants.MODEL_INSTANCE);
+        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
+        for (String fieldName : monitorFieldNames) {
+            ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
+            if (!monitorField.isNumeric()) continue;
+
+            ShareDataset dataset = builder.buildData(ShareDataset.class);
+            dataset.title(I18nTool.retrieveI18n(monitorField.getName()).get(lang));
+            for (Map.Entry<String, String> entry : allInstanceHosts.entrySet()) {
+                Map<String, String> monitor = data.get(entry.getKey());
+
+                String host = entry.getValue();
+                dataset.addData(host, monitor.get(fieldName));
+            }
+            datasetList.add(dataset);
+        }
+
+        return datasetList.toArray(new ShareDataset[0]);
     }
 
     private Gauge[] getGauge(DataBuilder builder, Map<String, String> allInstanceHosts, Map<String, Map<String, String>> data, Lang lang) {
@@ -114,17 +141,10 @@ public class Overview extends ModelBase implements Dashboard {
                 .title(title);
 
         String ipKey = I18nTool.retrieveI18n(modelInfo.getModelFieldInfo("host").getName()).get(lang);
-        String usedKey = title;
         String maxKey = I18nTool.retrieveI18n(modelInfo.getModelFieldInfo(maxField).getName()).get(lang);
 
-        gauge.fields(new String[]{ipKey, usedKey, maxKey}).usedKey(usedKey).maxKey(maxKey).unit(unit);
+        gauge.fields(new String[]{ipKey, title, maxKey}).usedKey(title).maxKey(maxKey).unit(unit);
         return gauge;
-    }
-
-    private LineChart[] getLineChart(DataBuilder builder, Map<String, String> allInstanceHosts, Map<String, Map<String, String>> data, Lang lang) {
-        return data.entrySet().stream()
-                .map(entry -> createLineChart(allInstanceHosts.get(entry.getKey()), entry.getValue(), lang, builder))
-                .toArray(LineChart[]::new);
     }
 
     private MatrixHeatmap[] getMatrixHeatmap(DataBuilder builder, Lang lang) {
@@ -171,25 +191,6 @@ public class Overview extends ModelBase implements Dashboard {
         String trustedIp = security.getTrustedIp();
         basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang), Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
         return basic;
-    }
-
-    private LineChart createLineChart(String showTitle, Map<String, String> internalData, Lang lang, DataBuilder builder) {
-        LineChart lineChart = builder.buildData(LineChart.class);
-        lineChart.title(showTitle);
-        Deployer deployer = Main.getService(Deployer.class);
-        qingzhou.core.deployer.App app = deployer.getApp(DeployerConstants.APP_SYSTEM);
-        ModelInfo instanceModel = app.getAppInfo().getModelInfo(DeployerConstants.MODEL_INSTANCE);
-        for (String monitorFieldName : instanceModel.getMonitorFieldNames()) {
-            ModelFieldInfo modelFieldInfo = instanceModel.getModelFieldInfo(monitorFieldName);
-            if (!modelFieldInfo.isNumeric()) {
-                continue;
-            }
-            String data = internalData.get(monitorFieldName);
-            if (!Utils.isBlank(data)) {
-                lineChart.addData(I18nTool.retrieveI18n(modelFieldInfo.getName()).get(lang), data);
-            }
-        }
-        return lineChart;
     }
 
     private Map<String, Map<String, String>> monitorData(String[] allInstanceIds) {
