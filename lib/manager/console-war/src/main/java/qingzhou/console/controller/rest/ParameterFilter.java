@@ -178,6 +178,9 @@ public class ParameterFilter implements Filter<RestContext> {
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
+            if (name == null){
+                continue;
+            }
             if (name.startsWith(DeployerConstants.SUB_MENU_PARAMETER_FLAG)) {
                 toMove.add(name);
             }
