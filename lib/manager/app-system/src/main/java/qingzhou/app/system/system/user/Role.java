@@ -38,8 +38,8 @@ public class Role extends ModelBase implements General, Echo, Option {
     static final String ID_KEY = "name";
 
     @ModelField(
-            required = true,
-            search = true,
+            required = true, search = true,
+            id = true,
             name = {"名称", "en:Name"},
             info = {"该角色的唯一标识。", "en:Unique identifier of the role."})
     public String name;
@@ -77,18 +77,12 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            batch_action = true,
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
         getAppContext().invokeSuperAction(request);
-    }
-
-    @Override
-    public String idField() {
-        return ID_KEY;
     }
 
     @Override
@@ -103,7 +97,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles == null) return new String[0];
 
         return Arrays.stream(roles)
@@ -118,15 +112,15 @@ public class Role extends ModelBase implements General, Echo, Option {
                         return ModelUtil.getPropertiesFromObj(role);
                     }
                 }))
-                .map(qingzhou.config.Role::getName)
+                .map(qingzhou.config.console.Role::getName)
                 .toArray(String[]::new);
     }
 
     @Override
     public Map<String, String> showData(String id) {
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
-            for (qingzhou.config.Role role : roles) {
+            for (qingzhou.config.console.Role role : roles) {
                 if (role.getName().equals(id)) {
                     return ModelUtil.getPropertiesFromObj(role);
                 }
@@ -137,7 +131,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public void addData(Map<String, String> data) throws Exception {
-        qingzhou.config.Role role = new qingzhou.config.Role();
+        qingzhou.config.console.Role role = new qingzhou.config.console.Role();
         ModelUtil.setPropertiesToObj(role, data);
         Main.getConfig().addRole(role);
     }
@@ -145,7 +139,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     @Override
     public void updateData(Map<String, String> data) throws Exception {
         String id = data.get(ID_KEY);
-        qingzhou.config.Role role = Main.getConsole().getRole(id);
+        qingzhou.config.console.Role role = Main.getConsole().getRole(id);
         Main.getConfig().deleteRole(id);
         ModelUtil.setPropertiesToObj(role, data);
         Main.getConfig().addRole(role);
@@ -153,14 +147,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
-        if (batchId != null && batchId.length > 0) {
-            for (String bId : batchId) {
-                Main.getConfig().deleteRole(bId);
-            }
-        } else {
-            Main.getConfig().deleteRole(id);
-        }
+        Main.getConfig().deleteRole(id);
     }
 
     @Override
@@ -176,9 +163,9 @@ public class Role extends ModelBase implements General, Echo, Option {
         }
         List<Item> items = getItems(appName);
         String value = "";
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
-            for (qingzhou.config.Role role : roles) {
+            for (qingzhou.config.console.Role role : roles) {
                 if (role.getApp().equals(appName)) {
                     value = role.getUris();
                 }

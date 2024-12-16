@@ -1,6 +1,23 @@
 package qingzhou.app.system.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
@@ -12,11 +29,6 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
-
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.Setting, order = "1",
         name = {"账户", "en:User"},
@@ -25,11 +37,6 @@ public class User extends ModelBase implements General, Validate, Option {
     static final String ID_KEY = "name";
     static final String PASSWORD_FLAG = "***************";
     static final String PASSWORD_SP = ";";
-
-    @Override
-    public String idField() {
-        return ID_KEY;
-    }
 
     @Override
     public boolean contains(String id) {
@@ -55,7 +62,7 @@ public class User extends ModelBase implements General, Validate, Option {
                         return ModelUtil.getPropertiesFromObj(user);
                     }
                 }))
-                .map(qingzhou.config.User::getName)
+                .map(qingzhou.config.console.User::getName)
                 .toArray(String[]::new);
     }
 
@@ -69,8 +76,8 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @ModelField(
-            required = true,
-            search = true,
+            required = true, search = true,
+            id = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String name;
@@ -193,7 +200,7 @@ public class User extends ModelBase implements General, Validate, Option {
         // 添加密码更新时间戳
         insertPasswordModifiedTime(data);
 
-        qingzhou.config.User u = new qingzhou.config.User();
+        qingzhou.config.console.User u = new qingzhou.config.console.User();
         ModelUtil.setPropertiesToObj(u, data);
         Main.getConfig().addUser(u);
     }
@@ -233,6 +240,23 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+    }
+
+    @ModelAction(
+            code = Delete.ACTION_DELETE, icon = "trash",
+            display = "name!=qingzhou",
+            batch_action = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
+            name = {"删除", "en:Delete"},
+            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+    public void delete(Request request) throws Exception {
+        getAppContext().invokeSuperAction(request);
+    }
+
+    @Override
     public void deleteData(String id) throws Exception {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
@@ -244,29 +268,12 @@ public class User extends ModelBase implements General, Validate, Option {
         }
     }
 
-    @Override
-    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
-    }
-
-    @ModelAction(
-            code = Delete.ACTION_DELETE, icon = "trash",
-            display = "name!=qingzhou",
-            batch_action = true,
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
-            name = {"删除", "en:Delete"},
-            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
-    public void delete(Request request) throws Exception {
-        getAppContext().invokeSuperAction(request);
-    }
-
     private boolean passwordChanged(String password) {
         return password != null && !password.equals(PASSWORD_FLAG);
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.config.User user : Main.getConsole().getUser()) {
+        for (qingzhou.config.console.User user : Main.getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -286,7 +293,7 @@ public class User extends ModelBase implements General, Validate, Option {
         data.remove("type");// 用户的类型是初始化定的，不可通过api修改
 
         String id = data.get(ID_KEY);
-        qingzhou.config.User user = Main.getConsole().getUser(id);
+        qingzhou.config.console.User user = Main.getConsole().getUser(id);
         Main.getConfig().deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
@@ -381,12 +388,11 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public Map<String, String> validate(Request request) {
+    public Map<String, String> validate(Request request, ValidationContext context) {
         Map<String, String> errors = new HashMap<>();
         String password = request.getParameter("password");
 
-        boolean isAddOrUpdate = Boolean.parseBoolean(request.getParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER));
-        if (isAddOrUpdate) {
+        if (context.isAdd()) {
             String msg = checkPwd(password, request.getUser());
             if (msg != null) {
                 errors.put("password", getAppContext().getI18n(msg));

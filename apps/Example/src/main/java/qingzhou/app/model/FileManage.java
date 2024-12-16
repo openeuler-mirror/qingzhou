@@ -1,10 +1,5 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
-import qingzhou.api.type.*;
-import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -12,12 +7,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Show;
+import qingzhou.app.ExampleMain;
+
 @Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11,
         order = "4", name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
-    @ModelField(create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
+    @ModelField(id = true, create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
     public String id;
 
     @ModelField(input_type = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
@@ -45,7 +53,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
                 String fileName = file.getName();
                 if (id.equals(fileName)) {
                     return new HashMap<String, String>() {{
-                        put(idField(), fileName);
+                        put("id", fileName);
                         put("file", file.getAbsolutePath().replace(getAppContext().getAppDir().getAbsolutePath(), ""));
                     }};
                 }
@@ -129,7 +137,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     }
 
     @Override
-    public void deleteData(String id) throws Exception {
+    public void deleteData(String id) {
         File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         if (path.exists()) {
             for (File file : path.listFiles()) {
@@ -138,9 +146,21 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
                 }
                 String fileName = file.getName();
                 if (id.equals(fileName)) {
-                    FileUtil.forceDelete(file);
+                    delDir(file);
                 }
             }
+        }
+    }
+
+    private static void delDir(File file) {
+        if (file.isDirectory()) {
+            File[] zFiles = file.listFiles();
+            for (File file2 : zFiles) {
+                delDir(file2);
+            }
+            file.delete();
+        } else {
+            file.delete();
         }
     }
 }

@@ -12,10 +12,16 @@ import qingzhou.app.AddModelBase;
         info = {"事务信息示例，展示组合详情查看。", "en:Transaction information example, showing combination details to view."})
 public class TransactionCombination extends AddModelBase implements Combined {
     public static final String code = "this-model-code";
+
+    public TransactionCombination() {
+        super("id");
+    }
+
     @ModelField(
             required = true,
             link_action = Combined.ACTION_COMBINED,
             search = true,
+            id = true,
             name = {"事务名称", "en:Transaction Name"},
             info = {"该事务的详细名称。", "en:The name of the transaction."})
     public String id;

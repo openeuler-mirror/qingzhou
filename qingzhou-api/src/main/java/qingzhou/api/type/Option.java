@@ -8,7 +8,6 @@ import qingzhou.api.Item;
 
 public interface Option {
     String ACTION_OPTION = "option";
-    String FIELD_NAME_PARAMETER = "FIELD_NAME_PARAMETER";
 
     /**
      * 根据字段名称，将选项数据组织成对应的页面表单字段项目

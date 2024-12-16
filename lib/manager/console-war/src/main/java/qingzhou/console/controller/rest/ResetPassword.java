@@ -8,7 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import qingzhou.api.Lang;
 import qingzhou.api.type.Update;
-import qingzhou.config.User;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;

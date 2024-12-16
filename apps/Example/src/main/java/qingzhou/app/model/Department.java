@@ -14,9 +14,14 @@ import java.util.Map;
 public class Department extends AddModelBase implements Echo, Option {
     public static final String code = "department";
 
+    public Department() {
+        super("id");
+    }
+
     @ModelField(
             required = true,
             search = true,
+            id = true,
             name = {"部门名称", "en:Department Name"},
             info = {"该部门的详细名称。", "en:The name of the department."})
     public String id;

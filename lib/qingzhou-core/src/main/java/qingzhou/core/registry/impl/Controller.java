@@ -1,15 +1,15 @@
 package qingzhou.core.registry.impl;
 
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import qingzhou.core.registry.Registry;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Controller implements Process {
     private final ModuleContext context;
@@ -27,12 +27,6 @@ public class Controller implements Process {
     public void exec() {
         registry = new RegistryImpl(context.getService(Json.class), context.getService(CryptoService.class));
         context.registerService(Registry.class, registry);
-
-        Map<String, String> deployer = (Map<String, String>) ((Map<String, Object>) context.getConfig()).get("deployer");
-        if (Boolean.parseBoolean(deployer.get("staticMode"))) {
-            // 静态模式下，不能进行应用和实例的“卸载”和“添加”，注册服务也会关闭
-            return;
-        }
 
         Map<String, String> config = (Map<String, String>) ((Map<String, Object>) context.getConfig()).get("registry");
         if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;

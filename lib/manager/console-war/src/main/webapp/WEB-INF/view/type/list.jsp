@@ -149,7 +149,7 @@
 				if (batchActions.length > 0) {
 					otherTh += 1;
 			%>
-			<th class="custom-checkbox" style="width: 5%">
+			<th class="custom-checkbox" style="width: 2%">
 				<input type="checkbox" class="allcheck"/>
 			</th>
 			<%
@@ -157,7 +157,7 @@
 				if (modelInfo.isShowOrderNumber()) {
 					otherTh += 1;
 			%>
-			<th class="sequence" style="width: 10%"><%=I18n.getKeyI18n("page.list.order")%>
+			<th class="sequence" style="width: 2%"><%=I18n.getKeyI18n("page.list.order")%>
 			</th>
 			<%
 				}
@@ -182,7 +182,8 @@
 					if (fieldInfo.getWidthPercent() > 0) {
 						width = fieldInfo.getWidthPercent();
 					} else {
-						width = 100 / (displayListFields.length + otherTh - hiddenCount);
+                        // 多选框占 2%，序号占 2%，剩余 96% ping j
+						width = 96 / (displayListFields.length + otherTh - hiddenCount);
 					}
 			%>
 			<%-- 注意这个width末尾的 % 不能删除 %>% 不是手误 --%>

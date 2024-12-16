@@ -10,11 +10,15 @@ import qingzhou.app.ExampleMain;
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
 public class Post extends AddModelBase implements Option {
+    public Post() {
+        super("id");
+    }
 
     @ModelField(
             required = true,
             show = false,
             width_percent = 10,
+            id = true,
             search = true,
             name = {"岗位编码", "en:Post Code"})
     public String postCode;
@@ -49,11 +53,6 @@ public class Post extends AddModelBase implements Option {
             list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;
-
-    @Override
-    public String idField() {
-        return "postCode";
-    }
 
     @ModelAction(
             name = {}, code = "listUpdate")

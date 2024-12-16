@@ -7,14 +7,14 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Console;
+import qingzhou.config.console.Console;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
 
 import java.util.Map;
 
-@Model(code = "jmx", icon = "coffee",
+@Model(code = "jmx", icon = "exchange",
         menu = Main.Setting, order = "4",
         entrance = Update.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
@@ -45,7 +45,7 @@ public class Jmx extends ModelBase implements Update {
     public void start() throws Exception {
         Console console = Main.getConsole();
         if (console == null || !console.isEnabled()) return;
-        qingzhou.config.Jmx jmx = console.getJmx();
+        qingzhou.config.console.Jmx jmx = console.getJmx();
         if (jmx == null || !jmx.isEnabled()) return;
 
         ServiceManager.getInstance().init(jmx);
@@ -63,7 +63,7 @@ public class Jmx extends ModelBase implements Update {
 
     @Override
     public Map<String, String> editData(String id) {
-        qingzhou.config.Jmx jmx = Main.getConsole().getJmx();
+        qingzhou.config.console.Jmx jmx = Main.getConsole().getJmx();
         if (jmx != null) {
             return ModelUtil.getPropertiesFromObj(jmx);
         } else {
@@ -73,14 +73,14 @@ public class Jmx extends ModelBase implements Update {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        qingzhou.config.Jmx jmx = Main.getConsole().getJmx();
-        if (jmx == null) jmx = new qingzhou.config.Jmx();
+        qingzhou.config.console.Jmx jmx = Main.getConsole().getJmx();
+        if (jmx == null) jmx = new qingzhou.config.console.Jmx();
         ModelUtil.setPropertiesToObj(jmx, data);
         doJmxService(jmx); // 生效 jmx 服务
         Main.getConfig().setJmx(jmx); // 最后没问题再写入配置文件
     }
 
-    private void doJmxService(qingzhou.config.Jmx jmx) throws Exception {
+    private void doJmxService(qingzhou.config.console.Jmx jmx) throws Exception {
         ServiceManager.getInstance().destroy();
         if (jmx.isEnabled()) {
             ServiceManager.getInstance().init(jmx);

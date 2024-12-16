@@ -1,5 +1,15 @@
 package qingzhou.core.agent.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.Deployer;
@@ -16,10 +26,6 @@ import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.serializer.Serializer;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 class Service implements Process {
     private final ModuleContext moduleContext;
@@ -75,8 +81,7 @@ class Service implements Process {
             }
         });
 
-        String serverUrl = "http://" + agentHost + ":" + agentPort + context.getPath();
-        logger.info("The agent service is started: " + serverUrl);
+        logger.info(String.format("The agent service is started, host: %s, port: %s", agentHost, agentPort));
     }
 
     @Override
@@ -103,8 +108,12 @@ class Service implements Process {
 
         // 4. 处理
         App app = moduleContext.getService(Deployer.class).getApp(request.getApp());
-        preProcess(request, app);
-        app.invoke(request);
+        List<File> uploadDirs = uploadDirs(request, app);
+        try {
+            app.invoke(request);
+        } finally {
+            uploadDirs.forEach(FileUtil::forceDeleteQuietly);
+        }
 
         // 将 request 收集的 session 参数，通过 response 回传到调用端
         ResponseImpl response = (ResponseImpl) request.getResponse();
@@ -120,7 +129,8 @@ class Service implements Process {
         return moduleContext.getService(Serializer.class).serialize(response);
     }
 
-    private void preProcess(RequestImpl request, App app) {
+    private List<File> uploadDirs(RequestImpl request, App app) {
+        List<File> uploadDirs = new ArrayList<>();
         request.setCachedModelInfo(app.getAppInfo().getModelInfo(request.getModel()));
         Set<String> parameterNames = request.getParameters().keySet();
         for (String uploadField : parameterNames) {
@@ -131,11 +141,13 @@ class Service implements Process {
             String uploadId = detectUploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
             File uploadDir = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);
             if (!uploadDir.isDirectory()) continue;
+            uploadDirs.add(uploadDir);
 
             File[] listFiles = uploadDir.listFiles();
             if (listFiles == null || listFiles.length != 1) continue;
 
             request.getParameters().put(uploadField, listFiles[0].getAbsolutePath());
         }
+        return uploadDirs;
     }
 }

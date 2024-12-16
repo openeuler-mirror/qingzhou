@@ -14,7 +14,7 @@ public class ExampleMain implements QingzhouApp {
     public static Logger logger;
 
     @Override
-    public void start(AppContext appContext) {
+    public void start(AppContext appContext) throws Exception {
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 

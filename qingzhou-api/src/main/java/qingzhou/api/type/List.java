@@ -19,13 +19,6 @@ public interface List {
      */
     java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception;
 
-    /**
-     * 指定 ModelField 指定的字段中，哪一个用作数据 ID
-     */
-    default String idField() {
-        return "id";
-    }
-
     default boolean contains(String id) throws Exception {
         return id == null || id.isEmpty();
     }

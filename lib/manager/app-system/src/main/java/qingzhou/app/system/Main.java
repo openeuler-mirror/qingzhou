@@ -8,9 +8,8 @@ import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.app.system.oauth.TongAuthAdapter;
-import qingzhou.config.Console;
-import qingzhou.config.OAuth;
-import qingzhou.config.impl.Config;
+import qingzhou.config.console.Console;
+import qingzhou.config.console.impl.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.QingzhouSystemApp;
@@ -28,24 +27,7 @@ public class Main extends QingzhouSystemApp {
     private static Main main;
     private static Config fileConfig;
 
-    @Override
-    public void start(AppContext appContext) {
-        main = this;
-        fileConfig = new Config(getService(Json.class),
-                new File(new File(main.moduleContext.getInstanceDir(), "conf"), "qingzhou.json"));
-
-        appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
-        appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
-
-        appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
-        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("2");
-        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("3");
-
-        OAuth oAuth = Main.getConsole().getOauth();
-        if (oAuth != null && oAuth.isEnabled()) {
-            appContext.setAuthAdapter(new TongAuthAdapter(oAuth));
-        }
-    }
+    private Boolean singleAppMode;
 
     public static Config getConfig() {
         return fileConfig;
@@ -73,11 +55,47 @@ public class Main extends QingzhouSystemApp {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             requestImpl.setActionName(action);
             Map<String, Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instances);
+                    .invokeMultiple(request, instances);
             requestImpl.setInvokeOnInstances(responseList);
         } finally {
             requestImpl.setModelName(originModel);
             requestImpl.setActionName(originAction);
         }
+    }
+
+    @Override
+    public void start(AppContext appContext) {
+        main = this;
+        fileConfig = new Config(getService(Json.class),
+                new File(new File(main.moduleContext.getInstanceDir(), "conf"), "qingzhou.json"));
+
+        appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
+        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("folder-open").order("2");
+        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
+
+        appContext.setActionFilter(this::doSingleAppMode);
+
+        if (Boolean.parseBoolean(appContext.getAppProperties().getProperty("oauth_enabled"))) {
+            appContext.setAuthAdapter(new TongAuthAdapter(appContext));
+        }
+    }
+
+    private String doSingleAppMode(Request request) {
+        if (singleAppMode == null) {
+            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
+            singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+        }
+
+        if (singleAppMode) {
+            if (DeployerConstants.APP_SYSTEM.equals(request.getApp())) {
+                if (DeployerConstants.MODEL_APP.equals(request.getModel())) {
+                    if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) {
+                        return "This action is not supported in single-app mode";
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }

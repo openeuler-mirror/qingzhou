@@ -1,6 +1,6 @@
 package qingzhou.console.controller.jmx;
 
-import qingzhou.config.User;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.login.LoginManager;

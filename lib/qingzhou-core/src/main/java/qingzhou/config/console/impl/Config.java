@@ -1,4 +1,4 @@
-package qingzhou.config.impl;
+package qingzhou.config.console.impl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -7,11 +7,11 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.util.Properties;
 
-import qingzhou.config.Console;
-import qingzhou.config.Jmx;
-import qingzhou.config.Role;
-import qingzhou.config.Security;
-import qingzhou.config.User;
+import qingzhou.config.console.Console;
+import qingzhou.config.console.Jmx;
+import qingzhou.config.console.Role;
+import qingzhou.config.console.Security;
+import qingzhou.config.console.User;
 import qingzhou.engine.util.CallbackArgs;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;

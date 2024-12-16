@@ -22,10 +22,16 @@ import java.util.Map;
         info = {"用户管理", "en:User management."})
 public class User extends AddModelBase implements Delete, Group, Option, Echo {
     public static final String code = "user-model-code";
+
+    public User() {
+        super("id");
+    }
+
     @ModelField(
             group = "base",
             required = true,
             search = true,
+            id = true,
             color = {"admin:Green"},
             name = {"用户名称", "en:Username"})
     public String id;

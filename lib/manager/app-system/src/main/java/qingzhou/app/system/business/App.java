@@ -1,6 +1,19 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -11,9 +24,7 @@ import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.Registry;
 
-import java.util.*;
-
-@Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
+@Model(code = DeployerConstants.MODEL_APP, icon = "stack",
         menu = Main.Business, order = "2",
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
@@ -21,12 +32,7 @@ import java.util.*;
 public class App extends ModelBase implements qingzhou.api.type.List, Add {
     public static final String INSTANCE_SP = ";";
 
-    @Override
-    public String idField() {
-        return "name";
-    }
-
-    private String[] allIds(Map<String, String> query) {
+    public static String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
         Deployer deployer = Main.getService(Deployer.class);
@@ -59,6 +65,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             create = false, edit = false,
             forbid = {DeployerConstants.APP_SYSTEM},
             search = true,
+            id = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
                     "en:The name of the application package indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and each deployment will have a unique ID corresponding to it."})
@@ -112,7 +119,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
     }
 
-    public Map<String, String> showData(String id) {
+    private static Map<String, String> showData(String id) {
         AppInfo appInfo = null;
         List<String> instances = new ArrayList<>();
 
@@ -131,7 +138,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
-            appMap.put(idField(), id);
+            appMap.put("name", id);
             appMap.put("path", appInfo.getFilePath());
             appMap.put("instances", String.join(App.INSTANCE_SP, instances));
             appMap.put("state", appInfo.getState());
@@ -143,7 +150,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @Override
     public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+        return ModelUtil.listData(allIds(query), App::showData, pageNum, pageSize, showFields);
     }
 
     @Override
@@ -193,7 +200,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
@@ -202,6 +209,10 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_APP, instances.split(App.INSTANCE_SP));
+
+        // 不用等待下次检测不通过再移除应用，本地应用已经即可卸载掉来，远程应用在此处解除注册即可
+        Registry registry = Main.getService(Registry.class);
+        registry.unregisterApp(id);
     }
 
     @ModelAction(

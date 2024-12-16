@@ -30,6 +30,8 @@ public class ModelFieldInfo implements Serializable {
     private boolean numeric;
     private String display;
     private boolean required;
+    private boolean id;
+    private boolean idMask;
     private long min;
     private long max;
     private int lengthMin;
@@ -298,6 +300,22 @@ public class ModelFieldInfo implements Serializable {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public boolean isId() {
+        return id;
+    }
+
+    public void setId(boolean id) {
+        this.id = id;
+    }
+
+    public boolean isIdMask() {
+        return idMask;
+    }
+
+    public void setIdMask(boolean idMask) {
+        this.idMask = idMask;
     }
 
     public long getMin() {

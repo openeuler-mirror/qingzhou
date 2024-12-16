@@ -1,16 +1,7 @@
 package qingzhou.console.controller.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-
-import qingzhou.config.Role;
-import qingzhou.config.User;
+import qingzhou.config.console.Role;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
@@ -19,6 +10,9 @@ import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, String[] dataListFields, String[] dataValues) {
@@ -55,16 +49,7 @@ public class SecurityController implements Filter<RestContext> {
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
         if (actionInfo == null) return false;
 
-        // 检查用户的权限
-        User currentUser = LoginManager.getLoggedUser(request.getSession(false));
-        if (currentUser == null) return false;
-
-        //超管直接放行
-        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
-            return true;
-        }
-
-        // 是否是开放的 model
+        // 是否是开放的 model，需要放在 getLoggedUser 之前，远程注册时候没有用户
         if (DeployerConstants.APP_SYSTEM.equals(app)) {
             if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(model)) return true;
 
@@ -76,6 +61,15 @@ public class SecurityController implements Filter<RestContext> {
             if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(model)) {
                 return true;
             }
+        }
+
+        // 检查用户的权限
+        User currentUser = LoginManager.getLoggedUser(request.getSession(false));
+        if (currentUser == null) return false;
+
+        //超管直接放行
+        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
+            return true;
         }
 
         String roles = currentUser.getRole();

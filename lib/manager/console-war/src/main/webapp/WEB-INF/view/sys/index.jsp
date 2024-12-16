@@ -321,31 +321,25 @@
 
     <%-- 显示第一个应用的管理页面--%>
     <%
-	String appName = PageUtil.getAppToShow();
-	if (appName != null) {
-            //获取系统应用菜单图标
-            String icon = SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, DeployerConstants.MODEL_APP).getIcon();
-    %>
+String openApp = PageUtil.getAppToShow();
+if (openApp != null) {
+        %>
     $(document).ready(function () {
-        var firstAppId = "<%= DeployerConstants.MODEL_APP %>|<%= appName %>";
-        var firstAppName = "<%= appName %>";
-        var AppIcon = "<%= icon %>";
-
         var firstAppElement = {
-            'data-id': firstAppId,
-            'data-name': firstAppName,
-            'model-icon': AppIcon,
+            'data-id': "<%=DeployerConstants.MODEL_APP %>|<%=openApp%>",
+            'data-name': "<%=openApp%>",
+            'model-icon': "desktop",
             attr: function (name) {
                 return this[name];
             }
         };
 
-        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
+        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + openApp)%>"
         initializeManager(firstAppElement, url);
     });
     <%
-        }
-    %>
+}
+%>
 
 </script>
 <script src="<%=contextPath%>/static/js/dashboard.js"></script>

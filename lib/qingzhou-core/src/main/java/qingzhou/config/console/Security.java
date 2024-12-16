@@ -1,4 +1,4 @@
-package qingzhou.config;
+package qingzhou.config.console;
 
 public class Security {
     private String trustedIp;

@@ -55,7 +55,7 @@ public class HtmlView implements View {
         request.setModelName(AppContext.APP_HOME_MODEL); // qingzhou.app.common.Home 的 code
         request.setActionName(Show.ACTION_SHOW);
         request.setCachedModelInfo(SystemController.getModelInfo(request.getId(), AppContext.APP_HOME_MODEL)); // 重新缓存
-        Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
+        Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
         request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
     }
 

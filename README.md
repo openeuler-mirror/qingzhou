@@ -33,12 +33,12 @@ JDK >= 1.8
 
 > 看到类似如下的日志输出，则表示启动完成：
 >
-> Open a browser to access the Qingzhou console: http://localhost:9900/console
+> Open a browser to access the Qingzhou console: http://localhost:9001/console
 
 3. **访问控制台**
 
 打开浏览器访问轻舟的管理平台：
-[http://localhost:9900/console](http://localhost:9900/console)
+[http://localhost:9001/console](http://localhost:9001/console)
 
 > 注：
 >
@@ -51,25 +51,26 @@ JDK >= 1.8
 
 相关项目：
 
-【前端】
-
-+ Date Range Picker ([https://daterangepicker.com/])
-+ Muuri ([https://github.com/haltu/muuri](https://github.com/haltu/muuri))
-+ marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
-+ Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
-+ Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))
-+ Apache ECharts ([https://echarts.apache.org/](https://echarts.apache.org/))
-+ ZUI ([https://openzui.com](https://openzui.com))
-+ jQuery ([https://jquery.com](https://jquery.com))
-
 【后端】
 
-+ QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
-+ Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
-+ Gson ([https://github.com/google/gson](https://github.com/google/gson))
 + tinylog ([https://tinylog.org](https://tinylog.org))
++ Gson ([https://github.com/google/gson](https://github.com/google/gson))
 + Javassist ([http://www.javassist.org](http://www.javassist.org))
++ QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
++ Apache MINA SSHD ([https://mina.apache.org/sshd-project](https://mina.apache.org/sshd-project))
++ PlantUML ([https://plantuml.com](https://plantuml.com))
+
+【前端】
+
++ ZUI ([https://openzui.com](https://openzui.com))
++ Apache ECharts ([https://echarts.apache.org](https://echarts.apache.org))
++ jQuery ([https://jquery.com](https://jquery.com))
++ Layui layer ([https://layui.dev](https://layui.dev))
++ Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
++ Muuri ([https://github.com/haltu/muuri](https://github.com/haltu/muuri))
++ marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
++ Date Range Picker ([https://daterangepicker.com](https://daterangepicker.com))
 
 ## 参与贡献
 

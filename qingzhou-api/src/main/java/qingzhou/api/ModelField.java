@@ -30,6 +30,10 @@ public @interface ModelField {
 
     String display() default ""; // 在页面上显示或隐藏的条件
 
+    boolean id() default false; // 当 Model 为 List 类型时，用此字段作 ID
+
+    boolean idMask() default false; // 当 Model 为 List 类型时，用此字段作 ID 的替代显示字段
+
     boolean required() default false;
 
     long min() default Long.MIN_VALUE;

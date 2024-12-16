@@ -9,9 +9,13 @@ import qingzhou.app.ExampleMain;
         name = {"集群", "en:Cluster"},
         info = {"集群数据管理", "en:Cluster."})
 public class Cluster extends AddModelBase {
-    @ModelField(
-            required = true,
+    public Cluster() {
+        super("id");
+    }
+
+    @ModelField(required = true,
             search = true,
+            id = true,
             color = {"admin:Green"},
             name = {"集群名称", "en:Username"})
     public String id;

@@ -1,29 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.InputType;
-import qingzhou.api.MsgLevel;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
-import qingzhou.console.controller.I18n;
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.ViewManager;
-import qingzhou.console.view.type.JsonView;
-import qingzhou.core.deployer.ActionInvoker;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.core.registry.ModelFieldInfo;
-import qingzhou.core.registry.ModelInfo;
-import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.Base64Coder;
-import qingzhou.crypto.CryptoService;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
-import qingzhou.engine.util.pattern.FilterPattern;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -33,7 +9,44 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+
+import qingzhou.api.InputType;
+import qingzhou.api.MsgLevel;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.config.console.User;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.login.LoginManager;
+import qingzhou.console.view.ViewManager;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.CryptoService;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.pattern.Filter;
+import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.logger.Logger;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -104,7 +117,6 @@ public class RESTController extends HttpServlet {
     private final Filter<RestContext>[] filters = new Filter[]{
             new SecurityController(),
             new ResetPassword(),
-//            new BackFilter(), // 因前端 子菜单跳转 等功能支持，暂无法结合后端历史请求处理，会导致前端控制不到显示区域和菜单定位等问题
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ActionFilter(),
             new ValidationFilter(), // 参数校验
@@ -113,7 +125,7 @@ public class RESTController extends HttpServlet {
             context -> {
                 RestContext restContext = (RestContext) context;
                 RequestImpl request = restContext.request;
-                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invoke(request);
+                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invokeIfDistribute(request);
                 responseMsg(instanceResult, request);
                 return true;
             }
@@ -154,7 +166,7 @@ public class RESTController extends HttpServlet {
             for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
                 String instance = e.getKey();
                 String msg = e.getValue().getMsg();
-                errorMsg.append(instance).append(": ").append(msg);
+                errorMsg.append("<br/>").append(instance).append(": ").append(msg);
             }
             response.setMsg(errorMsg.toString());
         }
@@ -183,8 +195,7 @@ public class RESTController extends HttpServlet {
     private final ViewManager viewManager = new ViewManager();
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         thisInstance = this;
     }
 
@@ -216,7 +227,7 @@ public class RESTController extends HttpServlet {
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            SystemController.getService(Logger.class).error(e.getMessage(), e);
         } finally {
             if (fileAttachments != null) {
                 for (String fa : fileAttachments.values()) {
@@ -253,10 +264,18 @@ public class RESTController extends HttpServlet {
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        request.setUserName(LoginManager.getLoggedUser(session).getName());
+        User loggedUser = LoginManager.getLoggedUser(session);
+        if (loggedUser != null) { // 远程注册时候不需要登录，没有登录用户
+            request.setUserName(loggedUser.getName());
+        }
         request.setI18nLang(I18n.getI18nLang());
 
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        AppInfo appInfo = SystemController.getAppInfo(request.getApp());
+        if (appInfo == null) return null; // 应用卸载后，继续在原先的“管理”页面点击
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        if (modelInfo == null) return null;
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo == null) return null;// rest 接口可以任意输入不存在的action
 
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {

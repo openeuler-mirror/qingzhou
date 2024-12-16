@@ -16,7 +16,7 @@ import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.security.auth.Subject;
 
-import qingzhou.config.Jmx;
+import qingzhou.config.console.Jmx;
 import qingzhou.engine.util.Utils;
 
 public class ServiceManager {

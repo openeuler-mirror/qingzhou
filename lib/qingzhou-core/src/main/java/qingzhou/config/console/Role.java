@@ -1,4 +1,4 @@
-package qingzhou.config;
+package qingzhou.config.console;
 
 public class Role {
     private String name;

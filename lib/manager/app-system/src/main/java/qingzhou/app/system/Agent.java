@@ -1,6 +1,25 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
+import java.nio.file.Files;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.core.AppPageData;
@@ -11,16 +30,6 @@ import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.*;
-import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
@@ -278,5 +287,12 @@ public class Agent extends ModelBase implements Download {
     public void stopApp(Request request) throws Exception {
         Deployer deployer = Main.getService(Deployer.class);
         deployer.stopApp(request.getId());
+    }
+
+    @ModelAction(
+            code = DeployerConstants.ACTION_GC,
+            name = {"", "en:"})
+    public void gc(Request request) {
+        System.gc();
     }
 }
