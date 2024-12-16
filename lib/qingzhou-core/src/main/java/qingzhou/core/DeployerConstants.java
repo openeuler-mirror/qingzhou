@@ -1,9 +1,9 @@
 package qingzhou.core;
 
+import java.util.*;
+
 import qingzhou.api.ActionType;
 import qingzhou.api.AppContext;
-
-import java.util.*;
 
 public interface DeployerConstants {
     // 系统环境
@@ -74,6 +74,7 @@ public interface DeployerConstants {
     String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String APP_STARTED = "Started";
     String APP_STOPPED = "Stopped";
+    String DEPLOYMENT_PROPERTIES = "deploymentProperties"; // 保持一致：qingzhou.app.system.business.App.deploymentProperties
     String MULTISELECT_GROUP_SEPARATOR = ":";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
     String RETURNS_LINK_PARAM_NAME_RETURNSID = "PARAM_NAME_RETURNSID";

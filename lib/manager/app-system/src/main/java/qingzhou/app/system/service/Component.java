@@ -1,5 +1,10 @@
 package qingzhou.app.system.service;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
@@ -7,11 +12,6 @@ import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Model(code = Component.MODEL_NAME, icon = "cubes",
         menu = Main.Service,
@@ -107,7 +107,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
                 put("name", finalName);
                 put("type", serviceType.getName());
                 put("info", finalInfo);
-                put("inUse", "false"); // todo 模拟数据
+                put("inUse", "true"); // todo 模拟数据
             }};
         }
 

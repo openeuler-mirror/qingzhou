@@ -1,20 +1,5 @@
 package qingzhou.core.deployer.impl;
 
-import qingzhou.api.*;
-import qingzhou.api.type.List;
-import qingzhou.api.type.*;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
-import qingzhou.core.deployer.App;
-import qingzhou.core.deployer.AppListener;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.QingzhouSystemApp;
-import qingzhou.core.registry.*;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.logger.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +16,21 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+
+import qingzhou.api.*;
+import qingzhou.api.type.List;
+import qingzhou.api.type.*;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.*;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -60,9 +60,14 @@ class DeployerImpl implements Deployer {
 
     @Override
     public void installApp(File appDir) throws Throwable {
+        installApp(appDir, null);
+    }
+
+    @Override
+    public void installApp(File appDir, Properties deploymentProperties) throws Throwable {
         if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
 
-        AppImpl app = buildApp(appDir);
+        AppImpl app = buildApp(appDir, deploymentProperties);
 
         // 加载应用
         Utils.doInThreadContextClassLoader(app.getAppLoader(), () -> {
@@ -163,7 +168,7 @@ class DeployerImpl implements Deployer {
         return registry.getAppInfo(appName);
     }
 
-    private AppImpl buildApp(File appDir) throws Throwable {
+    private AppImpl buildApp(File appDir, Properties deploymentProperties) throws Throwable {
         AppImpl app = new AppImpl(moduleContext);
         app.setAppDir(appDir);
 
@@ -181,7 +186,7 @@ class DeployerImpl implements Deployer {
         app.setAppLoader(loader);
 
         // 解析应用的配置文件
-        Properties appProperties = buildAppProperties(appDir);
+        Properties appProperties = buildAppProperties(appDir, deploymentProperties);
         app.setAppProperties(appProperties);
 
         QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, appProperties);
@@ -538,31 +543,47 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private Properties buildAppProperties(File appDir) throws Exception {
-        if (appDir.isDirectory()) {
-            File file = new File(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
-            if (file.exists()) {
-                try (InputStream in = Files.newInputStream(file.toPath())) {
-                    return Utils.streamToProperties(in);
+    private Properties buildAppProperties(File appDir, Properties deploymentProperties) throws Exception {
+        if (!appDir.isDirectory()) throw new IllegalArgumentException("A directory file is required: " + appDir);
+
+        Properties result = null;
+        File preferablyFile = new File(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+        try {
+            if (preferablyFile.exists()) {
+                try (InputStream in = Files.newInputStream(preferablyFile.toPath())) {
+                    result = Utils.streamToProperties(in);
                 }
             }
 
-            File[] listFiles = appDir.listFiles();
-            for (File jarFile : Objects.requireNonNull(listFiles)) {
-                if (jarFile.getName().endsWith(".jar")) {
-                    Properties properties = Utils.zipEntryToProperties(jarFile, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
-                    if (properties != null) {
-                        return properties;
+            if (result == null) {
+                File[] listFiles = appDir.listFiles();
+                if (listFiles != null) {
+                    for (File jarFile : listFiles) {
+                        if (jarFile.getName().endsWith(".jar")) {
+                            Properties properties = Utils.zipEntryToProperties(jarFile, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+                            if (properties != null) {
+                                result = properties;
+                                break;
+                            }
+                        }
                     }
                 }
             }
-        }
+        } finally {
+            if (deploymentProperties != null) {
+                if (result == null) result = new Properties();
+                result.putAll(deploymentProperties);
 
-        if (appDir.isFile()) {
-            return Utils.zipEntryToProperties(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+                // 回写入文件
+                StringBuilder newFileContent = new StringBuilder();
+                for (String k : result.stringPropertyNames()) {
+                    String v = result.getProperty(k);
+                    newFileContent.append(k).append("=").append(v).append(System.lineSeparator());
+                }
+                FileUtil.writeFile(preferablyFile, newFileContent.toString());
+            }
         }
-
-        return null;
+        return result;
     }
 
     private AppContextImpl buildAppContext(AppImpl app) {

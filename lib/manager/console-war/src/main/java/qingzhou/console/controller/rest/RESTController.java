@@ -9,18 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import java.util.*;
+import javax.servlet.http.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
@@ -162,13 +152,15 @@ public class RESTController extends HttpServlet {
                     : MsgLevel.ERROR;
             response.setMsgLevel(msgLevel);
 
-            StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
-            for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
-                String instance = e.getKey();
-                String msg = e.getValue().getMsg();
-                errorMsg.append("<br/>").append(instance).append(": ").append(msg);
+            if (fail > 0) {
+                StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
+                for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
+                    String instance = e.getKey();
+                    String msg = e.getValue().getMsg();
+                    errorMsg.append("<br/>").append(instance).append(": ").append(msg);
+                }
+                response.setMsg(errorMsg.toString());
             }
-            response.setMsg(errorMsg.toString());
         }
 
         // 完善响应的 msg
