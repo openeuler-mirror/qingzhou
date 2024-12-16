@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import qingzhou.api.AuthAdapter;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.core.DeployerConstants;
 
 public class AuthContextImpl implements AuthAdapter.AuthContext {
     private final Parameter parameter;
@@ -31,21 +30,29 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
     }
 
     @Override
-    public void setLoginSuccessful(String user) throws IOException {
-        LoginManager.loginSession(request, buildUser(user));
+    public void setLoginSuccessful(String user, String role) {
+        LoginManager.loginSession(request, buildUser(user, role));
         // 进入主页
-        response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
+        try {
+            response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         loginSuccessful = true;
     }
 
     @Override
-    public void redirect(String url) throws IOException {
-        response.sendRedirect(url);
+    public void redirect(String url) {
+        try {
+            response.sendRedirect(url);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private User buildUser(String username) {
+    private User buildUser(String username, String role) {
         User user = new User();
-        user.setType(DeployerConstants.QINGZHOU_MANAGER_USER_TYP);
+        user.setRole(role);
         user.setName(username);
         user.setActive(true);
         user.setChangePwd(false);

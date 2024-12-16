@@ -2,6 +2,7 @@ package qingzhou.core.deployer;
 
 import java.io.File;
 import java.util.List;
+import java.util.Properties;
 
 import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.Service;
@@ -13,6 +14,8 @@ public interface Deployer {
     void removeAppListener(AppListener appListener);
 
     void installApp(File appDir) throws Throwable;
+
+    void installApp(File appDir, Properties deploymentProperties) throws Throwable;
 
     void unInstallApp(String appName) throws Exception;
 

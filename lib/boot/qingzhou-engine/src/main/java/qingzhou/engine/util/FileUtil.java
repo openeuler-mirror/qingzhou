@@ -1,17 +1,6 @@
 package qingzhou.engine.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
@@ -182,11 +171,11 @@ public class FileUtil {
         }
     }
 
-    public static void writeFile(File file, String context) throws IOException {
+    public static void writeFile(File file, String content) throws IOException {
         mkdirs(file.getParentFile());
         try (FileOutputStream fos = new FileOutputStream(file);
              BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
-            bw.write(context, 0, context.length());
+            bw.write(content, 0, content.length());
         }
     }
 

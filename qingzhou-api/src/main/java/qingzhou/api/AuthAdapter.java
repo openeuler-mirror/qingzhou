@@ -1,15 +1,13 @@
 package qingzhou.api;
 
-import java.io.IOException;
-
 public interface AuthAdapter {
-    void doAuth(String requestUri, AuthContext context) throws Exception;
+    void doAuth(String requestUri, AuthContext context);
 
     interface AuthContext {
         String getParameter(String name);
 
-        void setLoginSuccessful(String user) throws IOException;
+        void setLoginSuccessful(String user, String role);
 
-        void redirect(String url) throws IOException;
+        void redirect(String url);
     }
 }

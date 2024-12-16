@@ -2,24 +2,16 @@ package qingzhou.app.system;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.core.AppPageData;
@@ -30,6 +22,7 @@ import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
@@ -92,7 +85,14 @@ public class Agent extends ModelBase implements Download {
         }
 
         try {
-            deployer.installApp(app);
+            String deploymentProperties = request.getParameter(DeployerConstants.DEPLOYMENT_PROPERTIES);
+            if (Utils.notBlank(deploymentProperties)) {
+                Properties properties = new Properties();
+                properties.setProperty(DeployerConstants.DEPLOYMENT_PROPERTIES, deploymentProperties);
+                deployer.installApp(app, properties);
+            } else {
+                deployer.installApp(app);
+            }
         } catch (Throwable e) {
             FileUtil.forceDelete(app);
             throw e;
