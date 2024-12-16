@@ -151,7 +151,13 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
             java.util.List<String[]> result = (java.util.List<String[]>) res.getInternalData();
             if (result != null && !result.isEmpty()) {
-                return result.stream().map(s -> new ItemInfo(s[0], new String[]{s[1], "en:" + s[1]})).toArray(ItemInfo[]::new);
+                return result.stream().map(s -> {
+                    if (s.length == 1) {
+                        return new ItemInfo(s[0], new String[]{s[0], "en:" + s[0]});
+                    } else {
+                        return new ItemInfo(s[0], new String[]{s[1], "en:" + s[1]});
+                    }
+                }).toArray(ItemInfo[]::new);
             }
         }
 
