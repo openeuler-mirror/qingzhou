@@ -1,21 +1,23 @@
 package qingzhou.app.system.system.user;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.console.Console;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         menu = Main.Setting, hidden = true,
@@ -183,15 +185,17 @@ public class Password extends ModelBase implements Update, Export {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Request request = getAppContext().getCurrentRequest();
+        RequestImpl request = (RequestImpl) getAppContext().getCurrentRequest();
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+
         String loginUser = request.getUser();
         Map<String, String> baseData = Objects.requireNonNull(User.showDataForUserInternal(loginUser));
 
         if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
             String error = checkError(request, baseData);
             if (error != null) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n(error));
+                response.setSuccess(false);
+                response.setMsg(getAppContext().getI18n(error));
                 return;
             }
 
@@ -217,12 +221,13 @@ public class Password extends ModelBase implements Update, Export {
 
             String oldKey = baseData.get("keyForOtp");
             if (enabled && Utils.isBlank(oldKey)) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("refresh.key.need"));
+                response.setSuccess(false);
+                response.setMsg(getAppContext().getI18n("refresh.key.need"));
                 return;
             }
         }
 
         User.updateDataForUser(baseData);
+        response.logout();
     }
 }

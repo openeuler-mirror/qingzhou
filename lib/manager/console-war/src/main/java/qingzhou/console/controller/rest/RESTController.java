@@ -217,6 +217,12 @@ public class RESTController extends HttpServlet {
             RestContext context = new RestContext(req, resp, request);
 
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
+            ResponseImpl response = (ResponseImpl) context.request.getResponse();
+            if (response.isLogout()) {
+                LoginManager.logoutSession(context.req);
+                LoginManager.forwardToLoginJsp(context.req, context.resp);
+                return;
+            }
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
             SystemController.getService(Logger.class).error(e.getMessage(), e);
