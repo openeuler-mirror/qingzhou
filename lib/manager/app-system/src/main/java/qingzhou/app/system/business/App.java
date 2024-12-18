@@ -106,6 +106,14 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances = DeployerConstants.INSTANCE_LOCAL;
 
+
+    @ModelField(
+            input_type = InputType.kv,
+            separator = "@ ",
+            name = {"部署配置", "en:Deployment Config"},
+            info = {"应用部署所需的配置.", "en:Configuration required for application deployment."})
+    public String deploymentProperties;
+
     @ModelField(
             list = true, search = true,
             create = false, edit = false,
