@@ -1,5 +1,12 @@
 package qingzhou.core.deployer.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
@@ -7,6 +14,7 @@ import qingzhou.core.*;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ItemInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
@@ -15,13 +23,6 @@ import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
 class SuperAction {
     static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
 
@@ -29,10 +30,10 @@ class SuperAction {
         ALL_SUPER_ACTION_CACHE = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
     }
 
-    private final AppImpl app;
+    private final AppManagerImpl app;
     private final ModelBase instance;
 
-    SuperAction(AppImpl app, ModelBase instance) {
+    SuperAction(AppManagerImpl app, ModelBase instance) {
         this.app = app;
         this.instance = instance;
     }

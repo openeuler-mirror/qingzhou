@@ -1,25 +1,11 @@
 package qingzhou.app.system.system.user;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.General;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Update;
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.core.DeployerConstants;
@@ -206,23 +192,32 @@ public class Role extends ModelBase implements General, Echo, Option {
         Deployer deployer = Main.getService(Deployer.class);
         AppInfo appInfo = deployer.getAppInfo(app);
         if (appInfo == null) return list;
+
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
             if (modelInfo.isHidden()) continue;
 
             String modelName = modelInfo.getCode();
             if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {
                 if (modelName.equals(DeployerConstants.MODEL_AGENT)) continue;
-                if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(modelName)) continue;
+                if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(modelName)) continue;
             } else {
-                if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(modelName)) continue;
+                if (DeployerConstants.NONE_ROLE_NONE_SYSTEM_MODELS.contains(modelName)) continue;
             }
 
             list.add(Item.of(modelName, modelInfo.getName()));
+
             ModelActionInfo[] modelActionInfos = modelInfo.getModelActionInfos();
             Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
+                String action = modelActionInfo.getCode();
+
+                Set<String> set = appInfo.getOpenModelActions().get(modelName);
+                if (set != null && set.contains(action)) {
+                    return;
+                }
+
                 if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {
-                    Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(modelName);
-                    if (actions != null && actions.contains(modelActionInfo.getCode())) {
+                    Set<String> actions = DeployerConstants.NONE_ROLE_SYSTEM_MODEL_ACTIONS.get(modelName);
+                    if (actions != null && actions.contains(action)) {
                         return;
                     }
                 }
@@ -231,7 +226,7 @@ public class Role extends ModelBase implements General, Echo, Option {
                 if (nameI18n != null && nameI18n.length > 0) {
                     list.add(Item.of(modelName
                             + DeployerConstants.MULTISELECT_GROUP_SEPARATOR
-                            + modelActionInfo.getCode(), nameI18n));
+                            + action, nameI18n));
                 }
             });
         }

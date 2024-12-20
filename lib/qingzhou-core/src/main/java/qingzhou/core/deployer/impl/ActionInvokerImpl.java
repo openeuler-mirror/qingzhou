@@ -4,32 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.console.Console;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.ActionInvoker;
-import qingzhou.core.deployer.App;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.InstanceInfo;
-import qingzhou.core.registry.ModelActionInfo;
-import qingzhou.core.registry.ModelInfo;
-import qingzhou.core.registry.Registry;
+import qingzhou.core.deployer.*;
+import qingzhou.core.registry.*;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
@@ -90,8 +73,8 @@ class ActionInvokerImpl implements ActionInvoker {
             if (Utils.isBlank(instance)) continue;
             try {
                 if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
-                    App instanceApp = moduleContext.getService(Deployer.class).getApp(request.getApp());
-                    instanceApp.invoke(request);
+                    AppManager instanceAppManager = moduleContext.getService(Deployer.class).getApp(request.getApp());
+                    instanceAppManager.invoke(request);
                     responseList.put(instance, request.getResponse());
                 } else {
                     if (privateKey == null) {
@@ -233,8 +216,8 @@ class ActionInvokerImpl implements ActionInvoker {
     private List<String> getAppInstances(String app) {
         List<String> instances = new ArrayList<>();
 
-        App deployerApp = moduleContext.getService(Deployer.class).getApp(app);
-        if (deployerApp != null) {
+        AppManager deployerAppManager = moduleContext.getService(Deployer.class).getApp(app);
+        if (deployerAppManager != null) {
             instances.add(DeployerConstants.INSTANCE_LOCAL);
         }
 

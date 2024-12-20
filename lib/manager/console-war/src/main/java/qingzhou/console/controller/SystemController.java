@@ -1,5 +1,12 @@
 package qingzhou.console.controller;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -15,14 +22,10 @@ import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.AuthManager;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.core.deployer.*;
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ModelFieldInfo;
-import qingzhou.core.registry.ModelInfo;
-import qingzhou.core.registry.Registry;
+import qingzhou.core.registry.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
 import qingzhou.engine.ModuleContext;
@@ -31,13 +34,6 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -89,8 +85,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static java.util.List<String> getAppInstances(String appName) {
         java.util.List<String> instances = new ArrayList<>();
 
-        App app = getService(Deployer.class).getApp(appName);
-        if (app != null) {
+        AppManager appManager = getService(Deployer.class).getApp(appName);
+        if (appManager != null) {
             instances.add(DeployerConstants.INSTANCE_LOCAL);
         }
 

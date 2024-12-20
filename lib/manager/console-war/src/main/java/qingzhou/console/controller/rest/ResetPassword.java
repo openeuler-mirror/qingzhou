@@ -14,6 +14,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.util.pattern.Filter;
 
 public class ResetPassword implements Filter<RestContext> {
@@ -41,17 +42,26 @@ public class ResetPassword implements Filter<RestContext> {
         String RESET_OK_FLAG = "RESET_OK_FLAG";
         if (session.getAttribute(RESET_OK_FLAG) != null) return true;
 
+        String app = context.request.getApp();
         String model = context.request.getModel();
-        if (DeployerConstants.APP_SYSTEM.equals(context.request.getApp())) {
-            if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(model)) {
+        String action = context.request.getAction();
+
+        AppInfo appInfo = SystemController.getAppInfo(app);
+        Set<String> set = appInfo.getOpenModelActions().get(model);
+        if (set != null) {
+            if (set.contains(action)) return true;
+        }
+
+        if (DeployerConstants.APP_SYSTEM.equals(app)) {
+            if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(model)) { // 不需要角色的，也不必非得重置密码
                 return true;
             }
-            Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(model);
-            if (actions != null && actions.contains(context.request.getAction())) {
+            Set<String> actions = DeployerConstants.NONE_ROLE_SYSTEM_MODEL_ACTIONS.get(model);
+            if (actions != null && actions.contains(action)) {
                 return true;
             }
         } else {
-            if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(model)) {
+            if (DeployerConstants.NONE_ROLE_NONE_SYSTEM_MODELS.contains(model)) {
                 return true;
             }
         }

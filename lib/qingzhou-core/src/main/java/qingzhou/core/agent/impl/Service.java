@@ -1,17 +1,13 @@
 package qingzhou.core.agent.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.AppManager;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
@@ -107,10 +103,10 @@ class Service implements Process {
         RequestImpl request = moduleContext.getService(Json.class).fromJson(new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET), RequestImpl.class);
 
         // 4. 处理
-        App app = moduleContext.getService(Deployer.class).getApp(request.getApp());
-        List<File> uploadDirs = uploadDirs(request, app);
+        AppManager appManager = moduleContext.getService(Deployer.class).getApp(request.getApp());
+        List<File> uploadDirs = uploadDirs(request, appManager);
         try {
-            app.invoke(request);
+            appManager.invoke(request);
         } finally {
             uploadDirs.forEach(FileUtil::forceDeleteQuietly);
         }
@@ -129,9 +125,9 @@ class Service implements Process {
         return moduleContext.getService(Serializer.class).serialize(response);
     }
 
-    private List<File> uploadDirs(RequestImpl request, App app) {
+    private List<File> uploadDirs(RequestImpl request, AppManager appManager) {
         List<File> uploadDirs = new ArrayList<>();
-        request.setCachedModelInfo(app.getAppInfo().getModelInfo(request.getModel()));
+        request.setCachedModelInfo(appManager.getAppInfo().getModelInfo(request.getModel()));
         Set<String> parameterNames = request.getParameters().keySet();
         for (String uploadField : parameterNames) {
             String detectUploadFile = request.getParameter(uploadField);
@@ -139,7 +135,7 @@ class Service implements Process {
                     !detectUploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
 
             String uploadId = detectUploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
-            File uploadDir = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);
+            File uploadDir = FileUtil.newFile(appManager.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);
             if (!uploadDir.isDirectory()) continue;
             uploadDirs.add(uploadDir);
 

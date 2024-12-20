@@ -10,7 +10,7 @@ import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
+import qingzhou.core.registry.ItemInfo;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.*;

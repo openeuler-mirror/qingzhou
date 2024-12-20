@@ -1,19 +1,20 @@
 package qingzhou.core.deployer.impl;
 
+import java.io.File;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import qingzhou.api.*;
+import qingzhou.core.deployer.I18nTool;
 import qingzhou.core.registry.MenuInfo;
 import qingzhou.engine.Service;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
 public class AppContextImpl implements AppContext {
-    private final AppImpl app;
+    private final AppManagerImpl app;
+    private final I18nTool i18nTool = new I18nTool();
+    private File appTemp;
 
-    AppContextImpl(AppImpl app) {
+    AppContextImpl(AppManagerImpl app) {
         this.app = app;
     }
 
@@ -34,17 +35,20 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public synchronized File getTemp() {
-        return app.getAppTemp();
+        if (appTemp == null) {
+            appTemp = new File(app.getModuleContext().getTemp(), app.getAppInfo().getName());
+        }
+        return appTemp;
     }
 
     @Override
     public void addI18n(String key, String[] i18n) {
-        app.getI18nTool().addI18n(key, i18n);
+        i18nTool.addI18n(key, i18n);
     }
 
     @Override
     public String getI18n(Lang lang, String key, Object... args) {
-        return app.getI18nTool().getI18n(lang, key, args);
+        return i18nTool.getI18n(lang, key, args);
     }
 
     @Override
@@ -79,7 +83,7 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public void invokeSuperAction(Request request) throws Exception {
-        app.invokeDefault(request);
+        app.invokeSuperAction(request);
     }
 
     @Override
@@ -88,8 +92,19 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void setActionFilter(ActionFilter actionFilter) {
-        app.setAppActionFilter(actionFilter);
+    public void addActionFilter(ActionFilter... actionFilter) {
+        app.addAppActionFilter(actionFilter);
+    }
+
+    @Override
+    public void addOpenModelActions(String model, String[] actions) {
+        if (model == null || model.isEmpty() || actions == null || actions.length == 0) return;
+
+        Map<String, ActionMethod> methodMap = app.getModelActionMap().get(model);
+        if (methodMap == null) return;
+
+        Set<String> toSet = Arrays.stream(actions).filter(methodMap::containsKey).collect(Collectors.toSet());
+        toSet.forEach(s -> app.getAppInfo().getOpenModelActions().computeIfAbsent(model, k -> new HashSet<>()).add(s));
     }
 
     @Override

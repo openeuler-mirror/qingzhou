@@ -1,5 +1,11 @@
 package qingzhou.core.deployer.impl;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.AppListener;
@@ -14,13 +20,6 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
-
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class Controller implements Process {
     private final ModuleContext moduleContext;
@@ -37,7 +36,7 @@ public class Controller implements Process {
                 new InitDeployer(),
                 new RegisterService(),
                 new InjectShareableAddonsForApp(),
-                new InstallApp()
+                new StartLocalApp()
         );
         sequence.exec();
     }
@@ -56,7 +55,7 @@ public class Controller implements Process {
 
             deployer.addAppListener(new AppListener() {
                 @Override
-                public void onInstalled(String appName) {
+                public void onAppStarted(String appName) {
                     if (DeployerConstants.APP_SYSTEM.equals(appName)) {
                         deployer.removeAppListener(this);
                         disableSysActions();
@@ -143,9 +142,9 @@ public class Controller implements Process {
         }
     }
 
-    private class InstallApp implements Process {
+    private class StartLocalApp implements Process {
         @Override
-        public void exec() throws Throwable {
+        public void exec() {
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 @Override
                 public ClassLoader getClassLoader() {
@@ -158,7 +157,7 @@ public class Controller implements Process {
                 }
             });
             File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
-            deployer.installApp(systemApp);
+            doStartApp(systemApp);
 
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 final File commonApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", "common");
@@ -177,25 +176,17 @@ public class Controller implements Process {
             if (files != null) {
                 for (File file : files) {
                     if (!file.isDirectory()) continue;
-                    try {
-                        deployer.installApp(file);
-                    } catch (Throwable e) {
-                        moduleContext.getService(Logger.class).error("failed to install app " + file.getName(), e);
-                    }
+                    doStartApp(file);
                 }
             }
         }
 
-        @Override
-        public void undo() {
-            String[] apps = deployer.getLocalApps().toArray(new String[0]);
-            Arrays.stream(apps).forEach(appName -> {
-                try {
-                    deployer.unInstallApp(appName);
-                } catch (Exception e) {
-                    moduleContext.getService(Logger.class).warn("failed to stop app: " + appName, e);
-                }
-            });
+        private void doStartApp(File file) {
+            try {
+                deployer.reStartApp(file);
+            } catch (Throwable e) {
+                moduleContext.getService(Logger.class).error("failed to start app " + file.getName(), e);
+            }
         }
     }
 }

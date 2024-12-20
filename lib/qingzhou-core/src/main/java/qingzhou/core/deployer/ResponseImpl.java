@@ -1,17 +1,18 @@
 package qingzhou.core.deployer;
 
-import qingzhou.api.MsgLevel;
-import qingzhou.api.Response;
-import qingzhou.core.deployer.impl.ParametersImpl;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import qingzhou.api.MsgLevel;
+import qingzhou.api.Response;
+import qingzhou.core.deployer.impl.ParametersImpl;
+
 public class ResponseImpl implements Response, Serializable {
     private boolean success = true;
+    private boolean logout = false;
     private String msg;
     private MsgLevel msgLevel;
     private String contentType;
@@ -91,6 +92,14 @@ public class ResponseImpl implements Response, Serializable {
     @Override
     public void setData(Serializable data) {
         this.appData = data;
+    }
+
+    public void logout() {
+        this.logout = true;
+    }
+
+    public boolean isLogout() {
+        return logout;
     }
 
     public Serializable getInternalData() {

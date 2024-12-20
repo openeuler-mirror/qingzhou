@@ -70,12 +70,12 @@ public class Controller implements Process {
         }
 
         @Override
-        public void onInstalled(String appName) {
+        public void onAppStarted(String appName) {
             heartbeat.register();
         }
 
         @Override
-        public void onUninstalled(String appName) {
+        public void onAppStopped(String appName) {
             heartbeat.register();
         }
     }

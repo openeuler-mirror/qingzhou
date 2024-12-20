@@ -4,7 +4,7 @@ import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.core.registry.AppInfo;
 
-public interface App {
+public interface AppManager {
     AppContext getAppContext();
 
     AppInfo getAppInfo();

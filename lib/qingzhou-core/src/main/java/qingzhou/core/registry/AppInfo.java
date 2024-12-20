@@ -1,15 +1,16 @@
 package qingzhou.core.registry;
 
 import java.io.Serializable;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public class AppInfo implements Serializable {
     private String name;
     private String filePath;
-    private String state;
+    private Properties deploymentProperties;
+    private AppState state;
     private final Set<ModelInfo> modelInfos = new LinkedHashSet<>();
     private final Set<MenuInfo> menuInfos = new LinkedHashSet<>();
+    private final Map<String, Set<String>> openModelActions = new HashMap<>();
 
     public void removeModelInfo(ModelInfo modelInfo) {
         modelInfos.remove(modelInfo);
@@ -49,12 +50,24 @@ public class AppInfo implements Serializable {
         this.filePath = filePath;
     }
 
-    public String getState() {
+    public AppState getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(AppState state) {
         this.state = state;
+    }
+
+    public Map<String, Set<String>> getOpenModelActions() {
+        return openModelActions;
+    }
+
+    public Properties getDeploymentProperties() {
+        return deploymentProperties;
+    }
+
+    public void setDeploymentProperties(Properties deploymentProperties) {
+        this.deploymentProperties = deploymentProperties;
     }
 
     // 返回有序的模块列表

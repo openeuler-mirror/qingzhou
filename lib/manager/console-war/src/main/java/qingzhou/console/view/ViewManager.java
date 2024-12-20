@@ -3,31 +3,44 @@ package qingzhou.console.view;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 import qingzhou.api.type.Update;
-import qingzhou.console.controller.rest.SecurityController;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.engine.util.Utils;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
 
 public class ViewManager {
+    private static final ViewManager instance = new ViewManager();
+
+    public static ViewManager getInstance() {
+        return instance;
+    }
+
     private final Map<String, View> views = new HashMap<>();
 
     public ViewManager() {
         views.put(HtmlView.FLAG, new HtmlView());
         views.put(JsonView.FLAG, new JsonView());
         views.put(DownloadView.FLAG, new DownloadView());
+    }
+
+    public Set<String> getViews() {
+        return views.keySet();
     }
 
     public void render(RestContext restContext) throws Exception {
@@ -53,7 +66,8 @@ public class ViewManager {
         String viewName = request.getView();
         View view = views.get(viewName);
         if (view == null) {
-            throw new IllegalArgumentException("View not found: " + request.getView());
+            SystemController.getService(Logger.class).error("View not found: " + request.getView());
+            return;
         }
         if (servletResponse.getContentType() == null) {
             servletResponse.setContentType(view.getContentType());

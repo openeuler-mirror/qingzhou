@@ -1,18 +1,19 @@
 package qingzhou.console.controller.rest;
 
+import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+
 import qingzhou.config.console.Role;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.*;
 
 public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, String[] dataListFields, String[] dataValues) {
@@ -41,27 +42,36 @@ public class SecurityController implements Filter<RestContext> {
     }
 
     private static boolean isActionPermitted0(String app, String model, String action, HttpServletRequest request) {
-        // model 是否存在
-        ModelInfo modelInfo = SystemController.getModelInfo(app, model);
-        if (modelInfo == null) return false;
+        AppInfo appInfo = SystemController.getAppInfo(app);
 
+        // app 是否存在
+        if (appInfo == null) return false;
+        // model 是否存在
+        ModelInfo modelInfo = appInfo.getModelInfo(model);
+        if (modelInfo == null) return false;
         // action 是否存在
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
         if (actionInfo == null) return false;
 
+        Set<String> set = appInfo.getOpenModelActions().get(model);
+        if (set != null) {
+            if (set.contains(action)) return true;
+        }
+
         // 是否是开放的 model，需要放在 getLoggedUser 之前，远程注册时候没有用户
         if (DeployerConstants.APP_SYSTEM.equals(app)) {
-            if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(model)) return true;
+            if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(model)) return true;
 
-            Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(model);
+            Set<String> actions = DeployerConstants.NONE_ROLE_SYSTEM_MODEL_ACTIONS.get(model);
             if (actions != null && actions.contains(actionInfo.getCode())) {
                 return true;
             }
         } else {
-            if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(model)) {
+            if (DeployerConstants.NONE_ROLE_NONE_SYSTEM_MODELS.contains(model)) {
                 return true;
             }
         }
+
 
         // 检查用户的权限
         User currentUser = LoginManager.getLoggedUser(request.getSession(false));

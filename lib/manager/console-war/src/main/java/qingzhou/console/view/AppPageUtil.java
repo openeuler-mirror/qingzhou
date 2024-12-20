@@ -70,7 +70,7 @@ class AppPageUtil {
         Deployer deployer = SystemController.getService(Deployer.class);
         deployer.addAppListener(new AppListener() {
             @Override
-            public void onUninstalled(String appName) {
+            public void onAppStopped(String appName) {
                 if (appName.equals(app)) {
                     deployer.removeAppListener(this);
                     try {

@@ -1,5 +1,15 @@
 package qingzhou.console.login;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -7,19 +17,14 @@ import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.method.OtpLogin;
 import qingzhou.console.login.method.PwdLogin;
+import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
 
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_PATH = "/login";
@@ -55,7 +60,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
                 left = 0;
             }
             left = left / 60;
-            String msgKey = LOCKED_MSG_KEY + "," + lockOutRealm.getFailureCount() + "," + (left == 0 ? (left + 1) : left);
+            String msgKey = LOCKED_MSG_KEY + "," + lockOutRealm.getFailureCount() + "," + (left + 1);
             // login.jsp 已经在 application.xml 中配置了过滤，
             // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
             return new LoginFailedMsg(msgKey, null);
@@ -117,11 +122,23 @@ public class LoginManager implements Filter<SystemControllerContext> {
             }
         }
 
-        // 远程实例注册
-        String baseUri = DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
-        return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECK)
-                ||
-                checkUri.equals(baseUri + DeployerConstants.ACTION_REGISTER);
+        Deployer deployer = SystemController.getService(Deployer.class);
+        for (String app : deployer.getAllApp()) {
+            for (String view : ViewManager.getInstance().getViews()) {
+                AppInfo appInfo = deployer.getAppInfo(app);
+                for (Map.Entry<String, Set<String>> entry : appInfo.getOpenModelActions().entrySet()) {
+                    String model = entry.getKey();
+                    for (String action : entry.getValue()) {
+                        String baseUri = DeployerConstants.REST_PREFIX + "/" + view + "/" + app + "/" + model + "/" + action;
+                        if (checkUri.equals(baseUri)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public static User getLoggedUser(HttpSession session) {
