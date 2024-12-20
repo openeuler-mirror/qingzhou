@@ -2,7 +2,6 @@ package qingzhou.core.registry;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
-import qingzhou.core.ItemInfo;
 import qingzhou.engine.util.Utils;
 
 import java.io.Serializable;

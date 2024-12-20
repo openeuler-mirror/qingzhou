@@ -78,7 +78,7 @@ public class SshClientImpl implements SshClient {
     public void close() throws Exception {
         closeInternal();
 
-        lifecycleListeners.forEach(LifecycleListener::closed);
+        lifecycleListeners.forEach(LifecycleListener::onSessionClosed);
     }
 
     void closeInternal() throws Exception {

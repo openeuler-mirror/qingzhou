@@ -3,6 +3,8 @@ package qingzhou.console.login;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,9 +17,12 @@ import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.method.OtpLogin;
 import qingzhou.console.login.method.PwdLogin;
+import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
 
@@ -117,11 +122,23 @@ public class LoginManager implements Filter<SystemControllerContext> {
             }
         }
 
-        // 远程实例注册
-        String baseUri = DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
-        return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECK)
-                ||
-                checkUri.equals(baseUri + DeployerConstants.ACTION_REGISTER);
+        Deployer deployer = SystemController.getService(Deployer.class);
+        for (String app : deployer.getAllApp()) {
+            for (String view : ViewManager.getInstance().getViews()) {
+                AppInfo appInfo = deployer.getAppInfo(app);
+                for (Map.Entry<String, Set<String>> entry : appInfo.getOpenModelActions().entrySet()) {
+                    String model = entry.getKey();
+                    for (String action : entry.getValue()) {
+                        String baseUri = DeployerConstants.REST_PREFIX + "/" + view + "/" + app + "/" + model + "/" + action;
+                        if (checkUri.equals(baseUri)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public static User getLoggedUser(HttpSession session) {

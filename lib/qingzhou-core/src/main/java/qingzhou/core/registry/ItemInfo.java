@@ -1,4 +1,4 @@
-package qingzhou.core;
+package qingzhou.core.registry;
 
 import qingzhou.api.Item;
 

@@ -13,19 +13,17 @@ public interface Deployer {
 
     void removeAppListener(AppListener appListener);
 
-    void installApp(File appDir) throws Throwable;
-
-    void installApp(File appDir, Properties deploymentProperties) throws Throwable;
+    String installApp(File appDir, Properties deploymentProperties) throws Throwable;
 
     void unInstallApp(String appName) throws Exception;
 
     void startApp(String appName) throws Throwable;
 
-    void stopApp(String appName) throws Exception;
+    void stopApp(String appName);
 
     List<String> getLocalApps();
 
-    App getApp(String appName); // 返回 Local 的 App 对象
+    AppManager getApp(String appName); // 返回 Local 的 App 对象
 
     List<String> getAllApp();
 

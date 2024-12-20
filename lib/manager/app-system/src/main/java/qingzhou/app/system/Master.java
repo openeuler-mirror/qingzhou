@@ -13,6 +13,12 @@ import qingzhou.core.registry.Registry;
         info = {"受理远程轻舟实例的注册等请求。",
                 "en:Accept requests for registration of remote Qingzhou instances."})
 public class Master extends ModelBase {
+    @Override
+    public void start() throws Exception {
+        getAppContext().addOpenModelActions(DeployerConstants.MODEL_MASTER,
+                new String[]{DeployerConstants.ACTION_CHECK, DeployerConstants.ACTION_REGISTER});
+    }
+
     @ModelAction(
             code = DeployerConstants.ACTION_CHECK,
             name = {"注册检查", "en:Check Registry"},

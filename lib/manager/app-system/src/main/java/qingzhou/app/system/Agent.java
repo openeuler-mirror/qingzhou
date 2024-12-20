@@ -16,10 +16,12 @@ import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.core.AppPageData;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.AppManager;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.AppState;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
@@ -77,33 +79,48 @@ public class Agent extends ModelBase implements Download {
         }
 
         Deployer deployer = Main.getService(Deployer.class);
-        App deployerApp = deployer.getApp(app.getName());
-        if (deployerApp != null) {
+        AppManager deployerAppManager = deployer.getApp(app.getName());
+        if (deployerAppManager != null) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
             return;
         }
 
+        String appInstalled;
         try {
-            String deploymentProperties = request.getParameter(DeployerConstants.DEPLOYMENT_PROPERTIES);
-            if (Utils.notBlank(deploymentProperties)) {
-                Properties properties = new Properties();
-                properties.setProperty(DeployerConstants.DEPLOYMENT_PROPERTIES, deploymentProperties);
-                deployer.installApp(app, properties);
-            } else {
-                deployer.installApp(app);
-            }
+            Properties properties = getDeploymentProperties(request);
+            appInstalled = deployer.installApp(app, properties);
         } catch (Throwable e) {
             FileUtil.forceDelete(app);
             throw e;
         }
+
+        deployer.startApp(appInstalled);
+    }
+
+    private Properties getDeploymentProperties(Request request) {
+        Properties properties = null;
+        String deploymentProperties = request.getParameter(DeployerConstants.DEPLOYMENT_PROPERTIES);
+        if (Utils.notBlank(deploymentProperties)) {
+            properties = new Properties();
+            String[] split = deploymentProperties.split(qingzhou.app.system.business.App.DEPLOYMENT_PROPERTIES_SP);
+            for (String s : split) {
+                int i = s.indexOf("=");
+                if (i > 0) {
+                    properties.setProperty(s.substring(0, i), s.substring(i + 1));
+                }
+            }
+        }
+        return properties;
     }
 
     @ModelAction(
             code = DeployerConstants.ACTION_UNINSTALL_APP,
             name = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
-        Main.getService(Deployer.class).unInstallApp(request.getId());
+        Deployer deployer = Main.getService(Deployer.class);
+        deployer.stopApp(request.getId());
+        deployer.unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
@@ -220,8 +237,8 @@ public class Agent extends ModelBase implements Download {
         String fileName = request.getParameter(DeployerConstants.UPLOAD_FILE_NAME);
         String appName = request.getParameter(DeployerConstants.UPLOAD_APP_NAME);
         byte[] fileBytes = ((RequestImpl) request).getByteParameter();
-        App app = Main.getService(Deployer.class).getApp(appName);
-        File file = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
+        AppManager appManager = Main.getService(Deployer.class).getApp(appName);
+        File file = FileUtil.newFile(appManager.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
     }
 
@@ -276,17 +293,37 @@ public class Agent extends ModelBase implements Download {
             code = DeployerConstants.ACTION_START_APP,
             name = {"", "en:"})
     public void startApp(Request request) throws Throwable {
-        String name = request.getId();
         Deployer deployer = Main.getService(Deployer.class);
-        deployer.startApp(name);
+        deployer.startApp(request.getId());
     }
 
     @ModelAction(
             code = DeployerConstants.ACTION_STOP_APP,
             name = {"", "en:"})
-    public void stopApp(Request request) throws Exception {
+    public void stopApp(Request request) {
         Deployer deployer = Main.getService(Deployer.class);
         deployer.stopApp(request.getId());
+    }
+
+    @ModelAction(
+            code = DeployerConstants.ACTION_UPDATE_APP,
+            name = {"", "en:"})
+    public void updateApp(Request request) throws Throwable {
+        String appName = request.getId();
+        Deployer deployer = Main.getService(Deployer.class);
+        AppInfo appInfo = deployer.getAppInfo(appName);
+        Properties properties = getDeploymentProperties(request);
+        if (properties != null && !properties.isEmpty()) {
+            String appDir = appInfo.getFilePath();
+            File preferablyFile = new File(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+            FileUtil.writeFile(preferablyFile, properties);
+        }
+
+        boolean isRunning = appInfo.getState() == AppState.Started;
+        if (isRunning) {
+            deployer.stopApp(appName);
+            deployer.startApp(appName);
+        }
     }
 
     @ModelAction(

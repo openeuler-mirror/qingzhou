@@ -8,7 +8,7 @@ import qingzhou.api.type.Validate;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
+import qingzhou.core.registry.ItemInfo;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;

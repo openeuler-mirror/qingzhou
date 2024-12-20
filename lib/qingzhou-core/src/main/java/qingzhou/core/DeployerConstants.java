@@ -20,20 +20,17 @@ public interface DeployerConstants {
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
-    Set<String> OPEN_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+
+    Set<String> NONE_ROLE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
         add(DeployerConstants.MODEL_PASSWORD);
         add(DeployerConstants.MODEL_INDEX);
     }});
-    Map<String, Set<String>> OPEN_SYSTEM_MODEL_ACTIONS = Collections.unmodifiableMap(new HashMap<String, Set<String>>() {{
+    Map<String, Set<String>> NONE_ROLE_SYSTEM_MODEL_ACTIONS = Collections.unmodifiableMap(new HashMap<String, Set<String>>() {{
         put(DeployerConstants.MODEL_APP, Collections.unmodifiableSet(new HashSet<String>() {{
             add(DeployerConstants.ACTION_MANAGE);
         }}));
-        put(DeployerConstants.MODEL_MASTER, Collections.unmodifiableSet(new HashSet<String>() {{
-            add(DeployerConstants.ACTION_CHECK);
-            add(DeployerConstants.ACTION_REGISTER);
-        }}));
     }});
-    Set<String> OPEN_NONE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+    Set<String> NONE_ROLE_NONE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
         add(AppContext.APP_HOME_MODEL);
     }});
 
@@ -50,6 +47,7 @@ public interface DeployerConstants {
     String ACTION_UNINSTALL_APP = "ACTION_UNINSTALL_APP";
     String ACTION_START_APP = "ACTION_START_APP";
     String ACTION_STOP_APP = "ACTION_STOP_APP";
+    String ACTION_UPDATE_APP = "ACTION_UPDATE_APP";
     String ACTION_INSTALL_VERSION = "ACTION_INSTALL_VERSION";
     String ACTION_UNINSTALL_VERSION = "ACTION_UNINSTALL_VERSION";
     String ACTION_CONFIRMKEY = "confirmKey";
@@ -72,8 +70,8 @@ public interface DeployerConstants {
     String DO_REGISTER = "doRegister";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    String APP_STARTED = "Started";
-    String APP_STOPPED = "Stopped";
+    String APP_STARTED = "Started"; // 保持一致：qingzhou.core.registry.AppState.Started
+    String APP_STOPPED = "Stopped"; // 保持一致：qingzhou.core.registry.AppState.Stopped
     String DEPLOYMENT_PROPERTIES = "deploymentProperties"; // 保持一致：qingzhou.app.system.business.App.deploymentProperties
     String MULTISELECT_GROUP_SEPARATOR = ":";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";

@@ -18,7 +18,7 @@ import java.util.Map;
 public class Security extends ModelBase implements Update {
     @ModelField(
             name = {"信任 IP", "en:Trusted IP"},
-            info = {"指定信任的客户端 IP 地址，其值可为具体的 IP、匹配 IP 的正则表达式或通配符 IP（如：168.1.2.*，168.1.4.5-168.1.4.99）。远程的客户端只有在被设置为信任后，才可进行首次默认密码更改、文件上传等敏感操作。注：不设置表示只有安装机器受信任，设置为 * 表示信任所有机器。",
+            info = {"指定信任的客户端 IP 地址，其值可为具体的 IP、匹配 IP 的正则表达式或通配符 IP（如：168.1.2.*，168.1.4.5-168.1.4.99）。远程的客户端只有在被设置为信任后，才可进行首次默认密码更改、文件上传等敏感操作。注：不设置表示只有当前的部署机受信任，设置为 * 表示信任所有机器。",
                     "en:Specifies a trusted client IP address, which can be a specific IP, a regular expression that matches the IP, or a wildcard IP (e.g., 168.1.2.*, 168.1.4.5-168.1.4.99). Only after the remote client is set to trust can it perform sensitive operations such as changing the default password for the first time and uploading files. Note: No set means only the installation machine is trusted, and * means all machines are trusted."})
     public String trustedIp;
 

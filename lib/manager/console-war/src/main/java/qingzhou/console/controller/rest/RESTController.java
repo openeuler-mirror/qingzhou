@@ -184,8 +184,6 @@ public class RESTController extends HttpServlet {
         return operation + SP + msg;
     }
 
-    private final ViewManager viewManager = new ViewManager();
-
     @Override
     public void init() {
         thisInstance = this;
@@ -223,7 +221,7 @@ public class RESTController extends HttpServlet {
                 LoginManager.forwardToLoginJsp(context.req, context.resp);
                 return;
             }
-            viewManager.render(context); // 最后作出响应
+            ViewManager.getInstance().render(context); // 最后作出响应
         } catch (Exception e) {
             SystemController.getService(Logger.class).error(e.getMessage(), e);
         } finally {

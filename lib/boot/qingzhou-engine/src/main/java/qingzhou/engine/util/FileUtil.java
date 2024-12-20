@@ -12,6 +12,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -169,6 +170,16 @@ public class FileUtil {
         try (FileOutputStream fos = new FileOutputStream(file, append)) {
             fos.write(bytes);
         }
+    }
+
+    public static void writeFile(File file, Properties properties) throws IOException {
+        // 回写入文件
+        StringBuilder newFileContent = new StringBuilder();
+        for (String k : properties.stringPropertyNames()) {
+            String v = properties.getProperty(k);
+            newFileContent.append(k).append("=").append(v).append(System.lineSeparator());
+        }
+        FileUtil.writeFile(file, newFileContent.toString());
     }
 
     public static void writeFile(File file, String content) throws IOException {

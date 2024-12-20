@@ -1,15 +1,15 @@
 package qingzhou.console.login;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.AuthAdapter;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.impl.AppImpl;
+import qingzhou.core.deployer.impl.AppManagerImpl;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class AuthManager implements Filter<SystemControllerContext> {
     private AuthAdapter authAdapter;
@@ -17,7 +17,7 @@ public class AuthManager implements Filter<SystemControllerContext> {
     {
         Deployer deployer = SystemController.getService(Deployer.class);
         for (String localApp : deployer.getLocalApps()) {
-            AppImpl appImpl = (AppImpl) deployer.getApp(localApp);
+            AppManagerImpl appImpl = (AppManagerImpl) deployer.getApp(localApp);
             if ((authAdapter = appImpl.getAuthAdapter()) != null) break;
         }
     }

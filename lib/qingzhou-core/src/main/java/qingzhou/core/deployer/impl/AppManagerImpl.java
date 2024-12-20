@@ -1,35 +1,32 @@
 package qingzhou.core.deployer.impl;
 
+import java.io.File;
+import java.net.URLClassLoader;
+import java.util.*;
+
 import qingzhou.api.*;
-import qingzhou.core.deployer.App;
-import qingzhou.core.deployer.I18nTool;
+import qingzhou.core.deployer.AppManager;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 
-import java.io.File;
-import java.net.URLClassLoader;
-import java.util.*;
-
-public class AppImpl implements App {
+public class AppManagerImpl implements AppManager {
     private final ModuleContext moduleContext;
     private File appDir;
     private URLClassLoader appLoader;
     private QingzhouApp qingzhouApp;
-    private ActionFilter appActionFilter;
+    private final Set<ActionFilter> appActionFilters = new LinkedHashSet<>();
     private AuthAdapter authAdapter;
-    private Properties appProperties;
     private AppContextImpl appContext;
+    private Properties appProperties;
     private AppInfo appInfo;
     private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
     private final Map<String, Map<String, ActionMethod>> modelActionMap = new HashMap<>();
     private final Map<String, Map<String, ActionMethod>> addedSuperActions = new HashMap<>();
-    private File appTemp;
-    private final I18nTool i18nTool = new I18nTool();
     private final ThreadLocal<Request> threadLocalRequest = new ThreadLocal<>();
 
-    AppImpl(ModuleContext moduleContext) {
+    AppManagerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
     }
 
@@ -46,7 +43,7 @@ public class AppImpl implements App {
     @Override
     public void invoke(Request request) throws Throwable {
         Utils.doInThreadContextClassLoader(getAppLoader(), () -> {
-            if (appActionFilter != null) {
+            for (ActionFilter appActionFilter : appActionFilters) {
                 String msg = appActionFilter.doFilter(request);
                 if (msg != null) {
                     request.getResponse().setSuccess(false);
@@ -59,7 +56,7 @@ public class AppImpl implements App {
         });
     }
 
-    void invokeDirectly(Request request) throws Exception {
+    private void invokeDirectly(Request request) throws Exception {
         String modelName = request.getModel();
         Map<String, ActionMethod> methodMap = modelActionMap.get(modelName);
         if (methodMap == null) return;
@@ -84,7 +81,7 @@ public class AppImpl implements App {
         return moduleContext;
     }
 
-    void invokeDefault(Request request) throws Exception {
+    void invokeSuperAction(Request request) throws Exception {
         String modelName = request.getModel();
         String actionName = request.getAction();
 
@@ -145,16 +142,8 @@ public class AppImpl implements App {
         return modelBaseMap;
     }
 
-    Properties getAppProperties() {
-        return appProperties;
-    }
-
-    void setAppProperties(Properties appProperties) {
-        this.appProperties = appProperties;
-    }
-
-    void setAppActionFilter(ActionFilter appActionFilter) {
-        this.appActionFilter = appActionFilter;
+    void addAppActionFilter(ActionFilter... appActionFilter) {
+        this.appActionFilters.addAll(Arrays.asList(appActionFilter));
     }
 
     void setAuthAdapter(AuthAdapter authAdapter) {
@@ -173,14 +162,11 @@ public class AppImpl implements App {
         this.appDir = appDir;
     }
 
-    File getAppTemp() {
-        if (appTemp == null) {
-            appTemp = new File(moduleContext.getTemp(), appInfo.getName());
-        }
-        return appTemp;
+    Properties getAppProperties() {
+        return appProperties;
     }
 
-    I18nTool getI18nTool() {
-        return i18nTool;
+    void setAppProperties(Properties appProperties) {
+        this.appProperties = appProperties;
     }
 }

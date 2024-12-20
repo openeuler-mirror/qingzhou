@@ -34,7 +34,12 @@ public interface AppContext {
      *
      * @param actionFilter 操作过滤器实例。
      */
-    void setActionFilter(ActionFilter actionFilter);
+    void addActionFilter(ActionFilter... actionFilter);
+
+    /**
+     * 设置开放的的模块操作集合，开放的的模块操作可免登录访问的模块。
+     */
+    void addOpenModelActions(String model, String[] actions);
 
     /**
      * 设置轻舟使用应用自定义的登录认证插件，拦截处理轻舟的登陆流程。

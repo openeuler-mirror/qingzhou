@@ -21,9 +21,8 @@ import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
-import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.AppManager;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.registry.*;
@@ -34,7 +33,7 @@ import qingzhou.logger.Logger;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
-    private final Map<String, AppImpl> apps = new ConcurrentSkipListMap<>();
+    private final Map<String, AppManagerImpl> apps = new ConcurrentSkipListMap<>();
 
     private final ModuleContext moduleContext;
     private final Registry registry;
@@ -59,86 +58,93 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void installApp(File appDir) throws Throwable {
-        installApp(appDir, null);
+    public String installApp(File appDir, Properties deploymentProperties) throws Throwable {
+        if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
+        return reBuildAndCacheApp(appDir, deploymentProperties, true);
     }
 
-    @Override
-    public void installApp(File appDir, Properties deploymentProperties) throws Throwable {
-        if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
+    private String reBuildAndCacheApp(File appDir, Properties deploymentProperties, boolean withAppInstall) throws Throwable {
+        AppManagerImpl app = buildApp(appDir, deploymentProperties);
 
-        AppImpl app = buildApp(appDir, deploymentProperties);
-
-        // 加载应用
-        Utils.doInThreadContextClassLoader(app.getAppLoader(), () -> {
-            startApp(app);
-            startModel(app);
-        });
+        if (withAppInstall) {
+            app.getQingzhouApp().install(app.getAppContext());
+            moduleContext.getService(Logger.class).info("The app has been successfully installed: " + appDir.getName());
+        }
 
         // 注册完成
         String name = app.getAppInfo().getName();
         apps.put(name, app);
-        appListeners.forEach(appListener -> appListener.onInstalled(name));
-
-        moduleContext.getService(Logger.class).info("The app has been successfully installed: " + appDir.getName());
+        return name;
     }
 
-    private void startModel(AppImpl app) throws Exception {
+    private void startModel(AppManagerImpl app) throws Exception {
         Field appContextField = Arrays.stream(ModelBase.class.getDeclaredFields())
                 .filter(field -> field.getType() == AppContext.class)
                 .findFirst().orElseThrow((Supplier<Exception>) () -> new IllegalStateException("not found: " + app.getAppInfo().getName()));
+        appContextField.setAccessible(true);
 
-        app.getModelBaseMap().values().forEach(modelBase -> {
+        for (ModelBase modelBase : app.getModelBaseMap().values()) {
             try {
-                appContextField.setAccessible(true);
                 appContextField.set(modelBase, app.getAppContext());
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
-            try {
-                modelBase.start();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    private void startApp(AppImpl app) throws Exception {
-        app.getQingzhouApp().start(app.getAppContext());
-        app.getAppInfo().setState(DeployerConstants.APP_STARTED);
+            modelBase.start();
+        }
     }
 
     @Override
-    public void unInstallApp(String appName) throws Exception {
-        stopApp(appName);
-        apps.remove(appName);
+    public void unInstallApp(String appName) {
+        AppManagerImpl removed = apps.remove(appName);
+        if (removed == null) return;
+
+        removed.getQingzhouApp().uninstall(removed.getAppContext());
+        moduleContext.getService(Logger.class).info("The app has been successfully uninstalled: " + appName);
     }
 
     @Override
     public void startApp(String appName) throws Throwable {
-        File appDir = FileUtil.newFile(appsBase, appName);
-        installApp(appDir);
+        AppManagerImpl app = apps.get(appName);
+        if (app == null) return;
+        File appDir = new File(app.getAppInfo().getFilePath());
+        reStartApp(appDir);
+    }
+
+    public void reStartApp(File file) throws Throwable {
+        String appName = reBuildAndCacheApp(file, null, false);
+        AppManagerImpl app = apps.get(appName);
+
+        // 加载应用
+        Utils.doInThreadContextClassLoader(app.getAppLoader(), () -> {
+            app.getQingzhouApp().start(app.getAppContext());
+            startModel(app); // 启动应用内的模块
+            app.getAppInfo().setState(AppState.Started);
+        });
+
+        // 通知启动消息
+        appListeners.forEach(appListener -> appListener.onAppStarted(appName));
+
+        moduleContext.getService(Logger.class).info("The app has been successfully started: " + appName);
     }
 
     @Override
-    public void stopApp(String appName) throws Exception {
-        AppImpl app = apps.get(appName);
+    public void stopApp(String appName) {
+        AppManagerImpl app = apps.get(appName);
         if (app == null) return;
 
         app.getModelBaseMap().values().forEach(ModelBase::stop);
-
-        QingzhouApp qingzhouApp = app.getQingzhouApp();
-        if (qingzhouApp != null) {
-            qingzhouApp.stop();
-            app.getAppInfo().setState(DeployerConstants.APP_STOPPED);
-        }
+        app.getQingzhouApp().stop(app.getAppContext());
+        app.getAppInfo().setState(AppState.Stopped);
 
         try {
             app.getAppLoader().close();
         } catch (Exception ignored) {
         }
 
-        appListeners.forEach(appListener -> appListener.onUninstalled(appName));
+        // 通知停止消息
+        appListeners.forEach(appListener -> appListener.onAppStopped(appName));
+
+        moduleContext.getService(Logger.class).info("The app has been successfully stopped: " + appName);
     }
 
     @Override
@@ -147,7 +153,7 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public App getApp(String appName) {
+    public AppManager getApp(String appName) {
         return apps.get(appName);
     }
 
@@ -161,15 +167,15 @@ class DeployerImpl implements Deployer {
     @Override
     public AppInfo getAppInfo(String appName) {
         // 优先找本地，master和instance都在本地
-        App app = getApp(appName);
-        if (app != null) return app.getAppInfo();
+        AppManager appManager = apps.get(appName);
+        if (appManager != null) return appManager.getAppInfo();
 
         // 再找远程
         return registry.getAppInfo(appName);
     }
 
-    private AppImpl buildApp(File appDir, Properties deploymentProperties) throws Throwable {
-        AppImpl app = new AppImpl(moduleContext);
+    private AppManagerImpl buildApp(File appDir, Properties deploymentProperties) throws Throwable {
+        AppManagerImpl app = new AppManagerImpl(moduleContext);
         app.setAppDir(appDir);
 
         java.util.List<File> scanAppLibFiles = new ArrayList<>();
@@ -186,10 +192,9 @@ class DeployerImpl implements Deployer {
         app.setAppLoader(loader);
 
         // 解析应用的配置文件
-        Properties appProperties = buildAppProperties(appDir, deploymentProperties);
-        app.setAppProperties(appProperties);
+        app.setAppProperties(buildAppProperties(appDir, deploymentProperties));
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, appProperties);
+        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, app.getAppProperties());
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -199,12 +204,11 @@ class DeployerImpl implements Deployer {
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appDir.getName());
         appInfo.setFilePath(appDir.getAbsolutePath());
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader, appProperties);
+        appInfo.setDeploymentProperties(app.getAppProperties());
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader, app.getAppProperties());
         modelInfos.values().forEach(appInfo::addModelInfo);
         app.setAppInfo(appInfo);
-
-        AppContextImpl appContext = buildAppContext(app);
-        app.setAppContext(appContext);
+        app.setAppContext(new AppContextImpl(app));
 
         modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
 
@@ -575,20 +579,10 @@ class DeployerImpl implements Deployer {
                 result.putAll(deploymentProperties);
 
                 // 回写入文件
-                StringBuilder newFileContent = new StringBuilder();
-                for (String k : result.stringPropertyNames()) {
-                    String v = result.getProperty(k);
-                    newFileContent.append(k).append("=").append(v).append(System.lineSeparator());
-                }
-                FileUtil.writeFile(preferablyFile, newFileContent.toString());
+                FileUtil.writeFile(preferablyFile, result);
             }
         }
         return result;
-    }
-
-    private AppContextImpl buildAppContext(AppImpl app) {
-        //        appContext.addActionFilter(new UniqueFilter(appContext));
-        return new AppContextImpl(app);
     }
 
     private void findLib(File libFile, java.util.List<File> libs) throws IOException {

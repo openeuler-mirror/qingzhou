@@ -72,7 +72,7 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("folder-open").order("2");
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
 
-        appContext.setActionFilter(this::doSingleAppMode);
+        appContext.addActionFilter(this::doSingleAppMode);
     }
 
     private String doSingleAppMode(Request request) {
