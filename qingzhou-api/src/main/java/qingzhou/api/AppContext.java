@@ -15,6 +15,9 @@ public interface AppContext {
 
     Request getCurrentRequest();
 
+    // 在异步子线程中使用 AppContext 对象前，需首先从父线程里 getCurrentRequest() 获得当前 Request，并调用 setCurrentRequest(Request request) 设置到子线程中
+    void setCurrentRequest(Request request);
+
     /**
      * 获取应用程序目录的文件对象。
      *

@@ -29,6 +29,11 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
+    public void setCurrentRequest(Request request) {
+        app.setThreadLocalRequest(request);
+    }
+
+    @Override
     public File getAppDir() {
         return app.getAppDir();
     }
