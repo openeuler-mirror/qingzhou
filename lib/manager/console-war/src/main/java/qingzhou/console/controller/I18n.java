@@ -29,6 +29,7 @@ public class I18n implements Filter<SystemControllerContext> {
 
     static {
         addKeyI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
+        addKeyI18n("page.guide", new String[]{"新手指引", "en:Beginner Guide"});
         addKeyI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         addKeyI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         addKeyI18n("page.action", new String[]{"操作", "en:Action"});

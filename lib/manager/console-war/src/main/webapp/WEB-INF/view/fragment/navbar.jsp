@@ -125,12 +125,11 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        <a
-                                onclick="openManul()"
-                                class="tooltips"
-                                data-tip='<%=I18n.getKeyI18n( "page.manul")%>'
-                                data-tip-arrow="bottom">
-                            <span class="circle-bg"><i class="icon icon-question"></i></span>
+                        <a onclick="openManul()"
+                           class="tooltips"
+                           data-tip='<%=I18n.getKeyI18n( "page.guide")%>'
+                           data-tip-arrow="bottom">
+                            <span class="circle-bg"><i class="icon icon-hand-right"></i></span>
                         </a>
                     </li>
                     <%-- 明暗主题切换 --%>
