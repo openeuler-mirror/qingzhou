@@ -3,16 +3,16 @@
 <%
     {
         // 获取所有选项并放入 map
-        Map<String, ItemInfo> optionMap = new LinkedHashMap<>();
-        for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
-            optionMap.put(itemInfo.getName(), itemInfo);
+        Map<String, ItemData> optionMap = new LinkedHashMap<>();
+        for (ItemData itemData : SystemController.getOptions(qzRequest, fieldName)) {
+            optionMap.put(itemData.getName(), itemData);
         }
 %>
 <div class="checkbox-group sortable">
     <%
         // 循环已选的值，生成已勾选的 checkbox
         for (String field : fieldValues) {
-            ItemInfo selectedItem = optionMap.get(field);
+            ItemData selectedItem = optionMap.get(field);
             if (selectedItem != null) {
     %>
     <a draggable="true" href="javascript:void(0);">
@@ -27,11 +27,11 @@
         }
 
         // 输出未选中的 checkbox
-        for (ItemInfo itemInfo : optionMap.values()) {
+        for (ItemData itemData : optionMap.values()) {
     %>
     <a draggable="true" href="javascript:void(0);">
-        <input type="checkbox" name="<%=fieldName%>" value="<%=itemInfo.getName()%>"/>
-        <label><%=I18n.getStringI18n(itemInfo.getI18n())%>
+        <input type="checkbox" name="<%=fieldName%>" value="<%=itemData.getName()%>"/>
+        <label><%=I18n.getStringI18n(itemData.getI18n())%>
         </label>
     </a>
     <%

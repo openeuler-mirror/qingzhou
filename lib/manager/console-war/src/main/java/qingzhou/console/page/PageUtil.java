@@ -10,7 +10,7 @@ import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.registry.ItemInfo;
+import qingzhou.core.ItemData;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.*;
@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 public class PageUtil {
     private static Boolean singleAppMode;
-    public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
+    public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[]{"其他", "en:Other"});
 
     public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
         String placeholder = modelField.getPlaceholder();
@@ -202,9 +202,9 @@ public class PageUtil {
                 break;
             case radio:
             case select:
-                for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
-                    String option = itemInfo.getName();
-                    String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
+                for (ItemData itemData : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
+                    String option = itemData.getName();
+                    String optionI18n = I18n.getStringI18n(itemData.getI18n());
                     if (Objects.equals(value, option)) {
                         value = optionI18n;
                         break;
@@ -218,8 +218,8 @@ public class PageUtil {
                 List<String> list = new LinkedList<>();
 
                 Map<String, String> optionI18nMap = new HashMap<>();// 这里将i18n的数据提前整理好，否则会影响排序
-                for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
-                    optionI18nMap.put(itemInfo.getName(), I18n.getStringI18n(itemInfo.getI18n()));
+                for (ItemData itemData : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
+                    optionI18nMap.put(itemData.getName(), I18n.getStringI18n(itemData.getI18n()));
                 }
 
                 for (String option : split) {
@@ -402,17 +402,17 @@ public class PageUtil {
     public static void groupMultiselectOptions(
             LinkedHashMap<String, String> parentGroupDescriptions,
             LinkedHashMap<String, LinkedHashMap<String, String>> groupedOptions,
-            ItemInfo[] multiselectOptions) {
+            ItemData[] multiselectOptions) {
 
         // 存储父组的键
         Set<String> parentGroups = new HashSet<>();
 
         // 处理父组关系
-        for (ItemInfo entry : multiselectOptions) {
+        for (ItemData entry : multiselectOptions) {
             String key = entry.getName();
 
             // 查找是否有以当前key为前缀的子项，若有则标记当前key为父组
-            for (ItemInfo subEntry : multiselectOptions) {
+            for (ItemData subEntry : multiselectOptions) {
                 String subKey = subEntry.getName();
                 if (!subKey.equals(key) && subKey.startsWith(key + DeployerConstants.MULTISELECT_GROUP_SEPARATOR)) {
                     parentGroups.add(key);
@@ -422,7 +422,7 @@ public class PageUtil {
         }
 
         // 处理每个选项，将其按组分类
-        for (ItemInfo entry : multiselectOptions) {
+        for (ItemData entry : multiselectOptions) {
             String value = entry.getName();
             // 将父组选项存储到parentGroupDescriptions中
             if (parentGroups.contains(value)) {

@@ -14,7 +14,7 @@ import qingzhou.core.*;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ItemInfo;
+import qingzhou.core.ItemData;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
@@ -126,12 +126,12 @@ class SuperAction {
         Item[] items = option.optionData(request.getId(), request.getParameter(DeployerConstants.DYNAMIC_OPTION_FIELD));
         if (items == null) return;
 
-        ItemInfo[] itemInfos = new ItemInfo[items.length];
+        ItemData[] itemData = new ItemData[items.length];
         for (int i = 0; i < items.length; i++) {
-            itemInfos[i] = new ItemInfo(items[i]);
+            itemData[i] = new ItemData(items[i]);
         }
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.setInternalData(itemInfos);
+        response.setInternalData(itemData);
     }
 
     @ModelAction(

@@ -8,7 +8,7 @@ import qingzhou.api.type.Validate;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.registry.ItemInfo;
+import qingzhou.core.ItemData;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
@@ -389,7 +389,7 @@ public class ValidationFilter implements Filter<RestContext> {
     static class options implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
-            ItemInfo[] options = SystemController.getOptions(context.request, context.fieldInfo.getCode());
+            ItemData[] options = SystemController.getOptions(context.request, context.fieldInfo.getCode());
             if (options.length == 0) return null;
 
             if (isSingleSelect(context.fieldInfo)) {
@@ -408,8 +408,8 @@ public class ValidationFilter implements Filter<RestContext> {
             return null;
         }
 
-        String[] optionsError(ItemInfo[] options) {
-            String collect = Arrays.stream(options).map(ItemInfo::getName).collect(Collectors.joining(","));
+        String[] optionsError(ItemData[] options) {
+            String collect = Arrays.stream(options).map(ItemData::getName).collect(Collectors.joining(","));
             return new String[]{"validation_options", collect};
         }
     }

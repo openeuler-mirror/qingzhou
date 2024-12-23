@@ -16,13 +16,13 @@
             selectHtml += "<li data-value=\"\" class=\"option\" format=\"\"></li>";
         }
         boolean selected = false;
-        for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
-            String option = itemInfo.getName();
+        for (ItemData itemData : SystemController.getOptions(qzRequest, fieldName)) {
+            String option = itemData.getName();
             //处理option当中有双引号
             String optionHtmlStr = option.replaceAll("\"", "&quot;");
             String colorStyle = PageUtil.getColorStyle(modelInfo, fieldName, option);
 
-            String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
+            String optionI18n = I18n.getStringI18n(itemData.getI18n());
             if (Objects.equals(fieldValue, option)) {
                 selected = true;
                 selectVal = optionHtmlStr;

@@ -41,14 +41,14 @@
 			<%
 				Set<String> groups = groupedFields.keySet();
 				long suffixId = System.currentTimeMillis();
-				ItemInfo[] groupInfos = modelInfo.getGroupInfos();
+				ItemData[] groupInfos = modelInfo.getGroupInfos();
 				if (hasGroup) {
 			%>
 			<ul class="nav nav-tabs">
 				<%
 					boolean isFirst = true;
 					for (String group : groups) {
-						ItemInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
+						ItemData gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
 				%>
 				<li <%=isFirst ? "class='active'" : ""%>>
 					<a data-tab href="#group-<%=group%>-<%=suffixId%>"

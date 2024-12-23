@@ -22,6 +22,7 @@ import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.AuthManager;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.core.deployer.*;
@@ -101,12 +102,12 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    public static ItemInfo[] getOptions(RequestImpl request, String fieldName) {
-        ItemInfo[] options = getOptions0(request, fieldName);
-        return options != null ? options : new ItemInfo[0];
+    public static ItemData[] getOptions(RequestImpl request, String fieldName) {
+        ItemData[] options = getOptions0(request, fieldName);
+        return options != null ? options : new ItemData[0];
     }
 
-    private static ItemInfo[] getOptions0(RequestImpl request, String fieldName) {
+    private static ItemData[] getOptions0(RequestImpl request, String fieldName) {
         ModelInfo modelInfo = request.getCachedModelInfo();
         String[] dynamicOptionFields = modelInfo.getDynamicOptionFields();
         if (dynamicOptionFields != null) {
@@ -116,7 +117,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     req.setActionName(Option.ACTION_OPTION);
                     req.getParameters().put(DeployerConstants.DYNAMIC_OPTION_FIELD, fieldName);
                     ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
-                    return (ItemInfo[]) res.getInternalData();
+                    return (ItemData[]) res.getInternalData();
                 }
             }
         }
@@ -125,9 +126,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         if (staticOptionFields != null) {
             for (String staticOptionField : staticOptionFields) {
                 if (fieldName.equals(staticOptionField)) {
-                    ItemInfo[] itemInfos = modelInfo.getOptionInfos().get(fieldName);
-                    if (itemInfos != null && itemInfos.length > 0) {
-                        return itemInfos;
+                    ItemData[] itemData = modelInfo.getOptionInfos().get(fieldName);
+                    if (itemData != null && itemData.length > 0) {
+                        return itemData;
                     }
                 }
             }
@@ -149,15 +150,15 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
                     if (s.length == 1) {
-                        return new ItemInfo(s[0], new String[]{s[0], "en:" + s[0]});
+                        return new ItemData(s[0], new String[]{s[0], "en:" + s[0]});
                     } else {
-                        return new ItemInfo(s[0], new String[]{s[1], "en:" + s[1]});
+                        return new ItemData(s[0], new String[]{s[1], "en:" + s[1]});
                     }
-                }).toArray(ItemInfo[]::new);
+                }).toArray(ItemData[]::new);
             }
         }
 
-        return new ItemInfo[0];
+        return new ItemData[0];
     }
 
     public static <T> T getService(Class<T> type) {

@@ -77,6 +77,11 @@ public class AppManagerImpl implements AppManager {
         return threadLocalRequest.get();
     }
 
+    void setThreadLocalRequest(Request request) {
+        if (request == null) return;
+        threadLocalRequest.set(request);
+    }
+
     ModuleContext getModuleContext() {
         return moduleContext;
     }
