@@ -115,6 +115,6 @@ public class JsonImpl implements Json {
     }
 
     private Gson gsonInstance() {
-        return new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        return new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().setObjectToNumberStrategy(ToNumberPolicy.LAZILY_PARSED_NUMBER).create();
     }
 }
