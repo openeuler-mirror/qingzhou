@@ -2,7 +2,6 @@ package qingzhou.core;
 
 import qingzhou.api.Item;
 import qingzhou.api.type.Echo;
-import qingzhou.core.registry.ItemInfo;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -25,7 +24,7 @@ public class EchoDataBuilder implements Echo.DataBuilder, Serializable {
         echoData.field = field;
         echoData.value = value;
         for (Item option : options) {
-            echoData.options.add(new ItemInfo(option));
+            echoData.options.add(new ItemData(option));
         }
         this.options.add(echoData);
     }
@@ -33,6 +32,6 @@ public class EchoDataBuilder implements Echo.DataBuilder, Serializable {
     public static class EchoData {
         public String field;
         public String value;
-        public List<ItemInfo> options = new LinkedList<>();
+        public List<ItemData> options = new LinkedList<>();
     }
 }

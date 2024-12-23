@@ -2,6 +2,7 @@ package qingzhou.core.registry;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
+import qingzhou.core.ItemData;
 import qingzhou.engine.util.Utils;
 
 import java.io.Serializable;
@@ -23,8 +24,8 @@ public class ModelInfo implements Serializable {
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
-    private ItemInfo[] groupInfos;
-    private LinkedHashMap<String, ItemInfo[]> optionInfos;
+    private ItemData[] groupInfos;
+    private LinkedHashMap<String, ItemData[]> optionInfos;
     private Map<String, String> defaultSearch;
     private boolean useDynamicDefaultSearch;
     private String[] staticOptionFields;
@@ -230,19 +231,19 @@ public class ModelInfo implements Serializable {
         this.order = order;
     }
 
-    public ItemInfo[] getGroupInfos() {
+    public ItemData[] getGroupInfos() {
         return groupInfos;
     }
 
-    public void setGroupInfos(ItemInfo[] groupInfos) {
+    public void setGroupInfos(ItemData[] groupInfos) {
         this.groupInfos = groupInfos;
     }
 
-    public LinkedHashMap<String, ItemInfo[]> getOptionInfos() {
+    public LinkedHashMap<String, ItemData[]> getOptionInfos() {
         return optionInfos;
     }
 
-    public void setOptionInfos(LinkedHashMap<String, ItemInfo[]> optionInfos) {
+    public void setOptionInfos(LinkedHashMap<String, ItemData[]> optionInfos) {
         this.optionInfos = optionInfos;
     }
 

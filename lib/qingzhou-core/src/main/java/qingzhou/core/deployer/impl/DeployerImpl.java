@@ -21,6 +21,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemData;
 import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.AppManager;
 import qingzhou.core.deployer.Deployer;
@@ -413,7 +414,7 @@ class DeployerImpl implements Deployer {
         if (!(instance instanceof Option)) return;
         Option option = (Option) instance;
 
-        LinkedHashMap<String, ItemInfo[]> infoList = new LinkedHashMap<>();
+        LinkedHashMap<String, ItemData[]> infoList = new LinkedHashMap<>();
 
         java.util.List<String> staticOptionFields = new ArrayList<>();
         java.util.List<String> dynamicOptionFields = new ArrayList<>();
@@ -426,7 +427,7 @@ class DeployerImpl implements Deployer {
             for (String fieldName : staticOptionFields) {
                 Item[] items = option.optionData(null, fieldName);
                 if (items != null) {
-                    infoList.put(fieldName, Arrays.stream(items).map(ItemInfo::new).toArray(ItemInfo[]::new));
+                    infoList.put(fieldName, Arrays.stream(items).map(ItemData::new).toArray(ItemData[]::new));
                 }
             }
         }
@@ -435,15 +436,15 @@ class DeployerImpl implements Deployer {
         modelInfo.setDynamicOptionFields(dynamicOptionFields.toArray(new String[0]));
     }
 
-    private ItemInfo[] getGroupInfo(ModelBase instance) {
-        java.util.List<ItemInfo> infoList = new ArrayList<>();
+    private ItemData[] getGroupInfo(ModelBase instance) {
+        java.util.List<ItemData> infoList = new ArrayList<>();
         if (instance instanceof Group) {
             Item[] items = ((Group) instance).groupData();
             if (items != null) {
-                Arrays.stream(items).map(ItemInfo::new).forEach(infoList::add);
+                Arrays.stream(items).map(ItemData::new).forEach(infoList::add);
             }
         }
-        return infoList.toArray(new ItemInfo[0]);
+        return infoList.toArray(new ItemData[0]);
     }
 
     private ModelFieldInfo[] getModelFieldInfos(AnnotationReader annotation, ModelBase instance) {
