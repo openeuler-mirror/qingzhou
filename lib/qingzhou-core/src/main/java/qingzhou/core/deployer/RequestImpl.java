@@ -1,17 +1,17 @@
 package qingzhou.core.deployer;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.core.deployer.impl.ParametersImpl;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RequestImpl implements Request, Serializable {
     private transient Response response = new ResponseImpl();
@@ -26,10 +26,12 @@ public class RequestImpl implements Request, Serializable {
     private String[] batchId;
     private String userName;
     private Lang lang;
-    private byte[] byteParameter; // 发送上传的附件到远程实例上
+    private byte[] httpBody;
     private final Map<String, String> parameters = new HashMap<>();
     private final ParametersImpl parametersForSession = new ParametersImpl();
     private final ParametersImpl parametersForSubMenu = new ParametersImpl();
+
+    private byte[] byteParameter; // 发送上传的附件到远程实例上
 
     public RequestImpl() {
     }
@@ -43,9 +45,11 @@ public class RequestImpl implements Request, Serializable {
         this.userName = origin.userName;
         this.batchId = origin.batchId;
         this.lang = origin.lang;
+        this.httpBody = origin.httpBody;
         this.parameters.putAll(origin.parameters);
         this.parametersForSubMenu.putAll(origin.parametersForSubMenu);
         this.parametersForSession.putAll(origin.parametersForSession);
+
         this.byteParameter = null; // 数据量大，且目前大部分业务并不需要它
     }
 
@@ -112,6 +116,11 @@ public class RequestImpl implements Request, Serializable {
         return parametersForSubMenu;
     }
 
+    @Override
+    public byte[] getHttpBody() {
+        return httpBody;
+    }
+
     public Map<String, String> getParameters() {
         return parameters;
     }
@@ -155,7 +164,7 @@ public class RequestImpl implements Request, Serializable {
         this.userName = userName;
     }
 
-    public void setI18nLang(Lang lang) {
+    public void setLang(Lang lang) {
         this.lang = lang;
     }
 
@@ -189,5 +198,9 @@ public class RequestImpl implements Request, Serializable {
 
     public void addSessionParameterListener(ParameterListener parameterListener) {
         this.parametersForSession.addParameterListener(parameterListener);
+    }
+
+    public void setHttpBody(byte[] httpBody) {
+        this.httpBody = httpBody;
     }
 }

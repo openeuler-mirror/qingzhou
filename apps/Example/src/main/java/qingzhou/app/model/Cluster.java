@@ -39,4 +39,15 @@ public class Cluster extends AddModelBase {
             info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."})
     public void org(Request request) {
     }
+
+    @ModelAction(
+            code = "test", icon = "cogs",
+            list_action = true,
+            request_body = true,
+            name = {"获取消息体参数", "en:request_body"},
+            info = {"获取消息体参数", "en:Go to the page."})
+    public void test(Request request) {
+        byte[] httpBody = request.getHttpBody();
+        System.out.println(httpBody);
+    }
 }

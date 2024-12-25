@@ -23,6 +23,8 @@ public @interface ModelAction {
 
     boolean distribute() default false;
 
+    boolean request_body() default false; // 为 true 后，可通过 Request.getInputStream 得到 http 消息体
+
     ActionType action_type() default ActionType.link;
 
     String display() default ""; // 设置该操作的可用条件

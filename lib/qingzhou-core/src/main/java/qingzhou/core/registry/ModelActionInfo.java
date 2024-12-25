@@ -1,9 +1,9 @@
 package qingzhou.core.registry;
 
-import qingzhou.api.ActionType;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
+
+import qingzhou.api.ActionType;
 
 public class ModelActionInfo implements Serializable {
     private transient Method method;
@@ -12,6 +12,7 @@ public class ModelActionInfo implements Serializable {
     private String[] info;
     private String icon;
     private boolean distribute;
+    private boolean requestBody;
     private String display;
     private boolean showAction;
     private boolean listAction;
@@ -120,6 +121,14 @@ public class ModelActionInfo implements Serializable {
 
     public void setDistribute(boolean distribute) {
         this.distribute = distribute;
+    }
+
+    public boolean isRequestBody() {
+        return requestBody;
+    }
+
+    public void setRequestBody(boolean requestBody) {
+        this.requestBody = requestBody;
     }
 
     public String getAppPage() {

@@ -2,7 +2,7 @@ package qingzhou.yaml;
 
 import qingzhou.engine.Service;
 
-@Service(name = "YAML Parser", description = "Provides parser tools for YAML or YML.")
+@Service(name = "YAML Processor", description = "YAML 1.1 parser and emitter for Java.")
 public interface Yaml {
     Object fromYaml(String yaml);
 
