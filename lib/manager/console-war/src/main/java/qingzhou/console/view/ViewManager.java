@@ -93,7 +93,7 @@ public class ViewManager {
         ModelInfo modelInfo = request.getCachedModelInfo();
         LinkedHashMap<String, String> orderedData = new LinkedHashMap<>();
         for (String field : modelInfo.getAllFieldNames()) {
-            String found = dataMap.get(field); // 不能用 remove，会修改应用的原始数据结构
+            String found = String.valueOf(dataMap.get(field)); // 不能用 remove，会修改应用的原始数据结构
             if (found == null) continue;
 
             ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
