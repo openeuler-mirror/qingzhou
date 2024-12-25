@@ -192,48 +192,52 @@ class DeployerImpl implements Deployer {
         URLClassLoader loader = buildLoader(appLibs);
         app.setAppLoader(loader);
 
-        // 解析应用的配置文件
-        app.setAppProperties(buildAppProperties(appDir, deploymentProperties));
+        try {
+            // 解析应用的配置文件
+            app.setAppProperties(buildAppProperties(appDir, deploymentProperties));
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, app.getAppProperties());
-        if (qingzhouApp instanceof QingzhouSystemApp) {
-            QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
-            qingzhouSystemApp.setModuleContext(moduleContext);
+            QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, app.getAppProperties());
+            if (qingzhouApp instanceof QingzhouSystemApp) {
+                QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
+                qingzhouSystemApp.setModuleContext(moduleContext);
+            }
+            app.setQingzhouApp(qingzhouApp);
+
+            AppInfo appInfo = new AppInfo();
+            appInfo.setName(appDir.getName());
+            appInfo.setFilePath(appDir.getAbsolutePath());
+            appInfo.setDeploymentProperties(app.getAppProperties());
+            Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader, app.getAppProperties());
+            modelInfos.values().forEach(appInfo::addModelInfo);
+            app.setAppInfo(appInfo);
+            app.setAppContext(new AppContextImpl(app));
+
+            modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
+
+            // 构建 Action 执行器
+            modelInfos.forEach((modelBase, modelInfo) -> {
+                Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelInfo.getCode(), model -> new HashMap<>());
+                for (ModelActionInfo action : modelInfo.getModelActionInfos()) {
+                    ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), modelBase);
+                    moelMap.put(action.getCode(), actionMethod);
+                }
+            });
+
+            // 追加默认的 Action 执行器
+            Map<String, java.util.List<ModelActionInfo>> addedSuperActions = addSuperAction(modelInfos);// 追加系统预置的 action
+            addedSuperActions.forEach((modelName, addedModelActions) -> {
+                ModelBase[] findModelBase = new ModelBase[1];
+                modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
+                SuperAction superAction = new SuperAction(app, findModelBase[0]);
+                Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
+                for (ModelActionInfo action : addedModelActions) {
+                    ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), superAction);
+                    moelMap.put(action.getCode(), actionMethod);
+                }
+            });
+        } catch (Throwable e) {
+            loader.close();
         }
-        app.setQingzhouApp(qingzhouApp);
-
-        AppInfo appInfo = new AppInfo();
-        appInfo.setName(appDir.getName());
-        appInfo.setFilePath(appDir.getAbsolutePath());
-        appInfo.setDeploymentProperties(app.getAppProperties());
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader, app.getAppProperties());
-        modelInfos.values().forEach(appInfo::addModelInfo);
-        app.setAppInfo(appInfo);
-        app.setAppContext(new AppContextImpl(app));
-
-        modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
-
-        // 构建 Action 执行器
-        modelInfos.forEach((modelBase, modelInfo) -> {
-            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelInfo.getCode(), model -> new HashMap<>());
-            for (ModelActionInfo action : modelInfo.getModelActionInfos()) {
-                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), modelBase);
-                moelMap.put(action.getCode(), actionMethod);
-            }
-        });
-
-        // 追加默认的 Action 执行器
-        Map<String, java.util.List<ModelActionInfo>> addedSuperActions = addSuperAction(modelInfos);// 追加系统预置的 action
-        addedSuperActions.forEach((modelName, addedModelActions) -> {
-            ModelBase[] findModelBase = new ModelBase[1];
-            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
-            SuperAction superAction = new SuperAction(app, findModelBase[0]);
-            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
-            for (ModelActionInfo action : addedModelActions) {
-                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), superAction);
-                moelMap.put(action.getCode(), actionMethod);
-            }
-        });
 
         return app;
     }
