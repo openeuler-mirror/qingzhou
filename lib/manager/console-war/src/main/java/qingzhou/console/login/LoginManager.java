@@ -126,7 +126,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         for (String app : deployer.getAllApp()) {
             for (String view : ViewManager.getInstance().getViews()) {
                 AppInfo appInfo = deployer.getAppInfo(app);
-                for (Map.Entry<String, Set<String>> entry : appInfo.getOpenModelActions().entrySet()) {
+                for (Map.Entry<String, Set<String>> entry : appInfo.getLoginFreeModelActions().entrySet()) {
                     String model = entry.getKey();
                     for (String action : entry.getValue()) {
                         String baseUri = DeployerConstants.REST_PREFIX + "/" + view + "/" + app + "/" + model + "/" + action;

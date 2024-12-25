@@ -13,14 +13,9 @@ import qingzhou.core.registry.Registry;
         info = {"受理远程轻舟实例的注册等请求。",
                 "en:Accept requests for registration of remote Qingzhou instances."})
 public class Master extends ModelBase {
-    @Override
-    public void start() throws Exception {
-        getAppContext().addOpenModelActions(DeployerConstants.MODEL_MASTER,
-                new String[]{DeployerConstants.ACTION_CHECK, DeployerConstants.ACTION_REGISTER});
-    }
-
     @ModelAction(
             code = DeployerConstants.ACTION_CHECK,
+            login_free = true,
             name = {"注册检查", "en:Check Registry"},
             info = {"用于接收实例心跳信息。", "en:Used to receive the heartbeat information of the instance."})
     public void check(Request request) {
@@ -33,6 +28,7 @@ public class Master extends ModelBase {
 
     @ModelAction(
             code = DeployerConstants.ACTION_REGISTER,
+            login_free = true,
             name = {"注册实例", "en:Register"},
             info = {"用于接收实例注册的信息。", "en:Information used to receive instance registrations."})
     public void register(Request request) {

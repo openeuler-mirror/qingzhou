@@ -40,11 +40,6 @@ public interface AppContext {
     void addActionFilter(ActionFilter... actionFilter);
 
     /**
-     * 设置开放的的模块操作集合，开放的的模块操作可免登录访问的模块。
-     */
-    void addOpenModelActions(String model, String[] actions);
-
-    /**
      * 设置轻舟使用应用自定义的登录认证插件，拦截处理轻舟的登陆流程。
      * 注意：设置的插件仅在应用安装到本地实例上时有效！如果多个应用设置，则随机选择一个。
      */

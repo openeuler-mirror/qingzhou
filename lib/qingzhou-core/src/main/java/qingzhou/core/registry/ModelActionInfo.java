@@ -14,6 +14,7 @@ public class ModelActionInfo implements Serializable {
     private boolean distribute;
     private boolean requestBody;
     private String display;
+    private boolean loginFree;
     private boolean showAction;
     private boolean listAction;
     private boolean headAction;
@@ -65,6 +66,14 @@ public class ModelActionInfo implements Serializable {
 
     public void setDisplay(String display) {
         this.display = display;
+    }
+
+    public boolean isLoginFree() {
+        return loginFree;
+    }
+
+    public void setLoginFree(boolean loginFree) {
+        this.loginFree = loginFree;
     }
 
     public boolean isShowAction() {
