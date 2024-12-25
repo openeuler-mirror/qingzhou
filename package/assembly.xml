@@ -93,7 +93,6 @@
                 <include>${project.groupId}:qingzhou-http</include>
                 <include>${project.groupId}:qingzhou-qr</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
-                <include>${project.groupId}:qingzhou-yaml</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -107,6 +106,7 @@
                 <include>${project.groupId}:qingzhou-jdbc</include>
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-uml</include>
+                <include>${project.groupId}:qingzhou-yaml</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

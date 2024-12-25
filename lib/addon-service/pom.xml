@@ -16,6 +16,7 @@
         <module>qingzhou-jdbc</module>
         <module>qingzhou-ssh</module>
         <module>qingzhou-uml</module>
+        <module>qingzhou-yaml</module>
     </modules>
 
     <dependencies>
