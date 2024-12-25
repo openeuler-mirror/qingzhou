@@ -12,6 +12,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.serializer.Serializer;
+import qingzhou.yaml.YamlParser;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -27,6 +28,8 @@ public class Controller implements ModuleActivator {
     private QrGenerator qrGenerator;
     @Resource
     private Http http;
+    @Resource
+    private YamlParser yamlParser;
 
     private ProcessSequence processSequence;
 

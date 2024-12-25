@@ -19,6 +19,7 @@
         <module>qingzhou-qr</module>
         <module>qingzhou-crypto</module>
         <module>qingzhou-serializer</module>
+        <module>qingzhou-yaml</module>
     </modules>
 
     <dependencies>
