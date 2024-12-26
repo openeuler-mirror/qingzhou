@@ -28,6 +28,7 @@ public class RequestImpl implements Request, Serializable {
     private Lang lang;
     private byte[] httpBody;
     private final Map<String, String> parameters = new HashMap<>();
+    private final Map<String, String> headers = new HashMap<>();
     private final ParametersImpl parametersForSession = new ParametersImpl();
     private final ParametersImpl parametersForSubMenu = new ParametersImpl();
 
@@ -47,6 +48,7 @@ public class RequestImpl implements Request, Serializable {
         this.lang = origin.lang;
         this.httpBody = origin.httpBody;
         this.parameters.putAll(origin.parameters);
+        this.headers.putAll(origin.headers);
         this.parametersForSubMenu.putAll(origin.parametersForSubMenu);
         this.parametersForSession.putAll(origin.parametersForSession);
 
@@ -117,8 +119,22 @@ public class RequestImpl implements Request, Serializable {
     }
 
     @Override
+    public String getHeader(String name) {
+        return headers.get(name);
+    }
+
+    @Override
+    public Enumeration<String> getHeaderNames() {
+        return Collections.enumeration(headers.keySet());
+    }
+
+    @Override
     public byte[] getHttpBody() {
         return httpBody;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     public Map<String, String> getParameters() {

@@ -221,9 +221,8 @@ public class RESTController extends HttpServlet {
                 if (fileAttachments != null) {
                     fileAttachments.forEach((k, v) -> request.getParameters().put(k, v));
                 }
-
-                parseRequestParameters(request, req);
             }
+            parseRequestParameters(request, req);
 
             RestContext context = new RestContext(req, resp, request);
 
@@ -290,6 +289,15 @@ public class RESTController extends HttpServlet {
             request.setId(decodeId);
             // Update 更新操作参数里需要id
             request.getParameters().put(modelInfo.getIdField(), decodeId);
+        }
+
+        Enumeration<String> headerNames = req.getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = req.getHeader(headerName);
+                request.getHeaders().put(headerName, headerValue);
+            }
         }
 
         HttpSession session = req.getSession();
