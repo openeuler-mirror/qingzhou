@@ -53,7 +53,7 @@ public class SecurityController implements Filter<RestContext> {
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
         if (actionInfo == null) return false;
 
-        Set<String> set = appInfo.getLoginFreeModelActions().get(model);
+        Set<String> set = appInfo.getAuthFreeModelActions().get(model);
         if (set != null && set.contains(action)) return true;
 
         // 是否是开放的 model，需要放在 getLoggedUser 之前，远程注册时候没有用户

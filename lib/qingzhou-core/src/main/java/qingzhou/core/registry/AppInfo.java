@@ -57,11 +57,11 @@ public class AppInfo implements Serializable {
         this.state = state;
     }
 
-    public Map<String, Set<String>> getLoginFreeModelActions() {
+    public Map<String, Set<String>> getAuthFreeModelActions() {
         Map<String, Set<String>> openModelActions = new HashMap<>();
         for (ModelInfo modelInfo : modelInfos) {
             for (ModelActionInfo actionInfo : modelInfo.getModelActionInfos()) {
-                if (actionInfo.isLoginFree()) {
+                if (actionInfo.isAuthFree()) {
                     openModelActions.computeIfAbsent(modelInfo.getCode(), s -> new HashSet<>()).add(actionInfo.getCode());
                 }
             }

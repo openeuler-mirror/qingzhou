@@ -47,7 +47,7 @@ public class ResetPassword implements Filter<RestContext> {
         String action = context.request.getAction();
 
         AppInfo appInfo = SystemController.getAppInfo(app);
-        Set<String> set = appInfo.getLoginFreeModelActions().get(model);
+        Set<String> set = appInfo.getAuthFreeModelActions().get(model);
         if (set != null && set.contains(action)) return true;
 
         if (DeployerConstants.APP_SYSTEM.equals(app)) {
