@@ -63,6 +63,10 @@ public interface Request {
 
     Parameters parametersForSubMenu();
 
+    String getHeader(String name);
+
+    Enumeration<String> getHeaderNames();
+
     /**
      * 获取 http 请求消息体
      * 需要首先设置 ModelAction.request_body = true
