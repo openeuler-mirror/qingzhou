@@ -237,6 +237,7 @@ class DeployerImpl implements Deployer {
             });
         } catch (Throwable e) {
             loader.close();
+            throw e;
         }
 
         return app;

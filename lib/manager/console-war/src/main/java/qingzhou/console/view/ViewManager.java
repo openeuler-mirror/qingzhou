@@ -1,5 +1,6 @@
 package qingzhou.console.view;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -79,8 +80,8 @@ public class ViewManager {
                 case Update.ACTION_EDIT:
                 case Show.ACTION_SHOW:
                 case Monitor.ACTION_MONITOR:
-                    Map<String, String> dataMap = (Map<String, String>) response.getInternalData();
-                    LinkedHashMap<String, String> prepareDataMap = prepareDataMap(dataMap, request);
+                    Serializable internalData = response.getInternalData();
+                    LinkedHashMap<String, String> prepareDataMap = prepareDataMap(internalData, request);
                     response.setInternalData(prepareDataMap);
                     break;
             }
@@ -89,18 +90,22 @@ public class ViewManager {
         view.render(restContext);
     }
 
-    private LinkedHashMap<String, String> prepareDataMap(Map<String, String> dataMap, RequestImpl request) {
+    private LinkedHashMap<String, String> prepareDataMap(Serializable internalData, RequestImpl request) {
+        Map<String, Object> dataMap = (Map<String, Object>) internalData;
+
         ModelInfo modelInfo = request.getCachedModelInfo();
         LinkedHashMap<String, String> orderedData = new LinkedHashMap<>();
         for (String field : modelInfo.getAllFieldNames()) {
-            String found = String.valueOf(dataMap.get(field)); // 不能用 remove，会修改应用的原始数据结构
-            if (found == null) continue;
+            Object val = dataMap.get(field); // 不能用 remove，会修改应用的原始数据结构
+            if (val == null) continue;
 
+            String found = String.valueOf(val);
             ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
             if (request.getAction().equals(Show.ACTION_SHOW)) {
                 if (!fieldInfo.isShow()) continue;
                 if (Utils.notBlank(fieldInfo.getDisplay()))
-                    if (!SecurityController.checkRule(fieldInfo.getDisplay(), dataMap::get)) continue;
+                    if (!SecurityController.checkRule(fieldInfo.getDisplay(), key -> String.valueOf(dataMap.get(key))))
+                        continue;
             }
 
             orderedData.put(field, found);
