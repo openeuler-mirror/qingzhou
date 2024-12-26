@@ -50,11 +50,6 @@
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-yaml</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-api</artifactId>
             <version>${project.version}</version>
         </dependency>

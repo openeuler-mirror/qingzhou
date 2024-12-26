@@ -1,9 +1,9 @@
 package qingzhou.core.registry;
 
-import qingzhou.api.ActionType;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
+
+import qingzhou.api.ActionType;
 
 public class ModelActionInfo implements Serializable {
     private transient Method method;
@@ -12,7 +12,9 @@ public class ModelActionInfo implements Serializable {
     private String[] info;
     private String icon;
     private boolean distribute;
+    private boolean requestBody;
     private String display;
+    private boolean authFree;
     private boolean showAction;
     private boolean listAction;
     private boolean headAction;
@@ -64,6 +66,14 @@ public class ModelActionInfo implements Serializable {
 
     public void setDisplay(String display) {
         this.display = display;
+    }
+
+    public boolean isAuthFree() {
+        return authFree;
+    }
+
+    public void setAuthFree(boolean authFree) {
+        this.authFree = authFree;
     }
 
     public boolean isShowAction() {
@@ -120,6 +130,14 @@ public class ModelActionInfo implements Serializable {
 
     public void setDistribute(boolean distribute) {
         this.distribute = distribute;
+    }
+
+    public boolean isRequestBody() {
+        return requestBody;
+    }
+
+    public void setRequestBody(boolean requestBody) {
+        this.requestBody = requestBody;
     }
 
     public String getAppPage() {

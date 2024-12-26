@@ -1,11 +1,11 @@
 package qingzhou.json;
 
-import qingzhou.engine.Service;
-
 import java.io.Reader;
 import java.util.Properties;
 
-@Service(name = "JSON Converter", description = "Provides conversion tools between JSON data and Java objects.")
+import qingzhou.engine.Service;
+
+@Service(name = "JSON Processor", description = "Provides conversion tools between JSON data and Java objects.")
 public interface Json {
     String toJson(Object src);
 

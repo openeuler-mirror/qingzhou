@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -206,12 +207,24 @@ public class RESTController extends HttpServlet {
     private void doRest(HttpServletRequest req, HttpServletResponse resp) {
         Map<String, String> fileAttachments = null;
         try {
-            fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
+            RequestImpl request = buildRequest(req, resp);
+            if (request == null) return;
 
-            RequestImpl request = buildRequest(req, resp, fileAttachments);
-            if (request == null) {
-                return;
+            ModelInfo modelInfo = request.getCachedModelInfo();
+            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+            if (actionInfo.isRequestBody()) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                FileUtil.copyStream(req.getInputStream(), baos);
+                request.setHttpBody(baos.toByteArray());
+            } else {
+                fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
+                if (fileAttachments != null) {
+                    fileAttachments.forEach((k, v) -> request.getParameters().put(k, v));
+                }
+
+                parseRequestParameters(request, req);
             }
+
             RestContext context = new RestContext(req, resp, request);
 
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
@@ -243,7 +256,7 @@ public class RESTController extends HttpServlet {
         }
     }
 
-    private RequestImpl buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
+    private RequestImpl buildRequest(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> rest = detectRest(req);
         int restDepth = 4;
         if (rest.size() < restDepth) { // must have model & action
@@ -254,17 +267,10 @@ public class RESTController extends HttpServlet {
         }
 
         RequestImpl request = new RequestImpl();
-        HttpSession session = req.getSession();
-        request.addSessionParameterListener(session::setAttribute);
         request.setViewName(rest.get(0));
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        User loggedUser = LoginManager.getLoggedUser(session);
-        if (loggedUser != null) { // 远程注册时候不需要登录，没有登录用户
-            request.setUserName(loggedUser.getName());
-        }
-        request.setI18nLang(I18n.getI18nLang());
 
         AppInfo appInfo = SystemController.getAppInfo(request.getApp());
         if (appInfo == null) return null; // 应用卸载后，继续在原先的“管理”页面点击
@@ -272,6 +278,7 @@ public class RESTController extends HttpServlet {
         if (modelInfo == null) return null;
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
         if (actionInfo == null) return null;// rest 接口可以任意输入不存在的action
+        request.setCachedModelInfo(modelInfo);
 
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
@@ -284,6 +291,28 @@ public class RESTController extends HttpServlet {
             // Update 更新操作参数里需要id
             request.getParameters().put(modelInfo.getIdField(), decodeId);
         }
+
+        HttpSession session = req.getSession();
+        request.addSessionParameterListener(session::setAttribute);
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String key = attributeNames.nextElement();
+            Object value = session.getAttribute(key);
+            if (value instanceof String) {
+                request.parametersForSession().put(key, (String) value);
+            }
+        }
+        User loggedUser = LoginManager.getLoggedUser(session);
+        if (loggedUser != null) { // 远程注册时候不需要登录，没有登录用户
+            request.setUserName(loggedUser.getName());
+        }
+        request.setLang(I18n.getI18nLang());
+
+        return request;
+    }
+
+    private void parseRequestParameters(RequestImpl request, HttpServletRequest req) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
 
         HashMap<String, String> data = new HashMap<>();
         Enumeration<String> parameterNames = req.getParameterNames();
@@ -308,24 +337,7 @@ public class RESTController extends HttpServlet {
             }
         }
 
-        if (fileAttachments != null) {
-            data.putAll(fileAttachments);
-        }
-
         data.forEach((k, v) -> request.getParameters().put(k, v));
-
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        while (attributeNames.hasMoreElements()) {
-            String key = attributeNames.nextElement();
-            Object value = session.getAttribute(key);
-            if (value instanceof String) {
-                request.parametersForSession().put(key, (String) value);
-            }
-        }
-
-        request.setCachedModelInfo(modelInfo);
-
-        return request;
     }
 
     private Map<String, String> prepareUploadFiles(HttpServletRequest request) throws Exception {

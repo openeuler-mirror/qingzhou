@@ -1,7 +1,9 @@
 package qingzhou.core.deployer.impl;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
@@ -99,17 +101,6 @@ public class AppContextImpl implements AppContext {
     @Override
     public void addActionFilter(ActionFilter... actionFilter) {
         app.addAppActionFilter(actionFilter);
-    }
-
-    @Override
-    public void addOpenModelActions(String model, String[] actions) {
-        if (model == null || model.isEmpty() || actions == null || actions.length == 0) return;
-
-        Map<String, ActionMethod> methodMap = app.getModelActionMap().get(model);
-        if (methodMap == null) return;
-
-        Set<String> toSet = Arrays.stream(actions).filter(methodMap::containsKey).collect(Collectors.toSet());
-        toSet.forEach(s -> app.getAppInfo().getOpenModelActions().computeIfAbsent(model, k -> new HashSet<>()).add(s));
     }
 
     @Override

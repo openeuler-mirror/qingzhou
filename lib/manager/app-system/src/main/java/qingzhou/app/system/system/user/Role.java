@@ -210,10 +210,8 @@ public class Role extends ModelBase implements General, Echo, Option {
             Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
                 String action = modelActionInfo.getCode();
 
-                Set<String> set = appInfo.getOpenModelActions().get(modelName);
-                if (set != null && set.contains(action)) {
-                    return;
-                }
+                Set<String> set = appInfo.getAuthFreeModelActions().get(modelName);
+                if (set != null && set.contains(action)) return;
 
                 if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {
                     Set<String> actions = DeployerConstants.NONE_ROLE_SYSTEM_MODEL_ACTIONS.get(modelName);

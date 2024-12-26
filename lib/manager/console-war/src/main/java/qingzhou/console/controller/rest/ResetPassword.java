@@ -47,10 +47,8 @@ public class ResetPassword implements Filter<RestContext> {
         String action = context.request.getAction();
 
         AppInfo appInfo = SystemController.getAppInfo(app);
-        Set<String> set = appInfo.getOpenModelActions().get(model);
-        if (set != null) {
-            if (set.contains(action)) return true;
-        }
+        Set<String> set = appInfo.getAuthFreeModelActions().get(model);
+        if (set != null && set.contains(action)) return true;
 
         if (DeployerConstants.APP_SYSTEM.equals(app)) {
             if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(model)) { // 不需要角色的，也不必非得重置密码

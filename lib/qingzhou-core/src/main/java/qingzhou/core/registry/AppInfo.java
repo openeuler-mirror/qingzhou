@@ -10,7 +10,6 @@ public class AppInfo implements Serializable {
     private AppState state;
     private final Set<ModelInfo> modelInfos = new LinkedHashSet<>();
     private final Set<MenuInfo> menuInfos = new LinkedHashSet<>();
-    private final Map<String, Set<String>> openModelActions = new HashMap<>();
 
     public void removeModelInfo(ModelInfo modelInfo) {
         modelInfos.remove(modelInfo);
@@ -58,7 +57,15 @@ public class AppInfo implements Serializable {
         this.state = state;
     }
 
-    public Map<String, Set<String>> getOpenModelActions() {
+    public Map<String, Set<String>> getAuthFreeModelActions() {
+        Map<String, Set<String>> openModelActions = new HashMap<>();
+        for (ModelInfo modelInfo : modelInfos) {
+            for (ModelActionInfo actionInfo : modelInfo.getModelActionInfos()) {
+                if (actionInfo.isAuthFree()) {
+                    openModelActions.computeIfAbsent(modelInfo.getCode(), s -> new HashSet<>()).add(actionInfo.getCode());
+                }
+            }
+        }
         return openModelActions;
     }
 

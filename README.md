@@ -60,6 +60,7 @@ JDK >= 1.8
 + QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
 + Apache MINA SSHD ([https://mina.apache.org/sshd-project](https://mina.apache.org/sshd-project))
 + PlantUML ([https://plantuml.com](https://plantuml.com))
++ SnakeYAML ([https://bitbucket.org/snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml))
 
 【前端】
 

@@ -64,6 +64,12 @@ public interface Request {
     Parameters parametersForSubMenu();
 
     /**
+     * 获取 http 请求消息体
+     * 需要首先设置 ModelAction.request_body = true
+     */
+    byte[] getHttpBody();
+
+    /**
      * 获取用户名。
      *
      * @return 返回当前请求的用户名。
