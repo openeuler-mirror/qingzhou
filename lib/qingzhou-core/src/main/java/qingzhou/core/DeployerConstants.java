@@ -4,6 +4,7 @@ import java.util.*;
 
 import qingzhou.api.ActionType;
 import qingzhou.api.AppContext;
+import qingzhou.api.Lang;
 
 public interface DeployerConstants {
     // 系统环境
@@ -87,4 +88,7 @@ public interface DeployerConstants {
     String VALIDATION_ADD_FLAG = "VALIDATION_ADD_FLAG";
     String DYNAMIC_OPTION_FIELD = "DYNAMIC_OPTION_FIELD";
     String LIST_ALL_FIELDS = "LIST_ALL_FIELDS";
+
+    Lang DEFAULT_LANG = Lang.zh;
+    ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG); // 支持在 qingzhou.api.AuthAdapter.doAuth 中使用国际化
 }

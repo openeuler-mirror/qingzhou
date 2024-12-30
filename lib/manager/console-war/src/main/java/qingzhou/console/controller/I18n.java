@@ -11,19 +11,17 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.I18nTool;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.pattern.Filter;
 
 public class I18n implements Filter<SystemControllerContext> {
     public static final String LANG_SWITCH_URI = "/lang";
 
     private static final I18nTool KEY_I18N = new I18nTool();
-    private static final Lang DEFAULT_LANG = Lang.zh;// 这样一来，命令行和rest默认就是中文了（也可通过 --lang 参数来修改），控制台除外（有特殊处理）
-    private static final ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG);// 直接修改语言
     private static final String SESSION_LANG_FLAG = "lang";// 向下兼容，不可修改
     private static final String LAST_URI_KEY = "lastUriKey";
 
@@ -151,16 +149,16 @@ public class I18n implements Filter<SystemControllerContext> {
         }
 
         if (lang != null) {
-            SESSION_LANG.set(lang);
+            DeployerConstants.SESSION_LANG.set(lang);
         }
     }
 
     public static Lang getI18nLang() {
-        return SESSION_LANG.get();
+        return DeployerConstants.SESSION_LANG.get();
     }
 
     public static void resetI18nLang() {
-        SESSION_LANG.set(DEFAULT_LANG);
+        DeployerConstants.SESSION_LANG.set(DeployerConstants.DEFAULT_LANG);
     }
 
     public static boolean isZH() {
