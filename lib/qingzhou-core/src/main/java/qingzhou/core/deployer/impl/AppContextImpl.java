@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
+import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.I18nTool;
 import qingzhou.core.registry.MenuInfo;
 import qingzhou.engine.Service;
@@ -60,8 +61,8 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public String getI18n(String key, Object... args) {
-        return getI18n(getCurrentRequest().getLang(),
-                key, args);
+        Lang lang = DeployerConstants.SESSION_LANG.get();
+        return getI18n(lang, key, args);
     }
 
     @Override
