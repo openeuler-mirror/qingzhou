@@ -50,6 +50,21 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
         }
     }
 
+    @Override
+    public void setContentType(String contentType) {
+        response.setContentType(contentType);
+    }
+
+    @Override
+    public void setHeader(String name, String value) {
+        response.setHeader(name, value);
+    }
+
+    @Override
+    public void setHttpBody(byte[] body) throws IOException {
+        response.getOutputStream().write(body);
+    }
+
     private User buildUser(String username, String role) {
         User user = new User();
         user.setRole(role);
