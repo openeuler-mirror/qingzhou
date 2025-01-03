@@ -5,11 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
+import qingzhou.core.deployer.impl.AppContextImpl;
+import qingzhou.core.deployer.impl.ServiceHelper;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
 
@@ -52,6 +55,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             list = true, search = true,
             width_percent = 15,
+            input_type = InputType.bool,
             color = {"true:Green", "false:Gray"},
             name = {"使用中", "en:In Use"},
             info = {"表示该组件的使用状态。", "en:Indicates the usage status of the component."})
@@ -87,7 +91,8 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     }
 
     public Map<String, String> showData(String id) {
-        for (Class<?> serviceType : getAppContext().getServiceTypes()) {
+        AppContextImpl appContext = (AppContextImpl) getAppContext();
+        for (Class<?> serviceType : appContext.getServiceTypes()) {
             if (!getServiceId(serviceType).equals(id)) continue;
 
             String name = null;
@@ -107,7 +112,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
                 put("name", finalName);
                 put("type", serviceType.getName());
                 put("info", finalInfo);
-                put("inUse", "true"); // todo 模拟数据
+                put("inUse", String.valueOf(ServiceHelper.isServiceInUse(serviceType)));
             }};
         }
 

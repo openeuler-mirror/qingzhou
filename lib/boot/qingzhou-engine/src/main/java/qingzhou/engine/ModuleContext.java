@@ -24,4 +24,6 @@ public interface ModuleContext {
     <T> T getService(Class<T> serviceType);
 
     Collection<Class<?>> getAvailableServiceTypes();
+
+    void addServiceListener(ServiceListener listener);
 }

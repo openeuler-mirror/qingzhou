@@ -68,7 +68,11 @@ class DeployerImpl implements Deployer {
         AppManagerImpl app = buildApp(appDir, deploymentProperties);
 
         if (withAppInstall) {
-            app.getQingzhouApp().install(app.getAppContext());
+            try {
+                app.getQingzhouApp().install();
+            } catch (Exception e) {
+                destroyApp(app);
+            }
             moduleContext.getService(Logger.class).info("The app has been successfully installed: " + appDir.getName());
         }
 
@@ -99,7 +103,7 @@ class DeployerImpl implements Deployer {
         AppManagerImpl removed = apps.remove(appName);
         if (removed == null) return;
 
-        removed.getQingzhouApp().uninstall(removed.getAppContext());
+        removed.getQingzhouApp().uninstall();
         moduleContext.getService(Logger.class).info("The app has been successfully uninstalled: " + appName);
     }
 
@@ -133,19 +137,23 @@ class DeployerImpl implements Deployer {
         AppManagerImpl app = apps.get(appName);
         if (app == null) return;
 
+        destroyApp(app);
+
+        // 通知停止消息
+        appListeners.forEach(appListener -> appListener.onAppStopped(appName));
+
+        moduleContext.getService(Logger.class).info("The app has been successfully stopped: " + appName);
+    }
+
+    private void destroyApp(AppManagerImpl app) {
         app.getModelBaseMap().values().forEach(ModelBase::stop);
-        app.getQingzhouApp().stop(app.getAppContext());
+        app.getQingzhouApp().stop();
         app.getAppInfo().setState(AppState.Stopped);
 
         try {
             app.getAppLoader().close();
         } catch (Exception ignored) {
         }
-
-        // 通知停止消息
-        appListeners.forEach(appListener -> appListener.onAppStopped(appName));
-
-        moduleContext.getService(Logger.class).info("The app has been successfully stopped: " + appName);
     }
 
     @Override

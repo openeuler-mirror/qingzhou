@@ -73,7 +73,13 @@ public interface AppContext {
 
     Collection<Class<?>> getServiceTypes();
 
+    <T> void registerService(Class<T> serviceType, T serviceObj);
+
+    void addServiceListener(ServiceListener listener);
+
     void invokeSuperAction(Request request) throws Exception;
 
     String getPlatformVersion();
+
+    String[] getStartArgs();
 }
