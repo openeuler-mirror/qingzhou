@@ -199,7 +199,7 @@ public class Role extends ModelBase implements General, Echo, Option {
         if (appInfo == null) return list;
 
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
-            if (modelInfo.isHidden()) continue;
+            // if (modelInfo.isHidden()) continue; 隐藏的也需要能授权，因为也涉及 json 业务操作，以及 弹出子菜单页面的授权控制
 
             String modelName = modelInfo.getCode();
             if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {

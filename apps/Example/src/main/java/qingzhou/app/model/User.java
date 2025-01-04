@@ -164,7 +164,6 @@ public class User extends MemoryDataStoreModelBase implements Delete, Group, Opt
     @ModelAction(
             code = "share", icon = "share-alt",
             head_action = true, order = "3",
-            action_type = ActionType.action_list,
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {
