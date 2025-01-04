@@ -36,6 +36,8 @@ import qingzhou.engine.ModuleContext;
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
 public class Instance extends ModelBase implements List, Monitor, Group, Download {
     private static final String ID_KEY = "name";
+    public final String group_os = "os";
+    private final String group_jvm = "jvm";
 
     @ModelField(
             required = true, search = true,
@@ -198,9 +200,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             name = {"死锁线程数", "en:Deadlocked Threads"},
             info = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
     public int deadlockedThreadCount;
-
-    public final String group_os = "os";
-    private final String group_jvm = "jvm";
 
     @Override
     public Item[] groupData() {
