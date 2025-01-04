@@ -169,6 +169,11 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
     }
 
     @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
+
+    @Override
     public boolean contains(String id) {
         String[] ids = allIds(null);
         for (String s : ids) {

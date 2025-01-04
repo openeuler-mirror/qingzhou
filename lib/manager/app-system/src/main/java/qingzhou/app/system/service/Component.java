@@ -125,6 +125,11 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     }
 
     @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
+
+    @Override
     public int pageSize() {
         return Integer.MAX_VALUE;
     }

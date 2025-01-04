@@ -473,7 +473,7 @@
 			}
 			url += "&" + ListData.PAGE_NUM + "=";
 	%>
-	<div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
+	<div style="text-align: center; <%=(totalSize <= 0) ? "display:none;" : ""%>">
 		<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
 			recPerPage="<%=pageSize%>"
 			data-rec-total="<%=totalSize%>"

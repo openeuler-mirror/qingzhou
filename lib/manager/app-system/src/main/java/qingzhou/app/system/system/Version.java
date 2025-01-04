@@ -230,4 +230,9 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
     public void addData(Map<String, String> data) {
         throw new IllegalStateException("覆盖了 add 方法，不会再进入这里");
     }
+
+    @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds().length;
+    }
 }

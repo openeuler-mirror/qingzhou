@@ -353,6 +353,11 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @Override
     public File downloadData(String id) {
-        return null;//已经自行实现了下载方法，不必在覆写这个
+        return null;// 已经自行实现了下载方法，不必在覆写这个
+    }
+
+    @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
     }
 }

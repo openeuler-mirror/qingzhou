@@ -163,4 +163,9 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
             file.delete();
         }
     }
+
+    @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
 }

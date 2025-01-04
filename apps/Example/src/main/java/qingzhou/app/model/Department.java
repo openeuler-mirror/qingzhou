@@ -3,7 +3,7 @@ package qingzhou.app.model;
 import qingzhou.api.*;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Option;
-import qingzhou.app.AddModelBase;
+import qingzhou.app.MemoryDataStoreModelBase;
 
 import java.util.Map;
 
@@ -11,7 +11,7 @@ import java.util.Map;
         menu = qingzhou.app.ExampleMain.MENU_1, order = "2",
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends AddModelBase implements Echo, Option {
+public class Department extends MemoryDataStoreModelBase implements Echo, Option {
     public static final String code = "department";
 
     public Department() {

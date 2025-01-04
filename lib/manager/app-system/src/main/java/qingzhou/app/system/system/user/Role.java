@@ -142,6 +142,11 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
+
+    @Override
     public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         String appName = params.get("app");
         if (Utils.isBlank(appName)) {

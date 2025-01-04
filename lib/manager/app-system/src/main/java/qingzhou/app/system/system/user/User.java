@@ -430,4 +430,9 @@ public class User extends ModelBase implements General, Validate, Option {
         }
         return null;
     }
+
+    @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
 }
