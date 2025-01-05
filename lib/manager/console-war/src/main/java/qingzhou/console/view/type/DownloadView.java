@@ -52,7 +52,7 @@ public class DownloadView implements View {
             RequestImpl req = new RequestImpl(request);
             req.getParameters().put(DownloadData.DOWNLOAD_SERIAL_KEY, result.get(DownloadData.DOWNLOAD_SERIAL_KEY));
             req.getParameters().put(DownloadData.DOWNLOAD_OFFSET, String.valueOf(offset));
-            ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(req);
+            ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(req);
             if (res.isSuccess()) {
                 DownloadData downloadDataNext = ((DownloadData) res.getInternalData());
                 content = downloadDataNext.block;

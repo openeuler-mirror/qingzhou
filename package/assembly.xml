@@ -112,7 +112,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/addons</outputDirectory>
+            <outputDirectory>lib/version${project.version}/addon</outputDirectory>
         </dependencySet>
 
         <dependencySet>

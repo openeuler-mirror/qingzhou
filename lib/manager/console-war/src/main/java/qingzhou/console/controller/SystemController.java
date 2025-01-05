@@ -122,7 +122,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     RequestImpl req = new RequestImpl(request);
                     req.setActionName(Option.ACTION_OPTION);
                     req.getParameters().put(DeployerConstants.DYNAMIC_OPTION_FIELD, fieldName);
-                    ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
+                    ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeAny(req); // 续传
                     return (ItemData[]) res.getInternalData();
                 }
             }
@@ -149,9 +149,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
             ModelInfo refModelInfo = getAppInfo(request.getApp()).getModelInfo(refModel);
             req.setCachedModelInfo(refModelInfo);
-            req.getParameters().put(DeployerConstants.LIST_ALL_FIELDS, refModelInfo.getIdMaskField());
+            req.getParameters().put(DeployerConstants.LIST_ALL_ADD_FIELD, refModelInfo.getIdMaskField());
 
-            ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
+            ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeAny(req); // 续传
             java.util.List<String[]> result = (java.util.List<String[]>) res.getInternalData();
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {

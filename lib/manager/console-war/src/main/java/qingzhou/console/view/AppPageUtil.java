@@ -51,7 +51,7 @@ class AppPageUtil {
         fileReq.getParameters().put(AppPageData.DOWNLOAD_PAGE_DIR, pageRootDirName);
 
         Map<String, Response> invokeOnInstances = SystemController.getService(ActionInvoker.class)
-                .invokeMultiple(fileReq, SystemController.getAppInstances(targetAppName).get(0));
+                .invokeAll(fileReq, SystemController.getAppInstances(targetAppName).get(0));
         Response next = invokeOnInstances.values().iterator().next();
         ResponseImpl res = (ResponseImpl) next;
         if (res.isSuccess() && res.getInternalData() != null) {

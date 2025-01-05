@@ -1,10 +1,6 @@
 package qingzhou.launcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -118,11 +114,7 @@ class VersionUtil {
             String flag = "/bin/qingzhou-launcher.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);
-            try {
-                qingzhouHomeFile = new File(pre).getCanonicalFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            qingzhouHomeFile = new File(pre).getAbsoluteFile();
         }
 
         return qingzhouHomeFile;
@@ -157,7 +149,7 @@ class VersionUtil {
 
     private File newFile(File destDir, ZipEntry entry) throws IOException {
         File destFile = new File(destDir, entry.getName());
-        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
+        if (!destFile.getAbsolutePath().startsWith(destDir.getAbsolutePath())) {
             throw new IllegalStateException("Entry is outside of target dir:" + entry.getName());
         }
         return destFile;

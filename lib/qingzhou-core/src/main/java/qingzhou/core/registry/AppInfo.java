@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class AppInfo implements Serializable {
+    private String id;
     private String name;
     private String filePath;
     private Properties deploymentProperties;
@@ -39,6 +40,14 @@ public class AppInfo implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getFilePath() {

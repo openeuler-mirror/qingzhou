@@ -55,10 +55,9 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
     }
 
     @ModelField(
-            create = false, edit = false,
-            forbid = {DeployerConstants.APP_SYSTEM},
-            search = true,
             id = true,
+            create = false, edit = false,
+            list = true, search = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可部署在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
                     "en:The name of the application package indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and each deployment will have a unique ID corresponding to it."})

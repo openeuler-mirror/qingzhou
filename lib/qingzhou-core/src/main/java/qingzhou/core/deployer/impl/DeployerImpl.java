@@ -40,6 +40,7 @@ class DeployerImpl implements Deployer {
     private final Registry registry;
     private LoaderPolicy loaderPolicy;
     File appsBase = null;
+    File systemApp = null;
 
     private final java.util.List<AppListener> appListeners = new CopyOnWriteArrayList<>();
 
@@ -212,6 +213,8 @@ class DeployerImpl implements Deployer {
             app.setQingzhouApp(qingzhouApp);
 
             AppInfo appInfo = new AppInfo();
+            String appId = systemApp.equals(appDir) ? DeployerConstants.APP_SYSTEM : UUID.randomUUID().toString().replace("-", "");
+            appInfo.setId(appId);
             appInfo.setName(appDir.getName());
             appInfo.setFilePath(appDir.getAbsolutePath());
             appInfo.setDeploymentProperties(app.getAppProperties());
@@ -666,7 +669,6 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setName(modelAction.name());
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
-            modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setRequestBody(modelAction.request_body());
             modelActionInfo.setAuthFree(modelAction.auth_free());
             modelActionInfo.setDisplay(modelAction.display());

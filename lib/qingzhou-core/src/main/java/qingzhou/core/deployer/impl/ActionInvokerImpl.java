@@ -35,31 +35,29 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     @Override
-    public Response invokeOnce(Request request) {
-        return invokeOnOneInstances(request).values().iterator().next();
+    public Response invokeAny(Request request) {
+        return invokeOnAnyInstance(request).values().iterator().next();
     }
 
     @Override
-    public Map<String, Response> invokeMultiple(Request qzRequest, String... onInstances) {
+    public Map<String, Response> invokeAll(Request qzRequest, String... onInstances) {
         return invokeOnInstances(qzRequest, onInstances);
     }
 
     @Override
-    public Map<String, Response> invokeIfDistribute(Request request) {
-        String appName = request.getApp();
-        AppInfo appInfo = moduleContext.getService(Deployer.class).getAppInfo(appName);
-        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
-        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-        if (actionInfo.isDistribute()) {
-            // 系统应用是非注册应用，这里永远只是一个 DeployerConstants.APP_SYSTEM，所以不必设置 distribute = true
-            List<String> appInstances = getAppInstances(appName);
-            return invokeMultiple(request, appInstances.toArray(new String[0]));
-        } else {
-            return invokeOnOneInstances(request);
-        }
+    public Map<String, Response> invokeAuto(Request request) {
+//        String appName = request.getApp();
+//        AppInfo appInfo = moduleContext.getService(Deployer.class).getAppInfo(appName);
+//        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+//        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        // 系统应用是非注册应用，这里永远只是一个 DeployerConstants.APP_SYSTEM，所以不必设置 distribute = true
+//        List<String> appInstances = getAppInstances(appName);
+//        return invokeAll(request, appInstances.toArray(new String[0]));
+
+        return invokeOnAnyInstance(request);
     }
 
-    private Map<String, Response> invokeOnOneInstances(Request request) {
+    private Map<String, Response> invokeOnAnyInstance(Request request) {
         String selectInstance = selectInstance(request.getApp());
         return invokeOnInstances(request, selectInstance);
     }
@@ -204,30 +202,18 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     private String selectInstance(String app) {
-        List<String> appInstances = getAppInstances(app);
-        if (appInstances.contains(DeployerConstants.INSTANCE_LOCAL)) {
-            // 优先考虑在本地实例上执行，性能最好
-            return DeployerConstants.INSTANCE_LOCAL;
-        } else {
-            return appInstances.get(0);
-        }
-    }
-
-    private List<String> getAppInstances(String app) {
-        List<String> instances = new ArrayList<>();
-
         AppManager deployerAppManager = moduleContext.getService(Deployer.class).getApp(app);
-        if (deployerAppManager != null) {
-            instances.add(DeployerConstants.INSTANCE_LOCAL);
+        if (deployerAppManager != null) { // 优先考虑在本地实例上执行，性能最好
+            return DeployerConstants.INSTANCE_LOCAL;
         }
 
-        moduleContext.getService(Registry.class).getAllInstanceNames().forEach(s -> {
-            InstanceInfo instanceInfo = moduleContext.getService(Registry.class).getInstanceInfo(s);
+        for (String instanceName : moduleContext.getService(Registry.class).getAllInstanceNames()) {
+            InstanceInfo instanceInfo = moduleContext.getService(Registry.class).getInstanceInfo(instanceName);
             for (AppInfo appInfo : instanceInfo.getAppInfos()) {
-                if (appInfo.getName().equals(app)) instances.add(s);
+                if (appInfo.getName().equals(app)) return instanceName;
             }
-        });
+        }
 
-        return instances;
+        throw new IllegalStateException("No instances with this app installed found: " + app);
     }
 }

@@ -196,7 +196,7 @@ public class Overview extends ModelBase implements Dashboard {
         requestImpl.setActionName(Monitor.ACTION_MONITOR);
         requestImpl.setResponse(new ResponseImpl());
         Map<String, Response> invokeOnInstances = Main.getService(ActionInvoker.class)
-                .invokeMultiple(requestImpl, allInstanceIds);
+                .invokeAll(requestImpl, allInstanceIds);
 
         Map<String, Map<String, String>> monitorData = new LinkedHashMap<>();
         for (String instanceId : allInstanceIds) {

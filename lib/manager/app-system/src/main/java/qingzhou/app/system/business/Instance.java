@@ -344,7 +344,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             Map<String, Response> invokeOnInstances = Main.getService(ActionInvoker.class)
-                    .invokeMultiple(requestImpl, instance);
+                    .invokeAll(requestImpl, instance);
             requestImpl.setResponse(invokeOnInstances.values().iterator().next());
         } finally {
             requestImpl.setModelName(originModel);

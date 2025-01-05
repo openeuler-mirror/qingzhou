@@ -116,7 +116,7 @@ public class RESTController extends HttpServlet {
             context -> {
                 RestContext restContext = (RestContext) context;
                 RequestImpl request = restContext.request;
-                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invokeIfDistribute(request);
+                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invokeAuto(request);
                 responseMsg(instanceResult, request);
                 return true;
             }
@@ -244,7 +244,7 @@ public class RESTController extends HttpServlet {
                         if (f.exists()) {
                             File parentFile = f.getParentFile();
                             if (parentFile.exists()
-                                    && parentFile.getCanonicalPath().startsWith(TEMP_BASE_PATH.getCanonicalPath())) {
+                                    && parentFile.getAbsolutePath().startsWith(TEMP_BASE_PATH.getAbsolutePath())) {
                                 FileUtil.forceDelete(parentFile);
                             }
                         }

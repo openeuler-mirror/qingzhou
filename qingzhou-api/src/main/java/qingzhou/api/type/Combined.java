@@ -25,7 +25,7 @@ public interface Combined {
     }
 
     /**
-     * 注意：使用 此类型的数据，需要编译 qingzhou-uml 模块，将 qingzhou-uml.jar 放入 ${qingzhou.home}/lib/versionX.X.X/addons 目录下
+     * 注意：使用 此类型的数据，需要编译 qingzhou-uml 模块，将 qingzhou-uml.jar 放入 ${qingzhou.home}/lib/versionX.X.X/addon 目录下
      */
     interface UmlData extends CombinedData {
         void setData(String umlData);

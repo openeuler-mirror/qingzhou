@@ -11,7 +11,6 @@ public class ModelActionInfo implements Serializable {
     private String[] name;
     private String[] info;
     private String icon;
-    private boolean distribute;
     private boolean requestBody;
     private String display;
     private boolean authFree;
@@ -122,14 +121,6 @@ public class ModelActionInfo implements Serializable {
 
     public void setOrder(String order) {
         this.order = order;
-    }
-
-    public boolean isDistribute() {
-        return distribute;
-    }
-
-    public void setDistribute(boolean distribute) {
-        this.distribute = distribute;
     }
 
     public boolean isRequestBody() {

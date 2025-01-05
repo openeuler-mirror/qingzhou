@@ -14,6 +14,7 @@ import java.util.Properties;
 import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
+import qingzhou.app.system.business.App;
 import qingzhou.core.AppPageData;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.AppManager;
@@ -57,22 +58,22 @@ public class Agent extends ModelBase implements Download {
             return;
         }
 
-        String fileName = srcFile.getName();
         File app;
+        String fileName = srcFile.getName();
         if (srcFile.isDirectory()) {
             app = FileUtil.newFile(getAppsDir(), fileName);
             FileUtil.copyFileOrDirectory(srcFile, app);
-        } else if (fileName.endsWith(".jar")) {
-            int index = fileName.lastIndexOf(".");
-            String appName = fileName.substring(0, index);
-            app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, fileName));
-        } else if (fileName.endsWith(".zip")) {
-            int index = fileName.lastIndexOf(".");
-            String appName = fileName.substring(0, index);
-            app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.unZipToDir(srcFile, app);
         } else {
+            int index = fileName.lastIndexOf(".");
+            String appName = fileName.substring(0, index);
+            app = FileUtil.newFile(getAppsDir(), appName);
+            if (fileName.endsWith(".jar")) {
+                FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, fileName));
+            } else if (fileName.endsWith(".zip")) {
+                FileUtil.unZipToDir(srcFile, app);
+            }
+        }
+        if (!app.isDirectory()) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(getAppContext().getI18n("file.type.unknown"));
             return;
@@ -103,7 +104,7 @@ public class Agent extends ModelBase implements Download {
         String deploymentProperties = request.getParameter(DeployerConstants.DEPLOYMENT_PROPERTIES);
         if (Utils.notBlank(deploymentProperties)) {
             properties = new Properties();
-            String[] split = deploymentProperties.split(qingzhou.app.system.business.App.DEPLOYMENT_PROPERTIES_SP);
+            String[] split = deploymentProperties.split(App.DEPLOYMENT_PROPERTIES_SP);
             for (String s : split) {
                 int i = s.indexOf("=");
                 if (i > 0) {

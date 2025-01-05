@@ -32,7 +32,7 @@ public class FileUtil {
         if (!srcDir.isDirectory()) {
             throw new IOException("Source '" + srcDir + "' exists but is not a directory");
         }
-        if (srcDir.getCanonicalPath().equals(destDir.getCanonicalPath())) {
+        if (srcDir.getAbsolutePath().equals(destDir.getAbsolutePath())) {
             throw new IOException("Source '" + srcDir + "' and destination '" + destDir + "' are the same");
         }
 
@@ -59,7 +59,7 @@ public class FileUtil {
         }
         for (File file : files) {
             File copiedFile = new File(destDir, file.getName());
-            if (exclusionList == null || !exclusionList.contains(file.getCanonicalPath())) {
+            if (exclusionList == null || !exclusionList.contains(file.getAbsolutePath())) {
                 if (file.isDirectory()) {
                     doCopyDirectory(file, copiedFile, exclusionList);
                 } else {
@@ -219,7 +219,7 @@ public class FileUtil {
 
     private static File newEntryFile(File destDir, ZipEntry entry) throws IOException {
         File destFile = new File(destDir, entry.getName());
-        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
+        if (!destFile.getAbsolutePath().startsWith(destDir.getAbsolutePath())) {
             throw new IOException("Entry is outside of target dir:" + entry.getName());
         }
         return destFile;
@@ -293,13 +293,13 @@ public class FileUtil {
 
     private static List<String> getExclusionList(File srcDir, File destDir) throws IOException {
         List<String> exclusionList = null;
-        if (destDir.getCanonicalPath().startsWith(srcDir.getCanonicalPath())) {
+        if (destDir.getAbsolutePath().startsWith(srcDir.getAbsolutePath())) {
             File[] srcFiles = srcDir.listFiles();
             if (srcFiles != null && srcFiles.length > 0) {
                 exclusionList = new ArrayList<>(srcFiles.length);
                 for (File srcFile : srcFiles) {
                     File copiedFile = new File(destDir, srcFile.getName());
-                    exclusionList.add(copiedFile.getCanonicalPath());
+                    exclusionList.add(copiedFile.getAbsolutePath());
                 }
             }
         }

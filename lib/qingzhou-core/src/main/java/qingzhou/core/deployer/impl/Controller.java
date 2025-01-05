@@ -33,7 +33,7 @@ public class Controller implements Process {
         sequence = new ProcessSequence(
                 new InitDeployer(),
                 new RegisterService(),
-                new InjectShareableAddonsForApp(),
+                new InitAddonService(),
                 new ServiceHelper(moduleContext),
                 new StartLocalApp()
         );
@@ -81,11 +81,11 @@ public class Controller implements Process {
         }
     }
 
-    private class InjectShareableAddonsForApp implements Process {
+    private class InitAddonService implements Process {
         @Override
         public void exec() throws Exception {
-            File addonsDir = FileUtil.newFile(moduleContext.getLibDir(), "addons"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
-            File[] addonFiles = addonsDir.listFiles();
+            File addonDir = FileUtil.newFile(moduleContext.getLibDir(), "addon"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
+            File[] addonFiles = addonDir.listFiles();
             if (addonFiles == null || addonFiles.length == 0) return;
 
             Map<Class<?>, Object> injectedServices = HackUtil.getInjectedServices(moduleContext);
@@ -134,8 +134,8 @@ public class Controller implements Process {
                     return null;
                 }
             });
-            File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
-            doStartApp(systemApp);
+            deployer.systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
+            doStartApp(deployer.systemApp);
 
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 final File commonApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", "common");

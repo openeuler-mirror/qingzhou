@@ -39,7 +39,7 @@
 						if (modelInfo.isUseDynamicDefaultSearch()) {
 							RequestImpl tmp = new RequestImpl(qzRequest);
 							tmp.setActionName(qingzhou.api.type.List.ACTION_DEFAULT_SEARCH);
-							ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(tmp);
+							ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
 							defaultSearch = (Map<String, String>) tmpResp.getInternalData();
 						} else {
 							defaultSearch = modelInfo.getDefaultSearch();

@@ -24,7 +24,7 @@ class RemoteFieldValueRetriever implements SecurityController.FieldValueRetrieve
             RequestImpl tmp = new RequestImpl(request);
             tmp.setActionName(Show.ACTION_SHOW);
             tmp.setId(id);
-            ResponseImpl response = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(tmp);
+            ResponseImpl response = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
             originData = (Map<String, String>) response.getInternalData();
         }
 
