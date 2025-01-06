@@ -28,20 +28,26 @@ public class AuthManager implements Filter<SystemControllerContext> {
 
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
+        String reqUri = RESTController.getReqUri(request);
+
+        // 注销
+        if (reqUri.equals(LoginManager.LOGIN_PATH)) {
+            if (request.getParameter(LoginManager.LOGOUT_FLAG) != null) {
+                LoginManager.logoutSession(request);
+                authAdapter.logout(new AuthContextImpl(request, response));
+                return false;
+            }
+        }
 
         // 已登录
         if (LoginManager.getLoggedUser(request.getSession(false)) != null) return true;
 
-        String reqUri = RESTController.getReqUri(request);
         if (LoginManager.isOpenUris(reqUri)) return true; // 开放的 uri，不需要处理
 
         // “认证”上下文
-        AuthContextImpl authContext = buildAuthContext(request, response);
-        authAdapter.doAuth(reqUri, authContext);
-        return authContext.loginSuccessful; // 若登录成功，则继续业务
-    }
+        authAdapter.doAuth(reqUri, new AuthContextImpl(request, response));
 
-    private AuthContextImpl buildAuthContext(HttpServletRequest request, HttpServletResponse response) {
-        return new AuthContextImpl(request::getParameter, request, response);
+        // 根据是否认证通过，确定是否继续进入轻舟系统
+        return LoginManager.getLoggedUser(request.getSession(false)) != null;
     }
 }

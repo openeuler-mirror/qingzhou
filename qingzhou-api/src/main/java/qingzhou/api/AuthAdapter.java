@@ -3,22 +3,23 @@ package qingzhou.api;
 import java.io.IOException;
 
 public interface AuthAdapter {
-    void doAuth(String requestUri, AuthContext context);
+    void doAuth(String requestUri, AuthContext context) throws IOException;
+
+    void logout(AuthContext context) throws IOException;
 
     interface AuthContext {
         String getParameter(String name);
 
-        void login(String user, String... role);
+        void loggedIn(String user, String... role) throws IOException;
 
-        void logout();
+        void redirect(String url) throws IOException;
 
-        void redirect(String url);
+        // 设置响应类型，比如登录错误了，返回自定义的错误页面
 
-        // 设置响应类型
-        void setContentType(String contentType);
+        void responseContentType(String contentType);
 
-        void setHeader(String name, String value);
+        void responseHeader(String name, String value);
 
-        void setHttpBody(byte[] body) throws IOException;
+        void responseBody(byte[] body) throws IOException;
     }
 }
