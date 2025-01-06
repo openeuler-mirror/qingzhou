@@ -1,9 +1,5 @@
 package qingzhou.app.master.system.user;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.*;
-
 import qingzhou.api.*;
 import qingzhou.api.type.*;
 import qingzhou.app.master.Main;
@@ -14,6 +10,10 @@ import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.*;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -30,17 +30,22 @@ public class Role extends ModelBase implements General, Echo, Option {
             info = {"该角色的唯一标识。", "en:Unique identifier of the role."})
     public String name;
 
+    @ModelField(input_type = InputType.grouped_multiselect,
+            search = true, dynamic_option = true,
+            separator = DeployerConstants.ROLE_URI_SP,
+            name = {"集中管理权限", "en:Master Permissions"},
+            info = {"分配轻舟集中管理控制台可以访问的资源（URI）集合。", "en:Allocates a collection of resources (URIs) accessible to the qingzhou centralized management console."})
+    public String masterAppUris;
+
     @ModelField(
-            input_type = InputType.select,
-            required = true, search = true,
+            input_type = InputType.select, search = true,
             echo_group = "uri", dynamic_option = true,
             name = {"应用", "en:App"},
             info = {"指定该角色的权限作用到的应用。", "en:Specify the apps to which the role permissions apply."})
     public String app;
 
     @ModelField(input_type = InputType.grouped_multiselect,
-            required = true, search = true,
-            dynamic_option = true,
+            search = true, dynamic_option = true,
             separator = DeployerConstants.ROLE_URI_SP,
             name = {"权限", "en:Permissions"},
             info = {"角色的权限表示具有该角色的用户可以访问的资源（URI）集合。", "en:The permissions of a role represent a collection of resources (URI) that users with that role can access."})
@@ -167,13 +172,16 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public Item[] optionData(String id, String fieldName) {
+        if ("masterAppUris".equals(fieldName)) {
+            List<Item> list = getItems(DeployerConstants.APP_MASTER);
+            return list.toArray(new Item[0]);
+        }
+
         if ("app".equals(fieldName)) {
             Deployer deployer = Main.getService(Deployer.class);
             List<Item> appItems = new ArrayList<>();
             for (String app : deployer.getAllApp()) {
-                if (app.equals(DeployerConstants.APP_MASTER)) {
-                    appItems.add(Item.of(app, new String[]{"集中管理", "en:Centralized Management"}));
-                } else {
+                if (!app.equals(DeployerConstants.APP_MASTER)) {
                     appItems.add(Item.of(app));
                 }
             }
