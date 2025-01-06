@@ -8,7 +8,7 @@ public interface AuthAdapter {
     interface AuthContext {
         String getParameter(String name);
 
-        void setLoginSuccessful(String user, String role);
+        void setLoginSuccessful(String user, String... role);
 
         void redirect(String url);
 

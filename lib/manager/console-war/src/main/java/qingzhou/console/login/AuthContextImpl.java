@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import qingzhou.api.AuthAdapter;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.core.DeployerConstants;
 
 public class AuthContextImpl implements AuthAdapter.AuthContext {
     private final Parameter parameter;
@@ -30,7 +31,7 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
     }
 
     @Override
-    public void setLoginSuccessful(String user, String role) {
+    public void setLoginSuccessful(String user, String... role) {
         LoginManager.loginSession(request, buildUser(user, role));
         // 进入主页
         try {
@@ -65,9 +66,10 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
         response.getOutputStream().write(body);
     }
 
-    private User buildUser(String username, String role) {
+    private User buildUser(String username, String... role) {
         User user = new User();
-        user.setRole(role);
+        String roles = String.join(DeployerConstants.USER_ROLE_SP, role);
+        user.setRole(roles);
         user.setName(username);
         user.setActive(true);
         user.setChangePwd(false);
