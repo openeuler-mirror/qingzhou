@@ -36,6 +36,8 @@ import qingzhou.engine.ModuleContext;
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
 public class Instance extends ModelBase implements List, Monitor, Group, Download {
     private static final String ID_KEY = "name";
+    public final String group_os = "os";
+    private final String group_jvm = "jvm";
 
     @ModelField(
             required = true, search = true,
@@ -199,9 +201,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             info = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
     public int deadlockedThreadCount;
 
-    public final String group_os = "os";
-    private final String group_jvm = "jvm";
-
     @Override
     public Item[] groupData() {
         return new Item[]{
@@ -345,7 +344,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             Map<String, Response> invokeOnInstances = Main.getService(ActionInvoker.class)
-                    .invokeMultiple(requestImpl, instance);
+                    .invokeAll(requestImpl, instance);
             requestImpl.setResponse(invokeOnInstances.values().iterator().next());
         } finally {
             requestImpl.setModelName(originModel);
@@ -354,6 +353,11 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @Override
     public File downloadData(String id) {
-        return null;//已经自行实现了下载方法，不必在覆写这个
+        return null;// 已经自行实现了下载方法，不必在覆写这个
+    }
+
+    @Override
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
     }
 }

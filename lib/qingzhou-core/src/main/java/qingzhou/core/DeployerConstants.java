@@ -87,7 +87,7 @@ public interface DeployerConstants {
     String LOGIN_OTP = "otp";
     String VALIDATION_ADD_FLAG = "VALIDATION_ADD_FLAG";
     String DYNAMIC_OPTION_FIELD = "DYNAMIC_OPTION_FIELD";
-    String LIST_ALL_FIELDS = "LIST_ALL_FIELDS";
+    String LIST_ALL_ADD_FIELD = "LIST_ALL_ADD_FIELD";
 
     Lang DEFAULT_LANG = Lang.zh;
     ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG); // 支持在 qingzhou.api.AuthAdapter.doAuth 中使用国际化

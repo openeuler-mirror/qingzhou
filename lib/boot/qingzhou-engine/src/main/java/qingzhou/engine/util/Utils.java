@@ -19,7 +19,7 @@ import java.util.zip.ZipFile;
 
 public class Utils {
     public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
-        if (obj == null || key == null || val == null) return;
+        if (obj == null || key == null || Utils.isBlank(val)) return;
 
         Class<?> objClass = obj.getClass();
         BeanInfo beanInfo = Introspector.getBeanInfo(objClass);

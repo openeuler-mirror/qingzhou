@@ -16,6 +16,7 @@ public class AppContextImpl implements AppContext {
     private final AppManagerImpl app;
     private final I18nTool i18nTool = new I18nTool();
     private File appTemp;
+    private String[] startArgs;
 
     AppContextImpl(AppManagerImpl app) {
         this.app = app;
@@ -90,6 +91,16 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
+    public <T> void registerService(Class<T> serviceType, T serviceObj) {
+        app.getModuleContext().registerService(serviceType, serviceObj);
+    }
+
+    @Override
+    public void addServiceListener(ServiceListener listener) {
+        app.getModuleContext().addServiceListener((event, serviceType) -> listener.onServiceEvent(ServiceListener.ServiceEvent.valueOf(event.name()), serviceType));
+    }
+
+    @Override
     public void invokeSuperAction(Request request) throws Exception {
         app.invokeSuperAction(request);
     }
@@ -97,6 +108,15 @@ public class AppContextImpl implements AppContext {
     @Override
     public String getPlatformVersion() {
         return app.getModuleContext().getPlatformVersion();
+    }
+
+    @Override
+    public String[] getStartArgs() {
+        return startArgs;
+    }
+
+    public void setStartArgs(String[] startArgs) {
+        this.startArgs = startArgs;
     }
 
     @Override

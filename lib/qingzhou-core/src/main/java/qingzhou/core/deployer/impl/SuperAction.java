@@ -14,7 +14,6 @@ import qingzhou.core.*;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
-import qingzhou.core.ItemData;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
@@ -172,9 +171,11 @@ class SuperAction {
             info = {"获取该模块的所有ID数据。", "en:Get all the ID data for the module."})
     public void all(Request request) throws Exception {
         List list = (List) instance;
-        String parameter = request.getParameter(DeployerConstants.LIST_ALL_FIELDS);
+        String parameter = request.getParameter(DeployerConstants.LIST_ALL_ADD_FIELD);
         String idField = ((RequestImpl) request).getCachedModelInfo().getIdField();
-        String[] getFields = Utils.notBlank(parameter) ? new String[]{idField, parameter} : new String[]{idField};
+        String[] getFields = Utils.notBlank(parameter) && !parameter.equals(idField)
+                ? new String[]{idField, parameter}
+                : new String[]{idField};
         java.util.ArrayList<String[]> result = new ArrayList<>(list.listData(1, list.maxResponseDataSize(), getFields, null));
         ResponseImpl response = (ResponseImpl) request.getResponse();
         response.setInternalData(result);
@@ -237,8 +238,7 @@ class SuperAction {
     }
 
     @ModelAction(
-            code = Add.ACTION_ADD, icon = "save",
-            distribute = true, order = "1",
+            code = Add.ACTION_ADD, icon = "save", order = "1",
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -270,7 +270,7 @@ class SuperAction {
 
     @ModelAction(
             code = Update.ACTION_UPDATE, icon = "save",
-            distribute = true, order = "1",
+            order = "1",
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -281,7 +281,7 @@ class SuperAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
+            list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})

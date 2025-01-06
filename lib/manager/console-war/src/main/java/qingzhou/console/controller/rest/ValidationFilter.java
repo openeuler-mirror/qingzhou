@@ -103,7 +103,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 tmp.setActionName(Validate.ACTION_VALIDATE);
                 context.request.getParameters().forEach((k, v) -> tmp.getParameters().put(k, v));
                 tmp.getParameters().put(DeployerConstants.VALIDATION_ADD_FLAG, String.valueOf(isAddAction));
-                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(tmp);
+                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
                 Map<String, String> result = (Map<String, String>) tmpResp.getInternalData();
                 errorMsg.putAll(result);
             }
@@ -203,7 +203,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(List.ACTION_CONTAINS);
                 tmp.setId(context.parameterVal);
-                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(tmp);
+                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
                 boolean success = tmpResp.isSuccess();
                 if (success) {
                     return new String[]{"validation_id"};

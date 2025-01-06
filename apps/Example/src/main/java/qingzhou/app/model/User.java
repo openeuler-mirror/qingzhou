@@ -5,7 +5,7 @@ import qingzhou.api.type.Delete;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
-import qingzhou.app.AddModelBase;
+import qingzhou.app.MemoryDataStoreModelBase;
 import qingzhou.app.ExampleMain;
 import qingzhou.ssh.Ssh;
 import qingzhou.ssh.SshClient;
@@ -20,7 +20,7 @@ import java.util.Map;
         menu = ExampleMain.MENU_1, order = "1",
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
-public class User extends AddModelBase implements Delete, Group, Option, Echo {
+public class User extends MemoryDataStoreModelBase implements Delete, Group, Option, Echo {
     public static final String code = "user-model-code";
 
     public User() {
@@ -164,7 +164,6 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelAction(
             code = "share", icon = "share-alt",
             head_action = true, order = "3",
-            action_type = ActionType.action_list,
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {

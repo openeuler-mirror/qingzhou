@@ -24,16 +24,25 @@ import java.util.stream.Stream;
 
 public class PageUtil {
     private static Boolean singleAppMode;
-    public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[]{"其他", "en:Other"});
+    public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[] { "其他", "en:Other" });
+
+    public static boolean isSingleAppMode() {
+        if (singleAppMode == null) {
+            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController
+                    .getModuleContext().getConfig()).get("deployer");
+            singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+        }
+        return singleAppMode;
+    }
 
     public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
         String placeholder = modelField.getPlaceholder();
-        String i18nPlaceholder = I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode());
 
         if (isForm && modelField.isShowLabel()) {
             return placeholder;
         }
 
+        String i18nPlaceholder = I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode());
         return Utils.notBlank(placeholder) ? placeholder : i18nPlaceholder;
     }
 
@@ -42,7 +51,8 @@ public class PageUtil {
         List<String> defaultGroup = new LinkedList<>();
         for (String fieldName : fieldNames) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField == null) continue; // 用户模块没有 enableOtp 字段，但配置的数据是有的，这里会为 null
+            if (modelField == null)
+                continue; // 用户模块没有 enableOtp 字段，但配置的数据是有的，这里会为 null
             String group = modelField.getGroup();
             if (Utils.isBlank(group)) {
                 defaultGroup.add(fieldName);
@@ -51,7 +61,6 @@ public class PageUtil {
                 fields.add(fieldName);
             }
         }
-
 
         if (!defaultGroup.isEmpty()) {
             groupedFields.put("", defaultGroup);
@@ -67,7 +76,8 @@ public class PageUtil {
         return false;
     }
 
-    public static String[] filterActions(String[] checkActions, String qzApp, String qzModel, HttpServletRequest request) {
+    public static String[] filterActions(String[] checkActions, String qzApp, String qzModel,
+            HttpServletRequest request) {
         List<String> filteredActions = new ArrayList<>();
         for (String action : checkActions) {
             if (SecurityController.isActionPermitted(qzApp, qzModel, action, request)) {
@@ -92,20 +102,23 @@ public class PageUtil {
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-                                         Request request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
+            Request request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/"
+                + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
     public static String buildModelUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-                                       String viewName, String appName, String modelName) {
-        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + appName + "/" + modelName;
+            String viewName, String appName, String modelName) {
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + appName
+                + "/" + modelName;
         return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
-                                        Request request, String viewName, String model, String actionName) {
-        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
+            Request request, String viewName, String model, String actionName) {
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/"
+                + request.getApp() + "/" + model + "/" + actionName;
         return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
     }
 
@@ -151,11 +164,13 @@ public class PageUtil {
 
     public static String styleFieldValue(String value, RequestImpl qzRequest, ModelFieldInfo fieldInfo) {
         String styleValue = getInputTypeStyle(value, qzRequest, fieldInfo);
-        if (Utils.isBlank(styleValue)) return styleValue;
+        if (Utils.isBlank(styleValue))
+            return styleValue;
 
         try {
             String[] colorInfo = fieldInfo.getColor();
-            if (colorInfo == null) return styleValue;
+            if (colorInfo == null)
+                return styleValue;
 
             String colorStyle = "";
             for (String condition : colorInfo) {
@@ -170,7 +185,8 @@ public class PageUtil {
             int ignore = fieldInfo.getIgnore();
             if (ignore > 0 && styleValue.length() > ignore) {
                 value = value.replaceAll("\"", "&quot;");
-                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + styleValue.substring(0, ignore) + "...</span>";
+                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">"
+                        + styleValue.substring(0, ignore) + "...</span>";
             } else {
                 if (Utils.notBlank(colorStyle)) {
                     return "<span style=\"" + colorStyle + "\">" + styleValue + "</span>";
@@ -184,7 +200,8 @@ public class PageUtil {
     }
 
     public static String getInputTypeStyle(String value, RequestImpl qzRequest, ModelFieldInfo fieldInfo) {
-        if (Utils.isBlank(value)) return value;
+        if (Utils.isBlank(value))
+            return value;
 
         InputType inputType = fieldInfo.getInputType();
         switch (inputType) {
@@ -251,7 +268,8 @@ public class PageUtil {
             String[] menuModels = actionInfo.getSubMenuModels();
             if (menuModels != null && menuModels.length > 0) {
                 showSubMenus = new HashSet<>(Arrays.asList(menuModels));
-                modelMenuParameter = (DeployerConstants.SUB_MENU_PARAMETER_FLAG + qzRequest.getModel() + "." + qzRequest.getAction() + "=" + qzRequest.getId());
+                modelMenuParameter = (DeployerConstants.SUB_MENU_PARAMETER_FLAG + qzRequest.getModel() + "."
+                        + qzRequest.getAction() + "=" + qzRequest.getId());
             }
         }
 
@@ -277,22 +295,25 @@ public class PageUtil {
         // 将 Model 菜单挂到 导航 菜单上
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
             if (showSubMenus != null) { // 是否使用 子菜单 功能
-                if (!showSubMenus.contains(modelInfo.getCode())) { //  是否在子菜单范围内
+                if (!showSubMenus.contains(modelInfo.getCode())) { // 是否在子菜单范围内
                     continue;
                 }
             } else {
                 // 未使用子菜单，需要判断是否 hidden
-                if (modelInfo.isHidden()) continue;
+                if (modelInfo.isHidden())
+                    continue;
 
-                if (singleAppMode == null) {
-                    Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController.getModuleContext().getConfig()).get("deployer");
-                    singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+                if (appInfo.getName().equals(DeployerConstants.APP_SYSTEM)
+                        && modelInfo.getCode().equals(DeployerConstants.MODEL_APP)) {
+                    if (isSingleAppMode())
+                        continue;
                 }
-                if (singleAppMode) continue;
             }
 
-            boolean actionPermitted = SecurityController.isActionPermitted(appInfo.getName(), modelInfo.getCode(), modelInfo.getEntrance(), request);
-            if (!actionPermitted) continue;
+            boolean actionPermitted = SecurityController.isActionPermitted(appInfo.getName(), modelInfo.getCode(),
+                    modelInfo.getEntrance(), request);
+            if (!actionPermitted)
+                continue;
 
             String menu = modelInfo.getMenu();
             MenuItem foundParent = rootMenu.findMenu(menu);
@@ -316,16 +337,19 @@ public class PageUtil {
     }
 
     private static boolean isEmptyMenu(MenuItem menuItem) {
-        if (!menuItem.getSubModelList().isEmpty()) return false;
+        if (!menuItem.getSubModelList().isEmpty())
+            return false;
 
         for (MenuItem item : menuItem.getSubMenuList()) {
-            if (!isEmptyMenu(item)) return false;
+            if (!isEmptyMenu(item))
+                return false;
         }
 
         return true;
     }
 
-    private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String modelMenuParameter) {
+    private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request,
+            HttpServletResponse response, String modelMenuParameter) {
         // 空菜单不显示
         if (isEmptyMenu(menuItem)) {
             return "";
@@ -337,13 +361,16 @@ public class PageUtil {
         boolean isDefaultActive = "Business".equals(menuItem.getName());
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
         if (Utils.notBlank(menuItem.getModel()) && Utils.notBlank(menuItem.getAction())) {
-            //菜单添加action
+            // 菜单添加action
             String contextPath = request.getContextPath();
-            String actionUrl = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/" + menuItem.getModel() + "/" + menuItem.getAction();
+            String actionUrl = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1)
+                    : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/"
+                            + menuItem.getModel() + "/" + menuItem.getAction();
             if (Utils.notBlank(modelMenuParameter)) {
                 actionUrl += "?" + modelMenuParameter;
             }
-            menuHtml.append("   <a href=\"javascript:void(0);\"  action=\"" + actionUrl + "\" style=\"text-indent:").append(level).append("px;\">");
+            menuHtml.append("   <a href=\"javascript:void(0);\"  action=\"" + actionUrl + "\" style=\"text-indent:")
+                    .append(level).append("px;\">");
         } else {
             menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
         }
@@ -359,7 +386,8 @@ public class PageUtil {
             menuHtml.append("<ul class=\"treeview-menu\">");
             menuBegan = true;
 
-            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(menuTextLeft, subModel, qzRequest, request, response, modelMenuParameter)));
+            menuItem.getSubModelList().forEach(subModel -> menuHtml
+                    .append(buildModelMenu(menuTextLeft, subModel, qzRequest, request, response, modelMenuParameter)));
         }
 
         if (!menuItem.getSubMenuList().isEmpty()) {
@@ -368,7 +396,8 @@ public class PageUtil {
                 menuBegan = true;
             }
 
-            menuItem.getSubMenuList().forEach(subMenu -> menuHtml.append(buildParentMenu(level + 1, subMenu, qzRequest, request, response, modelMenuParameter)));
+            menuItem.getSubMenuList().forEach(subMenu -> menuHtml
+                    .append(buildParentMenu(level + 1, subMenu, qzRequest, request, response, modelMenuParameter)));
         }
 
         if (menuBegan) {
@@ -379,7 +408,8 @@ public class PageUtil {
         return menuHtml.toString();
     }
 
-    private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String urlParameter) {
+    private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest,
+            HttpServletRequest request, HttpServletResponse response, String urlParameter) {
         String app = qzRequest.getApp();
         String model = modelInfo.getCode();
         String action = modelInfo.getEntrance();
@@ -387,11 +417,15 @@ public class PageUtil {
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1)
+                : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/"
+                        + model + "/" + action;
         if (Utils.notBlank(urlParameter)) {
             url += "?" + urlParameter;
         }
-        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(model).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
+        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='")
+                .append(model).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"")
+                .append(">");
         menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
         menuHtml.append("<span>").append(I18n.getModelI18n(app, "model." + model)).append("</span>");
         menuHtml.append("</a>");
@@ -438,7 +472,8 @@ public class PageUtil {
                 }
 
                 // 使用computeIfAbsent确保groupName对应的组存在
-                LinkedHashMap<String, String> groupItems = groupedOptions.computeIfAbsent(groupName, k -> new LinkedHashMap<>());
+                LinkedHashMap<String, String> groupItems = groupedOptions.computeIfAbsent(groupName,
+                        k -> new LinkedHashMap<>());
                 groupItems.put(value, I18n.getStringI18n(entry.getI18n()));
             }
         }

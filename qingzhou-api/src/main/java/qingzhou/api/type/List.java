@@ -15,21 +15,19 @@ public interface List {
      * @param pageNum    查询此页的数据
      * @param pageSize   每页的数据条数
      * @param showFields 查询出的每条数据的字段名称
-     *                   注：当 totalSize() 或 pageSize() 返回值 小于 1 时，请在实现内部忽略分页逻辑，转而返回所有数据
+     *                   注：当 totalSize() 或 pageSize() 返回值 小于 1
+     *                   时，请在实现内部忽略分页逻辑，转而返回所有数据
      */
-    java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception;
-
-    default boolean contains(String id) throws Exception {
-        return id == null || id.isEmpty();
-    }
+    java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query)
+            throws Exception;
 
     /**
      * 如果需要使用列表数据分页查看，则需要覆写此方法，表示所有数据的条数
-     * 返回值小于 1 时无效
+     * 返回值小于或等于 0 时，列表页面将不显示分页控件
      */
-    default int totalSize(Map<String, String> query) {
-        return -1;
-    }
+    int totalSize(Map<String, String> query);
+
+    boolean contains(String id);
 
     /**
      * 单次请求可获取的最大数据条数

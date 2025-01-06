@@ -21,8 +21,6 @@ public @interface ModelAction {
 
     String icon() default ""; // 指定与该模型操作关联的图标名称
 
-    boolean distribute() default false;
-
     boolean request_body() default false; // 为 true 后，可通过 Request.getInputStream 得到 http 消息体
 
     boolean auth_free() default false; // 免登录可访问

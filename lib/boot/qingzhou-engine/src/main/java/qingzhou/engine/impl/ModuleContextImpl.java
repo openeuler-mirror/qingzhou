@@ -1,13 +1,11 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.ServiceListener;
+import qingzhou.engine.util.FileUtil;
 
 class ModuleContextImpl implements ModuleContext {
     private final ModuleInfo moduleInfo;
@@ -16,6 +14,7 @@ class ModuleContextImpl implements ModuleContext {
     ClassLoader apiLoader;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
     final Map<Class<?>, Object> injectedServices = new HashMap<>();
+    final Set<ServiceListener> serviceListeners = new HashSet<>();
 
     private File temp;
 
@@ -49,10 +48,24 @@ class ModuleContextImpl implements ModuleContext {
             throw new IllegalStateException("Re-registration is not allowed: " + serviceType.getName());
         }
         registeredServices.put(serviceType, serviceObj);
+
+        notifyListeners(ServiceListener.ServiceEvent.REGISTERED, serviceType);
+    }
+
+    private void notifyListeners(ServiceListener.ServiceEvent event, Class<?> serviceType) {
+        moduleInfo.engineContext.moduleInfoList.forEach(moduleInfo -> moduleInfo.moduleContext.serviceListeners.forEach(serviceListener -> serviceListener.onServiceEvent(event, serviceType)));
     }
 
     @Override
     public <T> T getService(Class<T> serviceType) {
+        T found = getService0(serviceType);
+        if (found != null) {
+            notifyListeners(ServiceListener.ServiceEvent.GOT, serviceType);
+        }
+        return found;
+    }
+
+    public <T> T getService0(Class<T> serviceType) {
         Object injected = injectedServices.get(serviceType);
         if (injected != null) {
             return (T) injected;
@@ -72,6 +85,11 @@ class ModuleContextImpl implements ModuleContext {
             addAll(registeredServices.keySet());
             addAll(injectedServices.keySet());
         }};
+    }
+
+    @Override
+    public void addServiceListener(ServiceListener listener) {
+        serviceListeners.add(listener);
     }
 
     @Override

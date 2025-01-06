@@ -43,9 +43,9 @@ public class Instance extends CommandLineProcessor {
         String instance = args[1];
         File base = new File(instance);
         if (base.isAbsolute()) {
-            instance = base.getCanonicalPath();
+            instance = base.getAbsolutePath();
         } else {
-            instance = new File(new File(homeDir, "instances"), instance).getCanonicalPath();
+            instance = new File(new File(homeDir, "instances"), instance).getAbsolutePath();
         }
 
         File instanceDir = new File(instance);
@@ -56,7 +56,7 @@ public class Instance extends CommandLineProcessor {
 
         String cmdName = args[0];
         String outputInfo = instance;
-        if (instance.startsWith(homeDir.getCanonicalPath())) {
+        if (instance.startsWith(homeDir.getAbsolutePath())) {
             outputInfo = instanceDir.getName();
         }
         CommandUtil.log("Ready to <" + cmdName + "> Qingzhou: " + outputInfo);

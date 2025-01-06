@@ -42,7 +42,6 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.operationConfirm", new String[]{"是否%s此%s", "en:Whether to %s this %s"});
         addKeyI18n("page.document", new String[]{"手册", "en:Manual"});
         addKeyI18n("page.invalidate", new String[]{"注销", "en:Logout"});
-        addKeyI18n("page.error", new String[]{"请求服务器出现错误，请查看服务器日志以了解详情", "en:There was an error requesting the server, please check the server log for details"});
         addKeyI18n("msg.success", new String[]{"成功", "en:Success"});
         addKeyI18n("msg.fail", new String[]{"失败", "en:Failed"});
         addKeyI18n("page.selectfile", new String[]{"选择文件", "en:Select file"});

@@ -2,14 +2,14 @@ package qingzhou.app.model;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Option;
-import qingzhou.app.AddModelBase;
+import qingzhou.app.MemoryDataStoreModelBase;
 import qingzhou.app.ExampleMain;
 
 @Model(code = "post", icon = "stack",
         menu = ExampleMain.MENU_1, order = "3",
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
-public class Post extends AddModelBase implements Option {
+public class Post extends MemoryDataStoreModelBase implements Option {
     public Post() {
         super("id");
     }

@@ -1,13 +1,12 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import qingzhou.engine.util.FileUtil;
 
 public class EngineContext {
     private File libDir;
@@ -39,11 +38,7 @@ public class EngineContext {
             if (instance == null || instance.trim().isEmpty()) {
                 throw new IllegalArgumentException(); // 不要在这里设置 instance1，应该在调用端去捕捉异常并处理
             }
-            try {
-                this.instanceDir = new File(instance).getCanonicalFile();
-            } catch (IOException e) {
-                throw new IllegalArgumentException(); // 不要在这里设置 instance1，应该在调用端去捕捉异常并处理
-            }
+            this.instanceDir = new File(instance).getAbsoluteFile();
         }
         return instanceDir;
     }

@@ -3,6 +3,7 @@ package qingzhou.console.controller;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Objects;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,6 +12,8 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
 import qingzhou.config.console.Console;
@@ -26,7 +29,10 @@ import qingzhou.core.ItemData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.core.deployer.*;
-import qingzhou.core.registry.*;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.core.registry.Registry;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
 import qingzhou.engine.ModuleContext;
@@ -116,7 +122,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     RequestImpl req = new RequestImpl(request);
                     req.setActionName(Option.ACTION_OPTION);
                     req.getParameters().put(DeployerConstants.DYNAMIC_OPTION_FIELD, fieldName);
-                    ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
+                    ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeAny(req); // 续传
                     return (ItemData[]) res.getInternalData();
                 }
             }
@@ -143,9 +149,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
             ModelInfo refModelInfo = getAppInfo(request.getApp()).getModelInfo(refModel);
             req.setCachedModelInfo(refModelInfo);
-            req.getParameters().put(DeployerConstants.LIST_ALL_FIELDS, refModelInfo.getIdMaskField());
+            req.getParameters().put(DeployerConstants.LIST_ALL_ADD_FIELD, refModelInfo.getIdMaskField());
 
-            ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeOnce(req); // 续传
+            ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeAny(req); // 续传
             java.util.List<String[]> result = (java.util.List<String[]>) res.getInternalData();
             if (result != null && !result.isEmpty()) {
                 return result.stream().map(s -> {
@@ -156,6 +162,14 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     }
                 }).toArray(ItemData[]::new);
             }
+        }
+
+        InputType type = fieldInfo.getInputType();
+        if (Objects.requireNonNull(type) == InputType.bool) {
+            return new ItemData[]{
+                    new ItemData(Item.of("true")),
+                    new ItemData(Item.of("false"))
+            };
         }
 
         return new ItemData[0];

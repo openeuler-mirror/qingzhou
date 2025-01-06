@@ -265,7 +265,6 @@
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
         "langFlag": '<%=I18n.getI18nLang().flag%>',
-        "pageErrorMsg": '<%=I18n.getKeyI18n("page.error")%>',
         "pageConfirmTitle": '<%=I18n.getKeyI18n("page.confirm.title")%>',
         "confirmBtnText": '<%=I18n.getKeyI18n("page.confirm")%>',
         "cancelBtnText": '<%=I18n.getKeyI18n("page.return")%>',
@@ -335,7 +334,8 @@ if (openApp != null) {
         };
 
         var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + openApp)%>"
-        initializeManager(firstAppElement, url);
+        var closeTab = <%=!PageUtil.isSingleAppMode()%>;
+        initializeManager(firstAppElement, url, closeTab);
     });
     <%
 }

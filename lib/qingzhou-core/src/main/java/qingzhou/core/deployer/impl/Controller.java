@@ -1,9 +1,7 @@
 package qingzhou.core.deployer.impl;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import qingzhou.core.DeployerConstants;
@@ -35,7 +33,8 @@ public class Controller implements Process {
         sequence = new ProcessSequence(
                 new InitDeployer(),
                 new RegisterService(),
-                new InjectShareableAddonsForApp(),
+                new InitAddonService(),
+                new ServiceHelper(moduleContext),
                 new StartLocalApp()
         );
         sequence.exec();
@@ -82,29 +81,25 @@ public class Controller implements Process {
         }
     }
 
-    private class InjectShareableAddonsForApp implements Process {
+    private class InitAddonService implements Process {
         @Override
         public void exec() throws Exception {
-            File addonsDir = FileUtil.newFile(moduleContext.getLibDir(), "addons"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
-            File[] listFiles = addonsDir.listFiles();
-            if (listFiles == null || listFiles.length == 0) return;
+            File addonDir = FileUtil.newFile(moduleContext.getLibDir(), "addon"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
+            File[] addonFiles = addonDir.listFiles();
+            if (addonFiles == null || addonFiles.length == 0) return;
 
-            // hack into ModuleContextImpl:
-            // 因底层服务管理模块约束，未经过 @Resource 注入的服务无法通过 getService(xx) 使用，因此，
-            // 为了使得应用可以依赖到插件里自定义的服务，强行修改底层服务管理的注册表
-            Field field = moduleContext.getClass().getDeclaredField("injectedServices");
-            field.setAccessible(true);
-            Map<Class<?>, Object> injectedServices = (Map<Class<?>, Object>) field.get(moduleContext);
+            Map<Class<?>, Object> injectedServices = HackUtil.getInjectedServices(moduleContext);
+            ServiceHelper.injectedServicesBackupForCore.addAll(injectedServices.keySet());
 
             try {
                 ClassLoader apiLoader = moduleContext.getApiLoader();
                 Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
-                        listFiles, Service.class, apiLoader);
+                        addonFiles, Service.class, apiLoader);
                 for (String detectedService : annotatedClasses) {
                     Class<?> serviceClass = apiLoader.loadClass(detectedService);
-                    Object service = getService(serviceClass);
-                    if (service != null) {
-                        injectedServices.put(serviceClass, service);
+                    Object registeredService = findRegisteredService(serviceClass);
+                    if (registeredService != null) {
+                        injectedServices.put(serviceClass, registeredService);
                     }
                 }
             } catch (Throwable e) {
@@ -112,33 +107,16 @@ public class Controller implements Process {
             }
         }
 
-        private Object getService(Class<?> serviceClass) throws Exception {
-            List moduleInfoList = (List) getAllModuleInfos();
-            Field moduleContextField = null;
-            for (Object otherModuleInfo : moduleInfoList) {
-                if (moduleContextField == null) {
-                    moduleContextField = otherModuleInfo.getClass().getDeclaredField("moduleContext");
-                    moduleContextField.setAccessible(true);
+        private Object findRegisteredService(Class<?> serviceClass) throws Throwable {
+            final Object[] service = new Object[1];
+            HackUtil.visitAllModuleContext(moduleContext, moduleContext -> {
+                try {
+                    service[0] = HackUtil.getRegisteredServices(moduleContext).get(serviceClass);
+                } catch (Exception ignored) {
                 }
-                ModuleContext context = (ModuleContext) moduleContextField.get(otherModuleInfo);
-                Object service = context.getService(serviceClass);
-                if (service != null) return service;
-            }
-            return null;
-        }
-
-        private Object getAllModuleInfos() throws NoSuchFieldException, IllegalAccessException {
-            Field fieldModuleInfo = moduleContext.getClass().getDeclaredField("moduleInfo");
-            fieldModuleInfo.setAccessible(true);
-            Object moduleInfo = fieldModuleInfo.get(moduleContext);
-
-            Field engineContextField = moduleInfo.getClass().getDeclaredField("engineContext");
-            engineContextField.setAccessible(true);
-            Object engineContext = engineContextField.get(moduleInfo);
-
-            Field moduleInfoListField = engineContext.getClass().getDeclaredField("moduleInfoList");
-            moduleInfoListField.setAccessible(true);
-            return moduleInfoListField.get(engineContext);
+                return service[0] == null;
+            });
+            return service[0];
         }
     }
 
@@ -156,8 +134,8 @@ public class Controller implements Process {
                     return null;
                 }
             });
-            File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
-            doStartApp(systemApp);
+            deployer.systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
+            doStartApp(deployer.systemApp);
 
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 final File commonApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", "common");

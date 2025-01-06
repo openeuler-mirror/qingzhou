@@ -3,14 +3,14 @@ package qingzhou.app.model;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Combined;
-import qingzhou.app.AddModelBase;
+import qingzhou.app.MemoryDataStoreModelBase;
 
 
 @Model(code = TransactionCombination.code, icon = "sitemap",
         menu = qingzhou.app.ExampleMain.MENU_1, order = "5",
         name = {"事务信息", "en:Transaction Info"},
         info = {"事务信息示例，展示组合详情查看。", "en:Transaction information example, showing combination details to view."})
-public class TransactionCombination extends AddModelBase implements Combined {
+public class TransactionCombination extends MemoryDataStoreModelBase implements Combined {
     public static final String code = "this-model-code";
 
     public TransactionCombination() {
