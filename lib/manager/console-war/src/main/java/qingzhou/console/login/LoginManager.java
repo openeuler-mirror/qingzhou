@@ -185,7 +185,9 @@ public class LoginManager implements Filter<SystemControllerContext> {
                         LoginManager.logoutSession(request);
                     }
                 }
-                forwardToLoginJsp(request, response);
+                if (!response.isCommitted()) {
+                    forwardToLoginJsp(request, response);
+                }
                 return false;
             case "/": // 主页
                 if (session != null) {

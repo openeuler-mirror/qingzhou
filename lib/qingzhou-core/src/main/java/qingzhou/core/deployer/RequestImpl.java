@@ -120,7 +120,12 @@ public class RequestImpl implements Request, Serializable {
 
     @Override
     public String getHeader(String name) {
-        return headers.get(name);
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(name)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     @Override

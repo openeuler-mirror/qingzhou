@@ -92,6 +92,11 @@ public class TongAuthAdapter implements AuthAdapter {
         context.redirect(toLoginUrl);
     }
 
+    @Override
+    public boolean logout(AuthContext context) {
+        return true;
+    }
+
     private Object getUser(String accessToken, String tokenType) throws Exception {
         String tokenUrl = user_uri + "?client_id=" + client_id;
         HttpResponse httpResponse = httpClient.request(tokenUrl, HttpMethod.GET, (byte[]) null, new HashMap<String, String>() {{
