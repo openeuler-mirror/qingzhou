@@ -1,5 +1,20 @@
 package qingzhou.core.deployer.impl;
 
+import qingzhou.api.*;
+import qingzhou.api.type.List;
+import qingzhou.api.type.*;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemData;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.AppManager;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.*;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,21 +31,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
-
-import qingzhou.api.*;
-import qingzhou.api.type.List;
-import qingzhou.api.type.*;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemData;
-import qingzhou.core.deployer.AppListener;
-import qingzhou.core.deployer.AppManager;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.QingzhouSystemApp;
-import qingzhou.core.registry.*;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.logger.Logger;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -193,6 +193,8 @@ class DeployerImpl implements Deployer {
         Arrays.stream(Objects.requireNonNull(appDir.listFiles())).filter(f -> f.getName().endsWith(".jar")).forEach(scanAppLibFiles::add);
         // 2. 探测“根目录/lib” 下所有的 jar 文件加入应用加载路径
         findLib(new File(appDir, "lib"), scanAppLibFiles);
+        // 3. 增加配置文件 当轻舟进程和 第三方应用进程是同一个进程的时候需要把config 目前下的资源添加到classload中，前提是第三方应用有config目录
+        findResource(new File(appDir, "config"), scanAppLibFiles);
         // 3. 轻舟为应用扩展的 jar 文件加入应用加载路径
         File[] additionalLib = loaderPolicy.getAdditionalLib();
         if (additionalLib != null) scanAppLibFiles.addAll(Arrays.asList(additionalLib));
@@ -252,6 +254,25 @@ class DeployerImpl implements Deployer {
         }
 
         return app;
+    }
+
+    private void findResource(File resourceFile, java.util.List<File> resourceFiles) {
+        if (!resourceFile.exists()) {
+            return;
+        }
+        resourceFiles.add(resourceFile);
+
+        if (resourceFile.isDirectory()) {
+            File[] listFiles = resourceFile.listFiles();
+            if (listFiles != null) {
+                for (File f : listFiles) {
+                    findResource(f, resourceFiles);
+                }
+            }
+            return;
+        }
+
+        resourceFiles.add(resourceFile);
     }
 
     private Map<String, java.util.List<ModelActionInfo>> addSuperAction(Map<ModelBase, ModelInfo> modelInfos) {
