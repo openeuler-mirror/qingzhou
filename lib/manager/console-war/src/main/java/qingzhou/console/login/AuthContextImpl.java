@@ -13,7 +13,7 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
     private final Parameter parameter;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
-    private boolean loginSuccessful;
+    boolean loginSuccessful;
 
     public AuthContextImpl(Parameter parameter, HttpServletRequest request, HttpServletResponse response) {
         this.parameter = parameter;
@@ -26,13 +26,10 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
         return parameter.get(name);
     }
 
-    public boolean isLoginSuccessful() {
-        return loginSuccessful;
-    }
-
     @Override
-    public void setLoginSuccessful(String user, String... role) {
-        LoginManager.loginSession(request, buildUser(user, role));
+    public void login(String user, String... role) {
+        User loginUser = buildUser(user, role);
+        LoginManager.loginSession(request, loginUser);
         // 进入主页
         try {
             response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
@@ -40,6 +37,12 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
             throw new RuntimeException(e);
         }
         loginSuccessful = true;
+    }
+
+    @Override
+    public void logout() {
+        LoginManager.logoutSession(request);
+        loginSuccessful = false;
     }
 
     @Override

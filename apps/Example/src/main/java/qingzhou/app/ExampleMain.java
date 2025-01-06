@@ -34,7 +34,7 @@ public class ExampleMain implements QingzhouApp {
     }
 
     @Override
-    public void stop() {
+    public void stop(AppContext appContext) {
         logger.info("停止样例应用");
     }
 }

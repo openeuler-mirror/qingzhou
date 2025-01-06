@@ -93,6 +93,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     }
 
     public static void forwardToLoginJsp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (response.isCommitted()) return;
         request.getRequestDispatcher(HtmlView.HTML_PAGE_BASE + "login.jsp").forward(request, response);
     }
 
@@ -185,9 +186,8 @@ public class LoginManager implements Filter<SystemControllerContext> {
                         LoginManager.logoutSession(request);
                     }
                 }
-                if (!response.isCommitted()) {
-                    forwardToLoginJsp(request, response);
-                }
+
+                forwardToLoginJsp(request, response);
                 return false;
             case "/": // 主页
                 if (session != null) {
