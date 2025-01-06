@@ -83,13 +83,15 @@ public class TongAuthAdapter implements AuthAdapter {
             }
         }
 
+        context.redirect(toLoginUrl());
+    }
+
+    private String toLoginUrl() {
         String sp = authorize_uri.contains("?") ? "&" : "?";
-        String toLoginUrl = authorize_uri
+        return authorize_uri
                 + sp + "client_id=" + client_id
                 + "&response_type=code"
                 + "&redirect_uri=" + redirect_uri;
-
-        context.redirect(toLoginUrl);
     }
 
     private Object getUser(String accessToken, String tokenType) throws Exception {

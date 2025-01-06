@@ -8,13 +8,13 @@ import qingzhou.api.Lang;
 
 public interface DeployerConstants {
     // 系统环境
-    String APP_SYSTEM = "-";
+    String APP_MASTER = "-";
     String INSTANCE_LOCAL = "localhost";
     String ACTION_INVOKE_CHARSET = "UTF-8";
     String DEFAULT_USER_QINGZHOU = "qingzhou";
 
     // Master 模块
-    String MODEL_MASTER = "master";
+    String MODEL_REGISTER = "register";
     String MODEL_AGENT = "agent";
     String MODEL_INDEX = "index";
     String MODEL_APP = "app";
@@ -73,7 +73,7 @@ public interface DeployerConstants {
     String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String APP_STARTED = "Started"; // 保持一致：qingzhou.core.registry.AppState.Started
     String APP_STOPPED = "Stopped"; // 保持一致：qingzhou.core.registry.AppState.Stopped
-    String DEPLOYMENT_PROPERTIES = "deploymentProperties"; // 保持一致：qingzhou.app.system.business.App.deploymentProperties
+    String DEPLOYMENT_PROPERTIES = "deploymentProperties"; // 保持一致：qingzhou.app.master.business.App.deploymentProperties
     String MULTISELECT_GROUP_SEPARATOR = ":";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
     String RETURNS_LINK_PARAM_NAME_RETURNSID = "PARAM_NAME_RETURNSID";

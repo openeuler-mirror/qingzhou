@@ -57,7 +57,7 @@
 					   class="form-control"
 					   placeholder="<%=I18n.getKeyI18n( "page.login.user")%>" autofocus>
 				<label class="input-control-icon-left" style="line-height: 44px;">
-					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_USER).getIcon()%> "></i>
+					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_MASTER).getModelInfo(DeployerConstants.MODEL_USER).getIcon()%> "></i>
 				</label>
 			</div>
 			<div class="input-control has-icon-left">
@@ -70,7 +70,7 @@
 					   name="<%=LoginManager.LOGIN_PASSWORD%>">
 				<label class="input-control-icon-left"
 					   style="line-height: 44px;">
-					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_PASSWORD).getIcon()%>"></i>
+					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_MASTER).getModelInfo(DeployerConstants.MODEL_PASSWORD).getIcon()%>"></i>
 				</label>
 				<label id="<%=LoginManager.LOGIN_PASSWORD%>_eye"
 					   class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">

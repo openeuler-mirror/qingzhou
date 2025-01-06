@@ -5,6 +5,7 @@ public class Role {
     private String app;
     private String info;
     private boolean active;
+    private String masterAppUris;
     private String uris;
 
     public String getName() {
@@ -45,5 +46,13 @@ public class Role {
 
     public void setUris(String uris) {
         this.uris = uris;
+    }
+
+    public String getMasterAppUris() {
+        return masterAppUris;
+    }
+
+    public void setMasterAppUris(String masterAppUris) {
+        this.masterAppUris = masterAppUris;
     }
 }

@@ -46,7 +46,7 @@ public class HtmlView implements View {
 
     private boolean isManageApp(Request request) {
         if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
-        if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
+        if (!DeployerConstants.APP_MASTER.equals(request.getApp())) return false;
         return DeployerConstants.MODEL_APP.equals(request.getModel());
     }
 

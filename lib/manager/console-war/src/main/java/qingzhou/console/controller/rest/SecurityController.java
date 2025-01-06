@@ -57,7 +57,7 @@ public class SecurityController implements Filter<RestContext> {
         if (set != null && set.contains(action)) return true;
 
         // 是否是开放的 model，需要放在 getLoggedUser 之前，远程注册时候没有用户
-        if (DeployerConstants.APP_SYSTEM.equals(app)) {
+        if (DeployerConstants.APP_MASTER.equals(app)) {
             if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(model)) return true;
 
             Set<String> actions = DeployerConstants.NONE_ROLE_SYSTEM_MODEL_ACTIONS.get(model);
@@ -86,14 +86,26 @@ public class SecurityController implements Filter<RestContext> {
         String checkUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
         for (String r : roles.split(DeployerConstants.USER_ROLE_SP)) {
             Role role = SystemController.getConsole().getRole(r);
-            String roleApp = role.getApp();
-            if (!roleApp.equals(app)) continue;
-            String[] roleUris = role.getUris().split(DeployerConstants.ROLE_URI_SP);
-            if (Arrays.asList(roleUris).contains(checkUri)) {
-                return true;
+            if (role != null) {
+                if (app.equals(DeployerConstants.APP_MASTER)) {
+                    if (hasUri(role.getMasterAppUris(), checkUri)) {
+                        return true;
+                    }
+                }
+
+                if (app.equals(role.getApp())) {
+                    if (hasUri(role.getUris(), checkUri)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
+    }
+
+    private static boolean hasUri(String uris, String checkUri) {
+        String[] roleUris = uris.split(DeployerConstants.ROLE_URI_SP);
+        return Arrays.asList(roleUris).contains(checkUri);
     }
 
     public static boolean checkRule(String condition, FieldValueRetriever retriever) {

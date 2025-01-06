@@ -43,7 +43,7 @@ class AppPageUtil {
     private static void requestPage(RequestImpl request, File appPageCacheDir, String actionPage) throws IOException {
         RequestImpl fileReq = new RequestImpl(request);
         String targetAppName = request.getApp();
-        fileReq.setAppName(DeployerConstants.APP_SYSTEM);
+        fileReq.setAppName(DeployerConstants.APP_MASTER);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
         fileReq.setActionName(AppPageData.ACTION_DOWNLOAD_PAGE);
         fileReq.getParameters().put(AppPageData.DOWNLOAD_PAGE_APP, targetAppName);

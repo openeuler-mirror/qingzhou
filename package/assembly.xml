@@ -133,7 +133,7 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-system</include>
+                <include>${project.groupId}:master-app</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

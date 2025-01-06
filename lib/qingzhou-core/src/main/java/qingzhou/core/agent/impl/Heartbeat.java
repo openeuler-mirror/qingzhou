@@ -46,7 +46,7 @@ class Heartbeat implements Process {
         if (masterUrl.endsWith("/")) {
             masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
         }
-        String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW_FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+        String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW_FLAG + "/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_REGISTER + "/";
         checkUrl = baseUri + DeployerConstants.ACTION_CHECK;
         registerUrl = baseUri + DeployerConstants.ACTION_REGISTER;
 
@@ -80,7 +80,7 @@ class Heartbeat implements Process {
         List<AppInfo> appInfos = new ArrayList<>();
         Deployer deployer = moduleContext.getService(Deployer.class);
         for (String a : deployer.getLocalApps()) {
-            if (!DeployerConstants.APP_SYSTEM.equals(a)) {
+            if (!DeployerConstants.APP_MASTER.equals(a)) {
                 AppInfo appInfo = deployer.getApp(a).getAppInfo();
                 appInfos.add(appInfo);
             }
