@@ -5,12 +5,12 @@ import java.io.IOException;
 public interface AuthAdapter {
     void doAuth(String requestUri, AuthContext context);
 
-    boolean logout(AuthContext context);
-
     interface AuthContext {
         String getParameter(String name);
 
-        void setLoginSuccessful(String user, String role);
+        void login(String user, String... role);
+
+        void logout();
 
         void redirect(String url);
 

@@ -77,7 +77,7 @@ public class TongAuthAdapter implements AuthAdapter {
                 String user = data.get("userName");
                 if (user != null) {
                     String role = data.get("roleName"); // 可能不存在
-                    context.setLoginSuccessful(user, role);
+                    context.login(user, role);
                     return;
                 }
             }
@@ -90,11 +90,6 @@ public class TongAuthAdapter implements AuthAdapter {
                 + "&redirect_uri=" + redirect_uri;
 
         context.redirect(toLoginUrl);
-    }
-
-    @Override
-    public boolean logout(AuthContext context) {
-        return true;
     }
 
     private Object getUser(String accessToken, String tokenType) throws Exception {

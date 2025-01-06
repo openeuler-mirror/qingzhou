@@ -29,10 +29,6 @@ public class AuthManager implements Filter<SystemControllerContext> {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
-        if (request.getParameter(LoginManager.LOGOUT_FLAG) != null) {
-            return authAdapter.logout(new AuthContextImpl(request::getParameter, request, response));
-        }
-
         // 已登录
         if (LoginManager.getLoggedUser(request.getSession(false)) != null) return true;
 
@@ -42,6 +38,6 @@ public class AuthManager implements Filter<SystemControllerContext> {
         // “认证”上下文
         AuthContextImpl authContext = new AuthContextImpl(request::getParameter, request, response);
         authAdapter.doAuth(reqUri, authContext);
-        return authContext.isLoginSuccessful(); // 若登录成功，则继续业务
+        return authContext.loginSuccessful; // 若登录成功，则继续业务
     }
 }
