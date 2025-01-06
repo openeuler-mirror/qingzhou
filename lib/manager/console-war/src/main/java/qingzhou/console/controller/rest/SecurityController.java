@@ -1,8 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import java.util.*;
-import javax.servlet.http.HttpServletRequest;
-
+import qingzhou.api.MsgLevel;
 import qingzhou.config.console.Role;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
@@ -14,6 +12,10 @@ import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, String[] dataListFields, String[] dataValues) {
@@ -150,7 +152,14 @@ public class SecurityController implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        return isActionPermitted(request.getApp(), request.getModel(), request.getAction(), context.req);
+        boolean actionPermitted = isActionPermitted(request.getApp(), request.getModel(), request.getAction(), context.req);
+        if (!actionPermitted) {
+            context.resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsgLevel(MsgLevel.ERROR);
+            request.getResponse().setMsg("The current user has no permissions");
+        }
+        return actionPermitted;
     }
 
     public interface FieldValueRetriever {
