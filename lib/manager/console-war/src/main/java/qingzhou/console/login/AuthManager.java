@@ -36,8 +36,12 @@ public class AuthManager implements Filter<SystemControllerContext> {
         if (LoginManager.isOpenUris(reqUri)) return true; // 开放的 uri，不需要处理
 
         // “认证”上下文
-        AuthContextImpl authContext = new AuthContextImpl(request::getParameter, request, response);
+        AuthContextImpl authContext = buildAuthContext(request, response);
         authAdapter.doAuth(reqUri, authContext);
         return authContext.loginSuccessful; // 若登录成功，则继续业务
+    }
+
+    private AuthContextImpl buildAuthContext(HttpServletRequest request, HttpServletResponse response) {
+        return new AuthContextImpl(request::getParameter, request, response);
     }
 }

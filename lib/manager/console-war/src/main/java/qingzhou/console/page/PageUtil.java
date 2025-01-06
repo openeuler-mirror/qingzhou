@@ -90,7 +90,7 @@ public class PageUtil {
     public static String getAppToShow() {
         List<String> allApp = SystemController.getService(Deployer.class).getLocalApps();
         for (String s : allApp) {
-            if (!s.equals(DeployerConstants.APP_SYSTEM)) {
+            if (!s.equals(DeployerConstants.APP_MASTER)) {
                 return s;
             }
         }
@@ -303,7 +303,7 @@ public class PageUtil {
                 if (modelInfo.isHidden())
                     continue;
 
-                if (appInfo.getName().equals(DeployerConstants.APP_SYSTEM)
+                if (appInfo.getName().equals(DeployerConstants.APP_MASTER)
                         && modelInfo.getCode().equals(DeployerConstants.MODEL_APP)) {
                     if (isSingleAppMode())
                         continue;
@@ -357,7 +357,7 @@ public class PageUtil {
 
         StringBuilder menuHtml = new StringBuilder();
 
-        // qingzhou.app.system.Main.XXX
+        // qingzhou.app.master.Main.XXX
         boolean isDefaultActive = "Business".equals(menuItem.getName());
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
         if (Utils.notBlank(menuItem.getModel()) && Utils.notBlank(menuItem.getAction())) {

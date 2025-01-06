@@ -35,12 +35,12 @@ public class MemoryDataStoreModelBase extends ModelBase implements General {
                 .toArray(String[]::new);
     }
 
-    // 实现参考：qingzhou.app.system.ModelUtil.query
+    // 实现参考：qingzhou.app.master.ModelUtil.query
     public static boolean query(Map<String, String> query, Map<String, String> data) {
         if (query == null)
             return true;
 
-        // 实现参考：qingzhou.app.system.ModelUtil.query
+        // 实现参考：qingzhou.app.master.ModelUtil.query
         for (Map.Entry<String, String> e : query.entrySet()) {
             String queryKey = e.getKey();
             String queryValue = e.getValue();

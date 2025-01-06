@@ -37,7 +37,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     private static final LockOutRealm lockOutRealm = new LockOutRealm();
 
     public static final String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
-    public static final String INDEX_PATH = DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INDEX + "/" + DeployerConstants.ACTION_INDEX;
+    public static final String INDEX_PATH = DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INDEX + "/" + DeployerConstants.ACTION_INDEX;
     private static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
 
     private static final String LOGIN_ERROR_MSG_KEY = "page.login.invalid";

@@ -50,7 +50,7 @@ public class ResetPassword implements Filter<RestContext> {
         Set<String> set = appInfo.getAuthFreeModelActions().get(model);
         if (set != null && set.contains(action)) return true;
 
-        if (DeployerConstants.APP_SYSTEM.equals(app)) {
+        if (DeployerConstants.APP_MASTER.equals(app)) {
             if (DeployerConstants.NONE_ROLE_SYSTEM_MODELS.contains(model)) { // 不需要角色的，也不必非得重置密码
                 return true;
             }
@@ -79,7 +79,7 @@ public class ResetPassword implements Filter<RestContext> {
             servletResponse.sendRedirect(RESTController.encodeURL(servletResponse, servletRequest.getContextPath() +
                     DeployerConstants.REST_PREFIX +
                     "/" + context.request.getView() +
-                    "/" + DeployerConstants.APP_SYSTEM +
+                    "/" + DeployerConstants.APP_MASTER +
                     "/" + DeployerConstants.MODEL_PASSWORD +
                     "/" + Update.ACTION_EDIT +
                     "/" + user.getName() +

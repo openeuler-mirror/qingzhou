@@ -160,7 +160,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>app-system</artifactId>
+            <artifactId>master-app</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

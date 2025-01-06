@@ -138,7 +138,7 @@ class ActionInvokerImpl implements ActionInvoker {
             String uploadId = UUID.randomUUID().toString().replace("-", "");
 
             RequestImpl tmp = new RequestImpl(request);
-            tmp.setAppName(DeployerConstants.APP_SYSTEM);
+            tmp.setAppName(DeployerConstants.APP_MASTER);
             tmp.setModelName(DeployerConstants.MODEL_AGENT);
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
             tmp.getParameters().put(DeployerConstants.UPLOAD_FILE_ID, uploadId);

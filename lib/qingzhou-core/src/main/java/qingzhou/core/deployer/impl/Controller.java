@@ -55,7 +55,7 @@ public class Controller implements Process {
             deployer.addAppListener(new AppListener() {
                 @Override
                 public void onAppStarted(String appName) {
-                    if (DeployerConstants.APP_SYSTEM.equals(appName)) {
+                    if (DeployerConstants.APP_MASTER.equals(appName)) {
                         deployer.removeAppListener(this);
                         disableSysActions();
                     }
@@ -67,8 +67,8 @@ public class Controller implements Process {
             Map<String, String> registry = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("registry");
             boolean disableMaster = registry == null || !Boolean.parseBoolean(registry.get("enabled"));
             if (disableMaster) {
-                AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
-                sysApp.removeModelInfo(sysApp.getModelInfo(DeployerConstants.MODEL_MASTER));
+                AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_MASTER);
+                sysApp.removeModelInfo(sysApp.getModelInfo(DeployerConstants.MODEL_REGISTER));
             }
         }
     }
@@ -134,7 +134,7 @@ public class Controller implements Process {
                     return null;
                 }
             });
-            deployer.systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_SYSTEM);
+            deployer.systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-core", DeployerConstants.APP_MASTER);
             doStartApp(deployer.systemApp);
 
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {

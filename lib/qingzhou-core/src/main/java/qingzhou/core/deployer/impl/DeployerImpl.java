@@ -215,7 +215,7 @@ class DeployerImpl implements Deployer {
             app.setQingzhouApp(qingzhouApp);
 
             AppInfo appInfo = new AppInfo();
-            String appId = systemApp.equals(appDir) ? DeployerConstants.APP_SYSTEM : UUID.randomUUID().toString().replace("-", "");
+            String appId = systemApp.equals(appDir) ? DeployerConstants.APP_MASTER : UUID.randomUUID().toString().replace("-", "");
             appInfo.setId(appId);
             appInfo.setName(appDir.getName());
             appInfo.setFilePath(appDir.getAbsolutePath());
