@@ -10,62 +10,44 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.core.DeployerConstants;
 
 public class AuthContextImpl implements AuthAdapter.AuthContext {
-    private final Parameter parameter;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
-    boolean loginSuccessful;
 
-    public AuthContextImpl(Parameter parameter, HttpServletRequest request, HttpServletResponse response) {
-        this.parameter = parameter;
+    public AuthContextImpl(HttpServletRequest request, HttpServletResponse response) {
         this.request = request;
         this.response = response;
     }
 
     @Override
     public String getParameter(String name) {
-        return parameter.get(name);
+        return request.getParameter(name);
     }
 
     @Override
-    public void login(String user, String... role) {
+    public void loggedIn(String user, String... role) throws IOException {
         User loginUser = buildUser(user, role);
         LoginManager.loginSession(request, loginUser);
         // 进入主页
-        try {
-            response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        loginSuccessful = true;
+        response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
     }
 
     @Override
-    public void logout() {
-        LoginManager.logoutSession(request);
-        loginSuccessful = false;
+    public void redirect(String url) throws IOException {
+        response.sendRedirect(url);
     }
 
     @Override
-    public void redirect(String url) {
-        try {
-            response.sendRedirect(url);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void setContentType(String contentType) {
+    public void responseContentType(String contentType) {
         response.setContentType(contentType);
     }
 
     @Override
-    public void setHeader(String name, String value) {
+    public void responseHeader(String name, String value) {
         response.setHeader(name, value);
     }
 
     @Override
-    public void setHttpBody(byte[] body) throws IOException {
+    public void responseBody(byte[] body) throws IOException {
         response.getOutputStream().write(body);
     }
 

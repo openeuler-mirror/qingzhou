@@ -1,5 +1,6 @@
 package qingzhou.app.oauth;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class TongAuthAdapter implements AuthAdapter {
     }
 
     @Override
-    public void doAuth(String requestUri, AuthContext context) {
+    public void doAuth(String requestUri, AuthContext context) throws IOException {
         String receiveCodeUri = "/oauth/code_callback";
         if (receiveCodeUri.equals(requestUri)) {
             String code = context.getParameter("code");
@@ -77,13 +78,18 @@ public class TongAuthAdapter implements AuthAdapter {
                 String user = data.get("userName");
                 if (user != null) {
                     String role = data.get("roleName"); // 可能不存在
-                    context.login(user, role);
+                    context.loggedIn(user, role);
                     return;
                 }
             }
         }
 
         context.redirect(toLoginUrl());
+    }
+
+    @Override
+    public void logout(AuthContext context) throws IOException {
+        context.redirect(toLoginUrl()); // 重定向到认证中心的登录页面
     }
 
     private String toLoginUrl() {

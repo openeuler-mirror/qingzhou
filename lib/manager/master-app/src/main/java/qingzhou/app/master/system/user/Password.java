@@ -58,11 +58,10 @@ public class Password extends ModelBase implements Update, Export {
             info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
 
-    @ModelField(
-            input_type = InputType.bool,
+    @ModelField(input_type = InputType.bool,
             name = {"动态密码", "en:One-time password"},
-            info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
-                    "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."})
+            info = {"动态密码，是根据专门算法、每隔60秒生成一个不可预测的随机数字组合，是指只能使用一次的密码（One Time Password，简称OTP），又称“一次性口令”。若开启了动态密码，在登录密码不输入或输入错误时，会尝试校验输入的动态密码，以决定是否允许登录。",
+                    "en:A one-time password (OTP) is a password that can only be used once, also known as a \"one-time password\", which is an unpredictable random combination of numbers generated every 60 seconds according to a special algorithm. If a one-time password is enabled, the system will try to verify the one-time password if the login password is not entered or entered incorrectly, and the system will try to verify the entered one-time password to determine whether to allow the login."})
     public Boolean enableOtp = true;
 
     @Override
