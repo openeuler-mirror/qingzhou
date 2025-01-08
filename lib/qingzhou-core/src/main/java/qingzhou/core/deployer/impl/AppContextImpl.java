@@ -120,8 +120,13 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void addActionFilter(ActionFilter... actionFilter) {
+    public void addAppActionFilter(ActionFilter... actionFilter) {
         app.addAppActionFilter(actionFilter);
+    }
+
+    @Override
+    public void addModelActionFilter(ModelBase modelBase, ActionFilter... actionFilter) {
+        app.addModelActionFilter(modelBase, actionFilter);
     }
 
     @Override

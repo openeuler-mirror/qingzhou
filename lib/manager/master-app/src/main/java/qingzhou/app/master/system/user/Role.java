@@ -26,6 +26,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     @ModelField(
             required = true, search = true,
             id = true,
+            forbid = {DeployerConstants.QINGZHOU_ROLE_OWNER, DeployerConstants.QINGZHOU_ROLE_MAINTAINER, DeployerConstants.QINGZHOU_ROLE_MONITOR},
             name = {"名称", "en:Name"},
             info = {"该角色的唯一标识。", "en:Unique identifier of the role."})
     public String name;
@@ -67,8 +68,29 @@ public class Role extends ModelBase implements General, Echo, Option {
     public String info = "";
 
     @ModelAction(
+            code = Update.ACTION_EDIT, icon = "edit",
+            list_action = true, order = "1",
+            display = "name!=" + DeployerConstants.QINGZHOU_ROLE_OWNER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MAINTAINER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MONITOR,
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    public void edit(Request request) throws Exception {
+        getAppContext().invokeSuperAction(request);
+    }
+
+    @ModelAction(
+            code = Update.ACTION_UPDATE, icon = "save",
+            order = "1",
+            display = "name!=" + DeployerConstants.QINGZHOU_ROLE_OWNER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MAINTAINER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MONITOR,
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
+    public void update(Request request) throws Exception {
+        getAppContext().invokeSuperAction(request);
+    }
+
+    @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list_action = true, order = "9", action_type = ActionType.action_list,
+            display = "name!=" + DeployerConstants.QINGZHOU_ROLE_OWNER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MAINTAINER + "&name!=" + DeployerConstants.QINGZHOU_ROLE_MONITOR,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -88,10 +110,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
-        if (roles == null) return new String[0];
-
-        return Arrays.stream(roles)
+        return getAllRoles().stream()
                 .filter(role -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
                     public String getModelName() {
@@ -109,12 +128,9 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public Map<String, String> showData(String id) {
-        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
-        if (roles != null) {
-            for (qingzhou.config.console.Role role : roles) {
-                if (role.getName().equals(id)) {
-                    return ModelUtil.getPropertiesFromObj(role);
-                }
+        for (qingzhou.config.console.Role role : getAllRoles()) {
+            if (role.getName().equals(id)) {
+                return ModelUtil.getPropertiesFromObj(role);
             }
         }
         return null;
@@ -159,15 +175,35 @@ public class Role extends ModelBase implements General, Echo, Option {
         }
         List<Item> items = getItems(appName);
         String value = "";
-        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
-        if (roles != null) {
-            for (qingzhou.config.console.Role role : roles) {
-                if (role.getApp().equals(appName)) {
-                    value = role.getUris();
-                }
+
+        for (qingzhou.config.console.Role role : getAllRoles()) {
+            if (role.getApp().equals(appName)) {
+                value = role.getUris();
             }
         }
         dataBuilder.addData("uris", value, items.toArray(new Item[0]));
+    }
+
+    private List<qingzhou.config.console.Role> getAllRoles() {
+        List<qingzhou.config.console.Role> roles = new ArrayList<>();
+
+        roles.add(new qingzhou.config.console.Role() {{
+            setName(DeployerConstants.QINGZHOU_ROLE_MAINTAINER);
+            setInfo("Managers of system resources");
+            setActive(true);
+        }});
+
+        roles.add(new qingzhou.config.console.Role() {{
+            setName(DeployerConstants.QINGZHOU_ROLE_MONITOR);
+            setInfo("Monitor the health of system resources");
+            setActive(true);
+        }});
+
+        qingzhou.config.console.Role[] rolesInConfig = Main.getConsole().getRole();
+        if (rolesInConfig != null) {
+            roles.addAll(Arrays.asList(rolesInConfig));
+        }
+        return roles;
     }
 
     @Override

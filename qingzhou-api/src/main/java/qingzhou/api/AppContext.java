@@ -37,7 +37,10 @@ public interface AppContext {
      *
      * @param actionFilter 操作过滤器实例。
      */
-    void addActionFilter(ActionFilter... actionFilter);
+    void addAppActionFilter(ActionFilter... actionFilter);
+
+    // 为指定模块添加过滤器
+    void addModelActionFilter(ModelBase modelBase, ActionFilter... actionFilter);
 
     /**
      * 设置轻舟使用应用自定义的登录认证插件，拦截处理轻舟的登陆流程。

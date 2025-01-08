@@ -12,6 +12,9 @@ public interface DeployerConstants {
     String INSTANCE_LOCAL = "localhost";
     String ACTION_INVOKE_CHARSET = "UTF-8";
     String DEFAULT_USER_QINGZHOU = "qingzhou";
+    String QINGZHOU_ROLE_OWNER = "QINGZHOU_ROLE_OWNER"; // 内置的，不能赋予
+    String QINGZHOU_ROLE_MAINTAINER = "QINGZHOU_ROLE_MAINTAINER";
+    String QINGZHOU_ROLE_MONITOR = "QINGZHOU_ROLE_MONITOR";
 
     // Master 模块
     String MODEL_REGISTER = "register";
@@ -62,7 +65,6 @@ public interface DeployerConstants {
     String UPLOAD_FILE_PREFIX_FLAG = "UPLOAD_FILE_PREFIX_FLAG";
     String UPLOAD_FILE_TEMP_SUB_DIR = "UPLOAD_FILE_TEMP_SUB_DIR";
 
-    String QINGZHOU_MANAGER_USER_TYP = "Qingzhou_Manager";
     String USER_ROLE_SP = ";";
     String ROLE_URI_SP = ";";
     String REST_PREFIX = "/rest";
@@ -91,4 +93,5 @@ public interface DeployerConstants {
 
     Lang DEFAULT_LANG = Lang.zh;
     ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG); // 支持在 qingzhou.api.AuthAdapter.doAuth 中使用国际化
+    String PASSWORD_FLAG = "***************";
 }

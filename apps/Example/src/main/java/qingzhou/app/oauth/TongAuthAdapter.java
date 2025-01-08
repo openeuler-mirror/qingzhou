@@ -78,6 +78,9 @@ public class TongAuthAdapter implements AuthAdapter {
                 String user = data.get("userName");
                 if (user != null) {
                     String role = data.get("roleName"); // 可能不存在
+                    if (role == null || role.trim().isEmpty()) {
+                        role = "QINGZHOU_ROLE_MONITOR"; // QINGZHOU_ROLE_MAINTAINER
+                    }
                     context.loggedIn(user, role);
                     return;
                 }

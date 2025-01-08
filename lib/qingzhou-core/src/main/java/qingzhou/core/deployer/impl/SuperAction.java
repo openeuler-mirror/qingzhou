@@ -215,13 +215,16 @@ class SuperAction {
             String val = request.getParameter(fieldName);
             if (val != null) { // 注意不要用  “” 判定，以区分使用默认搜索，还是 清空所有条件！！！
                 if (query == null) query = new HashMap<>();
-                query.put(fieldName, val);
+
+                if (Utils.notBlank(val)) query.put(fieldName, val.trim());
             }
         }
 
         if (query != null) return query;
 
-        if (instance instanceof List) return ((List) instance).defaultSearch();
+        if (instance instanceof List) {
+            return ((List) instance).defaultSearch();
+        }
 
         return null;
     }

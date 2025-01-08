@@ -11,6 +11,7 @@ import qingzhou.api.type.Update;
 import qingzhou.app.master.Main;
 import qingzhou.config.console.Console;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.crypto.CryptoService;
@@ -76,6 +77,15 @@ public class Password extends ModelBase implements Update, Export {
                 "en:The new password is the same as the original password and has not changed"});
         getAppContext().addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，请勿设置最近使用过的密码",
                 "en:For security reasons, do not set a recently used password"});
+
+        getAppContext().addModelActionFilter(this, request -> {
+            if (Main.getService(Deployer.class).getAuthAdapter() != null) {
+                if (Update.ACTION_UPDATE.equals(request.getAction())) {
+                    return "Unsupported actions";
+                }
+            }
+            return null;
+        });
     }
 
     private String checkError(Request request, Map<String, String> baseData) {

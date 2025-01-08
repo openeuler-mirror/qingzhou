@@ -163,7 +163,13 @@
                     <%-- 用户/修改密码 --%>
                     <li>
                         <a id="reset-password-btn"
-                           href="<%=RESTController.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + DeployerConstants.APP_MASTER +"/" + DeployerConstants.MODEL_PASSWORD + "/" + Update.ACTION_EDIT)%>"
+                                <%
+                                    if (SystemController.getService(Deployer.class).getAuthAdapter() == null) {
+                                        out.print("href=\""
+                                                + RESTController.encodeURL(response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_PASSWORD + "/" + Update.ACTION_EDIT)
+                                                + "\";");
+                                    }
+                                %>
                            class="tooltips" data-tip='<%=LoginManager.getLoggedUser(session).getName()%>'
                            data-tip-arrow="bottom">
                             <span class="circle-bg">

@@ -22,7 +22,7 @@ public class ExampleMain implements QingzhouApp {
         appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}).icon("folder-open").order("1");
         appContext.addMenu(MENU_11, new String[]{"二级菜单", "en:11"}).icon("leaf").order("1").parent(MENU_1).action(Department.code, "menuHealthCheck");
 
-        appContext.addActionFilter(request -> {
+        appContext.addAppActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());
             logger.debug(msg);
             return null; // null 表示无异常
