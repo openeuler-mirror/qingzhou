@@ -16,7 +16,6 @@ public class AppContextImpl implements AppContext {
     private final AppManagerImpl app;
     private final I18nTool i18nTool = new I18nTool();
     private File appTemp;
-    private String[] startArgs;
 
     AppContextImpl(AppManagerImpl app) {
         this.app = app;
@@ -112,11 +111,7 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public String[] getStartArgs() {
-        return startArgs;
-    }
-
-    public void setStartArgs(String[] startArgs) {
-        this.startArgs = startArgs;
+        return app.getModuleContext().getStartArgs();
     }
 
     @Override

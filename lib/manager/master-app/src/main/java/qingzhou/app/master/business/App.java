@@ -15,6 +15,7 @@ import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.Registry;
+import qingzhou.engine.ModuleContext;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "stack",
         menu = Main.Business, order = "2",
@@ -123,7 +124,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
 
         getAppContext().addModelActionFilter(this, request -> {
             if (singleAppMode == null) {
-                Map<String, String> config = (Map<String, String>) ((Map<String, Object>) Main.getConfig()).get("deployer");
+                Map<String, String> config = (Map<String, String>) ((Map<String, Object>) Main.getService(ModuleContext.class).getConfig()).get("deployer");
                 singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
             }
 

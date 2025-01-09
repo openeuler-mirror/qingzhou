@@ -14,6 +14,7 @@ import qingzhou.core.ItemData;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.*;
+import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +29,7 @@ public class PageUtil {
 
     public static boolean isSingleAppMode() {
         if (singleAppMode == null) {
-            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController
-                    .getModuleContext().getConfig()).get("deployer");
+            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController.getModuleContext().getConfig()).get("deployer");
             singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
         }
         return singleAppMode;

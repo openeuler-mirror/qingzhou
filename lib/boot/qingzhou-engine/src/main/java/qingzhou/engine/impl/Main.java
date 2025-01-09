@@ -5,6 +5,7 @@ import qingzhou.engine.util.pattern.ProcessSequence;
 public class Main {
     public static void main(String[] args) throws Throwable {
         EngineContext engineContext = new EngineContext();
+        engineContext.startArgs = args;
         ProcessSequence sequence = new ProcessSequence(
                 new RunningControl(engineContext),
                 new ModuleLoading(engineContext)

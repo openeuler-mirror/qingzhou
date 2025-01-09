@@ -53,7 +53,7 @@ public class TongAuthAdapter implements AuthAdapter {
     @Override
     public void doAuth(String requestUri, AuthContext context) throws IOException {
         String receiveCodeUri = "/oauth/code_callback";
-        if (receiveCodeUri.equals(requestUri)) {
+        if (receiveCodeUri.equals(requestUri)) { // 重复进入，可支持切换用户
             String code = context.getParameter("code");
             Map<String, String> tokenInfo;
             try {
@@ -87,7 +87,9 @@ public class TongAuthAdapter implements AuthAdapter {
             }
         }
 
-        context.redirect(toLoginUrl());
+        if (!context.isLoggedIn()) {
+            context.redirect(toLoginUrl());
+        }
     }
 
     @Override

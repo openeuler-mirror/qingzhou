@@ -48,6 +48,7 @@ class SuperAction {
     public void show(Request request) throws Exception {
         Map<String, String> data = ((Show) instance).showData(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
+        if (data == null) return;
         response.setInternalData(new HashMap<>(data));
     }
 
