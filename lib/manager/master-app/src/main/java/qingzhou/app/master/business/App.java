@@ -116,21 +116,21 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
     public String state;
 
-    private Boolean singleAppMode;
+    private Boolean standaloneMode;
 
     @Override
     public void start() {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
 
         getAppContext().addModelActionFilter(this, request -> {
-            if (singleAppMode == null) {
+            if (standaloneMode == null) {
                 Map<String, String> config = (Map<String, String>) ((Map<String, Object>) Main.getService(ModuleContext.class).getConfig()).get("deployer");
-                singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+                standaloneMode = config != null && Boolean.parseBoolean(config.get("standalone")); // 单应用模式 == tw8.0模式
             }
 
-            if (singleAppMode) {
+            if (standaloneMode) {
                 if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) {
-                    return "This action is not supported in single-app mode";
+                    return "This action is not supported in standalone mode";
                 }
             }
 

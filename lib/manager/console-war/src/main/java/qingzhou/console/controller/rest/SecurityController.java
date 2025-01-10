@@ -1,10 +1,12 @@
 package qingzhou.console.controller.rest;
 
+import java.util.List;
 import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import qingzhou.api.MsgLevel;
+import qingzhou.api.type.*;
 import qingzhou.config.console.Role;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
@@ -85,6 +87,26 @@ public class SecurityController implements Filter<RestContext> {
         //超管直接放行，一般是租户管理员创建的系统管理员
         if (DeployerConstants.QINGZHOU_ROLE_MAINTAINER.equals(currentUser.getRole())) {
             return true;
+        }
+
+        // 监控者放行只读资源
+        if (DeployerConstants.QINGZHOU_ROLE_MONITOR.equals(currentUser.getRole())) {
+            String[] monitorActions = new String[]{
+                    Chart.ACTION_CHART,
+                    Combined.ACTION_COMBINED,
+                    Dashboard.ACTION_DASHBOARD,
+                    Download.ACTION_FILES, Download.ACTION_DOWNLOAD,
+                    Export.ACTION_EXPORT,
+                    qingzhou.api.type.List.ACTION_LIST,
+                    Monitor.ACTION_MONITOR,
+                    Show.ACTION_SHOW,
+                    Update.ACTION_EDIT,
+            };
+            for (String monitorAction : monitorActions) {
+                if (monitorAction.equals(actionInfo.getCode())) {
+                    return true;
+                }
+            }
         }
 
         String roles = currentUser.getRole();

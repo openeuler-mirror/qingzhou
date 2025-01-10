@@ -80,9 +80,7 @@ public class Password extends ModelBase implements Update, Export {
 
         getAppContext().addModelActionFilter(this, request -> {
             if (Main.getService(Deployer.class).getAuthAdapter() != null) {
-                if (Update.ACTION_UPDATE.equals(request.getAction())) {
-                    return "Unsupported actions";
-                }
+                return "Unsupported actions";
             }
             return null;
         });

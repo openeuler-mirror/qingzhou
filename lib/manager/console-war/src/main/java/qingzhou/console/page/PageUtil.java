@@ -24,15 +24,15 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class PageUtil {
-    private static Boolean singleAppMode;
+    private static Boolean standaloneMode;
     public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[] { "其他", "en:Other" });
 
-    public static boolean isSingleAppMode() {
-        if (singleAppMode == null) {
+    public static boolean getStandaloneMode() {
+        if (standaloneMode == null) {
             Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController.getModuleContext().getConfig()).get("deployer");
-            singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+            standaloneMode = config != null && Boolean.parseBoolean(config.get("standalone")); // 单应用模式 == tw8.0模式
         }
-        return singleAppMode;
+        return standaloneMode;
     }
 
     public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
@@ -305,7 +305,7 @@ public class PageUtil {
 
                 if (appInfo.getName().equals(DeployerConstants.APP_MASTER)
                         && modelInfo.getCode().equals(DeployerConstants.MODEL_APP)) {
-                    if (isSingleAppMode())
+                    if (getStandaloneMode())
                         continue;
                 }
             }

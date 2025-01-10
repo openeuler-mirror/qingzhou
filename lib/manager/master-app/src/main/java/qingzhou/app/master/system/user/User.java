@@ -2,16 +2,17 @@ package qingzhou.app.master.system.user;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.General;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Validate;
 import qingzhou.app.master.Main;
 import qingzhou.app.master.ModelUtil;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
@@ -59,21 +60,6 @@ public class User extends ModelBase implements General, Validate, Option {
         getAppContext().addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
         getAppContext().addI18n("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
         getAppContext().addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
-
-        getAppContext().addModelActionFilter(this, request -> {
-            if (Main.getService(Deployer.class).getAuthAdapter() != null) {
-                if (Update.ACTION_UPDATE.equals(request.getAction())
-                        || Add.ACTION_ADD.equals(request.getAction())) {
-                    qingzhou.config.console.User user = Main.getConsole().getUser(request.getUser());
-                    if (user != null) {
-                        if (DeployerConstants.QINGZHOU_ROLE_OWNER.equals(user.getRole())) {
-                            return "Unsupported actions";
-                        }
-                    }
-                }
-            }
-            return null;
-        });
     }
 
     @ModelField(

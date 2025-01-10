@@ -84,7 +84,7 @@
         ]
       },
       "deployer": {
-        "singleAppMode": "false"
+        "standalone": "false"
       },
       "registry": {
         "enabled": "true",
