@@ -15,12 +15,11 @@ import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 
-@Model(code = Role.MODEL_NAME, icon = "check-sign",
+@Model(code = DeployerConstants.MODEL_ROLE, icon = "check-sign",
         menu = Main.Setting, order = "2",
         name = {"角色", "en:Role"},
         info = {"定义应用的操作权限。", "en:Define the operation permissions of the app."})
 public class Role extends ModelBase implements General, Echo, Option {
-    public static final String MODEL_NAME = "role";
     static final String ID_KEY = "name";
 
     @ModelField(

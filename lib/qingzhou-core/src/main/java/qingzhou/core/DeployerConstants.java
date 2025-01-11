@@ -24,6 +24,7 @@ public interface DeployerConstants {
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
+    String MODEL_ROLE = "role";
 
     Set<String> NONE_ROLE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
         add(DeployerConstants.MODEL_PASSWORD);

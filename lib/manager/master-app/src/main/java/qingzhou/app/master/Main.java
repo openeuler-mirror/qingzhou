@@ -11,6 +11,7 @@ import qingzhou.config.console.Console;
 import qingzhou.config.console.impl.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
@@ -69,5 +70,21 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
         appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("folder-open").order("2");
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
+
+        appContext.addAppActionFilter(request -> {
+            if (Main.getService(Deployer.class).getAuthAdapter() != null) {
+                String[] forbiddenModels = new String[]{
+                        DeployerConstants.MODEL_USER,
+                        DeployerConstants.MODEL_PASSWORD,
+                        DeployerConstants.MODEL_ROLE
+                };
+                for (String forbiddenModel : forbiddenModels) {
+                    if (request.getModel().equals(forbiddenModel)) {
+                        return "Unsupported actions";
+                    }
+                }
+            }
+            return null;
+        });
     }
 }

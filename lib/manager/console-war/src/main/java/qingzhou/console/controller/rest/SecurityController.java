@@ -74,7 +74,6 @@ public class SecurityController implements Filter<RestContext> {
             }
         }
 
-
         // 检查用户的权限
         User currentUser = LoginManager.getLoggedUser(request.getSession(false));
         if (currentUser == null) return false;

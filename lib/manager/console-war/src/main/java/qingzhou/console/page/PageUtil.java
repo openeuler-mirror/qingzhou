@@ -1,5 +1,11 @@
 package qingzhou.console.page;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
@@ -14,18 +20,11 @@ import qingzhou.core.ItemData;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.*;
-import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Stream;
 
 public class PageUtil {
     private static Boolean standaloneMode;
-    public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[] { "其他", "en:Other" });
+    public static final ItemData OTHER_GROUP = new ItemData("OTHERS", new String[]{"其他", "en:Other"});
 
     public static boolean getStandaloneMode() {
         if (standaloneMode == null) {
@@ -77,7 +76,7 @@ public class PageUtil {
     }
 
     public static String[] filterActions(String[] checkActions, String qzApp, String qzModel,
-            HttpServletRequest request) {
+                                         HttpServletRequest request) {
         List<String> filteredActions = new ArrayList<>();
         for (String action : checkActions) {
             if (SecurityController.isActionPermitted(qzApp, qzModel, action, request)) {
@@ -102,21 +101,21 @@ public class PageUtil {
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-            Request request, String viewName, String actionName) {
+                                         Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/"
                 + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
     public static String buildModelUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-            String viewName, String appName, String modelName) {
+                                       String viewName, String appName, String modelName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + appName
                 + "/" + modelName;
         return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
-            Request request, String viewName, String model, String actionName) {
+                                        Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/"
                 + request.getApp() + "/" + model + "/" + actionName;
         return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
@@ -293,6 +292,7 @@ public class PageUtil {
         });
 
         // 将 Model 菜单挂到 导航 菜单上
+        ModelMenu:
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
             if (showSubMenus != null) { // 是否使用 子菜单 功能
                 if (!showSubMenus.contains(modelInfo.getCode())) { // 是否在子菜单范围内
@@ -303,10 +303,22 @@ public class PageUtil {
                 if (modelInfo.isHidden())
                     continue;
 
-                if (appInfo.getName().equals(DeployerConstants.APP_MASTER)
-                        && modelInfo.getCode().equals(DeployerConstants.MODEL_APP)) {
-                    if (getStandaloneMode())
-                        continue;
+                if (appInfo.getName().equals(DeployerConstants.APP_MASTER)) {
+                    if (modelInfo.getCode().equals(DeployerConstants.MODEL_APP)) {
+                        if (getStandaloneMode())
+                            continue;
+                    }
+
+                    if (SystemController.getService(Deployer.class).getAuthAdapter() != null) {
+                        String[] forbiddenModels = new String[]{
+                                DeployerConstants.MODEL_USER,
+                                DeployerConstants.MODEL_ROLE
+                        };
+                        for (String forbiddenModel : forbiddenModels) {
+                            if (modelInfo.getCode().equals(forbiddenModel))
+                                continue ModelMenu;
+                        }
+                    }
                 }
             }
 
@@ -349,7 +361,7 @@ public class PageUtil {
     }
 
     private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request,
-            HttpServletResponse response, String modelMenuParameter) {
+                                          HttpServletResponse response, String modelMenuParameter) {
         // 空菜单不显示
         if (isEmptyMenu(menuItem)) {
             return "";
@@ -365,7 +377,7 @@ public class PageUtil {
             String contextPath = request.getContextPath();
             String actionUrl = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1)
                     : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/"
-                            + menuItem.getModel() + "/" + menuItem.getAction();
+                    + menuItem.getModel() + "/" + menuItem.getAction();
             if (Utils.notBlank(modelMenuParameter)) {
                 actionUrl += "?" + modelMenuParameter;
             }
@@ -409,7 +421,7 @@ public class PageUtil {
     }
 
     private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest,
-            HttpServletRequest request, HttpServletResponse response, String urlParameter) {
+                                         HttpServletRequest request, HttpServletResponse response, String urlParameter) {
         String app = qzRequest.getApp();
         String model = modelInfo.getCode();
         String action = modelInfo.getEntrance();
@@ -419,7 +431,7 @@ public class PageUtil {
         String contextPath = request.getContextPath();
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1)
                 : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/"
-                        + model + "/" + action;
+                + model + "/" + action;
         if (Utils.notBlank(urlParameter)) {
             url += "?" + urlParameter;
         }
