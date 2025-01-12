@@ -285,7 +285,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
 
     @Override
     public void updateData(Map<String, String> data) {
-        Request request = getAppContext().getCurrentRequest();
+        Request request = getAppContext().getThreadLocalRequest();
         invokeAppActionOnAgent(request, DeployerConstants.ACTION_UPDATE_APP);
     }
 }

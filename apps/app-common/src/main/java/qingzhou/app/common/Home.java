@@ -39,7 +39,7 @@ public class Home extends ModelBase implements Show {
     @Override
     public Map<String, String> showData(String id) {
         return new HashMap<String, String>() {{
-            put("appName", getAppContext().getCurrentRequest().getApp());
+            put("appName", getAppContext().getThreadLocalRequest().getApp());
             put("appDir", getAppContext().getAppDir().getAbsolutePath());
             put("javaHome", System.getProperty("java.home"));
         }};

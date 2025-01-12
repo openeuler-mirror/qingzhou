@@ -105,7 +105,7 @@ public class MemoryDataStoreModelBase extends ModelBase implements General {
 
     @Override
     public void updateData(Map<String, String> data) {
-        showData(getAppContext().getCurrentRequest().getId()).putAll(data);
+        showData(getAppContext().getThreadLocalRequest().getId()).putAll(data);
         ExampleMain.logger.info("updateData:" + data);
     }
 

@@ -242,7 +242,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
+        String[] batchId = getAppContext().getThreadLocalRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
                 Main.getConfig().deleteUser(bId);
