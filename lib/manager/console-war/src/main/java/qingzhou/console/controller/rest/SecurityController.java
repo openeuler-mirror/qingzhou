@@ -1,6 +1,12 @@
 package qingzhou.console.controller.rest;
 
+import java.util.List;
+import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.MsgLevel;
+import qingzhou.api.type.*;
 import qingzhou.config.console.Role;
 import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
@@ -12,10 +18,6 @@ import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
 
 public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, String[] dataListFields, String[] dataValues) {
@@ -72,14 +74,38 @@ public class SecurityController implements Filter<RestContext> {
             }
         }
 
-
         // 检查用户的权限
         User currentUser = LoginManager.getLoggedUser(request.getSession(false));
         if (currentUser == null) return false;
 
-        //超管直接放行
-        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
+        // 所有者直接放行，一般是租户管理员
+        if (DeployerConstants.QINGZHOU_ROLE_OWNER.equals(currentUser.getRole())) {
             return true;
+        }
+
+        //超管直接放行，一般是租户管理员创建的系统管理员
+        if (DeployerConstants.QINGZHOU_ROLE_MAINTAINER.equals(currentUser.getRole())) {
+            return true;
+        }
+
+        // 监控者放行只读资源
+        if (DeployerConstants.QINGZHOU_ROLE_MONITOR.equals(currentUser.getRole())) {
+            String[] monitorActions = new String[]{
+                    Chart.ACTION_CHART,
+                    Combined.ACTION_COMBINED,
+                    Dashboard.ACTION_DASHBOARD,
+                    Download.ACTION_FILES, Download.ACTION_DOWNLOAD,
+                    Export.ACTION_EXPORT,
+                    qingzhou.api.type.List.ACTION_LIST,
+                    Monitor.ACTION_MONITOR,
+                    Show.ACTION_SHOW,
+                    Update.ACTION_EDIT,
+            };
+            for (String monitorAction : monitorActions) {
+                if (monitorAction.equals(actionInfo.getCode())) {
+                    return true;
+                }
+            }
         }
 
         String roles = currentUser.getRole();

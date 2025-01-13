@@ -32,6 +32,11 @@ public class AuthContextImpl implements AuthAdapter.AuthContext {
     }
 
     @Override
+    public boolean isLoggedIn() {
+        return LoginManager.getLoggedUser(request.getSession(false)) != null;
+    }
+
+    @Override
     public void redirect(String url) throws IOException {
         response.sendRedirect(url);
     }

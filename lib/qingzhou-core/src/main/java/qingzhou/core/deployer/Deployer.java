@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Properties;
 
+import qingzhou.api.AuthAdapter;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.Service;
 
@@ -28,4 +29,6 @@ public interface Deployer {
     List<String> getAllApp();
 
     AppInfo getAppInfo(String appName);
+
+    AuthAdapter getAuthAdapter();
 }

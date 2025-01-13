@@ -93,6 +93,15 @@ class ModuleContextImpl implements ModuleContext {
     }
 
     @Override
+    public String[] getStartArgs() {
+        String[] startArgs = moduleInfo.engineContext.startArgs;
+        if (startArgs != null) {
+            return Arrays.copyOfRange(startArgs, 0, startArgs.length);
+        }
+        return new String[0];
+    }
+
+    @Override
     public File getInstanceDir() {
         return moduleInfo.engineContext.getInstanceDir();
     }

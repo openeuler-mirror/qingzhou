@@ -1,18 +1,18 @@
 package qingzhou.console.controller.rest;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.RequestImpl;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.pattern.Filter;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
@@ -134,17 +134,21 @@ public class ParameterFilter implements Filter<RestContext> {
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
+
+            String val = request.getParameter(fieldName);
+            if (Utils.isBlank(val)) continue;
+            if (val.equals(DeployerConstants.PASSWORD_FLAG)) continue;
+
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField == null) continue;
-            if (modelField.getInputType() == InputType.password) {
-                try {
-                    String val = request.getParameter(fieldName);
-                    String result = SystemController.decryptWithConsolePrivateKey(val, false);
-                    if (result != null) { // 可能是空串
-                        request.getParameters().put(fieldName, result);
-                    }
-                } catch (Exception ignored) {
+            if (modelField.getInputType() != InputType.password) continue;
+
+            try {
+                String result = SystemController.decryptWithConsolePrivateKey(val, false);
+                if (result != null) { // 可能是空串
+                    request.getParameters().put(fieldName, result);
                 }
+            } catch (Exception ignored) {
             }
         }
     }
@@ -178,7 +182,7 @@ public class ParameterFilter implements Filter<RestContext> {
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
-            if (name == null){
+            if (name == null) {
                 continue;
             }
             if (name.startsWith(DeployerConstants.SUB_MENU_PARAMETER_FLAG)) {

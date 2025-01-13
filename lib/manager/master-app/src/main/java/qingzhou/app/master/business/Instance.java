@@ -322,7 +322,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             info = {"调用 System.gc() 进行内存垃圾回收。",
                     "en:Call System.gc() for memory garbage collection."})
     public void gc(Request request) {
-        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
+        String[] batchId = getAppContext().getThreadLocalRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             invokeOnAgent(request, batchId);
         } else {

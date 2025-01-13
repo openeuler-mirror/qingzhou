@@ -141,7 +141,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @Override
     public DataSupplier exportData(String id) {
-        Request request = getAppContext().getCurrentRequest();
+        Request request = getAppContext().getThreadLocalRequest();
         return new DataSupplier() {
             private final String format = "png";
 
@@ -173,7 +173,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @Override
     public Map<String, String> editData(String id) {
-        Request request = getAppContext().getCurrentRequest();
+        Request request = getAppContext().getThreadLocalRequest();
         Map<String, String> loginUserPro = User.showDataForUserInternal(request.getUser());
         boolean enableOtp = Boolean.parseBoolean(Objects.requireNonNull(loginUserPro).get("enableOtp"));
         return new HashMap<String, String>() {{
@@ -184,7 +184,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        RequestImpl request = (RequestImpl) getAppContext().getCurrentRequest();
+        RequestImpl request = (RequestImpl) getAppContext().getThreadLocalRequest();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         String loginUser = request.getUser();

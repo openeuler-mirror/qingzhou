@@ -1,15 +1,15 @@
 package qingzhou.console.controller.rest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import qingzhou.api.type.Show;
 import qingzhou.console.controller.I18n;
 import qingzhou.core.deployer.RequestImpl;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
-
-import java.util.ArrayList;
-import java.util.Arrays;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.pattern.Filter;
 
 public class ActionFilter implements Filter<RestContext> {
     static {
@@ -18,10 +18,10 @@ public class ActionFilter implements Filter<RestContext> {
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        return show(context);
+        return checkDisplay(context);
     }
 
-    private boolean show(RestContext context) {
+    private boolean checkDisplay(RestContext context) {
         RequestImpl request = context.request;
         ModelInfo modelInfo = request.getCachedModelInfo();
 

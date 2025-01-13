@@ -52,7 +52,7 @@ public class Overview extends ModelBase implements Dashboard {
 
     @Override
     public void dashboardData(String id, DataBuilder builder) {
-        Lang lang = getAppContext().getCurrentRequest().getLang();
+        Lang lang = getAppContext().getThreadLocalRequest().getLang();
         Map<String, String> allInstanceHosts = allInstanceHosts();
         Map<String, Map<String, String>> monitorData = monitorData(allInstanceHosts.keySet().toArray(new String[0]));
         Set<String> deleteIds = allInstanceHosts.keySet().stream().filter(s -> !monitorData.containsKey(s)).collect(Collectors.toSet());

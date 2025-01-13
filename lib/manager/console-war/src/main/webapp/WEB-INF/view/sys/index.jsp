@@ -334,7 +334,7 @@ if (openApp != null) {
         };
 
         var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + openApp)%>"
-        var closeTab = <%=!PageUtil.isSingleAppMode()%>;
+        var closeTab = <%=!PageUtil.getStandaloneMode()%>;
         initializeManager(firstAppElement, url, closeTab);
     });
     <%

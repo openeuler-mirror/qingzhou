@@ -1,5 +1,16 @@
 package qingzhou.console.controller.rest;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
@@ -17,17 +28,6 @@ import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -196,22 +196,25 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdField())) return null;
 
             if (context.isAddAction) {
-                ModelInfo modelInfo = context.request.getCachedModelInfo();
-                ModelActionInfo actionInfo = modelInfo.getModelActionInfo(List.ACTION_CONTAINS);
-                if (actionInfo == null) return null;
-
-                RequestImpl tmp = new RequestImpl(context.request);
-                tmp.setActionName(List.ACTION_CONTAINS);
-                tmp.setId(context.parameterVal);
-                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
-                boolean success = tmpResp.isSuccess();
-                if (success) {
+                Boolean contains = contains(context.request, context.parameterVal);
+                if (contains != null && contains) {
                     return new String[]{"validation_id"};
                 }
             }
 
             return null;
         }
+    }
+
+    static Boolean contains(RequestImpl request, String id) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(List.ACTION_CONTAINS);
+        if (actionInfo == null) return null; // 没有提供实现
+        RequestImpl tmp = new RequestImpl(request);
+        tmp.setActionName(List.ACTION_CONTAINS);
+        tmp.setId(id);
+        ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeAny(tmp);
+        return tmpResp.isSuccess();
     }
 
     static class min implements Validator {

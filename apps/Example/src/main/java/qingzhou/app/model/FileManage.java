@@ -118,7 +118,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
         String file = data.get("file");
         File srcFile = new File(file);
         if (!srcFile.exists()) {
-            getAppContext().getCurrentRequest().getResponse().setSuccess(false);
+            getAppContext().getThreadLocalRequest().getResponse().setSuccess(false);
             return;
         }
 

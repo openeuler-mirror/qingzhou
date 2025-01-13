@@ -47,7 +47,7 @@ public class StaticCharts extends ModelBase implements Chart {
 
     @Override
     public void chartData(DataBuilder dataBuilder) {
-        Request request = getAppContext().getCurrentRequest();
+        Request request = getAppContext().getThreadLocalRequest();
         String sql = request.getParameter("sql");
         int j = 10;
         try {

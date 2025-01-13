@@ -73,7 +73,8 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     }
 
     private String[] allIds(Map<String, String> query) {
-        return getAppContext().getServiceTypes().stream().filter(aClass -> ModelUtil.query(query, new ModelUtil.Supplier() {
+        AppContextImpl appContext = (AppContextImpl) getAppContext();
+        return appContext.getServiceTypes().stream().filter(aClass -> ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
             public String getModelName() {
                 return MODEL_NAME;

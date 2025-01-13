@@ -28,6 +28,6 @@ class RemoteFieldValueRetriever implements SecurityController.FieldValueRetrieve
             originData = (Map<String, String>) response.getInternalData();
         }
 
-        return originData.get(fieldName);
+        return originData == null ? null : originData.get(fieldName);
     }
 }

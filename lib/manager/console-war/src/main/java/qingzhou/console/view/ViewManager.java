@@ -81,8 +81,10 @@ public class ViewManager {
                 case Show.ACTION_SHOW:
                 case Monitor.ACTION_MONITOR:
                     Serializable internalData = response.getInternalData();
-                    LinkedHashMap<String, String> prepareDataMap = prepareDataMap(internalData, request);
-                    response.setInternalData(prepareDataMap);
+                    if (internalData != null) {
+                        LinkedHashMap<String, String> prepareDataMap = prepareDataMap(internalData, request);
+                        response.setInternalData(prepareDataMap);
+                    }
                     break;
             }
         }

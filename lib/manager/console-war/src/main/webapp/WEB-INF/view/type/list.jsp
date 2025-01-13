@@ -21,6 +21,7 @@
 	String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, request);
 
 	ListData listData = (ListData) qzResponse.getInternalData();
+	if (listData == null) return;
 	int totalSize = listData.totalSize;
 	int pageNum = listData.pageNum;
 	int pageSize = listData.pageSize;
@@ -182,7 +183,7 @@
 					if (fieldInfo.getWidthPercent() > 0) {
 						width = fieldInfo.getWidthPercent();
 					} else {
-                        // 多选框占 2%，序号占 2%，剩余 96% ping j
+						// 多选框占 2%，序号占 2%，剩余 96% ping j
 						width = 96 / (displayListFields.length + otherTh - hiddenCount);
 					}
 			%>
@@ -412,7 +413,8 @@
 						boolean useJsonUri = action.getActionType() == ActionType.action_list
 								|| action.getActionType() == ActionType.download;
 				%>
-				<a style="white-space: nowrap;" href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
+				<a style="white-space: nowrap;"
+				   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
 				   data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>"
 				   class="qz-action-link tooltips" model-icon="<%=modelInfo.getIcon()%>"

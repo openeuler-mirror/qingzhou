@@ -16,7 +16,6 @@ public class AppContextImpl implements AppContext {
     private final AppManagerImpl app;
     private final I18nTool i18nTool = new I18nTool();
     private File appTemp;
-    private String[] startArgs;
 
     AppContextImpl(AppManagerImpl app) {
         this.app = app;
@@ -28,12 +27,12 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public Request getCurrentRequest() {
+    public Request getThreadLocalRequest() {
         return app.getThreadLocalRequest();
     }
 
     @Override
-    public void setCurrentRequest(Request request) {
+    public void setThreadLocalRequest(Request request) {
         app.setThreadLocalRequest(request);
     }
 
@@ -82,22 +81,11 @@ public class AppContextImpl implements AppContext {
         }
     }
 
-    @Override
     public Collection<Class<?>> getServiceTypes() {
         return app.getModuleContext().getAvailableServiceTypes().stream().filter(aClass -> {
             Service annotation = aClass.getAnnotation(Service.class);
             return annotation == null || annotation.shareable();
         }).sorted(Comparator.comparing(o -> o.getAnnotation(Service.class).name())).collect(Collectors.toList());
-    }
-
-    @Override
-    public <T> void registerService(Class<T> serviceType, T serviceObj) {
-        app.getModuleContext().registerService(serviceType, serviceObj);
-    }
-
-    @Override
-    public void addServiceListener(ServiceListener listener) {
-        app.getModuleContext().addServiceListener((event, serviceType) -> listener.onServiceEvent(ServiceListener.ServiceEvent.valueOf(event.name()), serviceType));
     }
 
     @Override
@@ -112,16 +100,17 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public String[] getStartArgs() {
-        return startArgs;
-    }
-
-    public void setStartArgs(String[] startArgs) {
-        this.startArgs = startArgs;
+        return app.getModuleContext().getStartArgs();
     }
 
     @Override
-    public void addActionFilter(ActionFilter... actionFilter) {
+    public void addAppActionFilter(ActionFilter... actionFilter) {
         app.addAppActionFilter(actionFilter);
+    }
+
+    @Override
+    public void addModelActionFilter(ModelBase modelBase, ActionFilter... actionFilter) {
+        app.addModelActionFilter(modelBase, actionFilter);
     }
 
     @Override

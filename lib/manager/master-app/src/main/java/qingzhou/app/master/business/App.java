@@ -15,6 +15,7 @@ import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.Registry;
+import qingzhou.engine.ModuleContext;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "stack",
         menu = Main.Business, order = "2",
@@ -115,9 +116,26 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
     public String state;
 
+    private Boolean standaloneMode;
+
     @Override
     public void start() {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+
+        getAppContext().addModelActionFilter(this, request -> {
+            if (standaloneMode == null) {
+                Map<String, String> config = (Map<String, String>) ((Map<String, Object>) Main.getService(ModuleContext.class).getConfig()).get("deployer");
+                standaloneMode = config != null && Boolean.parseBoolean(config.get("standalone")); // 单应用模式 == tw8.0模式
+            }
+
+            if (standaloneMode) {
+                if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) {
+                    return "This action is not supported in standalone mode";
+                }
+            }
+
+            return null;
+        });
     }
 
     @Override
@@ -267,7 +285,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add, Updat
 
     @Override
     public void updateData(Map<String, String> data) {
-        Request request = getAppContext().getCurrentRequest();
+        Request request = getAppContext().getThreadLocalRequest();
         invokeAppActionOnAgent(request, DeployerConstants.ACTION_UPDATE_APP);
     }
 }

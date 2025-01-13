@@ -26,4 +26,6 @@ public interface ModuleContext {
     Collection<Class<?>> getAvailableServiceTypes();
 
     void addServiceListener(ServiceListener listener);
+
+    String[] getStartArgs();
 }

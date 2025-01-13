@@ -13,6 +13,7 @@ public class EngineContext {
     private File instanceDir;
     private File temp;
     final List<ModuleInfo> moduleInfoList = new ArrayList<>();
+    String[] startArgs;
 
     public File getLibDir() {
         if (libDir == null) {

@@ -1,7 +1,6 @@
 package qingzhou.api;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -13,10 +12,10 @@ public interface AppContext {
     // 应用自带的 "qingzhou.properties" 文件
     Properties getAppProperties();
 
-    Request getCurrentRequest();
+    Request getThreadLocalRequest();
 
-    // 在异步子线程中使用 AppContext 对象前，需首先从父线程里 getCurrentRequest() 获得当前 Request，并调用 setCurrentRequest(Request request) 设置到子线程中
-    void setCurrentRequest(Request request);
+    // 在异步子线程中使用 AppContext 对象前，需首先从父线程里 getThreadLocalRequest() 获得当前 Request，并调用 setThreadLocalRequest(Request request) 设置到子线程中
+    void setThreadLocalRequest(Request request);
 
     /**
      * 获取应用程序目录的文件对象。
@@ -37,7 +36,10 @@ public interface AppContext {
      *
      * @param actionFilter 操作过滤器实例。
      */
-    void addActionFilter(ActionFilter... actionFilter);
+    void addAppActionFilter(ActionFilter... actionFilter);
+
+    // 为指定模块添加过滤器
+    void addModelActionFilter(ModelBase modelBase, ActionFilter... actionFilter);
 
     /**
      * 设置轻舟使用应用自定义的登录认证插件，拦截处理轻舟的登陆流程。
@@ -71,15 +73,10 @@ public interface AppContext {
      */
     <T> T getService(Class<T> clazz);
 
-    Collection<Class<?>> getServiceTypes();
-
-    <T> void registerService(Class<T> serviceType, T serviceObj);
-
-    void addServiceListener(ServiceListener listener);
-
     void invokeSuperAction(Request request) throws Exception;
 
     String getPlatformVersion();
 
+    // 传递外部参数到应用内部，用于业务逻辑需求
     String[] getStartArgs();
 }

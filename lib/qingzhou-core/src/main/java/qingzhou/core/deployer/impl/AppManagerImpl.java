@@ -17,6 +17,7 @@ public class AppManagerImpl implements AppManager {
     private URLClassLoader appLoader;
     private QingzhouApp qingzhouApp;
     private final Set<ActionFilter> appActionFilters = new LinkedHashSet<>();
+    private final Map<String, Set<ActionFilter>> modelActionFilters = new LinkedHashMap<>();
     private AuthAdapter authAdapter;
     private AppContextImpl appContext;
     private Properties appProperties;
@@ -43,7 +44,14 @@ public class AppManagerImpl implements AppManager {
     @Override
     public void invoke(Request request) throws Throwable {
         Utils.doInThreadContextClassLoader(getAppLoader(), () -> {
-            for (ActionFilter appActionFilter : appActionFilters) {
+
+            Set<ActionFilter> finalFilters = new LinkedHashSet<>(appActionFilters);
+            Set<ActionFilter> actionFilters = modelActionFilters.get(request.getModel());
+            if (actionFilters != null) {
+                finalFilters.addAll(actionFilters);
+            }
+
+            for (ActionFilter appActionFilter : finalFilters) {
                 String msg = appActionFilter.doFilter(request);
                 if (msg != null) {
                     request.getResponse().setSuccess(false);
@@ -149,6 +157,18 @@ public class AppManagerImpl implements AppManager {
 
     void addAppActionFilter(ActionFilter... appActionFilter) {
         this.appActionFilters.addAll(Arrays.asList(appActionFilter));
+    }
+
+    void addModelActionFilter(ModelBase modelBase, ActionFilter... appActionFilter) {
+        String modelName = null;
+        for (Map.Entry<String, ModelBase> e : modelBaseMap.entrySet()) {
+            if (e.getValue().equals(modelBase)) {
+                modelName = e.getKey();
+            }
+        }
+        if (modelName == null) throw new IllegalArgumentException();
+
+        this.modelActionFilters.computeIfAbsent(modelName, k -> new LinkedHashSet<>()).addAll(Arrays.asList(appActionFilter));
     }
 
     void setAuthAdapter(AuthAdapter authAdapter) {

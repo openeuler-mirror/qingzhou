@@ -2,22 +2,10 @@ package qingzhou.app.master.system.user;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
@@ -35,7 +23,6 @@ import qingzhou.engine.util.Utils;
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements General, Validate, Option {
     static final String ID_KEY = "name";
-    static final String PASSWORD_FLAG = "***************";
     static final String PASSWORD_SP = ";";
 
     @Override
@@ -142,14 +129,6 @@ public class User extends ModelBase implements General, Validate, Option {
     public String passwordLastModified;
 
     @ModelField(
-            input_type = InputType.bool,
-            list = true, search = true,
-            color = {"true:Green", "false:Gray"},
-            name = {"启用", "en:Active"},
-            info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
-    public Boolean active = true;
-
-    @ModelField(
             input_type = InputType.checkbox,
             list = true, search = true,
             ref_model = Role.class,
@@ -164,6 +143,14 @@ public class User extends ModelBase implements General, Validate, Option {
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
 
+    @ModelField(
+            input_type = InputType.bool,
+            list = true, search = true,
+            color = {"true:Green", "false:Gray"},
+            name = {"启用", "en:Active"},
+            info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
+    public Boolean active = true;
+
     @Override
     public Map<String, String> editData(String id) {
         return showData(id);
@@ -173,11 +160,8 @@ public class User extends ModelBase implements General, Validate, Option {
     public Map<String, String> showData(String id) {
         Map<String, String> data = showDataForUserInternal(id);
         if (data == null) return new HashMap<>();
-        data.put("password", PASSWORD_FLAG);
-        data.put("confirmPassword", PASSWORD_FLAG);
-        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(data.get("type"))) {
-            data.remove("role"); // 不能编辑超级管理员的角色
-        }
+        data.put("password", DeployerConstants.PASSWORD_FLAG);
+        data.put("confirmPassword", DeployerConstants.PASSWORD_FLAG);
         return data;
     }
 
@@ -246,7 +230,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            display = "name!=qingzhou",
+            display = "role!=" + DeployerConstants.QINGZHOU_ROLE_OWNER,
             batch_action = true,
             list_action = true, order = "9", action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
@@ -258,7 +242,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
+        String[] batchId = getAppContext().getThreadLocalRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
                 Main.getConfig().deleteUser(bId);
@@ -269,7 +253,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     private boolean passwordChanged(String password) {
-        return password != null && !password.equals(PASSWORD_FLAG);
+        return password != null && !password.equals(DeployerConstants.PASSWORD_FLAG);
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
@@ -295,7 +279,7 @@ public class User extends ModelBase implements General, Validate, Option {
         String id = data.get(ID_KEY);
         qingzhou.config.console.User user = Main.getConsole().getUser(id);
         Main.getConfig().deleteUser(id);
-        if (PASSWORD_FLAG.equals(data.get("password"))) {
+        if (DeployerConstants.PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
         }
         ModelUtil.setPropertiesToObj(user, data);
@@ -303,7 +287,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static String checkPwd(String password, String userId) {
-        if (Utils.isBlank(password) || PASSWORD_FLAG.equals(password)) return null;
+        if (Utils.isBlank(password) || DeployerConstants.PASSWORD_FLAG.equals(password)) return null;
 
         if (userId != null) {
             if (password.contains(userId)) { // 包含身份信息

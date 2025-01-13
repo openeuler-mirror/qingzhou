@@ -11,6 +11,7 @@ import qingzhou.config.console.Console;
 import qingzhou.config.console.impl.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
@@ -25,8 +26,6 @@ public class Main extends QingzhouSystemApp {
     public static final String Service = "Service";
     private static Main main;
     private static Config fileConfig;
-
-    private Boolean singleAppMode;
 
     public static Config getConfig() {
         return fileConfig;
@@ -72,25 +71,20 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("folder-open").order("2");
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
 
-        appContext.addActionFilter(this::doSingleAppMode);
-    }
-
-    private String doSingleAppMode(Request request) {
-        if (singleAppMode == null) {
-            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
-            singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
-        }
-
-        if (singleAppMode) {
-            if (DeployerConstants.APP_MASTER.equals(request.getApp())) {
-                if (DeployerConstants.MODEL_APP.equals(request.getModel())) {
-                    if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) {
-                        return "This action is not supported in single-app mode";
+        appContext.addAppActionFilter(request -> {
+            if (Main.getService(Deployer.class).getAuthAdapter() != null) {
+                String[] forbiddenModels = new String[]{
+                        DeployerConstants.MODEL_USER,
+                        DeployerConstants.MODEL_PASSWORD,
+                        DeployerConstants.MODEL_ROLE
+                };
+                for (String forbiddenModel : forbiddenModels) {
+                    if (request.getModel().equals(forbiddenModel)) {
+                        return "Unsupported actions";
                     }
                 }
             }
-        }
-
-        return null;
+            return null;
+        });
     }
 }

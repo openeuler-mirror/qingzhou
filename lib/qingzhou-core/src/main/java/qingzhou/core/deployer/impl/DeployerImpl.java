@@ -41,6 +41,7 @@ class DeployerImpl implements Deployer {
     private LoaderPolicy loaderPolicy;
     File appsBase = null;
     File systemApp = null;
+    private AuthAdapter authAdapter;
 
     private final java.util.List<AppListener> appListeners = new CopyOnWriteArrayList<>();
 
@@ -182,6 +183,17 @@ class DeployerImpl implements Deployer {
 
         // 再找远程
         return registry.getAppInfo(appName);
+    }
+
+    @Override
+    public AuthAdapter getAuthAdapter() {
+        if (authAdapter == null) {
+            for (String localApp : getLocalApps()) {
+                AppManagerImpl appImpl = (AppManagerImpl) getApp(localApp);
+                if ((authAdapter = appImpl.getAuthAdapter()) != null) break;
+            }
+        }
+        return authAdapter;
     }
 
     private AppManagerImpl buildApp(File appDir, Properties deploymentProperties) throws Throwable {
