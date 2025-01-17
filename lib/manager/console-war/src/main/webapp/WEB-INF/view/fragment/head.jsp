@@ -19,7 +19,7 @@
     String common_msg = request.getParameter(RESTController.MSG_FLAG);
     common_msg = LoginManager.retrieveI18nMsg(common_msg);
     if (common_msg != null) {
-        common_msg = common_msg.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
+        common_msg = common_msg.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
 %>
 <script>
     $(document).ready(function () {
@@ -43,7 +43,7 @@
 %>
 <script type="text/javascript">
     $(document).ready(function () {
-        var forward_msgIndex = showMsg("<%=qzResponse.getMsg().replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;")%>", "error");
+        var forward_msgIndex = showMsg("<%=qzResponse.getMsg().replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")%>", "error");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", forward_msgIndex);
