@@ -200,13 +200,14 @@ class DeployerImpl implements Deployer {
         AppManagerImpl app = new AppManagerImpl(moduleContext);
         app.setAppDir(appDir);
 
-        java.util.List<File> scanAppLibFiles = new ArrayList<>();
+        java.util.List<File> scanAppLibFiles = new ArrayList<>();// 此处用hashset 是否更合理
+        scanAppLibFiles.add(appDir);// 此处将应用的根目录增加到classload中 防止类似config/application.properties的资源 无法加载
         // 1. 只将“根目录”下的 jar 文件加入应用加载路径
         Arrays.stream(Objects.requireNonNull(appDir.listFiles())).filter(f -> f.getName().endsWith(".jar")).forEach(scanAppLibFiles::add);
         // 2. 探测“根目录/lib” 下所有的 jar 文件加入应用加载路径
         appendClassPath(new File(appDir, "lib"), scanAppLibFiles);
         // 3. 探测“根目录/config” 下所有的 jar 文件加入应用加载路径。SpringBoot 等应用实践会将需要加载的资源文件放入此名称目录
-        appendClassPath(new File(appDir, "config"), scanAppLibFiles);
+        scanAppLibFiles.add(new File(appDir, "config"));
         // 3. 轻舟为应用扩展的 jar 文件加入应用加载路径
         File[] additionalLib = loaderPolicy.getAdditionalLib();
         if (additionalLib != null) scanAppLibFiles.addAll(Arrays.asList(additionalLib));
