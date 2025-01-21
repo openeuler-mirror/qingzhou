@@ -2,64 +2,66 @@
 
 <style>
     #manul {
-        left: 50%;
-        transform: translateX(-50%);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        width: 900px;
-        z-index: 999;
-        position: absolute;
+        /* 调整为固定定位，覆盖全屏 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* 半透明背景，让图片更清晰 */
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 99999;
+        /* 居中对齐图片区域 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+		/* 去除可能的默认外边距 */
+		margin: 0;
+    	padding: 0;
     }
 
     #manul-image {
         position: relative;
-        width: 100%;
-        height: 500px;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
     }
 
     #manul-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        position: absolute;
-        top: 0;
-        left: 0;
-        opacity: 0;
-        transition: opacity 0.5s ease-in-out;
+		position: absolute;
+    	top: 50%;
+    	left: 50%;
+    	/* 通过 transform 来实现居中 */
+    	transform: translate(-50%, -50%);
+		max-width: 100%;
+		max-height: 100%;
+		margin: auto; 
+		object-fit: contain;
+		opacity: 0;
+		transition: opacity 0.5s ease-in-out;
     }
 
     #manul-image img.active {
         opacity: 1;
+		z-index: 1;
     }
 
     .carousel-controls {
-        display: flex;
-        justify-content: left;
-        padding: 10px;
-        background-color: rgba(0, 0, 0, 0.5);
         position: absolute;
-        bottom: 0;
+        bottom: 20px;
         width: 100%;
-        box-sizing: border-box;
+        text-align: center;
+		z-index: 100000;
     }
 
-    .carousel-button {
-        font-size: 16px;
-        background-color: transparent;
-        background-color: #4CAF50;
-        color: white;
-        cursor: pointer;
-        width: 70px;
-        height: 30px;
-        z-index: 10;
-    }
-
+    .carousel-button,
     .close-button {
-        font-size: 16px;
         background-color: #4CAF50;
-        color: white;
-        width: 60px;
-        height: 30px;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
         cursor: pointer;
+        margin: 0 5px;
     }
 </style>
 <%
@@ -82,6 +84,7 @@
 			}
 		}
 	}
+
 %>
 <div id="manul" style="display:none;">
 	<div id="manul-image">
