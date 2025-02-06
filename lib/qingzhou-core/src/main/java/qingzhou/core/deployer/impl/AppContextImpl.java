@@ -3,6 +3,7 @@ package qingzhou.core.deployer.impl;
 import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -116,5 +117,10 @@ public class AppContextImpl implements AppContext {
     @Override
     public void setAuthAdapter(AuthAdapter authAdapter) {
         app.setAuthAdapter(authAdapter);
+    }
+    
+    @Override
+    public List<ActionFilter> getAppActionFilter() {
+        return app.getAppActionFilter();
     }
 }

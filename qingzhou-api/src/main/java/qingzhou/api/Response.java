@@ -11,6 +11,10 @@ public interface Response {
      * 设置操作成功状态。
      */
     void setSuccess(boolean success);
+    
+    void setSuccess(boolean success, String code);
+    
+    void setCode(String code);
 
     /**
      * 设置操作返回的消息。
@@ -37,4 +41,6 @@ public interface Response {
     void setDateHeader(String name, long date);
 
     void setData(Serializable data);
+    
+    void write(byte[] bytes);
 }

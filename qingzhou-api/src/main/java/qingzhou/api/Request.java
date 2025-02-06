@@ -1,12 +1,25 @@
 package qingzhou.api;
 
 import java.util.Enumeration;
+import java.util.Map;
 
 /**
  * 请求接口定义了获取请求相关信息的方法。
  */
 public interface Request {
 
+    String getUri();
+    
+    String getQueryString();
+    
+    /**
+     * 请求方法
+     * @return "HEAD/GET/POST/PUT/DELETE/OPTIONS/TRACE/CONNECT/PATCH"
+     */
+    String getMethod();
+    
+    Map<String, String> getHeaders();
+    
     /**
      * 获取应用程序名称。
      *
