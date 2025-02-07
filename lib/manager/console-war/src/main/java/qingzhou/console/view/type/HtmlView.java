@@ -20,6 +20,12 @@ import qingzhou.console.view.View;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelInfo;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Optional;
 
 public class HtmlView implements View {
     public static final String HTML_PAGE_BASE = "/WEB-INF/view/";
@@ -52,9 +58,17 @@ public class HtmlView implements View {
 
     private void switchToManagedAction(RequestImpl request) {
         request.setAppName(request.getId());
-        request.setModelName(AppContext.APP_HOME_MODEL); // qingzhou.app.common.Home 的 code
-        request.setActionName(Show.ACTION_SHOW);
-        request.setCachedModelInfo(SystemController.getModelInfo(request.getId(), AppContext.APP_HOME_MODEL)); // 重新缓存
+        AppInfo appInfo = SystemController.getAppInfo(request.getId());
+        Optional<ModelInfo> first = Arrays.stream(appInfo.getModelInfos()).filter(m -> m.getMenu().isEmpty() && !m.isHidden()).min(Comparator.comparing(ModelInfo::getOrder));
+        if (first.isPresent()) {
+            request.setModelName(first.get().getCode());
+            request.setActionName(first.get().getEntrance());
+            request.setCachedModelInfo(SystemController.getModelInfo(request.getId(), first.get().getCode()));
+        } else {
+            request.setModelName(AppContext.APP_HOME_MODEL); // qingzhou.app.common.Home 的 code
+            request.setActionName(Show.ACTION_SHOW);
+            request.setCachedModelInfo(SystemController.getModelInfo(request.getId(), AppContext.APP_HOME_MODEL)); // 重新缓存
+        }
         Response response = SystemController.getService(ActionInvoker.class).invokeAny(request);
         request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
     }
