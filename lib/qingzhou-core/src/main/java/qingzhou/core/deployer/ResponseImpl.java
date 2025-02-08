@@ -11,44 +11,24 @@ import qingzhou.api.Response;
 import qingzhou.core.deployer.impl.ParametersImpl;
 
 public class ResponseImpl implements Response, Serializable {
-    private static final long serialVersionUID = -7237981774515507806L;
     private boolean success = true;
     private boolean logout = false;
-    private String code = "200";
     private String msg;
     private MsgLevel msgLevel;
     private String contentType;
     private final Map<String, String> parameters = new HashMap<>();
     private final ParametersImpl parametersInSession = new ParametersImpl();
     private final Map<String, String> headers = new LinkedHashMap<>();
-    private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
     private Serializable appData;
     private Serializable internalData;
-    private byte[] bytes = null;
 
     @Override
     public void setSuccess(boolean success) {
         this.success = success;
-        this.code = success ? "200" : "500";
-    }
-    
-    @Override
-    public void setSuccess(boolean success, String code) {
-        this.success = success;
-        this.code = code;
     }
 
     public boolean isSuccess() {
         return this.success;
-    }
-    
-    @Override
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getCode() {
-        return this.code;
     }
 
     @Override
@@ -91,19 +71,6 @@ public class ResponseImpl implements Response, Serializable {
         return headers.keySet();
     }
 
-    @Override
-    public void setDateHeader(String name, long date) {
-        dateHeaders.put(name, date);
-    }
-
-    public Long getDateHeader(String name) {
-        return dateHeaders.get(name);
-    }
-
-    public Collection<String> getDateHeaderNames() {
-        return dateHeaders.keySet();
-    }
-
     public Serializable getAppData() {
         return appData;
     }
@@ -120,11 +87,6 @@ public class ResponseImpl implements Response, Serializable {
     public boolean isLogout() {
         return logout;
     }
-    
-    @Override
-    public void write(byte[] bytes) {
-        this.bytes = bytes;
-    }
 
     public Serializable getInternalData() {
         return internalData;
@@ -140,9 +102,5 @@ public class ResponseImpl implements Response, Serializable {
 
     public Map<String, String> getParameters() {
         return parameters;
-    }
-    
-    public byte[] getBytes() {
-        return this.bytes;
     }
 }

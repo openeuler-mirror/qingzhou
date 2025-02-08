@@ -26,7 +26,6 @@ import qingzhou.console.view.type.JsonView;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.core.deployer.impl.AppContextImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelFieldInfo;
@@ -209,40 +208,27 @@ public class RESTController extends HttpServlet {
         Map<String, String> fileAttachments = null;
         try {
             RequestImpl request = buildRequest(req, resp);
-            
-            AppInfo appInfo = SystemController.getAppInfo(request.getApp());
-            if (appInfo != null) {// 应用卸载后，继续在原先的“管理”页面点击
-                ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
-                if (modelInfo != null) {
-                    ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-                    // rest 接口可以任意输入不存在的action
-                    if (actionInfo != null) {
-                        request.setCachedModelInfo(modelInfo);
-                    }
-                    // Update 更新操作参数里需要 id
-                    request.getParameters().put(modelInfo.getIdField(), request.getId());
+            if (request == null) return;
+
+            ModelInfo modelInfo = request.getCachedModelInfo();
+            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+            if (actionInfo.isRequestBody()) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                FileUtil.copyStream(req.getInputStream(), baos);
+                request.setHttpBody(baos.toByteArray());
+            } else {
+                fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
+                if (fileAttachments != null) {
+                    fileAttachments.forEach((k, v) -> request.getParameters().put(k, v));
                 }
             }
-            
-            fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
-            if (fileAttachments != null) {
-                fileAttachments.forEach((k, v) -> request.getParameters().put(k, v));
-            }
-            
             parseRequestParameters(request, req);
 
             RestContext context = new RestContext(req, resp, request);
 
-            AppContextImpl appContext = (AppContextImpl) qingzhou.console.controller.SystemController.getService(qingzhou.core.deployer.Deployer.class).getApp(request.getApp()).getAppContext();
-            List<qingzhou.api.ActionFilter> filterList = appContext.getAppActionFilter();
-            for (qingzhou.api.ActionFilter filter : filterList) {
-                String filterResult = filter.doFilter(request);
-                if (filterResult != null) {
-                    break;
-                }
-            }
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
-            if (((ResponseImpl) context.request.getResponse()).isLogout()) {
+            ResponseImpl response = (ResponseImpl) context.request.getResponse();
+            if (response.isLogout()) {
                 LoginManager.logoutSession(context.req);
                 LoginManager.forwardToLoginJsp(context.req, context.resp);
                 return;
@@ -280,28 +266,40 @@ public class RESTController extends HttpServlet {
         }
 
         RequestImpl request = new RequestImpl();
-        request.setLang(I18n.getI18nLang());
-        request.setUri(req.getRequestURI());
-        request.setQueryString(req.getQueryString());
-        request.setMethod(req.getMethod());
-        Enumeration<String> headerNames = req.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            request.setHeader(headerName, req.getHeader(headerName));
-        }
-        
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            FileUtil.copyStream(req.getInputStream(), baos);
-            request.setHttpBody(baos.toByteArray());
-        } catch (IOException ignored) {
-        }
-        
         request.setViewName(rest.get(0));
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        
+
+        AppInfo appInfo = SystemController.getAppInfo(request.getApp());
+        if (appInfo == null) return null; // 应用卸载后，继续在原先的“管理”页面点击
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        if (modelInfo == null) return null;
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo == null) return null;// rest 接口可以任意输入不存在的action
+        request.setCachedModelInfo(modelInfo);
+
+        StringBuilder id = new StringBuilder();
+        if (rest.size() > restDepth) {
+            id.append(rest.get(restDepth));
+            for (int i = restDepth + 1; i < rest.size(); i++) {
+                id.append("/").append(rest.get(i)); // support ds jndi: jdbc/test
+            }
+            String decodeId = RESTController.decodeId(id.toString());
+            request.setId(decodeId);
+            // Update 更新操作参数里需要id
+            request.getParameters().put(modelInfo.getIdField(), decodeId);
+        }
+
+        Enumeration<String> headerNames = req.getHeaderNames();
+        if (headerNames != null) {
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                String headerValue = req.getHeader(headerName);
+                request.setHeader(headerName, headerValue);
+            }
+        }
+
         HttpSession session = req.getSession();
         request.addSessionParameterListener(session::setAttribute);
         Enumeration<String> attributeNames = session.getAttributeNames();
@@ -316,16 +314,8 @@ public class RESTController extends HttpServlet {
         if (loggedUser != null) { // 远程注册时候不需要登录，没有登录用户
             request.setUserName(loggedUser.getName());
         }
-        
-        StringBuilder id = new StringBuilder();
-        if (rest.size() > restDepth) {
-            id.append(rest.get(restDepth));
-            for (int i = restDepth + 1; i < rest.size(); i++) {
-                id.append("/").append(rest.get(i)); // support ds jndi: jdbc/test
-            }
-            request.setId(RESTController.decodeId(id.toString()));
-        }
-        
+        request.setLang(I18n.getI18nLang());
+
         return request;
     }
 

@@ -1,25 +1,12 @@
 package qingzhou.api;
 
 import java.util.Enumeration;
-import java.util.Map;
 
 /**
  * 请求接口定义了获取请求相关信息的方法。
  */
 public interface Request {
 
-    String getUri();
-    
-    String getQueryString();
-    
-    /**
-     * 请求方法
-     * @return "HEAD/GET/POST/PUT/DELETE/OPTIONS/TRACE/CONNECT/PATCH"
-     */
-    String getMethod();
-    
-    Map<String, String> getHeaders();
-    
     /**
      * 获取应用程序名称。
      *
@@ -79,6 +66,16 @@ public interface Request {
     String getHeader(String name);
 
     Enumeration<String> getHeaderNames();
+
+    /**
+     * Returns the name of the HTTP method with which this request was made, for
+     * example, GET, POST, or PUT. Same as the value of the CGI variable
+     * REQUEST_METHOD.
+     *
+     * @return a <code>String</code> specifying the name of the method with
+     * which this request was made
+     */
+    String getMethod();
 
     /**
      * 获取 http 请求消息体

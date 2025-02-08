@@ -177,7 +177,7 @@ class SuperAction {
         String[] getFields = Utils.notBlank(parameter) && !parameter.equals(idField)
                 ? new String[]{idField, parameter}
                 : new String[]{idField};
-        java.util.ArrayList<String[]> result = new ArrayList<>(list.listData(1, list.maxResponseDataSize(), getFields, new HashMap<>()));
+        java.util.ArrayList<String[]> result = new ArrayList<>(list.listData(1, list.maxResponseDataSize(), getFields, null));
         ResponseImpl response = (ResponseImpl) request.getResponse();
         response.setInternalData(result);
     }
@@ -227,7 +227,7 @@ class SuperAction {
             return ((List) instance).defaultSearch();
         }
 
-        return new HashMap<>();
+        return null;
     }
 
     @ModelAction(

@@ -1,6 +1,5 @@
 package qingzhou.api.type;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -49,7 +48,7 @@ public interface List {
      * 设置进入列表页面默认的搜索条件
      */
     default Map<String, String> defaultSearch() {
-        return new HashMap<>();
+        return null; // null 表示不使用搜索
     }
 
     default boolean useDynamicDefaultSearch() {

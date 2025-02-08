@@ -11,10 +11,6 @@ public interface Response {
      * 设置操作成功状态。
      */
     void setSuccess(boolean success);
-    
-    void setSuccess(boolean success, String code);
-    
-    void setCode(String code);
 
     /**
      * 设置操作返回的消息。
@@ -23,24 +19,11 @@ public interface Response {
 
     void setMsgLevel(MsgLevel msgLevel);
 
+    // 自定义返回数据，会忽略 success 和 msg 数据
+    void setData(Serializable data);
+
     // 设置响应类型
     void setContentType(String contentType);
 
     void setHeader(String name, String value);
-
-    /**
-     * Sets a response header with the given name and date-value. The date is
-     * specified in terms of milliseconds since the epoch. If the header had
-     * already been set, the new value overwrites the previous one. The
-     * <code>containsHeader</code> method can be used to test for the presence
-     * of a header before setting its value.
-     *
-     * @param name the name of the header to set
-     * @param date the assigned date value
-     */
-    void setDateHeader(String name, long date);
-
-    void setData(Serializable data);
-    
-    void write(byte[] bytes);
 }
