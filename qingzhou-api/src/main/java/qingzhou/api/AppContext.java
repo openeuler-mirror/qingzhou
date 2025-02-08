@@ -1,6 +1,7 @@
 package qingzhou.api;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -37,6 +38,8 @@ public interface AppContext {
      * @param actionFilter 操作过滤器实例。
      */
     void addAppActionFilter(ActionFilter... actionFilter);
+    
+    List<ActionFilter> getAppActionFilter();
 
     // 为指定模块添加过滤器
     void addModelActionFilter(ModelBase modelBase, ActionFilter... actionFilter);

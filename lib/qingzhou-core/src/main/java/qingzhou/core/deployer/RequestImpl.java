@@ -14,10 +14,14 @@ import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 
 public class RequestImpl implements Request, Serializable {
+    private static final long serialVersionUID = -8646110059006025102L;
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;
     private transient Map<String, Response> invokeOnInstances;
 
+    private String uri;
+    private String queryString;
+    private String method;
     private String appName;
     private String modelName;
     private String actionName;
@@ -38,6 +42,9 @@ public class RequestImpl implements Request, Serializable {
     }
 
     public RequestImpl(RequestImpl origin) {
+    	this.uri = origin.uri;
+        this.queryString = origin.queryString;
+        this.method = origin.method;
         this.appName = origin.appName;
         this.modelName = origin.modelName;
         this.actionName = origin.actionName;
@@ -53,6 +60,21 @@ public class RequestImpl implements Request, Serializable {
         this.parametersForSession.putAll(origin.parametersForSession);
 
         this.byteParameter = null; // 数据量大，且目前大部分业务并不需要它
+    }
+    
+    @Override
+    public String getUri() {
+        return this.uri;
+    }
+    
+    @Override
+    public String getQueryString() {
+        return this.queryString;
+    }
+    
+    @Override
+    public String getMethod() {
+        return method;
     }
 
     @Override
@@ -138,6 +160,7 @@ public class RequestImpl implements Request, Serializable {
         return httpBody;
     }
 
+    @Override
     public Map<String, String> getHeaders() {
         return headers;
     }
@@ -163,6 +186,22 @@ public class RequestImpl implements Request, Serializable {
     @Override
     public Response getResponse() {
         return response;
+    }
+    
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+    
+    public void setQueryString(String queryString) {
+        this.queryString = queryString;
+    }
+    
+    public void setMethod(String method) {
+        this.method = method;
+    }
+    
+    public void setHeader(String name, String value) {
+        this.headers.put(name, value);
     }
 
     public void setAppName(String appName) {
