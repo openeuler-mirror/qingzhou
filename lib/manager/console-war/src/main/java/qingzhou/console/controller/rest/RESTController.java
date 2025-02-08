@@ -300,6 +300,8 @@ public class RESTController extends HttpServlet {
             }
         }
 
+        request.setMethod(req.getMethod());
+
         HttpSession session = req.getSession();
         request.addSessionParameterListener(session::setAttribute);
         Enumeration<String> attributeNames = session.getAttributeNames();

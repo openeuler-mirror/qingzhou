@@ -19,6 +19,7 @@ public class ResponseImpl implements Response, Serializable {
     private final Map<String, String> parameters = new HashMap<>();
     private final ParametersImpl parametersInSession = new ParametersImpl();
     private final Map<String, String> headers = new LinkedHashMap<>();
+    private int statusCode = -1;
     private Serializable appData;
     private Serializable internalData;
 
@@ -61,6 +62,15 @@ public class ResponseImpl implements Response, Serializable {
     @Override
     public void setHeader(String name, String value) {
         headers.put(name, value);
+    }
+
+    @Override
+    public void setStatusCode(int sc) {
+        this.statusCode = sc;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
     }
 
     public String getHeader(String name) {
