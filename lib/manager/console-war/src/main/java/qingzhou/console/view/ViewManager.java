@@ -55,7 +55,11 @@ public class ViewManager {
 
         servletResponse.setContentType(response.getContentType());
         response.getHeaderNames().forEach(k -> servletResponse.setHeader(k, response.getHeader(k)));
-        response.getDateHeaderNames().forEach(k -> servletResponse.setDateHeader(k, response.getDateHeader(k)));
+
+        int statusCode = response.getStatusCode();
+        if (statusCode > 0) {
+            servletResponse.setStatus(statusCode);
+        }
 
         String page = actionInfo.getAppPage();
         if (Utils.notBlank(page)) {

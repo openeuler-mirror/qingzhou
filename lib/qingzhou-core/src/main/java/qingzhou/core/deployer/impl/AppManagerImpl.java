@@ -158,10 +158,6 @@ public class AppManagerImpl implements AppManager {
     void addAppActionFilter(ActionFilter... appActionFilter) {
         this.appActionFilters.addAll(Arrays.asList(appActionFilter));
     }
-    
-    List<ActionFilter> getAppActionFilter() {
-        return new ArrayList<>(this.appActionFilters);
-    }
 
     void addModelActionFilter(ModelBase modelBase, ActionFilter... appActionFilter) {
         String modelName = null;
