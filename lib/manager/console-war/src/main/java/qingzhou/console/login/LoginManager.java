@@ -1,16 +1,5 @@
 package qingzhou.console.login;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -26,6 +15,16 @@ import qingzhou.core.deployer.Deployer;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
 
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_PATH = "/login";
@@ -132,11 +131,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
                     String model = entry.getKey();
                     for (String action : entry.getValue()) {
                         String baseUri = DeployerConstants.REST_PREFIX + "/" + view + "/" + app + "/" + model + "/" + action;
-                        // 支持/rest/json/auth-server-x/user/update  /rest/json/auth-server-x/user/update/2
-                        // 支持/rest/json/auth-server-x/user/delete  /rest/json/auth-server-x/user/delete/2
-                        String regex = baseUri + "(/\\d+)?$";
-                        Pattern pattern = Pattern.compile(regex);
-                        if (pattern.matcher(checkUri).matches()) {
+                        if (checkUri.startsWith(baseUri)) {
                             return true;
                         }
                     }
