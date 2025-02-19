@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -131,7 +132,11 @@ public class LoginManager implements Filter<SystemControllerContext> {
                     String model = entry.getKey();
                     for (String action : entry.getValue()) {
                         String baseUri = DeployerConstants.REST_PREFIX + "/" + view + "/" + app + "/" + model + "/" + action;
-                        if (checkUri.equals(baseUri)) {
+                        // 支持/rest/json/auth-server-x/user/update  /rest/json/auth-server-x/user/update/2
+                        // 支持/rest/json/auth-server-x/user/delete  /rest/json/auth-server-x/user/delete/2
+                        String regex = baseUri + "(/\\d+)?$";
+                        Pattern pattern = Pattern.compile(regex);
+                        if (pattern.matcher(checkUri).matches()) {
                             return true;
                         }
                     }
