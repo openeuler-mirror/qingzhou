@@ -63,6 +63,7 @@ public class Controller implements Process {
                     new File(moduleContext.getTemp(), "servlet"),
                     new Properties() {{
                         setProperty("maxPostSize", String.valueOf(console.getMaxPostSize()));
+                        setProperty("enabledRemoteIpValve", String.valueOf(console.isEnabledRemoteIpValve()));
                     }});
         }
 
