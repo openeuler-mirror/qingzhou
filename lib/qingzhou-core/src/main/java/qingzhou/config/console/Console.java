@@ -7,6 +7,7 @@ public class Console {
     private int port;
     private String contextRoot;
     private int maxPostSize;
+    private boolean enabledRemoteIpValve;
     private Security security;
     private Jmx jmx;
     private User[] user;
@@ -64,6 +65,14 @@ public class Console {
 
     public void setMaxPostSize(int maxPostSize) {
         this.maxPostSize = maxPostSize;
+    }
+
+    public boolean isEnabledRemoteIpValve() {
+        return enabledRemoteIpValve;
+    }
+
+    public void setEnabledRemoteIpValve(boolean enabledRemoteIpValve) {
+        this.enabledRemoteIpValve = enabledRemoteIpValve;
     }
 
     public Security getSecurity() {

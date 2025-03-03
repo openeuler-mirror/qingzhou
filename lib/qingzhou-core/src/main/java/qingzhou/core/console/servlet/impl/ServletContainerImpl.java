@@ -7,6 +7,7 @@ import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.tomcat.util.modeler.Registry;
 import qingzhou.core.console.servlet.ServletContainer;
@@ -37,6 +38,15 @@ public class ServletContainerImpl implements ServletContainer {
                 String maxPostSize = properties.getProperty("maxPostSize");
                 if (maxPostSize != null) {
                     setMaxPostSize = Integer.parseInt(maxPostSize);
+                }
+                String enabledRemoteIpValve = properties.getProperty("enabledRemoteIpValve", "false");
+                if (enabledRemoteIpValve.equals("true")) {
+                    RemoteIpValve remoteIpValve = new RemoteIpValve();
+                    remoteIpValve.setRemoteIpHeader("X-Forwarded-For");
+                    remoteIpValve.setProtocolHeader("X-Forwarded-Proto");
+                    remoteIpValve.setHostHeader("X-Forwarded-Host");
+                    remoteIpValve.setPortHeader("X-Forwarded-Port");
+                    tomcat.getEngine().getPipeline().addValve(remoteIpValve);
                 }
             }
             // 设置最大文件上传的大小
