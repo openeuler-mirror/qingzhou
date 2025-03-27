@@ -117,4 +117,6 @@ public interface ConnectionPoolBuilder {
      * @return 配置好的连接池
      */
     ConnectionPool buildConnectionPool() throws SQLException;
+
+    ConnectionPoolBuilder testWhileIdle(boolean testWhileIdle);
 }
