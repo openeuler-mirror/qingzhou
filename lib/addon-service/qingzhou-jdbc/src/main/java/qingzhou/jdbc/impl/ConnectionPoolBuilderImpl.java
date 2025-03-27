@@ -73,6 +73,12 @@ public class ConnectionPoolBuilderImpl implements ConnectionPoolBuilder {
     }
 
     @Override
+    public ConnectionPoolBuilder testWhileIdle(boolean testWhileIdle) {
+        poolProperties.setTestWhileIdle(testWhileIdle);
+        return this;
+    }
+
+    @Override
     public ConnectionPool buildConnectionPool() throws SQLException {
         String error = validate();
         if (error != null) {
