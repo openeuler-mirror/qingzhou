@@ -104,12 +104,11 @@ class VersionUtil {
     private File getHomeDir() {
         if (qingzhouHomeFile == null) {
             String jarPath = VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            try { // 兼容中文路径
-                jarPath = URLDecoder.decode(
-                        jarPath,
-                        Charset.defaultCharset().name());
+            try { //兼容Windows平台中文路径或包含空白符号
+                jarPath = URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                System.err.println("Waring! not support UTF-8 coding. this is standard java coding");
+                throw new RuntimeException("not support UTF-8 coding");
             }
             String flag = "/bin/qingzhou-launcher.jar";
             int i = jarPath.indexOf(flag);
