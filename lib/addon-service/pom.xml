@@ -24,7 +24,7 @@
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-engine</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope> <!-- 不要一起打包进去-->
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

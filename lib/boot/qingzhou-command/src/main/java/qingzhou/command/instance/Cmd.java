@@ -8,11 +8,12 @@ import qingzhou.command.CommandUtil;
 public enum Cmd {
     start {
         @Override
-        public void exec(File instanceDir, List<String> extArgs) throws Exception {
-            ConfigTool configTool = new ConfigTool(instanceDir);
+        public void exec(List<String> extArgs) throws Exception {
+            File instance = CommandUtil.getInstance();
+            ConfigTool configTool = new ConfigTool(instance);
             // build ProcessBuilder
             ProcessBuilder builder = new ProcessBuilder();
-            builder.directory(instanceDir);
+            builder.directory(instance);
             builder.redirectErrorStream(true).inheritIO();
             builder.environment().putAll(configTool.environment());
             builder.command(CommandUtil.getJavaCmd(configTool.getJavaHomeEnv()));
@@ -40,5 +41,5 @@ public enum Cmd {
         }
     };
 
-    public abstract void exec(File instanceDir, List<String> extArgs) throws Exception;
+    public abstract void exec(List<String> extArgs) throws Exception;
 }

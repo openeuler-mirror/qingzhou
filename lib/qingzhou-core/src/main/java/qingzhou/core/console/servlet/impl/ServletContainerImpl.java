@@ -1,5 +1,9 @@
 package qingzhou.core.console.servlet.impl;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
@@ -11,13 +15,9 @@ import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.tomcat.util.modeler.Registry;
 import qingzhou.core.console.servlet.ServletContainer;
-import qingzhou.impl.Controller;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
+import qingzhou.impl.Controller;
 
 public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;
@@ -33,14 +33,13 @@ public class ServletContainerImpl implements ServletContainer {
             tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
             Connector connector = tomcat.getConnector();// 建立连接器
 
-            int setMaxPostSize = 104857600; // 100 MB
+            int setMaxPostSize = 100 * 1024 * 1024; // 修改默认值
             if (properties != null) {
                 String maxPostSize = properties.getProperty("maxPostSize");
                 if (maxPostSize != null) {
                     setMaxPostSize = Integer.parseInt(maxPostSize);
                 }
-                String enabledRemoteIpValve = properties.getProperty("enabledRemoteIpValve", "false");
-                if (enabledRemoteIpValve.equals("true")) {
+                if (Boolean.parseBoolean(properties.getProperty("enabledRemoteIpValve"))) { // 云帆用
                     RemoteIpValve remoteIpValve = new RemoteIpValve();
                     remoteIpValve.setRemoteIpHeader("X-Forwarded-For");
                     remoteIpValve.setProtocolHeader("X-Forwarded-Proto");

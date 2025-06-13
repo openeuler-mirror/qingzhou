@@ -1,35 +1,21 @@
 package qingzhou.command;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 public class CommandUtil {
-    public static File getLibDir() {
-        String jarPath = Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        try {
-            // 兼容中文路径
-            jarPath = java.net.URLDecoder.decode(
-                    jarPath,
-                    Charset.defaultCharset().name());
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        String flag = "/command/qingzhou-command.jar";
-        int i = jarPath.indexOf(flag);
-        String pre = jarPath.substring(0, i);
-        return new File(pre);
+    public static File getHome() {
+        return new File(System.getProperty("qingzhou.home"));
     }
 
-    public static void log(String msg) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss >>> ");
-        String logPrefix = dateFormat.format(new Date());
-        System.out.println(logPrefix + msg);
+    public static File getInstance() {
+        return new File(System.getProperty("qingzhou.instance"));
+    }
+
+    public static File getLib() {
+        return new File(System.getProperty("qingzhou.lib"));
     }
 
     public static boolean isWindows() {
@@ -54,7 +40,7 @@ public class CommandUtil {
         return "java";
     }
 
-    public static String stripQuotes(String value) {
+    static String stripQuotes(String value) {
         if (value == null) return null;
 
         while (value.startsWith("\"")) {

@@ -1,5 +1,9 @@
 package qingzhou.command;
 
+import java.io.File;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
 public abstract class CommandLineProcessor { // 兼容 老版本，因此动这个要小心
@@ -13,6 +17,24 @@ public abstract class CommandLineProcessor { // 兼容 老版本，因此动这�
     }
 
     public abstract void doCommandLine(String[] args) throws Exception;
+
+    protected void log(String msg) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss >>> ");
+        String logPrefix = dateFormat.format(new Date());
+        System.out.println(logPrefix + msg);
+    }
+
+    protected boolean initInstanceFailed(String instanceName) {
+        String base = Paths.get(System.getProperty("qingzhou.home"), "instances", instanceName).toFile().getAbsolutePath();
+        File configFile = Paths.get(base, "conf", "qingzhou.json").toFile();
+        if (configFile.isFile()) {
+            System.setProperty("qingzhou.instance", base);
+            return false;
+        } else {
+            log("instance does not exist: " + instanceName);
+            return true;
+        }
+    }
 
     @Override
     public boolean equals(Object o) {

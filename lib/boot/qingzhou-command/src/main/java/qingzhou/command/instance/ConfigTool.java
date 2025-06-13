@@ -1,7 +1,5 @@
 package qingzhou.command.instance;
 
-import qingzhou.command.CommandUtil;
-
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -12,17 +10,19 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-class ConfigTool {
+import qingzhou.command.CommandUtil;
+
+public class ConfigTool {
     private final File instanceDir;
     private final List<String> commands = new ArrayList<>();
     private final Map<String, String> envs = new HashMap<>();
 
-    ConfigTool(File instanceDir) throws Exception {
+    public ConfigTool(File instanceDir) throws Exception {
         this.instanceDir = instanceDir;
         initConfig();
     }
 
-    String getJavaHomeEnv() {
+    public String getJavaHomeEnv() {
         return envs.get("JAVA_HOME");
     }
 
@@ -30,7 +30,7 @@ class ConfigTool {
         return envs;
     }
 
-    List<String> command() {
+    public List<String> command() {
         return commands;
     }
 
@@ -56,7 +56,7 @@ class ConfigTool {
             commands.add(convertArg(String.valueOf(arg.get("name"))));
         }
 
-        String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
+        String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLib(), "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
         commands.add("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/"));
@@ -66,21 +66,21 @@ class ConfigTool {
     }
 
     private Map parseFileConfig() throws Exception {
-        URL jsonUrl = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
-        URL engineUrl = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "engine", "qingzhou-engine.jar").toUri().toURL();
+        URL jsonUrl = Paths.get(CommandUtil.getLib().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
+        URL engineUrl = Paths.get(CommandUtil.getLib().getAbsolutePath(), "engine", "qingzhou-engine.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{engineUrl, jsonUrl})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);
 
-            try (InputStream inputStream = Files.newInputStream(new File(new File(instanceDir, "conf"), "qingzhou.json").toPath())) {
+            try (InputStream inputStream = Files.newInputStream(Paths.get(instanceDir.getAbsolutePath(), "conf", "qingzhou.json"))) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 return (Map) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
             }
         }
     }
 
-    public static String convertArg(String str) {
+    static String convertArg(String str) {
         if (str == null) {
             return null;
         }
