@@ -3,7 +3,6 @@ package qingzhou.engine.impl;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +22,7 @@ public class EngineContext {
             try { //兼容Windows平台中文路径或包含空白符号
                 jarPath = URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name());
             } catch (UnsupportedEncodingException e) {
-                System.err.println("Waring! not support UTF-8 coding. this is standard java coding");
-                throw new RuntimeException("not support UTF-8 coding");
+                e.printStackTrace();
             }
             String flag = "/engine/qingzhou-engine.jar";
             int i = jarPath.indexOf(flag);
