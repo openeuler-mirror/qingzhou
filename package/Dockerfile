@@ -19,7 +19,13 @@ RUN rm -rf /var/cache/apk/* && rm -rf /tmp/* /var/tmp/*
 FROM basejdk
 RUN adduser -u 1000 -D qingzhou
 USER qingzhou
-COPY --chown=qingzhou:qingzhou target/qingzhou /opt/qingzhou
-WORKDIR /opt/qingzhou
+
+ARG version=2.1.0
+ENV QZ_HOME=/opt/qingzhou
+ENV QZ_BASE=/opt/qingzhou/instances/instance1
+ENV QZ_VERSION=$version
+
+COPY --chown=qingzhou:qingzhou target/qingzhou $QZ_HOME
+WORKDIR $QZ_HOME
 EXPOSE 9000
 ENTRYPOINT ["sh","./bin/start.sh"]
