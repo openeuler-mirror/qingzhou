@@ -9,20 +9,16 @@
     ],
     "arg": [
       {
-        "name": "-Xms1024m",
-        "desc": "初始分配的堆内存"
+        "name": "-Xms1024m"
       },
       {
-        "name": "-Xmx1024m",
-        "desc": "最大可分配的堆内存"
+        "name": "-Xmx1024m"
       },
       {
-        "name": "-XX:+HeapDumpOnOutOfMemoryError",
-        "desc": "开启堆转储"
+        "name": "-XX:+HeapDumpOnOutOfMemoryError"
       },
       {
-        "name": "-XX:HeapDumpPath=logs/heap.hprof",
-        "desc": "堆转储文件路径"
+        "name": "-XX:HeapDumpPath=logs/heap.hprof"
       },
       {
         "name": "-server"
@@ -42,9 +38,8 @@
         "name": "-Djava.awt.headless=true"
       },
       {
-        "name": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888",
         "enabled": "true",
-        "desc": "远程调试参数"
+        "name": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888"
       }
     ]
   },

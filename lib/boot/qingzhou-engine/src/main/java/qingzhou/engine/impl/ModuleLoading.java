@@ -5,7 +5,7 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Resource;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
-import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.engine.util.pattern.ProcessPattern;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -21,11 +21,11 @@ import java.util.*;
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
     private final List<ModuleInfo> moduleStartedOrderCache = new ArrayList<>();
-    private final ProcessSequence sequence;
+    private final ProcessPattern sequence;
 
     public ModuleLoading(EngineContext engineContext) {
         this.engineContext = engineContext;
-        this.sequence = new ProcessSequence(
+        this.sequence = new ProcessPattern(
                 new BuildModuleInfo(),
                 new BuildModuleLoader(),
                 new BuildModuleActivator(),
@@ -35,19 +35,19 @@ public class ModuleLoading implements Process {
     }
 
     @Override
-    public void exec() throws Throwable {
-        sequence.exec();
+    public void run() throws Throwable {
+        sequence.run();
     }
 
     @Override
-    public void undo() {
-        sequence.undo();
+    public void completed() {
+        sequence.completed();
     }
 
     private class BuildModuleInfo implements Process {
 
         @Override
-        public void exec() {
+        public void run() {
             File moduleDir = new File(engineContext.getLibDir(), "module");
             List<File> moduleFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(moduleDir.listFiles())));
             File[] pluginFiles = new File(engineContext.getLibDir(), "addon").listFiles(); // 保持一致 ：assembly.xml 里的 addon
@@ -64,7 +64,7 @@ public class ModuleLoading implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             engineContext.moduleInfoList.clear();
         }
     }
@@ -72,7 +72,7 @@ public class ModuleLoading implements Process {
     private class BuildModuleLoader implements Process {
 
         @Override
-        public void exec() throws Exception {
+        public void run() throws Exception {
             URLClassLoader parentLoader = new URLClassLoader(
                     new URL[]{new File(engineContext.getLibDir(), "qingzhou-api.jar").toURI().toURL()},
                     Main.class.getClassLoader());
@@ -80,7 +80,7 @@ public class ModuleLoading implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             engineContext.moduleInfoList.forEach(moduleInfo -> {
                 try {
                     moduleInfo.getLoader().close();
@@ -95,7 +95,7 @@ public class ModuleLoading implements Process {
     private class SetModule implements Process {
 
         @Override
-        public void exec() throws Exception {
+        public void run() throws Exception {
             Map<String, ?> qzJson;
             URL jsonUrl = Paths.get(engineContext.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
             try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonUrl})) {
@@ -121,7 +121,7 @@ public class ModuleLoading implements Process {
     private class BuildModuleActivator implements Process {
 
         @Override
-        public void exec() throws Throwable {
+        public void run() throws Throwable {
             for (ModuleInfo moduleInfo : engineContext.moduleInfoList) {
                 Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
                         new File[]{moduleInfo.getFile()},
@@ -135,7 +135,7 @@ public class ModuleLoading implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             engineContext.moduleInfoList.forEach(moduleInfo -> moduleInfo.moduleActivators.clear());
         }
     }
@@ -143,7 +143,7 @@ public class ModuleLoading implements Process {
     private class StartModule implements Process {
 
         @Override
-        public void exec() throws Throwable {
+        public void run() throws Throwable {
             Collection<ModuleInfo> toStartList = engineContext.moduleInfoList;
             while (true) {
                 Map<ModuleInfo, Set<Class<?>>> missingServiceModule = startModule(toStartList);
@@ -163,7 +163,7 @@ public class ModuleLoading implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             Collections.reverse(moduleStartedOrderCache); // Qingzhou Logger module must be the last one to stop.
             moduleStartedOrderCache.forEach(moduleInfo -> {
                 moduleInfo.setStarted(false);

@@ -10,7 +10,6 @@ public interface DeployerConstants {
     // 系统环境
     String APP_MASTER = "-";
     String INSTANCE_LOCAL = "localhost";
-    String ACTION_INVOKE_CHARSET = "UTF-8";
     String DEFAULT_USER_QINGZHOU = "qingzhou";
     String QINGZHOU_ROLE_OWNER = "QINGZHOU_ROLE_OWNER"; // 内置的，不能赋予
     String QINGZHOU_ROLE_MAINTAINER = "QINGZHOU_ROLE_MAINTAINER";

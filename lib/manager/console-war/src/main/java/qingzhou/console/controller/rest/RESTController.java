@@ -226,7 +226,7 @@ public class RESTController extends HttpServlet {
 
             RestContext context = new RestContext(req, resp, request);
 
-            FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
+            new FilterPattern(filters, context).doFilter();// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             ResponseImpl response = (ResponseImpl) context.request.getResponse();
             if (response.isLogout()) {
                 LoginManager.logoutSession(context.req);
@@ -234,7 +234,7 @@ public class RESTController extends HttpServlet {
                 return;
             }
             ViewManager.getInstance().render(context); // 最后作出响应
-        } catch (Exception e) {
+        } catch (Throwable e) {
             SystemController.getService(Logger.class).error(e.getMessage(), e);
         } finally {
             if (fileAttachments != null) {

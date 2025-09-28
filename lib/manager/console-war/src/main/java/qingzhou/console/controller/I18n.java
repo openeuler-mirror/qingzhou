@@ -123,7 +123,7 @@ public class I18n implements Filter<SystemControllerContext> {
     }
 
     @Override
-    public void afterFilter(SystemControllerContext context) {
+    public void postFilter(SystemControllerContext context) {
         I18n.resetI18nLang();
         try {
             String requestURI = context.req.getRequestURI();

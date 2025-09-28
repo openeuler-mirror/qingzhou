@@ -24,7 +24,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void exec() {
+    public void run() {
         registry = new RegistryImpl(context.getService(Json.class), context.getService(CryptoService.class));
         context.registerService(Registry.class, registry);
 
@@ -45,7 +45,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         if (timer != null) {
             timer.cancel();
         }

@@ -25,7 +25,7 @@ public class ServiceHelper implements Process {
     }
 
     @Override
-    public void exec() throws Throwable {
+    public void run() throws Throwable {
         context.addServiceListener((event, serviceType) -> {
             if (ServiceListener.ServiceEvent.GOT == event) {
                 ALL_GOT_SERVICES.add(serviceType);

@@ -6,7 +6,7 @@ import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Resource;
-import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.engine.util.pattern.ProcessPattern;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -28,21 +28,21 @@ public class Controller implements ModuleActivator {
     @Resource
     private Http http;
 
-    private ProcessSequence processSequence;
+    private ProcessPattern processPattern;
 
     @Override
     public void start(ModuleContext context) throws Throwable {
-        processSequence = new ProcessSequence(
+        processPattern = new ProcessPattern(
                 new qingzhou.core.registry.impl.Controller(context),
                 new qingzhou.core.deployer.impl.Controller(context),
                 new qingzhou.core.agent.impl.Controller(context),
                 new qingzhou.core.console.impl.Controller(context)
         );
-        processSequence.exec();
+        processPattern.run();
     }
 
     @Override
     public void stop() {
-        processSequence.undo();
+        processPattern.completed();
     }
 }

@@ -1,5 +1,8 @@
 package qingzhou.core.agent.impl;
 
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.registry.AppInfo;
@@ -12,8 +15,6 @@ import qingzhou.http.HttpMethod;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-
-import java.util.*;
 
 class Heartbeat implements Process {
     private final ModuleContext moduleContext;
@@ -37,7 +38,7 @@ class Heartbeat implements Process {
     private InstanceInfo thisInstanceInfo;
 
     @Override
-    public void exec() {
+    public void run() {
         String masterUrl = config.get("masterUrl");
         if (masterUrl == null || masterUrl.trim().isEmpty()) {
             moduleContext.getService(Logger.class).error("Instance registration fails: \"masterUrl\" is not set correctly.");
@@ -62,7 +63,7 @@ class Heartbeat implements Process {
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         if (timer != null) {
             timer.cancel();
         }
@@ -105,7 +106,7 @@ class Heartbeat implements Process {
 
         boolean registered = false;
         if (response != null && response.getResponseCode() == 200) {
-            String checkResult = new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET);
+            String checkResult = new String(response.getResponseBody(), StandardCharsets.UTF_8);
             registered = Boolean.parseBoolean(checkResult);
         }
         if (registered) return;

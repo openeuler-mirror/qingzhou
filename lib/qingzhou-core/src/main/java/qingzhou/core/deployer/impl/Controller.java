@@ -16,39 +16,39 @@ import qingzhou.engine.Service;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
-import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.engine.util.pattern.ProcessPattern;
 import qingzhou.logger.Logger;
 
 public class Controller implements Process {
     private final ModuleContext moduleContext;
     private DeployerImpl deployer;
-    private ProcessSequence sequence;
+    private ProcessPattern sequence;
 
     public Controller(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
     }
 
     @Override
-    public void exec() throws Throwable {
-        sequence = new ProcessSequence(
+    public void run() throws Throwable {
+        sequence = new ProcessPattern(
                 new InitDeployer(),
                 new RegisterService(),
                 new InitAddonService(),
                 new ServiceHelper(moduleContext),
                 new StartLocalApp()
         );
-        sequence.exec();
+        sequence.run();
     }
 
     @Override
-    public void undo() {
-        sequence.undo();
+    public void completed() {
+        sequence.completed();
     }
 
     private class InitDeployer implements Process {
 
         @Override
-        public void exec() {
+        public void run() {
             deployer = new DeployerImpl(moduleContext, moduleContext.getService(Registry.class));
             deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
@@ -75,7 +75,7 @@ public class Controller implements Process {
 
     private class RegisterService implements Process {
         @Override
-        public void exec() {
+        public void run() {
             moduleContext.registerService(Deployer.class, deployer);
             moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(moduleContext));
         }
@@ -83,7 +83,7 @@ public class Controller implements Process {
 
     private class InitAddonService implements Process {
         @Override
-        public void exec() throws Exception {
+        public void run() throws Exception {
             File addonDir = FileUtil.newFile(moduleContext.getLibDir(), "addon"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
             File[] addonFiles = addonDir.listFiles();
             if (addonFiles == null || addonFiles.length == 0) return;
@@ -122,7 +122,7 @@ public class Controller implements Process {
 
     private class StartLocalApp implements Process {
         @Override
-        public void exec() {
+        public void run() {
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 @Override
                 public ClassLoader getClassLoader() {

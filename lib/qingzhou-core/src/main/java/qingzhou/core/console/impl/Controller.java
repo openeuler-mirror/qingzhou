@@ -13,7 +13,7 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
-import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.engine.util.pattern.ProcessPattern;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
@@ -21,7 +21,7 @@ public class Controller implements Process {
     public final ModuleContext moduleContext;
     private Console console;
     private String hostIp;
-    private ProcessSequence sequence;
+    private ProcessPattern sequence;
     private ServletContainer servletContainer;
 
     public Controller(ModuleContext moduleContext) {
@@ -29,7 +29,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void exec() throws Throwable {
+    public void run() throws Throwable {
         Json json = moduleContext.getService(Json.class);
         String consoleJson = json.toJson(((Map<String, Object>) moduleContext.getConfig()).get("console"));
         console = json.fromJson(consoleJson, Console.class);
@@ -41,23 +41,23 @@ public class Controller implements Process {
         }
         if (Utils.isBlank(hostIp)) hostIp = "localhost";
 
-        sequence = new ProcessSequence(
+        sequence = new ProcessPattern(
                 new StartServletContainer(),
                 new DeployWar()
         );
-        sequence.exec();
+        sequence.run();
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         if (sequence != null) {
-            sequence.undo();
+            sequence.completed();
         }
     }
 
     private class StartServletContainer implements Process {
         @Override
-        public void exec() throws Throwable {
+        public void run() throws Throwable {
             servletContainer = new ServletContainerImpl();
             servletContainer.start(console.getPort(),
                     new File(moduleContext.getTemp(), "servlet"),
@@ -68,7 +68,7 @@ public class Controller implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             servletContainer.stop();
         }
     }
@@ -77,7 +77,7 @@ public class Controller implements Process {
         private String contextPath;
 
         @Override
-        public void exec() {
+        public void run() {
             try {
                 ContextHelper.GET_INSTANCE.set(() -> Controller.this.moduleContext);
                 exec0();
@@ -97,7 +97,7 @@ public class Controller implements Process {
         }
 
         @Override
-        public void undo() {
+        public void completed() {
             servletContainer.removeApp(contextPath);
         }
     }
