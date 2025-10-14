@@ -8,7 +8,7 @@ fi
 if [ -n "$1" ]; then
     runInstance=$1
 else
-    runInstance="instance1"
+    runInstance="default"
 fi
 
 instanceDir="${qingzhou_home}/instances/${runInstance}"

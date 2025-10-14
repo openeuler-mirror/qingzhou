@@ -1,9 +1,5 @@
 package qingzhou.engine.util;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.LoaderClassPath;
-
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -11,11 +7,17 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.LoaderClassPath;
+import qingzhou.engine.util.pattern.Callback;
 
 public class Utils {
     public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
@@ -311,16 +313,30 @@ public class Utils {
         return scopeClasses;
     }
 
-    public static Properties zipEntryToProperties(File file, String entryName) throws Exception {
-        try (ZipFile zip = new ZipFile(file, ZipFile.OPEN_READ)) {
-            ZipEntry entry = zip.getEntry(entryName);
-            if (entry == null) {
-                return null;
-            }
-            try (InputStream inputStream = zip.getInputStream(entry)) {
-                return streamToProperties(inputStream);
-            }
+    public static List<String> readLines(final InputStream input, final Charset cs) throws IOException {
+        try (final InputStreamReader reader = new InputStreamReader(input, cs != null ? cs : StandardCharsets.UTF_8)) {
+            return readLines(reader);
         }
+    }
+
+    public static List<String> readLines(final Reader input) throws IOException {
+        try (final BufferedReader reader = (input instanceof BufferedReader ? (BufferedReader) input : new BufferedReader(input))) {
+            final List<String> list = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                list.add(line);
+            }
+            return list;
+        }
+    }
+
+    public static void copyStream(InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[1024 * 4];
+        int n;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        output.flush();
     }
 
     public static Properties streamToProperties(InputStream inputStream) throws Exception {

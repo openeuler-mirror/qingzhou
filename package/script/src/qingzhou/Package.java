@@ -45,7 +45,7 @@ public class Package {
         zipFiles(Objects.requireNonNull(versionDir.listFiles()),
                 new File(versionDir.getParent(),
                         versionDir.getName()
-                                + (devMode ? ("-" + new SimpleDateFormat("yyyy-MM-dd").format(new Date())) : "")
+                                + (devMode ? ("-" + new SimpleDateFormat("MM.dd'T'HH.mm.ss").format(new Date())) : "")
                                 + ".zip"));
         boolean delete = delete(versionDir);
         if (!delete) {

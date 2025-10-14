@@ -214,7 +214,7 @@ public class RESTController extends HttpServlet {
             ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
             if (actionInfo.isRequestBody()) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                FileUtil.copyStream(req.getInputStream(), baos);
+                Utils.copyStream(req.getInputStream(), baos);
                 request.setHttpBody(baos.toByteArray());
             } else {
                 fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容

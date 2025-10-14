@@ -17,7 +17,7 @@ public class StartArgs extends CommandLineProcessor {
 
     @Override
     public void doCommandLine(String[] args) throws Exception {
-        String instance = args.length > 0 ? args[0] : "instance1";
+        String instance = args.length > 0 ? args[0] : "default";
         if (initInstanceFailed(instance)) return;
 
         ConfigTool configTool = new ConfigTool(CommandUtil.getInstance());

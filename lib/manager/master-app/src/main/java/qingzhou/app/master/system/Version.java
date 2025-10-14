@@ -3,23 +3,11 @@ package qingzhou.app.master.system;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
@@ -28,6 +16,7 @@ import qingzhou.app.master.ModelUtil;
 import qingzhou.app.master.business.Instance;
 import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 
 @Model(code = "version", icon = "upload-alt",
         menu = Main.Setting, order = "5",
@@ -188,7 +177,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
                 try (ZipFile zipFile = new ZipFile(versionFile)) {
                     ZipEntry entry = zipFile.getEntry(releaseNoteFile);
                     if (entry != null) {
-                        return FileUtil.readLines(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
+                        return Utils.readLines(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
                     }
                 }
             }

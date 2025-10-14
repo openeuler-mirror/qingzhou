@@ -6,7 +6,7 @@
 
     <groupId>qingzhou</groupId>
     <artifactId>qingzhou-project</artifactId>
-    <version>2.1.0</version>
+    <version>x</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -78,18 +78,6 @@
                         </manifest>
                     </archive>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <!--            <plugin>-->

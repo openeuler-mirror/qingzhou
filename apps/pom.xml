@@ -6,45 +6,44 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>qingzhou-project</artifactId>
-        <version>2.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>apps</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>app-common</module>
         <module>Example</module>
     </modules>
 
     <dependencies>
         <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-json</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-http</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-ssh</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-logger</artifactId>
+            <artifactId>qingzhou-api</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-api</artifactId>
+            <artifactId>qingzhou-logger</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-json</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-http</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-ssh</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

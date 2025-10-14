@@ -35,7 +35,7 @@ public class Instance extends CommandLineProcessor {
         }
 
         if (args.length == 1) {
-            args = new String[]{args[0], "instance1"};
+            args = new String[]{args[0], "default"};
         }
 
         File homeDir = CommandUtil.getHome();

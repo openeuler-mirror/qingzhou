@@ -1,9 +1,6 @@
 package qingzhou.engine.impl;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +16,6 @@ public class EngineContext {
     public File getLibDir() {
         if (libDir == null) {
             String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            try { //兼容Windows平台中文路径或包含空白符号
-                jarPath = URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name());
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
             String flag = "/engine/qingzhou-engine.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);
@@ -36,7 +28,7 @@ public class EngineContext {
         if (instanceDir == null) {
             String instance = System.getProperty("qingzhou.instance");
             if (instance == null || instance.trim().isEmpty()) {
-                throw new IllegalArgumentException(); // 不要在这里设置 instance1，应该在调用端去捕捉异常并处理
+                throw new IllegalArgumentException();
             }
             this.instanceDir = new File(instance).getAbsoluteFile();
         }

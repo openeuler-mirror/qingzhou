@@ -6,14 +6,18 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>qingzhou-project</artifactId>
-        <version>2.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>test</artifactId>
-    <packaging>pom</packaging>
 
-    <modules>
-        <module>basic</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.1.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>

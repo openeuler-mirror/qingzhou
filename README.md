@@ -42,7 +42,7 @@ JDK >= 1.8
 
 > 注：
 >
-> 若遇到浏览器页面提示 IP 不受信任，可设置轻舟的配置文件`${轻舟的安装包}/instances/instance1/conf/qingzhou.json`，
+> 若遇到浏览器页面提示 IP 不受信任，可设置轻舟的配置文件`${轻舟的安装包}/instances/default/conf/qingzhou.json`，
 > 修改其中的 trustedIp 值，指定一个浏览器IP正则表达式来信任特定的浏览器，设置为 * 表示信任所有浏览器。
 
 ## 鸣谢
