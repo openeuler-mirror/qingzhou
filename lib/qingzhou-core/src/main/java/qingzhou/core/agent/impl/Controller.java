@@ -1,5 +1,7 @@
 package qingzhou.core.agent.impl;
 
+import java.util.Map;
+
 import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.crypto.Cipher;
@@ -8,20 +10,18 @@ import qingzhou.crypto.PairCipher;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
-import qingzhou.engine.util.pattern.ProcessSequence;
-
-import java.util.Map;
+import qingzhou.engine.util.pattern.ProcessPattern;
 
 public class Controller implements Process {
     private final ModuleContext moduleContext;
-    private ProcessSequence sequence;
+    private ProcessPattern sequence;
 
     public Controller(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
     }
 
     @Override
-    public void exec() throws Throwable {
+    public void run() throws Throwable {
         Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("agent");
         if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;
 
@@ -37,19 +37,19 @@ public class Controller implements Process {
         Cipher agentCipher = cryptoService.getCipher(generateKey);
 
         Heartbeat heartbeat = new Heartbeat(moduleContext, agentHost, agentPort, encryptedAgentKey, config);
-        sequence = new ProcessSequence(
+        sequence = new ProcessPattern(
                 () -> moduleContext.getService(Deployer.class).addAppListener(new AppListenerImpl(heartbeat)),
                 new Service(moduleContext, agentCipher, agentHost, agentPort),
                 heartbeat
         );
-        sequence.exec();
+        sequence.run();
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         if (sequence == null) return;
 
-        sequence.undo();
+        sequence.completed();
     }
 
     private String getAgentHost(String agentHost) {

@@ -264,7 +264,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         SystemControllerContext context = new SystemControllerContext(httpServletRequest, httpServletResponse, chain);
         try {
-            FilterPattern.doFilter(context, processors);
+            new FilterPattern(processors, context).doFilter();
         } catch (Throwable e) {
             getService(Logger.class).error(e.getMessage(), e);
         }

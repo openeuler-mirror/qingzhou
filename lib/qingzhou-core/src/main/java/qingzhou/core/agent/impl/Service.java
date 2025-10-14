@@ -39,7 +39,7 @@ class Service implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void run() throws Exception {
         Logger logger = moduleContext.getService(Logger.class);
 
         path = "/";
@@ -51,7 +51,13 @@ class Service implements Process {
             try {
                 byte[] result;
                 try (InputStream inputStream = exchange.getRequestBody()) {
-                    result = process(inputStream);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available());
+                    FileUtil.copyStream(inputStream, bos);
+                    // 1. 获得请求的数据
+                    byte[] requestData = bos.toByteArray();
+                    // 2. 数据解密，带认证
+                    byte[] data = agentCipher.decrypt(requestData);
+                    result = process(data);
                     exchange.setStatus(200);
                 } catch (Throwable e) {
                     Throwable cause = Utils.getCause(e);
@@ -81,26 +87,16 @@ class Service implements Process {
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         if (server != null) {
             server.removeContext(path);
             server.stop(0);
         }
     }
 
-    private byte[] process(InputStream in) throws Throwable {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(in.available());
-        FileUtil.copyStream(in, bos);
-
-        // 1. 获得请求的数据
-        byte[] requestData = bos.toByteArray();
-        if (requestData.length == 0) return null;
-
-        // 2. 数据解密，带认证
-        byte[] decryptedData = agentCipher.decrypt(requestData);
-
+    private byte[] process(byte[] data) throws Throwable {
         // 3. 得到请求对象
-        RequestImpl request = moduleContext.getService(Json.class).fromJson(new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET), RequestImpl.class);
+        RequestImpl request = moduleContext.getService(Json.class).fromJson(new String(data, StandardCharsets.UTF_8), RequestImpl.class);
 
         // 4. 处理
         AppManager appManager = moduleContext.getService(Deployer.class).getApp(request.getApp());

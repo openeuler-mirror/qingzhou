@@ -1,34 +1,43 @@
 package qingzhou.engine.util.pattern;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FilterPattern {
-    public static <T> void doFilter(T context, Filter<T>[] filters) throws Exception {
-        if (filters == null) return;
+    private final ProcessPattern processPattern;
 
-        Process[] processes = Arrays.stream(filters).map(filter -> new Process() {
-            @Override
-            public void exec() throws Exception {
-                boolean doNext = filter.doFilter(context);
-                if (!doNext) {
-                    throw new InterruptedException(); // 中断链条
+    public <T> FilterPattern(Filter<T>[] filters, T context) {
+        if (filters == null) throw new IllegalArgumentException();
+        List<Process> processList = new ArrayList<>();
+        for (Filter<T> filter : filters) {
+            if (filter == null) throw new IllegalArgumentException();
+            processList.add(new Process() {
+                @Override
+                public void run() throws Throwable {
+                    boolean doNext = filter.doFilter(context);
+                    if (!doNext) {
+                        throw new InternalInterruptedSignal(); // 中断链条
+                    }
                 }
-            }
 
-            @Override
-            public void undo() {
-                filter.afterFilter(context);
-            }
-        }).toArray(Process[]::new);
-        ProcessSequence sequence = new ProcessSequence(processes);
-        try {
-            sequence.exec();
-        } catch (Throwable e) {
-            // 为了中断调用链，这里忽略错误即可
+                @Override
+                public void completed() {
+                    filter.postFilter(context);
+                }
+            });
         }
-        sequence.undo();
+        processPattern = new ProcessPattern(processList);
     }
 
-    private static class InterruptedException extends Exception {
+    public void doFilter() throws Throwable {
+        try {
+            processPattern.run();
+        } catch (InternalInterruptedSignal ignored) {
+        } finally {
+            processPattern.completed();
+        }
+    }
+
+    private static class InternalInterruptedSignal extends Throwable {
     }
 }

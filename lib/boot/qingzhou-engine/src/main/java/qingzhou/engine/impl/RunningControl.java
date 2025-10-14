@@ -20,7 +20,7 @@ class RunningControl implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void run() throws Exception {
         // 实例不可重复启动，因为端口和 temp 文件都会冲突
         running = FileUtil.newFile(engineContext.getInstanceDir(), "temp", "running");
         if (running.exists() && checkService()) {
@@ -63,7 +63,7 @@ class RunningControl implements Process {
     }
 
     @Override
-    public void undo() {
+    public void completed() {
         try {
             FileUtil.forceDelete(running);
         } catch (IOException e) {
