@@ -71,7 +71,7 @@
             "password": "SHA-256$zQA=$2$QtAiP41cVQj6RHzYqK3VqJ9cL2w7Gpa5sNNvMv2tF1s=",
             "active": "true",
             "role": "QINGZHOU_ROLE_OWNER",
-            "changePwd": "false",
+            "changePwd": "${ChangePwd}",
             "enableOtp": "false",
             "keyForOtp": "",
             "passwordLastModified": ""
