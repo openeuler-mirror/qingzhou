@@ -1,12 +1,12 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.util.pattern.ProcessPattern;
+import qingzhou.engine.util.pattern.CompositeProcess;
 
 public class Main {
     public static void main(String[] args) throws Throwable {
         EngineContext engineContext = new EngineContext();
         engineContext.startArgs = args;
-        ProcessPattern sequence = new ProcessPattern(
+        CompositeProcess sequence = new CompositeProcess(
                 new RunningControl(engineContext),
                 new ModuleLoading(engineContext)
         );

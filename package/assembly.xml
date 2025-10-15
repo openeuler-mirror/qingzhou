@@ -2,7 +2,7 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-    <id>alpha</id>
+    <id>assembly-dir</id>
     <formats>
         <format>dir</format>
     </formats>
@@ -31,13 +31,27 @@
     <dependencySets>
         <dependencySet>
             <includes>
+                <include>${project.groupId}:qingzhou-jdbc</include>
+                <include>${project.groupId}:qingzhou-ssh</include>
+                <include>${project.groupId}:qingzhou-uml</include>
+                <include>${project.groupId}:qingzhou-yaml</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/addon</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:Example</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>/instances/instance1/apps/Example</outputDirectory>
+            <outputDirectory>/instances/default/apps/Example</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -103,27 +117,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-jdbc</include>
-                <include>${project.groupId}:qingzhou-ssh</include>
-                <include>${project.groupId}:qingzhou-uml</include>
-                <include>${project.groupId}:qingzhou-yaml</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/addon</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
                 <include>${project.groupId}:console-war</include>
             </includes>
             <unpack>true</unpack>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/console</outputDirectory>
+            <outputDirectory>lib/version${project.version}/console-war</outputDirectory>
             <unpackOptions>
                 <excludes>
                     <exclude>META-INF/**</exclude>
@@ -139,18 +139,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-core/-</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
-                <include>${project.groupId}:app-common</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-core/common</outputDirectory>
+            <outputDirectory>lib/version${project.version}/-</outputDirectory>
         </dependencySet>
     </dependencySets>
 </assembly>

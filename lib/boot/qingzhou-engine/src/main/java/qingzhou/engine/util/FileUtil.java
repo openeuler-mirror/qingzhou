@@ -3,7 +3,6 @@ package qingzhou.engine.util;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -132,7 +131,7 @@ public class FileUtil {
                     if (e.getMessage().contains("正在使用")) {
                         try (FileOutputStream fos = new FileOutputStream(to)) {
                             try (InputStream read = new BufferedInputStream(Files.newInputStream(from.toPath()), 32768)) {
-                                copyStream(read, fos);
+                                Utils.copyStream(read, fos);
                             }
                         }
                     }
@@ -141,13 +140,16 @@ public class FileUtil {
         }
     }
 
-    public static void copyStream(InputStream input, OutputStream output) throws IOException {
-        byte[] buffer = new byte[1024 * 4];
-        int n;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
+    public static Properties zipEntryToProperties(File file, String entryName) throws Exception {
+        try (ZipFile zip = new ZipFile(file, ZipFile.OPEN_READ)) {
+            ZipEntry entry = zip.getEntry(entryName);
+            if (entry == null) {
+                return null;
+            }
+            try (InputStream inputStream = zip.getInputStream(entry)) {
+                return Utils.streamToProperties(inputStream);
+            }
         }
-        output.flush();
     }
 
     public static long getFileLength(File file) {
@@ -210,7 +212,7 @@ public class FileUtil {
                         }
                     }
                     try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        FileUtil.copyStream(zip.getInputStream(entry), out);
+                        Utils.copyStream(zip.getInputStream(entry), out);
                     }
                 }
             }
@@ -261,7 +263,7 @@ public class FileUtil {
         } else {
             zos.putNextEntry(new ZipEntry(toZipName));
             try (InputStream in = Files.newInputStream(srcFile.toPath())) {
-                FileUtil.copyStream(in, zos);
+                Utils.copyStream(in, zos);
             }
         }
     }
@@ -291,7 +293,7 @@ public class FileUtil {
         return fileSize;
     }
 
-    private static List<String> getExclusionList(File srcDir, File destDir) throws IOException {
+    private static List<String> getExclusionList(File srcDir, File destDir) {
         List<String> exclusionList = null;
         if (destDir.getAbsolutePath().startsWith(srcDir.getAbsolutePath())) {
             File[] srcFiles = srcDir.listFiles();
@@ -324,23 +326,6 @@ public class FileUtil {
         return lineList;
     }
 
-    public static List<String> readLines(final InputStream input, final Charset cs) throws IOException {
-        try (final InputStreamReader reader = new InputStreamReader(input, cs != null ? cs : StandardCharsets.UTF_8)) {
-            return readLines(reader);
-        }
-    }
-
-    public static List<String> readLines(final Reader input) throws IOException {
-        try (final BufferedReader reader = (input instanceof BufferedReader ? (BufferedReader) input : new BufferedReader(input))) {
-            final List<String> list = new ArrayList<>();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                list.add(line);
-            }
-            return list;
-        }
-    }
-
     public static void forceDeleteQuietly(File file) {
         try {
             forceDelete(file);
@@ -355,8 +340,7 @@ public class FileUtil {
             if (file.exists() && !file.delete()) {
                 try { // for #ITAIT-4164
                     Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ignored) {
                 }
                 if (!file.delete()) {
                     throw new IOException("Unable to delete file: " + file);

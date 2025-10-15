@@ -5,7 +5,7 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Resource;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
-import qingzhou.engine.util.pattern.ProcessPattern;
+import qingzhou.engine.util.pattern.CompositeProcess;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -21,11 +21,11 @@ import java.util.*;
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
     private final List<ModuleInfo> moduleStartedOrderCache = new ArrayList<>();
-    private final ProcessPattern sequence;
+    private final CompositeProcess sequence;
 
     public ModuleLoading(EngineContext engineContext) {
         this.engineContext = engineContext;
-        this.sequence = new ProcessPattern(
+        this.sequence = new CompositeProcess(
                 new BuildModuleInfo(),
                 new BuildModuleLoader(),
                 new BuildModuleActivator(),

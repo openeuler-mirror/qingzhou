@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FilterPattern {
-    private final ProcessPattern processPattern;
+    private final CompositeProcess compositeProcess;
 
     public <T> FilterPattern(Filter<T>[] filters, T context) {
         if (filters == null) throw new IllegalArgumentException();
@@ -26,15 +26,15 @@ public class FilterPattern {
                 }
             });
         }
-        processPattern = new ProcessPattern(processList);
+        compositeProcess = new CompositeProcess(processList);
     }
 
     public void doFilter() throws Throwable {
         try {
-            processPattern.run();
+            compositeProcess.run();
         } catch (InternalInterruptedSignal ignored) {
         } finally {
-            processPattern.completed();
+            compositeProcess.completed();
         }
     }
 

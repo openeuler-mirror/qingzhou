@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>qingzhou-project</artifactId>
-        <version>2.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>package</artifactId>
@@ -82,127 +82,127 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>Example</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-launcher</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-engine</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-logger</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-qr</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-api</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-json</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-yaml</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-serializer</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-http</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-crypto</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-core</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-command</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>console-war</artifactId>
-            <version>${project.version}</version>
             <type>war</type>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>master-app</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <artifactId>master-app</artifactId>
             <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>app-common</artifactId>
+            <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-jdbc</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-ssh</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-uml</artifactId>
-            <version>${project.version}</version>
             <classifier>jar-with-dependencies</classifier>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
     <profiles>
         <profile>
-            <id>release</id>
-            <properties>
-                <DevMode>false</DevMode>
-            </properties>
-        </profile>
-        <profile>
-            <id>develop</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <id>develop</id>
             <properties>
                 <DevMode>true</DevMode>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>release</id>
+            <properties>
+                <DevMode>false</DevMode>
             </properties>
         </profile>
     </profiles>

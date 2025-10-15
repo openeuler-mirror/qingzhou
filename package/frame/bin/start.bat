@@ -12,7 +12,7 @@ rem 设定要启动的 instance
 if not "%~1"=="" (
     set runInstance=%~1
 ) else (
-    set runInstance=instance1
+    set runInstance=default
 )
 
 set instanceDir=%qingzhou_home%\instances\%runInstance%
