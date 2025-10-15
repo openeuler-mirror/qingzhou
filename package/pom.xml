@@ -9,12 +9,51 @@
         <version>x</version>
     </parent>
 
+    <properties>
+        <release.version>3.0.0</release.version>
+    </properties>
+
     <artifactId>package</artifactId>
     <packaging>pom</packaging>
 
     <build>
         <finalName>qingzhou</finalName>
+
         <plugins>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-frame</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>frame</directory>
+                                    <filtering>false</filtering>
+                                    <excludes>
+                                        <exclude>**/*.json</exclude>
+                                        <exclude>**/.empty</exclude>
+                                        <exclude>**/.gitkeep</exclude>
+                                    </excludes>
+                                </resource>
+                                <resource>
+                                    <directory>frame</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>**/*.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -37,6 +76,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <id>compile-package</id>
@@ -55,7 +95,6 @@
                             </arguments>
                         </configuration>
                     </execution>
-
                     <execution>
                         <id>run-package</id>
                         <phase>package</phase>
@@ -68,15 +107,14 @@
                                 <!--                                <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=7777</argument>-->
                                 <argument>-classpath</argument>
                                 <argument>${project.basedir}/target/archive-tmp</argument>
+                                <argument>-DDevMode=${DevMode}</argument>
+                                <argument>-DBuildVersion=${release.version}</argument>
                                 <argument>qingzhou.Package</argument>
-                                <argument>${project.basedir}/target/qingzhou/lib/version${project.version}</argument>
-                                <argument>${DevMode}</argument>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
@@ -196,6 +234,7 @@
             <id>develop</id>
             <properties>
                 <DevMode>true</DevMode>
+                <ChangePwd>false</ChangePwd>
             </properties>
         </profile>
 
@@ -203,6 +242,7 @@
             <id>release</id>
             <properties>
                 <DevMode>false</DevMode>
+                <ChangePwd>true</ChangePwd>
             </properties>
         </profile>
     </profiles>

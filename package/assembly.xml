@@ -7,26 +7,6 @@
         <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}/frame</directory>
-            <excludes>
-                <exclude>**/.empty</exclude>
-                <exclude>**/.gitkeep</exclude>
-            </excludes>
-            <outputDirectory/>
-            <fileMode>0755</fileMode>
-        </fileSet>
-
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <includes>
-                <include>version-notes.md</include>
-            </includes>
-            <outputDirectory>lib/version${project.version}</outputDirectory>
-            <fileMode>0755</fileMode>
-        </fileSet>
-    </fileSets>
 
     <dependencySets>
         <dependencySet>
@@ -40,7 +20,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/addon</outputDirectory>
+            <outputDirectory>lib/version/addon</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -73,7 +53,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/command</outputDirectory>
+            <outputDirectory>lib/version/command</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -84,7 +64,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/engine</outputDirectory>
+            <outputDirectory>lib/version/engine</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -95,7 +75,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}</outputDirectory>
+            <outputDirectory>lib/version</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -112,7 +92,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module</outputDirectory>
+            <outputDirectory>lib/version/module</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -123,7 +103,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/console-war</outputDirectory>
+            <outputDirectory>lib/version/console-war</outputDirectory>
             <unpackOptions>
                 <excludes>
                     <exclude>META-INF/**</exclude>
@@ -139,7 +119,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/-</outputDirectory>
+            <outputDirectory>lib/version/-</outputDirectory>
         </dependencySet>
     </dependencySets>
 </assembly>

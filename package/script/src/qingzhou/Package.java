@@ -3,6 +3,7 @@ package qingzhou;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,13 +24,24 @@ public class Package {
      * @throws Exception 抛出可能发生的异常。
      */
     public static void main(String[] args) throws Exception {
-        File versionDir = new File(args[0]);
-        boolean devMode = Boolean.parseBoolean(args[1]);
+        // 配置参数
+        File mvnTarget = new File(new File("").getAbsolutePath() + File.separator + "target");
+        File buildHome = new File(mvnTarget, "qingzhou");
+        boolean devMode = Boolean.getBoolean("DevMode");
+        String buildVersion = System.getProperty("BuildVersion");
 
-        System.out.println("版本目录：" + versionDir);
-
+        // 构建版本
+        File versionDir = new File(buildHome, "lib" + File.separator + "version");
         addBuildTime(versionDir);// 添加构建时间到版本说明文件
-        generateLibZip(versionDir, devMode); //生成lib的zip文件
+
+        // 发布版本
+        File releaseVersionDir = new File(versionDir.getParentFile(), "version" + buildVersion);
+        try {
+            Files.move(versionDir.toPath(), releaseVersionDir.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        } catch (Exception e) { // 如果原子移动不支持，回退到普通移动
+            Files.move(versionDir.toPath(), releaseVersionDir.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        generateLibZip(releaseVersionDir, devMode); //生成lib的zip文件
 
         System.out.println("打包完毕！");
     }
@@ -90,7 +102,7 @@ public class Package {
     /**
      * 将字符串列表写入文件。
      *
-     * @param file    要写入的文件。
+     * @param file      要写入的文件。
      * @param fileLines 要写入的字符串列表。
      * @throws IOException 抛出可能发生的IO异常。
      */
@@ -120,7 +132,7 @@ public class Package {
             }
         } else {
             if (!directory.mkdirs()) {
-                 // 检查是否由其他线程或进程创建了目录
+                // 检查是否由其他线程或进程创建了目录
                 if (!directory.isDirectory()) {
                     String message = "Unable to create directory " + directory;
                     throw new IOException(message);
