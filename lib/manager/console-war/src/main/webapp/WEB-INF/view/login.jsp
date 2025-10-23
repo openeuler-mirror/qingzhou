@@ -51,7 +51,7 @@
 			  action="<%=RESTController.encodeURL( response, contextPath + LoginManager.LOGIN_URI)%>"
 			  class="form-group" autocomplete="off">
 			<div class="input-control has-icon-left">
-				<input value="<%=DeployerConstants.DEFAULT_USER_QINGZHOU%>" type="text"
+				<input value="@DefaultUser@" type="text"
 					   id="<%=LoginManager.LOGIN_USER%>"
 					   name="<%=LoginManager.LOGIN_USER%>" required
 					   class="form-control"
@@ -61,12 +61,12 @@
 				</label>
 			</div>
 			<div class="input-control has-icon-left">
-				<input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
+				<input value="@DefaultPass@" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
 					   data-type="password" class="form-control"
 					   placeholder="<%=I18n.getKeyI18n( "page.login.password")%>"
 					   onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;"
 					   dotted>
-				<input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
+				<input value="@DefaultPass@" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
 					   name="<%=LoginManager.LOGIN_PASSWORD%>">
 				<label class="input-control-icon-left"
 					   style="line-height: 44px;">
