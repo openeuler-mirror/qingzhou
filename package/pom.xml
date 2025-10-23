@@ -11,6 +11,10 @@
 
     <properties>
         <release.version>3.0.0</release.version>
+
+         <!-- 供过滤后的 WAR / 目录使用 -->
+        <console.exploded.dir>${project.build.directory}/console-exploded</console.exploded.dir>
+        <console.filtered.war>${project.build.directory}/console-war-filtered.war</console.filtered.war>
     </properties>
 
     <artifactId>package</artifactId>
@@ -54,20 +58,221 @@
                 </executions>
             </plugin>
 
+            <!-- 解包 console-war 到 console-exploded -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-console-war</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                        <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                        <artifactItems>
+                            <artifactItem>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>console-war</artifactId>
+                            <version>${project.version}</version>
+                            <type>war</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${console.exploded.dir}</outputDirectory>
+                            </artifactItem>
+                        </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 修改console-exploded的login.jsp对应 @…@ -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>filter-login-jsp</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                        <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                        <encoding>UTF-8</encoding>
+                        <outputDirectory>${project.build.directory}/filtered</outputDirectory>
+                        <resources>
+                            <resource>
+                            <!-- 指向源码中带 @…@ 的 login.jsp 所在目录 -->
+                            <directory>${project.basedir}/../lib/manager/console-war/src/main/webapp/WEB-INF/view</directory>
+                            <includes>
+                                <include>login.jsp</include>
+                            </includes>
+                            <filtering>true</filtering>
+                            </resource>
+                        </resources>
+                        <useDefaultDelimiters>false</useDefaultDelimiters>
+                        <delimiters>
+                            <delimiter>@</delimiter>
+                        </delimiters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                    <id>overlay-filtered-login-into-exploded</id>
+                    <phase>package</phase>
+                    <goals><goal>copy-resources</goal></goals>
+                    <configuration>
+                        <outputDirectory>${console.exploded.dir}/WEB-INF/view</outputDirectory>
+                        <resources>
+                        <resource>
+                            <directory>${project.build.directory}/filtered</directory>
+                            <includes>
+                            <include>login.jsp</include>
+                            </includes>
+                            <filtering>false</filtering>
+                        </resource>
+                        </resources>
+                    </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
                 <executions>
                     <execution>
                         <id>assembly</id>
-                        <phase>prepare-package</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptors>
-                                <descriptor>assembly.xml</descriptor>
-                            </descriptors>
                             <appendAssemblyId>false</appendAssemblyId>
+
+                            <inlineDescriptors>
+                                <inlineDescriptor>
+                                    <id>assembly-dir</id>
+                                    <formats>
+                                        <format>dir</format>
+                                    </formats>
+                                    <includeBaseDirectory>false</includeBaseDirectory>
+
+                                    <dependencySets>
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-jdbc</include>
+                                                <include>${project.groupId}:qingzhou-ssh</include>
+                                                <include>${project.groupId}:qingzhou-uml</include>
+                                                <include>${project.groupId}:qingzhou-yaml</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version/addon</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:Example</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>/instances/default/apps/Example</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-launcher</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>/bin</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-command</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version/command</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-engine</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version/engine</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-api</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:qingzhou-core</include>
+                                                <include>${project.groupId}:qingzhou-logger</include>
+                                                <include>${project.groupId}:qingzhou-json</include>
+                                                <include>${project.groupId}:qingzhou-serializer</include>
+                                                <include>${project.groupId}:qingzhou-http</include>
+                                                <include>${project.groupId}:qingzhou-qr</include>
+                                                <include>${project.groupId}:qingzhou-crypto</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version/module</outputDirectory>
+                                        </dependencySet>
+
+                                        <dependencySet>
+                                            <includes>
+                                                <include>${project.groupId}:master-app</include>
+                                            </includes>
+                                            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+                                            <useProjectArtifact>false</useProjectArtifact>
+                                            <useProjectAttachments>false</useProjectAttachments>
+                                            <useTransitiveDependencies>false</useTransitiveDependencies>
+                                            <outputDirectory>lib/version/-</outputDirectory>
+                                        </dependencySet>
+                                    </dependencySets>
+
+                                    <!-- ❗把 console-war 这一条改成 fileSets，指向 exploded 目录 -->
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${console.exploded.dir}</directory>
+                                            <outputDirectory>lib/version/console-war</outputDirectory>
+                                            <excludes>
+                                            <exclude>META-INF/**</exclude>
+                                            </excludes>
+                                        </fileSet>
+                                    </fileSets>
+
+                                </inlineDescriptor>
+                            </inlineDescriptors>
                         </configuration>
                     </execution>
                 </executions>
@@ -200,11 +405,11 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <artifactId>app-common</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency> -->
 
         <dependency>
             <artifactId>qingzhou-jdbc</artifactId>
@@ -228,22 +433,21 @@
 
     <profiles>
         <profile>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <id>develop</id>
             <properties>
-                <DevMode>true</DevMode>
-                <ChangePwd>false</ChangePwd>
+            <DevMode>true</DevMode>
+            <DefaultUser>qingzhou</DefaultUser>
+            <DefaultPass>qingzhou123.com</DefaultPass>
             </properties>
         </profile>
-
         <profile>
             <id>release</id>
             <properties>
-                <DevMode>false</DevMode>
-                <ChangePwd>true</ChangePwd>
+            <DevMode>false</DevMode>
+            <DefaultUser></DefaultUser>
+            <DefaultPass></DefaultPass>
             </properties>
         </profile>
     </profiles>
+
 </project>
