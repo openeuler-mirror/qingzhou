@@ -1,16 +1,13 @@
 package qingzhou.command;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.ServiceLoader;
+import java.io.File;
+import java.util.*;
 
-public class Admin { // 由 Launcher 来调用
+public class CommandMain { // 由 Launcher 来调用
+    private final File libDir;
 
-    public static void main(String[] args) throws Exception {
-        new Admin().doCommand(args);
+    public CommandMain(File libDir) {
+        this.libDir = libDir;
     }
 
     public void doCommand(String[] args) throws Exception {
@@ -54,7 +51,10 @@ public class Admin { // 由 Launcher 来调用
 
     private List<CommandLineProcessor> listCommandsTemp() {
         List<CommandLineProcessor> processors = new ArrayList<>();
-        ServiceLoader.load(CommandLineProcessor.class, CommandLineProcessor.class.getClassLoader()).forEach(processors::add);
+        ServiceLoader.load(CommandLineProcessor.class, CommandLineProcessor.class.getClassLoader()).forEach(e -> {
+            e.setLibDir(libDir);
+            processors.add(e);
+        });
         processors.sort(Comparator.comparing(CommandLineProcessor::name));
         return processors;
     }

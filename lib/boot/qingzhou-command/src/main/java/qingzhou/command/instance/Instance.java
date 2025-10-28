@@ -3,11 +3,13 @@ package qingzhou.command.instance;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import qingzhou.command.CommandLineProcessor;
-import qingzhou.command.CommandUtil;
 
 public class Instance extends CommandLineProcessor {
+    private static final String START_NAME = "start";
+
     public Instance() {
         // 实现 CommandLineProcessor 接口，须有无参的公开构造方法
     }
@@ -24,7 +26,7 @@ public class Instance extends CommandLineProcessor {
 
     @Override
     public String[] supportedArgs() {
-        return new String[]{Cmd.start.name()};
+        return new String[]{START_NAME};
     }
 
     @Override
@@ -38,27 +40,47 @@ public class Instance extends CommandLineProcessor {
             args = new String[]{args[0], "default"};
         }
 
-        File homeDir = CommandUtil.getHome();
-
         String instance = args[1];
-        if (initInstanceFailed(instance)) return;
+        File instanceDie = initInstance(instance);
+        if (instanceDie == null) return;
 
         String cmdName = args[0];
-        String outputInfo = instance;
-        if (instance.startsWith(homeDir.getAbsolutePath())) {
-            outputInfo = CommandUtil.getInstance().getName();
-        }
-        log("Ready to <" + cmdName + "> Qingzhou: " + outputInfo);
-        Cmd cmd;
-        try {
-            cmd = Cmd.valueOf(cmdName);
-        } catch (Exception e) {
+        if (!START_NAME.equals(cmdName)) {
             log("Command <" + cmdName + "> not found.");
             return;
         }
 
         String[] extArgs = Arrays.copyOfRange(args, 2, args.length);
-        cmd.exec(new ArrayList<>(Arrays.asList(extArgs)));
-        log("Command <" + cmdName + "> has been executed.");
+        start(instanceDie, getLibDir(), new ArrayList<>(Arrays.asList(extArgs)));
+    }
+
+    private void start(File instanceDir, File libDir, List<String> extArgs) throws Exception {
+        ConfigTool configTool = new ConfigTool(instanceDir, libDir);
+        // build ProcessBuilder
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.directory(instanceDir);
+        builder.redirectErrorStream(true).inheritIO();
+        builder.environment().putAll(configTool.environment());
+        builder.command(configTool.getJavaCmd());
+        builder.command().addAll(configTool.command());
+        for (String cmd : extArgs) {
+            builder.command().add(cmd);
+        }
+
+        // 预防命令行执行注入漏洞
+        for (String cmd : builder.command()) {
+            if (cmd.contains("`")) {
+                throw new IllegalArgumentException("This command may have security risks: " + cmd);
+            }
+        }
+
+        Process process = builder.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                process.waitFor();
+            } catch (InterruptedException ignored) {
+            }
+        }));
+        process.waitFor();
     }
 }

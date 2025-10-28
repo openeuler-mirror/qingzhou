@@ -6,20 +6,52 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import qingzhou.command.CommandUtil;
-
 public class ConfigTool {
     private final File instanceDir;
+    private final File libDir;
     private final List<String> commands = new ArrayList<>();
     private final Map<String, String> envs = new HashMap<>();
 
-    public ConfigTool(File instanceDir) throws Exception {
+    public ConfigTool(File instanceDir, File libDir) throws Exception {
         this.instanceDir = instanceDir;
+        this.libDir = libDir;
         initConfig();
+    }
+
+    public String getJavaCmd() {
+        String javaHome = getJavaHomeEnv();
+        if (javaHome == null) {
+            javaHome = System.getenv("JAVA_HOME");
+        }
+        javaHome = stripQuotes(javaHome);
+
+        if (javaHome != null && new File(javaHome).isDirectory()) {
+            String cmd = "java";
+            if (System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH).startsWith("win")) {
+                cmd += ".exe";
+            }
+            Path cmdPath = Paths.get(javaHome, "bin", cmd);
+            return cmdPath.toString();
+        }
+
+        return "java";
+    }
+
+    private String stripQuotes(String value) {
+        if (value == null) return null;
+
+        while (value.startsWith("\"")) {
+            value = value.substring(1);
+        }
+        while (value.endsWith("\"")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
     }
 
     public String getJavaHomeEnv() {
@@ -35,28 +67,31 @@ public class ConfigTool {
     }
 
     private void initConfig() throws Exception {
-        Map jvm = parseFileConfig();
+        Map<?, ?> jvm = parseFileConfig();
 
-        List<Map> envs = (List<Map>) jvm.get("env");
-        for (Map env : envs) {
+        List<Map<?, ?>> envs = (List<Map<?, ?>>) jvm.get("env");
+        for (Map<?, ?> env : envs) {
             if (env.get("enabled") != null && !Boolean.parseBoolean(String.valueOf(env.get("enabled")))) continue;
 
             this.envs.put(String.valueOf(env.get("name")),
                     String.valueOf(env.get("value")));
         }
 
-        List<Map> args = (List<Map>) jvm.get("arg");
-        for (Map arg : args) {
+        List<Map<?, ?>> args = (List<Map<?, ?>>) jvm.get("arg");
+        for (Map<?, ?> arg : args) {
             if (arg.get("enabled") != null && !Boolean.parseBoolean(String.valueOf(arg.get("enabled")))) continue;
 
-            if (CommandUtil.isWindows()) {
-                if (Boolean.parseBoolean(String.valueOf(arg.get("forLinux")))) continue;
+
+            if (Boolean.parseBoolean(String.valueOf(arg.get("forLinux")))) {
+                if (System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH).startsWith("win")) {
+                    continue;
+                }
             }
 
-            commands.add(convertArg(String.valueOf(arg.get("name"))));
+            commands.add(String.valueOf(arg.get("name")));
         }
 
-        String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLib(), "engine").listFiles()))
+        String classpath = Arrays.stream(Objects.requireNonNull(new File(libDir, "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
 
         commands.add("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/"));
@@ -65,9 +100,9 @@ public class ConfigTool {
         commands.add("qingzhou.engine.impl.Main");
     }
 
-    private Map parseFileConfig() throws Exception {
-        URL jsonUrl = Paths.get(CommandUtil.getLib().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
-        URL engineUrl = Paths.get(CommandUtil.getLib().getAbsolutePath(), "engine", "qingzhou-engine.jar").toUri().toURL();
+    private Map<?, ?> parseFileConfig() throws Exception {
+        URL jsonUrl = Paths.get(libDir.getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
+        URL engineUrl = Paths.get(libDir.getAbsolutePath(), "engine", "qingzhou-engine.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{engineUrl, jsonUrl})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
@@ -75,47 +110,8 @@ public class ConfigTool {
 
             try (InputStream inputStream = Files.newInputStream(Paths.get(instanceDir.getAbsolutePath(), "conf", "qingzhou.json"))) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                return (Map) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
+                return (Map<?, ?>) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
             }
         }
-    }
-
-    static String convertArg(String str) {
-        if (str == null) {
-            return null;
-        }
-
-        String convertBegin = "${";
-        String convertEnd = "}";
-
-        int begin = str.indexOf(convertBegin);
-        if (begin < 0) {
-            return str;
-        }
-
-        int end = str.indexOf(convertEnd, begin);
-        if (end < 0) {
-            return str;
-        }
-
-        String key = str.substring(begin + convertBegin.length(), end);
-        String replacement = convert(key);
-
-        String newStr = str.replace(convertBegin + key + convertEnd, replacement);
-        return convertArg(newStr);
-    }
-
-    private static String convert(String origin) {
-        String replacement = System.getProperty(origin);
-
-        if (replacement == null) {
-            replacement = System.getenv(origin);
-        }
-
-        if (replacement == null) {
-            return "";
-        }
-
-        return replacement;
     }
 }
