@@ -278,7 +278,7 @@ public class Utils {
                 classPool = ClassPool.getDefault();
                 classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
             }
-            getScopeClasses(libs).forEach(s -> {
+            getAllClasses(libs).forEach(s -> {
                 try {
                     CtClass ctClass = classPool.get(s);
                     if (ctClass.getAnnotation(annotationClass) != null) {
@@ -293,8 +293,8 @@ public class Utils {
         return targetClasses;
     }
 
-    private static Collection<String> getScopeClasses(File[] libs) throws IOException {
-        Collection<String> scopeClasses = new HashSet<>();
+    private static Collection<String> getAllClasses(File[] libs) throws IOException {
+        Collection<String> classes = new HashSet<>();
         // 找出类名范围
         for (File file : libs) {
             if (!file.getName().endsWith(".jar")) continue;
@@ -306,11 +306,11 @@ public class Utils {
                     int i = entryName.indexOf(".class");
                     if (i < 1) continue;
                     String className = entryName.substring(0, i).replace("/", ".");
-                    scopeClasses.add(className);
+                    classes.add(className);
                 }
             }
         }
-        return scopeClasses;
+        return classes;
     }
 
     public static List<String> readLines(final InputStream input, final Charset cs) throws IOException {

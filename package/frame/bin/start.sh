@@ -1,8 +1,6 @@
 #!/bin/sh
 
-if [ -z "${qingzhou_home+x}" ] || [ ! -d "${qingzhou_home}" ]; then
-  export qingzhou_home=$(dirname -- "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)")
-fi
+export qingzhou_home=$(dirname -- "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)")
 
 # 设定要启动的 instance
 if [ -n "$1" ]; then

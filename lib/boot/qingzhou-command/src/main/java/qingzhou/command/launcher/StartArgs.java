@@ -1,7 +1,8 @@
 package qingzhou.command.launcher;
 
+import java.io.File;
+
 import qingzhou.command.CommandLineProcessor;
-import qingzhou.command.CommandUtil;
 import qingzhou.command.instance.ConfigTool;
 
 public class StartArgs extends CommandLineProcessor {
@@ -18,12 +19,12 @@ public class StartArgs extends CommandLineProcessor {
     @Override
     public void doCommandLine(String[] args) throws Exception {
         String instance = args.length > 0 ? args[0] : "default";
-        if (initInstanceFailed(instance)) return;
+        File instanceDir = initInstance(instance);
+        if (instanceDir == null) return;
 
-        ConfigTool configTool = new ConfigTool(CommandUtil.getInstance());
-
+        ConfigTool configTool = new ConfigTool(instanceDir, getLibDir());
         // prepare javaCmd
-        String javaCmd = CommandUtil.getJavaCmd(configTool.getJavaHomeEnv());
+        String javaCmd = configTool.getJavaCmd();
         // 构造启动命令
         StringBuilder startCmd = new StringBuilder(javaCmd);
         for (String arg : configTool.command()) {

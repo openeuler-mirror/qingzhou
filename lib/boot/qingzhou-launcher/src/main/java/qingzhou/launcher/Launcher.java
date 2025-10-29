@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -25,32 +26,21 @@ public class Launcher {
         initHomeFile(); // 确定主目录
         prepareVersion(); // 检查是否需要 解压 升级 版本
         File libDir = getLibDir(); // 获得最新版本
-        System.setProperty("qingzhou.lib", libDir.getAbsolutePath());
 
-        ClassLoader cmdMainLoader = buildAdminClassLoader(libDir);
-        Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.Admin");
-        Method cmdMainMethod = cmdMainClass.getMethod("main", String[].class);
-        cmdMainMethod.invoke(null, new Object[]{args});
+        ClassLoader cmdMainLoader = buildCommandClassLoader(libDir);
+        Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.CommandMain");
+        Constructor<?> constructor = cmdMainClass.getConstructor(File.class);
+        Object newInstance = constructor.newInstance(libDir);
+        Method doCommandMethod = cmdMainClass.getMethod("doCommand", String[].class);
+        doCommandMethod.invoke(newInstance, new Object[]{args});
     }
 
     static void initHomeFile() {
-        String home = System.getProperty("qingzhou.home");
-        if (home == null || home.trim().isEmpty()) {
-            home = System.getenv("qingzhou_home");
-        }
-        if (home == null || home.trim().isEmpty()) {
-            String jarPath = Launcher.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            String flag = "/bin/qingzhou-launcher.jar";
-            int i = jarPath.lastIndexOf(flag);
-            String pre = jarPath.substring(0, i);
-            home = new File(pre).getPath();
-        }
-        homeFile = new File(home);
-        if (homeFile.exists()) {
-            System.setProperty("qingzhou.home", homeFile.getAbsolutePath());
-        } else {
-            throw new IllegalStateException("qingzhou home not found");
-        }
+        String jarPath = Launcher.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String flag = "/bin/qingzhou-launcher.jar";
+        int i = jarPath.lastIndexOf(flag);
+        String pre = jarPath.substring(0, i);
+        homeFile = new File(pre);
     }
 
     static void prepareVersion() throws Exception { // 保持一致：BaseUtil.getLatestLibDir
@@ -128,7 +118,7 @@ public class Launcher {
         return versionFile;
     }
 
-    private static ClassLoader buildAdminClassLoader(File libDir) throws Exception {
+    private static ClassLoader buildCommandClassLoader(File libDir) throws Exception {
         List<URL> urls = new ArrayList<>();
         urls.add(new File(new File(libDir, "command"), "qingzhou-command.jar").toURI().toURL());
         return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
