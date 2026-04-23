@@ -5,9 +5,7 @@ public class ModelActionView extends Base {
 
     public int order;
 
-    public boolean isDefaultAction;
-
-    public String methodName;
+    public String display;
 
     public boolean add;
 
@@ -18,10 +16,6 @@ public class ModelActionView extends Base {
     public boolean list;
 
     public boolean batch;
-
-    public boolean skip_validation;
-
-    public String display;
 
     public String[] name;
 
