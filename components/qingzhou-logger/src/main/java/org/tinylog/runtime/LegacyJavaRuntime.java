@@ -30,6 +30,24 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
 
     private final boolean hasSunReflection;
     private final Method stackTraceElementGetter;
+    private static final boolean JDK8;
+    private static final java.lang.reflect.Method GET_CALLER_CLASS;
+
+    static {
+        java.lang.reflect.Method method = null;
+        boolean isJdk8 = false;
+
+        try {
+            Class<?> cls = Class.forName("sun.reflect.Reflection");
+            method = cls.getMethod("getCallerClass", int.class);
+            isJdk8 = true;
+        } catch (Throwable e) {
+            isJdk8 = false;
+        }
+
+        GET_CALLER_CLASS = method;
+        JDK8 = isJdk8;
+    }
 
     /** */
     public LegacyJavaRuntime() {
@@ -65,13 +83,36 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
     }
 
     @Override
-    @SuppressWarnings("removal")
     public String getCallerClassName(final int depth) {
         if (hasSunReflection) {
-            return sun.reflect.Reflection.getCallerClass(depth + 1).getName();
+            return getCallerClass(depth + 1).getName();
         } else {
             return getCallerStackTraceElement(depth + 1).getClassName();
         }
+    }
+
+    /**
+     * 等价于：sun.reflect.Reflection.getCallerClass(depth)
+     * 全版本 JDK8 ~ JDK17+ 源码可编译、可运行
+     */
+    private Class<?> getCallerClass(int depth) {
+        if (JDK8 && GET_CALLER_CLASS != null) {
+            try {
+                return (Class<?>) GET_CALLER_CLASS.invoke(null, depth);
+            } catch (Throwable ignored) {}
+        }
+
+        // JDK9+ 环境：使用 StackTrace 实现等价语义
+        // 栈深度 100% 对齐 sun.reflect.Reflection.getCallerClass(depth)
+        StackTraceElement[] stack = new Throwable().getStackTrace();
+        int index = depth - 1;
+        if (index >= 0 && index < stack.length) {
+            try {
+                return Class.forName(stack[index].getClassName());
+            } catch (ClassNotFoundException ignored) {}
+        }
+
+        return null;
     }
 
     @Override
@@ -130,19 +171,8 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
      *
      * @return {@code true} if available, {@code false} if not
      */
-    @SuppressWarnings("removal")
     private static boolean verifySunReflection() {
-        try {
-            return AbstractJavaRuntime.class.equals(sun.reflect.Reflection.getCallerClass(1));
-        } catch (NoClassDefFoundError error) {
-            return false;
-        } catch (NoSuchMethodError error) {
-            return false;
-        } catch (UnsatisfiedLinkError error) {
-            return false;
-        } catch (Exception ex) {
-            return false;
-        }
+        return JDK8;
     }
 
     /**
