@@ -49,6 +49,7 @@ public class AppMetaInfo implements WebBackendHttpServer.WebHandler {
             modelBasicInfo.put("icon", model.icon);
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
+            modelBasicInfo.put("action", model.action);
             modelBasicInfo.put("name", helper.getI18n(model.name));
             models.add(modelBasicInfo);
         });
