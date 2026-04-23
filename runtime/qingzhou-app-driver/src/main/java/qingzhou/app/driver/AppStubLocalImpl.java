@@ -105,9 +105,6 @@ class AppStubLocalImpl implements AppStubLocal {
     private Validator[] validators = {};
 
     private Map<String, String> validate(ModelAction action, RequestImpl request) {
-        // 是否开启了校验
-        if (action.skip_validation) return null;
-
         // 确定要检验哪些字段
         Set<ModelField> validateFields = null;
         if (action.code.equals(Add.ACTION_CODE_ADD)) {

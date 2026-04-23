@@ -17,6 +17,8 @@ public @interface ModelAction {
 
     int order() default 0;
 
+    String display() default ""; // 设置该操作的可用条件
+
     boolean add() default false;
 
     boolean update() default false;
@@ -26,10 +28,6 @@ public @interface ModelAction {
     boolean list() default false;
 
     boolean batch() default false;
-
-    boolean skip_validation() default false;
-
-    String display() default ""; // 设置该操作的可用条件
 
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
     String[] name();
