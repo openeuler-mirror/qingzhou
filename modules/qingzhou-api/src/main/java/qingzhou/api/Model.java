@@ -20,6 +20,8 @@ public @interface Model {
 
     int order() default 0;
 
+    String action() default ""; // 页面点击默认操作
+
     String[] name();
 
     String[] info() default {};
