@@ -1,0 +1,144 @@
+package qingzhou.registry.service;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.dto.RequestImpl;
+import qingzhou.dto.ResponseImpl;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.HttpServer;
+import qingzhou.json.Json;
+import qingzhou.logger.Logger;
+import qingzhou.registry.AppStub;
+import qingzhou.registry.Registry;
+
+@Component(property = HttpServer.HTTP_SERVER_PATH + "=" + InvokeHttpServer.URI_SERVER_PATH)
+public class InvokeHttpServer implements HttpServer {
+    public static final String URI_SERVER_PATH = "/invoke"; // 两端加 /，匹配更安全
+
+    @Reference
+    private Registry registry;
+    @Reference
+    private Json json;
+    @Reference
+    private Logger logger;
+
+    @Override
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        httpResponse.contentTypeJsonUtf8(); // 所有结果需要以 json 格式返回
+
+        RequestImpl request = buildRequest(httpRequest);
+        if (request == null) {
+            httpResponse.statusBad();
+            return;
+        }
+
+        AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
+
+        if (app == null) {
+            httpResponse.statusBad();
+            return;
+        }
+
+        try {
+            app.invokeApp(request);
+            if (request.getResponse().isFound()) {
+                ResponseImpl response = request.getResponse();
+                sendResponse(response, httpResponse);
+            } else {
+                httpResponse.statusBad();
+            }
+        } catch (Throwable e) {
+            httpResponse.statusError();
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    private void sendResponse(ResponseImpl response, HttpResponse httpResponse) throws Exception {
+        if (response.getStatus() > 0) {
+            httpResponse.status(response.getStatus());
+        }
+        if (response.getContentType() != null) {
+            httpResponse.contentType(response.getContentType());
+        }
+        response.getHeaders().forEach(httpResponse::header);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", response.isSuccess());
+        if (response.isSuccess() && response.getData() != null) {
+            result.put("data", response.getData());
+        } else if (response.getMsg() != null) {
+            result.put("msg", response.getMsg());
+            result.put("msgLevel", response.getMsgLevel());
+        }
+        String json = this.json.toJson(result);
+        httpResponse.sendResponse(json);
+    }
+
+    private RequestImpl buildRequest(HttpRequest httpRequest) {
+        String requestPath = httpRequest.getPath();
+        List<String> rest = detectRest(requestPath);
+        int restDepth = 4; // instance/app/model/action/[id]
+        if (rest == null || rest.size() < restDepth)
+            return null;
+
+        RequestImpl request = new RequestImpl();
+        request.setInstance(rest.get(0));
+        request.setApp(rest.get(1));
+        request.setModel(rest.get(2));
+        request.setAction(rest.get(3));
+        if (rest.size() > 4) {
+            request.setId(rest.get(4));
+        }
+
+        // 获取 URL 参数
+        httpRequest.getParameters().forEach((k, v) -> request.getParameters().put(k, v.get(0)));
+
+        // 如果是 POST 请求且 Content-Type 为 application/json，需要从请求体中解析参数
+        if ("POST".equalsIgnoreCase(httpRequest.getMethod())
+                && httpRequest.getContentType() != null
+                && httpRequest.getContentType().contains("application/json")) {
+            byte[] body = httpRequest.getBody();
+            if (body != null && body.length > 0) {
+                try {
+                    Map<String, Object> bodyParams = json.fromJson(new String(body, StandardCharsets.UTF_8), Map.class);
+                    if (bodyParams != null) {
+                        bodyParams.forEach((k, v) -> {
+                            if (v != null) {
+                                request.getParameters().put(k, v.toString());
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    logger.warn("Failed to parse JSON body: " + e.getMessage());
+                }
+            }
+        }
+
+        return request;
+    }
+
+    private static List<String> detectRest(String requestUri) {
+        String uriPrefix = URI_SERVER_PATH + "/"; // 两端加 /，匹配更安全
+        if (!requestUri.startsWith(uriPrefix)) return null;
+        int i = requestUri.indexOf(uriPrefix);
+        requestUri = requestUri.substring(i + uriPrefix.length());
+
+        String[] uriArray = requestUri.split("/");
+        if (uriArray.length == 0) return null;
+
+        List<String> result = new ArrayList<>();
+        for (String r : uriArray) {
+            if (!r.isEmpty()) {
+                result.add(r);
+            }
+        }
+        return result;
+    }
+}

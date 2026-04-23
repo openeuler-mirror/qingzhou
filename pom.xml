@@ -1,50 +1,85 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>qingzhou</groupId>
-    <artifactId>qingzhou-project</artifactId>
-    <version>x</version>
-    <packaging>pom</packaging>
+    <artifactId>console</artifactId>
+    <version>${revision}</version>
 
+    <packaging>pom</packaging>
     <modules>
-        <module>qingzhou-api</module>
-        <module>lib</module>
+        <module>runtime</module>
+        <module>components</module>
+        <module>modules</module>
         <module>apps</module>
-        <module>package</module>
-        <module>test</module>
+        <module>web</module>
+        <module>qingzhou</module>
     </modules>
 
     <properties>
+        <revision>1.0.0-SNAPSHOT</revision><!-- 设置默认 revision 值 -->
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.framework</artifactId>
+            <version>1.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+            <version>1.4.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component</artifactId>
+            <version>1.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.cm</artifactId>
+            <version>1.6.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.1.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
     <build>
-        <finalName>${project.artifactId}</finalName>
         <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-            <resource>
+            <resource> <!-- 打包 CharMap.txt -->
                 <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
                 <excludes>
                     <exclude>**/*.java</exclude>
                 </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
             </resource>
         </resources>
 
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
                     <source>8</source>
                     <target>8</target>
@@ -53,6 +88,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
                 <configuration>
                     <archive>
                         <addMavenDescriptor>false</addMavenDescriptor>
@@ -66,46 +102,83 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+            </plugin>
 
-            <!--            <plugin>-->
-            <!--                <artifactId>maven-checkstyle-plugin</artifactId>-->
-            <!--                <version>3.5.0</version>-->
-            <!--                <configuration>-->
-            <!--                    <configLocation>checkstyle.xml</configLocation>-->
-            <!--                    <consoleOutput>true</consoleOutput>-->
-            <!--                    <failsOnError>true</failsOnError>-->
-            <!--                    <linkXRef>false</linkXRef>-->
-            <!--                </configuration>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>validate</id>-->
-            <!--                        <phase>package</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>checkstyle-aggregate</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
-
+            <plugin>
+                <!--flatten-maven-plugin 是 ${revision} 机制的最佳搭档
+                    使用了 ${revision} 机制后，单独编译一个模块，其依赖的另外一个模块会找不到-->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <!-- 指定输出目录为当前模块的 target 目录下的一个子目录 -->
+                    <outputDirectory>${project.build.directory}/final-pom.xml</outputDirectory>
+                    <!-- 指定生成的扁平化 POM 的文件名，可以包含版本号 -->
+                    <flattenedPomFilename>
+                        ${project.artifactId}-${project.version}-flattened-pom.xml
+                    </flattenedPomFilename>
+                    <!-- 选择所需的扁平化模式 -->
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                    <!-- 关键：可将 <packaging>pom</packaging> parent 里的 占位符 也替换并 install 到本地库 -->
+                    <updatePomFile>true</updatePomFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
 
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>4.2.1</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <instructions>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+
+                            <Embed-Transitive>false</Embed-Transitive>
+                            <Embed-Directory>OSGI-INF/lib</Embed-Directory>
+
+                            <_nouses>true</_nouses>
+                            <_removeheaders>
+                                Bnd-LastModified,
+                                Private-Package,
+                                Tool,
+                                Build-Jdk,
+                                Created-By,
+                                Built-By,
+                                Bundle-ManifestVersion,
+                                Bundle-Name,
+                                Provide-Capability,
+                                Require-Capability,
+                                Embed-Dependency,
+                                Embed-Transitive,
+                                Embed-Directory,
+                                Include-Resource,
+                                Embedded-Artifacts
+                            </_removeheaders>
+                        </instructions>
+                    </configuration>
                 </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
-                </plugin>
+
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.3.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
