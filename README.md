@@ -36,7 +36,7 @@
 
 轻舟提供了可视化的 Web 管理控制台，如已部署，可打开浏览器访问：
 
-[http://localhost:7900/qingzhou](http://localhost:5001/qingzhou)
+[http://localhost:7900/console](http://localhost:7900/console)
 
 注：轻舟的 Web 管理控制台支持独立部署，因此可能并未部署在当前轻舟实例上，请根据实际部署情况访问。
 
