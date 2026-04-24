@@ -68,6 +68,8 @@ public @interface ModelField {
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
 
+    String[] group() default {}; // 监视字段的分组，同一分组的字段在同一个图表中展示。国际化数组格式。
+
     String[] color() default {}; // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
 
     int width_percent() default -1;

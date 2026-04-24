@@ -54,6 +54,8 @@ public class ModelFieldView extends Base {
 
     public boolean numeric;
 
+    public String[] group;
+
     public String[] color;
 
     public int width_percent;
