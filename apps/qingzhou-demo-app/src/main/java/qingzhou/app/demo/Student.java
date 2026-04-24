@@ -119,7 +119,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             list = true,
             add = true,
             update = true,
-            email = true)
+            email = true,
+            group = {"联系方式", "en:Contact"})
     public String email;
 
     @ModelField(
@@ -127,7 +128,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             info = {"登录密码", "en:Login password"},
             input_type = InputType.password,
             add = true,
-            update = true)
+            update = true,
+            group = {"联系方式", "en:Contact"})
     public String password;
 
     @ModelField(
@@ -135,7 +137,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             info = {"个人简介", "en:Personal biography"},
             input_type = InputType.textarea,
             add = true,
-            update = true)
+            update = true,
+            group = {"个人信息", "en:Personal Info"})
     public String bio;
 
     @ModelField(
@@ -145,7 +148,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             separator = ",",
-            options = {"篮球", "足球", "音乐", "绘画", "编程", "阅读", "游泳", "游戏"})
+            options = {"篮球", "足球", "音乐", "绘画", "编程", "阅读", "游泳", "游戏"},
+            group = {"个人信息", "en:Personal Info"})
     public String hobbies;
 
     @ModelField(
@@ -163,7 +167,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             info = {"头像图片", "en:Avatar image"},
             input_type = InputType.file,
             add = true,
-            update = true)
+            update = true,
+            group = {"个人信息", "en:Personal Info"})
     public String avatar;
 
     @ModelField(
@@ -190,7 +195,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.sortable,
             separator = ",",
             add = true,
-            update = true)
+            update = true,
+            group = {"个人信息", "en:Personal Info"})
     public String skills;
 
     @ModelField(
@@ -199,7 +205,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.combine,
             separator = "|",
             add = true,
-            update = true)
+            update = true,
+            group = {"个人信息", "en:Personal Info"})
     public String fullName;
 
     @ModelField(
@@ -208,7 +215,8 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.text,
             color = {"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"},
             add = true,
-            update = true)
+            update = true,
+            group = {"个人信息", "en:Personal Info"})
     public String themeColor;
 
     @Override

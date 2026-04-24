@@ -101,7 +101,8 @@ public class BundleConverter {
                         "qingzhou.crypto," +
                         "qingzhou.http.server," +
                         "qingzhou.http.client," +
-                        "qingzhou.qr");
+                        "qingzhou.qr," +
+                        "com.sun.management");
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);

@@ -76,7 +76,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             list = true,
             add = true,
             update = true,
-            pattern = "^1[3-9]\\d{9}$")
+            pattern = "^1[3-9]\\d{9}$",
+            group = {"配送信息", "en:Delivery"})
     public String phone;
 
     @ModelField(
@@ -84,7 +85,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             info = {"详细配送地址", "en:Delivery address"},
             input_type = InputType.textarea,
             add = true,
-            update = true)
+            update = true,
+            group = {"配送信息", "en:Delivery"})
     public String address;
 
     @ModelField(
@@ -94,7 +96,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0)
+            min = 0,
+            group = {"订单详情", "en:Order Details"})
     public String amount;
 
     @ModelField(
@@ -104,7 +107,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             add = true,
             update = true,
             input_type = InputType.radio,
-            options = {"wechat", "alipay", "bankcard", "cash"})
+            options = {"wechat", "alipay", "bankcard", "cash"},
+            group = {"订单详情", "en:Order Details"})
     public String payMethod;
 
     @ModelField(
@@ -113,7 +117,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             add = true,
             update = true,
             input_type = InputType.checkbox,
-            options = {"express", "pickup", "home_delivery", "self_pickup"})
+            options = {"express", "pickup", "home_delivery", "self_pickup"},
+            group = {"配送信息", "en:Delivery"})
     public String deliveryMethod;
 
     @ModelField(
@@ -121,7 +126,8 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
             info = {"订单备注", "en:Order remark"},
             input_type = InputType.kv,
             add = true,
-            update = true)
+            update = true,
+            group = {"配送信息", "en:Delivery"})
     public String remark;
 
     @ModelField(
