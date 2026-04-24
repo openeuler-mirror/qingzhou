@@ -8,6 +8,7 @@ import qingzhou.api.type.Monitor;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -124,44 +125,76 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
         double loadAvg = osBean.getSystemLoadAverage();
         data.put("systemLoadAverage", loadAvg < 0 ? "-1" : String.format("%.2f", loadAvg));
 
-        if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
-            com.sun.management.OperatingSystemMXBean sunOsBean = (com.sun.management.OperatingSystemMXBean) osBean;
+        try {
+            Class<?> sunOsClass = Class.forName("com.sun.management.OperatingSystemMXBean");
+            if (sunOsClass.isInstance(osBean)) {
+                double processCpu = invokeDoubleMethod(osBean, sunOsClass, "getProcessCpuLoad");
+                data.put("cpuProcessUsage", processCpu < 0 ? "-1" : String.format("%.2f", processCpu * 100));
 
-            double processCpu = sunOsBean.getProcessCpuLoad();
-            data.put("cpuProcessUsage", processCpu < 0 ? "-1" : String.format("%.2f", processCpu * 100));
+                double systemCpu = invokeDoubleMethod(osBean, sunOsClass, "getSystemCpuLoad");
+                data.put("cpuSystemUsage", systemCpu < 0 ? "-1" : String.format("%.2f", systemCpu * 100));
 
-            double systemCpu = sunOsBean.getSystemCpuLoad();
-            data.put("cpuSystemUsage", systemCpu < 0 ? "-1" : String.format("%.2f", systemCpu * 100));
+                long totalMem = invokeLongMethod(osBean, sunOsClass, "getTotalPhysicalMemorySize");
+                long freeMem = invokeLongMethod(osBean, sunOsClass, "getFreePhysicalMemorySize");
+                data.put("totalPhysicalMemory", String.valueOf(totalMem / (1024 * 1024)));
+                data.put("freePhysicalMemory", String.valueOf(freeMem / (1024 * 1024)));
+                data.put("usedPhysicalMemory", String.valueOf((totalMem - freeMem) / (1024 * 1024)));
 
-            long totalMem = sunOsBean.getTotalPhysicalMemorySize();
-            long freeMem = sunOsBean.getFreePhysicalMemorySize();
-            data.put("totalPhysicalMemory", String.valueOf(totalMem / (1024 * 1024)));
-            data.put("freePhysicalMemory", String.valueOf(freeMem / (1024 * 1024)));
-            data.put("usedPhysicalMemory", String.valueOf((totalMem - freeMem) / (1024 * 1024)));
-
-            long totalSwap = sunOsBean.getTotalSwapSpaceSize();
-            long freeSwap = sunOsBean.getFreeSwapSpaceSize();
-            data.put("totalSwapSpace", String.valueOf(totalSwap / (1024 * 1024)));
-            data.put("freeSwapSpace", String.valueOf(freeSwap / (1024 * 1024)));
-        } else {
-            data.put("cpuProcessUsage", "-1");
-            data.put("cpuSystemUsage", "-1");
-            data.put("totalPhysicalMemory", "-1");
-            data.put("freePhysicalMemory", "-1");
-            data.put("usedPhysicalMemory", "-1");
-            data.put("totalSwapSpace", "-1");
-            data.put("freeSwapSpace", "-1");
+                long totalSwap = invokeLongMethod(osBean, sunOsClass, "getTotalSwapSpaceSize");
+                long freeSwap = invokeLongMethod(osBean, sunOsClass, "getFreeSwapSpaceSize");
+                data.put("totalSwapSpace", String.valueOf(totalSwap / (1024 * 1024)));
+                data.put("freeSwapSpace", String.valueOf(freeSwap / (1024 * 1024)));
+            } else {
+                setUnavailable(data);
+            }
+        } catch (ClassNotFoundException e) {
+            setUnavailable(data);
         }
 
-        if (osBean instanceof com.sun.management.UnixOperatingSystemMXBean) {
-            com.sun.management.UnixOperatingSystemMXBean unixOsBean = (com.sun.management.UnixOperatingSystemMXBean) osBean;
-            data.put("openFileDescriptorCount", String.valueOf(unixOsBean.getOpenFileDescriptorCount()));
-            data.put("maxFileDescriptorCount", String.valueOf(unixOsBean.getMaxFileDescriptorCount()));
-        } else {
+        try {
+            Class<?> unixOsClass = Class.forName("com.sun.management.UnixOperatingSystemMXBean");
+            if (unixOsClass.isInstance(osBean)) {
+                long openFd = invokeLongMethod(osBean, unixOsClass, "getOpenFileDescriptorCount");
+                long maxFd = invokeLongMethod(osBean, unixOsClass, "getMaxFileDescriptorCount");
+                data.put("openFileDescriptorCount", String.valueOf(openFd));
+                data.put("maxFileDescriptorCount", String.valueOf(maxFd));
+            } else {
+                data.put("openFileDescriptorCount", "-1");
+                data.put("maxFileDescriptorCount", "-1");
+            }
+        } catch (ClassNotFoundException e) {
             data.put("openFileDescriptorCount", "-1");
             data.put("maxFileDescriptorCount", "-1");
         }
 
         return data;
+    }
+
+    private void setUnavailable(Map<String, String> data) {
+        data.put("cpuProcessUsage", "-1");
+        data.put("cpuSystemUsage", "-1");
+        data.put("totalPhysicalMemory", "-1");
+        data.put("freePhysicalMemory", "-1");
+        data.put("usedPhysicalMemory", "-1");
+        data.put("totalSwapSpace", "-1");
+        data.put("freeSwapSpace", "-1");
+    }
+
+    private static double invokeDoubleMethod(Object obj, Class<?> clazz, String methodName) throws Exception {
+        Method method = clazz.getMethod(methodName);
+        Object result = method.invoke(obj);
+        if (result instanceof Number) {
+            return ((Number) result).doubleValue();
+        }
+        return -1;
+    }
+
+    private static long invokeLongMethod(Object obj, Class<?> clazz, String methodName) throws Exception {
+        Method method = clazz.getMethod(methodName);
+        Object result = method.invoke(obj);
+        if (result instanceof Number) {
+            return ((Number) result).longValue();
+        }
+        return -1;
     }
 }
