@@ -110,8 +110,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"运行时间(秒)", "en:Uptime (s)"},
             info = {"JVM运行时长(秒)", "en:JVM uptime in seconds"},
-            field_type = FieldType.MONITORING,
-            numeric = true)
+            field_type = FieldType.MONITORING)
     public String uptime;
 
     @Override

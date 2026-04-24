@@ -102,8 +102,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"可用处理器数", "en:Available Processors"},
             info = {"可用CPU核心数", "en:Available CPU cores"},
-            field_type = FieldType.MONITORING,
-            numeric = true)
+            field_type = FieldType.MONITORING)
     public String availableProcessors;
 
     @ModelField(
