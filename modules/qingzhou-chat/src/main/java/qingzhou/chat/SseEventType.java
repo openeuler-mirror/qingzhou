@@ -1,0 +1,13 @@
+package qingzhou.chat;
+
+public enum SseEventType {
+    RUN_STARTED,
+    REASONING_START,
+    REASONING_CONTENT,
+    REASONING_END,
+    TEXT_MESSAGE_START,
+    TEXT_MESSAGE_CONTENT,
+    TEXT_MESSAGE_END,
+    RUN_FINISHED,
+    RUN_ERROR,
+}

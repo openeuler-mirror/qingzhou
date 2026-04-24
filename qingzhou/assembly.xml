@@ -92,6 +92,7 @@
                 <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-dto</include>
                 <include>${project.groupId}:qingzhou-agent</include>
+                <include>${project.groupId}:qingzhou-chat</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

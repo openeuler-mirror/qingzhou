@@ -243,6 +243,11 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-chat</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <artifactId>qingzhou-web-backend</artifactId>
