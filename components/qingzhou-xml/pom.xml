@@ -19,7 +19,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.xml</Export-Package>
-                        <Import-Package>javax.xml.parsers,javax.xml.xpath</Import-Package>
+                        <Import-Package>javax.xml.parsers,javax.xml.xpath,org.w3c.dom,javax.xml.transform.*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

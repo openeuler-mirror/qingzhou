@@ -1,8 +1,15 @@
 package qingzhou.xml.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -71,5 +78,61 @@ class DocImpl implements Doc {
             }
         }
         return result;
+    }
+
+    @Override
+    public void updateNode(String xPath, Properties attributes) throws Exception {
+        Node node = (Node) this.xPath.evaluate(xPath, dom, XPathConstants.NODE);
+        if (node == null) {
+            throw new IllegalArgumentException("Node not found: " + xPath);
+        }
+
+        for (String key : attributes.stringPropertyNames()) {
+            String value = attributes.getProperty(key);
+            if (value != null && !value.isEmpty()) {
+                ((org.w3c.dom.Element) node).setAttribute(key, value);
+            } else {
+                ((org.w3c.dom.Element) node).removeAttribute(key);
+            }
+        }
+    }
+
+    @Override
+    public void addNode(String parentXPath, String elementName, Properties attributes) throws Exception {
+        Node parent = (Node) this.xPath.evaluate(parentXPath, dom, XPathConstants.NODE);
+        if (parent == null) {
+            throw new IllegalArgumentException("Parent node not found: " + parentXPath);
+        }
+
+        org.w3c.dom.Element newElement = dom.createElement(elementName);
+        for (String key : attributes.stringPropertyNames()) {
+            String value = attributes.getProperty(key);
+            if (value != null && !value.isEmpty()) {
+                newElement.setAttribute(key, value);
+            }
+        }
+        parent.appendChild(newElement);
+    }
+
+    @Override
+    public void deleteNode(String xPath) throws Exception {
+        Node node = (Node) this.xPath.evaluate(xPath, dom, XPathConstants.NODE);
+        if (node == null) {
+            throw new IllegalArgumentException("Node not found: " + xPath);
+        }
+        node.getParentNode().removeChild(node);
+    }
+
+    @Override
+    public void write(File file) throws Exception {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount}", "4");
+        DOMSource source = new DOMSource(dom);
+        FileOutputStream fos = new FileOutputStream(file);
+        StreamResult result = new StreamResult(fos);
+        transformer.transform(source, result);
+        fos.close();
     }
 }
