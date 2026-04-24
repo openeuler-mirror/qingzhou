@@ -6,8 +6,9 @@
     <groupId>qingzhou</groupId>
     <artifactId>console</artifactId>
     <version>${revision}</version>
-
     <packaging>pom</packaging>
+    <name>qingzhou</name>
+
     <modules>
         <module>runtime</module>
         <module>components</module>
