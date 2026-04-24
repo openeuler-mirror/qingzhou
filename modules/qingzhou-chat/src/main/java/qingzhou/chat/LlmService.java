@@ -31,14 +31,13 @@ import qingzhou.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class LlmService {
 
-    private Registry registry;
-    private I18nService i18nService;
+    private final Registry registry;
+    private final I18nService i18nService;
+    private final ChatModel chatModel;
 
-    private ChatModel chatModel;
     private List<Tool> tools;
 
     public LlmService(Registry registry, I18nService i18nService, ChatModel chatModel) {
@@ -47,15 +46,12 @@ public class LlmService {
         this.chatModel = chatModel;
     }
 
-    public void init(Map<String, String> config) {
-        chatModel = ModelConfig.getChatModel(config);
-    }
-
     public void streamChat(String message, StreamCallback callback) {
         MemoryPrompt prompt = new MemoryPrompt();
         prompt.addMessage(new UserMessage(message));
         if (tools == null) {
             tools = getTools();
+            System.out.println("添加了 " + tools.size() + " 个Tool。");
         }
         prompt.addTools(tools);
         if (chatModel == null) {

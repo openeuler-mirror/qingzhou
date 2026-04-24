@@ -75,7 +75,7 @@ public class ChatHttpServer implements HttpServer {
         } finally {
             try {
                 countDownLatch.await();
-                System.out.println("请求结束");
+                System.out.println("对话结束！");
             } catch (InterruptedException ignored) {
             }
         }
