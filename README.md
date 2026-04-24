@@ -33,7 +33,7 @@
   - version*.zip: 轻舟二进制 *.jar 文件的分发 zip 包，启动时会自动解压开，解压后此文件不再需要，可删除或继续留存。
   - version* 目录: 在启动时根据 version*.zip 自动解压生成的目录，此目录下的 *.jar 文件会加载到内存。
   - 重点说明：启动时，如果 version* 目录已存在，则会与 version*.zip 比对，不一致，则删除重新生成，若要禁止此行为，可将 version*.zip 移出此目录，或修改其名字不要以 version 开头。
-  - 
+  -
 2. **启动**
 
 在 `${轻舟安装包}/bin` 下，执行 start 脚本，如：sh start.sh，等待启动完成。
@@ -45,6 +45,51 @@
 [http://localhost:7900/console](http://localhost:7900/console)
 
 注：轻舟的 Web 管理控制台支持独立部署，因此可能并未部署在当前轻舟实例上，请根据实际部署情况访问。
+
+4. **应用开发**
+
+📌 参考示例：`apps/qingzhou-demo-app`。
+
+1. **创建模块**：在 `qingzhou\apps` 目录下创建 Maven 子模块。
+
+2. **应用入口类开发**：
+  - 创建类，实现 `QingzhouApp` 接口。
+  - 添加 `@App`、`@Menu` 注解配置元数据。
+  - 重写 `start()` 方法，定制启动逻辑。
+
+   | 注解 | 作用说明 |
+   |:---|:---|
+   | `@App` | 标注应用入口 |
+   | `@Menu` | 标注应用菜单 |
+
+3. **业务模型类开发**：
+  - 创建类，继承 `ModelBase`。
+  - 根据业务需求，实现相应的能力接口。
+
+   **模型能力接口：**
+
+   | 接口 | 功能说明 |
+   |:---|:---|
+   | `List` | 列表查询 |
+   | `Show` | 详情展示 |
+   | `Add` | 新增数据 |
+   | `Update` | 编辑数据 |
+   | `Delete` | 删除操作 |
+   | `Monitor` | 实时监控 |
+
+   **模型类常用注解：**
+
+   | 注解 | 作用说明 |
+   |:---|:---|
+   | `@Model` | 标注应用模块 |
+   | `@ModelField` | 标注模块字段 |
+   |  `@ModelAction` | 标注模块自定义操作，访问格式：`/invoke/-/demo/model/action` |
+
+5. **应用部署**
+
+-  执行 `mvn clean install` 编译。
+-  将生成的 jar 包放入`qingzhou\target\qingzhou\instances\default\apps` 目录下。
+-  重启轻舟实例即可生效。
 
 ### 云端
 
