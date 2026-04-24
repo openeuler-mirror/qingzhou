@@ -9,6 +9,7 @@ import qingzhou.api.type.Monitor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Dashboard 首页模型
@@ -60,11 +61,13 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @Override
     public Map<String, String> monitor(Request request) {
         Map<String, String> stats = new HashMap<>();
+        Random random = new Random();
 
-        stats.put("studentCount", "1286");
-        stats.put("productCount", "328");
-        stats.put("orderCount", "5432");
-        stats.put("totalSales", "128650.00");
+        stats.put("studentCount", String.valueOf(1000 + random.nextInt(1000)));
+        stats.put("productCount", String.valueOf(300 + random.nextInt(200)));
+        stats.put("orderCount", String.valueOf(5000 + random.nextInt(2000)));
+        double sales = 100000 + random.nextDouble() * 50000;
+        stats.put("totalSales", String.format("%.2f", sales));
 
         stats.put("statsTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
 
