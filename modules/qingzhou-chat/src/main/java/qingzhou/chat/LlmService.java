@@ -118,16 +118,23 @@ public class LlmService {
                     Tool.Builder builder = Tool.builder()
                             .name(appCode + "." + methodName + "_" + code)
                             .description(description);
-                    if (Show.ACTION_CODE_SHOW.equals(methodName)) {
-                        for (ModelField field : model.fields) {
-                            if (field.id) {
-                                builder.addParameter(Parameter.builder()
-                                        .name(field.fieldName)
-                                        .description(i18nService.getI18n(field.name, Lang.zh))
-                                        .type(field.input_type == InputType.number ? "number" : "string")
-                                        .required(true)
-                                        .build());
-                            }
+                    ModelField idField = getIdField(model);
+                    if (Show.ACTION_CODE_SHOW.equals(methodName) && idField != null) {
+                        builder.addParameter(Parameter.builder()
+                                .name(idField.fieldName)
+                                .description(i18nService.getI18n(idField.name, Lang.zh))
+                                .type(idField.input_type == InputType.number ? "number" : "string")
+                                .required(true)
+                                .build());
+                    }
+                    if (qingzhou.api.type.List.ACTION_CODE_LIST.equals(methodName)) {
+                        List<ModelField> searchFields = getSearchField(model);
+                        for (ModelField field : searchFields) {
+                            builder.addParameter(Parameter.builder()
+                                    .name(field.fieldName)
+                                    .description(i18nService.getI18n(field.name, Lang.zh))
+                                    .type(field.input_type == InputType.number ? "number" : "string")
+                                    .build());
                         }
                     }
                     Tool tool = builder
@@ -138,6 +145,12 @@ public class LlmService {
                                     request.setModel(code);
                                     request.setAction(methodName);
                                     request.setInstance(Constants.LOCAL_INSTANCE_ID);
+                                    if (idField != null) {
+                                        Object o = args.get(idField.fieldName);
+                                        if (o != null) {
+                                            request.setId(o.toString());
+                                        }
+                                    }
                                     args.forEach((s, o) -> request.getParameters().put(s, o.toString()));
                                     appStubLocal.invokeApp(request);
                                     return request.getResponse().getData();
@@ -152,5 +165,24 @@ public class LlmService {
         }
         System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(tools));
         return tools;
+    }
+
+    private ModelField getIdField(Model model) {
+        for (ModelField field : model.fields) {
+            if (field.id) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private List<ModelField> getSearchField(Model model) {
+        List<ModelField> list = new ArrayList<>();
+        for (ModelField field : model.fields) {
+            if (field.search) {
+                list.add(field);
+            }
+        }
+        return list;
     }
 }

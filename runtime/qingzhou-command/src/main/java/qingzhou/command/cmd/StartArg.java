@@ -37,7 +37,7 @@ public class StartArg extends Processor {
         // prepare javaCmd
         String javaCmd = Paths.get(System.getProperty("java.home"), "bin", "java").toString();
         // 构造启动命令
-        StringBuilder startCmd = new StringBuilder(javaCmd);
+        StringBuilder startCmd = new StringBuilder("\"" + javaCmd + "\"");
         for (String arg : jvmConfig) {
             startCmd.append(" ").append(arg);
         }
