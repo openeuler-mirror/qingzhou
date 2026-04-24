@@ -97,6 +97,7 @@ public class BundleConverter {
         attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE,
                 "qingzhou.logger," +
                         "qingzhou.json," +
+                        "qingzhou.xml," +
                         "qingzhou.jdbc," +
                         "qingzhou.crypto," +
                         "qingzhou.http.server," +

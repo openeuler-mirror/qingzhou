@@ -36,6 +36,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <artifactId>qingzhou-xml</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-jdbc</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
