@@ -8,12 +8,12 @@ import java.util.Map;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-public class AppMetaInfo implements WebBackendHttpServer.WebHandler {
+public class AppMetaInfo implements WebBackendHttpHandler.WebHandler {
     public static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
 
-    private final WebBackendHttpServer.ContextHelper helper;
+    private final WebBackendHttpHandler.ContextHelper helper;
 
-    public AppMetaInfo(WebBackendHttpServer.ContextHelper helper) {
+    public AppMetaInfo(WebBackendHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

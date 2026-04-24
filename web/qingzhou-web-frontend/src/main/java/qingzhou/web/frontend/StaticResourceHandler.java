@@ -9,13 +9,13 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/console")
-public class StaticResourceServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=/console")
+public class StaticResourceHandler implements HttpHandler {
 
     private static final String STATIC_RESOURCE_PATH = "/webapp/";
     private static final String INDEX_FILE = "index.html";

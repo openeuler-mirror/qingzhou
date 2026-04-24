@@ -11,15 +11,15 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/register",
+@Component(property = HttpHandler.HANDLE_PATH + "=/register",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class RegisterHttpServer implements HttpServer {
+public class RegisterHttpHandler implements HttpHandler {
     public static final Object REGISTRY_LOCK = new Object();
 
     @Reference

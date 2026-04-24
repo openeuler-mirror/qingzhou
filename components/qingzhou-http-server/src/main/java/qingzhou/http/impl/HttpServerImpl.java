@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.netty.channel.ChannelOption;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
@@ -18,11 +19,11 @@ import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class HttpServerImpl {
+public class HttpServerImpl implements HttpServer {
     @Reference
     private Logger logger;
 
-    final Map<String, HttpServer> handlerMap = new HashMap<>();
+    final Map<String, HttpHandler> handlerMap = new HashMap<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
@@ -87,28 +88,36 @@ public class HttpServerImpl {
         return defaultValue;
     }
 
+    @Override
+    public void registerHttpHandler(String handlePath, HttpHandler httpHandler) {
+        addHttpHandler(httpHandler, new HashMap<String, String>() {{
+            put(HttpHandler.HANDLE_PATH, handlePath);
+        }});
+    }
+
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            unbind = "removeHttpServer")
-    public void registerHttpServer(HttpServer httpServer, Map<String, String> properties) {
-        String path = properties.get(HttpServer.HTTP_SERVER_PATH);
+            unbind = "removeHttpHandler")
+    public void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties) {
+        String path = properties.get(HttpHandler.HANDLE_PATH);
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
+        if (component == null) component = "@App";
         if (path == null)
-            throw new IllegalArgumentException(HttpServer.HTTP_SERVER_PATH + " of [" + component + "] cannot be null");
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be null");
         path = path.trim();
         if (!path.startsWith("/"))
-            throw new IllegalArgumentException(HttpServer.HTTP_SERVER_PATH + " of [" + component + "] must start with '/', but it currently is: " + path);
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with '/', but it currently is: " + path);
 
         if (handlerMap.containsKey(path)) {
-            throw new IllegalArgumentException(HttpServer.HTTP_SERVER_PATH + "(" + path + ") of [" + component + "] already exists: " + path + " of [" + handlerMap.get(path).getClass().getName() + "]");
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] already exists: " + path + " of [" + handlerMap.get(path).getClass().getName() + "]");
         } else {
             String matches = matches(path);
             if (matches != null && !matches.equals("/")) {
-                throw new IllegalArgumentException(HttpServer.HTTP_SERVER_PATH + "(" + path + ") of [" + component + "] matches: " + matches + " of [" + handlerMap.get(matches).getClass().getName() + "]");
+                throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] matches: " + matches + " of [" + handlerMap.get(matches).getClass().getName() + "]");
             }
         }
 
-        handlerMap.put(path, httpServer);
-        logger.info("HTTP service registered: " + path);
+        handlerMap.put(path, httpHandler);
+        logger.info("HttpHandler registered: " + path);
     }
 
     String matches(String checkPath) {
@@ -135,10 +144,10 @@ public class HttpServerImpl {
      * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
      * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
      */
-    public void removeHttpServer(HttpServer httpServer) {
+    public void removeHttpHandler(HttpHandler httpHandler) {
         String contextPath = null;
-        for (Map.Entry<String, HttpServer> e : handlerMap.entrySet()) {
-            if (Objects.equals(e.getValue(), httpServer)) {
+        for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
+            if (Objects.equals(e.getValue(), httpHandler)) {
                 contextPath = e.getKey();
             }
         }

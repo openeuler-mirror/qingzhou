@@ -30,7 +30,7 @@ public @interface ModelAction {
     boolean batch() default false;
 
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
-    String[] name();
+    String[] name() default {};
 
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
     String[] info() default {};

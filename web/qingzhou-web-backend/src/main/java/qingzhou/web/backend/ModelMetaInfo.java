@@ -12,10 +12,10 @@ import qingzhou.dto.meta.annotation.ModelFieldView;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-public class ModelMetaInfo implements WebBackendHttpServer.WebHandler {
-    private final WebBackendHttpServer.ContextHelper helper;
+public class ModelMetaInfo implements WebBackendHttpHandler.WebHandler {
+    private final WebBackendHttpHandler.ContextHelper helper;
 
-    public ModelMetaInfo(WebBackendHttpServer.ContextHelper helper) {
+    public ModelMetaInfo(WebBackendHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

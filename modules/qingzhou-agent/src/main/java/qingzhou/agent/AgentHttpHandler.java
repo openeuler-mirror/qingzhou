@@ -17,14 +17,14 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/agent")
-public class AgentHttpServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=/agent")
+public class AgentHttpHandler implements HttpHandler {
     @Reference
     private Logger logger;
     @Reference

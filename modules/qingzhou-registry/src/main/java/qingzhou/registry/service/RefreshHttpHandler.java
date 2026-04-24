@@ -13,15 +13,15 @@ import qingzhou.crypto.PairCipher;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
-import static qingzhou.registry.service.RegisterHttpServer.REGISTRY_LOCK;
+import static qingzhou.registry.service.RegisterHttpHandler.REGISTRY_LOCK;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/refresh",
+@Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class RefreshHttpServer implements HttpServer {
+public class RefreshHttpHandler implements HttpHandler {
     @Reference
     private Crypto crypto;
     @Reference

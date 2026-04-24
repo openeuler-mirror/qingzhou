@@ -9,14 +9,14 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.Lang;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=" + WebBackendHttpServer.URI_SERVER_PATH)
-public class WebBackendHttpServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=" + WebBackendHttpHandler.URI_SERVER_PATH)
+public class WebBackendHttpHandler implements HttpHandler {
     public static final String URI_SERVER_PATH = "/web";
     public static final String REQUEST_PARAMETER_NAME_LANG = "lang";
     public static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";

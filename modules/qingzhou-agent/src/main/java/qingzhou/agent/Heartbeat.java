@@ -151,8 +151,8 @@ public class Heartbeat {
         thisInstanceInfo.setVersion(qzVersion);
 
         // 实例端口
-        Dictionary<String, Object> httpserverConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-        int serverPort = Integer.parseInt(String.valueOf(httpserverConfig.get("port")));
+        Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
+        int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
         thisInstanceInfo.setPort(serverPort);
 
         // 所有信息收集完成后，计算实例 ID，同一个实例多次重启的 ID 不应该变化

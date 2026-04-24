@@ -6,7 +6,7 @@ import java.util.function.BiFunction;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -32,7 +32,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         String matches = httpServerImpl.matches(normalizedPath);
         if (matches == null) return response.status(HttpResponseStatus.NOT_FOUND);
 
-        HttpServer httpServer = this.httpServerImpl.handlerMap.get(matches);
+        HttpHandler httpHandler = this.httpServerImpl.handlerMap.get(matches);
         return request.receive()
                 .aggregate().asByteArray()
                 .defaultIfEmpty(NULL_BYTES)
@@ -47,7 +47,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                                     requestPath, bytes);
                             HttpResponseImpl httpResponse = new HttpResponseImpl(response,
                                     headerSentFuture, sendBodySink);
-                            httpServer.handle(httpRequest, httpResponse);
+                            httpHandler.handle(httpRequest, httpResponse);
                         } catch (Throwable e) {
                             response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                             Throwable cause = getCause(e);
