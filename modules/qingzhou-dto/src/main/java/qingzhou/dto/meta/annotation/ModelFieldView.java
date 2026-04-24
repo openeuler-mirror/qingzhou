@@ -1,5 +1,6 @@
 package qingzhou.dto.meta.annotation;
 
+import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 
@@ -53,6 +54,8 @@ public class ModelFieldView extends Base {
     public boolean search;
 
     public boolean numeric;
+
+    public ChartType chart_type;
 
     public String[] group;
 

@@ -1,5 +1,6 @@
 package qingzhou.app.demo;
 
+import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
@@ -33,6 +34,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"当前进程CPU使用率", "en:Current process CPU usage"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.gauge,
             group = {"CPU", "en:CPU"})
     public String cpuProcessUsage;
 
@@ -41,6 +43,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统整体CPU使用率", "en:System overall CPU usage"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.gauge,
             group = {"CPU", "en:CPU"})
     public String cpuSystemUsage;
 
@@ -49,6 +52,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统总物理内存", "en:Total physical memory"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String totalPhysicalMemory;
 
@@ -57,6 +61,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统空闲物理内存", "en:Free physical memory"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String freePhysicalMemory;
 
@@ -65,6 +70,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统已用物理内存", "en:Used physical memory"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String usedPhysicalMemory;
 
@@ -73,6 +79,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统总交换空间", "en:Total swap space"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"交换空间", "en:Swap"})
     public String totalSwapSpace;
 
@@ -81,6 +88,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"系统空闲交换空间", "en:Free swap space"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"交换空间", "en:Swap"})
     public String freeSwapSpace;
 
@@ -89,6 +97,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"当前打开的文件描述符数量", "en:Open file descriptor count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.bar,
             group = {"文件描述符", "en:File Descriptors"})
     public String openFileDescriptorCount;
 
@@ -97,20 +106,24 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"文件描述符上限", "en:Max file descriptor count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.bar,
             group = {"文件描述符", "en:File Descriptors"})
     public String maxFileDescriptorCount;
 
     @ModelField(
             name = {"可用处理器数", "en:Available Processors"},
             info = {"可用CPU核心数", "en:Available CPU cores"},
-            field_type = FieldType.MONITORING)
+            field_type = FieldType.MONITORING,
+            numeric = true,
+            chart_type = ChartType.stat)
     public String availableProcessors;
 
     @ModelField(
             name = {"系统负载均值", "en:System Load Average"},
             info = {"系统1分钟负载均值", "en:System 1-minute load average"},
             field_type = FieldType.MONITORING,
-            numeric = true)
+            numeric = true,
+            chart_type = ChartType.line)
     public String systemLoadAverage;
 
     @Override

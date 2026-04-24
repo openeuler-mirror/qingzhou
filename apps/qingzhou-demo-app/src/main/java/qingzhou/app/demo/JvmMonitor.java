@@ -1,5 +1,6 @@
 package qingzhou.app.demo;
 
+import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
@@ -32,6 +33,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"JVM堆内存已使用量", "en:JVM heap memory used"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String heapUsed;
 
@@ -40,6 +42,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"JVM堆内存最大值", "en:JVM heap memory max"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String heapMax;
 
@@ -48,6 +51,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"JVM堆内存已提交量", "en:JVM heap memory committed"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String heapCommitted;
 
@@ -56,6 +60,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"JVM非堆内存已使用量", "en:JVM non-heap memory used"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"内存", "en:Memory"})
     public String nonHeapUsed;
 
@@ -64,6 +69,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"当前活动线程数量", "en:Current live thread count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"线程", "en:Thread"})
     public String threadCount;
 
@@ -72,6 +78,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"峰值线程数量", "en:Peak thread count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"线程", "en:Thread"})
     public String peakThreadCount;
 
@@ -80,6 +87,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"当前守护线程数量", "en:Current daemon thread count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.line,
             group = {"线程", "en:Thread"})
     public String daemonThreadCount;
 
@@ -88,6 +96,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"JVM已加载的类总数", "en:Total number of loaded classes"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.bar,
             group = {"类加载", "en:Class Loading"})
     public String totalLoadedClassCount;
 
@@ -96,6 +105,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"垃圾回收总次数", "en:Total garbage collection count"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.bar,
             group = {"GC", "en:GC"})
     public String gcCount;
 
@@ -104,13 +114,16 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             info = {"垃圾回收总耗时(毫秒)", "en:Total garbage collection time in ms"},
             field_type = FieldType.MONITORING,
             numeric = true,
+            chart_type = ChartType.bar,
             group = {"GC", "en:GC"})
     public String gcTime;
 
     @ModelField(
-            name = {"运行时间(秒)", "en:Uptime (s)"},
-            info = {"JVM运行时长(秒)", "en:JVM uptime in seconds"},
-            field_type = FieldType.MONITORING)
+            name = {"运行时间", "en:Uptime"},
+            info = {"JVM运行时长", "en:JVM uptime"},
+            field_type = FieldType.MONITORING,
+            numeric = true,
+            chart_type = ChartType.stat)
     public String uptime;
 
     @Override
@@ -150,8 +163,23 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
         data.put("gcTime", String.valueOf(totalGcTime));
 
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        data.put("uptime", String.valueOf(runtimeMXBean.getUptime() / 1000));
+        data.put("uptime", formatUptime(runtimeMXBean.getUptime()));
 
         return data;
+    }
+
+    private String formatUptime(long uptimeMs) {
+        long seconds = uptimeMs / 1000;
+        long days = seconds / 86400;
+        long hours = (seconds % 86400) / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("d");
+        if (hours > 0 || days > 0) sb.append(hours).append("h");
+        if (minutes > 0 || hours > 0 || days > 0) sb.append(minutes).append("m");
+        sb.append(secs).append("s");
+        return sb.toString();
     }
 }
