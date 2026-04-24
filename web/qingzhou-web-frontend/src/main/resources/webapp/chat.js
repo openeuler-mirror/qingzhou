@@ -9,12 +9,12 @@ class ChatSidebar {
     static LANG = {
         waitGenerate: '请等待当前生成完成',
         defaultTitle: 'AI 助手',
-        alreadyNewSession: '当前已是新会话',
-        newSessionCreated: '已新建会话',
+        alreadyNewSession: '当前已是空会话',
+        newSessionCreated: '已清空会话',
         requestFailed: '请求失败: ',
         runError: '运行出错',
         welcomeMain: '输入消息开始对话',
-        newSessionBtn: '新建会话',
+        newSessionBtn: '清空会话',
         closeBtn: '关闭',
         inputPlaceholder: '输入消息，Enter 发送',
         stopBtn: '停止',
@@ -23,6 +23,9 @@ class ChatSidebar {
         thinking: '思考中',
         thoughtProcess: '思考过程',
         roundThink: '第 {n} 轮思考',
+        deleteMsg: '删除',
+        copyMsg: '复制',
+        copied: '已复制',
     };
 
     constructor(options = {}) {
@@ -186,6 +189,16 @@ class ChatSidebar {
         css += '.chat-sb-chd{display:flex;justify-content:space-between;align-items:center;padding:3px 10px;background:#282828;border-bottom:1px solid #333;font-size:10px;color:#999;font-family:"SF Mono",Consolas,"Courier New",monospace}';
         css += '.chat-sb-cpb{background:none;border:none;color:#999;cursor:pointer;font-size:10px;padding:2px 5px;border-radius:3px;font-family:inherit}';
         css += '.chat-sb-cpb:hover{color:#fff;background:rgba(255,255,255,.1)}';
+        css += '.chat-sb-del-btn{position:static;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;border:1px solid #e8e8e8;background:#fff;color:#999;cursor:pointer;opacity:1;transition:all .15s;vertical-align:middle;margin-right:6px}';
+        css += '.chat-sb-del-btn:hover{border-color:#e53935;background:#fff5f5;color:#e53935}';
+        css += '.chat-sb-del-btn svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}';
+        css += '.chat-sb-footer-btns{display:flex;justify-content:flex-start;gap:6px;margin-top:6px}';
+        css += '.chat-sb-footer-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid #e8e8e8;background:#fff;color:#888;cursor:pointer;transition:all .15s}';
+        css += '.chat-sb-footer-btn:hover{border-color:#ccc}';
+        css += '.chat-sb-footer-btn.delete:hover{border-color:#e53935;background:#fff5f5;color:#e53935}';
+        css += '.chat-sb-footer-btn.copy:hover{border-color:#00b878;background:#f0faf6;color:#00b878}';
+        css += '.chat-sb-footer-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}';
+        css += '.chat-sb-msg{position:relative;animation:chat-sb-fu .3s ease-out}';
         css += '.chat-sb-input{padding:10px 14px;border-top:1px solid #ebebeb;background:#fafafa}';
         css += '.chat-sb-iwrap{position:relative;display:flex;align-items:flex-end;background:#fff;border:1px solid #ddd;border-radius:6px;transition:border-color .2s,box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}';
         css += '.chat-sb-iwrap:focus-within{border-color:#00b878;box-shadow:0 0 0 2px rgba(0,180,120,.1)}';
@@ -254,6 +267,11 @@ class ChatSidebar {
         css += 'html.dark .chat-sb-ibtn.send{background:#00b878;color:#ffffff !important}';
         css += 'html.dark .chat-sb-ibtn.send:hover{background:#00a86b}';
         css += 'html.dark .chat-sb-ibtn.send svg, html.dark .chat-sb-ibtn.send svg path{stroke:#ffffff !important}';
+        css += 'html.dark .chat-sb-del-btn{border-color:#3a3a3a;background:transparent;color:#777}';
+        css += 'html.dark .chat-sb-del-btn:hover{border-color:#e53935;background:rgba(229,57,53,.1);color:#ff6b6b}';
+        css += 'html.dark .chat-sb-footer-btn{border-color:#3a3a3a;background:transparent;color:#777}';
+        css += 'html.dark .chat-sb-footer-btn.delete:hover{border-color:#e53935;background:rgba(229,57,53,.1);color:#ff6b6b}';
+        css += 'html.dark .chat-sb-footer-btn.copy:hover{border-color:#00b878;background:rgba(0,184,120,.1);color:#4ade80}';
         css += 'html.dark .chat-sb-toast-item{background:#1e1e1e;border-color:#3a3a3a;color:#e5e5e5}';
         s.textContent = css;
         this._el = { style: s };
@@ -268,7 +286,7 @@ class ChatSidebar {
         document.body.appendChild(overlay);
         const root = document.createElement('div');
         root.className = 'chat-sb';
-        root.innerHTML = '<div class="chat-sb-resizer"></div><div class="chat-sb-hd"><div class="chat-sb-logo"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><span class="chat-sb-t"></span><button class="chat-sb-btn" data-action="new"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' + L.newSessionBtn + '</button><button class="chat-sb-ibtn" data-action="close" title="' + L.closeBtn + '"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="chat-sb-msgs"><div class="chat-sb-welcome"><div class="chat-sb-wi"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><p>' + L.welcomeMain + '</p></div><div class="chat-sb-ml" style="display:none"></div></div><div class="chat-sb-input"><div class="chat-sb-iwrap"><textarea placeholder="' + L.inputPlaceholder + '" rows="1"></textarea><div class="chat-sb-ibtns"><button class="chat-sb-ibtn sm stop" data-action="stop" style="display:none" title="' + L.stopBtn + '"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button class="chat-sb-ibtn sm send" data-action="send" disabled title="' + L.sendBtn + '"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button></div></div></div>';
+        root.innerHTML = '<div class="chat-sb-resizer"></div><div class="chat-sb-hd"><div class="chat-sb-logo"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><span class="chat-sb-t"></span><button class="chat-sb-btn" data-action="new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' + L.newSessionBtn + '</button><button class="chat-sb-ibtn" data-action="close" title="' + L.closeBtn + '"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="chat-sb-msgs"><div class="chat-sb-welcome"><div class="chat-sb-wi"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><p>' + L.welcomeMain + '</p></div><div class="chat-sb-ml" style="display:none"></div></div><div class="chat-sb-input"><div class="chat-sb-iwrap"><textarea placeholder="' + L.inputPlaceholder + '" rows="1"></textarea><div class="chat-sb-ibtns"><button class="chat-sb-ibtn sm stop" data-action="stop" style="display:none" title="' + L.stopBtn + '"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button class="chat-sb-ibtn sm send" data-action="send" disabled title="' + L.sendBtn + '"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button></div></div></div>';
         document.body.appendChild(root);
         const toastBox = document.createElement('div');
         toastBox.className = 'chat-sb-toast';
@@ -327,6 +345,14 @@ class ChatSidebar {
             else if (a === 'stop') this._cancelRun();
             else if (a === 'close') this.close();
             else if (a === 'new') this.newSession();
+            else if (a === 'delete') {
+                const mid = e.target.closest('[data-mid]')?.dataset.mid;
+                if (mid) this._deleteMessage(mid);
+            }
+            else if (a === 'copy') {
+                const mid = e.target.closest('[data-mid]')?.dataset.mid;
+                if (mid) this._copyMessage(mid);
+            }
         });
 
         this._el.msgList.addEventListener('click', e => {
@@ -656,14 +682,19 @@ class ChatSidebar {
     }
 
     _userH(m) {
-        return '<div class="chat-sb-msg chat-sb-mu"><div class="chat-sb-bbl">' + this._esc(m.content).replace(/\r?\n/g, '<br>') + '</div><div class="chat-sb-time">' + this._fmtT(m.timestamp) + '</div></div>';
+        const delBtn = '<button class="chat-sb-del-btn" data-action="delete" data-mid="' + this._esc(m.id) + '" title="' + this._lang.deleteMsg + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+        return '<div class="chat-sb-msg chat-sb-mu" data-mid="' + this._esc(m.id) + '"><div class="chat-sb-bbl">' + delBtn + this._esc(m.content).replace(/\r?\n/g, '<br>') + '</div><div class="chat-sb-time">' + this._fmtT(m.timestamp) + '</div></div>';
     }
 
     _aiH(m) {
         const segs = m.segments || [];
         const bodyHtml = this._buildSegsHtml(segs, true);
         const er = m.error ? '<div class="chat-sb-err">' + this._esc(m.error) + '</div>' : '';
-        return '<div class="chat-sb-msg chat-sb-ma" data-mid="' + m.id + '"><div class="chat-sb-av"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="chat-sb-body">' + bodyHtml + er + '<div class="chat-sb-time">' + this._fmtT(m.timestamp) + '</div></div></div>';
+        const footer = '<div class="chat-sb-footer-btns">' +
+            '<button class="chat-sb-footer-btn delete" data-action="delete" data-mid="' + this._esc(m.id) + '" title="' + this._lang.deleteMsg + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+            '<button class="chat-sb-footer-btn copy" data-action="copy" data-mid="' + this._esc(m.id) + '" title="' + this._lang.copyMsg + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>' +
+        '</div>';
+        return '<div class="chat-sb-msg chat-sb-ma" data-mid="' + m.id + '"><div class="chat-sb-av"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="chat-sb-body">' + bodyHtml + er + '<div class="chat-sb-time">' + this._fmtT(m.timestamp) + '</div>' + footer + '</div></div>';
     }
 
     _renderMsgs() {
@@ -684,6 +715,64 @@ class ChatSidebar {
         const m = this._getConv(this._activeCtx).messages.find(x => x.id === mid);
         if (el && m) el.outerHTML = this._aiH(m);
         this._el.msgContainer.scrollTop = this._el.msgContainer.scrollHeight;
+    }
+
+    _deleteMessage(mid) {
+        if (this._generating) {
+            this._toast(this._lang.waitGenerate, 'error');
+            return;
+        }
+        const conv = this._getConv(this._activeCtx);
+        const lenBefore = conv.messages.length;
+        // 找到要删除的消息索引
+        const index = conv.messages.findIndex(m => m.id === mid);
+        if (index === -1) {
+            return; // 没找到，可能已经删除了
+        }
+        const deleted = conv.messages[index];
+        // 如果删除的是用户消息，且下一条是 AI 消息，一起删除
+        if (deleted.role === 'user' && index + 1 < conv.messages.length && conv.messages[index + 1].role === 'assistant') {
+            conv.messages = conv.messages.filter((_, i) => i !== index && i !== index + 1);
+        } else {
+            // 否则只删除当前这一条
+            conv.messages = conv.messages.filter(m => m.id !== mid);
+        }
+        this._saveConv();
+        this._renderMsgs();
+        this._emitMsgCount();
+    }
+
+    async _copyMessage(mid) {
+        const conv = this._getConv(this._activeCtx);
+        const msg = conv.messages.find(m => m.id === mid);
+        if (!msg) {
+            return;
+        }
+        // 获取纯文本内容
+        let content = '';
+        if (msg.segments) {
+            // 从 segments 提取文本
+            content = msg.segments.filter(s => s.type === 'text').map(s => s.content).join('');
+        } else {
+            content = msg.content || '';
+        }
+        if (!content.trim()) {
+            this._toast(this._lang.runError, 'error');
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(content);
+            this._toast(this._lang.copied, 'success');
+        } catch (err) {
+            // 降级处理：execCommand
+            const ta = document.createElement('textarea');
+            ta.value = content;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            this._toast(this._lang.copied, 'success');
+        }
     }
 
     _updBtn() {
