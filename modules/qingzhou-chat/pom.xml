@@ -97,6 +97,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- 不生成 dependency-reduced-pom.xml 文件 -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>
                                     <exclude>qingzhou:qingzhou-http-server</exclude>

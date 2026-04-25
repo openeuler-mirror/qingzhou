@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpHandler;
 
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
@@ -80,7 +80,7 @@ public class StaticResourceHandler implements HttpHandler {
                 return;
             }
             response.status(404);
-            response.sendResponse("Not Found: " + path);
+            response.sendResponse("not found: " + path);
             return;
         }
 
@@ -93,8 +93,8 @@ public class StaticResourceHandler implements HttpHandler {
             byte[] content = readAllBytes(inputStream);
             response.sendResponse(content);
         } catch (IOException e) {
-            response.status(500);
-            response.sendResponse("Internal Server Error");
+            response.statusError();
+            response.sendResponse("internal server error");
         } finally {
             try {
                 inputStream.close();

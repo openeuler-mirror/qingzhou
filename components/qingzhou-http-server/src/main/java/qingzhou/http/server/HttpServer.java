@@ -1,5 +1,7 @@
 package qingzhou.http.server;
 
 public interface HttpServer {
-    void registerHttpHandler(String handlePath, HttpHandler httpHandler);
+    void registerHttpHandler(HttpHandler httpHandler, String handlePath);
+
+    void unregisterHttpHandler(HttpHandler httpHandler);
 }

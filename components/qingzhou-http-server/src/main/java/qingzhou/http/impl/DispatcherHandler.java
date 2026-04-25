@@ -15,12 +15,12 @@ import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
-    private final HttpServerImpl httpServerImpl;
+    private final HttpServiceEngine httpServiceEngine;
     private final ThreadPoolExecutor taskThreadPool;
     private final Logger logger;
 
-    DispatcherHandler(HttpServerImpl httpServerImpl, ThreadPoolExecutor taskThreadPool, Logger logger) {
-        this.httpServerImpl = httpServerImpl;
+    DispatcherHandler(HttpServiceEngine httpServiceEngine, ThreadPoolExecutor taskThreadPool, Logger logger) {
+        this.httpServiceEngine = httpServiceEngine;
         this.taskThreadPool = taskThreadPool;
         this.logger = logger;
     }
@@ -29,10 +29,10 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         String requestPath = request.uri().split("\\?")[0];
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
-        String matches = httpServerImpl.matches(normalizedPath);
+        String matches = httpServiceEngine.matches(normalizedPath);
         if (matches == null) return response.status(HttpResponseStatus.NOT_FOUND);
 
-        HttpHandler httpHandler = this.httpServerImpl.handlerMap.get(matches);
+        HttpHandler httpHandler = this.httpServiceEngine.handlerMap.get(matches);
         return request.receive()
                 .aggregate().asByteArray()
                 .defaultIfEmpty(NULL_BYTES)
@@ -41,7 +41,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     Sinks.Many<byte[]> sendBodySink = Sinks.many().unicast().onBackpressureBuffer();
 
                     taskThreadPool.execute(() -> {
-                        logger.info("Incoming request: " + request.uri());
+                        logger.info("request received: " + request.uri());
                         try {
                             HttpRequestImpl httpRequest = new HttpRequestImpl(request,
                                     requestPath, bytes);
@@ -51,7 +51,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         } catch (Throwable e) {
                             response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                             Throwable cause = getCause(e);
-                            logger.error("An exception occurred during HTTP processing.", cause);
+                            logger.error("an exception occurred during HTTP processing.", cause);
                         } finally {
                             headerSentFuture.complete(null);
                             sendBodySink.tryEmitComplete();

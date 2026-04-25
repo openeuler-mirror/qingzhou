@@ -11,9 +11,9 @@ import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
@@ -51,7 +51,7 @@ public class RefreshHttpHandler implements HttpHandler {
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("Key auth error !!!");
+            httpResponse.sendResponse("key auth error");
             return;
         }
 
@@ -71,8 +71,8 @@ public class RefreshHttpHandler implements HttpHandler {
             instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("Instance Key error !!!");
-            logger.error("Encryption failed, key length: " + instanceKey.length());
+                    .sendResponse("instance key error");
+            logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
         httpResponse.sendResponse(encrypt);

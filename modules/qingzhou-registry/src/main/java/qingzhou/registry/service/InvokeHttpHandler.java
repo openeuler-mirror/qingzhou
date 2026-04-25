@@ -10,9 +10,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -48,11 +48,11 @@ public class InvokeHttpHandler implements HttpHandler {
 
         try {
             app.invokeApp(request);
-            if (request.getResponse().isFound()) {
+            if (request.getResponse().isActionFound()) {
                 ResponseImpl response = request.getResponse();
                 sendResponse(response, httpResponse);
             } else {
-                httpResponse.statusBad();
+                httpResponse.statusNotFound();
             }
         } catch (Throwable e) {
             httpResponse.statusError();
@@ -116,7 +116,7 @@ public class InvokeHttpHandler implements HttpHandler {
                         });
                     }
                 } catch (Exception e) {
-                    logger.warn("Failed to parse JSON body: " + e.getMessage());
+                    logger.warn("failed to parse JSON body: " + e.getMessage());
                 }
             }
         }

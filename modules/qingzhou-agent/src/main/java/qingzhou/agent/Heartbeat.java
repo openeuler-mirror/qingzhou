@@ -74,10 +74,10 @@ public class Heartbeat {
                     } else {
                         String registerData = json.toJson(thisInstanceInfo);
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));
-                        logger.info("Registration response: " + registration);
+                        logger.info("registration response: " + registration);
                     }
                 } catch (Exception e) {
-                    logger.error("Heartbeat service error.", e);
+                    logger.error("heartbeat service error", e);
                 }
             }
         }, 2000, 1000 * Long.parseLong(config.get("interval")));
@@ -113,7 +113,7 @@ public class Heartbeat {
             byte[] encrypted = pairCipher.encryptWithPublicKey(data);
             HttpResult response = httpClient.request(url, HttpMethod.POST, encrypted, null);
             if (response.getStatus() != 200) {
-                logger.warn("Response Code Error [ " + response.getStatus() + " ] :" + url);
+                logger.warn("response code error [ " + response.getStatus() + " ] : " + url);
             }
             byte[] responseBody = response.getBody();
 
@@ -123,7 +123,7 @@ public class Heartbeat {
             byte[] result = cipher.decrypt(responseBody);
             return new String(result, StandardCharsets.UTF_8);
         } catch (ConnectException e) {
-            logger.error("Failed to connect to the URL: " + url + ", msg: " + e.getMessage());
+            logger.error("failed to connect to the URL: " + url + ", msg: " + e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

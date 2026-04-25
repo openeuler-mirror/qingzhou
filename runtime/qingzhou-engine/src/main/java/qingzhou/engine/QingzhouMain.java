@@ -46,19 +46,16 @@ public class QingzhouMain {
         osgiFramework.start();
 
         // 启动 OSGI 基础框架
-        File[] features = Paths.get(libDir, "runtime", "features").toFile().listFiles(File::isDirectory);
-        for (File feature : Objects.requireNonNull(features)) {
-            startBundles(feature);
-        }
+        startDirAndJars(Paths.get(libDir, "runtime", "features").toFile());
 
         // 启动基础模块
-        startBundles(Paths.get(libDir, "components"));
+        startDirAndJars(new File(libDir, "components"));
 
         // 启动业务模块
-        startBundles(Paths.get(libDir, "modules"));
+        startDirAndJars(new File(libDir, "modules"));
 
         // 启动 Web 后端模块
-        startBundles(Paths.get(libDir, "web"));
+        startDirAndJars(new File(libDir, "web"));
 
         // 驱动应用
         deployApps();
@@ -78,40 +75,59 @@ public class QingzhouMain {
     }
 
     private static void deployApps() throws Exception {
-        List<File> appFiles = new ArrayList<>(Arrays.asList(new File(instanceDir, "apps").listFiles()));
-
-        File appCacheDir = Paths.get(instanceDir, "temp", "app-cache").toFile();
+        File appCacheDir = Paths.get(instanceDir, "temp", "app-bundle-cache").toFile();
         if (appCacheDir.exists()) {
             deleteFile(appCacheDir);
         }
         appCacheDir.mkdirs();
 
-        for (File appFile : appFiles) {
-            if (appFile.getName().endsWith(".jar")) {
-                if (isBundleJar(appFile)) {
-                    Bundle bundle = installBundle(appFile);
-                    bundle.start();
-                } else {
+        File[] listFiles = new File(instanceDir, "apps").listFiles();
+        if (listFiles != null) {
+            for (File appFile : listFiles) {
+                if (appFile.getName().endsWith(".jar")) {
                     File appCache = new File(appCacheDir, appFile.getName());
                     convertBundleJar(appFile, appCache, libDir);
                 }
             }
         }
-        startBundles(appCacheDir);
+
+        startDirAndJars(appCacheDir);
     }
 
-    private static void startBundles(Path bundleDir) throws BundleException {
-        startBundles(bundleDir.toFile());
+    private static void startDirAndJars(File bundleDir) throws BundleException {
+        List<File> subDirs = new ArrayList<>();
+        List<File> subJars = new ArrayList<>();
+
+        File[] listFiles = bundleDir.listFiles();
+        if (listFiles != null) {
+            for (File file : listFiles) {
+                if (file.isDirectory()) {
+                    subDirs.add(file);
+                } else if (file.getName().endsWith(".jar")) {
+                    subJars.add(file);
+                }
+            }
+        }
+
+        subDirs.sort(Comparator.comparing(File::getName)); // logger 排在最前面
+        subDirs.forEach(dir -> {
+            try {
+                startBundles(dir.listFiles());
+            } catch (BundleException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        startBundles(subJars.toArray(new File[0]));
     }
 
-    private static void startBundles(File bundleDir) throws BundleException {
-        File[] bundleFiles = bundleDir.listFiles(f -> f.getName().endsWith(".jar"));
-        if (bundleFiles == null || bundleFiles.length == 0) return;
+    private static void startBundles(File[] bundleJars) throws BundleException {
+        if (bundleJars == null || bundleJars.length == 0) return;
+
         List<Bundle> bundleList = new ArrayList<>();
-        for (File bundleFile : bundleFiles) {
-            if (isFeatureDisabled(bundleFile)) continue;
+        for (File bundleJar : bundleJars) {
+            if (isFeatureDisabled(bundleJar)) continue;
 
-            Bundle bundle = installBundle(bundleFile);
+            Bundle bundle = osgiFramework.getBundleContext().installBundle("file:" + bundleJar.getAbsolutePath());
             bundleList.add(bundle);
         }
         for (Bundle bundle : bundleList) {
@@ -138,10 +154,6 @@ public class QingzhouMain {
         return false;
     }
 
-    private static Bundle installBundle(File bundleFile) throws BundleException {
-        return osgiFramework.getBundleContext().installBundle("file:" + bundleFile.getAbsolutePath());
-    }
-
     private static Map<String, String> osgiConfig() {
         Map<String, String> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_STORAGE, Paths.get(instanceDir, "temp", "osgi-cache").toFile().getAbsolutePath());
@@ -155,19 +167,6 @@ public class QingzhouMain {
 
     private static Method bundleConverterMethod;
     private static Object bundleConverterInstance;
-
-    private static boolean isBundleJar(File sourceJar) throws IOException {
-        String[] checkFiles = {"qingzhou/app/driver/AppDriver.class",
-                "QZ-INF/annotation.json"};
-        try (ZipFile zip = new ZipFile(sourceJar)) {
-            for (String f : checkFiles) {
-                if (zip.getEntry(f) == null) return false;
-            }
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
 
     private static void convertBundleJar(File sourceJar, File targetJar, String libDir) throws Exception {
         if (bundleConverterMethod == null || bundleConverterInstance == null) {

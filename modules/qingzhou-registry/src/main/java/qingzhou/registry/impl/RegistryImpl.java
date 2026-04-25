@@ -1,8 +1,6 @@
 package qingzhou.registry.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +20,8 @@ import qingzhou.registry.Registry;
 
 @Component
 public class RegistryImpl implements Registry {
+    private List<String> tempMsg = new ArrayList<>();
+
     @Reference
     private Logger logger;
     @Reference
@@ -42,8 +42,10 @@ public class RegistryImpl implements Registry {
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
     @Activate
-    public void start() {
+    public synchronized void start() {
         qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+
+        tempMsg.forEach(s -> logger.info(s));
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -52,18 +54,16 @@ public class RegistryImpl implements Registry {
         dataTimestamp = System.currentTimeMillis();
     }
 
-    private void bindApp0(AppStubLocal appStub) {
+    private synchronized void bindApp0(AppStubLocal appStub) {
         AppMeta appMeta = appStub.getAppMeta();
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);
 
-        String msg = String.format("App registered: %s", appCode);
+        String msg = String.format("app registered: %s", appCode);
         if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
             logger.info(msg);
         } else {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String time = sdf.format(new Date());
-            System.out.println(time + " [INFO] " + msg);
+            tempMsg.add(msg);
         }
     }
 
@@ -87,7 +87,7 @@ public class RegistryImpl implements Registry {
         String appCode = appMeta.getApp().code;
         localApps.remove(appCode);
 
-        logger.info(String.format("App unregistered: %s", appCode));
+        logger.info(String.format("app unregistered: %s", appCode));
     }
 
     @Override

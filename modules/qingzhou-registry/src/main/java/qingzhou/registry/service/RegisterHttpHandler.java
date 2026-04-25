@@ -9,9 +9,9 @@ import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
@@ -84,7 +84,7 @@ public class RegisterHttpHandler implements HttpHandler {
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("Key auth error !!!");
+            httpResponse.sendResponse("key auth error");
             return;
         }
 
@@ -94,7 +94,7 @@ public class RegisterHttpHandler implements HttpHandler {
             instanceInfo = json.fromJson(jsonContent, InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
-            httpResponse.sendResponse("Data format error !!!");
+            httpResponse.sendResponse("data format error");
             return;
         }
 
@@ -108,7 +108,7 @@ public class RegisterHttpHandler implements HttpHandler {
             List<AppMeta> appMetas = instanceInfo.getAppMetas();
             msg = appMetas.size() + " apps accepted.";
             for (AppMeta appMeta : appMetas) {
-                logger.info(String.format("App Registration, instance: %s, app: %s", instanceInfo.getId(), appMeta.getApp().code));
+                logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), appMeta.getApp().code));
             }
         }
 
@@ -119,8 +119,8 @@ public class RegisterHttpHandler implements HttpHandler {
             encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("Instance Key error !!!");
-            logger.error("Encryption failed, key length: " + instanceKey.length());
+                    .sendResponse("instance key error");
+            logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
         httpResponse.sendResponse(encrypt);
