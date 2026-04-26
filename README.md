@@ -111,12 +111,13 @@
 | 接口URI        | 接口说明          | 传参形式                           |
 |--------------|---------------|--------------------------------|
 | /invoke      | 执行指定应用的模块操作   | /invoke/-/admin/app/list       |
-| /web/welcome | 获取应用列表        | 无需参数                           |
-| /web/app     | 获取某个应用的元数据    | /web/app?appId=admin@-         |
-| /web/model   | 获取某个模块的元数据    | /web/model?modelId=app@admin@- |
-| /register    | 注册远程实例上的应用    | 内部加密                           |
-| /refresh     | 刷新远程实例的通信密钥   | 内部加密                           |
-| /agent       | 在远程实例上执行应用的操作 | 内部加密                           |
+| /register    | 注册远程实例上的应用    |                            |
+| /refresh     | 刷新远程实例的通信密钥   |                            |
+| /agent       | 在远程实例上执行应用的操作 |                            |
+| /console     | 管控台前端静态资源     |                            |
+| /web/welcome | 管控台后端应用概览     |                            |
+| /web/app     | 管控台后端应用元数据    | /web/app?appId=admin@-         |
+| /web/model   | 管控台后端应用模块元数据  | /web/model?modelId=app@admin@- |
 
 ### 常见问题
 
