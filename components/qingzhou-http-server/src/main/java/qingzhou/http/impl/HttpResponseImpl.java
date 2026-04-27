@@ -21,14 +21,20 @@ public class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public HttpResponse statusBad() {
-        response.status(HttpResponseStatus.BAD_REQUEST);
+    public HttpResponse statusError() {
+        response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         return this;
     }
 
     @Override
-    public HttpResponse statusError() {
-        response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+    public HttpResponse statusNotFound() {
+        response.status(HttpResponseStatus.NOT_FOUND);
+        return this;
+    }
+
+    @Override
+    public HttpResponse statusBad() {
+        response.status(HttpResponseStatus.BAD_REQUEST);
         return this;
     }
 

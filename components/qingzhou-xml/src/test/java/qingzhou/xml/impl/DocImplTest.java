@@ -10,21 +10,10 @@ import qingzhou.xml.Doc;
 
 public class DocImplTest {
     @Test
-    public void nullPath_getTextContent_returnNull() {
+    public void nullPath_getText_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
         try {
-            String textContent = doc.getTextContent(null);
-            Assert.assertNull(textContent);
-        } catch (Exception e) {
-            Assert.fail();
-        }
-    }
-
-    @Test
-    public void emptyPath_getTextContent_throwXPathExpressionException() {
-        Doc doc = getPomXmlDoc();
-        try {
-            doc.getTextContent("");
+            doc.getText(null);
             Assert.fail();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof XPathExpressionException);
@@ -32,28 +21,28 @@ public class DocImplTest {
     }
 
     @Test
-    public void packagingPath_getTextContent_returnBundle() throws Exception {
+    public void emptyPath_getText_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
-        String packaging = doc.getTextContent("/project/packaging");
+        try {
+            doc.getText("");
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof XPathExpressionException);
+        }
+    }
+
+    @Test
+    public void packagingPath_getText_returnBundle() throws Exception {
+        Doc doc = getPomXmlDoc();
+        String packaging = doc.getText("/project/packaging");
         Assert.assertEquals(packaging, "bundle");
     }
 
     @Test
-    public void nullPath_getAttributes_returnNull() {
+    public void nullPath_getNode_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
         try {
-            Properties properties = doc.getAttributes(null);
-            Assert.assertNull(properties);
-        } catch (Exception e) {
-            Assert.fail();
-        }
-    }
-
-    @Test
-    public void emptyPath_getAttributes_throwXPathExpressionException() {
-        Doc doc = getPomXmlDoc();
-        try {
-            doc.getAttributes("");
+            doc.getNode(null);
             Assert.fail();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof XPathExpressionException);
@@ -61,10 +50,21 @@ public class DocImplTest {
     }
 
     @Test
-    public void pomXmlProjectPath_getAttributes_returnProjectAttributes() {
+    public void emptyPath_getNode_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
         try {
-            Properties properties = doc.getAttributes("/project");
+            doc.getNode("");
+            Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof XPathExpressionException);
+        }
+    }
+
+    @Test
+    public void pomXmlProjectPath_getAttributes_returnProjectNodeAttributes() {
+        Doc doc = getPomXmlDoc();
+        try {
+            Properties properties = doc.getNode("/project");
             Assert.assertNotNull(properties);
             Assert.assertFalse(properties.isEmpty());
             String xmlns = properties.getProperty("xmlns");
@@ -75,18 +75,18 @@ public class DocImplTest {
     }
 
     @Test
-    public void nullPath_getNodes_returnNull() {
+    public void nullPath_getNodes_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
         try {
-            Object object = doc.getNodes(null);
-            Assert.assertNull(object);
-        } catch (Exception e) {
+            doc.getNodes(null);
             Assert.fail();
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof XPathExpressionException);
         }
     }
 
     @Test
-    public void emptyPath_getNodes_throwXPathExpressionException() {
+    public void emptyPath_getNodes_Attributes_throwXPathExpressionException() {
         Doc doc = getPomXmlDoc();
         try {
             doc.getNodes("");

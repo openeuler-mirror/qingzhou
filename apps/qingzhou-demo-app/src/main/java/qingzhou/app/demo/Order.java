@@ -1,18 +1,11 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 
 @Model(code = "order", order = 2,
         name = {"订单", "en:Order"},
@@ -50,6 +43,11 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
         o2.put("status", "shipped");
         db.put(o2.get("orderNo"), o2);
         idCounter = 3;
+    }
+
+    @ModelAction
+    public void abc(Request request) {
+        request.getResponse().data("我来自 ModelAction.。");
     }
 
     @ModelField(id = true,

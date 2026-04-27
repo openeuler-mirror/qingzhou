@@ -6,6 +6,7 @@ import qingzhou.api.QingzhouModel;
 import qingzhou.api.Request;
 
 public interface Update extends QingzhouModel {
+    String ACTION_CODE_EDIT = "edit";
     String ACTION_CODE_UPDATE = "update";
 
     void update(Request request, Map<String, String> data) throws Exception;

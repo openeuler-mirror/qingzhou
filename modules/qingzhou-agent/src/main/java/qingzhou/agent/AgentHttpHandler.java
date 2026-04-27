@@ -15,16 +15,16 @@ import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/agent")
-public class AgentHttpServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=/agent")
+public class AgentHttpHandler implements HttpHandler {
     @Reference
     private Logger logger;
     @Reference
@@ -49,7 +49,7 @@ public class AgentHttpServer implements HttpServer {
             cipher = crypto.getCipher(thisInstanceInfo.getKey());
             requestData = cipher.decrypt(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("Key auth error !!!");
+            httpResponse.sendResponse("key auth error");
             return;
         }
 
@@ -59,8 +59,8 @@ public class AgentHttpServer implements HttpServer {
             responseData = process(requestData);
         } catch (Throwable e) {
             httpResponse.statusError()
-                    .sendResponse("Business processing error !!!");
-            logger.error("Business processing error !!!", e);
+                    .sendResponse("business processing error");
+            logger.error("business processing error", e);
             return;
         }
 
@@ -70,8 +70,8 @@ public class AgentHttpServer implements HttpServer {
             encrypt = cipher.encrypt(responseData);
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("Instance Key error !!!");
-            logger.error("Encryption failed: " + e.getMessage());
+                    .sendResponse("instance Key error");
+            logger.error("encryption failed: " + e.getMessage());
             return;
         }
         httpResponse.sendResponse(encrypt);
@@ -91,7 +91,7 @@ public class AgentHttpServer implements HttpServer {
                 try {
                     forceDelete(file);
                 } catch (IOException e) {
-                    logger.warn("Failed to clean up the files: " + file, e);
+                    logger.warn("failed to clean up the files: " + file, e);
                 }
             });
         }

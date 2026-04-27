@@ -149,7 +149,7 @@ public class App extends ModelBase implements List, Show {
             }
         } else {
             if (registry.getAllRemoteInstances().contains(instanceId) &&
-                registry.getAllRemoteApps(instanceId).contains(appCode)) {
+                    registry.getAllRemoteApps(instanceId).contains(appCode)) {
                 return getAppData(instanceId, appCode);
             }
         }

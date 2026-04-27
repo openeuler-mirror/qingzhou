@@ -9,12 +9,12 @@ import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.registry.Registry;
 
-public class WelcomeInfo implements WebBackendHttpServer.WebHandler {
+public class WelcomeInfo implements WebBackendHttpHandler.WebHandler {
     public static final String REQUEST_PARAMETER_NAME_APP_ID = "appId";
 
-    private final WebBackendHttpServer.ContextHelper helper;
+    private final WebBackendHttpHandler.ContextHelper helper;
 
-    public WelcomeInfo(WebBackendHttpServer.ContextHelper helper) {
+    public WelcomeInfo(WebBackendHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

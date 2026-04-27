@@ -1,23 +1,22 @@
 package qingzhou.app.driver;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Update;
+import qingzhou.app.driver.validation.Validation;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
-import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.registry.AppStubLocal;
 
 class AppStubLocalImpl implements AppStubLocal {
+    private static final Validation validation = new Validation();
+
     private final AppContextImpl appContext;
     private final AppMeta appMeta;
 
@@ -52,14 +51,13 @@ class AppStubLocalImpl implements AppStubLocal {
             if (m.code.equals(request.getModel())) {
                 for (ModelAction a : m.actions) {
                     if (a.code.equals(request.getAction())) {
-                        // 确认已找到目标 Action
-                        request.getResponse().setFound(true);
                         request.setCurrentModel(m);
 
                         // 数据校验
-                        Map<String, String> errors = validate(a, request);
+                        Map<String, List<String>> errors = validation.validate(a, request);
                         if (errors != null && !errors.isEmpty()) {
-//                            error(request, error);  todo 转json
+                            error(request, "data validation failed");
+                            request.getResponse().data(errors);
                             return;
                         }
 
@@ -74,75 +72,42 @@ class AppStubLocalImpl implements AppStubLocal {
 
     private void invokeAction(Model model, ModelAction action, RequestImpl request) throws Throwable {
         ModelBase modelBase = appContext.getModelInstances().get(model);
-        if (action.isDefaultAction) {
+        if (action.isDefaultAction) { // 执行默认 action
             for (Method method : DefaultAction.class.getMethods()) {
                 if (method.getName().equals(action.code)) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     if (parameterTypes.length == 2) {
                         if (QingzhouModel.class.isAssignableFrom(parameterTypes[0])
                                 && parameterTypes[1] == Request.class) {
-                            method.invoke(null, modelBase, request);
+                            invokeMethod(request, method, null, modelBase, request);
                         }
                     }
                     break;
                 }
             }
-        } else { // 执行自定义的 action
+        } else { // 执行自定义 action
             Method method = appContext.getActionMethods().get(AppContextImpl.resolveActionKey(model, action));
             if (method != null) {
-                method.invoke(modelBase, request);
+                invokeMethod(request, method, modelBase, request);
             }
+        }
+    }
+
+    private void invokeMethod(RequestImpl request, Method method, Object obj, Object... args) throws Throwable {
+        ResponseImpl response = request.getResponse();
+        response.setActionFound(true);
+        try {
+            method.invoke(obj, args);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
         }
     }
 
     private void error(RequestImpl request, String error) {
         ResponseImpl response = request.getResponse();
+        response.status(400); // 请求参数、格式等不合法
         response.success(false);
         response.msg(error);
         response.msgLevel(Response.MsgLevel.error);
-    }
-
-    private Validator[] validators = {};
-
-    private Map<String, String> validate(ModelAction action, RequestImpl request) {
-        // 确定要检验哪些字段
-        Set<ModelField> validateFields = null;
-        if (action.code.equals(Add.ACTION_CODE_ADD)) {
-            validateFields = request.getCurrentModel().fields.stream().filter(field -> field.field_type == FieldType.FORM && field.add).collect(Collectors.toSet());
-        } else if (action.code.equals(Update.ACTION_CODE_UPDATE)) {
-            validateFields = request.getCurrentModel().fields.stream().filter(field -> field.field_type == FieldType.FORM && field.update).collect(Collectors.toSet());
-            validateFields.removeIf(field -> request.getParameter(field.code) == null); // rest 更新，可以指定要更新的字段，而无需全量字段
-        }
-        if (validateFields == null || validateFields.isEmpty()) return null;
-
-        // 开始校验，一次性校验所有字段
-        for (ModelField field : validateFields) {
-            Map<String, String> result = new HashMap<>();
-            ValidationContext context = new ValidationContext(field, request.getParameter(field.code), request);
-            for (Validator validator : validators) {
-                String error = validator.validate(context);
-                if (error != null) {
-                    result.put(field.code, error);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    static class ValidationContext {
-        final ModelField field;
-        final String parameter;
-        final RequestImpl request;
-
-        ValidationContext(ModelField field, String parameter, RequestImpl request) {
-            this.field = field;
-            this.parameter = parameter;
-            this.request = request;
-        }
-    }
-
-    interface Validator {
-        String validate(ValidationContext context);
     }
 }

@@ -1,26 +1,28 @@
 package qingzhou.app.tomcat;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.xml.Doc;
-import qingzhou.xml.Xml;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.*;
+import qingzhou.xml.Doc;
+import qingzhou.xml.Xml;
+
 @Model(code = "connector", order = 4,
         name = {"Connector通道", "en:Connector"},
         info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
         icon = "Connection",
         menu = "container")
-public class Connector extends qingzhou.api.ModelBase implements List, Show , Add, Update, Delete {
+public class Connector extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
     private java.util.List<Map<String, String>> db;
     private static final String[] CONNECTOR_FIELDS = {"protocol", "port", "address", "maxThreads", "minSpareThreads", "acceptCount", "connectionTimeout", "redirectPort"};
     private static final Map<String, String> CONNECTOR_DEFAULTS = new HashMap<>();
+
     static {
         CONNECTOR_DEFAULTS.put("protocol", "HTTP/1.1");
         CONNECTOR_DEFAULTS.put("address", "0.0.0.0");
@@ -30,7 +32,9 @@ public class Connector extends qingzhou.api.ModelBase implements List, Show , Ad
         CONNECTOR_DEFAULTS.put("connectionTimeout", "20000");
         CONNECTOR_DEFAULTS.put("redirectPort", "8443");
     }
-    public Connector() {}
+
+    public Connector() {
+    }
 
     @ModelField(id = true,
             name = {"Connector ID", "en:Connector ID"},
@@ -241,7 +245,7 @@ public class Connector extends qingzhou.api.ModelBase implements List, Show , Ad
             File file = new File(confPath);
             Doc doc = xml.parse(file);
             java.util.List<Properties> nodes = doc.getNodes("//Connector");
-            for (Properties p: nodes) {
+            for (Properties p : nodes) {
                 Map<String, String> c1 = new HashMap<>();
                 c1.put("id", p.getProperty("port"));
                 c1.put("protocol", p.getProperty("protocol", "HTTP/1.1"));
@@ -255,7 +259,7 @@ public class Connector extends qingzhou.api.ModelBase implements List, Show , Ad
                 result.add(c1);
             }
         } catch (Throwable e) {
-            System.err.println("parse server xml error: " + e.getMessage());
+            e.printStackTrace();
         }
         return result;
     }

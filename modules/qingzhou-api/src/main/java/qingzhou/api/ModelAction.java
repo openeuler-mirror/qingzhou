@@ -25,12 +25,13 @@ public @interface ModelAction {
 
     boolean show() default false;
 
-    boolean list() default false;
+    boolean list_head() default false; // 列表页面的头部显示
+
+    boolean list() default false; // 列表页面每条数据后面显示
 
     boolean batch() default false;
 
-    // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
-    String[] name();
+    String[] name() default {};
 
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
     String[] info() default {};

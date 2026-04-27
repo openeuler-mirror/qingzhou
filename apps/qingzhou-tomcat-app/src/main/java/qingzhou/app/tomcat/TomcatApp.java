@@ -5,7 +5,7 @@ import qingzhou.api.AppContext;
 import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
 
-@App(code = "tomcat", icon = "Promotion",
+@App(icon = "Promotion",
         name = {"Tomcat应用", "en:Tomcat Application"},
         info = {"用于演示tomcat的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"应用管理", "en:App"}, code = "appmanagement", icon = "cog", order = 1)

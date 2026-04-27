@@ -7,15 +7,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
 
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/console")
-public class StaticResourceServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=/console")
+public class StaticResourceHandler implements HttpHandler {
 
     private static final String STATIC_RESOURCE_PATH = "/webapp/";
     private static final String INDEX_FILE = "index.html";
@@ -80,7 +80,7 @@ public class StaticResourceServer implements HttpServer {
                 return;
             }
             response.status(404);
-            response.sendResponse("Not Found: " + path);
+            response.sendResponse("not found: " + path);
             return;
         }
 
@@ -93,8 +93,8 @@ public class StaticResourceServer implements HttpServer {
             byte[] content = readAllBytes(inputStream);
             response.sendResponse(content);
         } catch (IOException e) {
-            response.status(500);
-            response.sendResponse("Internal Server Error");
+            response.statusError();
+            response.sendResponse("internal server error");
         } finally {
             try {
                 inputStream.close();

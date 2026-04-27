@@ -23,7 +23,46 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Show.ACTION_CODE_SHOW, icon = "folder-open-alt",
+            code = Add.ACTION_CODE_CREATE, icon = "CirclePlus", order = 1,
+            name = {"添加", "en:Add"},
+            info = {"添加一条记录。", "en:Add a record."})
+    public static void create(Add add, Request request) throws Exception {
+
+    }
+
+    @ModelAction(
+            code = Add.ACTION_CODE_ADD, icon = "CirclePlus", order = 1,
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+    public static void add(Add add, Request request) throws Exception {
+        Map<String, String> saveData = toSaveData(request, modelField -> modelField.add);
+        add.add(request, saveData);
+    }
+
+    @ModelAction(
+            code = Update.ACTION_CODE_EDIT, icon = "Edit", order = 1,
+            name = {"编辑", "en:Edit"},
+            info = {"编辑本条记录。", "en:Edit this record."})
+    public static void edit(Update update, Request request) throws Exception {
+
+    }
+
+    @ModelAction(
+            code = Update.ACTION_CODE_UPDATE, icon = "Edit", order = 1,
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
+    public static void update(Update update, Request request) throws Exception {
+        Map<String, String> saveData = toSaveData(request, modelField -> modelField.update);
+
+        String[] idFields = selectFormFields(request, field -> field.id);
+        if (idFields.length > 0) {
+            saveData.remove(idFields[0]);
+        }
+        update.update(request, saveData);
+    }
+
+    @ModelAction(
+            code = Show.ACTION_CODE_SHOW, icon = "Document",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void show(Show show, Request request) throws Exception {
@@ -36,7 +75,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Monitor.ACTION_CODE_MONITOR, icon = "folder-open-alt",
+            code = Monitor.ACTION_CODE_MONITOR, icon = "TrendCharts",
             name = {"监视", "en:Monitor"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void monitor(Monitor monitor, Request request) throws Exception {
@@ -49,7 +88,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = qingzhou.api.type.List.ACTION_CODE_LIST, icon = "list",
+            code = qingzhou.api.type.List.ACTION_CODE_LIST, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public static void list(qingzhou.api.type.List list, Request request) throws Exception {
@@ -80,30 +119,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Add.ACTION_CODE_ADD, icon = "save", order = 1,
-            name = {"添加", "en:Add"},
-            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public static void add(Add add, Request request) throws Exception {
-        Map<String, String> saveData = toSaveData(request, modelField -> modelField.add);
-        add.add(request, saveData);
-    }
-
-    @ModelAction(
-            code = Update.ACTION_CODE_UPDATE, icon = "save", order = 1,
-            name = {"更新", "en:Update"},
-            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    public static void update(Update update, Request request) throws Exception {
-        Map<String, String> saveData = toSaveData(request, modelField -> modelField.update);
-
-        String[] idFields = selectFormFields(request, field -> field.id);
-        if (idFields.length > 0) {
-            saveData.remove(idFields[0]);
-        }
-        update.update(request, saveData);
-    }
-
-    @ModelAction(
-            code = Delete.ACTION_CODE_DELETE, icon = "delete", order = 2,
+            code = Delete.ACTION_CODE_DELETE, icon = "Delete", order = 2,
             name = {"删除", "en:Delete"},
             info = {"删除该模块。", "en:Delete this module."})
     public static void delete(Delete delete, Request request) throws Exception {

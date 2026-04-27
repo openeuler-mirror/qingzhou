@@ -10,16 +10,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=" + InvokeHttpServer.URI_SERVER_PATH)
-public class InvokeHttpServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=" + InvokeHttpHandler.URI_SERVER_PATH)
+public class InvokeHttpHandler implements HttpHandler {
     public static final String URI_SERVER_PATH = "/invoke"; // 两端加 /，匹配更安全
 
     @Reference
@@ -48,11 +48,11 @@ public class InvokeHttpServer implements HttpServer {
 
         try {
             app.invokeApp(request);
-            if (request.getResponse().isFound()) {
+            if (request.getResponse().isActionFound()) {
                 ResponseImpl response = request.getResponse();
                 sendResponse(response, httpResponse);
             } else {
-                httpResponse.statusBad();
+                httpResponse.statusNotFound();
             }
         } catch (Throwable e) {
             httpResponse.statusError();
@@ -116,7 +116,7 @@ public class InvokeHttpServer implements HttpServer {
                         });
                     }
                 } catch (Exception e) {
-                    logger.warn("Failed to parse JSON body: " + e.getMessage());
+                    logger.warn("failed to parse JSON body: " + e.getMessage());
                 }
             }
         }

@@ -13,6 +13,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -20,42 +21,41 @@ import org.w3c.dom.NodeList;
 import qingzhou.xml.Doc;
 
 class DocImpl implements Doc {
+    private static final XPath xPathInstance;
+    private static TransformerFactory transformerFactory;
+
+    static {
+        XPathFactory factory = XPathFactory.newInstance();
+        xPathInstance = factory.newXPath();
+
+        try {
+            transformerFactory = TransformerFactory.newInstance();
+        } catch (Throwable e) {
+            transformerFactory = TransformerFactory.newInstance(
+                    "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl",
+                    DocImpl.class.getClassLoader());
+        }
+    }
+
     private final org.w3c.dom.Document dom;
-    private final XPath xPath;
 
-    public DocImpl(org.w3c.dom.Document dom, XPath xPath) {
+    public DocImpl(org.w3c.dom.Document dom) {
         this.dom = dom;
-        this.xPath = xPath;
     }
 
     @Override
-    public String getTextContent(String xPath) throws XPathExpressionException {
-        if (xPath == null) return null;
-        if (xPath.trim().isEmpty()) throw new XPathExpressionException("xPath cannot be empty");
-
-        Node node = (Node) this.xPath.evaluate(xPath.trim(), dom, XPathConstants.NODE);
-        if (node == null) return null;
-        return node.getTextContent();
+    public String getText(String xPath) throws XPathExpressionException {
+        return findNode(xPath).getTextContent();
     }
 
     @Override
-    public Properties getAttributes(String xPath) throws XPathExpressionException {
-        if (xPath == null) return null;
-        if (xPath.trim().isEmpty()) throw new XPathExpressionException("xPath cannot be empty");
-
-        Node node = (Node) this.xPath.evaluate(xPath.trim(), dom, XPathConstants.NODE);
-        if (node == null) return null;
-        return getPropertiesFromNode(node);
+    public Properties getNode(String xPath) throws XPathExpressionException {
+        return getPropertiesFromNode(findNode(xPath));
     }
 
     @Override
     public List<Properties> getNodes(String xPath) throws XPathExpressionException {
-        if (xPath == null) return null;
-        if (xPath.trim().isEmpty()) throw new XPathExpressionException("xPath cannot be empty");
-
-        NodeList nodeList = (NodeList) this.xPath.evaluate(xPath, dom, XPathConstants.NODESET);
-        if (nodeList == null) return null;
-
+        NodeList nodeList = findNodeNodeList(xPath);
         List<Properties> list = new ArrayList<>();
         int length = nodeList.getLength();
         for (int i = 0; i < length; i++) {
@@ -64,6 +64,66 @@ class DocImpl implements Doc {
             list.add(propertiesFromNode);
         }
         return list;
+    }
+
+    @Override
+    public void updateNode(String xPath, Properties newProperties) throws XPathExpressionException {
+        Node node = findNode(xPath);
+
+        for (String key : newProperties.stringPropertyNames()) {
+            String value = newProperties.getProperty(key);
+            ((org.w3c.dom.Element) node).setAttribute(key, value);
+        }
+    }
+
+    @Override
+    public void addNode(String parentXPath, String nodeName, Properties attributes) throws XPathExpressionException {
+        Node parent = findNode(parentXPath);
+
+        org.w3c.dom.Element newElement = dom.createElement(nodeName);
+        for (String key : attributes.stringPropertyNames()) {
+            String value = attributes.getProperty(key);
+            newElement.setAttribute(key, value);
+        }
+        parent.appendChild(newElement);
+    }
+
+    @Override
+    public void deleteNode(String xPath) throws XPathExpressionException {
+        Node node = findNode(xPath);
+        node.getParentNode().removeChild(node);
+    }
+
+    @Override
+    public void write(File file) throws Exception {
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+            StreamResult result = new StreamResult(outputStream);
+            transformer.transform(new DOMSource(dom), result);
+        }
+    }
+
+    private Node findNode(String xPath) throws XPathExpressionException {
+        if (xPath == null || xPath.trim().isEmpty())
+            throw new XPathExpressionException("xPath cannot be null or empty");
+
+        Node obj = (Node) xPathInstance.evaluate(xPath, dom, XPathConstants.NODE);
+        if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
+
+        return obj;
+    }
+
+    private NodeList findNodeNodeList(String xPath) throws XPathExpressionException {
+        if (xPath == null || xPath.trim().isEmpty())
+            throw new XPathExpressionException("xPath cannot be null or empty");
+
+        NodeList obj = (NodeList) xPathInstance.evaluate(xPath, dom, XPathConstants.NODESET);
+        if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
+
+        return obj;
     }
 
     private Properties getPropertiesFromNode(Node node) {
@@ -78,61 +138,5 @@ class DocImpl implements Doc {
             }
         }
         return result;
-    }
-
-    @Override
-    public void updateNode(String xPath, Properties attributes) throws Exception {
-        Node node = (Node) this.xPath.evaluate(xPath, dom, XPathConstants.NODE);
-        if (node == null) {
-            throw new IllegalArgumentException("Node not found: " + xPath);
-        }
-
-        for (String key : attributes.stringPropertyNames()) {
-            String value = attributes.getProperty(key);
-            if (value != null && !value.isEmpty()) {
-                ((org.w3c.dom.Element) node).setAttribute(key, value);
-            } else {
-                ((org.w3c.dom.Element) node).removeAttribute(key);
-            }
-        }
-    }
-
-    @Override
-    public void addNode(String parentXPath, String elementName, Properties attributes) throws Exception {
-        Node parent = (Node) this.xPath.evaluate(parentXPath, dom, XPathConstants.NODE);
-        if (parent == null) {
-            throw new IllegalArgumentException("Parent node not found: " + parentXPath);
-        }
-
-        org.w3c.dom.Element newElement = dom.createElement(elementName);
-        for (String key : attributes.stringPropertyNames()) {
-            String value = attributes.getProperty(key);
-            if (value != null && !value.isEmpty()) {
-                newElement.setAttribute(key, value);
-            }
-        }
-        parent.appendChild(newElement);
-    }
-
-    @Override
-    public void deleteNode(String xPath) throws Exception {
-        Node node = (Node) this.xPath.evaluate(xPath, dom, XPathConstants.NODE);
-        if (node == null) {
-            throw new IllegalArgumentException("Node not found: " + xPath);
-        }
-        node.getParentNode().removeChild(node);
-    }
-
-    @Override
-    public void write(File file) throws Exception {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount}", "4");
-        DOMSource source = new DOMSource(dom);
-        FileOutputStream fos = new FileOutputStream(file);
-        StreamResult result = new StreamResult(fos);
-        transformer.transform(source, result);
-        fos.close();
     }
 }

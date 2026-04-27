@@ -62,6 +62,23 @@ public class BundleConverter {
                 zipFiles(zos, file, file.getName());
             }
         }
+
+        // 清理
+        deleteFile(qzAppTmp);
+    }
+
+    private static void deleteFile(File file) {
+        if (!file.exists()) return;
+
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteFile(child);
+                }
+            }
+        }
+        file.delete();
     }
 
     private void addManifest() throws Exception {
@@ -240,6 +257,11 @@ public class BundleConverter {
                 }
                 if (dtoModel.fields.contains(dtoModelField)) {
                     throw new IllegalStateException("Duplicate annotation @ModelField:" + dtoModelField.code);
+                }
+
+                Object defaultValue = ctField.getConstantValue();
+                if (defaultValue != null) {
+                    dtoModelField.default_value = defaultValue.toString();
                 }
                 dtoModel.fields.add(dtoModelField);
             }

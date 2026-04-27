@@ -6,7 +6,7 @@ import java.util.function.BiFunction;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -15,12 +15,12 @@ import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
-    private final HttpServerImpl httpServerImpl;
+    private final HttpServiceEngine httpServiceEngine;
     private final ThreadPoolExecutor taskThreadPool;
     private final Logger logger;
 
-    DispatcherHandler(HttpServerImpl httpServerImpl, ThreadPoolExecutor taskThreadPool, Logger logger) {
-        this.httpServerImpl = httpServerImpl;
+    DispatcherHandler(HttpServiceEngine httpServiceEngine, ThreadPoolExecutor taskThreadPool, Logger logger) {
+        this.httpServiceEngine = httpServiceEngine;
         this.taskThreadPool = taskThreadPool;
         this.logger = logger;
     }
@@ -29,10 +29,10 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         String requestPath = request.uri().split("\\?")[0];
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
-        String matches = httpServerImpl.matches(normalizedPath);
+        String matches = httpServiceEngine.matches(normalizedPath);
         if (matches == null) return response.status(HttpResponseStatus.NOT_FOUND);
 
-        HttpServer httpServer = this.httpServerImpl.handlerMap.get(matches);
+        HttpHandler httpHandler = this.httpServiceEngine.handlerMap.get(matches);
         return request.receive()
                 .aggregate().asByteArray()
                 .defaultIfEmpty(NULL_BYTES)
@@ -41,17 +41,17 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     Sinks.Many<byte[]> sendBodySink = Sinks.many().unicast().onBackpressureBuffer();
 
                     taskThreadPool.execute(() -> {
-                        logger.info("Incoming request: " + request.uri());
+                        // logger.info("request received: " + request.uri());
                         try {
                             HttpRequestImpl httpRequest = new HttpRequestImpl(request,
                                     requestPath, bytes);
                             HttpResponseImpl httpResponse = new HttpResponseImpl(response,
                                     headerSentFuture, sendBodySink);
-                            httpServer.handle(httpRequest, httpResponse);
+                            httpHandler.handle(httpRequest, httpResponse);
                         } catch (Throwable e) {
                             response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                             Throwable cause = getCause(e);
-                            logger.error("An exception occurred during HTTP processing.", cause);
+                            logger.error("an exception occurred during HTTP processing.", cause);
                         } finally {
                             headerSentFuture.complete(null);
                             sendBodySink.tryEmitComplete();

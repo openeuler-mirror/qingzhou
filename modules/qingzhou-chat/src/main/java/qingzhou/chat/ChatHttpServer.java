@@ -1,5 +1,10 @@
 package qingzhou.chat;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.agentsflex.core.model.chat.ChatModel;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -7,21 +12,16 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-
-@Component(property = HttpServer.HTTP_SERVER_PATH + "=/ai/chat", configurationPid = "qingzhou-chat", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class ChatHttpServer implements HttpServer {
+@Component(property = HttpHandler.HANDLE_PATH + "=/ai/chat", configurationPid = "qingzhou-chat", configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class ChatHttpServer implements HttpHandler {
     @Reference
     private Logger logger;
     @Reference

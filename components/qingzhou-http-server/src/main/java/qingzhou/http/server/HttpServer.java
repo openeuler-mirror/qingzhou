@@ -1,10 +1,7 @@
 package qingzhou.http.server;
 
-/**
- * A handler which is invoked to process HTTP requests.
- */
 public interface HttpServer {
-    String HTTP_SERVER_PATH = "HTTP_SERVER_PATH";
+    void registerHttpHandler(HttpHandler httpHandler, String handlePath);
 
-    void handle(HttpRequest httpRequest, HttpResponse httpResponse);
+    void unregisterHttpHandler(HttpHandler httpHandler);
 }
