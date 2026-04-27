@@ -1,10 +1,10 @@
 package qingzhou.app.nginx;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -68,34 +68,67 @@ public class NginxStatus extends qingzhou.api.ModelBase implements Monitor {
         Map<String, String> stats = new HashMap<>();
         stats.put("statsTime", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         // 1. 请求 Nginx status
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(AppConfig.getNginxStatusUrl())).build();
+        HttpURLConnection connection = null;
+        BufferedReader reader = null;
         try {
-            HttpResponse<String> response = client.send(req, HttpResponse.BodyHandlers.ofString());
+            URL url = new URL(AppConfig.getNginxStatusUrl());
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            StringBuilder response = new StringBuilder();
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line).append("\n");
+            }
+
             /* 响应文本格式：
-            Active connections: 1 
+            Active connections: 1
             server accepts handled requests
-            1 1 1 
+            1 1 1
             Reading: 0 Writing: 1 Waiting: 0
              */
-            String[] lines = response.body().split("\n");
+            String[] lines = response.toString().split("\n");
 
             // Active connections: 1
-            stats.put("activeConnections", lines[0].replaceAll("[^0-9]", ""));
+            if (lines.length > 0) {
+                stats.put("activeConnections", lines[0].replaceAll("[^0-9]", ""));
+            }
 
             // accepts handled requests
-            String[] reqs = lines[2].trim().split(" +");
-            stats.put("accepts", reqs[0]);
-            stats.put("handled", reqs[1]);
-            stats.put("requests", reqs[2]);
+            if (lines.length > 2) {
+                String[] reqs = lines[2].trim().split(" +");
+                if (reqs.length >= 3) {
+                    stats.put("accepts", reqs[0]);
+                    stats.put("handled", reqs[1]);
+                    stats.put("requests", reqs[2]);
+                }
+            }
 
             // Reading: 0 Writing: 1 Waiting: 1
-            String[] conn = lines[3].trim().split(" +");
-            stats.put("reading", conn[1]);
-            stats.put("writing", conn[3]);
-            stats.put("waiting", conn[5]);
-        } catch (IOException | InterruptedException e) {
+            if (lines.length > 3) {
+                String[] conn = lines[3].trim().split(" +");
+                if (conn.length >= 6) {
+                    stats.put("reading", conn[1]);
+                    stats.put("writing", conn[3]);
+                    stats.put("waiting", conn[5]);
+                }
+            }
+        } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
 
         return stats;
