@@ -5,7 +5,7 @@ import qingzhou.api.AppContext;
 import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
 
-@App(code = "demo", icon = "Promotion",
+@App(icon = "Promotion",
         name = {"示例应用", "en:Demo Application"},
         info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "cog", order = 1)

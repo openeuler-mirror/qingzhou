@@ -41,7 +41,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     Sinks.Many<byte[]> sendBodySink = Sinks.many().unicast().onBackpressureBuffer();
 
                     taskThreadPool.execute(() -> {
-                        logger.info("request received: " + request.uri());
+                        // logger.info("request received: " + request.uri());
                         try {
                             HttpRequestImpl httpRequest = new HttpRequestImpl(request,
                                     requestPath, bytes);

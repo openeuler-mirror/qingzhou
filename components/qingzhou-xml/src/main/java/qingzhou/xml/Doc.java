@@ -6,17 +6,17 @@ import java.util.Properties;
 import javax.xml.xpath.XPathExpressionException;
 
 public interface Doc {
-    String getTextContent(String xPath) throws XPathExpressionException;
+    String getText(String xPath) throws XPathExpressionException;
 
-    Properties getAttributes(String xPath) throws XPathExpressionException;
+    Properties getNode(String xPath) throws XPathExpressionException;
 
     List<Properties> getNodes(String xPath) throws XPathExpressionException;
 
-    void updateNode(String xPath, Properties attributes) throws Exception;
+    void updateNode(String xPath, Properties attributes) throws XPathExpressionException;
 
-    void addNode(String parentXPath, String elementName, Properties attributes) throws Exception;
+    void addNode(String parentXPath, String nodeName, Properties attributes) throws XPathExpressionException;
 
-    void deleteNode(String xPath) throws Exception;
+    void deleteNode(String xPath) throws XPathExpressionException;
 
     void write(File file) throws Exception;
 }

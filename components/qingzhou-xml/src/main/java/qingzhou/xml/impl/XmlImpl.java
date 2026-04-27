@@ -1,11 +1,11 @@
 package qingzhou.xml.impl;
 
 import java.io.File;
+import java.io.InputStream;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
+
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import qingzhou.xml.Doc;
@@ -14,7 +14,6 @@ import qingzhou.xml.Xml;
 @Component
 public class XmlImpl implements Xml {
     private static DocumentBuilder builder;
-    private static XPath xPath;
 
     @Activate
     public void init() throws Exception {
@@ -30,9 +29,6 @@ public class XmlImpl implements Xml {
         dbf.setXIncludeAware(false);
         dbf.setExpandEntityReferences(false);
         builder = dbf.newDocumentBuilder();
-
-        XPathFactory factory = XPathFactory.newInstance();
-        xPath = factory.newXPath();
     }
 
     @Override
@@ -40,7 +36,12 @@ public class XmlImpl implements Xml {
         if (file == null) throw new IllegalArgumentException("File cannot be null");
         if (!file.isFile()) throw new IllegalArgumentException("Must be a file");
 
-        org.w3c.dom.Document domDocument = builder.parse(file);
-        return new DocImpl(domDocument, xPath);
+        return new DocImpl(builder.parse(file));
+    }
+
+    @Override
+    public Doc parse(InputStream is) throws Exception {
+        if (is == null) throw new IllegalArgumentException("InputStream cannot be null");
+        return new DocImpl(builder.parse(is));
     }
 }

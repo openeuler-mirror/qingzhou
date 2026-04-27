@@ -11,7 +11,7 @@ public class XmlImplTest {
     public void nullFile_parse_throwIllegalArgumentException() {
         XmlImpl xml = new XmlImpl();
         try {
-            xml.parse(null);
+            xml.parse((File) null);
             Assert.fail();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof IllegalArgumentException);
