@@ -308,8 +308,13 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-tomcat-app</artifactId>
             <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-tomcat-app</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-nginx-app</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
