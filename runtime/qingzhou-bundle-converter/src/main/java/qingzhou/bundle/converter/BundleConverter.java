@@ -258,6 +258,11 @@ public class BundleConverter {
                 if (dtoModel.fields.contains(dtoModelField)) {
                     throw new IllegalStateException("Duplicate annotation @ModelField:" + dtoModelField.code);
                 }
+
+                Object defaultValue = ctField.getConstantValue();
+                if (defaultValue != null) {
+                    dtoModelField.default_value = defaultValue.toString();
+                }
                 dtoModel.fields.add(dtoModelField);
             }
         }

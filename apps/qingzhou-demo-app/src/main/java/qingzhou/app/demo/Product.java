@@ -127,7 +127,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.datetime)
     public String createdAt;
 
-    @ModelAction(code = "onshell", icon = "up",
+    @ModelAction(code = "onshell", icon = "ArrowUp",
             name = {"上架", "en:On Shelf"},
             info = {"将产品上架销售", "en:Put product on shelf"})
     public void onShell(Request request) {
@@ -138,7 +138,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
         }
     }
 
-    @ModelAction(code = "offshelf", icon = "down",
+    @ModelAction(code = "offshelf", icon = "ArrowDown",
             name = {"下架", "en:Off Shelf"},
             info = {"将产品下架", "en:Take product off shelf"})
     public void offShell(Request request) {

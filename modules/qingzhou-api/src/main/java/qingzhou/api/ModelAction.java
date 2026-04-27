@@ -25,7 +25,9 @@ public @interface ModelAction {
 
     boolean show() default false;
 
-    boolean list() default false;
+    boolean list_head() default false; // 列表页面的头部显示
+
+    boolean list() default false; // 列表页面每条数据后面显示
 
     boolean batch() default false;
 

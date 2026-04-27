@@ -13,6 +13,8 @@ public class ModelActionView extends Base {
 
     public boolean show;
 
+    public boolean list_head;
+
     public boolean list;
 
     public boolean batch;

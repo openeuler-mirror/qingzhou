@@ -41,8 +41,7 @@
 #### 访问管控台
 
 轻舟提供了可视化的 Web 管理控制台，可打开浏览器访问：
-
-[http://localhost:7900/console](http://localhost:7900/console)
+http://localhost:7900/console
 
 ### 开发应用
 
@@ -64,7 +63,7 @@
 模块类可对应管控台上的一个功能菜单。
 - 创建类，继承 `ModelBase`。
 - 添加 `@Model` 注解，配置元数据。
-- 根据业务需求，实现相应的能力接口。
+- 根据业务需求，实现相应的能力接口，主要接口如：
 
 | 接口        | 功能说明           |
 |:----------|:---------------|
@@ -87,102 +86,6 @@
 - 创建方法，如 `public void myMethod(Request request){}`，注意方法的参数有且只能有一个 Request 类型。
 - 添加 `@ModelAction` 注解，配置元数据。
 
-4.4 **图标配置**
-
-开发后端应用时，在 `@App`、`@Menu`、`@Model` 注解中可以配置图标，前端使用 **Element Plus Icons** 作为图标库，所有图标名称直接使用 Element Plus 官方图标名称（PascalCase 格式）。
-
-#### 图标配置方式
-
-##### 4.4.1 应用图标 (@App)
-
-在 Java 后端使用 `@App` 注解配置应用图标：
-
-```java
-@App(name = "示例应用", icon = "Ship")
-public class DemoApp extends QingzhouApp {
-    // ...
-}
-```
-
-##### 4.4.2 菜单图标 (@Menu)
-
-在 Java 后端使用 `@Menu` 注解配置菜单分组图标：
-
-```java
-@Menus({
-    @Menu(code = "basic", name = "基础功能", icon = "Grid"),
-    @Menu(code = "advanced", name = "高级功能", icon = "Tools"),
-    @Menu(code = "system", name = "系统", icon = "Setting")
-})
-```
-
-##### 4.4.3 模型图标 (@Model)
-
-在 Java 后端使用 `@Model` 注解配置模型图标：
-
-```java
-// 作为一级菜单的 Model（不配置 menu 属性）
-@Model(code = "dashboard", name = "首页", icon = "HomeFilled")
-public class Dashboard extends ModelBase {
-    // ...
-}
-
-// 属于某个菜单分组的 Model
-@Model(code = "student", name = "学生管理", icon = "User", menu = "basic")
-public class Student extends ModelBase {
-    // ...
-}
-```
-
-#### 常用图标参考
-
-| 图标名称 | 说明 | 适用场景 |
-|---------|------|---------|
-| `HomeFilled` / `Home` | 首页/主页 | 仪表盘、首页 |
-| `Grid` | 网格/菜单 | 功能菜单分组 |
-| `User` / `UserFilled` | 用户 | 用户管理、个人中心 |
-| `Tools` | 工具 | 高级功能、设置 |
-| `Setting` / `SettingFilled` | 设置 | 系统设置、配置 |
-| `Document` / `DocumentChecked` | 文档 | 默认图标、文档管理 |
-| `List` / `Memo` | 列表 | 数据列表、记录 |
-| `Search` | 搜索 | 查询功能 |
-| `Plus` / `CirclePlus` | 添加 | 新增操作 |
-| `Edit` / `EditPen` | 编辑 | 编辑操作 |
-| `Delete` / `DeleteFilled` | 删除 | 删除操作 |
-| `View` / `ViewFilled` | 查看 | 详情展示 |
-| `Refresh` | 刷新 | 数据刷新 |
-| `Download` / `Upload` | 下载/上传 | 文件操作 |
-| `Warning` / `WarningFilled` | 警告 | 提示信息 |
-| `InfoFilled` / `Info` | 信息 | 帮助说明 |
-| `SuccessFilled` / `CircleCheck` | 成功 | 成功状态 |
-| `CircleClose` / `Close` | 关闭 | 关闭操作 |
-| `ArrowRight` / `ArrowLeft` | 箭头 | 导航、展开 |
-| `Menu` / `Expand` / `Fold` | 菜单 | 侧边栏控制 |
-| `Monitor` | 监控 | 监控页面 |
-| `DataLine` / `TrendCharts` | 数据 | 图表、统计 |
-| `ShoppingCart` / `Goods` | 商品 | 产品、订单管理 |
-| `Money` / `Wallet` | 金额 | 财务、支付 |
-| `Calendar` / `Clock` | 时间 | 日程、历史 |
-| `Message` / `ChatDotRound` | 消息 | 通知、留言 |
-| `Lock` / `Unlock` | 锁 | 安全、权限 |
-| `Star` / `StarFilled` | 收藏 | 收藏功能 |
-| `Share` | 分享 | 分享操作 |
-| `Printer` | 打印 | 打印功能 |
-| `Ship` / `Truck` | 物流 | 运输、配送 |
-
-#### 图标命名规范
-
-1. **使用 PascalCase**：如 `HomeFilled`、`CirclePlus`
-2. **避免使用 kebab-case**：如 `home-filled` 不正确
-3. **完整图标列表参考**：[Element Plus Icons 官方文档](https://element-plus.org/zh-CN/component/icon.html#icon-collection)
-
-#### 默认图标行为
-
-- **应用图标**：未配置时显示默认图标 `Document`
-- **菜单分组图标**：未配置时显示默认图标 `Folder`
-- **模型图标**：未配置时显示默认图标 `Document`
-
-5. **应用部署**
 #### 应用部署
 
 - 执行 `mvn clean install` 编译。
@@ -201,6 +104,13 @@ public class Student extends ModelBase {
 ### 参数配置
 
 参数配置文件在 `${轻舟安装包}/instances/default/conf/qingzhou.properties`，修改后，重启轻舟实例即可生效。
+
+### 图标参考
+
+轻舟的 API 支持设置图标，如 `qingzhou.api.App.icon` `qingzhou.api.Menu.icon` `qingzhou.api.Model.icon` 等，
+轻舟的前端使用 **Element Plus Icons** 图标库来进行页面渲染，因此您可直接使用 Element Plus 官方图标名。
+
+图标名选择可参考：https://element-plus.org/zh-CN/component/icon.html#icon-collection
 
 ### 接口参考
 
