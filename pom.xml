@@ -4,11 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>qingzhou</groupId>
-    <artifactId>console</artifactId>
+    <artifactId>platform</artifactId>
     <version>${revision}</version>
-    <packaging>pom</packaging>
-    <name>qingzhou</name>
 
+    <packaging>pom</packaging>
     <modules>
         <module>runtime</module>
         <module>components</module>

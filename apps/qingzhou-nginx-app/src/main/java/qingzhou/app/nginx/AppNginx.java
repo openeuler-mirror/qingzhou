@@ -1,25 +1,34 @@
 package qingzhou.app.nginx;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
+import qingzhou.logger.Logger;
 
 @App(code = "nginx", icon = "Nginx",
         name = {"Nginx应用", "en:Nginx Application"},
         info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "cog", order = 1)
 public class AppNginx implements QingzhouApp {
+    private Logger logger;
 
     @Override
     public void start(AppContext appContext) {
-        System.out.println("\n========================================== nginx ====================================================");
+        logger = appContext.getService(Logger.class);
+
+        logger.info("========================================== nginx ====================================================");
         try {
             appContext.getTemp().mkdirs();
-            appContext.getProperties().forEach((k, v) -> System.out.println("nginx 应用配置 " + k + "=" + v));
+            appContext.getProperties().forEach((k, v) -> logger.info("nginx 应用配置 " + k + "=" + v));
 
             // 将 nginx.conf 文件输出到临时目录用作模拟真实的 nginx.conf
             new File(appContext.getTemp(), "backups").mkdirs();
@@ -34,17 +43,17 @@ public class AppNginx implements QingzhouApp {
             AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_PATH_KEY, nginxConf.toString());
             AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_BACKUPS_KEY, new File(appContext.getTemp(), "backups").getAbsolutePath());
 
-            System.out.println("nginx 应用版本号：" + appContext.getVersion());
-            System.out.println("nginx 应用根路径：" + appContext.getBase());
-            System.out.println("nginx 应用临时目录：" + appContext.getTemp().getAbsolutePath());
+            logger.info("nginx 应用版本号：" + appContext.getVersion());
+            logger.info("nginx 应用根路径：" + appContext.getBase());
+            logger.info("nginx 应用临时目录：" + appContext.getTemp().getAbsolutePath());
         } catch (IOException | UnsupportedOperationException e) {
             System.err.println("nginx 应用启动异常: " + e.getMessage());
         }
-        System.out.println("========================================== nginx ====================================================\n");
+        logger.info("========================================== nginx ====================================================");
     }
 
     @Override
     public void stop() {
-        System.out.println("nginx 应用停止");
+        logger.info("nginx 应用停止");
     }
 }
