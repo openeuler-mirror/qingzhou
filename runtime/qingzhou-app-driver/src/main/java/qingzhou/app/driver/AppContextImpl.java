@@ -1,6 +1,7 @@
 package qingzhou.app.driver;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.*;
@@ -12,6 +13,7 @@ import qingzhou.api.Request;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.logger.Logger;
 
 class AppContextImpl implements AppContext {
     private final AppDriver appDriver;
@@ -96,6 +98,7 @@ class AppContextImpl implements AppContext {
             try {
                 Class<?> modelClass = Class.forName(model.className);
                 ModelBase modelBase = (ModelBase) modelClass.newInstance();
+                initDefaultValue(model, modelBase);
                 modelInstances.put(model, modelBase);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
@@ -119,6 +122,20 @@ class AppContextImpl implements AppContext {
         modelInstances.values().forEach(modelBase -> {
             modelBase.setAppContext(AppContextImpl.this);
             modelBase.start();
+        });
+    }
+
+    private void initDefaultValue(Model model, ModelBase modelBase) {
+        model.fields.forEach(modelField -> {
+            try {
+                Field field = modelBase.getClass().getField(modelField.code);
+                Object val = field.get(modelBase);
+                if (val != null) {
+                    modelField.default_value = val.toString();
+                }
+            } catch (Exception ignored) {
+                getService(Logger.class).warn("failed to parse default value, model: " + model.code + ", field: " + modelField.code);
+            }
         });
     }
 

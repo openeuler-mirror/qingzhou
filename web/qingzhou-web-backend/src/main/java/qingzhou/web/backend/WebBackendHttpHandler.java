@@ -6,10 +6,10 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.api.Lang;
+import qingzhou.api.Constants;
+import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
@@ -18,7 +18,6 @@ import qingzhou.registry.Registry;
 @Component(property = HttpHandler.HANDLE_PATH + "=" + WebBackendHttpHandler.URI_SERVER_PATH)
 public class WebBackendHttpHandler implements HttpHandler {
     public static final String URI_SERVER_PATH = "/web";
-    public static final String REQUEST_PARAMETER_NAME_LANG = "lang";
     public static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
 
     private static final ThreadLocal<HttpRequest> HTTP_REQUEST_THREAD_LOCAL = new ThreadLocal<>();
@@ -46,20 +45,10 @@ public class WebBackendHttpHandler implements HttpHandler {
 
             @Override
             public String getI18n(String[] i18n, Object... args) {
-                Lang lang = Lang.zh;
-
                 HttpRequest httpRequest = HTTP_REQUEST_THREAD_LOCAL.get();
-                if (httpRequest != null) {
-                    String langParam = httpRequest.getParameter(REQUEST_PARAMETER_NAME_LANG);
-                    if (langParam != null) {
-                        try {
-                            lang = Lang.valueOf(langParam);
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-
-                String i18nValue = i18nService.getI18n(i18n, lang, args);
+                String langParam = null;
+                if (httpRequest != null) langParam = httpRequest.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+                String i18nValue = i18nService.getI18n(i18n, langParam, args);
                 return i18nValue == null ? "" : i18nValue;
             }
 
