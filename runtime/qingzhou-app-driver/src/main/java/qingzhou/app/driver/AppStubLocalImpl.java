@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.*;
 import qingzhou.app.driver.validation.Validation;
 import qingzhou.dto.RequestImpl;
@@ -13,16 +14,27 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.I18nService;
 
 class AppStubLocalImpl implements AppStubLocal {
-    private static final Validation validation = new Validation();
+    private final Validation validation = new Validation();
 
     private final AppContextImpl appContext;
     private final AppMeta appMeta;
+    private I18nService i18nService;
+
+    // Error messages
+    private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
 
     AppStubLocalImpl(AppContextImpl appContext, AppMeta appMeta) {
         this.appContext = appContext;
         this.appMeta = appMeta;
+    }
+
+    @Reference
+    public void setI18nService(I18nService i18nService) {
+        this.i18nService = i18nService;
+        validation.setI18nService(i18nService);
     }
 
     @Override
@@ -56,7 +68,14 @@ class AppStubLocalImpl implements AppStubLocal {
                         // 数据校验
                         Map<String, List<String>> errors = validation.validate(a, request);
                         if (errors != null && !errors.isEmpty()) {
-                            error(request, "data validation failed");
+                            String langStr = request.getParameter("lang");
+                            Lang lang;
+                            try {
+                                lang = langStr != null ? Lang.valueOf(langStr) : Lang.zh;
+                            } catch (IllegalArgumentException e) {
+                                lang = Lang.zh;
+                            }
+                            error(request, i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, lang));
                             request.getResponse().data(errors);
                             return;
                         }

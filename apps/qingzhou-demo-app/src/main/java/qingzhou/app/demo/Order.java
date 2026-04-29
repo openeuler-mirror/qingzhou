@@ -13,7 +13,7 @@ import qingzhou.api.type.*;
         icon = "Document",
         menu = "basic")
 public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
-    private final Map<String, Map<String, String>> db = new HashMap<>();
+    public static final Map<String, Map<String, String>> db = new HashMap<>();
     private int idCounter = 1;
 
     public Order() {
