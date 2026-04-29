@@ -116,7 +116,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             input_type = InputType.select,
             options = {"onsale", "offshelf", "discontinued"})
-    public String status;
+    public String status = "onsale";
 
     @ModelField(
             name = {"创建时间", "en:Created"},
