@@ -77,6 +77,34 @@ https://element-plus.org/zh-CN/component/icon.html#icon-collection
 | /web/app     | 管控台后端应用元数据    | /web/app?appId=admin@-         |
 | /web/model   | 管控台后端应用模块元数据  | /web/model?modelId=app@admin@- |
 
+### 前端分离部署
+
+轻舟采用前后端分离架构，支持前后端独立部署。
+
+以下是将轻舟前端独立部署到 Nginx 上的示例：
+
+1. 前端静态资源位于源码目录 `web/qingzhou-web-frontend/src/main/resources/webapp`。
+2. 在 Nginx 配置中添加以下内容：
+    ```asciidoc
+        server {
+            listen 8000;
+    
+            location /console {
+                alias ~/qingzhou/qingzhou-web-frontend/src/main/resources/webapp;
+            }
+    
+            location ^~ /web/ {
+                proxy_pass http://localhost:7900/web/;
+            }
+    
+            location ^~ /invoke/ {
+                proxy_pass http://localhost:7900/invoke/;
+            }
+        }
+    ```
+3. 启动 Nginx 服务。
+4. 访问 http://localhost:8000/console 打开轻舟管控台。
+
 ### 常见问题
 
 ### 故障排除
