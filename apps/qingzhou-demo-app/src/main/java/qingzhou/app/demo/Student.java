@@ -21,7 +21,7 @@ import java.util.Map;
         icon = "User",
         menu = "basic")
 public class Student extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
-    private final Map<String, Map<String, String>> db = new HashMap<>();
+    public final Map<String, Map<String, String>> db = new HashMap<>();
     private int idCounter = 1;
 
     public Student() {
