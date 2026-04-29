@@ -60,15 +60,18 @@ public class I18nServiceImpl implements I18nService {
 
     @Override
     public String getI18n(String[] i18n, Lang lang, Object... args) {
+        if (lang == null) lang = Lang.zh;
+
         // 查找素材
         final String[] foundI18n = new String[1];
         final String[] zhI18nBak = new String[1];
+        Lang finalLang = lang;
         visit(i18n, (currentLang, currentI18n) -> {
-            if (currentLang == lang) {
+            if (currentLang == finalLang) {
                 foundI18n[0] = currentI18n;
                 return false;
             } else {
-                if (lang == Lang.tr && currentLang == Lang.zh) {
+                if (finalLang == Lang.tr && currentLang == Lang.zh) {
                     zhI18nBak[0] = currentI18n;
                 }
                 return true;
@@ -88,6 +91,17 @@ public class I18nServiceImpl implements I18nService {
             return String.format(i18nVal, args);
         }
         return i18nVal;
+    }
+
+    @Override
+    public String getI18n(String[] i18n, String lang, Object... args) {
+        Lang toLang = null;
+        try {
+            if (lang != null && !lang.isEmpty())
+                toLang = Lang.valueOf(lang);
+        } catch (Exception ignored) {
+        }
+        return getI18n(i18n, toLang, args);
     }
 
     private String zh2tr(String msg) {
