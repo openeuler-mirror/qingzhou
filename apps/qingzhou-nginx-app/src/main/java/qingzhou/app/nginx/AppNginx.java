@@ -25,7 +25,6 @@ public class AppNginx implements QingzhouApp {
     public void start(AppContext appContext) {
         logger = appContext.getService(Logger.class);
 
-        logger.info("========================================== nginx ====================================================");
         try {
             appContext.getTemp().mkdirs();
             appContext.getProperties().forEach((k, v) -> logger.info("nginx 应用配置 " + k + "=" + v));
@@ -43,13 +42,10 @@ public class AppNginx implements QingzhouApp {
             AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_PATH_KEY, nginxConf.toString());
             AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_BACKUPS_KEY, new File(appContext.getTemp(), "backups").getAbsolutePath());
 
-            logger.info("nginx 应用版本号：" + appContext.getVersion());
-            logger.info("nginx 应用根路径：" + appContext.getBase());
-            logger.info("nginx 应用临时目录：" + appContext.getTemp().getAbsolutePath());
+            logger.info("nginx 应用已启动");
         } catch (IOException | UnsupportedOperationException e) {
-            System.err.println("nginx 应用启动异常: " + e.getMessage());
+            logger.error("nginx 应用启动异常: " + e.getMessage());
         }
-        logger.info("========================================== nginx ====================================================");
     }
 
     @Override

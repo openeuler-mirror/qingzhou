@@ -1,19 +1,14 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.*;
 
 @Model(code = "student", order = 1,
         name = {"学生", "en:Student"},
@@ -87,8 +82,6 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             name = {"年龄", "en:Age"},
             info = {"学生年龄", "en:Student age"},
             list = true,
-            add = true,
-            update = true,
             input_type = InputType.number,
             min = 0,
             max = 150)
@@ -98,8 +91,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             name = {"性别", "en:Gender"},
             info = {"学生性别", "en:Student gender"},
             list = true,
-            add = true,
-            update = true,
+            required = true,
             input_type = InputType.radio,
             options = {"男", "女"})
     public Boolean gender;
@@ -160,7 +152,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             input_type = InputType.select,
             options = {"active", "inactive", "suspended"})
-    public String status;
+    public String status = "active";
 
     @ModelField(
             name = {"头像", "en:Avatar"},
@@ -187,7 +179,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.bool)
-    public Boolean enabled;
+    public Boolean enabled = true;
 
     @ModelField(
             name = {"技能标签", "en:Skills"},
