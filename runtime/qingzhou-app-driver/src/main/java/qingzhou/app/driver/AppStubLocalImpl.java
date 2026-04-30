@@ -47,6 +47,7 @@ class AppStubLocalImpl implements AppStubLocal {
             String error = actionFilter.doFilter(request);
             if (error != null) {
                 error(request, error);
+                request.getResponse().setActionFound(true);
                 return;
             }
         }
@@ -64,6 +65,7 @@ class AppStubLocalImpl implements AppStubLocal {
                             String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
                             error(request, i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr));
                             request.getResponse().data(errors);
+                            request.getResponse().setActionFound(true);
                             return;
                         }
 

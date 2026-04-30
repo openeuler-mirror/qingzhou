@@ -33,12 +33,12 @@ class Validation {
         put(context -> context.field.input_type == InputType.bool, new PatternValidator("^(true|false)$",
                 new String[]{"只能是 true 或 false", "en:Must be either true or false"}));
         put(context -> context.field.min != Long.MIN_VALUE || context.field.max != Long.MAX_VALUE, new Range());
-        put(context -> context.field.min_length != -1 || context.field.max_length == Integer.MAX_VALUE, new Length());
+        put(context -> context.field.min_length != -1 || context.field.max_length != Integer.MAX_VALUE, new Length());
         put(context -> context.field.email, new PatternValidator("^[a-zA-Z0-9_+.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
                 new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"}));
         put(context -> context.field.host, new Host());
         put(context -> context.field.port, new Port());
-        put(context -> context.field.pattern != null, new CustomPattern());
+        put(context -> context.field.pattern != null && !context.field.pattern.isEmpty(), new CustomPattern());
     }};
 
     Validation(I18nService i18nService) {
@@ -51,6 +51,7 @@ class Validation {
         if (action.code.equals(Add.ACTION_CODE_ADD)) {
             validateFields = request.getCurrentModel().fields.stream()
                     .filter(field -> field.field_type == FieldType.FORM && field.add && !field.readonly)
+                    .filter(field -> request.getParameter(field.code) != null) // 只校验前端传递了的字段，支持部分字段创建（默认值由后端处理）
                     .collect(Collectors.toSet());
         } else if (action.code.equals(Update.ACTION_CODE_UPDATE)) {
             validateFields = request.getCurrentModel().fields.stream()
@@ -72,16 +73,15 @@ class Validation {
                 if (field.required) {
                     errors.add(i18nService.getI18n(MSG_REQUIRED, langParameter));
                 }
-                continue;
-            }
-
-            ValidationContext context = new ValidationContext(field, parameter, request, langParameter);
-            for (Map.Entry<Filter, Validator> entry : validators.entrySet()) {
-                Filter filter = entry.getKey();
-                Validator validator = entry.getValue();
-                if (filter.filter(context)) {
-                    String error = validator.validate(context);
-                    if (error != null) errors.add(error);
+            } else {
+                ValidationContext context = new ValidationContext(field, parameter, request, langParameter);
+                for (Map.Entry<Filter, Validator> entry : validators.entrySet()) {
+                    Filter filter = entry.getKey();
+                    Validator validator = entry.getValue();
+                    if (filter.filter(context)) {
+                        String error = validator.validate(context);
+                        if (error != null) errors.add(error);
+                    }
                 }
             }
 

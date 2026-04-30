@@ -5,15 +5,25 @@
     <link rel="icon" type="image/svg+xml" href="/console/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>轻舟管理平台</title>
-    <script type="module" crossorigin src="/console/assets/index-Dx9k4a_5.js"></script>
+    <!-- Set theme before page render to avoid white flash in dark mode -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/console/assets/index-CSpycBHo.js"></script>
     <link rel="modulepreload" crossorigin href="/console/assets/vue-vendor-Bk6sNLB0.js">
     <link rel="modulepreload" crossorigin href="/console/assets/vendor-Cpl6W6cE.js">
-    <link rel="modulepreload" crossorigin href="/console/assets/element-plus-BYSu5hVh.js">
+    <link rel="modulepreload" crossorigin href="/console/assets/element-plus-DivdxebG.js">
     <link rel="modulepreload" crossorigin href="/console/assets/axios-BOeqtr82.js">
     <link rel="stylesheet" crossorigin href="/console/assets/element-plus-Plm10Dc1.css">
-    <link rel="stylesheet" crossorigin href="/console/assets/index-CnnzhtFH.css">
+    <link rel="stylesheet" crossorigin href="/console/assets/index-yW9G1-_x.css">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app"></div>
+
   </body>
 </html>
