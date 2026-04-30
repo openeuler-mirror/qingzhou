@@ -71,9 +71,10 @@ public class InvokeHttpHandler implements HttpHandler {
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", response.isSuccess());
-        if (response.isSuccess() && response.getData() != null) {
+        if (response.getData() != null) {
             result.put("data", response.getData());
-        } else if (response.getMsg() != null) {
+        }
+        if (response.getMsg() != null) {
             result.put("msg", response.getMsg());
             result.put("msgLevel", response.getMsgLevel());
         }
