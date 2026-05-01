@@ -92,7 +92,7 @@
                 <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-dto</include>
                 <include>${project.groupId}:qingzhou-agent</include>
-                <include>${project.groupId}:qingzhou-chat</include>
+                <include>${project.groupId}:qingzhou-ai</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -110,6 +110,7 @@
                 <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-http-server</include>
                 <include>${project.groupId}:qingzhou-http-client</include>
+                <include>${project.groupId}:qingzhou-llm</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

@@ -15,12 +15,12 @@ import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
-    private final HttpServiceEngine httpServiceEngine;
+    private final HttpServerImpl httpServer;
     private final ThreadPoolExecutor taskThreadPool;
     private final Logger logger;
 
-    DispatcherHandler(HttpServiceEngine httpServiceEngine, ThreadPoolExecutor taskThreadPool, Logger logger) {
-        this.httpServiceEngine = httpServiceEngine;
+    DispatcherHandler(HttpServerImpl httpServer, ThreadPoolExecutor taskThreadPool, Logger logger) {
+        this.httpServer = httpServer;
         this.taskThreadPool = taskThreadPool;
         this.logger = logger;
     }
@@ -29,10 +29,10 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         String requestPath = request.uri().split("\\?")[0];
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
-        String matches = httpServiceEngine.matches(normalizedPath);
+        String matches = httpServer.matches(normalizedPath);
         if (matches == null) return response.status(HttpResponseStatus.NOT_FOUND);
 
-        HttpHandler httpHandler = this.httpServiceEngine.handlerMap.get(matches);
+        HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
         return request.receive()
                 .aggregate().asByteArray()
                 .defaultIfEmpty(NULL_BYTES)

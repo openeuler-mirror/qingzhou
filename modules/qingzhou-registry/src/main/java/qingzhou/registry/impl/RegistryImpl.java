@@ -20,7 +20,7 @@ import qingzhou.registry.Registry;
 
 @Component
 public class RegistryImpl implements Registry {
-    private List<String> tempMsg = new ArrayList<>();
+    private final List<String> tempMsg = new ArrayList<>();
 
     @Reference
     private Logger logger;

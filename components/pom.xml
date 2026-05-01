@@ -20,5 +20,6 @@
         <module>qingzhou-http-server</module>
         <module>qingzhou-http-client</module>
         <module>qingzhou-xml</module>
+        <module>qingzhou-llm</module>
     </modules>
 </project>

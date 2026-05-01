@@ -1,4 +1,4 @@
-package qingzhou.chat;
+package qingzhou.ai;
 
 /**
  * 流式回调接口 —— 与 agents-flex 解耦
@@ -8,15 +8,13 @@ package qingzhou.chat;
  */
 public interface StreamCallback {
 
-    default void onStart() {
-    }
-
     default void onReason(String reason) {
 
     }
 
     /**
      * 收到一个文本片段（增量 token）
+     *
      * @param token 当前输出的文本片段
      */
     void onToken(String token);
@@ -30,6 +28,7 @@ public interface StreamCallback {
 
     /**
      * 发生错误
+     *
      * @param error 异常
      */
     void onError(Throwable error);

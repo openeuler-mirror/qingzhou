@@ -29,7 +29,7 @@ public class NginxSettings extends qingzhou.api.ModelBase implements qingzhou.ap
     @ModelField(list = true, show = true, readonly = true,
             name = {"配置区块", "en:Block"},
             info = {"配置项所属的区块", "en:Configuration block"})
-    public String block="配置项所属的区块";
+    public String block;
 
     /**
      * 列表查询：返回分页的配置列表

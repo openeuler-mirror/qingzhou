@@ -1,4 +1,4 @@
-package qingzhou.chat;
+package qingzhou.ai;
 
 public enum SseEventType {
     RUN_STARTED,
