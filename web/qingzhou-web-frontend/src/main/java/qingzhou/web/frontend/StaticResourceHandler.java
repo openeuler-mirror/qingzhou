@@ -80,7 +80,7 @@ public class StaticResourceHandler implements HttpHandler {
                 return;
             }
             response.status(404);
-            response.sendResponse("not found: " + path);
+            response.sendFinish("not found: " + path);
             return;
         }
 
@@ -91,10 +91,10 @@ public class StaticResourceHandler implements HttpHandler {
 
             // 读取并发送文件内容
             byte[] content = readAllBytes(inputStream);
-            response.sendResponse(content);
+            response.sendFinish(content);
         } catch (IOException e) {
             response.statusError();
-            response.sendResponse("internal server error");
+            response.sendFinish("internal server error");
         } finally {
             try {
                 inputStream.close();

@@ -83,7 +83,7 @@ public class InvokeHttpHandler implements HttpHandler {
             result.put("msgLevel", response.getMsgLevel());
         }
         String json = this.json.toJson(result);
-        httpResponse.sendResponse(json);
+        httpResponse.sendFinish(json);
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {

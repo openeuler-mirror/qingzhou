@@ -49,7 +49,7 @@ public class AgentHttpHandler implements HttpHandler {
             cipher = crypto.getCipher(thisInstanceInfo.getKey());
             requestData = cipher.decrypt(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("key auth error");
+            httpResponse.sendFinish("key auth error");
             return;
         }
 
@@ -59,7 +59,7 @@ public class AgentHttpHandler implements HttpHandler {
             responseData = process(requestData);
         } catch (Throwable e) {
             httpResponse.statusError()
-                    .sendResponse("business processing error");
+                    .sendFinish("business processing error");
             logger.error("business processing error", e);
             return;
         }
@@ -70,11 +70,11 @@ public class AgentHttpHandler implements HttpHandler {
             encrypt = cipher.encrypt(responseData);
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("instance Key error");
+                    .sendFinish("instance Key error");
             logger.error("encryption failed: " + e.getMessage());
             return;
         }
-        httpResponse.sendResponse(encrypt);
+        httpResponse.sendFinish(encrypt);
     }
 
     private byte[] process(byte[] data) throws Throwable {

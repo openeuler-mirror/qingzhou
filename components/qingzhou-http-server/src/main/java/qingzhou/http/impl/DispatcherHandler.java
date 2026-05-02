@@ -1,14 +1,11 @@
 package qingzhou.http.impl;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.BiFunction;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -16,12 +13,10 @@ import reactor.netty.http.server.HttpServerResponse;
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
     private final HttpServerImpl httpServer;
-    private final ThreadPoolExecutor taskThreadPool;
     private final Logger logger;
 
-    DispatcherHandler(HttpServerImpl httpServer, ThreadPoolExecutor taskThreadPool, Logger logger) {
+    DispatcherHandler(HttpServerImpl httpServer, Logger logger) {
         this.httpServer = httpServer;
-        this.taskThreadPool = taskThreadPool;
         this.logger = logger;
     }
 
@@ -37,29 +32,19 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                 .aggregate().asByteArray()
                 .defaultIfEmpty(NULL_BYTES)
                 .flatMap(bytes -> {
-                    CompletableFuture<Void> headerSentFuture = new CompletableFuture<>();
-                    Sinks.Many<byte[]> sendBodySink = Sinks.many().unicast().onBackpressureBuffer();
-
-                    taskThreadPool.execute(() -> {
-                        // logger.info("request received: " + request.uri());
-                        try {
-                            HttpRequestImpl httpRequest = new HttpRequestImpl(request,
-                                    requestPath, bytes);
-                            HttpResponseImpl httpResponse = new HttpResponseImpl(response,
-                                    headerSentFuture, sendBodySink);
-                            httpHandler.handle(httpRequest, httpResponse);
-                        } catch (Throwable e) {
-                            response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                            Throwable cause = getCause(e);
-                            logger.error("an exception occurred during HTTP processing.", cause);
-                        } finally {
-                            headerSentFuture.complete(null);
-                            sendBodySink.tryEmitComplete();
-                        }
-                    });
-
-                    return Mono.fromFuture(headerSentFuture)
-                            .then(Mono.defer(() -> response.sendByteArray(sendBodySink.asFlux()).then()));
+                    Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
+                    try {
+                        HttpRequestImpl httpRequest = new HttpRequestImpl(request,
+                                requestPath, bytes);
+                        HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
+                        httpHandler.handle(httpRequest, httpResponse);
+                    } catch (Throwable e) {
+                        response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                        Throwable cause = getCause(e);
+                        logger.error("http processing error", cause);
+                        streamResponse.tryEmitError(cause);
+                    }
+                    return response.sendByteArray(streamResponse.asFlux()).then();
                 });
     }
 

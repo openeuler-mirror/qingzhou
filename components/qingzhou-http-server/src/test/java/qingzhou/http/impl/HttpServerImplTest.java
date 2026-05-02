@@ -43,7 +43,7 @@ public class HttpServerImplTest {
         int port = 7788;
         HttpServerImpl httpServer = build(port);
         String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendResponse("Hello: " + httpRequest.getPath());
+        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandler(httpHandler, path);
 
         HttpClient httpClient = new HttpClientImpl();
@@ -60,7 +60,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build(port);
 
         String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendResponse("Hello: " + httpRequest.getPath());
+        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandler(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = new HttpClientImpl();

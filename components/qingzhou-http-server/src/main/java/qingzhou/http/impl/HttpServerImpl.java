@@ -2,11 +2,6 @@ package qingzhou.http.impl;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import io.netty.channel.ChannelOption;
 import org.osgi.service.component.ComponentConstants;
@@ -30,13 +25,11 @@ public class HttpServerImpl implements HttpServer {
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
-    private ThreadPoolExecutor taskThreadPool;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
-        int taskThreads = getConfig(config, "task", 50);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
 
         String host = getConfig(config, "host", "0.0.0.0");
@@ -49,7 +42,6 @@ public class HttpServerImpl implements HttpServer {
                 workerThreads,        // Worker线程数
                 true                  // 是否为守护线程（生产建议true，不阻塞应用退出）
         );
-        taskThreadPool = buildTaskThreadPool(taskThreads);
 
         // 2. 构建生产级 HTTP 服务（配置超时、线程池、TCP 选项）
         reactor.netty.http.server.HttpServer httpServer = reactor.netty.http.server.HttpServer.create()
@@ -63,7 +55,7 @@ public class HttpServerImpl implements HttpServer {
                 .childOption(ChannelOption.TCP_NODELAY, true) // 现代带宽充足，路由器处理能力强，「小包风暴」的影响远小于实时性不足带来的业务问题
                 .idleTimeout(Duration.ofSeconds(idleTimeout)) // 一条连接，无任何读或写活动，则主动关闭连接释放资源，不设置则无限
                 // 业务路由（生产环境建议抽离到单独的 Handler 类，解耦业务逻辑）
-                .handle(new DispatcherHandler(this, taskThreadPool, logger));
+                .handle(new DispatcherHandler(this, logger));
 
         // 3. 启动服务并持有 Disposable（关键：用于后续优雅停止）
         disposableServer = httpServer.bindNow();
@@ -175,44 +167,7 @@ public class HttpServerImpl implements HttpServer {
                 })
                 .subscribe(); // 非阻塞订阅
 
-        // 关闭业务线程池（实际业务中根据场景决定是否关闭）
-        taskThreadPool.shutdown();
-        try { // 等待线程池关闭（可选）
-            if (!taskThreadPool.awaitTermination(5, TimeUnit.MINUTES)) {
-                taskThreadPool.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            taskThreadPool.shutdownNow();
-        }
-
         logger.info("http server stopped");
-    }
-
-    private ThreadPoolExecutor buildTaskThreadPool(int maximumPoolSize) {
-        int corePoolSize = maximumPoolSize / 5;          // 核心线程数（常驻）
-        if (corePoolSize < 1) corePoolSize = 1;
-
-        // 线程工厂：自定义线程名称，方便日志排查
-        ThreadFactory threadFactory = new ThreadFactory() {
-            private final AtomicLong count = new AtomicLong(0);
-
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
-                thread.setName("task-" + count.incrementAndGet());
-                return thread;
-            }
-        };
-
-        // 创建线程池
-        return new ThreadPoolExecutor(
-                corePoolSize,
-                maximumPoolSize,
-                60, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(maximumPoolSize * 2), // 任务队列：有界队列（避免无界队列导致内存溢出）
-                threadFactory,
-                new ThreadPoolExecutor.AbortPolicy() // 拒绝策略：任务过多时，直接抛出异常（可根据业务调整）
-        );
     }
 
     @Override

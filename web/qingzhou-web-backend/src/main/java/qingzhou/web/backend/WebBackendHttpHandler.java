@@ -88,7 +88,7 @@ public class WebBackendHttpHandler implements HttpHandler {
             try {
                 long cachedTime = Long.parseLong(cacheKey);
                 if (cachedTime == registry.getDataTimestamp()) {
-                    httpResponse.sendResponse("{\"success\":true}");
+                    httpResponse.sendFinish("{\"success\":true}");
                     return;
                 }
             } catch (NumberFormatException ignored) {
@@ -104,7 +104,7 @@ public class WebBackendHttpHandler implements HttpHandler {
                 metaData.put("data", result);
                 metaData.put(REQUEST_PARAMETER_NAME_CACHE_KEY, registry.getDataTimestamp());
                 String jsonString = json.toJson(metaData);
-                httpResponse.sendResponse(jsonString);
+                httpResponse.sendFinish(jsonString);
             }
         } catch (Exception e) {
             httpResponse.statusError();
