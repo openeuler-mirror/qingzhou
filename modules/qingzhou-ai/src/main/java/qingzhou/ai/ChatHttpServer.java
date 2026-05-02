@@ -20,7 +20,9 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Chat;
 import qingzhou.llm.LLM;
+import qingzhou.llm.StreamListener;
 import qingzhou.logger.Logger;
+import qingzhou.registry.I18nService;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/ai/chat",
         configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -31,6 +33,8 @@ public class ChatHttpServer implements HttpHandler {
     private Logger logger;
     @Reference
     private Json json;
+    @Reference
+    private I18nService i18nService;
 
     private Chat chat;
 
@@ -63,9 +67,12 @@ public class ChatHttpServer implements HttpHandler {
         }
 
         // 发出响应
-        String chatted = chat.chat(message.trim());
-        httpResponse.sendResponse(chatted);
-//        httpResponse.contentType("text/event-stream; charset=utf-8");
+        chat.chatStream(message.trim(), new StreamListener() {
+            @Override
+            public void onMessage(String deltaContent) {
+                httpResponse.sendResponse(deltaContent);
+            }
+        });
     }
 
 //    public void streamChat(String message, StreamCallback callback) {

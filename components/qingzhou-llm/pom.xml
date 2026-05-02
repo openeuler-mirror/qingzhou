@@ -87,7 +87,11 @@
             <artifactId>jtokkit</artifactId>
             <version>1.1.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-sse</artifactId>
+            <version>4.9.3</version>
+        </dependency>
 
     </dependencies>
 
@@ -102,7 +106,7 @@
                         <Import-Package>javax.net,javax.net.ssl,sun.misc</Import-Package>
                         <Embed-Dependency>
                             agents-flex-core,
-                            fastjson2,okhttp,slf4j-api,kotlin-stdlib,
+                            fastjson2,okhttp,okhttp-sse,slf4j-api,kotlin-stdlib,
                             opentelemetry-sdk-common,opentelemetry-sdk-trace,opentelemetry-sdk-metrics,
                             opentelemetry-api,opentelemetry-context,opentelemetry-exporter-logging,
                             opentelemetry-sdk,opentelemetry-sdk-logs,
