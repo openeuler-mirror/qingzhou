@@ -129,6 +129,7 @@ public class ChatHttpHandler implements HttpHandler {
     private Collection<qingzhou.llm.Tool> tools() {
         if (tools == null) {
             tools = new HashSet<>();
+            
         }
         return tools;
     }

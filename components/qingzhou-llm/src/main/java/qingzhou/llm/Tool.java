@@ -5,23 +5,32 @@ public interface Tool {
 
     String description();
 
-    Parameter[] parameters();
+    ToolParameter[] parameters();
 
     Object invoke(Object... args);
 
-    interface Parameter {
-        String name();
+    static Tool of(String name, String description, ToolParameter[] parameters,
+            java.util.function.Function<Object[], Object> invoke) {
+        return new Tool() {
+            @Override
+            public String name() {
+                return name;
+            }
 
-        String description();
+            @Override
+            public String description() {
+                return description;
+            }
 
-        Type type();
+            @Override
+            public ToolParameter[] parameters() {
+                return parameters;
+            }
 
-        boolean required();
-
-        String[] enumValues();
-    }
-
-    enum Type {
-        STRING, NUMBER, BOOLEAN
+            @Override
+            public Object invoke(Object... args) {
+                return invoke.apply(args);
+            }
+        };
     }
 }
