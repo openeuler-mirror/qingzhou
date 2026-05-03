@@ -12,7 +12,7 @@ public interface ToolParameter {
     String[] enumValues();
 
     static ToolParameter of(String name, String description, ParameterType type,
-            boolean required, String[] enumValues) {
+                            boolean required, String[] enumValues) {
         return new ToolParameter() {
             @Override
             public String name() {

@@ -3,8 +3,6 @@ package qingzhou.llm.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.agentsflex.core.message.AiMessage;
@@ -32,7 +30,7 @@ public class ChatModelImpl implements ChatModel {
         memoryPrompt.addMessage(new UserMessage(prompt));
         memoryPrompt.addTools(tools.stream().map(this::convertTool).collect(Collectors.toList()));
 
-        final boolean[] hasToolCalls = { false };
+        final boolean[] hasToolCalls = {false};
         do {
             chatModel.chatStream(memoryPrompt, new StreamResponseListener() {
                 @Override
@@ -56,13 +54,11 @@ public class ChatModelImpl implements ChatModel {
                     if (message.isFinalDelta()) {
                         memoryPrompt.addMessage(message);
 
-                        if (message.getToolCalls() != null) {
+                        if (message.hasToolCalls()) {
                             List<ToolMessage> toolMessages = response.executeToolCallsAndGetToolMessages();
                             memoryPrompt.addMessages(toolMessages);
 
                             hasToolCalls[0] = true;
-                        } else if (!message.hasToolCalls()) {
-                            listener.onComplete();
                         }
                     }
                 }
@@ -87,12 +83,7 @@ public class ChatModelImpl implements ChatModel {
         functionTool.setParameters(Arrays.stream(tool.parameters()).map(this::convertParameter)
                 .toArray(com.agentsflex.core.model.chat.tool.Parameter[]::new));
 
-        functionTool.setInvoker(new Function<Map<String, Object>, Object>() {
-            @Override
-            public Object apply(Map<String, Object> args) {
-                return tool.invoke(args.values().toArray());
-            }
-        });
+        functionTool.setInvoker(args -> tool.invoke(args.values().toArray()));
         return functionTool;
     }
 
@@ -105,5 +96,4 @@ public class ChatModelImpl implements ChatModel {
         parameter.setEnums(toolParameter.enumValues());
         return parameter;
     }
-
 }

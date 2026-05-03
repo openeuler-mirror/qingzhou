@@ -10,7 +10,7 @@ public interface Tool {
     Object invoke(Object... args);
 
     static Tool of(String name, String description, ToolParameter[] parameters,
-            java.util.function.Function<Object[], Object> invoke) {
+                   java.util.function.Function<Object[], Object> invoke) {
         return new Tool() {
             @Override
             public String name() {
