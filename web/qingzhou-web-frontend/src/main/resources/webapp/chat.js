@@ -617,6 +617,10 @@ class ChatSidebar {
     /* ---------- 流式 Markdown 安全解析 ---------- */
     _mdParse(content, complete = false) {
         if (!content) return '';
+        // 如果 marked 未定义，使用简单的 HTML 转义作为回退
+        if (typeof marked === 'undefined') {
+            return this._esc(content);
+        }
         const matches = content.match(/```/g);
         if (matches && matches.length % 2) content += '\n```';
         return marked.parse(content);
