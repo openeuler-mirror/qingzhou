@@ -2,30 +2,28 @@
 
 ## 概述
 
-轻舟可用于实现各类业务系统的集中式、一致化管理。
+Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要用于实现各类业务系统的集中式、一致化管理。
 
-通过在服务器部署轻舟代理，可自动识别业务系统类型并远程注册至轻舟管控台，进而实现集中式管理。
+![轻舟架构图](https://www.processon.com/embed/68edfdfc2c5acb0dc9480b99)
 
-轻舟应用是基于轻舟 API 开发的插件化管理组件。
-轻舟对业务系统的管控，依托轻舟代理调度对应轻舟应用完成，不同类型的业务系统需匹配专属轻舟应用。
-轻舟 API 为各类业务系统提供统一的开发规范，最终实现多品类业务系统的标准化、一致化管理。
+### 核心特点与功能
 
-## 开始使用
+1. 集中管理：通过在服务器部署“轻舟代理”，可以自动识别并远程注册不同类型的业务系统到“轻舟管控台”，从而实现集中管理。
+2. 插件化架构：对业务系统的管控是通过轻舟代理调度对应的“轻舟应用”（基于轻舟 API 开发的插件化组件）来完成的。
+3. 统一规范：轻舟 API 为各类业务系统提供统一的开发规范，包括接口、UI、集成方式等，最终实现多品类业务系统的标准化、一致化管理。
+4. 前后端分离：支持前后端独立部署，前端可单独部署到 Nginx 等 Web 服务器。
+5. AI驱动的智能管控：集成大模型能力，以自然语言交互完成复杂业务系统的管控操作，实现从手动配置到意图驱动的智能化升级。
 
-### 欢迎
+## 快速上手
 
-### 快速入门
-
-1. 确保您已经安装了 JDK 1.8+ 和 Maven 3.8+。
-2. 在源码根目录执行 `mvn clean install -DskipTests`，执行完成后，可在 `qingzhou/target/qingzhou` 得到轻舟的二进制产品安装包。
-3. 在 `${轻舟产品包}/bin` 下，执行 start 脚本，如：sh start.sh，等待启动完成。
-4. 打开浏览器，访问轻舟可视化 Web 管控台：http://localhost:7900/console
-
-### 云端
+- 环境要求：JDK 1.8+ 和 Maven 3.8+。
+- 构建：在源码根目录执行 `mvn clean install -DskipTests`，得到二进制产品包。
+- 启动：进入产品包的 bin 目录，执行启动脚本（如 Linux/macOS 下执行 sh start.sh）。
+- 访问：启动后，浏览器访问 http://localhost:7900/console 即可打开轻舟可视化 Web 管控台。
 
 ## 功能
 
-### REST 服务
+### REST
 
 ### 远程管理
 
@@ -33,16 +31,9 @@
 
 ## 更多信息
 
-### 图标参考
-
-轻舟 API 支持设置图标，如 `qingzhou.api.App.icon` `qingzhou.api.Menu.icon` `qingzhou.api.Model.icon` 等，
-轻舟前端使用 **Element Plus Icons** 图标库渲染页面，因此您可直接使用 Element Plus 官方图标名，请参考：
-
-https://element-plus.org/zh-CN/component/icon.html#icon-collection
-
 ### 参数配置
 
-参数配置文件在 `${轻舟产品包}/instances/default/conf/qingzhou.properties`，修改后，重启轻舟实例即可生效。
+参数配置文件在 `产品包/instances/default/conf/qingzhou.properties`，修改后，重启轻舟实例即可生效。
 
 ### 目录结构
 
@@ -62,22 +53,23 @@ https://element-plus.org/zh-CN/component/icon.html#icon-collection
     - 重点说明：启动时，如果 version* 目录已存在，则会与 version*.zip 比对，不一致，则删除重新生成，若要禁止此行为，可将
       version*.zip 移出此目录，或修改其名字不要以 version 开头。
 
-### 接口参考
+### 服务接口
 
-轻舟服务开放接口列表如下：
+轻舟服务打开的接口（HTTP 协议）如下：
 
-| 接口URI        | 接口说明          | 传参形式                           |
-|--------------|---------------|--------------------------------|
-| /invoke      | 执行指定应用的模块操作   | /invoke/-/admin/app/list       |
-| /register    | 注册远程实例上的应用    |                                |
-| /refresh     | 刷新远程实例的通信密钥   |                                |
-| /agent       | 在远程实例上执行应用的操作 |                                |
-| /console     | 管控台前端静态资源     |                                |
-| /web/welcome | 管控台后端应用概览     |                                |
-| /web/app     | 管控台后端应用元数据    | /web/app?appId=admin@-         |
-| /web/model   | 管控台后端应用模块元数据  | /web/model?modelId=app@admin@- |
+| 接口URI      | 接口说明          | 访问形式                           |
+|------------|---------------|--------------------------------|
+| /invoke    | 执行指定应用的模块操作   | /invoke/-/admin/app/list       |
+| /register  | 注册远程实例上的应用    |                                |
+| /refresh   | 刷新远程实例的通信密钥   |                                |
+| /agent     | 在远程实例上执行应用的操作 |                                |
+| /console   | 管控台前端静态资源     |                                |
+| /web/index | 管控台后端应用概览     |                                |
+| /web/app   | 管控台后端应用元数据    | /web/app?appId=admin@-         |
+| /web/model | 管控台后端应用模块元数据  | /web/model?modelId=app@admin@- |
+| /chat      | 智能管控自然语言交互接口  |                                |
 
-### 前端分离部署
+### 前后端分离
 
 轻舟采用前后端分离架构，支持前后端独立部署。
 
