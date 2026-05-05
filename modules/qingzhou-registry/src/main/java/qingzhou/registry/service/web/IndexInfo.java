@@ -8,14 +8,13 @@ import java.util.Map;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.WebHttpHandler;
 
-public class IndexInfo implements WebHttpHandler.WebHandler {
-    public static final String REQUEST_PARAMETER_NAME_APP_ID = "appId";
+class IndexInfo implements WebHttpHandler.WebHandler {
+    static final String REQUEST_PARAMETER_NAME_APP_ID = "appId";
 
     private final WebHttpHandler.ContextHelper helper;
 
-    public IndexInfo(WebHttpHandler.ContextHelper helper) {
+    IndexInfo(WebHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

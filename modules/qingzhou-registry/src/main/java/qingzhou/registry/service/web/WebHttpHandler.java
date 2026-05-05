@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.service.web;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,9 +14,6 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.web.AppMetaInfo;
-import qingzhou.registry.service.web.IndexInfo;
-import qingzhou.registry.service.web.ModelMetaInfo;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=" + WebHttpHandler.URI_SERVER_PATH)
 public class WebHttpHandler implements HttpHandler {

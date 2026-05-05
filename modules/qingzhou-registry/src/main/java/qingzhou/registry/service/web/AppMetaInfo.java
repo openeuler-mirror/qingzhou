@@ -7,14 +7,13 @@ import java.util.Map;
 
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.WebHttpHandler;
 
-public class AppMetaInfo implements WebHttpHandler.WebHandler {
-    public static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
+class AppMetaInfo implements WebHttpHandler.WebHandler {
+    static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
 
     private final WebHttpHandler.ContextHelper helper;
 
-    public AppMetaInfo(WebHttpHandler.ContextHelper helper) {
+    AppMetaInfo(WebHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 
