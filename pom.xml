@@ -13,7 +13,6 @@
         <module>components</module>
         <module>modules</module>
         <module>apps</module>
-        <module>web</module>
         <module>qingzhou</module>
     </modules>
 

@@ -1,4 +1,4 @@
-package qingzhou.web.backend;
+package qingzhou.registry.service.web;
 
 class IdResolver {
     static String toAppId(String instanceId, String appCode) {

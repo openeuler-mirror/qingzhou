@@ -1,4 +1,4 @@
-package qingzhou.web.frontend;
+package qingzhou.web;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

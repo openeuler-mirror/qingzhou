@@ -13,6 +13,7 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 5. AI驱动的智能管控：集成大模型能力，以自然语言交互完成复杂业务系统的管控操作，实现从手动配置到意图驱动的智能化升级。
 
 ### 轻舟架构图
+
 ![Qingzhou Architecture Diagram](./docs/images/architecture.jpg)
 
 ## 快速上手
@@ -76,24 +77,26 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 
 以下是将轻舟前端独立部署到 Nginx 上的示例：
 
-1. 前端静态资源位于源码目录 `web/qingzhou-web-frontend/src/main/resources/webapp`。
+1. 前端静态资源位于源码目录 `modules/qingzhou-web/src/main/resources/webapp`。
 2. 在 Nginx 配置中添加以下内容：
     ```asciidoc
-        server {
-            listen 8000;
+    server {
+        listen 8000;
     
-            location /console {
-                alias ~/qingzhou/qingzhou-web-frontend/src/main/resources/webapp;
-            }
-    
-            location ^~ /web/ {
-                proxy_pass http://localhost:7900/web/;
-            }
-    
-            location ^~ /invoke/ {
-                proxy_pass http://localhost:7900/invoke/;
-            }
+        location /console {
+            alias /Users/tw/Desktop/qingzhou/modules/qingzhou-web/src/main/resources/webapp;
+            index index.html;
+            try_files $uri $uri/ /console/index.html;
         }
+    
+        location ^~ /web/ {
+            proxy_pass http://localhost:7900/web/;
+        }
+    
+        location ^~ /invoke/ {
+            proxy_pass http://localhost:7900/invoke/;
+        }
+    }
     ```
 3. 启动 Nginx 服务。
 4. 访问 http://localhost:8000/console 打开轻舟管控台。

@@ -93,6 +93,7 @@
                 <include>${project.groupId}:qingzhou-dto</include>
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-ai</include>
+                <include>${project.groupId}:qingzhou-web</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -117,18 +118,6 @@
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <outputDirectory>lib/version/components</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
-                <include>${project.groupId}:qingzhou-web-backend</include>
-                <include>${project.groupId}:qingzhou-web-frontend</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/web</outputDirectory>
         </dependencySet>
 
         <dependencySet>

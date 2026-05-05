@@ -1,4 +1,4 @@
-package qingzhou.web.backend;
+package qingzhou.registry.service.web;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -11,11 +11,12 @@ import qingzhou.dto.meta.annotation.ModelActionView;
 import qingzhou.dto.meta.annotation.ModelFieldView;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.WebHttpHandler;
 
-public class ModelMetaInfo implements WebBackendHttpHandler.WebHandler {
-    private final WebBackendHttpHandler.ContextHelper helper;
+public class ModelMetaInfo implements WebHttpHandler.WebHandler {
+    private final WebHttpHandler.ContextHelper helper;
 
-    public ModelMetaInfo(WebBackendHttpHandler.ContextHelper helper) {
+    public ModelMetaInfo(WebHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

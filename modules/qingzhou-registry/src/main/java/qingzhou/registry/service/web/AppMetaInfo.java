@@ -1,4 +1,4 @@
-package qingzhou.web.backend;
+package qingzhou.registry.service.web;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,20 +7,21 @@ import java.util.Map;
 
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.WebHttpHandler;
 
-public class AppMetaInfo implements WebBackendHttpHandler.WebHandler {
+public class AppMetaInfo implements WebHttpHandler.WebHandler {
     public static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
 
-    private final WebBackendHttpHandler.ContextHelper helper;
+    private final WebHttpHandler.ContextHelper helper;
 
-    public AppMetaInfo(WebBackendHttpHandler.ContextHelper helper) {
+    public AppMetaInfo(WebHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 
     @Override
     public Object handle() {
         // 条件检查
-        String appId = helper.getParameter(WelcomeInfo.REQUEST_PARAMETER_NAME_APP_ID);
+        String appId = helper.getParameter(IndexInfo.REQUEST_PARAMETER_NAME_APP_ID);
         if (appId == null) return null;
         String[] split = IdResolver.fromAppId(appId);
         if (split == null) return null;

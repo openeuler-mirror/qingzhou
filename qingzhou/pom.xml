@@ -250,12 +250,7 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-web-backend</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-web-frontend</artifactId>
+            <artifactId>qingzhou-web</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

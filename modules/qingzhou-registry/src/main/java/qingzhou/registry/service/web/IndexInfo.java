@@ -1,4 +1,4 @@
-package qingzhou.web.backend;
+package qingzhou.registry.service.web;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,13 +8,14 @@ import java.util.Map;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.WebHttpHandler;
 
-public class WelcomeInfo implements WebBackendHttpHandler.WebHandler {
+public class IndexInfo implements WebHttpHandler.WebHandler {
     public static final String REQUEST_PARAMETER_NAME_APP_ID = "appId";
 
-    private final WebBackendHttpHandler.ContextHelper helper;
+    private final WebHttpHandler.ContextHelper helper;
 
-    public WelcomeInfo(WebBackendHttpHandler.ContextHelper helper) {
+    public IndexInfo(WebHttpHandler.ContextHelper helper) {
         this.helper = helper;
     }
 

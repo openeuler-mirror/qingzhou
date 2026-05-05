@@ -1,4 +1,4 @@
-package qingzhou.web.backend;
+package qingzhou.registry.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,9 +14,12 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.web.AppMetaInfo;
+import qingzhou.registry.service.web.IndexInfo;
+import qingzhou.registry.service.web.ModelMetaInfo;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=" + WebBackendHttpHandler.URI_SERVER_PATH)
-public class WebBackendHttpHandler implements HttpHandler {
+@Component(property = HttpHandler.HANDLE_PATH + "=" + WebHttpHandler.URI_SERVER_PATH)
+public class WebHttpHandler implements HttpHandler {
     public static final String URI_SERVER_PATH = "/web";
     public static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
 
@@ -62,7 +65,7 @@ public class WebBackendHttpHandler implements HttpHandler {
             }
         };
 
-        handlerMap.put("welcome", new WelcomeInfo(helper));
+        handlerMap.put("welcome", new IndexInfo(helper));
         handlerMap.put("app", new AppMetaInfo(helper));
         handlerMap.put("model", new ModelMetaInfo(helper));
     }
