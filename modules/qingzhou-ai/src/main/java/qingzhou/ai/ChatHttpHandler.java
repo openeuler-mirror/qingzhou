@@ -111,9 +111,7 @@ public class ChatHttpHandler implements HttpHandler {
             @Override
             public void onError(Throwable t) {
                 String errMsg = t.getMessage();
-                logger.error(errMsg, t);
-
-                if (errMsg.length() > 200) errMsg = errMsg.substring(0, 200) + "...";
+                logger.error(errMsg);
                 sendEventFinish(httpResponse, errMsg);
             }
 
@@ -129,7 +127,7 @@ public class ChatHttpHandler implements HttpHandler {
     private Collection<qingzhou.llm.Tool> tools() {
         if (tools == null) {
             tools = new HashSet<>();
-            
+
         }
         return tools;
     }
