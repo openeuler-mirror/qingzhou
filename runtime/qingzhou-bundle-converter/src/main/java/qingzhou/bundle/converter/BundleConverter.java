@@ -196,6 +196,14 @@ public class BundleConverter {
             parseModelAnnotations(model, ctClass, metaApp);
         }
 
+        // Process single @Menu annotation (since @Menu is @Repeatable)
+        Menu singleMenu = (Menu) ctClass.getAnnotation(Menu.class);
+        if (singleMenu != null) {
+            qingzhou.dto.meta.annotation.Menu dtoMenu = new qingzhou.dto.meta.annotation.Menu();
+            setObjAnnotation(dtoMenu, singleMenu);
+            metaApp.menus.add(dtoMenu);
+        }
+        // Process @Menus annotation (multiple menus)
         Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
         if (menus != null) {
             for (Menu menu : menus.value()) {
