@@ -18,7 +18,7 @@ import qingzhou.llm.Listener;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/ai/chat",
+@Component(property = HttpHandler.HANDLE_PATH + "=/chat",
         configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ChatHttpHandler implements HttpHandler {
     @Reference
@@ -74,7 +74,7 @@ public class ChatHttpHandler implements HttpHandler {
                 httpResponse.send("event: " + event + "\ndata: " + data + "\n\n");
             }
 
-            String toString(String messageId, String content) {
+            String toJson(String messageId, String content) {
                 try {
                     Map<String, String> map = new HashMap<>();
                     if (messageId != null && !messageId.isEmpty()) {
@@ -99,11 +99,11 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent("TEXT_MESSAGE_END", toString(messageId, null));
+                        sendEvent("TEXT_MESSAGE_END", toJson(messageId, null));
                     }
                     sendEvent("REASONING_START", "{}");
                 }
-                sendEvent("REASONING_CONTENT", toString(null, content));
+                sendEvent("REASONING_CONTENT", toJson(null, content));
             }
 
             @Override
@@ -113,9 +113,9 @@ public class ChatHttpHandler implements HttpHandler {
                     if (isReasoning) {
                         sendEvent("REASONING_END", "{}");
                     }
-                    sendEvent("TEXT_MESSAGE_START", toString(messageId, null));
+                    sendEvent("TEXT_MESSAGE_START", toJson(messageId, null));
                 }
-                sendEvent("TEXT_MESSAGE_CONTENT", toString(messageId, content));
+                sendEvent("TEXT_MESSAGE_CONTENT", toJson(messageId, content));
             }
 
             @Override

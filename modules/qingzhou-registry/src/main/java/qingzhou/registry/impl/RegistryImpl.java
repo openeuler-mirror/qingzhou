@@ -116,7 +116,7 @@ public class RegistryImpl implements Registry {
                 {
                     this.setId(Constants.LOCAL_INSTANCE_ID);
                     this.setVersion(qzVersion);
-                    this.setHost("localhost");
+                    this.setHost(Utils.getLocalIp());
                 }
             };
         }
