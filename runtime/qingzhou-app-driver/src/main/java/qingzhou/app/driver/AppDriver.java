@@ -1,5 +1,13 @@
 package qingzhou.app.driver;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
 import org.osgi.framework.*;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -8,14 +16,6 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStubLocal;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 public class AppDriver implements BundleActivator {
     final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
@@ -96,7 +96,7 @@ public class AppDriver implements BundleActivator {
     }
 
     <T> T getService(Class<T> serviceType, String name) {
-        Object found = serviceObjects.computeIfAbsent(serviceType + String.valueOf(name), c -> {
+        Object found = serviceObjects.computeIfAbsent(serviceType.getName() + (name == null ? "" : "~" + name), c -> {
             ServiceReference<?> serviceReference = null;
             if (name != null) {
                 try {
@@ -118,10 +118,6 @@ public class AppDriver implements BundleActivator {
         });
 
         return (T) found;
-    }
-
-    URL getAppResource(String name) {
-        return context.getBundle().getResource(name);
     }
 
     private App parseAnnotations() throws Exception {

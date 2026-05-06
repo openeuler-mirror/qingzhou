@@ -54,9 +54,6 @@ public class QingzhouMain {
         // 启动业务模块
         startDirAndJars(new File(libDir, "modules"));
 
-        // 启动 Web 后端模块
-        startDirAndJars(new File(libDir, "web"));
-
         // 驱动应用
         deployApps();
 

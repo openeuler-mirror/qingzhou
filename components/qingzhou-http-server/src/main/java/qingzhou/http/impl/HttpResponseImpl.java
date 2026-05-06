@@ -1,7 +1,6 @@
 package qingzhou.http.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -11,13 +10,11 @@ import reactor.netty.http.server.HttpServerResponse;
 
 public class HttpResponseImpl implements HttpResponse {
     private final HttpServerResponse response;
-    private final CompletableFuture<Void> headerSentFuture;
-    private final Sinks.Many<byte[]> sendBodySink;
+    private final Sinks.Many<byte[]> streamResponse;
 
-    public HttpResponseImpl(HttpServerResponse response, CompletableFuture<Void> headerSentFuture, Sinks.Many<byte[]> sendBodySink) {
+    public HttpResponseImpl(HttpServerResponse response, Sinks.Many<byte[]> streamResponse) {
         this.response = response;
-        this.headerSentFuture = headerSentFuture;
-        this.sendBodySink = sendBodySink;
+        this.streamResponse = streamResponse;
     }
 
     @Override
@@ -57,31 +54,40 @@ public class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public HttpResponse contentTypeHtmlUtf8() {
-        return contentType("text/html;charset=UTF-8");
-    }
-
-    @Override
     public HttpResponse contentTypeJsonUtf8() {
         return contentType("application/json;charset=UTF-8");
     }
 
     @Override
-    public HttpResponse contentTypeStream() {
-        return contentType("application/octet-stream");
-    }
-
-    @Override
-    public HttpResponse sendResponse(String bodyAsUtf8) {
-        if (bodyAsUtf8 == null) return this;
-        return sendResponse(bodyAsUtf8.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public HttpResponse sendResponse(byte[] body) {
-        if (body == null || body.length == 0) return this;
-        headerSentFuture.complete(null);
-        sendBodySink.tryEmitNext(body);
+    public HttpResponse send(String bodyAsUtf8) {
+        if (bodyAsUtf8 != null) {
+            send(bodyAsUtf8.getBytes(StandardCharsets.UTF_8));
+        }
         return this;
+    }
+
+    @Override
+    public HttpResponse send(byte[] body) {
+        if (body != null) {
+            streamResponse.tryEmitNext(body);
+        }
+        return this;
+    }
+
+    @Override
+    public void finish() {
+        streamResponse.tryEmitComplete();
+    }
+
+    @Override
+    public void sendFinish(String bodyAsUtf8) {
+        send(bodyAsUtf8);
+        finish();
+    }
+
+    @Override
+    public void sendFinish(byte[] body) {
+        send(body);
+        finish();
     }
 }

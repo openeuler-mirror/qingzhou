@@ -48,8 +48,12 @@ public class InvokeHttpHandler implements HttpHandler {
 
         try {
             app.invokeApp(request);
-            if (request.getResponse().isActionFound()) {
-                ResponseImpl response = request.getResponse();
+
+            ResponseImpl response = request.getResponse();
+            if (response.isActionInvoked()
+                    || response.getData() != null
+                    || response.getMsg() != null
+            ) {
                 sendResponse(response, httpResponse);
             } else {
                 httpResponse.statusNotFound();
@@ -79,7 +83,7 @@ public class InvokeHttpHandler implements HttpHandler {
             result.put("msgLevel", response.getMsgLevel());
         }
         String json = this.json.toJson(result);
-        httpResponse.sendResponse(json);
+        httpResponse.sendFinish(json);
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {

@@ -15,12 +15,8 @@ import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.registry.I18nService;
 
 class Validation {
-    // Error messages - i18n format: {"Chinese message", "en:English message"}
+    // 公共 - i18n format: {"中文提示消息", "en:English tip message"}
     private static final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
-    private static final String[] MSG_NOT_NUMBER = {"须是有效的数字", "en:Must be a valid number"};
-    private static final String[] MSG_LENGTH_BETWEEN = {"长度须在 %d 到 %d 个字符之间", "en:Length must be between %d and %d characters"};
-    private static final String[] MSG_LENGTH_MIN = {"长度须至少 %d 个字符", "en:Length must be at least %d characters"};
-    private static final String[] MSG_LENGTH_MAX = {"长度不能超过 %d 个字符", "en:Length cannot exceed %d characters"};
 
     private final I18nService i18nService;
     private final Map<Filter, Validator> validators = new LinkedHashMap<Filter, Validator>() {{
@@ -132,6 +128,7 @@ class Validation {
         final String[] MSG_RANGE_BETWEEN = {"数值须在 %d 到 %d 之间", "en:Value must be between %d and %d"};
         final String[] MSG_RANGE_MIN = {"数值不能小于 %d", "en:Value cannot be less than %d"};
         final String[] MSG_RANGE_MAX = {"数值不能大于 %d", "en:Value cannot be greater than %d"};
+        final String[] MSG_NOT_NUMBER = {"须是有效的数字", "en:Must be a valid number"};
 
         @Override
         public String validate(ValidationContext context) {
@@ -158,6 +155,10 @@ class Validation {
     }
 
     class Length implements Validator {
+        final String[] MSG_LENGTH_BETWEEN = {"长度须在 %d 到 %d 个字符之间", "en:Length must be between %d and %d characters"};
+        final String[] MSG_LENGTH_MIN = {"长度须至少 %d 个字符", "en:Length must be at least %d characters"};
+        final String[] MSG_LENGTH_MAX = {"长度不能超过 %d 个字符", "en:Length cannot exceed %d characters"};
+
         @Override
         public String validate(ValidationContext context) {
             int length = context.parameter.length();

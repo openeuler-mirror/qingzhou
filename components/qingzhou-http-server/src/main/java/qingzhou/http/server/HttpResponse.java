@@ -7,22 +7,21 @@ public interface HttpResponse {
 
     HttpResponse statusBad();
 
-
     HttpResponse status(int status);
 
     HttpResponse header(String name, String value);
 
     HttpResponse contentType(String value);
 
-    HttpResponse contentTypeHtmlUtf8();
-
     HttpResponse contentTypeJsonUtf8();
 
-    HttpResponse contentTypeStream();
+    HttpResponse send(String bodyAsUtf8);
 
-    /***************** 写入并结束响应 ****************/
+    HttpResponse send(byte[] body);
 
-    HttpResponse sendResponse(String bodyAsUtf8);
+    void finish();
 
-    HttpResponse sendResponse(byte[] body);
+    void sendFinish(String bodyAsUtf8);
+
+    void sendFinish(byte[] body);
 }

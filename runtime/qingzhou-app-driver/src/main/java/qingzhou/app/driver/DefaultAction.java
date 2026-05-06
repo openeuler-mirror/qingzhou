@@ -1,5 +1,11 @@
 package qingzhou.app.driver;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.ModelAction;
 import qingzhou.api.Request;
@@ -9,12 +15,6 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-
 /**
  * 被 AppStubLocalImpl#invokeAction 方法反射调用
  */
@@ -23,17 +23,16 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Add.ACTION_CODE_CREATE, icon = "CirclePlus", order = 1,
-            name = {"添加", "en:Add"}, list_head = true,
-            info = {"添加一条记录。", "en:Add a record."})
-    public static void create(Add add, Request request) throws Exception {
-
+            code = Add.ACTION_CODE_CREATE, icon = "Plus", order = 1,
+            name = {"新增", "en:Create"}, list_head = true,
+            info = {"新增一条记录。", "en:Create a new record."})
+    public static void create(Add add, Request request) {
     }
 
     @ModelAction(
-            code = Add.ACTION_CODE_ADD, icon = "CirclePlus", order = 1,
-            name = {"添加", "en:Add"}, add = true,
-            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+            code = Add.ACTION_CODE_ADD, icon = "Check", order = 1,
+            name = {"保存", "en:Add"}, add = true,
+            info = {"保存新建的记录。", "en:Save the newly created record."})
     public static void add(Add add, Request request) throws Exception {
         Map<String, String> saveData = toSaveData(request, modelField -> modelField.add);
         add.add(request, saveData);
@@ -43,12 +42,11 @@ public class DefaultAction {
             code = Update.ACTION_CODE_EDIT, icon = "Edit", order = 1,
             name = {"编辑", "en:Edit"}, list = true,
             info = {"编辑本条记录。", "en:Edit this record."})
-    public static void edit(Update update, Request request) throws Exception {
-
+    public static void edit(Update update, Request request) {
     }
 
     @ModelAction(
-            code = Update.ACTION_CODE_UPDATE, icon = "Edit", order = 1,
+            code = Update.ACTION_CODE_UPDATE, icon = "Check", order = 1,
             name = {"更新", "en:Update"}, update = true,
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public static void update(Update update, Request request) throws Exception {

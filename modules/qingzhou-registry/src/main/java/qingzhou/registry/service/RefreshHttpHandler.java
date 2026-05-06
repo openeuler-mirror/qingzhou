@@ -51,7 +51,7 @@ public class RefreshHttpHandler implements HttpHandler {
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("key auth error");
+            httpResponse.sendFinish("key auth error");
             return;
         }
 
@@ -71,10 +71,10 @@ public class RefreshHttpHandler implements HttpHandler {
             instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("instance key error");
+                    .sendFinish("instance key error");
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
-        httpResponse.sendResponse(encrypt);
+        httpResponse.sendFinish(encrypt);
     }
 }

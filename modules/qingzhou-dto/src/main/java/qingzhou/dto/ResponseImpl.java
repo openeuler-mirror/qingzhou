@@ -17,7 +17,7 @@ public class ResponseImpl implements Response {
     private final Map<String, String> sessionParameters = new HashMap<>();
 
     // 内部数据
-    private boolean actionFound;
+    private boolean actionInvoked;
 
     @Override
     public Response success(boolean success) {
@@ -95,12 +95,12 @@ public class ResponseImpl implements Response {
         return headers;
     }
 
-    public boolean isActionFound() {
-        return actionFound;
+    public boolean isActionInvoked() {
+        return actionInvoked;
     }
 
-    public void setActionFound(boolean actionFound) {
-        this.actionFound = actionFound;
+    public void setActionInvoked(boolean actionFound) {
+        this.actionInvoked = actionFound;
     }
 
     public Map<String, String> getSessionParameters() {

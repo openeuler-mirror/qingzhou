@@ -84,7 +84,7 @@ public class RegisterHttpHandler implements HttpHandler {
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendResponse("key auth error");
+            httpResponse.sendFinish("key auth error");
             return;
         }
 
@@ -94,7 +94,7 @@ public class RegisterHttpHandler implements HttpHandler {
             instanceInfo = json.fromJson(jsonContent, InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
-            httpResponse.sendResponse("data format error");
+            httpResponse.sendFinish("data format error");
             return;
         }
 
@@ -119,10 +119,10 @@ public class RegisterHttpHandler implements HttpHandler {
             encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             httpResponse.statusError()
-                    .sendResponse("instance key error");
+                    .sendFinish("instance key error");
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
-        httpResponse.sendResponse(encrypt);
+        httpResponse.sendFinish(encrypt);
     }
 }
