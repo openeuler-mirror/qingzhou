@@ -74,6 +74,21 @@ public class ChatHttpHandler implements HttpHandler {
                 httpResponse.send("event: " + event + "\ndata: " + data + "\n\n");
             }
 
+            String toString(String messageId, String content) {
+                try {
+                    Map<String, String> map = new HashMap<>();
+                    if (messageId != null && !messageId.isEmpty()) {
+                        map.put("messageId", messageId);
+                    }
+                    if (content != null && !content.isEmpty()) {
+                        map.put("content", content);
+                    }
+                    return json.toJson(map);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             @Override
             public void onBegin() {
                 sendEvent("RUN_STARTED", "{}");
@@ -84,11 +99,11 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent("TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
+                        sendEvent("TEXT_MESSAGE_END", toString(messageId, null));
                     }
                     sendEvent("REASONING_START", "{}");
                 }
-                sendEvent("REASONING_CONTENT", String.format("{\"content\":\"%s\"}", content));
+                sendEvent("REASONING_CONTENT", toString(null, content));
             }
 
             @Override
@@ -98,14 +113,9 @@ public class ChatHttpHandler implements HttpHandler {
                     if (isReasoning) {
                         sendEvent("REASONING_END", "{}");
                     }
-                    sendEvent("TEXT_MESSAGE_START", String.format("{\"messageId\":\"%s\"}", messageId));
+                    sendEvent("TEXT_MESSAGE_START", toString(messageId, null));
                 }
-
-                String res = String.format("{\"messageId\":\"%s\",\"content\":\"%s\"}",
-                        messageId,
-                        content
-                );
-                sendEvent("TEXT_MESSAGE_CONTENT", res);
+                sendEvent("TEXT_MESSAGE_CONTENT", toString(messageId, content));
             }
 
             @Override
