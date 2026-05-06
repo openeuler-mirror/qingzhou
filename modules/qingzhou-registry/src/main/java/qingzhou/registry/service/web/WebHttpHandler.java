@@ -62,7 +62,7 @@ public class WebHttpHandler implements HttpHandler {
             }
         };
 
-        handlerMap.put("welcome", new IndexInfo(helper));
+        handlerMap.put("index", new IndexInfo(helper));
         handlerMap.put("app", new AppMetaInfo(helper));
         handlerMap.put("model", new ModelMetaInfo(helper));
     }
