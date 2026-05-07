@@ -58,9 +58,9 @@ public class AgentHttpHandler implements HttpHandler {
         try {
             responseData = process(requestData);
         } catch (Throwable e) {
-            httpResponse.statusError()
-                    .sendFinish("business processing error");
-            logger.error("business processing error", e);
+            String error = "business processing error";
+            httpResponse.status500Finish(error);
+            logger.error(error, e);
             return;
         }
 
@@ -69,8 +69,7 @@ public class AgentHttpHandler implements HttpHandler {
         try {
             encrypt = cipher.encrypt(responseData);
         } catch (Exception e) {
-            httpResponse.statusError()
-                    .sendFinish("instance Key error");
+            httpResponse.status500Finish("instance Key error");
             logger.error("encryption failed: " + e.getMessage());
             return;
         }

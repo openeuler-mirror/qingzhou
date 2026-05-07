@@ -38,6 +38,9 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                                 requestPath, bytes);
                         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
                         httpHandler.handle(httpRequest, httpResponse);
+                        if (!httpResponse.isUsed()) {
+                            streamResponse.tryEmitComplete(); // 避免请求无限等
+                        }
                     } catch (Throwable e) {
                         response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                         Throwable cause = getCause(e);

@@ -78,7 +78,7 @@ public class WebHttpHandler implements HttpHandler {
             handler = handlerMap.get(flag);
         }
         if (handler == null) {
-            httpResponse.statusBad();
+            httpResponse.status400Finish();
             return;
         }
 
@@ -107,7 +107,7 @@ public class WebHttpHandler implements HttpHandler {
                 httpResponse.sendFinish(jsonString);
             }
         } catch (Exception e) {
-            httpResponse.statusError();
+            httpResponse.status500Finish(null);
             logger.error(e.getMessage(), e);
         } finally {
             HTTP_REQUEST_THREAD_LOCAL.remove();

@@ -93,8 +93,7 @@ public class StaticResourceHandler implements HttpHandler {
             byte[] content = readAllBytes(inputStream);
             response.sendFinish(content);
         } catch (IOException e) {
-            response.statusError();
-            response.sendFinish("internal server error");
+            response.status500Finish("internal server error");
         } finally {
             try {
                 inputStream.close();

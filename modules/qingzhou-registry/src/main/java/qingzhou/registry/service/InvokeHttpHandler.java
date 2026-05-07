@@ -31,40 +31,40 @@ public class InvokeHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        httpResponse.contentTypeJsonUtf8(); // 所有结果需要以 json 格式返回
-
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
-            httpResponse.statusBad();
+            httpResponse.status400Finish();
             return;
         }
 
         AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
 
         if (app == null) {
-            httpResponse.statusBad();
+            httpResponse.status400Finish();
             return;
         }
 
         try {
             app.invokeApp(request);
-
-            ResponseImpl response = request.getResponse();
-            if (response.isActionInvoked()
-                    || response.getData() != null
-                    || response.getMsg() != null
-            ) {
-                sendResponse(response, httpResponse);
-            } else {
-                httpResponse.statusNotFound();
-            }
         } catch (Throwable e) {
-            httpResponse.statusError();
+            httpResponse.status500Finish(e.getMessage());
             logger.error(e.getMessage(), e);
+            return;
+        }
+
+        ResponseImpl response = request.getResponse();
+        if (response.isActionInvoked()
+                || response.getData() != null
+                || response.getMsg() != null
+        ) {
+            httpResponse.contentTypeJsonUtf8();
+            sendResponse(response, httpResponse);
+        } else {
+            httpResponse.status404Finish();
         }
     }
 
-    private void sendResponse(ResponseImpl response, HttpResponse httpResponse) throws Exception {
+    private void sendResponse(ResponseImpl response, HttpResponse httpResponse) {
         if (response.getStatus() > 0) {
             httpResponse.status(response.getStatus());
         }
@@ -82,8 +82,13 @@ public class InvokeHttpHandler implements HttpHandler {
             result.put("msg", response.getMsg());
             result.put("msgLevel", response.getMsgLevel());
         }
-        String json = this.json.toJson(result);
-        httpResponse.sendFinish(json);
+        try {
+            String json = this.json.toJson(result);
+            httpResponse.sendFinish(json);
+        } catch (Exception e) {
+            httpResponse.status500Finish(e.getMessage());
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {

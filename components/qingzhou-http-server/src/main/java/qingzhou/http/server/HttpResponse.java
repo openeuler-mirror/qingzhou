@@ -1,11 +1,11 @@
 package qingzhou.http.server;
 
 public interface HttpResponse {
-    HttpResponse statusError();
+    void status500Finish(String msg);
 
-    HttpResponse statusNotFound();
+    void status404Finish();
 
-    HttpResponse statusBad();
+    void status400Finish();
 
     HttpResponse status(int status);
 

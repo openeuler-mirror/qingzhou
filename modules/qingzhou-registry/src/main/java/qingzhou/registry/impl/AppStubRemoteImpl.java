@@ -3,6 +3,7 @@ package qingzhou.registry.impl;
 import java.nio.charset.StandardCharsets;
 
 import qingzhou.api.Constants;
+import qingzhou.api.Response;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
@@ -45,7 +46,15 @@ class AppStubRemoteImpl implements AppStubRemote {
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = cipher.encrypt(data);
             String agentUrl = String.format("http://%s:%s/agent", instanceInfo.getHost(), instanceInfo.getPort());
-            response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
+            try {
+                response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
+            } catch (Exception e) {
+                ResponseImpl resp = request.getResponse();
+                resp.success(false);
+                resp.msg("remote connection error");
+                resp.msgLevel(Response.MsgLevel.error);
+                return;
+            }
         } finally {
             request.setInstance(originTargetName);
         }
