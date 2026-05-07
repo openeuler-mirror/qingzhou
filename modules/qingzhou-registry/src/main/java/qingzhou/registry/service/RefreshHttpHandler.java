@@ -22,6 +22,22 @@ import static qingzhou.registry.service.RegisterHttpHandler.REGISTRY_LOCK;
 @Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RefreshHttpHandler implements HttpHandler {
+
+    static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
+        byte[] requestBody = httpRequest.getBody();
+        if (requestBody.length == 0) return null;
+
+        byte[] decrypted;
+        try {
+            decrypted = pairCipher.decryptWithPrivateKey(requestBody);
+        } catch (Exception e) {
+            httpResponse.sendFinish("key auth error");
+            return null;
+        }
+
+        return new String(decrypted, StandardCharsets.UTF_8);
+    }
+
     @Reference
     private Crypto crypto;
     @Reference
@@ -44,19 +60,10 @@ public class RefreshHttpHandler implements HttpHandler {
     }
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
-        byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return;
+        String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
+        if (decryptedRequest == null) return;
 
-        byte[] decrypted;
-        try {
-            decrypted = pairCipher.decryptWithPrivateKey(requestBody);
-        } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
-            return;
-        }
-
-        String refreshInfos = new String(decrypted, StandardCharsets.UTF_8);
-        String[] split = refreshInfos.split(",");
+        String[] split = decryptedRequest.split(",");
         String instanceId = split[0];
         String newKey = split[1];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);
@@ -70,8 +77,7 @@ public class RefreshHttpHandler implements HttpHandler {
             instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
             instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
         } catch (Exception e) {
-            httpResponse.statusError()
-                    .sendFinish("instance key error");
+            httpResponse.status500Finish("instance key error");
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }

@@ -17,40 +17,51 @@ public class HttpResponseImpl implements HttpResponse {
         this.streamResponse = streamResponse;
     }
 
+    private boolean used = false;
+
+    private HttpResponse thisInstance() {
+        used = true;
+        return this;
+    }
+
+    public boolean isUsed() {
+        return used;
+    }
+
     @Override
-    public HttpResponse statusError() {
+    public void status500Finish(String msg) {
         response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        return this;
+        sendFinish(msg);
     }
 
     @Override
-    public HttpResponse statusNotFound() {
+    public void status404Finish() {
         response.status(HttpResponseStatus.NOT_FOUND);
-        return this;
+        finish();
     }
 
     @Override
-    public HttpResponse statusBad() {
+    public void status400Finish() {
         response.status(HttpResponseStatus.BAD_REQUEST);
-        return this;
+        finish();
     }
 
     @Override
     public HttpResponse status(int status) {
         response.status(status);
-        return this;
+        return thisInstance();
     }
 
     @Override
     public HttpResponse header(String name, String value) {
         response.responseHeaders().set(name, value);
-        return this;
+        return thisInstance();
     }
 
     @Override
     public HttpResponse contentType(String value) {
         response.responseHeaders().set(HttpHeaderNames.CONTENT_TYPE, value);
-        return this;
+        return thisInstance();
     }
 
     @Override
@@ -63,7 +74,7 @@ public class HttpResponseImpl implements HttpResponse {
         if (bodyAsUtf8 != null) {
             send(bodyAsUtf8.getBytes(StandardCharsets.UTF_8));
         }
-        return this;
+        return thisInstance();
     }
 
     @Override
@@ -71,7 +82,7 @@ public class HttpResponseImpl implements HttpResponse {
         if (body != null) {
             streamResponse.tryEmitNext(body);
         }
-        return this;
+        return thisInstance();
     }
 
     @Override

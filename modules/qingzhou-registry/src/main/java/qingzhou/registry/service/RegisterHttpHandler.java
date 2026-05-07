@@ -17,6 +17,8 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
+import static qingzhou.registry.service.RefreshHttpHandler.decryptRequest;
+
 @Component(property = HttpHandler.HANDLE_PATH + "=/register",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegisterHttpHandler implements HttpHandler {
@@ -77,21 +79,12 @@ public class RegisterHttpHandler implements HttpHandler {
     }
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
-        byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return;
+        String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
+        if (decryptedRequest == null) return;
 
-        byte[] decrypted;
-        try {
-            decrypted = pairCipher.decryptWithPrivateKey(requestBody);
-        } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
-            return;
-        }
-
-        String jsonContent = new String(decrypted, StandardCharsets.UTF_8);
         InstanceInfo instanceInfo;
         try {
-            instanceInfo = json.fromJson(jsonContent, InstanceInfo.class);
+            instanceInfo = json.fromJson(decryptedRequest, InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
             httpResponse.sendFinish("data format error");
@@ -118,8 +111,7 @@ public class RegisterHttpHandler implements HttpHandler {
             Cipher cipher = crypto.getCipher(instanceKey);
             encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.statusError()
-                    .sendFinish("instance key error");
+            httpResponse.status500Finish("instance key error");
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
