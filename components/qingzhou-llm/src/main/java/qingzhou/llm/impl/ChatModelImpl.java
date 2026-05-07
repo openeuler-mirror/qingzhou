@@ -3,6 +3,7 @@ package qingzhou.llm.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.agentsflex.core.message.AiMessage;
@@ -28,52 +29,55 @@ public class ChatModelImpl implements ChatModel {
     public void generate(String prompt, Collection<Tool> tools, Listener listener) {
         MemoryPrompt memoryPrompt = new MemoryPrompt();
         memoryPrompt.addMessage(new UserMessage(prompt));
-        memoryPrompt.addTools(tools.stream().map(this::convertTool).collect(Collectors.toList()));
+        memoryPrompt.addTools(tools.stream().filter(Objects::nonNull).map(this::convertTool).collect(Collectors.toList()));
 
-        final boolean[] hasToolCalls = {false};
-        do {
-            chatModel.chatStream(memoryPrompt, new StreamResponseListener() {
-                @Override
-                public void onStart(StreamContext context) {
-                    listener.onBegin();
-                }
+        generate(memoryPrompt, listener);
+    }
 
-                @Override
-                public void onMessage(StreamContext context, AiMessageResponse response) {
-                    AiMessage message = response.getMessage();
+    public void generate(MemoryPrompt prompt, Listener listener) {
+        chatModel.chatStream(prompt, new StreamResponseListener() {
+            @Override
+            public void onStart(StreamContext context) {
+                listener.onBegin();
+            }
 
-                    String reasoningContent = message.getReasoningContent();
-                    if (reasoningContent != null) {
-                        listener.onReasoning(reasoningContent);
-                    }
+            @Override
+            public void onMessage(StreamContext context, AiMessageResponse response) {
+                AiMessage message = response.getMessage();
+
+                String reasoningContent = message.getReasoningContent();
+                if (reasoningContent != null) {
+                    listener.onReasoning(reasoningContent);
+                } else {
                     String content = message.getContent();
                     if (content != null) {
                         listener.onMessage(content);
                     }
+                }
 
-                    if (message.isFinalDelta()) {
-                        memoryPrompt.addMessage(message);
+                if (message.isFinalDelta()) {
 
-                        if (message.hasToolCalls()) {
-                            List<ToolMessage> toolMessages = response.executeToolCallsAndGetToolMessages();
-                            memoryPrompt.addMessages(toolMessages);
+                    if (message.hasToolCalls()) {
+                        prompt.addMessage(message);
 
-                            hasToolCalls[0] = true;
-                        }
+                        List<ToolMessage> toolMessages = response.executeToolCallsAndGetToolMessages();
+                        prompt.addMessages(toolMessages);
+
+                        generate(prompt, listener);
                     }
                 }
+            }
 
-                @Override
-                public void onStop(StreamContext context) {
-                    listener.onComplete();
-                }
+            @Override
+            public void onStop(StreamContext context) {
+                listener.onComplete();
+            }
 
-                @Override
-                public void onFailure(StreamContext context, Throwable throwable) {
-                    listener.onError(throwable);
-                }
-            });
-        } while (hasToolCalls[0]);
+            @Override
+            public void onFailure(StreamContext context, Throwable throwable) {
+                listener.onError(throwable);
+            }
+        });
     }
 
     private com.agentsflex.core.model.chat.tool.Tool convertTool(Tool tool) {
