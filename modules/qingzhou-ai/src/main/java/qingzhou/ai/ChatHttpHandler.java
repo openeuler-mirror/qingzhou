@@ -64,6 +64,12 @@ public class ChatHttpHandler implements HttpHandler {
             return;
         }
 
+        // 设置 SSE 响应头
+        httpResponse.status(200);
+        httpResponse.contentType("text/event-stream");
+        httpResponse.header("Cache-Control", "no-cache");
+        httpResponse.header("Connection", "keep-alive");
+
         // 发出响应
         chatModel.generate(message, tools(), new Listener() {
             final String messageId = UUID.randomUUID().toString().replace("-", "");
