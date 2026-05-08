@@ -77,14 +77,11 @@ public class ChatHttpHandler implements HttpHandler {
 
         // 发出响应
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
+        sendEvent(httpResponse,"RUN_STARTED", "{}");
         chatModel.generate(message, tools(), new Listener() {
             final String messageId = UUID.randomUUID().toString().replace("-", "");
             boolean isReasoning = false;
             boolean isMessage = false;
-
-            void sendEvent(String event, String data) {
-                httpResponse.send("event: " + event + "\ndata: " + data + "\n\n");
-            }
 
             String toJson(String messageId, String content) {
                 try {
@@ -102,20 +99,16 @@ public class ChatHttpHandler implements HttpHandler {
             }
 
             @Override
-            public void onBegin() {
-                sendEvent("RUN_STARTED", "{}");
-            }
-
-            @Override
             public void onReasoning(String content) {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent("TEXT_MESSAGE_END", toJson(messageId, null));
+                        sendEvent(httpResponse,"TEXT_MESSAGE_END", toJson(messageId, null));
                     }
-                    sendEvent("REASONING_START", "{}");
+                    isMessage = false;
+                    sendEvent(httpResponse,"REASONING_START", "{}");
                 }
-                sendEvent("REASONING_CONTENT", toJson(null, content));
+                sendEvent(httpResponse,"REASONING_CONTENT", toJson(null, content));
             }
 
             @Override
@@ -123,11 +116,12 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isMessage) {
                     isMessage = true;
                     if (isReasoning) {
-                        sendEvent("REASONING_END", "{}");
+                        sendEvent(httpResponse,"REASONING_END", "{}");
                     }
-                    sendEvent("TEXT_MESSAGE_START", toJson(messageId, null));
+                    isReasoning = false;
+                    sendEvent(httpResponse,"TEXT_MESSAGE_START", toJson(messageId, null));
                 }
-                sendEvent("TEXT_MESSAGE_CONTENT", toJson(messageId, content));
+                sendEvent(httpResponse,"TEXT_MESSAGE_CONTENT", toJson(messageId, content));
             }
 
             @Override
@@ -139,11 +133,15 @@ public class ChatHttpHandler implements HttpHandler {
 
             @Override
             public void onComplete() {
-                sendEvent("TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
-                sendEvent("RUN_FINISHED", "{}");
+                sendEvent(httpResponse,"TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
+                sendEvent(httpResponse,"RUN_FINISHED", "{}");
                 httpResponse.finish();
             }
         });
+    }
+
+    void sendEvent(HttpResponse writer, String event, String data) {
+        writer.send("event: " + event + "\ndata: " + data + "\n\n");
     }
 
     public void sendEventFinish(HttpResponse writer, String error) {

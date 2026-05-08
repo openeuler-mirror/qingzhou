@@ -1,7 +1,7 @@
 package qingzhou.llm;
 
 public interface Listener {
-    void onBegin();
+    default void onBegin(){}
 
     void onReasoning(String content);
 
