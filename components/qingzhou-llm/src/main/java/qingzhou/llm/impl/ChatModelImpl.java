@@ -36,6 +36,8 @@ public class ChatModelImpl implements ChatModel {
 
     public void generate(MemoryPrompt prompt, Listener listener) {
         chatModel.chatStream(prompt, new StreamResponseListener() {
+            private boolean hasToolCalls = false;
+
             @Override
             public void onStart(StreamContext context) {
                 listener.onBegin();
@@ -50,16 +52,15 @@ public class ChatModelImpl implements ChatModel {
                     listener.onReasoning(reasoningContent);
                 } else {
                     String content = message.getContent();
-                    if (content != null) {
+                    if (content != null && !content.isEmpty()) {
                         listener.onMessage(content);
                     }
                 }
 
                 if (message.isFinalDelta()) {
-
                     if (message.hasToolCalls()) {
+                        hasToolCalls = true;
                         prompt.addMessage(message);
-
                         List<ToolMessage> toolMessages = response.executeToolCallsAndGetToolMessages();
                         prompt.addMessages(toolMessages);
 
@@ -70,7 +71,9 @@ public class ChatModelImpl implements ChatModel {
 
             @Override
             public void onStop(StreamContext context) {
-                listener.onComplete();
+                if (!hasToolCalls) {
+                    listener.onComplete();
+                }
             }
 
             @Override
