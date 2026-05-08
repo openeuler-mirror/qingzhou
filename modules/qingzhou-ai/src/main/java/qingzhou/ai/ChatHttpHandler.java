@@ -2,21 +2,17 @@ package qingzhou.ai;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Function;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.api.Constants;
-import qingzhou.api.Lang;
-import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.dto.meta.annotation.App;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.*;
+import qingzhou.llm.ChatModel;
+import qingzhou.llm.LLM;
+import qingzhou.llm.Listener;
+import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
@@ -38,7 +34,7 @@ public class ChatHttpHandler implements HttpHandler {
     private final String[] MSG_ERROR = {"消息不存在或数据格式异常", "en:Message not found or data format invalid"};
 
     private ChatModel chatModel;
-    private Collection<Tool> tools;
+    private final Set<Tool> tools = new HashSet<>();
 
     @Activate
     public void init(Map<String, String> config) {
@@ -47,6 +43,15 @@ public class ChatHttpHandler implements HttpHandler {
         String model = config.get("model");
 
         chatModel = llm.buildChatModel(baseUrl, apiKey, model);
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    public void bindTool(Tool tool) {
+        tools.add(tool);
+    }
+
+    public void unbindTool(Tool tool) {
+        tools.remove(tool);
     }
 
     @Override
@@ -69,46 +74,25 @@ public class ChatHttpHandler implements HttpHandler {
             return;
         }
 
-        // 设置 SSE 响应头
-        httpResponse.status(200);
-        httpResponse.contentType("text/event-stream");
-        httpResponse.header("Cache-Control", "no-cache");
-        httpResponse.header("Connection", "keep-alive");
-
         // 发出响应
+        final String messageId = UUID.randomUUID().toString().replace("-", "");
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
-        sendEvent(httpResponse,"RUN_STARTED", "{}");
-        chatModel.generate(message, tools(), new Listener() {
-            final String messageId = UUID.randomUUID().toString().replace("-", "");
+        sendEvent(httpResponse, "RUN_STARTED", "{}");
+        chatModel.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
-
-            String toJson(String messageId, String content) {
-                try {
-                    Map<String, String> map = new HashMap<>();
-                    if (messageId != null && !messageId.isEmpty()) {
-                        map.put("messageId", messageId);
-                    }
-                    if (content != null && !content.isEmpty()) {
-                        map.put("content", content);
-                    }
-                    return json.toJson(map);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
 
             @Override
             public void onReasoning(String content) {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent(httpResponse,"TEXT_MESSAGE_END", toJson(messageId, null));
+                        sendEvent(httpResponse, "TEXT_MESSAGE_END", toJson(messageId, null));
                     }
                     isMessage = false;
-                    sendEvent(httpResponse,"REASONING_START", "{}");
+                    sendEvent(httpResponse, "REASONING_START", "{}");
                 }
-                sendEvent(httpResponse,"REASONING_CONTENT", toJson(null, content));
+                sendEvent(httpResponse, "REASONING_CONTENT", toJson(null, content));
             }
 
             @Override
@@ -116,12 +100,12 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isMessage) {
                     isMessage = true;
                     if (isReasoning) {
-                        sendEvent(httpResponse,"REASONING_END", "{}");
+                        sendEvent(httpResponse, "REASONING_END", "{}");
                     }
                     isReasoning = false;
-                    sendEvent(httpResponse,"TEXT_MESSAGE_START", toJson(messageId, null));
+                    sendEvent(httpResponse, "TEXT_MESSAGE_START", toJson(messageId, null));
                 }
-                sendEvent(httpResponse,"TEXT_MESSAGE_CONTENT", toJson(messageId, content));
+                sendEvent(httpResponse, "TEXT_MESSAGE_CONTENT", toJson(messageId, content));
             }
 
             @Override
@@ -133,96 +117,34 @@ public class ChatHttpHandler implements HttpHandler {
 
             @Override
             public void onComplete() {
-                sendEvent(httpResponse,"TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
-                sendEvent(httpResponse,"RUN_FINISHED", "{}");
+                sendEvent(httpResponse, "TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
+                sendEvent(httpResponse, "RUN_FINISHED", "{}");
                 httpResponse.finish();
             }
         });
     }
 
-    void sendEvent(HttpResponse writer, String event, String data) {
+    private void sendEvent(HttpResponse writer, String event, String data) {
         writer.send("event: " + event + "\ndata: " + data + "\n\n");
     }
 
-    public void sendEventFinish(HttpResponse writer, String error) {
+    private void sendEventFinish(HttpResponse writer, String error) {
         String errorJson = "{\"code\":\"INTERNAL_ERROR\",\"message\":\"" + error + "\"}";
         writer.sendFinish("event: RUN_ERROR" + "\ndata: " + errorJson + "\n\n");
     }
 
-    private Collection<Tool> tools() {
-        if (tools == null) {
-            tools = new HashSet<>();
-            tools.add(webIndexTools());
-            tools.add(webAppMetaTools());
-            tools.add(webModelMetaTools());
-            tools.add(invokeTool());
+    private String toJson(String messageId, String content) {
+        try {
+            Map<String, String> map = new HashMap<>();
+            if (messageId != null && !messageId.isEmpty()) {
+                map.put("messageId", messageId);
+            }
+            if (content != null && !content.isEmpty()) {
+                map.put("content", content);
+            }
+            return json.toJson(map);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return tools;
-    }
-
-    private Tool webIndexTools() {
-        StringBuilder langParameterDescription = new StringBuilder("指定以哪种国际化语言展示结果，");
-        List<String> langList = new ArrayList<>();
-        for (Lang lang : Lang.values()) {
-            langParameterDescription.append(lang.flag).append(": ").append(lang.info);
-            langList.add(lang.flag);
-        }
-        return Tool.of("webIndex",
-                "该接口是轻舟平台的应用资产列表查询接口，用于查询环境中已部署的所有业务及中间件应用信息，返回每条应用的名称、部署服务器 IP 和功能简介等信息，可支撑前端展示应用清单、资产管理、服务盘点等场景。",
-                new ToolParameter[]{ToolParameter.of(Constants.REQUEST_PARAMETER_NAME_LANG, langParameterDescription.toString(), ParameterType.STRING, false, langList.toArray(new String[0]))},
-                new Function<Object[], Object>() {
-                    @Override
-                    public Object apply(Object[] objects) {
-                        String langValue;
-                        if (objects != null && objects.length > 0 && objects[0] instanceof Map) {
-                            Map<String, String> params = (Map<String, String>) objects[0];
-                            langValue = params.get(Constants.REQUEST_PARAMETER_NAME_LANG);
-                        } else {
-                            langValue = Lang.zh.flag;
-                        }
-                        List<Map<String, String>> appInfoList = new ArrayList<>();
-                        for (String localApp : registry.getAllLocalApps()) {
-                            appInfoList.add(appInfo(registry.getLocalInstance(), registry.getLocalApp(localApp).getAppMeta().getApp(), langValue));
-                        }
-                        registry.getAllRemoteInstances().forEach(instance -> {
-                            InstanceInfo remoteInstance = registry.getRemoteInstance(instance);
-                            registry.getAllRemoteApps(instance).forEach(appCode -> {
-                                App app = registry.getRemoteApp(instance, appCode).getAppMeta().getApp();
-                                appInfoList.add(appInfo(remoteInstance, app, langValue));
-                            });
-                        });
-                        try {
-                            return json.toJson(appInfoList);
-                        } catch (Exception e) {
-                            return "{" +
-                                    "  \"code\": \"500\"," +
-                                    "  \"msg\": \"" + e.getMessage() + "\"," +
-                                    "  \"success\": false" +
-                                    "}";
-                        }
-                    }
-
-                    private Map<String, String> appInfo(InstanceInfo instanceInfo, App app, String lang) {
-                        Map<String, String> appInfo = new HashMap<>();
-                        appInfo.put("instanceId", instanceInfo.getId());
-                        appInfo.put("instanceHost", instanceInfo.getHost());
-                        appInfo.put("code", app.code);
-                        appInfo.put("name", i18nService.getI18n(app.name, lang));
-                        appInfo.put("info", i18nService.getI18n(app.info, lang));
-                        return appInfo;
-                    }
-                });
-    }
-
-    private Tool webAppMetaTools() {
-        return null;// todo
-    }
-
-    private Tool webModelMetaTools() {
-        return null;// todo
-    }
-
-    private Tool invokeTool() {
-        return null;// todo
     }
 }

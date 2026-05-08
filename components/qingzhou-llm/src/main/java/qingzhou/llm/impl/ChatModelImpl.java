@@ -1,9 +1,7 @@
 package qingzhou.llm.impl;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.agentsflex.core.message.AiMessage;
@@ -11,6 +9,7 @@ import com.agentsflex.core.message.ToolMessage;
 import com.agentsflex.core.message.UserMessage;
 import com.agentsflex.core.model.chat.StreamResponseListener;
 import com.agentsflex.core.model.chat.response.AiMessageResponse;
+import com.agentsflex.core.model.chat.tool.Parameter;
 import com.agentsflex.core.model.client.StreamContext;
 import com.agentsflex.core.prompt.MemoryPrompt;
 import qingzhou.llm.ChatModel;
@@ -29,12 +28,12 @@ public class ChatModelImpl implements ChatModel {
     public void generate(String prompt, Collection<Tool> tools, Listener listener) {
         MemoryPrompt memoryPrompt = new MemoryPrompt();
         memoryPrompt.addMessage(new UserMessage(prompt));
-        memoryPrompt.addTools(tools.stream().filter(Objects::nonNull).map(this::convertTool).collect(Collectors.toList()));
+        memoryPrompt.addTools(tools.stream().map(this::convertTool).collect(Collectors.toList()));
 
         generate(memoryPrompt, listener);
     }
 
-    public void generate(MemoryPrompt prompt, Listener listener) {
+    private void generate(MemoryPrompt prompt, Listener listener) {
         chatModel.chatStream(prompt, new StreamResponseListener() {
             @Override
             public void onMessage(StreamContext context, AiMessageResponse response) {
@@ -71,23 +70,20 @@ public class ChatModelImpl implements ChatModel {
     }
 
     private com.agentsflex.core.model.chat.tool.Tool convertTool(Tool tool) {
-        com.agentsflex.core.model.chat.tool.FunctionTool functionTool = new com.agentsflex.core.model.chat.tool.FunctionTool();
-        functionTool.setName(tool.name());
-        functionTool.setDescription(tool.description());
-        functionTool.setParameters(Arrays.stream(tool.parameters()).map(this::convertParameter)
-                .toArray(com.agentsflex.core.model.chat.tool.Parameter[]::new));
+        com.agentsflex.core.model.chat.tool.Tool.Builder builder = com.agentsflex.core.model.chat.tool.Tool.builder()
+                .name(tool.name())
+                .description(tool.description())
+                .function(tool::invoke);
 
-        functionTool.setInvoker(args -> tool.invoke(args.values().toArray()));
-        return functionTool;
-    }
-
-    private com.agentsflex.core.model.chat.tool.Parameter convertParameter(ToolParameter toolParameter) {
-        com.agentsflex.core.model.chat.tool.Parameter parameter = new com.agentsflex.core.model.chat.tool.Parameter();
-        parameter.setName(toolParameter.name());
-        parameter.setDescription(toolParameter.description());
-        parameter.setType(toolParameter.type().value());
-        parameter.setRequired(toolParameter.required());
-        parameter.setEnums(toolParameter.enumValues());
-        return parameter;
+        for (ToolParameter toolParameter : tool.parameters()) {
+            builder.addParameter(Parameter.builder()
+                    .name(toolParameter.name())
+                    .description(toolParameter.description())
+                    .type(toolParameter.type().value())
+                    .required(toolParameter.required())
+                    .enums(toolParameter.enumValues())
+                    .build());
+        }
+        return builder.build();
     }
 }
