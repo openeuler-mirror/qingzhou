@@ -19,7 +19,7 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 ## 快速上手
 
 - 环境要求：JDK 1.8+ 和 Maven 3.8+。
-- 构建：在源码根目录执行 `mvn clean install -DskipTests`，得到二进制产品包。
+- 构建：在源码根目录执行 `mvn clean install -DskipTests`，得到二进制产品包（/qingzhou/target/qingzhou）。
 - 启动：进入产品包的 bin 目录，执行启动脚本（如 Linux/macOS 下执行 sh start.sh）。
 - 访问：启动后，浏览器访问 http://localhost:7900/console 即可打开轻舟可视化 Web 管控台。
 

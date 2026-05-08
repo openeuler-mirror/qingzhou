@@ -17,8 +17,6 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
-import static qingzhou.registry.service.RefreshHttpHandler.decryptRequest;
-
 @Component(property = HttpHandler.HANDLE_PATH + "=/register",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegisterHttpHandler implements HttpHandler {
@@ -79,7 +77,7 @@ public class RegisterHttpHandler implements HttpHandler {
     }
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
-        String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
+        String decryptedRequest = RefreshHttpHandler.decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 
         InstanceInfo instanceInfo;

@@ -45,9 +45,4 @@ public interface ToolParameter {
     static ToolParameter of(String name, String description, ParameterType type, boolean required) {
         return of(name, description, type, required, null);
     }
-
-    // 便捷方法：不带 required 和枚举值的参数
-    static ToolParameter of(String name, String description, ParameterType type) {
-        return of(name, description, type, false, null);
-    }
 }

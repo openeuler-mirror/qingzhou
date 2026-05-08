@@ -17,8 +17,6 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
-import static qingzhou.registry.service.RegisterHttpHandler.REGISTRY_LOCK;
-
 @Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RefreshHttpHandler implements HttpHandler {
@@ -54,7 +52,7 @@ public class RefreshHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        synchronized (REGISTRY_LOCK) {
+        synchronized (RegisterHttpHandler.REGISTRY_LOCK) {
             handle0(httpRequest, httpResponse);
         }
     }
