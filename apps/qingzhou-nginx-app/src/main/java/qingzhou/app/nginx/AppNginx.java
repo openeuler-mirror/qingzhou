@@ -1,12 +1,6 @@
 package qingzhou.app.nginx;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
@@ -26,24 +20,31 @@ public class AppNginx implements QingzhouApp {
         logger = appContext.getService(Logger.class);
 
         try {
-            appContext.getTemp().mkdirs();
-            appContext.getProperties().forEach((k, v) -> logger.info("nginx 应用配置 " + k + "=" + v));
-
-            // 将 nginx.conf 文件输出到临时目录用作模拟真实的 nginx.conf
-            new File(appContext.getTemp(), "backups").mkdirs();
-            Path nginxConf = new File(appContext.getTemp(), "nginx.conf").toPath();
-            nginxConf.toFile().createNewFile();
-            URL nginxConfUrl = getClass().getClassLoader().getResource("nginx.conf");
-
-            try (InputStream in = nginxConfUrl.openStream()) {
-                Files.copy(in, nginxConf, StandardCopyOption.REPLACE_EXISTING);
+            /* 配置 instances/default/conf/qingzhou.properties
+            # nginx 安装根目录
+            app~qingzhou-nginx-app.nginx.path=/usr/loca/nginx
+            # nginx.conf 路径（注意：程序需要有读写 nginx.conf 文件的权限）
+            #app~qingzhou-nginx-app.nginx.path.conf=/usr/local/nginx/conf/nginx.conf
+            # nginx.conf 备份路径（注意：程序需要有读写该目录的权限）
+            #app~qingzhou-nginx-app.nginx.path.backups=/usr/local/nginx/conf/backups
+            # nginx 监控路径
+            app~qingzhou-nginx-app.nginx_status_url=http://localhost:9000/nginx_status
+            */
+            AppConfig.getConfig().putAll(appContext.getProperties());
+            if (!"".equals(AppConfig.getNginxPath()) && new File(AppConfig.getNginxPath()).exists()) {
+                appContext.getTemp().mkdirs();
+                // 创建 nginx.conf 文件备份目录到临时目录用作模拟真实的 nginx.conf
+                File nginxConfBackups = new File(appContext.getBase(), "nginx-backups");
+                nginxConfBackups.mkdirs();
+                
+                File nginxPath = new File(AppConfig.getNginxPath());
+                AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_PATH_KEY, new File(nginxPath, "conf/nginx.conf").getAbsolutePath());
+                AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_BACKUPS_KEY, nginxConfBackups.getAbsolutePath());
+                logger.info("检测到本地已安装 nginx 应用：" + nginxPath.getAbsolutePath());
+            } else {
+                logger.info("未检测到本地 nginx 应用");
             }
-
-            AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_PATH_KEY, nginxConf.toString());
-            AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_BACKUPS_KEY, new File(appContext.getTemp(), "backups").getAbsolutePath());
-
-            logger.info("nginx 应用已启动");
-        } catch (IOException | UnsupportedOperationException e) {
+        } catch (Exception e) {
             logger.error("nginx 应用启动异常: " + e.getMessage());
         }
     }

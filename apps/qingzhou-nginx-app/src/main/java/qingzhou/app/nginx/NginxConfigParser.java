@@ -63,6 +63,9 @@ public class NginxConfigParser {
     public static Map<String, String> parseConfig() throws IOException {
         Map<String, String> configMap = new LinkedHashMap<>();
         String confPath = getNginxConfPath();
+        if (!new File(confPath).exists()) {
+            return configMap;
+        }
         String content = new String(Files.readAllBytes(Paths.get(confPath)));
 
         // 遍历所有定义的配置项，统一解析
