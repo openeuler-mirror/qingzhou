@@ -125,6 +125,16 @@ public class DefaultAction {
         if (id != null && !id.isEmpty()) {
             delete.delete(id);
         }
+
+        String ids = request.getParameter("ids");
+        if (ids != null && !ids.isEmpty()) {
+            String[] idArray = ids.split(",");
+            for (String itemId : idArray) {
+                if (itemId != null && !itemId.isEmpty()) {
+                    delete.delete(itemId);
+                }
+            }
+        }
     }
 
     private static Map<String, String> filterMapData(Map<String, String> data, String[] useFields) {
