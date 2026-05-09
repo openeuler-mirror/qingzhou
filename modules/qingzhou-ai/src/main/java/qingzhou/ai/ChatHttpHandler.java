@@ -77,7 +77,7 @@ public class ChatHttpHandler implements HttpHandler {
         // 发出响应
         final String messageId = UUID.randomUUID().toString().replace("-", "");
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
-        sendEvent(httpResponse, "RUN_STARTED", "{}");
+        sendEvent(httpResponse, SseResult.type("RUN_STARTED"));
         chatModel.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
@@ -87,12 +87,12 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent(httpResponse, "TEXT_MESSAGE_END", toJson(messageId, null));
+                        sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_END").messageId(messageId));
                     }
                     isMessage = false;
-                    sendEvent(httpResponse, "REASONING_START", "{}");
+                    sendEvent(httpResponse, SseResult.type("REASONING_START"));
                 }
-                sendEvent(httpResponse, "REASONING_CONTENT", toJson(null, content));
+                sendEvent(httpResponse, SseResult.type("REASONING_CONTENT").content(content));
             }
 
             @Override
@@ -100,12 +100,12 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isMessage) {
                     isMessage = true;
                     if (isReasoning) {
-                        sendEvent(httpResponse, "REASONING_END", "{}");
+                        sendEvent(httpResponse, SseResult.type("REASONING_END"));
                     }
                     isReasoning = false;
-                    sendEvent(httpResponse, "TEXT_MESSAGE_START", toJson(messageId, null));
+                    sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_START").messageId(messageId));
                 }
-                sendEvent(httpResponse, "TEXT_MESSAGE_CONTENT", toJson(messageId, content));
+                sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_CONTENT").messageId(messageId).content(content));
             }
 
             @Override
@@ -117,32 +117,25 @@ public class ChatHttpHandler implements HttpHandler {
 
             @Override
             public void onComplete() {
-                sendEvent(httpResponse, "TEXT_MESSAGE_END", String.format("{\"messageId\":\"%s\"}", messageId));
-                sendEvent(httpResponse, "RUN_FINISHED", "{}");
+                sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_END").messageId(messageId));
+                sendEvent(httpResponse, SseResult.type("RUN_FINISHED"));
                 httpResponse.finish();
             }
         });
     }
 
-    private void sendEvent(HttpResponse writer, String event, String data) {
-        writer.send("event: " + event + "\ndata: " + data + "\n\n");
+    private void sendEvent(HttpResponse writer, SseResult result) {
+        writer.send(toString(result));
     }
 
     private void sendEventFinish(HttpResponse writer, String error) {
-        String errorJson = "{\"code\":\"INTERNAL_ERROR\",\"message\":\"" + error + "\"}";
-        writer.sendFinish("event: RUN_ERROR" + "\ndata: " + errorJson + "\n\n");
+        SseResult result = SseResult.type("RUN_ERROR").message(error).code("INTERNAL_ERROR");
+        writer.sendFinish(toString(result));
     }
 
-    private String toJson(String messageId, String content) {
+    private String toString(SseResult result) {
         try {
-            Map<String, String> map = new HashMap<>();
-            if (messageId != null && !messageId.isEmpty()) {
-                map.put("messageId", messageId);
-            }
-            if (content != null && !content.isEmpty()) {
-                map.put("content", content);
-            }
-            return json.toJson(map);
+            return String.format("event: %s\ndata: %s\n\n", result.type(), this.json.toJson(result.data()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
