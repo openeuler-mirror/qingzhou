@@ -28,7 +28,6 @@ class Utils {
         return localIp;
     }
 
-
     static List<String> getLocalIps() {
         if (localIps == null || localIps.isEmpty()) {
             synchronized (Utils.class) {

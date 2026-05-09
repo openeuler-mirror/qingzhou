@@ -70,14 +70,15 @@ public class ChatHttpHandler implements HttpHandler {
         }
         if (message == null) {
             String langParam = httpRequest.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-            sendEventFinish(httpResponse, i18nService.getI18n(MSG_ERROR, langParam));
+            String error = i18nService.getI18n(MSG_ERROR, langParam);
+            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(error)));
             return;
         }
 
         // 发出响应
         final String messageId = UUID.randomUUID().toString().replace("-", "");
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
-        sendEvent(httpResponse, SseResult.type("RUN_STARTED"));
+        httpResponse.send(resultToString(SseResult.type("RUN_STARTED")));
         chatModel.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
@@ -87,12 +88,12 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isReasoning) {
                     isReasoning = true;
                     if (isMessage) {
-                        sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_END").messageId(messageId));
+                        httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_END").messageId(messageId)));
                     }
                     isMessage = false;
-                    sendEvent(httpResponse, SseResult.type("REASONING_START"));
+                    httpResponse.send(resultToString(SseResult.type("REASONING_START")));
                 }
-                sendEvent(httpResponse, SseResult.type("REASONING_CONTENT").content(content));
+                httpResponse.send(resultToString(SseResult.type("REASONING_CONTENT").content(content)));
             }
 
             @Override
@@ -100,44 +101,36 @@ public class ChatHttpHandler implements HttpHandler {
                 if (!isMessage) {
                     isMessage = true;
                     if (isReasoning) {
-                        sendEvent(httpResponse, SseResult.type("REASONING_END"));
+                        httpResponse.send(resultToString(SseResult.type("REASONING_END")));
                     }
                     isReasoning = false;
-                    sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_START").messageId(messageId));
+                    httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_START").messageId(messageId)));
                 }
-                sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_CONTENT").messageId(messageId).content(content));
+                httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_CONTENT").messageId(messageId).content(content)));
             }
 
             @Override
             public void onError(Throwable t) {
                 String errMsg = t.getMessage();
                 logger.error(errMsg);
-                sendEventFinish(httpResponse, errMsg);
+                httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(errMsg)));
             }
 
             @Override
             public void onComplete() {
-                sendEvent(httpResponse, SseResult.type("TEXT_MESSAGE_END").messageId(messageId));
-                sendEvent(httpResponse, SseResult.type("RUN_FINISHED"));
-                httpResponse.finish();
+                httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_END").messageId(messageId)));
+                httpResponse.sendFinish(resultToString(SseResult.type("RUN_FINISHED")));
             }
         });
     }
 
-    private void sendEvent(HttpResponse writer, SseResult result) {
-        writer.send(toString(result));
-    }
-
-    private void sendEventFinish(HttpResponse writer, String error) {
-        SseResult result = SseResult.type("RUN_ERROR").message(error).code("INTERNAL_ERROR");
-        writer.sendFinish(toString(result));
-    }
-
-    private String toString(SseResult result) {
+    private String resultToString(SseResult result) {
+        String toJson;
         try {
-            return String.format("event: %s\ndata: %s\n\n", result.type(), this.json.toJson(result.data()));
+            toJson = json.toJson(result.data);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            toJson = e.getMessage();
         }
+        return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 }

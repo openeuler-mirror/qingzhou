@@ -20,22 +20,6 @@ import qingzhou.registry.Registry;
 @Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RefreshHttpHandler implements HttpHandler {
-
-    static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
-        byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return null;
-
-        byte[] decrypted;
-        try {
-            decrypted = pairCipher.decryptWithPrivateKey(requestBody);
-        } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
-            return null;
-        }
-
-        return new String(decrypted, StandardCharsets.UTF_8);
-    }
-
     @Reference
     private Crypto crypto;
     @Reference
@@ -58,7 +42,7 @@ public class RefreshHttpHandler implements HttpHandler {
     }
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
-        String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
+        String decryptedRequest = RegisterHttpHandler.decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");

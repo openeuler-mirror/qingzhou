@@ -1,9 +1,7 @@
 package qingzhou.registry.service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -18,10 +16,8 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=" + InvokeHttpHandler.URI_SERVER_PATH)
+@Component(property = HttpHandler.HANDLE_PATH + "=/invoke")
 public class InvokeHttpHandler implements HttpHandler {
-    public static final String URI_SERVER_PATH = "/invoke"; // 两端加 /，匹配更安全
-
     @Reference
     private Registry registry;
     @Reference
@@ -93,18 +89,20 @@ public class InvokeHttpHandler implements HttpHandler {
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {
         String requestPath = httpRequest.getPath();
-        List<String> rest = detectRest(requestPath);
-        int restDepth = 4; // instance/app/model/action/[id]
-        if (rest == null || rest.size() < restDepth)
-            return null;
+        int i = requestPath.indexOf("/", 1);
+        String restPath = requestPath.substring(i + 1);
+        String[] rest = restPath.split("/");
+
+        int restMinDepth = 4; // instance/app/model/action/[id]
+        if (rest.length < restMinDepth) return null;
 
         RequestImpl request = new RequestImpl();
-        request.setInstance(rest.get(0));
-        request.setApp(rest.get(1));
-        request.setModel(rest.get(2));
-        request.setAction(rest.get(3));
-        if (rest.size() > 4) {
-            request.setId(rest.get(4));
+        request.setInstance(rest[0]);
+        request.setApp(rest[1]);
+        request.setModel(rest[2]);
+        request.setAction(rest[3]);
+        if (rest.length > 4) {
+            request.setId(rest[4]);
         }
 
         // 获取 URL 参数
@@ -132,23 +130,5 @@ public class InvokeHttpHandler implements HttpHandler {
         }
 
         return request;
-    }
-
-    private static List<String> detectRest(String requestUri) {
-        String uriPrefix = URI_SERVER_PATH + "/"; // 两端加 /，匹配更安全
-        if (!requestUri.startsWith(uriPrefix)) return null;
-        int i = requestUri.indexOf(uriPrefix);
-        requestUri = requestUri.substring(i + uriPrefix.length());
-
-        String[] uriArray = requestUri.split("/");
-        if (uriArray.length == 0) return null;
-
-        List<String> result = new ArrayList<>();
-        for (String r : uriArray) {
-            if (!r.isEmpty()) {
-                result.add(r);
-            }
-        }
-        return result;
     }
 }

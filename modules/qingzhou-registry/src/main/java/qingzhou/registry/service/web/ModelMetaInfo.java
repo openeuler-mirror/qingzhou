@@ -1,7 +1,11 @@
 package qingzhou.registry.service.web;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -19,6 +23,8 @@ import qingzhou.llm.ToolParameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.llm.BaseLlmTool;
+import qingzhou.registry.service.llm.HandlingContext;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/web/model")
 public class ModelMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
@@ -30,11 +36,11 @@ public class ModelMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     @Reference
     private Json json;
 
-    private final WebHandler webHandler = (retriever) -> {
+    private final Function<HandlingContext, Object> function = (context) -> {
         // 条件检查
-        String modelId = (String) retriever.getParameter(AppMetaInfo.REQUEST_PARAMETER_NAME_MODEL_ID);
+        String modelId = context.getParameter(AppMetaInfo.REQUEST_PARAMETER_NAME_MODEL_ID);
         if (modelId == null) return null;
-        String[] split = IdResolver.fromModelId(modelId);
+        String[] split = WebUtil.fromModelId(modelId);
         if (split == null) return null;
 
         // 查找
@@ -46,7 +52,7 @@ public class ModelMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
 
         // 处理结果
-        String lang = (String) retriever.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
         for (Model model : app.models) {
             if (model.code.equals(modelCode)) {
                 return modelMetaInfo(i18nService, model, instanceId, appCode, lang);
@@ -97,10 +103,10 @@ public class ModelMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         // 是否已缓存
-        if (IndexInfo.cached(httpRequest, httpResponse, registry)) return;
+        if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        httpResponse.sendFinish(IndexInfo.handleWeb(registry, json, httpRequest, webHandler));
+        httpResponse.sendFinish(WebUtil.webResult(registry, json, httpRequest, function));
     }
 
     @Override
@@ -109,14 +115,15 @@ public class ModelMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     }
 
     @Override
-    public Set<ToolParameter> parameters() {
-        Set<ToolParameter> parameters = super.parameters();
-        parameters.add(ToolParameter.of(AppMetaInfo.REQUEST_PARAMETER_NAME_MODEL_ID, "指定模块的ID", ParameterType.STRING, true));
-        return parameters;
+    public ToolParameter[] parameters() {
+        return new ToolParameter[]{
+                langParameter,
+                ToolParameter.of(AppMetaInfo.REQUEST_PARAMETER_NAME_MODEL_ID, "指定模块的ID", ParameterType.STRING, true)
+        };
     }
 
     @Override
-    protected WebHandler toolHandler() {
-        return webHandler;
+    protected Function<HandlingContext, Object> toolHandler() {
+        return function;
     }
 }

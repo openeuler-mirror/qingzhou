@@ -75,14 +75,17 @@ public class ChatModelImpl implements ChatModel {
                 .description(tool.description())
                 .function(tool::invoke);
 
-        for (ToolParameter toolParameter : tool.parameters()) {
-            builder.addParameter(Parameter.builder()
-                    .name(toolParameter.name())
-                    .description(toolParameter.description())
-                    .type(toolParameter.type().value())
-                    .required(toolParameter.required())
-                    .enums(toolParameter.enumValues())
-                    .build());
+        ToolParameter[] parameters = tool.parameters();
+        if (parameters != null) {
+            for (ToolParameter toolParameter : parameters) {
+                builder.addParameter(Parameter.builder()
+                        .name(toolParameter.name())
+                        .description(toolParameter.description())
+                        .type(toolParameter.type().value())
+                        .required(toolParameter.required())
+                        .enums(toolParameter.enumValues())
+                        .build());
+            }
         }
         return builder.build();
     }
