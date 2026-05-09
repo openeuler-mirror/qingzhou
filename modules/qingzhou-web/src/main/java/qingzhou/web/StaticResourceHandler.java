@@ -1,15 +1,14 @@
 package qingzhou.web;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.osgi.service.component.annotations.Component;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
@@ -19,6 +18,8 @@ public class StaticResourceHandler implements HttpHandler {
 
     private static final String STATIC_RESOURCE_PATH = "/webapp/";
     private static final String INDEX_FILE = "index.html";
+    // 缓存配置
+    private final Map<String, WebResource> resources = new ConcurrentHashMap<>();
 
     // MIME 类型映射
     private static final Map<String, String> MIME_TYPES = new HashMap<>();
@@ -55,13 +56,13 @@ public class StaticResourceHandler implements HttpHandler {
         }
 
         // 处理静态资源
-        serveStaticResource(requestPath, httpResponse);
+        serveStaticResource(httpRequest, requestPath, httpResponse);
     }
 
     /**
      * 提供静态资源
      */
-    private void serveStaticResource(String path, HttpResponse response) {
+    private void serveStaticResource(HttpRequest httpRequest, String path, HttpResponse response) {
         // 规范化路径
         if (path.equals("/") || path.isEmpty()) {
             path = "/" + INDEX_FILE;
@@ -69,37 +70,83 @@ public class StaticResourceHandler implements HttpHandler {
 
         // 移除开头的斜杠
         String resourcePath = STATIC_RESOURCE_PATH + path.substring(1);
-
-        // 尝试从 classpath 加载资源
-        InputStream inputStream = getClass().getResourceAsStream(resourcePath);
-
-        if (inputStream == null) {
-            // 如果文件不存在且不是 index.html，尝试返回 index.html（支持前端路由）
-            if (!path.endsWith(INDEX_FILE)) {
-                serveStaticResource("/" + INDEX_FILE, response);
-                return;
+        WebResource webResource = resources.get(resourcePath);
+        if (webResource == null) {
+            synchronized (this) {
+                webResource = resources.get(resourcePath);
+                if (webResource == null) {
+                    // 尝试从 classpath 加载资源
+                    URL resource = getClass().getResource(resourcePath);
+                    if (resource == null) {
+                        // 如果文件不存在且不是 index.html，尝试返回 index.html（支持前端路由）
+                        if (!path.endsWith(INDEX_FILE)) {
+                            serveStaticResource(httpRequest, "/" + INDEX_FILE, response);
+                            return;
+                        }
+                        response.status(404);
+                        response.sendFinish("not found: " + path);
+                        return;
+                    }
+                    webResource = new WebResource(resourcePath, resource);
+                    resources.putIfAbsent(resourcePath, webResource);
+                }
             }
-            response.status(404);
-            response.sendFinish("not found: " + path);
-            return;
         }
 
+        String cacheControl = getCacheControl(path);
+        response.header("Cache-Control", cacheControl);
+
         try {
+            // 生成 ETag（MD5）
+            String etag = webResource.getETag();
+
+            // 协商缓存校验：If-None-Match
+            boolean isEtagMatch = checkIfNoneMatch(httpRequest, etag);
+            response.header("ETag", etag);
+
+            // 辅助缓存头
+            response.header("Vary", "Accept-Encoding, Accept");
+
+            // 资源未修改 → 直接返回 304
+            if (isEtagMatch) {
+                response.status(304);
+                return;
+            }
+
             // 设置 Content-Type
             String contentType = getContentType(path);
             response.contentType(contentType);
 
             // 读取并发送文件内容
-            byte[] content = readAllBytes(inputStream);
-            response.sendFinish(content);
-        } catch (IOException e) {
+            response.sendFinish(webResource.getContent());
+        } catch (Exception e) {
             response.status500Finish("internal server error");
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException ignored) {
-            }
         }
+    }
+
+    private static String getCacheControl(String path) {
+        String cacheControl;
+        if (path.endsWith(".html") || path.endsWith(".htm")) {
+            cacheControl = "max-age=0, no-cache, must-revalidate, proxy-revalidate, no-transform";
+        } else if (path.endsWith(".svg")
+                || path.endsWith(".jpg")
+                || path.endsWith(".jpeg")
+                || path.endsWith(".png")
+                || path.endsWith(".gif")
+                || path.endsWith(".ico")) {
+            // 图片设置一个月缓存
+            cacheControl = String.format(
+                    "max-age=%d, must-revalidate, proxy-revalidate, no-transform",
+                    30 * 24 * 60 * 60
+            );
+        } else {
+            // 当前assets目录下的文件名自带hash值，可以设置长期缓存
+            cacheControl = String.format(
+                    "max-age=%d, must-revalidate, proxy-revalidate, no-transform",
+                    30 * 24 * 60 * 60 * 365
+            );
+        }
+        return cacheControl;
     }
 
     /**
@@ -118,15 +165,11 @@ public class StaticResourceHandler implements HttpHandler {
     }
 
     /**
-     * 读取 InputStream 的所有字节
+     * 校验 If-None-Match
      */
-    private byte[] readAllBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        byte[] data = new byte[8192];
-        int nRead;
-        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-        return buffer.toByteArray();
+    private boolean checkIfNoneMatch(HttpRequest request, String etag) {
+        String ifNoneMatch = request.getHeader("If-None-Match");
+        return ifNoneMatch != null && (ifNoneMatch.equals(etag) || ifNoneMatch.equals("*"));
     }
+
 }
