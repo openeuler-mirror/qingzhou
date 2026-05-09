@@ -73,11 +73,6 @@ public class App extends ModelBase implements List, Show {
     public String host;
 
     @Override
-    public void start() {
-        registry = getAppContext().getService(Registry.class);
-    }
-
-    @Override
     public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> allApps = getAllApps(query);
@@ -112,18 +107,32 @@ public class App extends ModelBase implements List, Show {
         return getAppById(request.getId());
     }
 
+    private Registry getRegistry() {
+        if (registry == null) {
+            synchronized (this) {
+                if (registry == null) {
+                    registry = getAppContext().getService(Registry.class);
+                    if (registry == null) {
+                        throw new IllegalStateException("Registry service is not available");
+                    }
+                }
+            }
+        }
+        return registry;
+    }
+
     private java.util.List<Map<String, String>> getAllApps(Map<String, String> query) {
         java.util.List<Map<String, String>> apps = new ArrayList<>();
 
-        for (String localApp : registry.getAllLocalApps()) {
+        for (String localApp : getRegistry().getAllLocalApps()) {
             Map<String, String> appData = getAppData(Constants.LOCAL_INSTANCE_ID, localApp);
             if (matchesQuery(appData, query)) {
                 apps.add(appData);
             }
         }
 
-        for (String instance : registry.getAllRemoteInstances()) {
-            for (String app : registry.getAllRemoteApps(instance)) {
+        for (String instance : getRegistry().getAllRemoteInstances()) {
+            for (String app : getRegistry().getAllRemoteApps(instance)) {
                 Map<String, String> appData = getAppData(instance, app);
                 if (matchesQuery(appData, query)) {
                     apps.add(appData);
@@ -144,12 +153,12 @@ public class App extends ModelBase implements List, Show {
         String instanceId = parts[1];
 
         if (Constants.LOCAL_INSTANCE_ID.equals(instanceId)) {
-            if (registry.getAllLocalApps().contains(appCode)) {
+            if (getRegistry().getAllLocalApps().contains(appCode)) {
                 return getAppData(instanceId, appCode);
             }
         } else {
-            if (registry.getAllRemoteInstances().contains(instanceId) &&
-                    registry.getAllRemoteApps(instanceId).contains(appCode)) {
+            if (getRegistry().getAllRemoteInstances().contains(instanceId) &&
+                    getRegistry().getAllRemoteApps(instanceId).contains(appCode)) {
                 return getAppData(instanceId, appCode);
             }
         }
@@ -163,7 +172,7 @@ public class App extends ModelBase implements List, Show {
         app.put("code", appCode);
         app.put("instance", instanceId);
 
-        AppStubLocal appStub = registry.getLocalApp(appCode);
+        AppStubLocal appStub = getRegistry().getLocalApp(appCode);
         if (appStub != null) {
             AppMeta appMeta = appStub.getAppMeta();
             if (appMeta != null && appMeta.getApp() != null) {
