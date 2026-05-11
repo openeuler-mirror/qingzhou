@@ -1,5 +1,5 @@
 package qingzhou.llm;
 
 public interface LLM {
-    ChatModel buildChatModel(String baseUrl, String apiKey, String model);
+    Chat buildChatModel(String baseUrl, String apiKey, String model);
 }

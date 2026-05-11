@@ -1,0 +1,74 @@
+package qingzhou.llm.impl;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.noear.solon.ai.chat.ChatResponse;
+import org.noear.solon.ai.chat.message.AssistantMessage;
+import org.noear.solon.ai.chat.tool.FunctionTool;
+import org.noear.solon.ai.chat.tool.FunctionToolDesc;
+import qingzhou.llm.Chat;
+import qingzhou.llm.Listener;
+import qingzhou.llm.Parameter;
+import qingzhou.llm.Tool;
+
+public class ChatImpl implements Chat {
+    private final org.noear.solon.ai.chat.ChatModel chatModel;
+
+    public ChatImpl(org.noear.solon.ai.chat.ChatModel chatModel) {
+        this.chatModel = chatModel;
+    }
+
+    @Override
+    public void generate(String prompt, Collection<Tool> tools, Listener listener) {
+        chatModel.prompt(prompt)
+                .options(op -> op.toolAdd(tools.stream().map(this::convertTool).collect(Collectors.toSet())))
+                .stream()
+                .doOnSubscribe(subscription -> listener.onBegin())
+                .doOnNext(chatResponse -> doOnNext(chatResponse, listener))
+                .doOnComplete(listener::onComplete)
+                .doOnError(listener::onError)
+                .doOnCancel(listener::onComplete)
+                .subscribe();
+    }
+
+    private void doOnNext(ChatResponse chatResponse, Listener listener) {
+        AssistantMessage aiMessage = chatResponse.getMessage();
+        if (aiMessage.isThinking()) {
+            String reasoning = aiMessage.getReasoning();
+            if (notEmpty(reasoning)) {
+                listener.onReasoning(reasoning);
+            }
+        } else {
+            String resultContent = aiMessage.getResultContent();
+            if (notEmpty(resultContent)) {
+                listener.onMessage(resultContent);
+            }
+        }
+    }
+
+    private boolean notEmpty(String content) {
+        return content != null && !content.isEmpty();
+    }
+
+    private FunctionTool convertTool(Tool tool) {
+        FunctionToolDesc functionTool = new FunctionToolDesc(tool.name())
+                .description(tool.description())
+                .doHandle(tool::invoke);
+
+        Parameter[] parameters = tool.parameters();
+        if (parameters != null) {
+            for (Parameter parameter : parameters) {
+                functionTool.paramAdd(parameter.name(), String.class, parameter.required(), parameter.description(), null, null);
+                List<String> list = parameter.enumValues();
+                if (list != null && !list.isEmpty()) {
+                    String enumValues = Arrays.toString(list.toArray());
+                    functionTool.description(functionTool.description() + " Optional values: " + enumValues + ", you can only choose one of these values as input.");
+                }
+            }
+        }
+        return functionTool;
+    }
+}
