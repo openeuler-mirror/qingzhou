@@ -1,18 +1,19 @@
 package qingzhou.llm;
 
 import java.util.Map;
-import java.util.Set;
 
 public interface Tool {
     String name();
 
     String description();
 
-    Set<ToolParameter> parameters();
+    default ToolParameter[] parameters() {
+        return null;
+    }
 
     Object invoke(Map<String, Object> argsMap);
 
-    static Tool of(String name, String description, Set<ToolParameter> parameters,
+    static Tool of(String name, String description, ToolParameter[] parameters,
                    java.util.function.Function<Map<String, Object>, Object> invoke) {
         return new Tool() {
             @Override
@@ -26,7 +27,7 @@ public interface Tool {
             }
 
             @Override
-            public Set<ToolParameter> parameters() {
+            public ToolParameter[] parameters() {
                 return parameters;
             }
 
