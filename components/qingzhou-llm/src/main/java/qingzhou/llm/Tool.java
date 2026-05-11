@@ -7,13 +7,13 @@ public interface Tool {
 
     String description();
 
-    default ToolParameter[] parameters() {
+    default Parameter[] parameters() {
         return null;
     }
 
     Object invoke(Map<String, Object> argsMap);
 
-    static Tool of(String name, String description, ToolParameter[] parameters,
+    static Tool of(String name, String description, Parameter[] parameters,
                    java.util.function.Function<Map<String, Object>, Object> invoke) {
         return new Tool() {
             @Override
@@ -27,7 +27,7 @@ public interface Tool {
             }
 
             @Override
-            public ToolParameter[] parameters() {
+            public Parameter[] parameters() {
                 return parameters;
             }
 
