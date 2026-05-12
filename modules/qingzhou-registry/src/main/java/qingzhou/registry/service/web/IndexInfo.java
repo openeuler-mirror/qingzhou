@@ -16,7 +16,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Tool;
-import qingzhou.llm.ToolParameter;
+import qingzhou.llm.Parameter;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 import qingzhou.registry.service.llm.BaseLlmTool;
@@ -75,8 +75,8 @@ public class IndexInfo extends BaseLlmTool implements HttpHandler, Tool {
     }
 
     @Override
-    public ToolParameter[] parameters() {
-        return new ToolParameter[]{langParameter};
+    public Parameter[] parameters() {
+        return new Parameter[]{langParameter};
     }
 
     @Override

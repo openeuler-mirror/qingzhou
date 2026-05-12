@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import qingzhou.llm.Tool;
-import qingzhou.llm.ToolParameter;
+import qingzhou.llm.Parameter;
 
 @Component
 public class ListTool extends BaseLlmTool implements Tool {
@@ -16,7 +16,7 @@ public class ListTool extends BaseLlmTool implements Tool {
     }
 
     @Override
-    public ToolParameter[] parameters() {
+    public Parameter[] parameters() {
         return null;
     }
 

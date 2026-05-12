@@ -9,7 +9,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.ChatModel;
+import qingzhou.llm.Chat;
 import qingzhou.llm.LLM;
 import qingzhou.llm.Listener;
 import qingzhou.llm.Tool;
@@ -33,7 +33,7 @@ public class ChatHttpHandler implements HttpHandler {
 
     private final String[] MSG_ERROR = {"消息不存在或数据格式异常", "en:Message not found or data format invalid"};
 
-    private ChatModel chatModel;
+    private Chat chat;
     private final Set<Tool> tools = new HashSet<>();
 
     @Activate
@@ -42,7 +42,7 @@ public class ChatHttpHandler implements HttpHandler {
         String apiKey = config.get("api_key");
         String model = config.get("model");
 
-        chatModel = llm.buildChatModel(baseUrl, apiKey, model);
+        chat = llm.buildChatModel(baseUrl, apiKey, model);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -78,10 +78,14 @@ public class ChatHttpHandler implements HttpHandler {
         // 发出响应
         final String messageId = UUID.randomUUID().toString().replace("-", "");
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
-        httpResponse.send(resultToString(SseResult.type("RUN_STARTED")));
-        chatModel.generate(message, tools, new Listener() {
+        chat.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
+
+            @Override
+            public void onBegin() {
+                httpResponse.send(resultToString(SseResult.type("RUN_STARTED")));
+            }
 
             @Override
             public void onReasoning(String content) {

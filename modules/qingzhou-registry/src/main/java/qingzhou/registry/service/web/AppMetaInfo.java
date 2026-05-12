@@ -13,9 +13,8 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.ParameterType;
 import qingzhou.llm.Tool;
-import qingzhou.llm.ToolParameter;
+import qingzhou.llm.Parameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
@@ -102,10 +101,10 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     }
 
     @Override
-    public ToolParameter[] parameters() {
-        return new ToolParameter[]{
+    public Parameter[] parameters() {
+        return new Parameter[]{
                 langParameter,
-                ToolParameter.of(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, "指定应用的ID", ParameterType.STRING, true)
+                Parameter.of(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, "指定应用的ID")
         };
     }
 
