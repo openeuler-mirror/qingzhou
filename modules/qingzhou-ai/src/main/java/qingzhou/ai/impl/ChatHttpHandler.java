@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.AiTool;
+import qingzhou.ai.ToolParameter;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -17,6 +18,7 @@ import qingzhou.json.Json;
 import qingzhou.llm.Chat;
 import qingzhou.llm.LLM;
 import qingzhou.llm.Listener;
+import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
@@ -82,7 +84,9 @@ public class ChatHttpHandler implements HttpHandler {
             int i = component.lastIndexOf(".");
             component = component.substring(i + 1);
 
-            return Tool.of(component, description, aiTool.parameters(), aiTool::invoke);
+            ToolParameter[] tp = aiTool.parameters();
+            Parameter[] params = tp != null ? convertParams(tp) : null;
+            return Tool.of(component, description, params, aiTool::invoke);
         }).collect(Collectors.toSet());
         chat.generate(message, tools, new Listener() {
             boolean isReasoning = false;
@@ -104,6 +108,36 @@ public class ChatHttpHandler implements HttpHandler {
                     httpResponse.send(resultToString(SseResult.type("REASONING_START")));
                 }
                 httpResponse.send(resultToString(SseResult.type("REASONING_CONTENT").content(content)));
+            }
+
+            @Override
+            public void onReasoningPause() {
+                httpResponse.send(resultToString(SseResult.type("REASONING_PAUSE")));
+            }
+
+            @Override
+            public void onReasoningResume() {
+                httpResponse.send(resultToString(SseResult.type("REASONING_RESUME")));
+            }
+
+            @Override
+            public void onToolCall(String toolName, Map<String, Object> args, Object result) {
+                if (isReasoning) {
+                    httpResponse.send(resultToString(SseResult.type("REASONING_PAUSE")));
+                }
+                try {
+                    httpResponse.send(resultToString(
+                            SseResult.type("TOOL_CALL")
+                                    .content(json.toJson(args))
+                                    .message(json.toJson(result))
+                                    .put("toolName", toolName)
+                    ));
+                } catch (Exception e) {
+                    logger.error("Failed to serialize tool call: " + e.getMessage());
+                }
+                if (isReasoning) {
+                    httpResponse.send(resultToString(SseResult.type("REASONING_RESUME")));
+                }
             }
 
             @Override
@@ -142,5 +176,14 @@ public class ChatHttpHandler implements HttpHandler {
             toJson = e.getMessage();
         }
         return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
+    }
+
+    private static Parameter[] convertParams(ToolParameter[] toolParameters) {
+        Parameter[] params = new Parameter[toolParameters.length];
+        for (int i = 0; i < toolParameters.length; i++) {
+            ToolParameter tp = toolParameters[i];
+            params[i] = Parameter.of(tp.name(), tp.description(), tp.required(), tp.enumValues());
+        }
+        return params;
     }
 }

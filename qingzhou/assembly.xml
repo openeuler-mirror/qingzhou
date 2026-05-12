@@ -101,6 +101,16 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <outputDirectory>lib/version/runtime/features/cm</outputDirectory>
         </dependencySet>
+        <dependencySet>
+            <includes>
+                <include>org.apache.felix:org.apache.felix.log</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version/runtime/features/log</outputDirectory>
+        </dependencySet>
 
         <dependencySet>
             <includes>
