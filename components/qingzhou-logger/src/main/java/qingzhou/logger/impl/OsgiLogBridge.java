@@ -42,12 +42,6 @@ public class OsgiLogBridge implements LogListener {
         Throwable exception = entry.getException();
 
         switch (entry.getLevel()) {
-            case org.osgi.service.log.LogService.LOG_DEBUG:
-                logger.debug(message, exception);
-                break;
-            case org.osgi.service.log.LogService.LOG_INFO:
-                logger.info(message, exception);
-                break;
             case org.osgi.service.log.LogService.LOG_WARNING:
                 logger.warn(message, exception);
                 break;
