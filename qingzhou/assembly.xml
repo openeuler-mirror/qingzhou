@@ -8,6 +8,23 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
 
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/..</directory>
+            <includes>
+                <include>README.md</include>
+            </includes>
+            <outputDirectory>lib/version/docs</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../docs</directory>
+            <includes>
+                <include>**/*.md</include>
+            </includes>
+            <outputDirectory>lib/version/docs</outputDirectory>
+        </fileSet>
+    </fileSets>
+    
     <dependencySets>
         <dependencySet>
             <includes>
@@ -134,21 +151,4 @@
             <outputDirectory>/instances/default/apps</outputDirectory>
         </dependencySet>
     </dependencySets>
-
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}/..</directory>
-            <includes>
-                <include>README.md</include>
-            </includes>
-            <outputDirectory>lib/version/docs</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../docs</directory>
-            <includes>
-                <include>**/*.md</include>
-            </includes>
-            <outputDirectory>lib/version/docs</outputDirectory>
-        </fileSet>
-    </fileSets>
 </assembly>

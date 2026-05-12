@@ -43,7 +43,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-llm</artifactId>
+            <artifactId>qingzhou-ai</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -65,7 +65,7 @@
                             qingzhou.logger,
                             qingzhou.json,
                             qingzhou.crypto,
-                            qingzhou.llm
+                            qingzhou.ai
                         </Import-Package>
                     </instructions>
                 </configuration>

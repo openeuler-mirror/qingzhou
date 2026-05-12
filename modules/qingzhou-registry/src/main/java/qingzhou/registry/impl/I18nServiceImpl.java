@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -22,7 +23,7 @@ public class I18nServiceImpl implements I18nService {
         try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream("/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/") + "/CharMap.txt")) {
             String zh = "";
             String tr = "";
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream), StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
                 if (line.startsWith(Lang.zh + "=")) {
                     zh = line;
@@ -42,24 +43,11 @@ public class I18nServiceImpl implements I18nService {
     }
 
     @Override
-    public Map<Lang, String> parse(String[] i18n) {
-        Map<Lang, String> i18nMap = new HashMap<>();
-        visit(i18n, (currentLang, currentI18n) -> {
-            i18nMap.put(currentLang, currentI18n);
-            return true;
-        });
-        // 自动补充 繁体
-        if (!i18nMap.containsKey(Lang.tr)) {
-            String zhI18n = i18nMap.get(Lang.zh);
-            if (zhI18n != null) {
-                i18nMap.put(Lang.tr, zh2tr(zhI18n));
-            }
-        }
-        return i18nMap;
+    public String getI18n(String[] i18n, Object... args) {
+        return getI18n(i18n, (Lang) null, args);
     }
 
-    @Override
-    public String getI18n(String[] i18n, Lang lang, Object... args) {
+    private String getI18n(String[] i18n, Lang lang, Object... args) {
         if (lang == null) lang = Lang.zh;
 
         // 查找素材

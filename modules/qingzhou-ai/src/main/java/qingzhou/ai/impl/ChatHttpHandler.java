@@ -1,10 +1,15 @@
-package qingzhou.ai;
+package qingzhou.ai.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
-import qingzhou.api.Constants;
+import qingzhou.ai.AiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -14,27 +19,19 @@ import qingzhou.llm.LLM;
 import qingzhou.llm.Listener;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
-import qingzhou.registry.I18nService;
-import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat",
         configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ChatHttpHandler implements HttpHandler {
-    @Reference
-    private Registry registry;
     @Reference
     private LLM llm;
     @Reference
     private Logger logger;
     @Reference
     private Json json;
-    @Reference
-    private I18nService i18nService;
-
-    private final String[] MSG_ERROR = {"消息不存在或数据格式异常", "en:Message not found or data format invalid"};
 
     private Chat chat;
-    private final Set<Tool> tools = new HashSet<>();
+    private final Map<AiTool, Map<String, String>> aiTools = new HashMap<>();
 
     @Activate
     public void init(Map<String, String> config) {
@@ -46,12 +43,12 @@ public class ChatHttpHandler implements HttpHandler {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindTool(Tool tool) {
-        tools.add(tool);
+    public void bindAiTool(AiTool tool, Map<String, String> properties) {
+        aiTools.put(tool, properties);
     }
 
-    public void unbindTool(Tool tool) {
-        tools.remove(tool);
+    public void unbindAiTool(AiTool tool) {
+        aiTools.remove(tool);
     }
 
     @Override
@@ -69,15 +66,24 @@ public class ChatHttpHandler implements HttpHandler {
             }
         }
         if (message == null) {
-            String langParam = httpRequest.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-            String error = i18nService.getI18n(MSG_ERROR, langParam);
-            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(error)));
+            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null")));
             return;
         }
 
         // 发出响应
         final String messageId = UUID.randomUUID().toString().replace("-", "");
         httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
+
+        Set<Tool> tools = aiTools.entrySet().stream().map(entry -> {
+            AiTool aiTool = entry.getKey();
+            Map<String, String> toolProp = entry.getValue();
+            String description = toolProp.get(AiTool.TOOL_DESCRIPTION);
+            String component = toolProp.get(ComponentConstants.COMPONENT_NAME);
+            int i = component.lastIndexOf(".");
+            component = component.substring(i + 1);
+
+            return Tool.of(component, description, aiTool.parameters(), aiTool::invoke);
+        }).collect(Collectors.toSet());
         chat.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
