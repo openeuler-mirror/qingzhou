@@ -9,16 +9,4 @@
         <version>${revision}</version>
     </parent>
     <artifactId>qingzhou-library-app</artifactId>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <finalName>${project.artifactId}</finalName>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

@@ -8,21 +8,20 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.api.Constants;
+import qingzhou.ai.AiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.Tool;
 import qingzhou.llm.Parameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.llm.BaseLlmTool;
-import qingzhou.registry.service.llm.HandlingContext;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/web/app")
-public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
+@Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
+        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。"}
+)
+public class AppMetaInfo implements HttpHandler, AiTool {
     static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
 
     @Reference
@@ -33,7 +32,7 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     @Reference
     private Json json;
 
-    private final Function<HandlingContext, Object> function = (context) -> {
+    private final Function<Context, Object> function = (context) -> {
         // 条件检查
         String appId = context.getParameter(WebUtil.REQUEST_PARAMETER_NAME_APP_ID);
         if (appId == null) return null;
@@ -47,15 +46,13 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
         if (appStub == null) return null;
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
 
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-
         // 处理结果
         Map<String, Object> appMetaInfo = new HashMap<>();
         appMetaInfo.put("instanceId", instanceId);
         appMetaInfo.put("appCode", app.code);
         appMetaInfo.put("icon", app.icon);
-        appMetaInfo.put("name", i18nService.getI18n(app.name, lang));
-        appMetaInfo.put("info", i18nService.getI18n(app.info, lang));
+        appMetaInfo.put("name", i18nService.getI18n(app.name));
+        appMetaInfo.put("info", i18nService.getI18n(app.info));
 
         List<Map<String, String>> models = new ArrayList<>();
         app.models.forEach(model -> {
@@ -66,7 +63,7 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
             modelBasicInfo.put("action", model.action);
-            modelBasicInfo.put("name", i18nService.getI18n(model.name, lang));
+            modelBasicInfo.put("name", i18nService.getI18n(model.name));
             models.add(modelBasicInfo);
         });
         appMetaInfo.put("models", models);
@@ -78,7 +75,7 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
             menuMetaInfo.put("icon", menu.icon);
             menuMetaInfo.put("parent", menu.parent);
             menuMetaInfo.put("order", menu.order + "");
-            menuMetaInfo.put("name", i18nService.getI18n(menu.name, lang));
+            menuMetaInfo.put("name", i18nService.getI18n(menu.name));
             menus.add(menuMetaInfo);
         });
         appMetaInfo.put("menus", menus);
@@ -96,20 +93,17 @@ public class AppMetaInfo extends BaseLlmTool implements HttpHandler, Tool {
     }
 
     @Override
-    public String description() {
-        return "该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。";
-    }
-
-    @Override
     public Parameter[] parameters() {
-        return new Parameter[]{
-                langParameter,
-                Parameter.of(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, "指定应用的ID")
-        };
+        return new Parameter[]{Parameter.of(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, "指定应用的ID")};
     }
 
     @Override
-    protected Function<HandlingContext, Object> toolHandler() {
-        return function;
+    public Object invoke(Map<String, Object> argsMap) {
+        if (argsMap == null) return null;
+        Context context = name -> {
+            Object val = argsMap.get(name);
+            return val != null ? String.valueOf(val) : null;
+        };
+        return function.apply(context);
     }
 }

@@ -1,4 +1,4 @@
-package qingzhou.ai;
+package qingzhou.ai.impl;
 
 import java.util.HashMap;
 import java.util.Map;

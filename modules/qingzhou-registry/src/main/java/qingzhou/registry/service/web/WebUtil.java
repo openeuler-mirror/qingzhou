@@ -8,7 +8,6 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.llm.HandlingContext;
 
 class WebUtil {
     static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
@@ -50,7 +49,7 @@ class WebUtil {
         return false;
     }
 
-    static String webResult(Registry registry, Json json, HttpRequest httpRequest, Function<HandlingContext, Object> function) throws Exception {
+    static String webResult(Registry registry, Json json, HttpRequest httpRequest, Function<Context, Object> function) throws Exception {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);

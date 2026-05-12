@@ -8,8 +8,5 @@
         <artifactId>apps</artifactId>
         <version>${revision}</version>
     </parent>
-    
     <artifactId>qingzhou-nginx-app</artifactId>
-    <name>qingzhou-nginx-app</name>
-    <description>基于轻舟开发的管理本机 nginx 的示例应用</description>
 </project>
