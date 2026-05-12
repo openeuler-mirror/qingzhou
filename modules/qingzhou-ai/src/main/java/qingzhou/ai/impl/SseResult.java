@@ -30,4 +30,9 @@ class SseResult {
         this.data.put("content", content);
         return this;
     }
+
+    SseResult put(String key, String value) {
+        this.data.put(key, value);
+        return this;
+    }
 }

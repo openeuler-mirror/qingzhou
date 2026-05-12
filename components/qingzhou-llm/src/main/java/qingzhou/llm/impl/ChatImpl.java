@@ -24,7 +24,7 @@ public class ChatImpl implements Chat {
     @Override
     public void generate(String prompt, Collection<Tool> tools, Listener listener) {
         chatModel.prompt(prompt)
-                .options(op -> op.toolAdd(tools.stream().map(this::convertTool).collect(Collectors.toSet())))
+                .options(op -> op.toolAdd(tools.stream().map(t -> convertTool(t, listener)).collect(Collectors.toSet())))
                 .stream()
                 .doOnSubscribe(subscription -> listener.onBegin())
                 .doOnNext(chatResponse -> doOnNext(chatResponse, listener))
@@ -53,10 +53,14 @@ public class ChatImpl implements Chat {
         return content != null && !content.isEmpty();
     }
 
-    private FunctionTool convertTool(Tool tool) {
+    private FunctionTool convertTool(Tool tool, Listener listener) {
         FunctionToolDesc functionTool = new FunctionToolDesc(tool.name())
                 .description(tool.description())
-                .doHandle(tool::invoke);
+                .doHandle(args -> {
+                    Object result = tool.invoke(args);
+                    listener.onToolCall(tool.name(), args, result);
+                    return result;
+                });
 
         Parameter[] parameters = tool.parameters();
         if (parameters != null) {

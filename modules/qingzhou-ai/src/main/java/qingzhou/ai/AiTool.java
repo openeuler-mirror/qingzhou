@@ -2,12 +2,10 @@ package qingzhou.ai;
 
 import java.util.Map;
 
-import qingzhou.llm.Parameter;
-
 public interface AiTool {
     String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
 
-    default Parameter[] parameters() {
+    default ToolParameter[] parameters() {
         return null;
     }
 

@@ -65,8 +65,7 @@
                             qingzhou.logger,
                             qingzhou.json,
                             qingzhou.crypto,
-                            qingzhou.ai,
-                            qingzhou.llm
+                            qingzhou.ai
                         </Import-Package>
                     </instructions>
                 </configuration>

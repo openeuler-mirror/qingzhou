@@ -13,7 +13,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.Parameter;
+import qingzhou.ai.ToolParameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
@@ -84,14 +84,15 @@ public class AppMetaInfo implements HttpHandler, AiTool {
     }
 
     @Override
-    public Parameter[] parameters() {
-        return new Parameter[]{
-                Parameter.of(WebUtil.INSTANCE_ID, "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。"),
-                Parameter.of(WebUtil.APP_CODE, "应用唯一编码，该编码在同一个轻舟实例下不会重复。")
+    public ToolParameter[] parameters() {
+        return new ToolParameter[]{
+                ToolParameter.of(WebUtil.INSTANCE_ID, "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。"),
+                ToolParameter.of(WebUtil.APP_CODE, "应用唯一编码，该编码在同一个轻舟实例下不会重复。")
         };
     }
 
     @Override
+
     public Object invoke(Map<String, Object> argsMap) {
         if (argsMap == null) return null;
         Context context = name -> {
