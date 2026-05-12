@@ -70,27 +70,22 @@ public class StaticResourceHandler implements HttpHandler {
 
         // 移除开头的斜杠
         String resourcePath = STATIC_RESOURCE_PATH + path.substring(1);
-        WebResource webResource = resources.get(resourcePath);
-        if (webResource == null) {
-            synchronized (this) {
-                webResource = resources.get(resourcePath);
-                if (webResource == null) {
-                    // 尝试从 classpath 加载资源
-                    URL resource = getClass().getResource(resourcePath);
-                    if (resource == null) {
-                        // 如果文件不存在且不是 index.html，尝试返回 index.html（支持前端路由）
-                        if (!path.endsWith(INDEX_FILE)) {
-                            serveStaticResource(httpRequest, "/" + INDEX_FILE, response);
-                            return;
-                        }
-                        response.status(404);
-                        response.sendFinish("not found: " + path);
-                        return;
-                    }
-                    webResource = new WebResource(resourcePath, resource);
-                    resources.putIfAbsent(resourcePath, webResource);
-                }
+
+        WebResource webResource = resources.computeIfAbsent(resourcePath, s -> {
+            URL resource = getClass().getResource(s);
+            if (resource == null) {
+                return null;
             }
+            return new WebResource(s, resource);
+        });
+        if (webResource == null) {
+            if (!path.endsWith(INDEX_FILE)) {
+                serveStaticResource(httpRequest, "/" + INDEX_FILE, response);
+                return;
+            }
+            response.status(404);
+            response.sendFinish("not found: " + path);
+            return;
         }
 
         String cacheControl = getCacheControl(path);

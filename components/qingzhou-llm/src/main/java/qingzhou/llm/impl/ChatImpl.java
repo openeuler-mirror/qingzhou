@@ -42,7 +42,7 @@ public class ChatImpl implements Chat {
                 listener.onReasoning(reasoning);
             }
         } else {
-            String resultContent = aiMessage.getResultContent();
+            String resultContent = aiMessage.getContent();
             if (notEmpty(resultContent)) {
                 listener.onMessage(resultContent);
             }
