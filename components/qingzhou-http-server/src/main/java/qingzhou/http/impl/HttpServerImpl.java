@@ -13,8 +13,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
 
-@Component(immediate = true,
-        configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
     private final List<String> tempMsg = new ArrayList<>();
 

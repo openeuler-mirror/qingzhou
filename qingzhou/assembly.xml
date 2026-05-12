@@ -24,7 +24,7 @@
             <outputDirectory>lib/version/docs</outputDirectory>
         </fileSet>
     </fileSets>
-    
+
     <dependencySets>
         <dependencySet>
             <includes>
@@ -139,7 +139,7 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-admin-app</include>
+                <include>${project.groupId}:qingzhou-library-app</include>
                 <include>${project.groupId}:qingzhou-demo-app</include>
                 <include>${project.groupId}:qingzhou-tomcat-app</include>
                 <include>${project.groupId}:qingzhou-nginx-app</include>

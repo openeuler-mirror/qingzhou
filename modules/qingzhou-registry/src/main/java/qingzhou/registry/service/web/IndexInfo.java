@@ -18,9 +18,8 @@ import qingzhou.json.Json;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
-@Component(immediate = true, property = {HttpHandler.HANDLE_PATH + "=/web/index",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回可用的应用列表。每个应用包含唯一标识、名称、图标、部署主机地址和描述信息。通过该接口可获取当前轻舟平台上所有可访问的应用概览，用于后续选择具体应用或展示应用清单。"}
-)
+@Component(property = {HttpHandler.HANDLE_PATH + "=/web/index",
+        AiTool.TOOL_DESCRIPTION + "=该接口返回可用的应用列表。每个应用包含唯一标识、名称、图标、部署主机地址和描述信息。通过该接口可获取当前轻舟平台上所有可访问的应用概览，用于后续选择具体应用或展示应用清单。"})
 public class IndexInfo implements HttpHandler, AiTool {
 
     @Reference
@@ -52,11 +51,12 @@ public class IndexInfo implements HttpHandler, AiTool {
 
     private Map<String, String> appBasicInfo(InstanceInfo instanceInfo, App app) {
         Map<String, String> appBasicInfo = new HashMap<>();
-        appBasicInfo.put(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, WebUtil.toAppId(instanceInfo.getId(), app.code));
+        appBasicInfo.put(WebUtil.INSTANCE_ID, instanceInfo.getId());
+        appBasicInfo.put(WebUtil.APP_CODE, app.code);
         appBasicInfo.put("icon", app.icon);
         appBasicInfo.put("name", i18nService.getI18n(app.name));
         appBasicInfo.put("info", i18nService.getI18n(app.info));
-        appBasicInfo.put("host", instanceInfo.getHost());
+        appBasicInfo.put("instanceHost", instanceInfo.getHost());
         return appBasicInfo;
     }
 
