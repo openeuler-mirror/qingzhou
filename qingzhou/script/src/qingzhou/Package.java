@@ -74,7 +74,7 @@ public class Package {
     private static void addBuildTime(File libDir) throws IOException {
         String buildTime = "Build_Time: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 
-        File releaseNotesFile = new File(libDir, "version-notes.md");
+        File releaseNotesFile = new File(libDir, "docs/version-notes.md");
         List<String> fileContent = fileToString(releaseNotesFile);
         fileContent.add("");
         fileContent.add(buildTime);
