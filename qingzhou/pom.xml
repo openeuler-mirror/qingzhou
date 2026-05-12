@@ -298,7 +298,7 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-admin-app</artifactId>
+            <artifactId>qingzhou-library-app</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

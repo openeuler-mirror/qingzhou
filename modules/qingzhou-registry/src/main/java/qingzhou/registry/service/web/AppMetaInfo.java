@@ -19,11 +19,8 @@ import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。"}
-)
+        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。"})
 public class AppMetaInfo implements HttpHandler, AiTool {
-    static final String REQUEST_PARAMETER_NAME_MODEL_ID = "modelId";
-
     @Reference
     private Registry registry;
     @Reference
@@ -33,23 +30,18 @@ public class AppMetaInfo implements HttpHandler, AiTool {
     private Json json;
 
     private final Function<Context, Object> function = (context) -> {
-        // 条件检查
-        String appId = context.getParameter(WebUtil.REQUEST_PARAMETER_NAME_APP_ID);
-        if (appId == null) return null;
-        String[] split = WebUtil.fromAppId(appId);
-        if (split == null) return null;
+        String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
+        String appCode = context.getParameter(WebUtil.APP_CODE);
+        if (instanceId == null || appCode == null) return null;
 
-        // 查找
-        String instanceId = split[0];
-        String appCode = split[1];
         AppStub appStub = registry.getAppStub(instanceId, appCode);
         if (appStub == null) return null;
+
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
 
-        // 处理结果
         Map<String, Object> appMetaInfo = new HashMap<>();
-        appMetaInfo.put("instanceId", instanceId);
-        appMetaInfo.put("appCode", app.code);
+        appMetaInfo.put(WebUtil.INSTANCE_ID, instanceId);
+        appMetaInfo.put(WebUtil.APP_CODE, app.code);
         appMetaInfo.put("icon", app.icon);
         appMetaInfo.put("name", i18nService.getI18n(app.name));
         appMetaInfo.put("info", i18nService.getI18n(app.info));
@@ -57,8 +49,7 @@ public class AppMetaInfo implements HttpHandler, AiTool {
         List<Map<String, String>> models = new ArrayList<>();
         app.models.forEach(model -> {
             Map<String, String> modelBasicInfo = new HashMap<>();
-            modelBasicInfo.put(REQUEST_PARAMETER_NAME_MODEL_ID, WebUtil.toModelId(instanceId, appCode, model.code));
-            modelBasicInfo.put("modelCode", model.code);
+            modelBasicInfo.put(WebUtil.MODEL_CODE, model.code);
             modelBasicInfo.put("icon", model.icon);
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
@@ -94,7 +85,10 @@ public class AppMetaInfo implements HttpHandler, AiTool {
 
     @Override
     public Parameter[] parameters() {
-        return new Parameter[]{Parameter.of(WebUtil.REQUEST_PARAMETER_NAME_APP_ID, "指定应用的ID")};
+        return new Parameter[]{
+                Parameter.of(WebUtil.INSTANCE_ID, "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。"),
+                Parameter.of(WebUtil.APP_CODE, "应用唯一编码，该编码在同一个轻舟实例下不会重复。")
+        };
     }
 
     @Override

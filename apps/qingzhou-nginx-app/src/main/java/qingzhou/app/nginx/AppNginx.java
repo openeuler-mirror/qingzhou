@@ -36,13 +36,11 @@ public class AppNginx implements QingzhouApp {
                 // 创建 nginx.conf 文件备份目录到临时目录用作模拟真实的 nginx.conf
                 File nginxConfBackups = new File(appContext.getBase(), "nginx-backups");
                 nginxConfBackups.mkdirs();
-                
+
                 File nginxPath = new File(AppConfig.getNginxPath());
                 AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_PATH_KEY, new File(nginxPath, "conf/nginx.conf").getAbsolutePath());
                 AppConfig.getConfig().setProperty(AppConfig.NGINX_CONF_BACKUPS_KEY, nginxConfBackups.getAbsolutePath());
                 logger.info("检测到本地已安装 nginx 应用：" + nginxPath.getAbsolutePath());
-            } else {
-                logger.info("未检测到本地 nginx 应用");
             }
         } catch (Exception e) {
             logger.error("nginx 应用启动异常: " + e.getMessage());
