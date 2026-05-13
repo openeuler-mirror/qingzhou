@@ -56,8 +56,10 @@ public class ChatImpl implements Chat {
         FunctionToolDesc functionTool = new FunctionToolDesc(tool.name())
                 .description(tool.description())
                 .doHandle(args -> {
+                    listener.onReasoningPause();
                     Object result = tool.invoke(args);
                     listener.onToolCall(tool.name(), args, result);
+                    listener.onReasoningResume();
                     return result;
                 });
 

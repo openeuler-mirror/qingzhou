@@ -113,9 +113,6 @@ public class ChatHttpHandler implements HttpHandler {
 
             @Override
             public void onToolCall(String toolName, Map<String, Object> args, Object result) {
-                if (isReasoning) {
-                    httpResponse.send(resultToString(SseResult.type("REASONING_PAUSE")));
-                }
                 try {
                     httpResponse.send(resultToString(
                             SseResult.type("TOOL_CALL")
@@ -125,9 +122,6 @@ public class ChatHttpHandler implements HttpHandler {
                     ));
                 } catch (Exception e) {
                     logger.error("Failed to serialize tool call: " + e.getMessage());
-                }
-                if (isReasoning) {
-                    httpResponse.send(resultToString(SseResult.type("REASONING_RESUME")));
                 }
             }
 
