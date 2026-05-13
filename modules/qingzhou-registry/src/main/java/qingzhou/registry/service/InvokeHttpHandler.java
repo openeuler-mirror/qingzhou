@@ -53,7 +53,6 @@ public class InvokeHttpHandler implements HttpHandler {
                 || response.getData() != null
                 || response.getMsg() != null
         ) {
-            httpResponse.contentTypeJsonUtf8();
             sendResponse(response, httpResponse);
         } else {
             httpResponse.status404Finish();
@@ -63,9 +62,6 @@ public class InvokeHttpHandler implements HttpHandler {
     private void sendResponse(ResponseImpl response, HttpResponse httpResponse) {
         if (response.getStatus() > 0) {
             httpResponse.status(response.getStatus());
-        }
-        if (response.getContentType() != null) {
-            httpResponse.contentType(response.getContentType());
         }
         response.getHeaders().forEach(httpResponse::header);
 
@@ -79,6 +75,11 @@ public class InvokeHttpHandler implements HttpHandler {
             result.put("msgLevel", response.getMsgLevel());
         }
         try {
+            if (response.getContentType() != null) {
+                httpResponse.contentType(response.getContentType());
+            } else {
+                httpResponse.contentType("application/json; charset=utf-8");
+            }
             String json = this.json.toJson(result);
             httpResponse.sendFinish(json);
         } catch (Exception e) {

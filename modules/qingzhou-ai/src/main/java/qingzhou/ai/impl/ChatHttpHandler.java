@@ -54,8 +54,9 @@ public class ChatHttpHandler implements HttpHandler {
         if (body != null && body.length > 0) {
             String str = new String(body, StandardCharsets.UTF_8);
             try {
+                // 在应用里面可包含实例id和应用code等参数
                 Map<String, String> map = json.fromJson(str, HashMap.class);
-                message = map.get("message");
+                message = map.entrySet().stream().filter(e -> e.getValue() != null).map(e -> e.getKey() + ":" + e.getValue() + ",").collect(Collectors.joining());
             } catch (Exception e) {
                 logger.error("failed to convert to JSON: " + str);
             }
@@ -66,20 +67,12 @@ public class ChatHttpHandler implements HttpHandler {
         }
 
         // 发出响应
-        final String messageId = UUID.randomUUID().toString().replace("-", "");
-        httpResponse.contentTypeJsonUtf8();// 返回内容是字符串，非二进制流
+        httpResponse.contentType("text/event-stream; charset=utf-8")
+                .header("connection", "keep-alive")
+                .header("cache-control", "no-cache");
+        chat.generate(message, tools(), new Listener() {
+            final String messageId = UUID.randomUUID().toString().replace("-", "");
 
-        Set<Tool> tools = aiTools.entrySet().stream().map(entry -> {
-            AiTool aiTool = entry.getKey();
-            Map<String, Object> toolProp = entry.getValue();
-            String description = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
-            String component = toolProp.get(ComponentConstants.COMPONENT_NAME).toString();
-            int i = component.lastIndexOf(".");
-            component = component.substring(i + 1);
-
-            return Tool.of(component, description, parseParameters(toolProp), aiTool::invoke);
-        }).collect(Collectors.toSet());
-        chat.generate(message, tools, new Listener() {
             boolean isReasoning = false;
             boolean isMessage = false;
 
@@ -163,7 +156,20 @@ public class ChatHttpHandler implements HttpHandler {
         return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 
-    private static Parameter[] parseParameters(Map<String, Object> toolProp) {
+    private Set<Tool> tools() {
+        return aiTools.entrySet().stream().map(entry -> {
+            AiTool aiTool = entry.getKey();
+            Map<String, Object> toolProp = entry.getValue();
+            String description = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
+            String component = toolProp.get(ComponentConstants.COMPONENT_NAME).toString();
+            int i = component.lastIndexOf(".");
+            component = component.substring(i + 1);
+
+            return Tool.of(component, description, parameters(toolProp), aiTool::invoke);
+        }).collect(Collectors.toSet());
+    }
+
+    private static Parameter[] parameters(Map<String, Object> toolProp) {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
 
         toolProp.forEach((key, value) -> Stream.of(AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION).forEach(flag -> {
