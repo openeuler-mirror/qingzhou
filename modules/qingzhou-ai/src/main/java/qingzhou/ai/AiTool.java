@@ -5,9 +5,8 @@ import java.util.Map;
 public interface AiTool {
     String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
 
-    default ToolParameter[] parameters() {
-        return null;
-    }
+    String PARAMETER_NAME = "PARAMETER_NAME";
+    String PARAMETER_DESCRIPTION = "PARAMETER_DESCRIPTION";
 
-    Object invoke(Map<String, Object> argsMap);
+    Object invoke(Map<String, Object> toolArgs);
 }

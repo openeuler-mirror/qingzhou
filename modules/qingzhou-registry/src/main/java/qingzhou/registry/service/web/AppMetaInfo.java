@@ -13,13 +13,19 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.ai.ToolParameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。"})
+        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
+
+        AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
+        AiTool.PARAMETER_DESCRIPTION + ".1=" + "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。",
+
+        AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
+        AiTool.PARAMETER_DESCRIPTION + ".2=" + "应用唯一编码，该编码在同一个轻舟实例下不会重复。"
+})
 public class AppMetaInfo implements HttpHandler, AiTool {
     @Reference
     private Registry registry;
@@ -84,19 +90,10 @@ public class AppMetaInfo implements HttpHandler, AiTool {
     }
 
     @Override
-    public ToolParameter[] parameters() {
-        return new ToolParameter[]{
-                ToolParameter.of(WebUtil.INSTANCE_ID, "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。"),
-                ToolParameter.of(WebUtil.APP_CODE, "应用唯一编码，该编码在同一个轻舟实例下不会重复。")
-        };
-    }
-
-    @Override
-
-    public Object invoke(Map<String, Object> argsMap) {
-        if (argsMap == null) return null;
+    public Object invoke(Map<String, Object> toolArgs) {
+        if (toolArgs == null) return null;
         Context context = name -> {
-            Object val = argsMap.get(name);
+            Object val = toolArgs.get(name);
             return val != null ? String.valueOf(val) : null;
         };
         return function.apply(context);

@@ -70,7 +70,7 @@ public class IndexInfo implements HttpHandler, AiTool {
     }
 
     @Override
-    public Object invoke(Map<String, Object> argsMap) {
+    public Object invoke(Map<String, Object> toolArgs) {
         return function.apply(null);
     }
 }

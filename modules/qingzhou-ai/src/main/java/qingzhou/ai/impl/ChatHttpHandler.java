@@ -1,25 +1,18 @@
 package qingzhou.ai.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.ToolParameter;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.Chat;
-import qingzhou.llm.LLM;
-import qingzhou.llm.Listener;
-import qingzhou.llm.Parameter;
-import qingzhou.llm.Tool;
+import qingzhou.llm.*;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat",
@@ -84,9 +77,7 @@ public class ChatHttpHandler implements HttpHandler {
             int i = component.lastIndexOf(".");
             component = component.substring(i + 1);
 
-            ToolParameter[] tp = aiTool.parameters();
-            Parameter[] params = tp != null ? convertParams(tp) : null;
-            return Tool.of(component, description, params, aiTool::invoke);
+            return Tool.of(component, description, parseParameters(toolProp), aiTool::invoke);
         }).collect(Collectors.toSet());
         chat.generate(message, tools, new Listener() {
             boolean isReasoning = false;
@@ -130,7 +121,7 @@ public class ChatHttpHandler implements HttpHandler {
                             SseResult.type("TOOL_CALL")
                                     .content(json.toJson(args))
                                     .message(json.toJson(result))
-                                    .put("toolName", toolName)
+                                    .toolName(toolName)
                     ));
                 } catch (Exception e) {
                     logger.error("Failed to serialize tool call: " + e.getMessage());
@@ -178,12 +169,18 @@ public class ChatHttpHandler implements HttpHandler {
         return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 
-    private static Parameter[] convertParams(ToolParameter[] toolParameters) {
-        Parameter[] params = new Parameter[toolParameters.length];
-        for (int i = 0; i < toolParameters.length; i++) {
-            ToolParameter tp = toolParameters[i];
-            params[i] = Parameter.of(tp.name(), tp.description(), tp.required(), tp.enumValues());
-        }
-        return params;
+    private static Parameter[] parseParameters(Map<String, String> toolProp) {
+        Map<String, Map<String, String>> params = new LinkedHashMap<>();
+        toolProp.forEach((key, value) -> Stream.of(AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION).forEach(flag -> {
+            if (key.startsWith(flag)) {
+                String sp = key.substring(key.indexOf("."));
+                Map<String, String> param = params.computeIfAbsent(sp, s -> new HashMap<>());
+                param.put(flag, value);
+            }
+        }));
+
+        return params.values().stream()
+                .map(map -> Parameter.of(map.get(AiTool.PARAMETER_NAME), map.get(AiTool.PARAMETER_DESCRIPTION)))
+                .toArray(Parameter[]::new);
     }
 }
