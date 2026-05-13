@@ -100,7 +100,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.http.server</Export-Package>
-                        <Import-Package>qingzhou.logger,javax.security.cert</Import-Package>
+                        <Import-Package>qingzhou.logger,javax.security.cert,org.osgi.framework</Import-Package>
                         <Embed-Dependency>
                             reactor-netty-core,reactor-netty-http,
                             reactor-core,

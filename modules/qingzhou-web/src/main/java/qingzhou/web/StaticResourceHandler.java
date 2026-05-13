@@ -13,7 +13,7 @@ import qingzhou.http.server.HttpResponse;
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
-@Component(property = HttpHandler.HANDLE_PATH + "=/console")
+@Component(property = HttpHandler.HANDLE_PATH + "=")
 public class StaticResourceHandler implements HttpHandler {
 
     private static final String STATIC_RESOURCE_PATH = "/webapp/";

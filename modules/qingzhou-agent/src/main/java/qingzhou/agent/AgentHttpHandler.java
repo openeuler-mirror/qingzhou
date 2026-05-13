@@ -23,7 +23,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/agent")
+@Component(property = HttpHandler.HANDLE_PATH + "=")
 public class AgentHttpHandler implements HttpHandler {
     @Reference
     private Logger logger;
