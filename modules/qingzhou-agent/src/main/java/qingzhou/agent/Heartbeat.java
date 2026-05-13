@@ -54,8 +54,8 @@ public class Heartbeat {
         while (registryUrl.endsWith("/")) {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
-        refreshUrl = registryUrl + "/refresh";
-        registerUrl = registryUrl + "/register";
+        refreshUrl = registryUrl + "/registry/refresh";
+        registerUrl = registryUrl + "/registry/register";
 
         timer = new Timer("agent-heartbeat");
         timer.schedule(new TimerTask() {

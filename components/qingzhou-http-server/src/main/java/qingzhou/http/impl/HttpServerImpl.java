@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.*;
 
 import io.netty.channel.ChannelOption;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.HttpHandler;
@@ -60,7 +61,7 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
-        logger.info("http server started: http://localhost:" + port + "/console");
+        logger.info("http server started: http://localhost:" + port + "/web");
     }
 
     private <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
@@ -85,15 +86,19 @@ public class HttpServerImpl implements HttpServer {
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeHttpHandler")
-    public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties) {
+    public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
         String path = properties.get(HttpHandler.HANDLE_PATH);
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
         if (component == null) component = "@App";
         if (path == null)
             throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be null");
         path = path.trim();
-        if (!path.startsWith("/"))
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with '/', but it currently is: " + path);
+
+        if (reference != null) {
+            String prefix = reference.getBundle().getSymbolicName();
+            prefix = prefix.replace("qingzhou-", "");
+            path = "/" + prefix + path;
+        }
 
         if (handlerMap.containsKey(path)) {
             throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] already exists: " + path + " of [" + handlerMap.get(path).getClass().getName() + "]");
@@ -173,7 +178,7 @@ public class HttpServerImpl implements HttpServer {
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
         addHttpHandler(httpHandler, new HashMap<String, String>() {{
             put(HttpHandler.HANDLE_PATH, handlePath);
-        }});
+        }}, null);
     }
 
     @Override
