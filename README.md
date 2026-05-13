@@ -84,7 +84,7 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
         listen 8000;
 
         location /web {
-            alias /Users/tw/Desktop/qingzhou/modules/qingzhou-web/src/main/resources/webapp;
+            alias /modules/qingzhou-web/src/main/resources/webapp;
             index index.html;
             try_files $uri $uri/ /web/index.html;
         }

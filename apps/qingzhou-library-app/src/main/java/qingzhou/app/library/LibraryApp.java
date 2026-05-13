@@ -4,6 +4,7 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
+import qingzhou.logger.Logger;
 
 @App(icon = "ReadingFilled",
         name = {"图书管理", "en:Book Management"},
@@ -13,5 +14,7 @@ import qingzhou.api.QingzhouApp;
 public class LibraryApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) {
+        Logger logger = appContext.getService(Logger.class);
+        logger.info("图书管理应用启动成功！");
     }
 }
