@@ -26,7 +26,7 @@ public class ChatHttpHandler implements HttpHandler {
     private Json json;
 
     private Chat chat;
-    private final Map<AiTool, Map<String, String>> aiTools = new HashMap<>();
+    private final Map<AiTool, Map<String, Object>> aiTools = new HashMap<>();
 
     @Activate
     public void init(Map<String, String> config) {
@@ -38,7 +38,7 @@ public class ChatHttpHandler implements HttpHandler {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindAiTool(AiTool tool, Map<String, String> properties) {
+    public void bindAiTool(AiTool tool, Map<String, Object> properties) {
         aiTools.put(tool, properties);
     }
 
@@ -71,9 +71,9 @@ public class ChatHttpHandler implements HttpHandler {
 
         Set<Tool> tools = aiTools.entrySet().stream().map(entry -> {
             AiTool aiTool = entry.getKey();
-            Map<String, String> toolProp = entry.getValue();
-            String description = toolProp.get(AiTool.TOOL_DESCRIPTION);
-            String component = toolProp.get(ComponentConstants.COMPONENT_NAME);
+            Map<String, Object> toolProp = entry.getValue();
+            String description = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
+            String component = toolProp.get(ComponentConstants.COMPONENT_NAME).toString();
             int i = component.lastIndexOf(".");
             component = component.substring(i + 1);
 
@@ -169,13 +169,14 @@ public class ChatHttpHandler implements HttpHandler {
         return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 
-    private static Parameter[] parseParameters(Map<String, String> toolProp) {
+    private static Parameter[] parseParameters(Map<String, Object> toolProp) {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
+
         toolProp.forEach((key, value) -> Stream.of(AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION).forEach(flag -> {
             if (key.startsWith(flag)) {
                 String sp = key.substring(key.indexOf("."));
                 Map<String, String> param = params.computeIfAbsent(sp, s -> new HashMap<>());
-                param.put(flag, value);
+                param.put(flag, (String) value);
             }
         }));
 
