@@ -1,14 +1,14 @@
 package qingzhou.web;
 
-import org.osgi.service.component.annotations.Component;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
-
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.osgi.service.component.annotations.Component;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
@@ -83,8 +83,7 @@ public class StaticResourceHandler implements HttpHandler {
                 serveStaticResource(httpRequest, "/" + INDEX_FILE, response);
                 return;
             }
-            response.status(404);
-            response.sendFinish("not found: " + path);
+            response.status404Finish();
             return;
         }
 

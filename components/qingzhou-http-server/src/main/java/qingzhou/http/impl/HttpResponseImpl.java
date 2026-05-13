@@ -65,11 +65,6 @@ public class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public HttpResponse contentTypeJsonUtf8() {
-        return contentType("application/json;charset=UTF-8");
-    }
-
-    @Override
     public HttpResponse send(String bodyAsUtf8) {
         if (bodyAsUtf8 != null) {
             send(bodyAsUtf8.getBytes(StandardCharsets.UTF_8));

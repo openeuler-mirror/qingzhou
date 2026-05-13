@@ -13,8 +13,6 @@ public interface HttpResponse {
 
     HttpResponse contentType(String value);
 
-    HttpResponse contentTypeJsonUtf8();
-
     HttpResponse send(String bodyAsUtf8);
 
     HttpResponse send(byte[] body);
