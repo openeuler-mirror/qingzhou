@@ -47,9 +47,9 @@ public class StaticResourceHandler implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         String requestPath = httpRequest.getPath();
 
-        // 去掉 /console 前缀
-        if (requestPath.startsWith("/console")) {
-            requestPath = requestPath.substring("/console".length());
+        // 去掉 /web 前缀
+        if (requestPath.startsWith("/web")) {
+            requestPath = requestPath.substring("/web".length());
             if (requestPath.isEmpty()) {
                 requestPath = "/";
             }
