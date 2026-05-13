@@ -152,7 +152,6 @@
                 <include>${project.groupId}:qingzhou-library-app</include>
                 <include>${project.groupId}:qingzhou-demo-app</include>
                 <include>${project.groupId}:qingzhou-tomcat-app</include>
-                <include>${project.groupId}:qingzhou-nginx-app</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
