@@ -13,7 +13,6 @@
     <modules>
         <module>qingzhou-demo-app</module>
         <module>qingzhou-library-app</module>
-        <module>qingzhou-tomcat-app</module>
     </modules>
 
     <dependencies>
