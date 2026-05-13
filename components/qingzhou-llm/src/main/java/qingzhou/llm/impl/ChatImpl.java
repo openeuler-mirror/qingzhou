@@ -2,7 +2,6 @@ package qingzhou.llm.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.noear.solon.ai.chat.ChatResponse;
@@ -66,9 +65,9 @@ public class ChatImpl implements Chat {
         if (parameters != null) {
             for (Parameter parameter : parameters) {
                 functionTool.paramAdd(parameter.name(), String.class, parameter.required(), parameter.description(), null, null);
-                List<String> list = parameter.enumValues();
-                if (list != null && !list.isEmpty()) {
-                    String enumValues = Arrays.toString(list.toArray());
+                String[] list = parameter.enumValues();
+                if (list != null && list.length != 0) {
+                    String enumValues = Arrays.toString(list);
                     functionTool.description(functionTool.description() + " Optional values: " + enumValues + ", you can only choose one of these values as input.");
                 }
             }

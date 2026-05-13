@@ -17,13 +17,22 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.ai.ToolParameter;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/model",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回某个应用模块的详细信息，用于描述如何展示和操作该模块的数据。核心内容包括：模块基本信息，包含模块代码、名称、图标、所属应用；字段定义列表，每个字段包含代码、输入类型、字段类型、是否必填、是否只读、是否唯一标识、是否在列表或表单中显示、是否可用于搜索、名称、提示信息、取值范围及各种校验规则；操作定义列表，每个操作包含代码、图标、顺序、操作名称、描述，以及该操作在列表头、列表行或批处理场景下的可用性标识。通过该接口可理解一个功能模块有哪些可用的数据字段、每个字段的填写和展示规则，以及该模块支持哪些操作，从而动态生成数据管理界面或执行相应的数据操作。"})
+        AiTool.TOOL_DESCRIPTION + "=该接口返回某个应用模块的详细信息，用于描述如何展示和操作该模块的数据。核心内容包括：模块基本信息，包含模块代码、名称、图标、所属应用；字段定义列表，每个字段包含代码、输入类型、字段类型、是否必填、是否只读、是否唯一标识、是否在列表或表单中显示、是否可用于搜索、名称、提示信息、取值范围及各种校验规则；操作定义列表，每个操作包含代码、图标、顺序、操作名称、描述，以及该操作在列表头、列表行或批处理场景下的可用性标识。通过该接口可理解一个功能模块有哪些可用的数据字段、每个字段的填写和展示规则，以及该模块支持哪些操作，从而动态生成数据管理界面或执行相应的数据操作。",
+
+        AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
+        AiTool.PARAMETER_DESCRIPTION + ".1=" + "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。",
+
+        AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
+        AiTool.PARAMETER_DESCRIPTION + ".2=" + "应用唯一编码，该编码在同一个轻舟实例下不会重复。",
+
+        AiTool.PARAMETER_NAME + ".3=" + WebUtil.MODEL_CODE,
+        AiTool.PARAMETER_DESCRIPTION + ".3=" + "模块唯一编码，该编码在同一个应用内不会重复。"
+})
 public class ModelMetaInfo implements HttpHandler, AiTool {
     @Reference
     private Registry registry;
@@ -102,19 +111,10 @@ public class ModelMetaInfo implements HttpHandler, AiTool {
     }
 
     @Override
-    public ToolParameter[] parameters() {
-        return new ToolParameter[]{
-                ToolParameter.of(WebUtil.INSTANCE_ID, "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。"),
-                ToolParameter.of(WebUtil.APP_CODE, "应用唯一编码，该编码在同一个轻舟实例下不会重复。"),
-                ToolParameter.of(WebUtil.MODEL_CODE, "模块唯一编码，该编码在同一个应用内不会重复。")
-        };
-    }
-
-    @Override
-    public Object invoke(Map<String, Object> argsMap) {
+    public Object invoke(Map<String, Object> toolArgs) {
         Context context = name -> {
-            if (argsMap != null) {
-                Object val = argsMap.get(name);
+            if (toolArgs != null) {
+                Object val = toolArgs.get(name);
                 return val != null ? String.valueOf(val) : null;
             }
             return null;

@@ -31,8 +31,8 @@ class SseResult {
         return this;
     }
 
-    SseResult put(String key, String value) {
-        this.data.put(key, value);
+    SseResult toolName(String value) {
+        this.data.put("toolName", value);
         return this;
     }
 }

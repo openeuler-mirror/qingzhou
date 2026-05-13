@@ -1,7 +1,5 @@
 package qingzhou.llm;
 
-import java.util.List;
-
 public interface Parameter {
     String name();
 
@@ -9,10 +7,10 @@ public interface Parameter {
 
     boolean required();
 
-    List<String> enumValues();
+    String[] enumValues();
 
     static Parameter of(String name, String description,
-                        boolean required, List<String> enumValues) {
+                        boolean required, String[] enumValues) {
         return new Parameter() {
             @Override
             public String name() {
@@ -30,7 +28,7 @@ public interface Parameter {
             }
 
             @Override
-            public List<String> enumValues() {
+            public String[] enumValues() {
                 return enumValues;
             }
         };

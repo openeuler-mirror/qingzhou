@@ -106,7 +106,7 @@ public class QingzhouMain {
             }
         }
 
-        subDirs.sort(Comparator.comparing(File::getName)); // logger 排在最前面
+        subDirs.sort(Comparator.comparing(File::getName));
         subDirs.forEach(dir -> {
             try {
                 startBundles(dir.listFiles());
@@ -155,7 +155,6 @@ public class QingzhouMain {
         Map<String, String> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_STORAGE, Paths.get(instanceDir, "temp", "osgi-cache").toFile().getAbsolutePath());
         config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
-        config.put("org.apache.felix.scr.log.level", "1");
         String pkgExtra = System.getProperty("qingzhou.osgi.packages.extra");
         if (pkgExtra != null && !pkgExtra.trim().isEmpty()) {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, pkgExtra.trim());
