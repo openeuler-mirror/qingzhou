@@ -91,6 +91,7 @@ public class InvokeHttpHandler implements HttpHandler {
     private RequestImpl buildRequest(HttpRequest httpRequest) {
         String requestPath = httpRequest.getPath();
         int i = requestPath.indexOf("/", 1);
+        i = requestPath.indexOf("/", i + 1);
         String restPath = requestPath.substring(i + 1);
         String[] rest = restPath.split("/");
 

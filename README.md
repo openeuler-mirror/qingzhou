@@ -21,7 +21,7 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 - 环境要求：JDK 1.8+ 和 Maven 3.8+。
 - 构建：在源码根目录执行 `mvn clean install -DskipTests`，得到二进制产品包（/qingzhou/target/qingzhou）。
 - 启动：进入产品包的 bin 目录，执行启动脚本（如 Linux/macOS 下执行 sh start.sh）。
-- 访问：启动后，浏览器访问 http://localhost:7900/console 即可打开轻舟可视化 Web 管控台。
+- 访问：启动后，浏览器访问 http://localhost:7900/web 即可打开轻舟可视化 Web 管控台。
 
 ## 功能
 
@@ -59,17 +59,17 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 
 轻舟服务打开的接口（HTTP 协议）如下：
 
-| 接口URI      | 接口说明          | 访问形式                           |
-|------------|---------------|--------------------------------|
-| /invoke    | 执行指定应用的模块操作   | /invoke/-/admin/app/list       |
-| /register  | 注册远程实例上的应用    |                                |
-| /refresh   | 刷新远程实例的通信密钥   |                                |
-| /agent     | 在远程实例上执行应用的操作 |                                |
-| /console   | 管控台前端静态资源     |                                |
-| /web/index | 管控台后端应用概览     |                                |
-| /web/app   | 管控台后端应用元数据    | /web/app?appId=admin@-         |
-| /web/model | 管控台后端应用模块元数据  | /web/model?modelId=app@admin@- |
-| /chat      | 智能管控自然语言交互接口  |                                |
+| 接口URI              | 接口说明          | 访问形式                                   |
+|--------------------|---------------|----------------------------------------|
+| /registry/invoke   | 执行指定应用的模块操作   | /registry/invoke/-/admin/app/list      |
+| /registry/register | 注册远程实例上的应用    |                                        |
+| /registry/refresh  | 刷新远程实例的通信密钥   |                                        |
+| /agent             | 在远程实例上执行应用的操作 |                                        |
+| /web               | 管控台前端静态资源     |                                        |
+| /registry/web/index | 管控台后端应用概览     |                                        |
+| /registry/web/app  | 管控台后端应用元数据    | /registry/web/app?appId=admin@-        |
+| /registry/web/model | 管控台后端应用模块元数据  | /registry/web/model?modelId=app@admin@- |
+| /ai/chat           | 智能管控自然语言交互接口  |                                        |
 
 ### 前后端分离
 
@@ -82,24 +82,28 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
     ```asciidoc
     server {
         listen 8000;
-    
-        location /console {
+
+        location /web {
             alias /Users/tw/Desktop/qingzhou/modules/qingzhou-web/src/main/resources/webapp;
             index index.html;
-            try_files $uri $uri/ /console/index.html;
+            try_files $uri $uri/ /web/index.html;
         }
-    
-        location ^~ /web/ {
-            proxy_pass http://localhost:7900/web/;
+
+        location ^~ /registry/web/ {
+            proxy_pass http://localhost:7900/registry/web/;
         }
-    
-        location ^~ /invoke/ {
-            proxy_pass http://localhost:7900/invoke/;
+
+        location ^~ /registry/invoke/ {
+            proxy_pass http://localhost:7900/registry/invoke/;
+        }
+
+        location ^~ /ai/ {
+            proxy_pass http://localhost:7900/ai/;
         }
     }
     ```
 3. 启动 Nginx 服务。
-4. 访问 http://localhost:8000/console 打开轻舟管控台。
+4. 访问 http://localhost:8000/web 打开轻舟管控台。
 
 ### 常见问题
 
