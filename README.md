@@ -14,7 +14,7 @@ Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要
 
 ### 轻舟架构图
 
-![Qingzhou Architecture Diagram](./docs/images/architecture.jpg)
+![Qingzhou Architecture Diagram](./docs/images/architecture.png)
 
 ## 快速上手
 

@@ -20,16 +20,34 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>${jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -42,7 +60,8 @@
                     <instructions>
                         <Export-Package>qingzhou.json</Export-Package>
                         <Import-Package/>
-                        <Embed-Dependency>jackson-core;scope=compile;inline=false,jackson-databind,jackson-annotations</Embed-Dependency>
+                        <Embed-Dependency>jackson-core;scope=compile;inline=false,jackson-databind,jackson-annotations
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>

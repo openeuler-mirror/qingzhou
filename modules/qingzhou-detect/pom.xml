@@ -4,26 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
-        <artifactId>components</artifactId>
+        <artifactId>modules</artifactId>
         <version>${revision}</version>
     </parent>
 
     <packaging>bundle</packaging>
-    <artifactId>qingzhou-qr</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.nayuki</groupId>
-            <artifactId>qrcodegen</artifactId>
-            <version>1.8.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-    </dependencies>
+    <artifactId>qingzhou-detect</artifactId>
 
     <build>
         <plugins>
@@ -32,9 +18,8 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.qr</Export-Package>
-                        <Import-Package>javax.imageio</Import-Package>
-                        <Embed-Dependency>qrcodegen</Embed-Dependency>
+                        <Export-Package/>
+                        <Import-Package/>
                     </instructions>
                 </configuration>
             </plugin>
