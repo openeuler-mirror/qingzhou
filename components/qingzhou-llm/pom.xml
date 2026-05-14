@@ -138,7 +138,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.llm</Export-Package>
-                        <Import-Package>javax.net,javax.net.ssl,sun.misc</Import-Package>
+                        <Import-Package>qingzhou.logger,javax.net,javax.net.ssl,sun.misc</Import-Package>
                         <Embed-Dependency>
                             solon-ai-core,solon-ai-dialect-openai,
                             solon,slf4j-api,
