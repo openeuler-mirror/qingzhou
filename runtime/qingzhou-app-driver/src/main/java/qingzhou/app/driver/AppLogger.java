@@ -1,19 +1,14 @@
 package qingzhou.app.driver;
 
 import qingzhou.logger.Logger;
+import qingzhou.logger.LoggerDecorator;
 
-public class AppLogger implements Logger {
+public class AppLogger extends LoggerDecorator {
     private final String app;
-    private final Logger delegate;
 
     public AppLogger(String app, Logger delegate) {
+        super(delegate);
         this.app = app;
-        this.delegate = delegate;
-    }
-
-    @Override
-    public boolean isDebugEnabled() {
-        return delegate.isDebugEnabled();
     }
 
     @Override
@@ -27,11 +22,6 @@ public class AppLogger implements Logger {
     }
 
     @Override
-    public boolean isInfoEnabled() {
-        return delegate.isInfoEnabled();
-    }
-
-    @Override
     public void info(String msg) {
         delegate.info("[" + app + "] " + msg);
     }
@@ -42,11 +32,6 @@ public class AppLogger implements Logger {
     }
 
     @Override
-    public boolean isWarnEnabled() {
-        return delegate.isWarnEnabled();
-    }
-
-    @Override
     public void warn(String msg) {
         delegate.warn("[" + app + "] " + msg);
     }
@@ -54,11 +39,6 @@ public class AppLogger implements Logger {
     @Override
     public void warn(String msg, Throwable t) {
         delegate.warn("[" + app + "] " + msg, t);
-    }
-
-    @Override
-    public boolean isErrorEnabled() {
-        return delegate.isErrorEnabled();
     }
 
     @Override
