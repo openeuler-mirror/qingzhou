@@ -56,7 +56,7 @@ public class ChatHttpHandler implements HttpHandler {
             try {
                 // 在应用里面可包含实例id和应用code等参数
                 Map<String, String> map = json.fromJson(str, HashMap.class);
-                message = map.entrySet().stream().filter(e -> e.getValue() != null).map(e -> e.getKey() + ":" + e.getValue() + ",").collect(Collectors.joining());
+                message = map.entrySet().stream().filter(e -> e.getValue() != null).map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", "));
             } catch (Exception e) {
                 logger.error("failed to convert to JSON: " + str);
             }
