@@ -90,17 +90,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.17</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.noear</groupId>
             <artifactId>eggg</artifactId>
             <version>1.0.12</version>
@@ -133,10 +122,10 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.llm</Export-Package>
-                        <Import-Package>javax.net,javax.net.ssl,sun.misc</Import-Package>
+                        <Import-Package>javax.net,javax.net.ssl,sun.misc,org.slf4j.*</Import-Package>
                         <Embed-Dependency>
                             solon-ai-core,solon-ai-dialect-openai,
-                            solon,slf4j-api,
+                            solon,
                             solon-net-httputils,
                             snack4,snack4-jsonschema,
                             reactive-streams,reactor-core,
