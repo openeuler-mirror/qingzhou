@@ -78,6 +78,11 @@ public class IndexInfo implements HttpHandler, AiTool {
 
     @Override
     public Object invoke(Map<String, Object> toolArgs) {
-        return function.apply(null);
+        Context context = name -> {
+            if (toolArgs == null) return null;
+            Object val = toolArgs.get(name);
+            return val != null ? String.valueOf(val) : null;
+        };
+        return function.apply(context);
     }
 }
