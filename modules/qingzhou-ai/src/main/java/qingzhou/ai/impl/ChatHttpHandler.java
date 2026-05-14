@@ -61,7 +61,7 @@ public class ChatHttpHandler implements HttpHandler {
                 logger.error("failed to convert to JSON: " + str);
             }
         }
-        if (message == null) {
+        if (message == null || message.isEmpty()) {
             httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null")));
             return;
         }
@@ -172,16 +172,24 @@ public class ChatHttpHandler implements HttpHandler {
     private static Parameter[] parameters(Map<String, Object> toolProp) {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
 
-        toolProp.forEach((key, value) -> Stream.of(AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION).forEach(flag -> {
+        toolProp.forEach((key, value) -> Stream.of(
+                AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION, AiTool.PARAMETER_REQUIRED).forEach(flag -> {
             if (key.startsWith(flag)) {
-                String sp = key.substring(key.indexOf("."));
+                String sp = "";
+                int i = key.indexOf(".");
+                if (i != -1) {
+                    sp = key.substring(i);
+                }
                 Map<String, String> param = params.computeIfAbsent(sp, s -> new HashMap<>());
                 param.put(flag, (String) value);
             }
         }));
 
         return params.values().stream()
-                .map(map -> Parameter.of(map.get(AiTool.PARAMETER_NAME), map.get(AiTool.PARAMETER_DESCRIPTION)))
+                .map(map -> Parameter.of(
+                        map.get(AiTool.PARAMETER_NAME),
+                        map.get(AiTool.PARAMETER_DESCRIPTION),
+                        Boolean.parseBoolean(map.getOrDefault(AiTool.PARAMETER_REQUIRED, "true"))))
                 .toArray(Parameter[]::new);
     }
 }

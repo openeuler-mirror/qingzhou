@@ -34,8 +34,7 @@ public interface Parameter {
         };
     }
 
-    // 便捷方法：不带枚举值的参数
-    static Parameter of(String name, String description) {
-        return of(name, description, true, null);
+    static Parameter of(String name, String description, boolean required) {
+        return of(name, description, required, null);
     }
 }

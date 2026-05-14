@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
+import qingzhou.api.Constants;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -20,11 +21,15 @@ import qingzhou.registry.Registry;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
         AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
 
+        AiTool.PARAMETER_NAME + ".0=" + Constants.REQUEST_PARAMETER_NAME_LANG,
+        AiTool.PARAMETER_DESCRIPTION + ".0=" + "指定以哪种国际化语言展示结果，简体请输入：zh，繁體请输入：tr，英语请输入：en",
+        AiTool.PARAMETER_REQUIRED + ".0=" + "false",
+
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
-        AiTool.PARAMETER_DESCRIPTION + ".1=" + "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用。",
+        AiTool.PARAMETER_DESCRIPTION + ".1=" + "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用",
 
         AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
-        AiTool.PARAMETER_DESCRIPTION + ".2=" + "应用唯一编码，该编码在同一个轻舟实例下不会重复。"
+        AiTool.PARAMETER_DESCRIPTION + ".2=" + "应用唯一编码，该编码在同一个轻舟实例下不会重复"
 })
 public class AppMetaInfo implements HttpHandler, AiTool {
     @Reference
@@ -44,13 +49,14 @@ public class AppMetaInfo implements HttpHandler, AiTool {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
+        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
 
         Map<String, Object> appMetaInfo = new HashMap<>();
         appMetaInfo.put(WebUtil.INSTANCE_ID, instanceId);
         appMetaInfo.put(WebUtil.APP_CODE, app.code);
         appMetaInfo.put("icon", app.icon);
-        appMetaInfo.put("name", i18nService.getI18n(app.name));
-        appMetaInfo.put("info", i18nService.getI18n(app.info));
+        appMetaInfo.put("name", i18nService.getI18n(app.name, lang));
+        appMetaInfo.put("info", i18nService.getI18n(app.info, lang));
 
         List<Map<String, String>> models = new ArrayList<>();
         app.models.forEach(model -> {
@@ -60,7 +66,7 @@ public class AppMetaInfo implements HttpHandler, AiTool {
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
             modelBasicInfo.put("action", model.action);
-            modelBasicInfo.put("name", i18nService.getI18n(model.name));
+            modelBasicInfo.put("name", i18nService.getI18n(model.name, lang));
             models.add(modelBasicInfo);
         });
         appMetaInfo.put("models", models);
@@ -72,7 +78,7 @@ public class AppMetaInfo implements HttpHandler, AiTool {
             menuMetaInfo.put("icon", menu.icon);
             menuMetaInfo.put("parent", menu.parent);
             menuMetaInfo.put("order", menu.order + "");
-            menuMetaInfo.put("name", i18nService.getI18n(menu.name));
+            menuMetaInfo.put("name", i18nService.getI18n(menu.name, lang));
             menus.add(menuMetaInfo);
         });
         appMetaInfo.put("menus", menus);

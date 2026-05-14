@@ -42,11 +42,6 @@ public class I18nServiceImpl implements I18nService {
         }
     }
 
-    @Override
-    public String getI18n(String[] i18n, Object... args) {
-        return getI18n(i18n, (Lang) null, args);
-    }
-
     private String getI18n(String[] i18n, Lang lang, Object... args) {
         if (lang == null) lang = Lang.zh;
 

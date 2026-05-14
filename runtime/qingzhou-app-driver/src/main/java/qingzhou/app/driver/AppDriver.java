@@ -15,6 +15,7 @@ import qingzhou.api.QingzhouApp;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 
 public class AppDriver implements BundleActivator {
@@ -26,6 +27,7 @@ public class AppDriver implements BundleActivator {
     private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
     private final Map<String, Object> serviceObjects = new HashMap<>();
 
+    private AppMeta appMeta;
     private AppContextImpl appContext;
     QingzhouApp qingzhouApp;
 
@@ -36,7 +38,7 @@ public class AppDriver implements BundleActivator {
         this.context = context;
 
         // 准备元数据
-        AppMeta appMeta = new AppMeta();
+        appMeta = new AppMeta();
         App app = parseAnnotations();
         appMeta.setApp(app);
 
@@ -62,14 +64,17 @@ public class AppDriver implements BundleActivator {
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
         ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
         try {
-            Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app", context.getBundle().getSymbolicName(), null);
+            Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
+                    context.getBundle().getSymbolicName(), null);
             Dictionary<String, Object> properties = appConfiguration.getProperties();
             if (properties != null) {
                 Enumeration<?> keys = properties.keys();
                 while (keys.hasMoreElements()) {
                     String key = (String) keys.nextElement();
-                    if (key.equals(Constants.SERVICE_PID)) continue;
-                    if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID)) continue;
+                    if (key.equals(Constants.SERVICE_PID))
+                        continue;
+                    if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
+                        continue;
 
                     String value = (String) properties.get(key);
                     appProperties.setProperty(key, value);
@@ -100,7 +105,8 @@ public class AppDriver implements BundleActivator {
             ServiceReference<?> serviceReference = null;
             if (name != null) {
                 try {
-                    Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType, "(" + Constants.SERVICE_PID + "=" + name + ")");
+                    Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
+                            "(" + Constants.SERVICE_PID + "=" + name + ")");
                     if (!serviceReferences.isEmpty()) {
                         serviceReference = serviceReferences.iterator().next();
                     }
@@ -112,7 +118,11 @@ public class AppDriver implements BundleActivator {
             }
             if (serviceReference != null) {
                 serviceReferences.add(serviceReference);
-                return context.getService(serviceReference);
+                Object service = context.getService(serviceReference);
+                if (service instanceof Logger) {
+                    service = new AppLogger(appMeta.getApp().code, (Logger) service);
+                }
+                return service;
             }
             return null;
         });
@@ -125,7 +135,7 @@ public class AppDriver implements BundleActivator {
         try (InputStream inputStream = annotationFile.openStream()) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024 * 4];
-            for (int n; (n = inputStream.read(buffer)) != -1; ) {
+            for (int n; (n = inputStream.read(buffer)) != -1;) {
                 bos.write(buffer, 0, n);
             }
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);

@@ -7,6 +7,7 @@ public interface AiTool {
 
     String PARAMETER_NAME = "PARAMETER_NAME";
     String PARAMETER_DESCRIPTION = "PARAMETER_DESCRIPTION";
+    String PARAMETER_REQUIRED = "PARAMETER_REQUIRED";
 
     Object invoke(Map<String, Object> toolArgs);
 }

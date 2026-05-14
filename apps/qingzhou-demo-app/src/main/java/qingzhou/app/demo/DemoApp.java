@@ -4,6 +4,7 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
+import qingzhou.logger.Logger;
 
 @App(icon = "Promotion",
         name = {"示例应用", "en:Demo Application"},
@@ -18,5 +19,7 @@ import qingzhou.api.QingzhouApp;
 public class DemoApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) {
+        Logger logger = appContext.getService(Logger.class);
+        logger.info("Demo 应用启动成功！");
     }
 }
