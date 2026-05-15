@@ -120,9 +120,13 @@ public class ChatHttpHandler implements HttpHandler {
         if (knowledgeBase != null) {
             String[] queried = knowledgeBase.query(message);
             if (queried != null) {
+                StringBuilder ragPrompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
+                        "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。【参考文档】：");
                 for (String s : queried) {
-                    System.out.println(s);
+                    ragPrompt.append(s).append(System.lineSeparator());
                 }
+                ragPrompt.append("【问题】：").append(message);
+                message = ragPrompt.toString();
             }
         }
 
