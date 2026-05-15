@@ -62,7 +62,7 @@ public class StartArg extends Processor {
 
         commands.add(wrap("-Duser.dir=" + instanceDir.getAbsolutePath()));
         commands.add(wrap("-Dqingzhou.instance=" + instanceDir.getAbsolutePath()));
-        commands.add(wrap("-Dqingzhou.version=" + getLibDir().getName().substring("version".length())));
+        commands.add(wrap("-Dqingzhou.version=" + getLibDir().getAbsolutePath()));
 
         commands.add("-classpath");
         commands.add(wrap(Arrays.stream(Objects.requireNonNull(new File(getLibDir(), "runtime").listFiles(f -> !f.isDirectory())))

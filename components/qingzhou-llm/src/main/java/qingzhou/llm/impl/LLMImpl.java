@@ -1,15 +1,17 @@
 package qingzhou.llm.impl;
 
-import org.noear.solon.ai.chat.ChatModel;
 import org.noear.solon.ai.chat.dialect.ChatDialectManager;
+import org.noear.solon.ai.embedding.dialect.EmbeddingDialectManager;
 import org.noear.solon.ai.llm.dialect.openai.OpenaiChatDialect;
+import org.noear.solon.ai.llm.dialect.openai.OpenaiEmbeddingDialect;
 import org.noear.solon.ai.llm.dialect.openai.OpenaiResponsesDialect;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.llm.Chat;
+import qingzhou.llm.ChatModel;
+import qingzhou.llm.EmbeddingModel;
 import qingzhou.llm.LLM;
-import qingzhou.llm.impl.slf4j.Slf4jLogBridge;
+import qingzhou.llm.impl.log.Slf4jLogBridge;
 import qingzhou.logger.Logger;
 
 @Component
@@ -19,17 +21,34 @@ public class LLMImpl implements LLM {
 
     @Activate
     public void init() {
-        Slf4jLogBridge.qingzhouLogger = logger;
+        Slf4jLogBridge.qingzhouLogger = logger; // 放在 solon 加载最前面
+
+        // chat 模型需要
+        ChatDialectManager.register(new OpenaiChatDialect());
+        ChatDialectManager.register(new OpenaiResponsesDialect());
+
+        // 嵌入模型需求
+        EmbeddingDialectManager.register(new OpenaiEmbeddingDialect());
     }
 
     @Override
-    public Chat buildChatModel(String baseUrl, String apiKey, String model) {
-        ChatDialectManager.register(new OpenaiChatDialect());
-        ChatDialectManager.register(new OpenaiResponsesDialect());
-        return new ChatImpl(ChatModel
+    public ChatModel buildChatModel(String baseUrl, String apiKey, String model, String... systemMessage) {
+        org.noear.solon.ai.chat.ChatModel chatModel = org.noear.solon.ai.chat.ChatModel
                 .of(baseUrl)
                 .apiKey(apiKey)
                 .model(model)
-                .build());
+                .build();
+        return new ChatModelImpl(chatModel, systemMessage);
+    }
+
+    @Override
+    public EmbeddingModel buildEmbeddingModel(String baseUrl, String apiKey, String model) {
+        org.noear.solon.ai.embedding.EmbeddingModel embeddingModel = org.noear.solon.ai.embedding.EmbeddingModel
+                .of(baseUrl)
+                .apiKey(apiKey)
+                .model(model)
+                .build();
+
+        return new EmbeddingModelImpl(embeddingModel);
     }
 }

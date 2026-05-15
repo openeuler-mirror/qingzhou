@@ -1,1 +1,1 @@
-qingzhou.llm.impl.slf4j.Slf4jLogBridge
+qingzhou.llm.impl.log.Slf4jLogBridge

@@ -1,6 +1,11 @@
 package qingzhou.ai.impl;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,16 +30,58 @@ public class ChatHttpHandler implements HttpHandler {
     @Reference
     private Json json;
 
-    private Chat chat;
+    private ChatModel chatModel;
+    private VectorStore knowledgeBase;
+
     private final Map<AiTool, Map<String, Object>> aiTools = new HashMap<>();
 
     @Activate
-    public void init(Map<String, String> config) {
-        String baseUrl = config.get("base_url");
-        String apiKey = config.get("api_key");
-        String model = config.get("model");
+    public void init(Map<String, String> config) throws IOException {
+        initKnowledgeBase(config);
 
-        chat = llm.buildChatModel(baseUrl, apiKey, model);
+        chatModel = llm.buildChatModel(
+                config.get("chat.base_url"),
+                config.get("chat.api_key"),
+                config.get("chat.model"),
+                knowledgeBase == null ? buildKnowledgeSystemMessage() : null);
+    }
+
+    private void initKnowledgeBase(Map<String, String> config) throws IOException {
+        // 构建内存向量库
+        String embedUrl = config.get("embed.base_url");
+        if (embedUrl != null && !embedUrl.isEmpty()) {
+            EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
+            knowledgeBase = embeddingModel.buildVectorStore();
+        }
+
+        // 将知识文档加入向量库
+        if (knowledgeBase != null) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(
+                    Paths.get(System.getProperty("qingzhou.version"), "docs"),
+                    "*.md")) {
+                for (Path md : stream) {
+                    List<String> contents = Files.readAllLines(md);
+                    knowledgeBase.insert(String.join(System.lineSeparator(), contents), 500);
+                }
+            }
+        }
+    }
+
+    private String buildKnowledgeSystemMessage() throws IOException {
+        StringBuilder systemPrompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
+                "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。【参考文档】：");
+
+        // 使用通配符过滤，只要 .md 文件
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(
+                Paths.get(System.getProperty("qingzhou.version"), "docs"),
+                "*.md")) {
+            for (Path md : stream) {
+                systemPrompt.append(System.lineSeparator());
+                List<String> contents = Files.readAllLines(md);
+                contents.forEach(str -> systemPrompt.append(System.lineSeparator()).append(str));
+            }
+        }
+        return systemPrompt.toString();
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -47,7 +94,7 @@ public class ChatHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         // 解析请求
         String message = null;
         byte[] body = httpRequest.getBody();
@@ -62,98 +109,25 @@ public class ChatHttpHandler implements HttpHandler {
             }
         }
         if (message == null || message.isEmpty()) {
-            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null")));
+            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null"), json));
             return;
+        }
+
+        // RAG 检索增强问答
+        if (knowledgeBase != null) {
+            String[] queried = knowledgeBase.query(message);
+            if (queried != null) {
+                for (String s : queried) {
+                    System.out.println(s);
+                }
+            }
         }
 
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        chat.generate(message, tools(), new Listener() {
-            final String messageId = UUID.randomUUID().toString().replace("-", "");
-
-            boolean isReasoning = false;
-            boolean isMessage = false;
-
-            @Override
-            public void onBegin() {
-                httpResponse.send(resultToString(SseResult.type("RUN_STARTED")));
-            }
-
-            @Override
-            public void onReasoning(String content) {
-                if (!isReasoning) {
-                    isReasoning = true;
-                    if (isMessage) {
-                        httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_END").messageId(messageId)));
-                    }
-                    isMessage = false;
-                    httpResponse.send(resultToString(SseResult.type("REASONING_START")));
-                }
-                httpResponse.send(resultToString(SseResult.type("REASONING_CONTENT").content(content)));
-            }
-
-            @Override
-            public void onReasoningPause() {
-                httpResponse.send(resultToString(SseResult.type("REASONING_PAUSE")));
-            }
-
-            @Override
-            public void onReasoningResume() {
-                httpResponse.send(resultToString(SseResult.type("REASONING_RESUME")));
-            }
-
-            @Override
-            public void onToolCall(String toolName, Map<String, Object> args, Object result) {
-                try {
-                    httpResponse.send(resultToString(
-                            SseResult.type("TOOL_CALL")
-                                    .content(json.toJson(args))
-                                    .message(json.toJson(result))
-                                    .toolName(toolName)
-                    ));
-                } catch (Exception e) {
-                    logger.error("Failed to serialize tool call: " + e.getMessage());
-                }
-            }
-
-            @Override
-            public void onMessage(String content) {
-                if (!isMessage) {
-                    isMessage = true;
-                    if (isReasoning) {
-                        httpResponse.send(resultToString(SseResult.type("REASONING_END")));
-                    }
-                    isReasoning = false;
-                    httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_START").messageId(messageId)));
-                }
-                httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_CONTENT").messageId(messageId).content(content)));
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                String errMsg = t.getMessage();
-                logger.error(errMsg);
-                httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(errMsg)));
-            }
-
-            @Override
-            public void onComplete() {
-                httpResponse.send(resultToString(SseResult.type("TEXT_MESSAGE_END").messageId(messageId)));
-                httpResponse.sendFinish(resultToString(SseResult.type("RUN_FINISHED")));
-            }
-        });
-    }
-
-    private String resultToString(SseResult result) {
-        String toJson;
-        try {
-            toJson = json.toJson(result.data);
-        } catch (Exception e) {
-            toJson = e.getMessage();
-        }
-        return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
+        chatModel.chat(message, tools(), new SseListener(httpResponse, logger, json));
     }
 
     private Set<Tool> tools() {
@@ -169,7 +143,7 @@ public class ChatHttpHandler implements HttpHandler {
         }).collect(Collectors.toSet());
     }
 
-    private static Parameter[] parameters(Map<String, Object> toolProp) {
+    private Parameter[] parameters(Map<String, Object> toolProp) {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
 
         toolProp.forEach((key, value) -> Stream.of(
@@ -191,5 +165,15 @@ public class ChatHttpHandler implements HttpHandler {
                         map.get(AiTool.PARAMETER_DESCRIPTION),
                         Boolean.parseBoolean(map.getOrDefault(AiTool.PARAMETER_REQUIRED, "true"))))
                 .toArray(Parameter[]::new);
+    }
+
+    static String resultToString(SseResult result, Json json) {
+        String toJson;
+        try {
+            toJson = json.toJson(result.data);
+        } catch (Exception e) {
+            toJson = e.getMessage();
+        }
+        return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 }

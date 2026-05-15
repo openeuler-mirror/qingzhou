@@ -20,7 +20,7 @@ import qingzhou.registry.AppStubLocal;
 
 public class AppDriver implements BundleActivator {
     final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
-    final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+    final String qzVersion = new File(System.getProperty("qingzhou.version")).getName().substring("version".length()); // 缓存，防止系统参数被应用覆盖
 
     private BundleContext context;
 
@@ -135,7 +135,7 @@ public class AppDriver implements BundleActivator {
         try (InputStream inputStream = annotationFile.openStream()) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024 * 4];
-            for (int n; (n = inputStream.read(buffer)) != -1;) {
+            for (int n; (n = inputStream.read(buffer)) != -1; ) {
                 bos.write(buffer, 0, n);
             }
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);

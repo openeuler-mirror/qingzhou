@@ -1,5 +1,6 @@
 package qingzhou.registry.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class RegistryImpl implements Registry {
     @Activate
     public synchronized void start() {
         qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+        qzVersion = new File(qzVersion).getName().substring("version".length());
 
         tempMsg.forEach(s -> logger.info(s));
     }
