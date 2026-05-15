@@ -82,7 +82,7 @@ public class Heartbeat {
                     logger.error("heartbeat service error", e);
                 }
             }
-        }, 2000, 1000 * Long.parseLong(config.get("interval")));
+        }, 1000 * 10, 1000 * Long.parseLong(config.get("interval")));
     }
 
     @Deactivate
