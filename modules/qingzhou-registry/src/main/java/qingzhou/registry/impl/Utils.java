@@ -83,13 +83,13 @@ class Utils {
                             // 如果没有发现 non-loopback地址.只能用最次选的方案
                             InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
                             if (jdkSuppliedAddress == null) {
-                                System.out.println("The JDK InetAddress.getLocalHost() method unexpectedly returned null.");
+                                System.out.println("InetAddress.getLocalHost() method unexpectedly returned null.");
                             } else {
                                 first.add(jdkSuppliedAddress.getHostAddress());
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("Failed to getLocalInetAddress: " + e.getMessage());
+                        System.out.println("failed to getLocalInetAddress: " + e.getMessage());
                     }
 
                     localIps = first;

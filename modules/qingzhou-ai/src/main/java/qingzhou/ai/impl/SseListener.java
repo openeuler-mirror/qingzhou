@@ -62,7 +62,7 @@ public class SseListener implements Listener {
                             .toolName(toolName)
             ));
         } catch (Exception e) {
-            logger.error("Failed to serialize tool call: " + e.getMessage());
+            logger.error("failed to serialize tool call: " + e.getMessage());
         }
     }
 

@@ -166,7 +166,7 @@ public class HttpServerImpl implements HttpServer {
         loopResources.disposeLater()
                 .timeout(Duration.ofSeconds(10))
                 .onErrorResume(ex -> {
-                    logger.error("Failed to close loop resources:", ex);
+                    logger.error("failed to close loop resources:", ex);
                     return Mono.empty();
                 })
                 .subscribe(); // 非阻塞订阅

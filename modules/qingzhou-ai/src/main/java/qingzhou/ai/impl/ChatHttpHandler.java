@@ -46,22 +46,25 @@ public class ChatHttpHandler implements HttpHandler {
                 knowledgeBase == null ? buildKnowledgeSystemMessage() : null);
     }
 
-    private void initKnowledgeBase(Map<String, String> config) throws IOException {
-        // 构建内存向量库
+    private void initKnowledgeBase(Map<String, String> config) {
         String embedUrl = config.get("embed.base_url");
         if (embedUrl != null && !embedUrl.isEmpty()) {
-            EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
-            knowledgeBase = embeddingModel.buildVectorStore();
-        }
-
-        // 将知识文档加入向量库
-        if (knowledgeBase != null) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(
-                    Paths.get(System.getProperty("qingzhou.version"), "docs"),
-                    "*.md")) {
-                for (Path md : stream) {
-                    List<String> contents = Files.readAllLines(md);
-                    knowledgeBase.insert(String.join(System.lineSeparator(), contents), 500);
+            Path docsDir = Paths.get(System.getProperty("qingzhou.version"), "docs");
+            if (Files.exists(docsDir)) {
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(docsDir, "*.md")) {
+                    for (Path md : stream) {
+                        List<String> contents = Files.readAllLines(md);
+                        if (!contents.isEmpty()) {
+                            if (knowledgeBase == null) {
+                                EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
+                                knowledgeBase = embeddingModel.buildVectorStore();
+                            }
+                            knowledgeBase.insert(String.join(System.lineSeparator(), contents), 500);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("failed to initialize knowledge", e);
+                    knowledgeBase = null;
                 }
             }
         }
