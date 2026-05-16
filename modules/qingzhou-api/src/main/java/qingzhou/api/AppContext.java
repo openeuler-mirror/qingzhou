@@ -1,24 +1,10 @@
 package qingzhou.api;
 
-import java.io.File;
-import java.util.Properties;
-
 /**
  * 平台提供接口，在应用内部 ModelAction 被调用过程中使用，用以与平台交互
  */
-public interface AppContext {
-    Properties getProperties();
-
-    /**
-     * 获取本应用部署到的平台实例的根目录，默认是 instances/default 目录
-     */
-    File getBase();
-
-    String getVersion();
-
+public interface AppContext extends BasicContext {
     void addActionFilter(ActionFilter... actionFilter);
-
-    File getTemp();
 
     /**
      * 获取平台提供的共享服务，如：qingzhou.logger.Logger、qingzhou.json.Json等。

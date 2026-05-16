@@ -1,103 +1,67 @@
 package qingzhou.app.driver;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.osgi.framework.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
+import qingzhou.dto.meta.annotation.Model;
+import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppStubLocal;
 
 public class AppDriver implements BundleActivator {
-    final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
-    final String qzVersion = new File(System.getProperty("qingzhou.version")).getName().substring("version".length()); // 缓存，防止系统参数被应用覆盖
-
     private BundleContext context;
+    private AppMeta appMeta;
+    private AppContextImpl appContext;
 
     private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
     private final Map<String, Object> serviceObjects = new HashMap<>();
-
-    private AppMeta appMeta;
-    private AppContextImpl appContext;
-    QingzhouApp qingzhouApp;
-
-    private ServiceRegistration<AppStubLocal> appRegistration;
 
     @Override
     public void start(BundleContext context) throws Exception {
         this.context = context;
 
-        // 准备元数据
+        // 初始化元数据
         appMeta = new AppMeta();
-        App app = parseAnnotations();
-        appMeta.setApp(app);
+        appMeta.setApp(parseAnnotations());
 
-        // 启动应用
-        appContext = new AppContextImpl(this, appMeta);
-        appContext.appProperties = getAppProperties(); // 通过 OSGI CM 监听
-        String code = appContext.appProperties.getProperty("code");
+        // 初始化上下文
+        appContext = new AppContextImpl(this, context, appMeta);
+        Properties appProperties = parseProperties();
+        String code = appProperties.getProperty("code");
         if (code != null && !code.trim().isEmpty()) {
-            app.code = code.trim();
+            appMeta.getApp().code = code.trim();
         }
-        qingzhouApp = (QingzhouApp) Class.forName(app.className).newInstance();
-        qingzhouApp.start(appContext);
+        appContext.appProperties = appProperties;
 
-        appContext.startModelInstances();
+        // 初始化对象
+        appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).newInstance();
+        initAppModels();
 
-        // 注册本地应用
-        AppStubLocal appStub = new AppStubLocalImpl(appContext, appMeta);
-        appRegistration = context.registerService(AppStubLocal.class, appStub, null);
-    }
-
-    Properties getAppProperties() throws IOException {
-        Properties appProperties = new Properties();
-        ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
-        ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
-        try {
-            Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
-                    context.getBundle().getSymbolicName(), null);
-            Dictionary<String, Object> properties = appConfiguration.getProperties();
-            if (properties != null) {
-                Enumeration<?> keys = properties.keys();
-                while (keys.hasMoreElements()) {
-                    String key = (String) keys.nextElement();
-                    if (key.equals(Constants.SERVICE_PID))
-                        continue;
-                    if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
-                        continue;
-
-                    String value = (String) properties.get(key);
-                    appProperties.setProperty(key, value);
-                }
-            }
-        } finally {
-            context.ungetService(serviceReference);
-        }
-        return appProperties;
+        appContext.start();
     }
 
     @Override
     public void stop(BundleContext context) {
-        appRegistration.unregister();
-
-        appContext.stopModelInstances();
-        qingzhouApp.stop();
+        appContext.stop();
 
         serviceReferences.forEach(context::ungetService);
-    }
-
-    <T> T getService(Class<T> serviceType) {
-        return getService(serviceType, null);
     }
 
     <T> T getService(Class<T> serviceType, String name) {
@@ -139,8 +103,77 @@ public class AppDriver implements BundleActivator {
                 bos.write(buffer, 0, n);
             }
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);
-            Json jsonService = getService(Json.class);
+            Json jsonService = getService(Json.class, null);
             return jsonService.fromJson(json, App.class);
         }
+    }
+
+    private Properties parseProperties() throws IOException {
+        Properties appProperties = new Properties();
+        ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
+        try {
+            ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
+            Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
+                    context.getBundle().getSymbolicName(), null);
+            Dictionary<String, Object> properties = appConfiguration.getProperties();
+            if (properties != null) {
+                Enumeration<?> keys = properties.keys();
+                while (keys.hasMoreElements()) {
+                    String key = (String) keys.nextElement();
+                    if (key.equals(Constants.SERVICE_PID))
+                        continue;
+                    if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
+                        continue;
+                    String value = (String) properties.get(key);
+                    appProperties.setProperty(key, value);
+                }
+            }
+        } finally {
+            context.ungetService(serviceReference);
+        }
+        return appProperties;
+    }
+
+    private void initAppModels() {
+        appMeta.getApp().models.forEach(model -> {
+            try {
+                // 初始化模块实例
+                Class<?> modelClass = Class.forName(model.className);
+                ModelBase modelBase = (ModelBase) modelClass.newInstance();
+                modelBase.setAppContext(appContext);
+                appContext.modelInstances.put(model, modelBase);
+
+
+                // 初始化模块属性
+                model.fields.forEach(modelField -> {
+                    try {
+                        Field field = modelBase.getClass().getField(modelField.code);
+                        Object val = field.get(modelBase);
+                        if (val != null) {
+                            modelField.default_value = val.toString();
+                        }
+                    } catch (Throwable ignored) {
+                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code + ", field: " + modelField.code);
+                    }
+                });
+
+                // 初始化模块操作
+                model.actions.forEach(action -> {
+                    try {
+                        Method actionMethod = modelBase.getClass().getMethod(action.methodName, Request.class);
+                        appContext.actionMethods.put(resolveActionKey(model, action), actionMethod);
+                    } catch (Throwable ignored) {
+                        // 实现的 Show List 等类型的默认方法不只有 Request.class 一个参数
+                        // 他们在 invokeAction 中被委派到 DefaultAction 中处理
+                    }
+                });
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    static String resolveActionKey(Model model, ModelAction action) {
+        return model.code + "->" + action.code;
     }
 }

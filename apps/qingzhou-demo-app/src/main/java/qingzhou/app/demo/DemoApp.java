@@ -1,9 +1,8 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.App;
-import qingzhou.api.AppContext;
-import qingzhou.api.Menu;
-import qingzhou.api.QingzhouApp;
+import java.io.File;
+
+import qingzhou.api.*;
 import qingzhou.logger.Logger;
 
 @App(icon = "Promotion",
@@ -17,6 +16,11 @@ import qingzhou.logger.Logger;
 @Menu(name = {"监视", "en:Monitor"}, code = "monitor", icon = "Monitor", order = 3)
 @Menu(name = {"系统", "en:System"}, code = "system", icon = "setting", order = 4)
 public class DemoApp implements QingzhouApp {
+    @Override
+    public boolean available(BasicContext context) {
+        return !new File(context.getTemp(), "stop").exists();
+    }
+
     @Override
     public void start(AppContext appContext) {
         Logger logger = appContext.getService(Logger.class);

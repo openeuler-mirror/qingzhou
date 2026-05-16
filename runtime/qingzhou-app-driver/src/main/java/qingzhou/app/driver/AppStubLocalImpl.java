@@ -21,7 +21,7 @@ class AppStubLocalImpl implements AppStubLocal {
     private final Validation validation;
 
     // Error messages
-    private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
+    private final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
 
     AppStubLocalImpl(AppContextImpl appContext, AppMeta appMeta) {
         this.appContext = appContext;
@@ -43,7 +43,7 @@ class AppStubLocalImpl implements AppStubLocal {
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
         // 确保应用的拦截器总是可以被执行
-        for (ActionFilter actionFilter : appContext.getActionFilters()) {
+        for (ActionFilter actionFilter : appContext.actionFilters) {
             String error = actionFilter.doFilter(request);
             if (error != null) {
                 error(request, error);
@@ -77,7 +77,7 @@ class AppStubLocalImpl implements AppStubLocal {
     }
 
     private void invokeAction(Model model, ModelAction action, RequestImpl request) throws Throwable {
-        ModelBase modelBase = appContext.getModelInstances().get(model);
+        ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
             for (Method method : DefaultAction.class.getMethods()) {
                 if (method.getName().equals(action.code)) {
@@ -92,7 +92,7 @@ class AppStubLocalImpl implements AppStubLocal {
                 }
             }
         } else { // 执行自定义 action
-            Method method = appContext.getActionMethods().get(AppContextImpl.resolveActionKey(model, action));
+            Method method = appContext.actionMethods.get(AppDriver.resolveActionKey(model, action));
             if (method != null) {
                 invokeMethod(request, method, modelBase, request);
             }
