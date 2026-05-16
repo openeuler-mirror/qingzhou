@@ -2,7 +2,10 @@ package qingzhou.app.demo;
 
 import java.io.File;
 
-import qingzhou.api.*;
+import qingzhou.api.App;
+import qingzhou.api.AppContext;
+import qingzhou.api.Menu;
+import qingzhou.api.QingzhouApp;
 import qingzhou.logger.Logger;
 
 @App(icon = "Promotion",
@@ -17,8 +20,8 @@ import qingzhou.logger.Logger;
 @Menu(name = {"系统", "en:System"}, code = "system", icon = "setting", order = 4)
 public class DemoApp implements QingzhouApp {
     @Override
-    public boolean available(BasicContext context) {
-        return !new File(context.getTemp(), "stop").exists();
+    public boolean available(AppContext appContext) {
+        return !new File(appContext.getTemp(), "stop").exists();
     }
 
     @Override

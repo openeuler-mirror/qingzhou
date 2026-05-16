@@ -6,7 +6,7 @@ public interface QingzhouApp {
      * 条件满足（true）时调用 start，不满足（false）时调用 stop。
      * 注意：因轻舟框架会周期性调用该方法，应用的 start 和 stop 会被反复执行，请确保相关逻辑的幂等性。
      */
-    default boolean available(BasicContext context) {
+    default boolean available(AppContext appContext) {
         return true;
     }
 

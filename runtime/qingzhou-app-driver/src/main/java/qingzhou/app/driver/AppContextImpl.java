@@ -47,12 +47,10 @@ class AppContextImpl implements AppContext {
     void start() {
         timer = new Timer("app-available");
         timer.schedule(new TimerTask() {
-            private BasicContextImpl basicContext = new BasicContextImpl(AppContextImpl.this);
-
             @Override
             public void run() {
                 try {
-                    if (qingzhouApp.available(basicContext)) {
+                    if (qingzhouApp.available(AppContextImpl.this)) {
                         start0();
                     } else {
                         stop0();
