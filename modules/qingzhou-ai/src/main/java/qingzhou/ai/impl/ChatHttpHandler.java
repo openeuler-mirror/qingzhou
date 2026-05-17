@@ -31,60 +31,71 @@ public class ChatHttpHandler implements HttpHandler {
     private Json json;
 
     private ChatModel chatModel;
-    private VectorStore knowledgeBase;
+    private VectorStore knowledgeStore;
 
     private final Map<AiTool, Map<String, Object>> aiTools = new HashMap<>();
 
     @Activate
-    public void init(Map<String, String> config) throws IOException {
-        initKnowledgeBase(config);
+    public void init(Map<String, String> config) {
+        String knowledgeSystemMessage = null;
+        Object knowledge = initKnowledge(config);
+        if (knowledge instanceof VectorStore) {
+            knowledgeStore = (VectorStore) knowledge;
+        } else if (knowledge instanceof String) {
+            knowledgeSystemMessage = (String) knowledge;
+        }
 
         chatModel = llm.buildChatModel(
                 config.get("chat.base_url"),
                 config.get("chat.api_key"),
                 config.get("chat.model"),
-                knowledgeBase == null ? buildKnowledgeSystemMessage() : null);
+                knowledgeSystemMessage);
     }
 
-    private void initKnowledgeBase(Map<String, String> config) {
-        String embedUrl = config.get("embed.base_url");
-        if (embedUrl != null && !embedUrl.isEmpty()) {
-            Path docsDir = Paths.get(System.getProperty("qingzhou.version"), "docs");
-            if (Files.exists(docsDir)) {
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(docsDir, "*.md")) {
-                    for (Path md : stream) {
-                        List<String> contents = Files.readAllLines(md);
-                        if (!contents.isEmpty()) {
-                            if (knowledgeBase == null) {
-                                EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
-                                knowledgeBase = embeddingModel.buildVectorStore();
-                            }
-                            knowledgeBase.insert(String.join(System.lineSeparator(), contents), 500);
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.warn("failed to initialize knowledge", e);
-                    knowledgeBase = null;
-                }
-            }
-        }
-    }
-
-    private String buildKnowledgeSystemMessage() throws IOException {
-        StringBuilder systemPrompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
-                "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。【参考文档】：");
-
-        // 使用通配符过滤，只要 .md 文件
+    private Object initKnowledge(Map<String, String> config) {
+        List<String> docs = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(
                 Paths.get(System.getProperty("qingzhou.version"), "docs"),
                 "*.md")) {
             for (Path md : stream) {
-                systemPrompt.append(System.lineSeparator());
                 List<String> contents = Files.readAllLines(md);
-                contents.forEach(str -> systemPrompt.append(System.lineSeparator()).append(str));
+                if (!contents.isEmpty()) {
+                    docs.add(String.join(System.lineSeparator(), contents));
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("failed to read knowledge", e);
+            return null;
+        }
+        if (docs.isEmpty()) return null;
+
+        VectorStore knowledgeStore = null;
+        String embedUrl = config.get("embed.base_url");
+        if (embedUrl != null && !embedUrl.isEmpty()) {
+            try {
+                EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
+                knowledgeStore = embeddingModel.buildVectorStore();
+                for (String doc : docs) {
+                    knowledgeStore.insert(doc, 500);
+                }
+            } catch (Exception e) {
+                logger.warn("failed to initialize knowledge store", e);
+                knowledgeStore = null;
             }
         }
-        return systemPrompt.toString();
+
+        return knowledgeStore != null ? knowledgeStore : systemPrompt(docs.toArray(new String[0]), "");
+    }
+
+    private String systemPrompt(String[] docs, String question) {
+        StringBuilder prompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
+                "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。" +
+                "\n\n【参考文档】：");
+        for (String doc : docs) {
+            prompt.append("\n").append(doc);
+        }
+        prompt.append("\n\n【问题】：\n").append(question);
+        return prompt.toString();
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -117,16 +128,10 @@ public class ChatHttpHandler implements HttpHandler {
         }
 
         // RAG 检索增强问答
-        if (knowledgeBase != null) {
-            String[] queried = knowledgeBase.query(message);
+        if (knowledgeStore != null) {
+            String[] queried = knowledgeStore.query(message);
             if (queried != null) {
-                StringBuilder ragPrompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
-                        "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。【参考文档】：");
-                for (String s : queried) {
-                    ragPrompt.append(s).append(System.lineSeparator());
-                }
-                ragPrompt.append("【问题】：").append(message);
-                message = ragPrompt.toString();
+                message = systemPrompt(queried, message);
             }
         }
 
