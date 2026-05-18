@@ -9,8 +9,8 @@ import qingzhou.api.QingzhouApp;
 import qingzhou.logger.Logger;
 
 @App(icon = "Promotion",
-        name = {"示例应用", "en:Demo Application"},
-        info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
+        name = {"示例应用示例应用示例应用示例应用", "en:Demo Application"},
+        info = {"用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "cog", order = 1)
 @Menu(name = {"高级功能", "en:Advanced"}, code = "advanced", icon = "tools", order = 2)
 @Menu(name = {"子菜单一", "en:Sub Menu 1"}, code = "sub1", parent = "advanced", icon = "document", order = 1)
