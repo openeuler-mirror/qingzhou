@@ -1,4 +1,4 @@
-package qingzhou.llm.impl.slf4j;
+package qingzhou.llm.impl.log;
 
 import org.slf4j.helpers.MarkerIgnoringBase;
 import org.slf4j.helpers.MessageFormatter;
@@ -174,6 +174,6 @@ public class Slf4jLogger extends MarkerIgnoringBase {
     }
 
     private String format(String msg) {
-        return "[SLF4J] [" + name + "] " + msg;
+        return "[SOLON] [" + name + "] " + msg;
     }
 }

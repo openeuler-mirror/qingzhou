@@ -3,10 +3,10 @@ package qingzhou.app.driver;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerDecorator;
 
-public class AppLogger extends LoggerDecorator {
+class AppLogger extends LoggerDecorator {
     private final String app;
 
-    public AppLogger(String app, Logger delegate) {
+    AppLogger(String app, Logger delegate) {
         super(delegate);
         this.app = app;
     }

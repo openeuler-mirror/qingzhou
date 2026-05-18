@@ -177,7 +177,7 @@ public class AgentHttpHandler implements HttpHandler {
 
         File[] files = directory.listFiles();
         if (files == null) {  // null if security restricted
-            throw new IOException("Failed to list contents of " + directory);
+            throw new IOException("failed to list contents of " + directory);
         }
 
         IOException exception = null;

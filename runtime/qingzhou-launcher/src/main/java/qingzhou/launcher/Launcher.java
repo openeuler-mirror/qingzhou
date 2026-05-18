@@ -133,7 +133,7 @@ public class Launcher {
                     if (!targetFile.exists()) {
                         boolean mkdirs = targetFile.mkdirs();
                         if (!mkdirs) {
-                            throw new IOException("Failed to create directory " + targetFile);
+                            throw new IOException("failed to create directory " + targetFile);
                         }
                     }
                 } else {
@@ -141,7 +141,7 @@ public class Launcher {
                     if (!parentFile.exists()) {
                         boolean mkdirs = parentFile.mkdirs();
                         if (!mkdirs) {
-                            throw new IOException("Failed to create directory " + targetFile.getParentFile());
+                            throw new IOException("failed to create directory " + targetFile.getParentFile());
                         }
                     }
                     try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {

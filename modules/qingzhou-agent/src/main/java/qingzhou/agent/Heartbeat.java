@@ -1,5 +1,6 @@
 package qingzhou.agent;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -47,6 +48,7 @@ public class Heartbeat {
     @Activate
     public void start(Map<String, String> config) throws Exception {
         qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+        qzVersion = new File(qzVersion).getName().substring("version".length());
 
         pairCipher = crypto.getPairCipher(config.get("public_key"), null);
 
@@ -80,7 +82,7 @@ public class Heartbeat {
                     logger.error("heartbeat service error", e);
                 }
             }
-        }, 2000, 1000 * Long.parseLong(config.get("interval")));
+        }, 1000 * 10, 1000 * Long.parseLong(config.get("interval")));
     }
 
     @Deactivate

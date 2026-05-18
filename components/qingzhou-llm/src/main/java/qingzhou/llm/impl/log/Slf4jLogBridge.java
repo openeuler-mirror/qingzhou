@@ -1,4 +1,4 @@
-package qingzhou.llm.impl.slf4j;
+package qingzhou.llm.impl.log;
 
 import org.slf4j.ILoggerFactory;
 import org.slf4j.IMarkerFactory;

@@ -122,6 +122,17 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.knuddels</groupId>
+            <artifactId>jtokkit</artifactId>
+            <version>1.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <dependency>
             <artifactId>qingzhou-logger</artifactId>
@@ -145,7 +156,8 @@
                             solon-net-httputils,
                             snack4,snack4-jsonschema,
                             reactive-streams,reactor-core,
-                            eggg
+                            eggg,
+                            jtokkit
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
