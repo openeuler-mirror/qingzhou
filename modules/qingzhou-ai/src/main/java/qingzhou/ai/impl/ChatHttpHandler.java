@@ -89,7 +89,7 @@ public class ChatHttpHandler implements HttpHandler {
 
     private String systemPrompt(String[] docs, String question) {
         StringBuilder prompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
-                "如果文档中没有相关信息，请明确回答\"文档中未提及\"，绝不要自行编造。" +
+                "如果文档中没有相关信息，请明确告知\"文档中未提及\"，并根据已有知识继续进行回答。" +
                 "\n\n【参考文档】：");
         for (String doc : docs) {
             prompt.append("\n").append(doc);
