@@ -155,6 +155,16 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
     public String status = "active";
 
     @ModelField(
+            name = {"停用原因", "en:Suspension Reason"},
+            info = {"停用原因说明，仅状态为suspended时显示", "en:Reason for suspension, only visible when status is suspended"},
+            input_type = InputType.textarea,
+            add = true,
+            update = true,
+            display = "status==suspended",
+            group = {"个人信息", "en:Personal Info"})
+    public String suspensionReason;
+
+    @ModelField(
             name = {"头像", "en:Avatar"},
             info = {"头像图片", "en:Avatar image"},
             input_type = InputType.file,
