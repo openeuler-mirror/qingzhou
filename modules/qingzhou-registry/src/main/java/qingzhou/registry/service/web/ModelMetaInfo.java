@@ -76,6 +76,7 @@ public class ModelMetaInfo implements HttpHandler, AiTool {
         modelMetaInfo.put("icon", model.icon);
         modelMetaInfo.put("name", i18nService.getI18n(model.name, lang));
         modelMetaInfo.put("info", i18nService.getI18n(model.info, lang));
+        modelMetaInfo.put("action", model.action);
 
         List<ModelFieldView> fieldsView = new ArrayList<>();
         model.fields.forEach(src -> fieldsView.add(cloneView(src, ModelFieldView.class, i18nService, lang)));
