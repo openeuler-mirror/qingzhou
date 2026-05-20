@@ -17,19 +17,20 @@ import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
+import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
         AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
 
         AiTool.PARAMETER_NAME + ".0=" + Constants.REQUEST_PARAMETER_NAME_LANG,
-        AiTool.PARAMETER_DESCRIPTION + ".0=" + "指定以哪种国际化语言展示结果，简体请输入：zh，繁體请输入：tr，英语请输入：en",
-        AiTool.PARAMETER_REQUIRED + ".0=" + "false",
+        AiTool.PARAMETER_DESCRIPTION + ".0=指定以哪种国际化语言展示结果，简体请输入：zh，繁體请输入：tr，英语请输入：en。",
+        AiTool.PARAMETER_REQUIRED + ".0=false",
 
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
-        AiTool.PARAMETER_DESCRIPTION + ".1=" + "应用所在的轻舟实例 ID，用于区分不同实例上的相同应用",
+        AiTool.PARAMETER_DESCRIPTION + ".1=应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。",
 
         AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
-        AiTool.PARAMETER_DESCRIPTION + ".2=" + "应用唯一编码，该编码在同一个轻舟实例下不会重复"
+        AiTool.PARAMETER_DESCRIPTION + ".2=应用的唯一编码，该编码在同一个轻舟实例下不会重复。"
 })
 public class AppMetaInfo implements HttpHandler, AiTool {
     @Reference

@@ -58,6 +58,7 @@
                     <instructions>
                         <Export-Package>qingzhou.registry</Export-Package>
                         <Import-Package>
+                            org.osgi.framework,org.osgi.service.component,
                             qingzhou.api,qingzhou.api.type,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,

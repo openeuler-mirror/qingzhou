@@ -1,4 +1,4 @@
-package qingzhou.registry.service.web;
+package qingzhou.registry.impl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,15 +8,18 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
+import qingzhou.registry.service.web.Context;
 
-class WebUtil {
-    static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
+public class WebUtil {
+    private static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
 
-    static final String INSTANCE_ID = "instanceId";
-    static final String APP_CODE = "appCode";
-    static final String MODEL_CODE = "modelCode";
+    public static final String INSTANCE_ID = "instanceId";
+    public static final String APP_CODE = "appCode";
+    public static final String MODEL_CODE = "modelCode";
+    public static final String ACTION_CODE = "actionCode";
+    public static final String DATA_ID = "dataId";
 
-    static boolean cached(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
+    public static boolean cached(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
         String cacheKey = httpRequest.getParameter(REQUEST_PARAMETER_NAME_CACHE_KEY);
         if (cacheKey != null) {
             try {
@@ -32,7 +35,7 @@ class WebUtil {
         return false;
     }
 
-    static String webResult(Registry registry, Json json, HttpRequest httpRequest, Function<Context, Object> function) throws Exception {
+    public static String webResult(Registry registry, Json json, HttpRequest httpRequest, Function<Context, Object> function) throws Exception {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);
