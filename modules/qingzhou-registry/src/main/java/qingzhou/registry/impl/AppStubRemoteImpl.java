@@ -60,7 +60,7 @@ class AppStubRemoteImpl implements AppStubRemote {
         }
         byte[] responseBody = response.getBody();
         byte[] decrypted = cipher.decrypt(responseBody);
-        ResponseImpl result = json.fromJson(new String(decrypted), ResponseImpl.class);
+        ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
         request.setResponse(result);
     }
 }
