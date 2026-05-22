@@ -1,12 +1,10 @@
 package qingzhou.http.impl;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
@@ -80,25 +78,7 @@ public class HttpRequestImpl implements HttpRequest {
         if (queryStringDecoder == null) {
             queryStringDecoder = new QueryStringDecoder(request.uri());
         }
-        Map<String, List<String>> parameters = queryStringDecoder.parameters();
-
-        // 如果是 POST 请求且 Content-Type 为 application/x-www-form-urlencoded，需要从请求体中解析参数
-        if (request.method() == HttpMethod.POST
-                && isFormUrlencoded()
-                && requestBody != null && requestBody.length > 0) {
-            QueryStringDecoder bodyDecoder = new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8));
-            Map<String, List<String>> bodyParams = bodyDecoder.parameters();
-
-            // 合并 URL 参数和表单参数
-            for (Map.Entry<String, List<String>> entry : bodyParams.entrySet()) {
-                parameters.merge(entry.getKey(), entry.getValue(), (oldList, newList) -> {
-                    oldList.addAll(newList);
-                    return oldList;
-                });
-            }
-        }
-
-        return parameters;
+        return queryStringDecoder.parameters();
     }
 
     @Override
