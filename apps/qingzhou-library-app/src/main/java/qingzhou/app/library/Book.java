@@ -1,15 +1,11 @@
 package qingzhou.app.library;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 
 @Model(code = "book", order = 1,
         name = {"图书管理", "en:Book Management"},
@@ -165,6 +161,23 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
             readonly = true,
             input_type = InputType.datetime)
     public String createdAt;
+
+    private SharedFunctionRegistration registration;
+
+    @Override
+    public void start() {
+        registration = getAppContext().registerSharedFunction("queryBook", new SharedFunction<String, String>() {
+            @Override
+            public String invoke(String o) {
+                return "From 图书管理：" + o + "库存 " + db.size();
+            }
+        });
+    }
+
+    @Override
+    public void stop() {
+        registration.unregister();
+    }
 
     @ModelAction(code = "addStock", icon = "Plus",
             name = {"增加库存", "en:Add Stock"},

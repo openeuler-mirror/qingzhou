@@ -6,11 +6,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
+import qingzhou.api.*;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.logger.Logger;
@@ -36,6 +35,9 @@ class AppContextImpl implements AppContext {
     private Timer timer;
     private boolean started;
     private ServiceRegistration<AppStubLocal> appRegistration;
+    private final Set<ServiceRegistration<?>> serviceRegistrationList = new HashSet<>();
+
+    private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
 
     AppContextImpl(AppDriver appDriver, BundleContext bundleContext, AppMeta appMeta) {
         this.appDriver = appDriver;
@@ -86,6 +88,8 @@ class AppContextImpl implements AppContext {
         started = false;
 
         appRegistration.unregister();
+        serviceReferences.forEach(bundleContext::ungetService);
+        serviceRegistrationList.forEach(ServiceRegistration::unregister);
         actionFilters.clear();
 
         modelInstances.values().forEach(ModelBase::stop);
@@ -136,6 +140,43 @@ class AppContextImpl implements AppContext {
             if (type.isInstance(qingzhouApp)) {
                 return (T) qingzhouApp;
             }
+        }
+        return null;
+    }
+
+    @Override
+    public <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function) {
+        if (functionName == null || functionName.isEmpty()) {
+            throw new IllegalArgumentException("shared function name is required");
+        }
+        Dictionary<String, String> dictionary = new Hashtable<>();
+        dictionary.put(Constants.SERVICE_PID, functionName);
+        ServiceRegistration<?> serviceRegistration = bundleContext.registerService(SharedFunction.class, function, dictionary);
+        serviceRegistrationList.add(serviceRegistration);
+        return () -> {
+            serviceRegistrationList.remove(serviceRegistration);
+            try {
+                serviceRegistration.unregister();
+            } catch (IllegalStateException e) {
+                if (!e.getMessage().contains("already unregistered")) {
+                    throw e;
+                }
+            }
+        };
+    }
+
+    @Override
+    public <T, R> SharedFunction<T, R> getSharedFunction(String functionName) {
+        try {
+            Collection<ServiceReference<SharedFunction>> serviceReferences = bundleContext.getServiceReferences(SharedFunction.class,
+                    "(" + Constants.SERVICE_PID + "=" + functionName + ")");
+            if (!serviceReferences.isEmpty()) {
+                ServiceReference<SharedFunction> serviceReference = serviceReferences.iterator().next();
+                this.serviceReferences.add(serviceReference);
+                return bundleContext.getService(serviceReference);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
         return null;
     }
