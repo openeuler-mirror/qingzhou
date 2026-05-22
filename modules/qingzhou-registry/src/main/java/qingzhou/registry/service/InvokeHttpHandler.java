@@ -6,7 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,19 +61,38 @@ public class InvokeHttpHandler implements HttpHandler {
             return;
         }
 
+        // 保存原始文件路径，用于 finally 块中的清理（应用可能修改参数值）
+        Map<String, String> originalFilePaths = new HashMap<>();
+
         try {
             parseRequestBody(httpRequest, request);
+
+            // 在应用处理前保存文件路径，因为应用可能会修改参数值（如将路径改为文件名）
+            for (String fileField : request.getFileFields()) {
+                originalFilePaths.put(fileField, request.getParameter(fileField));
+            }
+
             app.invokeApp(request);
         } catch (Throwable e) {
             httpResponse.status500Finish(e.getMessage());
             logger.error(e.getMessage(), e);
             return;
         } finally {
-            request.getFileFields().forEach(s -> {
-                File tempFile = new File(request.getParameter(s));
-                tempFile.delete(); // 上传的文件
-                tempFile.getParentFile().delete(); // 随机目录
-            });
+            // 使用原始路径清理上传的临时文件
+            for (String pathsValue : originalFilePaths.values()) {
+                if (pathsValue == null) continue;
+                String[] paths = pathsValue.split(",");
+                for (String path : paths) {
+                    File tempFile = new File(path.trim());
+                    if (tempFile.exists()) {
+                        tempFile.delete(); // 上传的文件
+                    }
+                    File parentDir = tempFile.getParentFile();
+                    if (parentDir != null && parentDir.isDirectory()) {
+                        parentDir.delete(); // 随机目录
+                    }
+                }
+            }
         }
 
         ResponseImpl response = request.getResponse();
@@ -149,9 +170,15 @@ public class InvokeHttpHandler implements HttpHandler {
                 bodyParams.forEach((k, v) -> request.getParameters().put(k, v.get(0)));
             } else if (httpRequest.getContentType().contains("application/json")) { // JSON 参数
                 try {
-                    Map<String, String> bodyParams = json.fromJson(
-                            new String(httpRequest.getBody(), StandardCharsets.UTF_8), Map.class);
-                    bodyParams.forEach((k, v) -> request.getParameters().put(k, v));
+                    Object parsed = json.fromJson(
+                            new String(httpRequest.getBody(), StandardCharsets.UTF_8), Object.class);
+                    if (parsed instanceof Map) {
+                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet()) {
+                            request.getParameters().put(
+                                    String.valueOf(entry.getKey()),
+                                    entry.getValue() != null ? String.valueOf(entry.getValue()) : "");
+                        }
+                    }
                 } catch (Exception e) {
                     logger.warn("failed to parse json body: " + e.getMessage());
                 }
@@ -170,21 +197,50 @@ public class InvokeHttpHandler implements HttpHandler {
 
         try {
             byte[] body = httpRequest.getBody();
-            String bodyStr = new String(body, StandardCharsets.UTF_8);
-            String[] parts = bodyStr.split("--" + boundary);
+            byte[] boundaryBytes = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
+            byte[] headerDelimiter = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
-            for (String part : parts) {
-                if (part.trim().isEmpty() || part.contains("--"))
-                    continue;
+            // 收集同一字段名的多个文件
+            Map<String, List<String>> uploadFileMap = new LinkedHashMap<>();
 
-                int headerEnd = part.indexOf("\r\n\r\n");
-                if (headerEnd == -1)
-                    continue;
+            int pos = 0;
+            while (pos < body.length) {
+                // 查找下一个 boundary
+                int boundaryStart = indexOfBytes(body, boundaryBytes, pos);
+                if (boundaryStart == -1) break;
 
-                String headers = part.substring(0, headerEnd);
-                String content = part.substring(headerEnd + 4);
+                // 跳过 boundary 标记
+                int afterBoundary = boundaryStart + boundaryBytes.length;
 
-                // 提取文件名和字段名
+                // 检查是否为结束 boundary（--结尾）
+                if (afterBoundary + 1 < body.length && body[afterBoundary] == '-' && body[afterBoundary + 1] == '-') {
+                    break;
+                }
+
+                // 跳过 boundary 后的 CRLF
+                if (afterBoundary + 1 < body.length && body[afterBoundary] == '\r' && body[afterBoundary + 1] == '\n') {
+                    afterBoundary += 2;
+                }
+
+                // 查找头部结束位置（双CRLF）
+                int headerEnd = indexOfBytes(body, headerDelimiter, afterBoundary);
+                if (headerEnd == -1) break;
+
+                // 解析头部为字符串
+                String headers = new String(body, afterBoundary, headerEnd - afterBoundary, StandardCharsets.UTF_8);
+                int contentStart = headerEnd + headerDelimiter.length;
+
+                // 查找下一个 boundary 以确定内容结束位置
+                int nextBoundary = indexOfBytes(body, boundaryBytes, contentStart);
+                if (nextBoundary == -1) break;
+
+                // 内容在下一个 boundary 前的 CRLF 之前结束
+                int contentEnd = nextBoundary;
+                if (contentEnd >= 2 && body[contentEnd - 2] == '\r' && body[contentEnd - 1] == '\n') {
+                    contentEnd -= 2;
+                }
+
+                // 提取字段名和文件名
                 String fieldName = extractFieldName(headers);
                 String fileName = extractFileName(headers);
 
@@ -212,21 +268,72 @@ public class InvokeHttpHandler implements HttpHandler {
                             File uploadDir = new File(uploadBase, uploadId);
                             uploadDir.mkdirs();
                             File tempFile = new File(uploadDir, fileName);
-                            Files.write(tempFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
-                            request.getParameters().put(fieldName, tempFile.getAbsolutePath());
+
+                            // 直接写入原始字节，不做字符集转换，确保二进制文件不损坏
+                            byte[] contentBytes = new byte[contentEnd - contentStart];
+                            System.arraycopy(body, contentStart, contentBytes, 0, contentBytes.length);
+                            Files.write(tempFile.toPath(), contentBytes);
+
+                            // 收集同一字段的多个文件路径
+                            uploadFileMap.computeIfAbsent(fieldName, k -> new ArrayList<>())
+                                    .add(tempFile.getAbsolutePath());
                             request.getFileFields().add(fieldName);
                         } else {
                             request.getParameters().put(fieldName, fileName);
                         }
                     } else {
-                        // 普通字段
-                        request.getParameters().put(fieldName, content.trim());
+                        // 普通字段：内容转为字符串
+                        String content = new String(body, contentStart, contentEnd - contentStart, StandardCharsets.UTF_8).trim();
+                        request.getParameters().put(fieldName, content);
                     }
                 }
+
+                pos = nextBoundary;
+            }
+
+            // 处理多文件字段：合并已有文本值（如已有文件名）与新文件路径
+            for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
+                String fieldName = entry.getKey();
+                List<String> paths = entry.getValue();
+                
+                // 获取该字段可能已有的文本值（来自 multipart 文本部分）
+                String existingText = request.getParameter(fieldName);
+                
+                // 合并：已有文本 + 新文件路径
+                StringBuilder combined = new StringBuilder();
+                if (existingText != null && !existingText.isEmpty()) {
+                    combined.append(existingText.trim());
+                }
+                for (String path : paths) {
+                    if (combined.length() > 0) {
+                        combined.append(",");
+                    }
+                    combined.append(path);
+                }
+                request.getParameters().put(fieldName, combined.toString());
             }
         } catch (IOException e) {
             logger.error("failed to parse multipart request", e);
         }
+    }
+
+    /**
+     * 在字节数组中查找模式字节序列的位置
+     */
+    private int indexOfBytes(byte[] data, byte[] pattern, int startPos) {
+        if (pattern.length == 0) return startPos;
+        if (startPos < 0) startPos = 0;
+        for (int i = startPos; i <= data.length - pattern.length; i++) {
+            boolean found = true;
+            for (int j = 0; j < pattern.length; j++) {
+                if (data[i + j] != pattern[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return i;
+        }
+        return -1;
     }
 
     private String extractBoundary(String contentType) {
