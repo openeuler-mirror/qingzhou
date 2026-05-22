@@ -1,5 +1,6 @@
 package qingzhou.app.demo;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,7 @@ import qingzhou.api.type.*;
         info = {"订单信息管理，演示复杂表单", "en:Order management with complex forms"},
         icon = "Document",
         menu = "basic")
-public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, DownloadFile {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private int idCounter = 1;
 
@@ -232,5 +233,10 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
     @Override
     public void delete(String id) throws Exception {
         db.remove(id);
+    }
+
+    @Override
+    public File parent(Request request) throws Exception {
+        return new File(getAppContext().getBase(), "apps");
     }
 }

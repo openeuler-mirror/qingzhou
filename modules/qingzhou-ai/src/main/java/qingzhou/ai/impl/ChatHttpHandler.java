@@ -146,12 +146,22 @@ public class ChatHttpHandler implements HttpHandler {
         return aiTools.entrySet().stream().map(entry -> {
             AiTool aiTool = entry.getKey();
             Map<String, Object> toolProp = entry.getValue();
-            String description = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
-            String component = toolProp.get(ComponentConstants.COMPONENT_NAME).toString();
-            int i = component.lastIndexOf(".");
-            component = component.substring(i + 1);
+            String toolDescription = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
+            String toolName;
+            Object toolNameObj = toolProp.get(AiTool.TOOL_NAME);
+            if (toolNameObj != null) {
+                toolName = (String) toolNameObj;
+            } else {
+                Object componentName = toolProp.get(ComponentConstants.COMPONENT_NAME);
+                if (componentName == null) {
+                    throw new IllegalArgumentException("missing parameter [" + AiTool.TOOL_NAME + "] for: " + toolDescription);
+                }
+                String component = componentName.toString();
+                int i = component.lastIndexOf(".");
+                toolName = component.substring(i + 1);
+            }
 
-            return Tool.of(component, description, parameters(toolProp), aiTool::invoke);
+            return Tool.of(toolName, toolDescription, parameters(toolProp), aiTool::invoke);
         }).collect(Collectors.toSet());
     }
 

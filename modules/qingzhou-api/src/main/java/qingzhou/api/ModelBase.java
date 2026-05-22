@@ -3,10 +3,11 @@ package qingzhou.api;
 /**
  * 轻舟所有的模块，都需要用 @qingzhou.api.Model 标注，并且都需要从此类继承。
  */
-public abstract class ModelBase {
+public abstract class ModelBase implements QingzhouModel {
     private AppContext appContext;
 
-    protected AppContext getAppContext() {
+    @Override
+    public AppContext getAppContext() {
         return appContext;
     }
 

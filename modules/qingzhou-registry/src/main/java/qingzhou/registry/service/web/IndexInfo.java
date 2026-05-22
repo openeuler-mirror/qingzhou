@@ -18,13 +18,14 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
+import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/index",
         AiTool.TOOL_DESCRIPTION + "=该接口返回可用的应用列表。每个应用包含唯一标识、名称、图标、部署主机地址和描述信息。通过该接口可获取当前轻舟平台上所有可访问的应用概览，用于后续选择具体应用或展示应用清单。",
 
         AiTool.PARAMETER_NAME + "=" + Constants.REQUEST_PARAMETER_NAME_LANG,
-        AiTool.PARAMETER_DESCRIPTION + "=" + "指定以哪种国际化语言展示结果，简体请输入：zh，繁體请输入：tr，英语请输入：en",
-        AiTool.PARAMETER_REQUIRED + "=" + "false"
+        AiTool.PARAMETER_DESCRIPTION + "=指定以哪种国际化语言展示结果，简体请输入：zh，繁體请输入：tr，英语请输入：en。",
+        AiTool.PARAMETER_REQUIRED + "=false"
 })
 public class IndexInfo implements HttpHandler, AiTool {
 

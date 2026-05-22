@@ -127,7 +127,7 @@ public class Package {
     private static void mkdirs(File directory) throws IOException {
         if (directory.exists()) {
             if (!directory.isDirectory()) {
-                String message = "File " + directory + " exists and is " + "not a directory. Unable to create directory.";
+                String message = "File " + directory + " exists and is not a directory. Unable to create directory.";
                 throw new IOException(message);
             }
         } else {
