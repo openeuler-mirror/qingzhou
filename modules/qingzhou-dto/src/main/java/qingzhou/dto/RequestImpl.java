@@ -1,7 +1,9 @@
 package qingzhou.dto;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import qingzhou.api.Request;
 import qingzhou.dto.meta.annotation.Model;
@@ -16,6 +18,7 @@ public class RequestImpl implements Request {
     private String action;
     private String id;
     private final Map<String, String> parameters = new HashMap<>();
+    private final Set<String> fileFields = new HashSet<>();
 
     @Override
     public ResponseImpl getResponse() {
@@ -55,6 +58,10 @@ public class RequestImpl implements Request {
     @Override
     public Map<String, String> getParameters() {
         return parameters;
+    }
+
+    public Set<String> getFileFields() {
+        return fileFields;
     }
 
     public void setResponse(ResponseImpl response) {
