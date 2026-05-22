@@ -50,9 +50,9 @@ class AppStubRemoteImpl implements AppStubRemote {
                 response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
             } catch (Exception e) {
                 ResponseImpl resp = request.getResponse();
-                resp.success(false);
-                resp.msg("remote connection error");
-                resp.msgLevel(Response.MsgLevel.error);
+                resp.success(false)
+                        .msgLevel(Response.MsgLevel.error)
+                        .msg("remote connection error");
                 return;
             }
         } finally {

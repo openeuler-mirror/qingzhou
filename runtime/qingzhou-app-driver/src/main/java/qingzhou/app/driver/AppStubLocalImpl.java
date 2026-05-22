@@ -45,8 +45,8 @@ class AppStubLocalImpl implements AppStubLocal {
         // 确保应用的拦截器总是可以被执行
         for (ActionFilter actionFilter : appContext.actionFilters) {
             String error = actionFilter.doFilter(request);
-            if (error != null) {
-                error(request, error);
+            if (error != null && !error.trim().isEmpty()) {
+                error(request, error.trim());
                 return;
             }
         }

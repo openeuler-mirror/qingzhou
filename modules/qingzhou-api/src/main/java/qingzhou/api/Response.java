@@ -36,8 +36,6 @@ public interface Response {
      */
     Response header(String name, String value);
 
-    Response writeParametersInSession(String key, String value);
-
     enum MsgLevel {
         info, warn, error
     }

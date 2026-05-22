@@ -1,6 +1,8 @@
 package qingzhou.app.demo;
 
 import java.io.File;
+import java.util.Map;
+import java.util.Properties;
 
 import qingzhou.api.*;
 import qingzhou.logger.Logger;
@@ -26,6 +28,20 @@ public class DemoApp implements QingzhouApp {
         Logger logger = appContext.getService(Logger.class);
         logger.info("Demo 应用启动成功！");
         logger.info("当前进程 PID: " + appContext.getPid());
+
+        Properties properties = appContext.getProperties();
+        logger.info("配置参数：" + properties);
+        appContext.addActionFilter(request -> {
+            JvmMonitor jvmMonitor = appContext.getObjectInstance(JvmMonitor.class);
+            Map<String, String> monitor = jvmMonitor.monitor(request);
+            String heapUsed = monitor.get("heapUsed");
+            int i = Integer.parseInt(heapUsed);
+            if (i > 50) {
+                logger.warn("内存过大（MB）：" + i);
+            }
+
+            return null;
+        });
 
         Thread.sleep(2000); // 确保图书管理应用启动完成
         SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
