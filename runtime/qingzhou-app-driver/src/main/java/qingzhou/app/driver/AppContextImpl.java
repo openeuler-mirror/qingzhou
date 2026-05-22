@@ -122,6 +122,12 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
+    public long getPid() {
+        String name = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        return Long.parseLong(name.split("@")[0]);
+    }
+
+    @Override
     public <T> T getService(Class<T> clazz) {
         return getService(clazz, null);
     }

@@ -25,6 +25,7 @@ public class DemoApp implements QingzhouApp {
     public void start(AppContext appContext) throws Exception {
         Logger logger = appContext.getService(Logger.class);
         logger.info("Demo 应用启动成功！");
+        logger.info("当前进程 PID: " + appContext.getPid());
 
         Thread.sleep(2000); // 确保图书管理应用启动完成
         SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
