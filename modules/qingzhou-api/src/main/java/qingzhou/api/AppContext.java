@@ -33,4 +33,8 @@ public interface AppContext {
      * 获取应用内 @App @Model 注解的类实例化后的对象
      */
     <T> T getObjectInstance(Class<T> type);
+
+    <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function);
+
+    <T, R> SharedFunction<T, R> getSharedFunction(String functionName);
 }

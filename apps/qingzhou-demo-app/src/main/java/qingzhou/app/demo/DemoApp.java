@@ -2,10 +2,7 @@ package qingzhou.app.demo;
 
 import java.io.File;
 
-import qingzhou.api.App;
-import qingzhou.api.AppContext;
-import qingzhou.api.Menu;
-import qingzhou.api.QingzhouApp;
+import qingzhou.api.*;
 import qingzhou.logger.Logger;
 
 @App(icon = "Promotion",
@@ -25,8 +22,13 @@ public class DemoApp implements QingzhouApp {
     }
 
     @Override
-    public void start(AppContext appContext) {
+    public void start(AppContext appContext) throws Exception {
         Logger logger = appContext.getService(Logger.class);
         logger.info("Demo 应用启动成功！");
+
+        Thread.sleep(2000); // 确保图书管理应用启动完成
+        SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
+        String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
+        logger.info(bookInfo);
     }
 }
