@@ -2,8 +2,10 @@ package qingzhou.registry.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.dto.RequestImpl;
@@ -51,8 +53,7 @@ public class InvokeHttpHandler implements HttpHandler {
         ResponseImpl response = request.getResponse();
         if (response.isActionInvoked()
                 || response.getData() != null
-                || response.getMsg() != null
-        ) {
+                || response.getMsg() != null) {
             sendResponse(response, httpResponse);
         } else {
             httpResponse.status404Finish();
@@ -96,7 +97,8 @@ public class InvokeHttpHandler implements HttpHandler {
         String[] rest = restPath.split("/");
 
         int restMinDepth = 4; // instance/app/model/action/[id]
-        if (rest.length < restMinDepth) return null;
+        if (rest.length < restMinDepth)
+            return null;
 
         RequestImpl request = new RequestImpl();
         request.setInstance(rest[0]);
@@ -107,26 +109,24 @@ public class InvokeHttpHandler implements HttpHandler {
             request.setId(rest[4]);
         }
 
-        // 获取 URL 参数
+        // 添加 URL 里的参数
         httpRequest.getParameters().forEach((k, v) -> request.getParameters().put(k, v.get(0)));
 
-        // 如果是 POST 请求且 Content-Type 为 application/json，需要从请求体中解析参数
-        if ("POST".equalsIgnoreCase(httpRequest.getMethod())
-                && httpRequest.getContentType() != null
-                && httpRequest.getContentType().contains("application/json")) {
-            byte[] body = httpRequest.getBody();
-            if (body != null && body.length > 0) {
+        // 添加 POST 请求体里的参数
+        if ("POST".equalsIgnoreCase(httpRequest.getMethod()) && httpRequest.getContentType() != null
+                && httpRequest.getBody() != null && httpRequest.getBody().length > 0) {
+            if (httpRequest.getContentType().contains("application/x-www-form-urlencoded")) { // 表单参数
+                QueryStringDecoder bodyDecoder = new QueryStringDecoder(
+                        "/?" + new String(httpRequest.getBody(), StandardCharsets.UTF_8));
+                Map<String, List<String>> bodyParams = bodyDecoder.parameters();
+                bodyParams.forEach((k, v) -> request.getParameters().put(k, v.get(0)));
+            } else if (httpRequest.getContentType().contains("application/json")) { // JSON 参数
                 try {
-                    Map<String, Object> bodyParams = json.fromJson(new String(body, StandardCharsets.UTF_8), Map.class);
-                    if (bodyParams != null) {
-                        bodyParams.forEach((k, v) -> {
-                            if (v != null) {
-                                request.getParameters().put(k, v.toString());
-                            }
-                        });
-                    }
+                    Map<String, String> bodyParams = json.fromJson(
+                            new String(httpRequest.getBody(), StandardCharsets.UTF_8), Map.class);
+                    bodyParams.forEach((k, v) -> request.getParameters().put(k, v));
                 } catch (Exception e) {
-                    logger.warn("failed to parse JSON body: " + e.getMessage());
+                    logger.warn("failed to parse json body: " + e.getMessage());
                 }
             }
         }
