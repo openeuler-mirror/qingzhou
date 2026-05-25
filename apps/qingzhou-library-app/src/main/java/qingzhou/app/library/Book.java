@@ -14,52 +14,49 @@ import qingzhou.api.type.*;
         menu = "basic")
 public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public Book() {
-        Map<String, String> b1 = new HashMap<>();
-        b1.put("id", "B001");
-        b1.put("isbn", "978-7-111-21382-6");
-        b1.put("name", "深入理解计算机系统");
-        b1.put("author", "Randal E. Bryant");
-        b1.put("publisher", "机械工业出版社");
-        b1.put("category", "计算机");
-        b1.put("total", "10");
-        b1.put("available", "8");
-        b1.put("price", "139.00");
-        b1.put("status", "available");
-        b1.put("createdAt", "2026-01-05 09:00:00");
-        db.put(b1.get("id"), b1);
+        if (!db.isEmpty()) return;
 
-        Map<String, String> b2 = new HashMap<>();
-        b2.put("id", "B002");
-        b2.put("isbn", "978-7-115-42802-8");
-        b2.put("name", "JavaScript高级程序设计");
-        b2.put("author", "Zakas");
-        b2.put("publisher", "人民邮电出版社");
-        b2.put("category", "计算机");
-        b2.put("total", "15");
-        b2.put("available", "12");
-        b2.put("price", "129.00");
-        b2.put("status", "available");
-        b2.put("createdAt", "2026-02-10 10:30:00");
-        db.put(b2.get("id"), b2);
+        String[] names = {"深入理解计算机系统", "JavaScript高级程序设计", "百年孤独", "算法导论", "设计模式", 
+                          "编译原理", "数据库系统概念", "操作系统概念", "计算机网络", "人工智能",
+                          "Python编程", "Java核心技术", "Spring实战", "Vue.js设计与实现", "React进阶",
+                          "经济学原理", "乌合之众", "人类简史", "活着", "三体",
+                          "围城", "红楼梦", "时间简史", "万历十五年", "苏菲的世界"};
+        String[] authors = {"Randal E. Bryant", "Zakas", "加西亚·马尔克斯", "Cormen", "GoF",
+                           "Aho", "Silberschatz", "Silberschatz", "Andrew S. Tanenbaum", "Stuart Russell",
+                           "Eric Matthes", "Cay S. Horstmann", "Craig Walls", "霍春阳", "Dan Abramov",
+                           "曼昆", "勒庞", "尤瓦尔·赫拉利", "余华", "刘慈欣",
+                           "钱钟书", "曹雪芹", "霍金", "黄仁宇", "Jostein Gaarder"};
+        String[] categories = {"计算机", "计算机", "文学", "计算机", "计算机",
+                              "计算机", "计算机", "计算机", "计算机", "计算机",
+                              "计算机", "计算机", "计算机", "计算机", "计算机",
+                              "经济", "哲学", "历史", "文学", "文学",
+                              "文学", "文学", "历史", "历史", "哲学"};
+        String[] publishers = {"机械工业出版社", "人民邮电出版社", "南海出版公司", "机械工业出版社", "机械工业出版社",
+                              "机械工业出版社", "高等教育出版社", "高等教育出版社", "电子工业出版社", "清华大学出版社",
+                              "人民邮电出版社", "机械工业出版社", "人民邮电出版社", "人民邮电出版社", "人民邮电出版社",
+                              "北京大学出版社", "中央编译出版社", "中信出版社", "作家出版社", "重庆出版社",
+                              "人民文学出版社", "人民文学出版社", "湖南科学技术出版社", "生活·读书·新知三联书店", "作家出版社"};
 
-        Map<String, String> b3 = new HashMap<>();
-        b3.put("id", "B003");
-        b3.put("isbn", "978-7-5442-6996-2");
-        b3.put("name", "百年孤独");
-        b3.put("author", "加西亚·马尔克斯");
-        b3.put("publisher", "南海出版公司");
-        b3.put("category", "文学");
-        b3.put("total", "20");
-        b3.put("available", "0");
-        b3.put("price", "39.50");
-        b3.put("status", "borrowed_all");
-        b3.put("createdAt", "2026-03-01 14:00:00");
-        db.put(b3.get("id"), b3);
-
-        idCounter = 4;
+        for (int i = 1; i <= 25; i++) {
+            Map<String, String> b = new HashMap<>();
+            String id = "B" + String.format("%03d", i);
+            b.put("id", id);
+            b.put("isbn", "978-7-" + String.format("%03d", 100 + i) + "-" + String.format("%05d", i * 1007) + "-" + (i % 9 + 1));
+            b.put("name", names[i - 1]);
+            b.put("author", authors[i - 1]);
+            b.put("publisher", publishers[i - 1]);
+            b.put("category", categories[i - 1]);
+            b.put("total", String.valueOf(5 + i % 16));
+            b.put("available", String.valueOf(i % 10));
+            b.put("price", String.format("%.2f", 29.0 + i * 6.8));
+            b.put("status", i % 10 == 0 ? "borrowed_all" : (i % 7 == 0 ? "damaged" : "available"));
+            b.put("createdAt", "2026-" + String.format("%02d", (i % 12) + 1) + "-" + String.format("%02d", (i * 3 % 28) + 1) + " 09:00:00");
+            db.put(b.get("id"), b);
+        }
+        idCounter = 26;
     }
 
     @ModelField(id = true,

@@ -17,9 +17,11 @@ import java.util.Map;
         menu = "basic")
 public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public Reader() {
+        if (!db.isEmpty()) return;
+
         Map<String, String> r1 = new HashMap<>();
         r1.put("id", "R001");
         r1.put("name", "张三");

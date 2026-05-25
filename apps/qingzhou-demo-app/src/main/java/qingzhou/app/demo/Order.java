@@ -15,35 +15,31 @@ import qingzhou.api.type.*;
         menu = "basic")
 public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, DownloadFile {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public Order() {
-        Map<String, String> o1 = new HashMap<>();
-        o1.put("orderNo", "ORD20260401001");
-        o1.put("customerName", "王五");
-        o1.put("phone", "13800138001");
-        o1.put("address", "北京市朝阳区某某路123号");
-        o1.put("amount", "299.50");
-        o1.put("payMethod", "wechat");
-        o1.put("deliveryMethod", "express");
-        o1.put("remark", "客户要求:尽快发货");
-        o1.put("orderTime", "2026-04-01 10:30:00");
-        o1.put("status", "pending");
-        db.put(o1.get("orderNo"), o1);
+        if (!db.isEmpty()) return;
 
-        Map<String, String> o2 = new HashMap<>();
-        o2.put("orderNo", "ORD20260402002");
-        o2.put("customerName", "赵六");
-        o2.put("phone", "13900139002");
-        o2.put("address", "上海市浦东新区某某街456号");
-        o2.put("amount", "1599.00");
-        o2.put("payMethod", "alipay");
-        o2.put("deliveryMethod", "pickup");
-        o2.put("remark", "");
-        o2.put("orderTime", "2026-04-02 15:45:00");
-        o2.put("status", "shipped");
-        db.put(o2.get("orderNo"), o2);
-        idCounter = 3;
+        String[] customers = {"王五", "赵六", "孙七", "周八", "吴九", "郑十", "冯十一", "陈十二", "褚十三", "卫十四"};
+        String[] payMethods = {"wechat", "alipay", "bankcard", "cash", "wechat"};
+        String[] deliveryMethods = {"express", "pickup", "home_delivery", "self_pickup", "express"};
+        String[] statuses = {"pending", "paid", "shipped", "delivered", "cancelled"};
+
+        for (int i = 1; i <= 25; i++) {
+            Map<String, String> o = new HashMap<>();
+            o.put("orderNo", "ORD2026" + String.format("%04d", i));
+            o.put("customerName", customers[i % customers.length]);
+            o.put("phone", "138" + String.format("%08d", i));
+            o.put("address", "某某路" + i + "号");
+            o.put("amount", String.format("%.2f", 100.0 + (i * 73.5) % 5000));
+            o.put("payMethod", payMethods[i % payMethods.length]);
+            o.put("deliveryMethod", deliveryMethods[i % deliveryMethods.length]);
+            o.put("remark", i % 3 == 0 ? "加急" : "");
+            o.put("orderTime", "2026-04-" + String.format("%02d", (i % 28) + 1) + " " + String.format("%02d", (i * 3) % 24) + ":00:00");
+            o.put("status", statuses[i % statuses.length]);
+            db.put(o.get("orderNo"), o);
+        }
+        idCounter = 26;
     }
 
     @ModelAction

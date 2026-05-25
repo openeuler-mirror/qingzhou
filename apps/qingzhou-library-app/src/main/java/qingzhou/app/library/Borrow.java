@@ -21,9 +21,11 @@ import java.util.Map;
         menu = "borrow")
 public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 3;
+    private static int idCounter = 3;
 
     public Borrow() {
+        if (!db.isEmpty()) return;
+
         Map<String, String> br1 = new HashMap<>();
         br1.put("id", "BR001");
         br1.put("readerId", "R002");

@@ -23,9 +23,11 @@ import java.util.Map;
         menu = "advanced")
 public class Product extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, Monitor {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public Product() {
+        if (!db.isEmpty()) return;
+
         Map<String, String> p1 = new HashMap<>();
         p1.put("id", "P001");
         p1.put("name", "笔记本电脑");
