@@ -104,8 +104,10 @@ public class DefaultAction {
         int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
         List<String[]> listData = list.list(request, pageNum, pageSize, query, showFields);
+        int totalSize = list.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
+            Map<String, Object> finalResult = new HashMap<>();
             List<Map<String, String>> listResult = new ArrayList<>();
             listData.forEach(data -> {
                 Map<String, String> dataMap = new HashMap<>(); // 远程 json 序列化会丢掉顺序
@@ -114,7 +116,11 @@ public class DefaultAction {
                 }
                 listResult.add(dataMap);
             });
-            response.data(listResult);
+            finalResult.put("data", listResult);
+            finalResult.put("pageNum", pageNum);
+            finalResult.put("pageSize", pageSize);
+            finalResult.put("totalSize", totalSize);
+            response.data(finalResult);
         }
     }
 
