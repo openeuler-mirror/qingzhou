@@ -20,9 +20,11 @@ import java.util.Map;
         icon = "Setting",
         menu = "system")
 public class Config extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
-    private final Map<String, Map<String, String>> db = new HashMap<>();
+    private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Config() {
+        if (!db.isEmpty()) return;
+
         Map<String, String> c1 = new HashMap<>();
         c1.put("configKey", "system.name");
         c1.put("configValue", "轻舟管理平台");

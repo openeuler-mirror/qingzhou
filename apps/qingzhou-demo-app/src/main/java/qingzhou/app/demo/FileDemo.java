@@ -26,8 +26,8 @@ import qingzhou.api.type.Update;
         icon = "FolderOpened",
         menu = "advanced")
 public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, DownloadFile {
-    private final Map<String, Map<String, String>> db = new LinkedHashMap<>();
-    private int idCounter = 1;
+    private static final Map<String, Map<String, String>> db = new LinkedHashMap<>();
+    private static int idCounter = 1;
 
     @Override
     public File parent(Request request) throws Exception {
@@ -52,6 +52,8 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     }
     
     public FileDemo() {
+        if (!db.isEmpty()) return;
+
         // 初始化一些示例数据（attachment 存储纯文件名，对应 parent() 返回目录下的文件）
         Map<String, String> f1 = new LinkedHashMap<>();
         f1.put("id", "F001");

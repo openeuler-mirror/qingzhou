@@ -21,9 +21,11 @@ import java.util.Map;
         menu = "basic")
 public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    private static int idCounter = 1;
 
     public Teacher() {
+        if (!db.isEmpty()) return;
+
         Map<String, String> t1 = new HashMap<>();
         t1.put("id", "T001");
         t1.put("name", "王教授");

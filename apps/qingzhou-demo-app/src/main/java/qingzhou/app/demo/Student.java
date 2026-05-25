@@ -16,48 +16,39 @@ import qingzhou.api.type.*;
         icon = "User",
         menu = "basic")
 public class Student extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
-    public final Map<String, Map<String, String>> db = new HashMap<>();
-    private int idCounter = 1;
+    public static final Map<String, Map<String, String>> db = new HashMap<>();
+    private static int idCounter = 1;
 
     public Student() {
-        Map<String, String> s1 = new HashMap<>();
-        s1.put("id", "S001");
-        s1.put("name", "张三");
-        s1.put("age", "20");
-        s1.put("gender", "男");
-        s1.put("className", "计算机一班");
-        s1.put("email", "zhangsan@example.com");
-        s1.put("password", "123456");
-        s1.put("bio", "热爱编程的学生");
-        s1.put("hobbies", "篮球,音乐,编程");
-        s1.put("status", "active");
-        s1.put("avatar", "");
-        s1.put("createdAt", "2026-01-15 10:30:00");
-        s1.put("enabled", "true");
-        s1.put("skills", "Java,Python,Vue");
-        s1.put("fullName", "张 三");
-        s1.put("themeColor", "#4ECDC4");
-        db.put(s1.get("id"), s1);
+        if (!db.isEmpty()) return;
 
-        Map<String, String> s2 = new HashMap<>();
-        s2.put("id", "S002");
-        s2.put("name", "李四");
-        s2.put("age", "22");
-        s2.put("gender", "女");
-        s2.put("className", "计算机二班");
-        s2.put("email", "lisi@example.com");
-        s2.put("password", "654321");
-        s2.put("bio", "喜欢设计的学生");
-        s2.put("hobbies", "绘画,音乐");
-        s2.put("status", "active");
-        s2.put("avatar", "");
-        s2.put("createdAt", "2026-02-20 14:20:00");
-        s2.put("enabled", "true");
-        s2.put("skills", "UI设计,Photoshop");
-        s2.put("fullName", "李 四");
-        s2.put("themeColor", "#FF6B6B");
-        db.put(s2.get("id"), s2);
-        idCounter = 3;
+        String[] names = {"张三", "李四", "王五", "赵六", "孙七", "周八", "吴九", "郑十", "冯十一", "陈十二"};
+        String[] genders = {"男", "女"};
+        String[] classes = {"计算机一班", "计算机二班", "软件工程一班", "软件工程二班", "人工智能班"};
+        String[] statuses = {"active", "active", "active", "inactive", "suspended"};
+
+        for (int i = 1; i <= 30; i++) {
+            Map<String, String> s = new HashMap<>();
+            String id = "S" + String.format("%03d", i);
+            s.put("id", id);
+            s.put("name", names[i % names.length] + (i / 10 > 0 ? i : ""));
+            s.put("age", String.valueOf(18 + i % 8));
+            s.put("gender", genders[i % 2]);
+            s.put("className", classes[i % classes.length]);
+            s.put("email", "student" + i + "@example.com");
+            s.put("password", "123456");
+            s.put("bio", "学生" + i + "的简介");
+            s.put("hobbies", i % 2 == 0 ? "篮球,音乐,编程" : "绘画,阅读,游戏");
+            s.put("status", statuses[i % statuses.length]);
+            s.put("avatar", "");
+            s.put("createdAt", "2026-" + String.format("%02d", (i % 12) + 1) + "-" + String.format("%02d", (i % 28) + 1) + " 10:00:00");
+            s.put("enabled", i % 5 == 0 ? "false" : "true");
+            s.put("skills", i % 2 == 0 ? "Java,Python,Vue" : "UI设计,Photoshop");
+            s.put("fullName", names[i % names.length]);
+            s.put("themeColor", i % 3 == 0 ? "#FF6B6B" : (i % 3 == 1 ? "#4ECDC4" : "#45B7D1"));
+            db.put(s.get("id"), s);
+        }
+        idCounter = 31;
     }
 
     @ModelField(id = true,
