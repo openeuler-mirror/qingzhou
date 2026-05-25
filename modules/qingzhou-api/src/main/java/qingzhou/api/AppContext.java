@@ -34,6 +34,9 @@ public interface AppContext {
      */
     <T> T getObjectInstance(Class<T> type);
 
+    // 获取当前进程 PID
+    long getPid();
+
     <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function);
 
     <T, R> SharedFunction<T, R> getSharedFunction(String functionName);

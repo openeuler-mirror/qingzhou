@@ -14,7 +14,6 @@ public class ResponseImpl implements Response {
     private int status;
     private String contentType;
     private final Map<String, String> headers = new HashMap<>();
-    private final Map<String, String> sessionParameters = new HashMap<>();
 
     // 内部数据
     private boolean actionInvoked;
@@ -61,12 +60,6 @@ public class ResponseImpl implements Response {
         return this;
     }
 
-    @Override
-    public Response writeParametersInSession(String key, String value) {
-        sessionParameters.put(key, value);
-        return this;
-    }
-
     public boolean isSuccess() {
         return success;
     }
@@ -101,9 +94,5 @@ public class ResponseImpl implements Response {
 
     public void setActionInvoked(boolean actionFound) {
         this.actionInvoked = actionFound;
-    }
-
-    public Map<String, String> getSessionParameters() {
-        return sessionParameters;
     }
 }

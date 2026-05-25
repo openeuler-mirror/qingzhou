@@ -104,17 +104,23 @@ public class DefaultAction {
         int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
         List<String[]> listData = list.list(request, pageNum, pageSize, query, showFields);
+        int totalSize = list.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
+            Map<String, Object> finalResult = new HashMap<>();
             List<Map<String, String>> listResult = new ArrayList<>();
             listData.forEach(data -> {
-                Map<String, String> dataMap = new HashMap<>(); // 没必要在此处保证顺序了，因为远程调用 json 序列化还是会丢掉顺序
+                Map<String, String> dataMap = new HashMap<>(); // 远程 json 序列化会丢掉顺序
                 for (int i = 0; i < showFields.length; i++) {
                     dataMap.put(showFields[i], data[i]);
                 }
                 listResult.add(dataMap);
             });
-            response.data(listResult);
+            finalResult.put("data", listResult);
+            finalResult.put("pageNum", pageNum);
+            finalResult.put("pageSize", pageSize);
+            finalResult.put("totalSize", totalSize);
+            response.data(finalResult);
         }
     }
 
@@ -140,7 +146,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = DownloadFile.ACTION_CODE_FILES, icon = "Download",
+            code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
             name = {"下载", "en:Download"}, list_head = true, show = true, update = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public static void files(DownloadFile downloadFile, Request request) throws Exception {
