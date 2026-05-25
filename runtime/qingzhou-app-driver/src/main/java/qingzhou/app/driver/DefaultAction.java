@@ -219,9 +219,11 @@ public class DefaultAction {
 
         byte[] byteRead;
 
+        boolean isTempFile = false;
         File toDownloadFile = new File(fileBase, downloadKey); // 单文件直接下载
         if (!toDownloadFile.exists()) {
             toDownloadFile = new File(tempBase, downloadKey); // 多文件压缩下载
+            isTempFile = true;
         }
         try (RandomAccessFile raf = new RandomAccessFile(toDownloadFile, "r")) {
             if (offset >= raf.length()) return;
@@ -239,7 +241,9 @@ public class DefaultAction {
             offset = raf.getFilePointer();
             if (offset == raf.length()) {
                 offset = -1L; // 结束
-                FileUtil.forceDeleteQuietly(toDownloadFile);
+                if (isTempFile) {
+                    FileUtil.forceDeleteQuietly(toDownloadFile);
+                }
             }
         }
         Crypto crypto = appContext.getService(Crypto.class);

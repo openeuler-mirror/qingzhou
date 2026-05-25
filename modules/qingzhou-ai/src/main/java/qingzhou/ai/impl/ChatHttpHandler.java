@@ -161,7 +161,15 @@ public class ChatHttpHandler implements HttpHandler {
                 toolName = component.substring(i + 1);
             }
 
-            return Tool.of(toolName, toolDescription, parameters(toolProp), aiTool::invoke);
+            return Tool.of(toolName, toolDescription, parameters(toolProp), toolArgs -> {
+                try {
+                    return aiTool.invoke(toolArgs);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            toolArgs != null ? toolArgs.toString() : e.getMessage(),
+                            e);
+                }
+            });
         }).collect(Collectors.toSet());
     }
 
