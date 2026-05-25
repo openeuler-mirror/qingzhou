@@ -285,14 +285,6 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
                 
                 java.nio.file.Files.move(srcFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 fileNames.add(fileName);
-                
-                File parentDir = srcFile.getParentFile();
-                if (parentDir != null && parentDir.isDirectory()) {
-                    File[] remaining = parentDir.listFiles();
-                    if (remaining != null && remaining.length == 0) {
-                        parentDir.delete();
-                    }
-                }
             } else {
                 // 已有文件名（不是有效路径），直接保留
                 fileNames.add(part);

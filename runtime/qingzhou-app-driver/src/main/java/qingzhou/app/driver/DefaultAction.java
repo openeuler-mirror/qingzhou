@@ -159,11 +159,11 @@ public class DefaultAction {
                 File[] files = fileBase.listFiles();
                 if (files != null) {
                     for (File file : files) {
-                        map.put(file.getName(), FileUtil.getFileSize(file));
+                        map.put(file.getName(), String.valueOf(FileUtil.getFileLength(file)));
                     }
                 }
             } else if (fileBase.isFile()) {
-                map.put(fileBase.getName(), FileUtil.getFileSize(fileBase));
+                map.put(fileBase.getName(), String.valueOf(FileUtil.getFileLength(fileBase)));
             }
 
             response.data(map);
@@ -178,7 +178,9 @@ public class DefaultAction {
         AppContext appContext = downloadFile.getAppContext();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
-        File keyDir = new File(appContext.getTemp(), "download");
+        File fileBase = downloadFile.parent(request);
+        File tempBase = new File(appContext.getTemp(), "download");
+
         String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);
         if (downloadKey == null || downloadKey.isEmpty()) {
             String downloadFileNames = request.getParameter(DownloadFile.REQUEST_PARAMETER_FILE_NAMES);
@@ -191,15 +193,22 @@ public class DefaultAction {
                 response.success(false);
                 return;
             }
-
-            File fileBase = downloadFile.parent(request);
             java.util.List<File> downloadFiles = new ArrayList<>();
             for (String s : downloadFileNames.split(",")) {
-                downloadFiles.add(new File(fileBase, s));
+                File file = new File(fileBase, s);
+                if (file.isFile()) {
+                    downloadFiles.add(file);
+                }
             }
-            downloadKey = buildDownloadKey(downloadFiles, keyDir);
+            if (!downloadFiles.isEmpty()) {
+                if (downloadFiles.size() == 1) {
+                    downloadKey = downloadFiles.get(0).getName();
+                } else {
+                    downloadKey = buildDownloadKey(downloadFiles, tempBase);
+                }
+            }
         }
-        if (downloadKey.isEmpty() || !new File(keyDir, downloadKey).exists()) return;
+        if (downloadKey == null || downloadKey.isEmpty()) return;
 
         long offset = 0;
         String downloadOffsetParameter = request.getParameter(DownloadFile.REQUEST_PARAMETER_OFFSET);
@@ -209,8 +218,12 @@ public class DefaultAction {
         if (offset < 0) return;
 
         byte[] byteRead;
-        File temp = new File(keyDir, downloadKey);
-        try (RandomAccessFile raf = new RandomAccessFile(temp, "r")) {
+
+        File toDownloadFile = new File(fileBase, downloadKey); // 单文件直接下载
+        if (!toDownloadFile.exists()) {
+            toDownloadFile = new File(tempBase, downloadKey); // 多文件压缩下载
+        }
+        try (RandomAccessFile raf = new RandomAccessFile(toDownloadFile, "r")) {
             if (offset >= raf.length()) return;
             raf.seek(offset);
 
@@ -226,7 +239,7 @@ public class DefaultAction {
             offset = raf.getFilePointer();
             if (offset == raf.length()) {
                 offset = -1L; // 结束
-                FileUtil.forceDeleteQuietly(temp);
+                FileUtil.forceDeleteQuietly(toDownloadFile);
             }
         }
         Crypto crypto = appContext.getService(Crypto.class);
@@ -316,15 +329,9 @@ public class DefaultAction {
         File tempDir = new File(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
         try {
             for (File file : downloadFiles) {
-                if (file.exists()) {
-                    File copyTo = new File(tempDir, file.getName());
-                    FileUtil.copyFileOrDirectory(file, copyTo);
-                }
+                FileUtil.copyFileOrDirectory(file, new File(tempDir, file.getName()));
             }
-            File[] files = tempDir.listFiles();
-            if (files != null && files.length > 0) {
-                FileUtil.zipFiles(tempDir, zipTo, false);
-            }
+            FileUtil.zipFiles(tempDir, zipTo, false);
         } finally {
             FileUtil.forceDelete(tempDir);
         }
