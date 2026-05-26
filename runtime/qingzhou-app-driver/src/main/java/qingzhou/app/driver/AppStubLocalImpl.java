@@ -42,15 +42,6 @@ class AppStubLocalImpl implements AppStubLocal {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        // 确保应用的拦截器总是可以被执行
-        for (ActionFilter actionFilter : appContext.actionFilters) {
-            String error = actionFilter.doFilter(request);
-            if (error != null && !error.trim().isEmpty()) {
-                error(request, error.trim());
-                return;
-            }
-        }
-
         // 查找并执行 Action
         for (Model m : appMeta.getApp().models) {
             if (m.code.equals(request.getModel())) {
@@ -58,15 +49,25 @@ class AppStubLocalImpl implements AppStubLocal {
                     if (a.code.equals(request.getAction())) {
                         request.setCurrentModel(m);
 
-                        // 数据校验
+                        // 系统拦截器：数据校验
                         Map<String, List<String>> errors = validation.validate(a, request);
                         if (errors != null && !errors.isEmpty()) {
                             String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-                            error(request, i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr));
-                            request.getResponse().data(errors);
+                            String msg = i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr);
+                            error(request, msg, errors);
                             return;
                         }
 
+                        // 应用拦截器：放在系统拦截器之后，最终 action 之前
+                        for (ActionFilter actionFilter : appContext.actionFilters) {
+                            String error = actionFilter.doFilter(request);
+                            if (error != null && !error.trim().isEmpty()) {
+                                error(request, error.trim(), null);
+                                return;
+                            }
+                        }
+
+                        // 最终 action
                         invokeAction(m, a, request);
                         break;
                     }
@@ -109,11 +110,14 @@ class AppStubLocalImpl implements AppStubLocal {
         }
     }
 
-    private void error(RequestImpl request, String error) {
-        ResponseImpl response = request.getResponse();
-        response.status(400); // 请求参数、格式等不合法
-        response.success(false);
-        response.msg(error);
-        response.msgLevel(Response.MsgLevel.error);
+    private void error(RequestImpl request, String error, Object data) {
+        request.getResponse()
+                .status(400)
+                .success(false)
+                .msg(error)
+                .msgLevel(Response.MsgLevel.error);
+        if (data != null) {
+            request.getResponse().data(data);
+        }
     }
 }

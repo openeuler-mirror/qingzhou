@@ -37,7 +37,7 @@ public class IfActionExistsTool implements AiTool {
     private Json json;
 
     @Override
-    public Object invoke(Map<String, Object> toolArgs) {
+    public String invoke(Map<String, Object> toolArgs) {
         if (toolArgs == null) return null;
         String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
         String appCode = (String) toolArgs.get(WebUtil.APP_CODE);
@@ -49,9 +49,9 @@ public class IfActionExistsTool implements AiTool {
         if (appStub == null) return null;
         for (Model model : appStub.getAppMeta().getApp().models) {
             for (ModelAction action : model.actions) {
-                if (action.code.equals(actionCode)) return true;
+                if (action.code.equals(actionCode)) return "true";
             }
         }
-        return false;
+        return "false";
     }
 }

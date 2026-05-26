@@ -1,17 +1,13 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Monitor;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Show;
 
 /**
  * Dashboard 首页模型
@@ -214,5 +210,13 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @Override
     public Map<String, String> show(Request request) {
         return monitor(request);
+    }
+
+    @ModelAction
+    public void custom(Request request) {
+        request.getResponse()
+                .header("test-header-key", "test-header-val")
+                .contentType("text/html;")
+                .status(222);
     }
 }
