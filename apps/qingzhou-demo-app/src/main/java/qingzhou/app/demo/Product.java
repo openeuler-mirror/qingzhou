@@ -131,7 +131,9 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
 
     @ModelAction(code = "onshell", icon = "ArrowUp",
             name = {"上架", "en:On Shelf"},
-            info = {"将产品上架销售", "en:Put product on shelf"})
+            info = {"将产品上架销售。非上架状态时显示。", "en:Put product on shelf. Shown when not onsale."},
+            display = "status!=onsale",
+            list = true)
     public void onShell(Request request) {
         String id = request.getId();
         Map<String, String> product = db.get(id);
@@ -142,12 +144,51 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
 
     @ModelAction(code = "offshelf", icon = "ArrowDown",
             name = {"下架", "en:Off Shelf"},
-            info = {"将产品下架", "en:Take product off shelf"})
+            info = {"将产品下架。上架状态时显示。", "en:Take product off shelf. Shown when onsale."},
+            display = "status==onsale",
+            list = true)
     public void offShell(Request request) {
         String id = request.getId();
         Map<String, String> product = db.get(id);
         if (product != null) {
             product.put("status", "offshelf");
+        }
+    }
+
+    // 演示组合条件（AND）：上架且有库存时才显示"推广"按钮
+    @ModelAction(code = "promote", icon = "Promotion",
+            name = {"推广", "en:Promote"},
+            info = {"推广产品。上架且有库存时显示。", "en:Promote product. Shown when onsale and in stock."},
+            display = "status==onsale & stock>0",
+            list = true)
+    public void promote(Request request) {
+        // 推广操作示例：不做实际数据变更，仅返回提示
+        request.getResponse().data("推广操作已触发");
+    }
+
+    // 演示组合条件（OR）：已下架或无库存时才显示"停产"按钮
+    @ModelAction(code = "discontinue", icon = "CloseBold",
+            name = {"停产", "en:Discontinue"},
+            info = {"停产品。已下架或无库存时显示。", "en:Discontinue product. Shown when offshelf or out of stock."},
+            display = "status==offshelf | stock==0",
+            list = true)
+    public void discontinue(Request request) {
+        // 停产操作示例
+        request.getResponse().data("停产操作已触发");
+    }
+
+    // 演示 toolbar 操作（无 display 条件，始终显示）
+    @ModelAction(code = "batchDelete", icon = "Delete",
+            name = {"批量删除", "en:Batch Delete"},
+            info = {"批量删除选中的产品。Toolbar操作，始终显示。", "en:Batch delete selected products. Toolbar action, always shown."},
+            list_head = true,
+            batch = true)
+    public void batchDelete(Request request) {
+        String ids = request.getParameter("ids");
+        if (ids != null && !ids.isEmpty()) {
+            for (String id : ids.split(",")) {
+                db.remove(id.trim());
+            }
         }
     }
 

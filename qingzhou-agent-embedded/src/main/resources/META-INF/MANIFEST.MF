@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Premain-Class: qingzhou.agent.embedded.QingzhouAgent
+Agent-Class: qingzhou.agent.embedded.QingzhouAgent
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true

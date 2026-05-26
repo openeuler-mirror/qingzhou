@@ -10,14 +10,13 @@ import java.util.Map;
 
 /**
  * 演示菜单点击直接进入Show详情页的Model
- * 通过设置 @Model 的 action = "show" 实现
+ * 由于未实现 List 接口，前端根据优先级（list > edit > monitor > show）自动降级进入 show 页
  */
 @Model(code = "company-show", order = 10,
         name = {"公司信息", "en:Company Info(Show Direct)"},
         info = {"演示菜单点击直接进入Show详情页", "en:Demo menu click to show page directly"},
         icon = "OfficeBuilding",
-        menu = "advanced",
-        action = "show")  // 关键：设置默认action为show
+        menu = "advanced")
 public class CompanyShow extends qingzhou.api.ModelBase implements Show {
 
     // 模拟单条数据，show类型只展示一条记录
