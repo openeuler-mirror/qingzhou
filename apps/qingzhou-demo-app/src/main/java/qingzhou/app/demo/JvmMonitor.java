@@ -18,8 +18,7 @@ import java.util.Map;
         name = {"JVM", "en:JVM"},
         info = {"JVM运行时监控", "en:JVM Runtime Monitoring"},
         icon = "Cpu",
-        menu = "monitor",
-        action = "monitor")
+        menu = "monitor")
 public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
 
     @ModelField(

@@ -1,11 +1,5 @@
 package qingzhou.registry.service.web;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
@@ -18,6 +12,12 @@ import qingzhou.registry.AppStub;
 import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
         AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
@@ -59,15 +59,21 @@ public class AppMetaInfo implements HttpHandler, AiTool {
         appMetaInfo.put("name", i18nService.getI18n(app.name, lang));
         appMetaInfo.put("info", i18nService.getI18n(app.info, lang));
 
-        List<Map<String, String>> models = new ArrayList<>();
+        List<Map<String, Object>> models = new ArrayList<>();
         app.models.forEach(model -> {
-            Map<String, String> modelBasicInfo = new HashMap<>();
+            Map<String, Object> modelBasicInfo = new HashMap<>();
             modelBasicInfo.put(WebUtil.MODEL_CODE, model.code);
             modelBasicInfo.put("icon", model.icon);
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
-            modelBasicInfo.put("action", model.action);
             modelBasicInfo.put("name", i18nService.getI18n(model.name, lang));
+
+            List<String> actionCodes = new ArrayList<>();
+            for (qingzhou.dto.meta.annotation.ModelAction action : model.actions) {
+                actionCodes.add(action.code);
+            }
+            modelBasicInfo.put("actions", actionCodes);
+
             models.add(modelBasicInfo);
         });
         appMetaInfo.put("models", models);

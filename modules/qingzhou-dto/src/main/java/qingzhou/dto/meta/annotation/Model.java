@@ -12,8 +12,6 @@ public class Model extends Base {
 
     public int order;
 
-    public String action; // 页面点击默认操作
-
     public String[] name;
 
     public String[] info;

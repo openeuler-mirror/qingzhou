@@ -20,7 +20,7 @@ import java.util.Map;
 @Model(code = "level3demo", order = 1, icon = "Star",
         name = {"三级菜单演示", "en:Level 3 Demo"},
         info = {"多级菜单嵌套演示", "en:Multi-level menu demo"},
-        menu = "level3", action = "monitor")
+        menu = "level3")
 public class NestedMenuDemo extends qingzhou.api.ModelBase implements Show, Monitor {
 
     @ModelField(

@@ -19,7 +19,7 @@ import java.util.Map;
 @Model(code = "sub1demo", order = 1, icon = "Document",
         name = {"二级菜单示例", "en:Level 2 Demo"},
         info = {"二级菜单演示", "en:Second level menu demo"},
-        menu = "sub1", action = "monitor")
+        menu = "sub1")
 public class SubMenuDemo extends qingzhou.api.ModelBase implements Show, Monitor {
 
     @ModelField(

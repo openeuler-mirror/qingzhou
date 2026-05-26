@@ -20,7 +20,7 @@ import java.util.Map;
 @Model(code = "dashboard", order = 1,
         name = {"首页", "en:Dashboard"},
         info = {"数据概览", "en:Dashboard Overview"},
-        icon = "HomeFilled", action = "monitor")
+        icon = "HomeFilled")
 public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
 
     @ModelField(id = true,

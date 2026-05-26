@@ -12,14 +12,13 @@ import java.util.Map;
 
 /**
  * 演示菜单点击直接进入Edit编辑页的Model
- * 通过设置 @Model 的 action = "edit" 实现
+ * 通过实现 Update 和 Show 接口，前端根据优先级（list > edit > monitor > show）自动进入编辑页
  */
 @Model(code = "profile-edit", order = 11,
         name = {"个人设置", "en:Profile Settings(Edit Direct)"},
         info = {"演示菜单点击直接进入Edit编辑页", "en:Demo menu click to edit page directly"},
         icon = "UserFilled",
-        menu = "advanced",
-        action = "edit")  // 关键：设置默认action为edit
+        menu = "advanced")
 public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update {
 
     // 模拟单条用户配置数据

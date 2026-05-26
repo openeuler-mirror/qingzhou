@@ -19,8 +19,7 @@ import java.util.Map;
         name = {"操作系统", "en:Operating System"},
         info = {"操作系统运行状态监控", "en:Operating system runtime monitoring"},
         icon = "Monitor",
-        menu = "monitor",
-        action = "monitor")
+        menu = "monitor")
 public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
 
     @ModelField(
