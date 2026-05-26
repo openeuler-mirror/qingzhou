@@ -36,7 +36,7 @@ public class DemoApp implements QingzhouApp {
             Map<String, String> monitor = jvmMonitor.monitor(request);
             String heapUsed = monitor.get("heapUsed");
             int i = Integer.parseInt(heapUsed);
-            if (i > 50) {
+            if (i >= 100) {
                 logger.warn("内存过大（MB）：" + i);
             }
 

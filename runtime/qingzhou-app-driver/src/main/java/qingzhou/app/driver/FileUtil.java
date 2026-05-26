@@ -1,8 +1,6 @@
 package qingzhou.app.driver;
 
 import java.io.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -51,31 +49,6 @@ public class FileUtil {
                 copyStream(in, zos);
             }
         }
-    }
-
-    /**
-     * 获取文件大小
-     *
-     * @return xx B、xx K、xx M、xx G、xx T
-     */
-    public static String getFileSize(File file) {
-        long fileLength = file.exists() ? getFileLength(file) : 0L;
-        String fileSize = fileLength + " B";
-        long kb = 1024;
-        long mb = kb * 1024;
-        long gb = mb * 1024;
-        long tb = gb * 1024;
-        long eb = tb * 1024;
-        if (fileLength >= kb && fileLength < mb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(kb), 1, RoundingMode.UP) + "K";
-        } else if (fileLength >= mb && fileLength < gb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(mb), 1, RoundingMode.DOWN) + "M";
-        } else if (fileLength >= gb && fileLength < tb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(gb), 2, RoundingMode.DOWN) + "G";
-        } else if (fileLength >= tb && fileLength < eb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(tb), 2, RoundingMode.DOWN) + "T";
-        }
-        return fileSize;
     }
 
     public static long getFileLength(File file) {

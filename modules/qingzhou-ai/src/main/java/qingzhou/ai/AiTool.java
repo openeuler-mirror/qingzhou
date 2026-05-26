@@ -10,5 +10,5 @@ public interface AiTool {
     String PARAMETER_DESCRIPTION = "PARAMETER_DESCRIPTION";
     String PARAMETER_REQUIRED = "PARAMETER_REQUIRED";
 
-    Object invoke(Map<String, Object> toolArgs);
+    String invoke(Map<String, Object> toolArgs) throws Exception;
 }

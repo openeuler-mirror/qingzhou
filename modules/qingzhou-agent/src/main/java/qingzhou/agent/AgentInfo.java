@@ -31,7 +31,7 @@ public class AgentInfo implements AiTool {
     }
 
     @Override
-    public Object invoke(Map<String, Object> toolArgs) {
+    public String invoke(Map<String, Object> toolArgs) {
         return String.format("本地监听的端口: %s\n " +
                         "集中管理平台的URL: %s\n " +
                         "向平台注册应用的心跳周期（秒）: %s",

@@ -36,7 +36,6 @@ public class ActionToolRegister {
     public void init(ComponentContext context) {
         bundleContext = context.getBundleContext();
 
-        String actionCodeList = qingzhou.api.type.List.ACTION_CODE_LIST;
         Hashtable<String, String> sharedProperties = new Hashtable<String, String>() {{
             put(AiTool.PARAMETER_NAME + ".1", WebUtil.INSTANCE_ID);
             put(AiTool.PARAMETER_DESCRIPTION + ".1", "应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。");
@@ -48,7 +47,7 @@ public class ActionToolRegister {
             put(AiTool.PARAMETER_DESCRIPTION + ".3", "模块的唯一编码，该编码在同一个应用内不会重复。");
 
             put(AiTool.PARAMETER_NAME + ".4", WebUtil.DATA_ID);
-            put(AiTool.PARAMETER_DESCRIPTION + ".4", "模块内某条业务数据的唯一ID，若该模块具有“" + actionCodeList + "”操作，则多数情况下应该输入此参数，否则不需要输入此参数，如果调用的方法正好是“" + actionCodeList + "”，则不需要此参数。");
+            put(AiTool.PARAMETER_DESCRIPTION + ".4", "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前执行的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
             put(AiTool.PARAMETER_REQUIRED + ".4", "false");
         }};
 

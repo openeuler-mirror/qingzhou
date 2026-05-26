@@ -72,7 +72,7 @@ public class ChatModelImpl implements ChatModel {
                 .description(tool.description())
                 .doHandle(args -> {
                     listener.onReasoningPause();
-                    Object result = tool.invoke(args);
+                    String result = tool.invoke(args);
                     listener.onToolCall(tool.name(), args, result);
                     listener.onReasoningResume();
                     return result;
