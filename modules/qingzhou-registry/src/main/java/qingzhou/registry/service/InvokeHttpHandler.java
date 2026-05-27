@@ -5,12 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.osgi.service.component.annotations.Activate;
@@ -61,16 +56,10 @@ public class InvokeHttpHandler implements HttpHandler {
             return;
         }
 
-        // 保存原始文件路径，用于 finally 块中的清理（应用可能修改参数值）
-        Map<String, String> originalFilePaths = new HashMap<>();
-
+        Set<String> originalFilePaths = new HashSet<>(); // 处理之前，须先保存原始文件路径，用于 finally 块中的清理，因应用可能修改此参数值
         try {
             parseRequestBody(httpRequest, request);
-
-            // 在应用处理前保存文件路径，因为应用可能会修改参数值（如将路径改为文件名）
-            for (String fileField : request.getFileFields()) {
-                originalFilePaths.put(fileField, request.getParameter(fileField));
-            }
+            request.getUploadFileFields().forEach(field -> originalFilePaths.add(request.getParameter(field)));
 
             app.invokeApp(request);
         } catch (Throwable e) {
@@ -78,17 +67,13 @@ public class InvokeHttpHandler implements HttpHandler {
             logger.error(e.getMessage(), e);
             return;
         } finally {
-            // 使用原始路径清理上传的临时文件
-            for (String pathsValue : originalFilePaths.values()) {
-                if (pathsValue == null) continue;
-                String[] paths = pathsValue.split(",");
-                for (String path : paths) {
+            for (String paths : originalFilePaths) {
+                for (String path : paths.split(",")) {
                     File tempFile = new File(path.trim());
-                    if (tempFile.exists()) {
-                        tempFile.delete(); // 上传的文件
-                    }
                     File parentDir = tempFile.getParentFile();
-                    if (parentDir != null && parentDir.isDirectory()) {
+                    File tempBase = parentDir.getParentFile();
+                    if (tempBase.equals(uploadBase)) {
+                        tempFile.delete();
                         parentDir.delete(); // 随机目录
                     }
                 }
@@ -277,7 +262,7 @@ public class InvokeHttpHandler implements HttpHandler {
                             // 收集同一字段的多个文件路径
                             uploadFileMap.computeIfAbsent(fieldName, k -> new ArrayList<>())
                                     .add(tempFile.getAbsolutePath());
-                            request.getFileFields().add(fieldName);
+                            request.getUploadFileFields().add(fieldName);
                         } else {
                             request.getParameters().put(fieldName, fileName);
                         }
@@ -295,10 +280,10 @@ public class InvokeHttpHandler implements HttpHandler {
             for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
                 String fieldName = entry.getKey();
                 List<String> paths = entry.getValue();
-                
+
                 // 获取该字段可能已有的文本值（来自 multipart 文本部分）
                 String existingText = request.getParameter(fieldName);
-                
+
                 // 合并：已有文本 + 新文件路径
                 StringBuilder combined = new StringBuilder();
                 if (existingText != null && !existingText.isEmpty()) {

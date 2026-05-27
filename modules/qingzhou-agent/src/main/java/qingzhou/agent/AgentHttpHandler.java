@@ -1,14 +1,16 @@
 package qingzhou.agent;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
@@ -19,20 +21,30 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=")
 public class AgentHttpHandler implements HttpHandler {
-    @Reference
-    private Logger logger;
+    // 参考：qingzhou.registry.impl.AppStubRemoteImpl.uploadFileToRemoteAgent
+    public static final String FILE_UPLOAD_URI = "/upload";
+    public static final String FILE_UPLOAD_KEY = "key";
+    public static final String FILE_UPLOAD_NAME_SP = "=";
+
     @Reference
     private Json json;
     @Reference
     private Registry registry;
     @Reference
     private Crypto crypto;
+
+    private File uploadBase;
+
+    @Activate
+    public void init() {
+        uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "agent-upload").toFile();
+        uploadBase.mkdirs();
+    }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -49,148 +61,75 @@ public class AgentHttpHandler implements HttpHandler {
             cipher = crypto.getCipher(thisInstanceInfo.getKey());
             requestData = cipher.decrypt(requestBody);
         } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
+            httpResponse.status500Finish("key auth error");
             return;
         }
 
         // 处理业务，得到响应数据
-        byte[] responseData;
+        String responseData;
         try {
-            responseData = process(requestData);
+            if (httpRequest.getPath().contains(FILE_UPLOAD_URI)) {
+                responseData = processFileUpload(requestData, httpRequest.getParameter(FILE_UPLOAD_KEY));
+            } else {
+                responseData = processRequest(requestData);
+            }
         } catch (Throwable e) {
-            String error = "business processing error";
-            httpResponse.status500Finish(error);
-            logger.error(error, e);
+            httpResponse.status500Finish("business processing error");
             return;
         }
 
         // 加密响应数据
         byte[] encrypt;
         try {
-            encrypt = cipher.encrypt(responseData);
+            encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.status500Finish("instance Key error");
-            logger.error("encryption failed: " + e.getMessage());
+            httpResponse.status500Finish("encryption failed");
             return;
         }
         httpResponse.sendFinish(encrypt);
     }
 
-    private byte[] process(byte[] data) throws Throwable {
+    private String processFileUpload(byte[] data, String key) throws Throwable {
+        String uploadId = UUID.randomUUID().toString();
+        File tempFile = new File(uploadBase, uploadId);
+        Files.write(tempFile.toPath(), data);
+        return uploadId;
+    }
+
+    private String processRequest(byte[] data) throws Throwable {
         // 3. 得到请求对象
         RequestImpl request = json.fromJson(new String(data, StandardCharsets.UTF_8), RequestImpl.class);
 
         // 4. 处理
-        AppStubLocal appStub = registry.getLocalApp(request.getApp());
-        List<File> uploadDirs = uploadDirs(request, appStub);
+        Set<String> originalFilePaths = new HashSet<>(); // 处理之前，须先保存原始文件路径，用于 finally 块中的清理，因应用可能修改此参数值
         try {
+            request.getUploadFileFields().forEach(field -> {
+                String newPaths = Arrays.stream(request.getParameter(field).split(",")).map(s -> {
+                    String[] keyName = s.split(FILE_UPLOAD_NAME_SP);
+                    File tempFile = new File(uploadBase, keyName[0]);
+                    File localFile = new File(uploadBase, keyName[1]);
+                    tempFile.renameTo(localFile);
+                    return localFile.getAbsolutePath();
+                }).collect(Collectors.joining(","));
+                request.getParameters().put(field, newPaths);
+                originalFilePaths.add(newPaths);
+            });
+
+            AppStubLocal appStub = registry.getLocalApp(request.getApp());
             appStub.invokeApp(request);
         } finally {
-            uploadDirs.forEach(file -> {
-                try {
-                    forceDelete(file);
-                } catch (IOException e) {
-                    logger.warn("failed to clean up the files: " + file, e);
+            for (String paths : originalFilePaths) {
+                for (String path : paths.split(",")) {
+                    File tempFile = new File(path.trim());
+                    File parentDir = tempFile.getParentFile();
+                    if (parentDir.equals(uploadBase)) {
+                        tempFile.delete();
+                    }
                 }
-            });
+            }
         }
 
         // 响应数据
-        return json.toJson(request.getResponse()).getBytes(StandardCharsets.UTF_8);
-    }
-
-    private List<File> uploadDirs(RequestImpl request, AppStubLocal appStub) {
-        List<File> uploadDirs = new ArrayList<>();
-        Set<String> parameterNames = request.getParameters().keySet();
-        for (String uploadField : parameterNames) {
-            String detectUploadFile = request.getParameter(uploadField);
-            if (detectUploadFile == null ||
-                    !detectUploadFile.startsWith("UPLOAD_FILE_PREFIX_FLAG")) continue;
-
-            String uploadId = detectUploadFile.substring("UPLOAD_FILE_PREFIX_FLAG".length());
-            if (uploadId.contains("..")) throw new IllegalArgumentException("Unsupported parameter: " + uploadId);
-            File uploadDir = Paths.get(appStub.getAppContext().getTemp().getAbsolutePath(), "UPLOAD_FILE_TEMP_SUB_DIR", uploadId).toFile();
-            uploadDirs.add(uploadDir);
-            File[] listFiles = uploadDir.listFiles();
-            request.getParameters().put(uploadField, Objects.requireNonNull(listFiles)[0].getAbsolutePath());
-        }
-        return uploadDirs;
-    }
-
-    private void forceDelete(File file) throws IOException {
-        if (file.isDirectory()) {
-            deleteDirectory(file);
-        } else {
-            if (file.exists() && !file.delete()) {
-                try { // for #ITAIT-4164
-                    Thread.sleep(2000);
-                } catch (InterruptedException ignored) {
-                }
-                if (!file.delete()) {
-                    throw new IOException("Unable to delete file: " + file);
-                }
-            }
-        }
-    }
-
-    private void deleteDirectory(File directory) throws IOException {
-        if (!directory.exists()) {
-            return;
-        }
-
-        if (notSymlink(directory)) {
-            cleanDirectory(directory);
-        }
-
-        if (!directory.delete()) {
-            String message = "Unable to delete directory " + directory + ".";
-            throw new IOException(message);
-        }
-    }
-
-    private boolean notSymlink(File file) throws IOException {
-        if (File.separatorChar == '\\') {
-            return true;
-        }
-        File fileInCanonicalDir;
-        if (file.getParent() == null) {
-            fileInCanonicalDir = file;
-        } else {
-            File canonicalDir = file.getParentFile().getCanonicalFile();
-            fileInCanonicalDir = new File(canonicalDir, file.getName());
-        }
-
-        return fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile());
-    }
-
-    // 将 文件夹 清空
-    private void cleanDirectory(File directory) throws IOException {
-        if (!directory.exists()) {
-            String message = directory + " does not exist";
-            throw new IllegalArgumentException(message);
-        }
-
-        if (!directory.isDirectory()) {
-            String message = directory + " is not a directory";
-            throw new IllegalArgumentException(message);
-        }
-
-        File[] files = directory.listFiles();
-        if (files == null) {  // null if security restricted
-            throw new IOException("failed to list contents of " + directory);
-        }
-
-        IOException exception = null;
-        for (File file : files) {
-            try {
-                forceDelete(file);
-            } catch (IOException ioe) {
-                exception = ioe;
-            }
-        }
-
-        if (null != exception) {
-            throw exception;
-        }
+        return json.toJson(request.getResponse());
     }
 }
