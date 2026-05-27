@@ -31,7 +31,7 @@ public class DemoApp implements QingzhouApp {
 
         Properties properties = appContext.getProperties();
         logger.info("配置参数：" + properties);
-        appContext.addActionFilter(request -> {
+        appContext.addActionFilter((request, chain) -> {
             JvmMonitor jvmMonitor = appContext.getObjectInstance(JvmMonitor.class);
             Map<String, String> monitor = jvmMonitor.monitor(request);
             String heapUsed = monitor.get("heapUsed");
@@ -39,8 +39,7 @@ public class DemoApp implements QingzhouApp {
             if (i >= 100) {
                 logger.warn("内存过大（MB）：" + i);
             }
-
-            return null;
+            chain.doFilter();
         });
 
         Thread.sleep(2000); // 确保图书管理应用启动完成

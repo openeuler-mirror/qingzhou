@@ -7,10 +7,12 @@ import java.util.Set;
 
 import qingzhou.api.Request;
 import qingzhou.dto.meta.annotation.Model;
+import qingzhou.dto.meta.annotation.ModelAction;
 
 public class RequestImpl implements Request {
     private transient ResponseImpl response = new ResponseImpl();
     private transient Model currentModel;
+    private transient ModelAction currentModelAction;
 
     private String instance;
     private String app;
@@ -94,5 +96,13 @@ public class RequestImpl implements Request {
 
     public void setCurrentModel(Model currentModel) {
         this.currentModel = currentModel;
+    }
+
+    public ModelAction getCurrentModelAction() {
+        return currentModelAction;
+    }
+
+    public void setCurrentModelAction(ModelAction currentModelAction) {
+        this.currentModelAction = currentModelAction;
     }
 }

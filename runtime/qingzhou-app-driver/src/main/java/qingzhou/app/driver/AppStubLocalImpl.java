@@ -2,8 +2,8 @@ package qingzhou.app.driver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.dto.RequestImpl;
@@ -17,17 +17,18 @@ import qingzhou.registry.I18nService;
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;
     private final AppMeta appMeta;
-    private final I18nService i18nService;
-    private final Validation validation;
-
-    // Error messages
-    private final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
+    private final List<ActionFilter> filters;
 
     AppStubLocalImpl(AppContextImpl appContext, AppMeta appMeta) {
         this.appContext = appContext;
         this.appMeta = appMeta;
-        this.i18nService = appContext.getService(I18nService.class);
-        this.validation = new Validation(i18nService);
+
+        filters = new ArrayList<>();
+        I18nService i18nService = appContext.getService(I18nService.class);
+        Validation validation = new Validation(i18nService);
+        filters.add(validation);
+        filters.addAll(appContext.actionFilters); // 应用拦截器：放在系统拦截器之后，最终 action 之前
+        filters.add((request, c) -> invokeAction((RequestImpl) request));
     }
 
     @Override
@@ -42,33 +43,22 @@ class AppStubLocalImpl implements AppStubLocal {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        // 查找并执行 Action
         for (Model m : appMeta.getApp().models) {
             if (m.code.equals(request.getModel())) {
                 for (ModelAction a : m.actions) {
                     if (a.code.equals(request.getAction())) {
                         request.setCurrentModel(m);
+                        request.setCurrentModelAction(a);
 
-                        // 系统拦截器：数据校验
-                        Map<String, List<String>> errors = validation.validate(a, request);
-                        if (errors != null && !errors.isEmpty()) {
-                            String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-                            String msg = i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr);
-                            error(request, msg, errors);
-                            return;
-                        }
+                        FilterChain chain = new FilterChain() {
+                            int index = 0;
 
-                        // 应用拦截器：放在系统拦截器之后，最终 action 之前
-                        for (ActionFilter actionFilter : appContext.actionFilters) {
-                            String error = actionFilter.doFilter(request);
-                            if (error != null && !error.trim().isEmpty()) {
-                                error(request, error.trim(), null);
-                                return;
+                            @Override
+                            public void doFilter() throws Throwable {
+                                filters.get(index++).doFilter(request, this);
                             }
-                        }
-
-                        // 最终 action
-                        invokeAction(m, a, request);
+                        };
+                        chain.doFilter();
                         break;
                     }
                 }
@@ -77,7 +67,10 @@ class AppStubLocalImpl implements AppStubLocal {
         }
     }
 
-    private void invokeAction(Model model, ModelAction action, RequestImpl request) throws Throwable {
+    private void invokeAction(RequestImpl request) throws Throwable {
+        Model model = request.getCurrentModel();
+        ModelAction action = request.getCurrentModelAction();
+
         ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
             for (Method method : DefaultAction.class.getMethods()) {
@@ -107,17 +100,6 @@ class AppStubLocalImpl implements AppStubLocal {
             method.invoke(obj, args);
         } catch (InvocationTargetException e) {
             throw e.getCause();
-        }
-    }
-
-    private void error(RequestImpl request, String error, Object data) {
-        request.getResponse()
-                .status(400)
-                .success(false)
-                .msg(error)
-                .msgLevel(Response.MsgLevel.error);
-        if (data != null) {
-            request.getResponse().data(data);
         }
     }
 }
