@@ -20,6 +20,8 @@ import qingzhou.registry.Registry;
 @Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RefreshHttpHandler implements HttpHandler {
+    public static final Object REFRESH_KEY_LOCK = new Object();
+
     @Reference
     private Crypto crypto;
     @Reference
@@ -36,7 +38,7 @@ public class RefreshHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        synchronized (RegisterHttpHandler.REGISTRY_LOCK) {
+        synchronized (REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
         }
     }

@@ -1,6 +1,11 @@
 package qingzhou.registry.impl;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 import qingzhou.api.Constants;
 import qingzhou.api.Response;
@@ -15,6 +20,7 @@ import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.HttpResult;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStubRemote;
+import qingzhou.registry.service.RefreshHttpHandler;
 
 class AppStubRemoteImpl implements AppStubRemote {
     private final InstanceInfo instanceInfo;
@@ -38,29 +44,80 @@ class AppStubRemoteImpl implements AppStubRemote {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
+        synchronized (RefreshHttpHandler.REFRESH_KEY_LOCK) {
+            invokeApp0(request);
+        }
+    }
+
+    private void invokeApp0(RequestImpl request) throws Throwable {
         HttpResult response;
         String originTargetName = request.getInstance();
         request.setInstance(Constants.LOCAL_INSTANCE_ID); // 远程到实例后，去本地实例找
         Cipher cipher = crypto.getCipher(instanceInfo.getKey());
+
         try {
+            // 处理文件上传：将本地文件上传到远程 agent
+            doFileUploads(request, cipher);
+
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = cipher.encrypt(data);
-            String agentUrl = String.format("http://%s:%s/agent", instanceInfo.getHost(), instanceInfo.getPort());
-            try {
-                response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
-            } catch (Exception e) {
-                ResponseImpl resp = request.getResponse();
-                resp.success(false)
-                        .msgLevel(Response.MsgLevel.error)
-                        .msg("remote connection error");
-                return;
-            }
+            String agentUrl = String.format("http://%s:%s/agent/", instanceInfo.getHost(), instanceInfo.getPort());
+
+            response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
+        } catch (Exception e) {
+            ResponseImpl resp = request.getResponse();
+            resp.success(false)
+                    .msgLevel(Response.MsgLevel.error)
+                    .msg("remote processing error");
+            return;
         } finally {
             request.setInstance(originTargetName);
         }
+
         byte[] responseBody = response.getBody();
         byte[] decrypted = cipher.decrypt(responseBody);
         ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
         request.setResponse(result);
+    }
+
+    /**
+     * 处理文件上传：将本地文件上传到远程 agent
+     */
+    private void doFileUploads(RequestImpl request, Cipher cipher) throws Exception {
+        for (String field : request.getUploadFileFields()) {
+            List<String> remotePaths = new ArrayList<>();
+            String[] filePaths = request.getParameter(field).split(","); // 处理多文件字段（逗号分隔的路径）
+            for (String path : filePaths) {
+                File file = new File(path);
+                String remoteFileTempKey = uploadFileToRemoteAgent(file, cipher);
+                remotePaths.add(remoteFileTempKey + "=" + file.getName());
+            }
+            String remotePathsStr = String.join(",", remotePaths); // 将远程路径列表保存到 request
+            request.getParameters().put(field, remotePathsStr); // 更新 request 中的参数为远程路径
+        }
+    }
+
+    /**
+     * 上传单个文件到远程 agent
+     */
+    private String uploadFileToRemoteAgent(File file, Cipher cipher) throws Exception {
+        byte[] fileContent = Files.readAllBytes(file.toPath()); // TODO：需要分块上传
+        byte[] encrypt = cipher.encrypt(fileContent);
+
+        // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
+        String uploadUrl = String.format("http://%s:%s/agent/upload?key=", instanceInfo.getHost(), instanceInfo.getPort());
+
+        HttpResult uploadResult = httpClient.request(uploadUrl, HttpMethod.POST, encrypt, null);
+        if (uploadResult.getStatus() != 200) {
+            String msg = "response code: " + uploadResult.getStatus() + " ";
+            byte[] body = uploadResult.getBody();
+            if (body != null) {
+                msg += new String(body, StandardCharsets.UTF_8);
+            }
+            throw new RemoteException(msg);
+        } else {
+            byte[] result = cipher.decrypt(uploadResult.getBody());
+            return new String(result, StandardCharsets.UTF_8);
+        }
     }
 }

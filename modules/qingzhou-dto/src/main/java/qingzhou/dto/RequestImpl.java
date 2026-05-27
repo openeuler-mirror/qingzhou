@@ -18,7 +18,7 @@ public class RequestImpl implements Request {
     private String action;
     private String id;
     private final Map<String, String> parameters = new HashMap<>();
-    private final Set<String> fileFields = new HashSet<>();
+    private final Set<String> uploadFileFields = new HashSet<>();
 
     @Override
     public ResponseImpl getResponse() {
@@ -60,8 +60,8 @@ public class RequestImpl implements Request {
         return parameters;
     }
 
-    public Set<String> getFileFields() {
-        return fileFields;
+    public Set<String> getUploadFileFields() {
+        return uploadFileFields;
     }
 
     public void setResponse(ResponseImpl response) {
