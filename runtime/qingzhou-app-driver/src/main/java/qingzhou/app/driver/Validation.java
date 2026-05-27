@@ -4,9 +4,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import qingzhou.api.Constants;
-import qingzhou.api.FieldType;
-import qingzhou.api.InputType;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
 import qingzhou.dto.RequestImpl;
@@ -14,9 +12,9 @@ import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.registry.I18nService;
 
-class Validation {
-    // 公共 - i18n format: {"中文提示消息", "en:English tip message"}
-    private static final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
+class Validation implements ActionFilter {
+    private final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
+    private final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
 
     private final I18nService i18nService;
     private final Map<Filter, Validator> validators = new LinkedHashMap<Filter, Validator>() {{
@@ -84,6 +82,24 @@ class Validation {
             if (!errors.isEmpty()) validation.put(field.code, errors);
         }
         return validation.isEmpty() ? null : validation;
+    }
+
+    @Override
+    public void doFilter(Request request, FilterChain chain) throws Throwable {
+        RequestImpl req = (RequestImpl) request;
+        Map<String, List<String>> errors = validate(req.getCurrentModelAction(), req);
+        if (errors != null && !errors.isEmpty()) {
+            String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+            String msg = i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr);
+            request.getResponse()
+                    .status(400)
+                    .success(false)
+                    .msg(msg)
+                    .msgLevel(Response.MsgLevel.error);
+            request.getResponse().data(errors);
+            return;
+        }
+        chain.doFilter();
     }
 
     interface Filter {
