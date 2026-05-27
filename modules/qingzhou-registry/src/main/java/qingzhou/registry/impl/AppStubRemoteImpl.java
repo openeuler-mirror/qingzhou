@@ -1,6 +1,7 @@
 package qingzhou.registry.impl;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
@@ -19,6 +20,7 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.HttpResult;
 import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
 import qingzhou.registry.service.RefreshHttpHandler;
 
@@ -28,13 +30,15 @@ class AppStubRemoteImpl implements AppStubRemote {
     private final Json json;
     private final HttpClient httpClient;
     private final Crypto crypto;
+    private final Logger logger;
 
-    AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto) {
+    AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto, Logger logger) {
         this.instanceInfo = instanceInfo;
         this.appMeta = appMeta;
         this.json = json;
         this.httpClient = httpClient;
         this.crypto = crypto;
+        this.logger = logger;
     }
 
     @Override
@@ -64,20 +68,24 @@ class AppStubRemoteImpl implements AppStubRemote {
             String agentUrl = String.format("http://%s:%s/agent/", instanceInfo.getHost(), instanceInfo.getPort());
 
             response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
+            if (response.getStatus() == 200) {
+                byte[] responseBody = response.getBody();
+                if (responseBody != null && responseBody.length > 0) {
+                    byte[] decrypted = cipher.decrypt(responseBody);
+                    ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
+                    request.setResponse(result);
+                }
+            } else {
+                logger.error(response.getStatus() + ": " + agentUrl);
+            }
         } catch (Exception e) {
             ResponseImpl resp = request.getResponse();
             resp.success(false)
                     .msgLevel(Response.MsgLevel.error)
                     .msg("remote processing error");
-            return;
         } finally {
             request.setInstance(originTargetName);
         }
-
-        byte[] responseBody = response.getBody();
-        byte[] decrypted = cipher.decrypt(responseBody);
-        ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
-        request.setResponse(result);
     }
 
     /**
@@ -101,23 +109,30 @@ class AppStubRemoteImpl implements AppStubRemote {
      * 上传单个文件到远程 agent
      */
     private String uploadFileToRemoteAgent(File file, Cipher cipher) throws Exception {
-        byte[] fileContent = Files.readAllBytes(file.toPath()); // TODO：需要分块上传
-        byte[] encrypt = cipher.encrypt(fileContent);
+        String fileTempKey = "";
+        byte[] buffer = new byte[1024 * 1024 * 2]; // 8KB缓冲
+        try (InputStream in = Files.newInputStream(file.toPath())) {
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                byte[] encrypt = cipher.encrypt(buffer, 0, bytesRead);
 
-        // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
-        String uploadUrl = String.format("http://%s:%s/agent/upload?key=", instanceInfo.getHost(), instanceInfo.getPort());
+                // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
+                String uploadUrl = String.format("http://%s:%s/agent/upload?key=" + fileTempKey, instanceInfo.getHost(), instanceInfo.getPort());
 
-        HttpResult uploadResult = httpClient.request(uploadUrl, HttpMethod.POST, encrypt, null);
-        if (uploadResult.getStatus() != 200) {
-            String msg = "response code: " + uploadResult.getStatus() + " ";
-            byte[] body = uploadResult.getBody();
-            if (body != null) {
-                msg += new String(body, StandardCharsets.UTF_8);
+                HttpResult uploadResult = httpClient.request(uploadUrl, HttpMethod.POST, encrypt, null);
+                if (uploadResult.getStatus() != 200) {
+                    String msg = "response code: " + uploadResult.getStatus() + " ";
+                    byte[] body = uploadResult.getBody();
+                    if (body != null) {
+                        msg += new String(body, StandardCharsets.UTF_8);
+                    }
+                    throw new RemoteException(msg);
+                } else {
+                    byte[] result = cipher.decrypt(uploadResult.getBody());
+                    fileTempKey = new String(result, StandardCharsets.UTF_8);
+                }
             }
-            throw new RemoteException(msg);
-        } else {
-            byte[] result = cipher.decrypt(uploadResult.getBody());
-            return new String(result, StandardCharsets.UTF_8);
         }
+        return fileTempKey;
     }
 }

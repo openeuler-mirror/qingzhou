@@ -51,6 +51,12 @@ class CipherImpl implements Cipher {
     @Override
     public byte[] encrypt(byte[] s) throws Exception {
         if (s == null) return null;
+        return encrypt(s, 0, s.length);
+    }
+
+    @Override
+    public byte[] encrypt(byte[] s, int off, int len) throws Exception {
+        if (s == null) return null;
 
         // 生成随机IV
         byte[] iv = new byte[IV_SIZE];
@@ -59,7 +65,7 @@ class CipherImpl implements Cipher {
         // 执行加密，结果包含：密文+认证标签
         javax.crypto.Cipher cipher = getCipher();
         cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
-        byte[] ciphertext = cipher.doFinal(s);
+        byte[] ciphertext = cipher.doFinal(s, off, len);
 
         // 拼接 IV(12) + 密文+标签
         byte[] result = new byte[IV_SIZE + ciphertext.length];

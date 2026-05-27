@@ -158,7 +158,7 @@ public class RegistryImpl implements Registry {
         if (instanceInfo == null) return null;
         for (AppMeta appMeta : instanceInfo.getAppMetas()) {
             if (appMeta.getApp().code.equals(appCode)) {
-                return new AppStubRemoteImpl(instanceInfo, appMeta, json, httpClient, crypto);
+                return new AppStubRemoteImpl(instanceInfo, appMeta, json, httpClient, crypto, logger);
             }
         }
         return null;

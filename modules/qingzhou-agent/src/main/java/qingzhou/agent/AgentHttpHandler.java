@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -90,9 +91,14 @@ public class AgentHttpHandler implements HttpHandler {
     }
 
     private String processFileUpload(byte[] data, String key) throws Throwable {
-        String uploadId = UUID.randomUUID().toString();
+        String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
         File tempFile = new File(uploadBase, uploadId);
-        Files.write(tempFile.toPath(), data);
+        if (tempFile.exists()) {
+            Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
+        } else {
+            Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
+        }
+
         return uploadId;
     }
 
