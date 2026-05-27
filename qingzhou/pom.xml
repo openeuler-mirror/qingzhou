@@ -304,12 +304,12 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-library-app</artifactId>
+            <artifactId>qingzhou-app-library</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-demo-app</artifactId>
+            <artifactId>qingzhou-app-demo</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

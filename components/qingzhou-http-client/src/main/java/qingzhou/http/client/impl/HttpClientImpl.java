@@ -82,8 +82,8 @@ public class HttpClientImpl implements HttpClient {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         conn.setUseCaches(false);
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(60000);
+        conn.setConnectTimeout(60 * 1000);
+        conn.setReadTimeout(10 * 60 * 1000);
         conn.setRequestProperty("Connection", "close");
         conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");

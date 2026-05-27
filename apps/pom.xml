@@ -11,8 +11,8 @@
 
     <packaging>pom</packaging>
     <modules>
-        <module>qingzhou-demo-app</module>
-        <module>qingzhou-library-app</module>
+        <module>qingzhou-app-demo</module>
+        <module>qingzhou-app-library</module>
     </modules>
 
     <dependencies>
