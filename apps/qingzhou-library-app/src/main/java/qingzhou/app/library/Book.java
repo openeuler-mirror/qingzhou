@@ -63,7 +63,7 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
             name = {"图书编号", "en:Book ID"},
             info = {"图书唯一标识", "en:Book unique identifier"},
             list = true,
-            show = true,
+            search = true,
             readonly = true)
     public String id;
 

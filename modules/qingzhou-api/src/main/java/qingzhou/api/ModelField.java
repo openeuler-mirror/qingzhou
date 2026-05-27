@@ -24,7 +24,7 @@ public @interface ModelField {
 
     String ref_model() default ""; // 使用指定的模块的所有数据id作为字段的取值范围
 
-    String placeholder() default "";
+    String link_to() default ""; // 点击该字段值时跳转到指定模型的列表页并筛选，格式为 modelCode.fieldCode
 
     String[] options() default {};
 
