@@ -8,5 +8,5 @@
         <artifactId>apps</artifactId>
         <version>${revision}</version>
     </parent>
-    <artifactId>qingzhou-library-app</artifactId>
+    <artifactId>qingzhou-app-library</artifactId>
 </project>
