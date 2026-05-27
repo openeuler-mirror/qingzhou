@@ -82,7 +82,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             name = {"图书编号", "en:Book ID"},
             info = {"图书编号", "en:Book ID"},
             list = true,
-            add = true,
+            link_to = "book.id",
             required = true)
     public String bookId;
 

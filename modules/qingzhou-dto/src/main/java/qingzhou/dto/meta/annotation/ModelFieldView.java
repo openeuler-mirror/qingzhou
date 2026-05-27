@@ -13,9 +13,9 @@ public class ModelFieldView extends Base {
 
     public String ref_model;
 
-    public String default_value;
+    public String link_to;
 
-    public String placeholder;
+    public String default_value;
 
     public String[] options;
 
