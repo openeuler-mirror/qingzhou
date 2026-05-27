@@ -15,7 +15,7 @@ public @interface App {
 
     String icon() default "";
 
-    String[] name() default {};
+    String[] name();
 
     String[] info() default {};
 }
