@@ -125,7 +125,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Delete.ACTION_CODE_DELETE, icon = "Delete", order = 2,
+            code = Delete.ACTION_CODE_DELETE, icon = "Delete", order = 99,
             name = {"删除", "en:Delete"}, list = true, batch = true,
             info = {"删除该模块。", "en:Delete this module."})
     public static void delete(Delete delete, Request request) throws Exception {

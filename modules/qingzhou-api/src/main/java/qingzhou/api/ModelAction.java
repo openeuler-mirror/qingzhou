@@ -15,7 +15,7 @@ public @interface ModelAction {
 
     String icon() default "";
 
-    int order() default 0;
+    int order() default 9;
 
     String display() default ""; // 设置该操作的可用条件
 

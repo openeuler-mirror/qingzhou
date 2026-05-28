@@ -12,7 +12,7 @@ public @interface Menu {
 
     String icon() default "";
 
-    int order() default 0;
+    int order() default 9;
 
     String parent() default ""; // parent code
 }
