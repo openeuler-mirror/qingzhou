@@ -52,28 +52,27 @@ public class RegisterHttpHandler implements HttpHandler {
     public void start(Map<String, String> config) throws Exception {
         pairCipher = crypto.getPairCipher(null, config.get("private_key"));
 
+        long interval = 1000 * Long.parseLong(config.get("interval"));
+        long timeout = 1000 * Long.parseLong(config.get("timeout"));
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 synchronized (RefreshHttpHandler.REFRESH_KEY_LOCK) {
                     Set<String> toRemove = new HashSet<>();
-                    long deadline = System.currentTimeMillis() - 1000 * Long.parseLong(config.get("timeout"));
                     for (String next : registry.getAllRemoteInstances()) {
                         InstanceInfo remoteInstance = registry.getRemoteInstance(next);
                         if (remoteInstance != null) {
                             long lastRefreshTime = remoteInstance.getLastRefreshTime();
-                            if (lastRefreshTime > 1) {
-                                if (lastRefreshTime < deadline) {
-                                    toRemove.add(next);
-                                }
+                            if (lastRefreshTime + timeout < System.currentTimeMillis()) {
+                                toRemove.add(next);
                             }
                         }
                     }
                     toRemove.forEach(s -> ((RegistryImpl) registry).removeRemoteApps(s));
                 }
             }
-        }, 2000, 1000 * Long.parseLong(config.get("interval")));
+        }, interval, interval);
     }
 
     @Deactivate

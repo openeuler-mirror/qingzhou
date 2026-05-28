@@ -24,7 +24,7 @@ public class WebUtil {
         if (cacheKey != null) {
             try {
                 long cachedTime = Long.parseLong(cacheKey);
-                if (cachedTime == registry.getDataTimestamp()) {
+                if (cachedTime == registry.getRegistryDataVersion()) {
                     httpResponse.sendFinish("{\"success\":true}");
                     return true;
                 }
@@ -39,7 +39,7 @@ public class WebUtil {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);
-        metaData.put(REQUEST_PARAMETER_NAME_CACHE_KEY, registry.getDataTimestamp());
+        metaData.put(REQUEST_PARAMETER_NAME_CACHE_KEY, registry.getRegistryDataVersion());
         return json.toJson(metaData);
     }
 }

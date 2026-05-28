@@ -34,7 +34,7 @@ public class RegistryImpl implements Registry {
 
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
-    private long dataTimestamp = Long.MAX_VALUE;
+    private long registryDataVersion = System.currentTimeMillis();
 
     private final Map<String, AppStubLocal> localApps = java.util.Collections
             .synchronizedMap(new java.util.LinkedHashMap<>());
@@ -53,7 +53,7 @@ public class RegistryImpl implements Registry {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindApp(AppStubLocal appStub) {
         bindApp0(appStub);
-        dataTimestamp = System.currentTimeMillis();
+        registryDataVersion = System.currentTimeMillis();
     }
 
     private synchronized void bindApp0(AppStubLocal appStub) {
@@ -81,7 +81,7 @@ public class RegistryImpl implements Registry {
      */
     public void unbindApp(AppStubLocal appStub) {
         unbindApp0(appStub);
-        dataTimestamp = System.currentTimeMillis();
+        registryDataVersion = System.currentTimeMillis();
     }
 
     private void unbindApp0(AppStubLocal appStub) {
@@ -93,8 +93,8 @@ public class RegistryImpl implements Registry {
     }
 
     @Override
-    public long getDataTimestamp() {
-        return dataTimestamp;
+    public long getRegistryDataVersion() {
+        return registryDataVersion;
     }
 
     @Override
@@ -167,13 +167,15 @@ public class RegistryImpl implements Registry {
     public InstanceInfo addRemoteApps(InstanceInfo instanceInfo) {
         InstanceInfo exists = remoteApps.put(instanceInfo.getId(), instanceInfo);
         if (exists == null) {
-            dataTimestamp = System.currentTimeMillis();
+            long currentTimeMillis = System.currentTimeMillis();
+            instanceInfo.setLastRefreshTime(currentTimeMillis); // 更新刷新时间
+            registryDataVersion = currentTimeMillis;
         }
         return exists;
     }
 
     public void removeRemoteApps(String instanceId) {
         remoteApps.remove(instanceId);
-        dataTimestamp = System.currentTimeMillis();
+        registryDataVersion = System.currentTimeMillis();
     }
 }

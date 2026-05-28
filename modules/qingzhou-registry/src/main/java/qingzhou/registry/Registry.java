@@ -5,7 +5,7 @@ import java.util.List;
 import qingzhou.dto.meta.InstanceInfo;
 
 public interface Registry {
-    long getDataTimestamp(); // 可用于前端缓存元数据
+    long getRegistryDataVersion(); // 可用于前端缓存元数据
 
     AppStub getAppStub(String instanceId, String appCode);
 
