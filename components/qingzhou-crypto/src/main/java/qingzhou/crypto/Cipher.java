@@ -7,5 +7,7 @@ public interface Cipher {
 
     byte[] encrypt(byte[] s) throws Exception;
 
+    byte[] encrypt(byte[] s, int off, int len) throws Exception;
+
     byte[] decrypt(byte[] s) throws Exception;
 }

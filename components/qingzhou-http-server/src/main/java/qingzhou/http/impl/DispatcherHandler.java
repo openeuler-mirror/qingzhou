@@ -2,6 +2,7 @@ package qingzhou.http.impl;
 
 import java.util.function.BiFunction;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.HttpHandler;
@@ -13,19 +14,39 @@ import reactor.netty.http.server.HttpServerResponse;
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
     private final HttpServerImpl httpServer;
+    private final long maxBodySize;
     private final Logger logger;
 
-    DispatcherHandler(HttpServerImpl httpServer, Logger logger) {
+    DispatcherHandler(HttpServerImpl httpServer, long maxBodySize, Logger logger) {
         this.httpServer = httpServer;
+        this.maxBodySize = maxBodySize;
         this.logger = logger;
     }
 
     @Override
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
+        // 检查 Content-Length
+        String contentLength = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
+        if (contentLength != null) {
+            try {
+                long len = Long.parseLong(contentLength);
+                if (len > maxBodySize) {
+                    return response
+                            .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE)
+                            .send();
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         String requestPath = request.uri().split("\\?")[0];
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
         String matches = httpServer.matches(normalizedPath);
-        if (matches == null) return response.status(HttpResponseStatus.NOT_FOUND);
+        if (matches == null) {
+            return response
+                    .status(HttpResponseStatus.NOT_FOUND)
+                    .send();
+        }
 
         HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
         return request.receive()

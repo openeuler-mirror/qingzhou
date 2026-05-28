@@ -18,7 +18,7 @@ public @interface Model {
 
     String menu() default "";
 
-    int order() default 0;
+    int order() default 9;
 
     String[] name();
 

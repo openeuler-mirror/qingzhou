@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InstanceInfo {
+    private transient long lastRefreshTime;
+
     private String id;
     private String host;
     private int port;
     private String key;
     private String version;
     private final List<AppMeta> appMetas = new ArrayList<>();
-    private long lastRefreshTime;
 
     public String getId() {
         return id;
