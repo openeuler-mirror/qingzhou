@@ -121,7 +121,7 @@ public class BundleConverter {
                         "qingzhou.http.client," +
                         "qingzhou.qr," +
                         "qingzhou.llm," +
-                        "com.sun.management");
+                        "com.sun.management,javax.naming");
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);
