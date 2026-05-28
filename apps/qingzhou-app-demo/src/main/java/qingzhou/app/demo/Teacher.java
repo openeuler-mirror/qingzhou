@@ -17,7 +17,7 @@ import java.util.Map;
 @Model(code = "teacher", order = 2,
         name = {"教师", "en:Teacher"},
         info = {"教师信息管理，演示完整CRUD功能", "en:Teacher information management"},
-        icon = "UserAdd",
+        icon = "Postcard",
         menu = "basic")
 public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
