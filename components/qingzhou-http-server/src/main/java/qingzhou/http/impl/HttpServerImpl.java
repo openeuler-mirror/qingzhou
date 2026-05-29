@@ -31,8 +31,6 @@ public class HttpServerImpl implements HttpServer {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
-        long maxBodySize = getConfig(config, "max_body_size", 2);
-        maxBodySize = maxBodySize * 1024 * 1024;
 
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
@@ -57,7 +55,7 @@ public class HttpServerImpl implements HttpServer {
                 .childOption(ChannelOption.TCP_NODELAY, true) // 现代带宽充足，路由器处理能力强，「小包风暴」的影响远小于实时性不足带来的业务问题
                 .idleTimeout(Duration.ofSeconds(idleTimeout)) // 一条连接，无任何读或写活动，则主动关闭连接释放资源，不设置则无限
                 // 业务路由（生产环境建议抽离到单独的 Handler 类，解耦业务逻辑）
-                .handle(new DispatcherHandler(this, maxBodySize, logger));
+                .handle(new DispatcherHandler(this, logger));
 
         // 3. 启动服务并持有 Disposable（关键：用于后续优雅停止）
         disposableServer = httpServer.bindNow();
