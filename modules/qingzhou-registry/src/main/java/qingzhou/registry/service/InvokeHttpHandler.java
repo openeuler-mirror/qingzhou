@@ -34,8 +34,6 @@ public class InvokeHttpHandler implements HttpHandler {
     @Reference
     private Logger logger;
 
-    private final StreamHandler streamHandler = new StreamHandlerImpl();
-
     private File uploadBase;
 
     @Activate
@@ -45,7 +43,7 @@ public class InvokeHttpHandler implements HttpHandler {
 
     @Override
     public StreamHandler getStreamHandler() {
-        return null;
+        return new StreamHandlerImpl();
     }
 
     @Override
