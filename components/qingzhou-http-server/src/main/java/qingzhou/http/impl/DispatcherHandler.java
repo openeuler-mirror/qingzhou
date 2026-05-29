@@ -2,7 +2,6 @@ package qingzhou.http.impl;
 
 import java.util.function.BiFunction;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
@@ -33,14 +32,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     .send();
         }
         HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
-        HttpHandler.StreamHandler streamHandler = httpHandler.getStreamHandler();
+        HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
 
-        boolean streamRequired = false;
-        if (request.method() == HttpMethod.POST && streamHandler != null) {
-            String contentType = request.requestHeaders().get(HttpHeaderNames.CONTENT_TYPE);
-            if (contentType != null && contentType.contains("multipart/form-data")) {
-                streamRequired = true;
-            }
+        boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
+        if (streamRequired && streamHandler == null) {
+            return response
+                    .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE)
+                    .send();
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
@@ -48,11 +46,12 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
         if (streamRequired) {
-            streamHandler.init(httpRequest, httpResponse);
+            streamHandler.onBegin(httpRequest, httpResponse);
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .subscribe(byteBuf -> {
                                 byte[] bytes = new byte[byteBuf.readableBytes()];
                                 byteBuf.readBytes(bytes);
+                                // todo: byteBuf.release(); // 重要：释放资源，防止内存泄漏
                                 streamHandler.onNext(bytes);
                             },
                             err -> streamHandler.onError(err),

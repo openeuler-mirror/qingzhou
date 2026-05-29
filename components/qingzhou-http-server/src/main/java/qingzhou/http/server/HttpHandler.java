@@ -11,13 +11,13 @@ public interface HttpHandler {
 
     void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 
-    default StreamHandler getStreamHandler() {
+    default StreamHandler buildStreamHandler() {
         return null;
     }
 
     interface StreamHandler {
 
-        default void init(HttpRequest request, HttpResponse response) {}
+        void onBegin(HttpRequest request, HttpResponse response);
 
         /**
          * Data notification sent by the {@link Publisher} in response to requests to {@link Subscription#request(long)}.

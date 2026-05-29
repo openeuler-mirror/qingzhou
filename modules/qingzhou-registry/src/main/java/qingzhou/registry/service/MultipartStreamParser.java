@@ -5,14 +5,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class MultipartStreamParser {
-
     private final byte[] boundaryDelimiter;
-    private static final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
+    private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final File uploadBase;
     private final FieldTypeResolver fieldTypeResolver;
 
-    private enum State { BEFORE_FIRST, IN_HEADERS, IN_CONTENT, DONE }
+    private enum State {BEFORE_FIRST, IN_HEADERS, IN_CONTENT, DONE}
+
     private State state = State.BEFORE_FIRST;
 
     private final byte[] leftover;
@@ -35,17 +35,6 @@ public class MultipartStreamParser {
     @FunctionalInterface
     public interface FieldTypeResolver {
         boolean isFileField(String fieldName);
-    }
-
-    public static String extractBoundary(String contentType) {
-        if (contentType == null) return null;
-        for (String part : contentType.split(";")) {
-            part = part.trim();
-            if (part.startsWith("boundary=")) {
-                return part.substring(9).replace("\"", "");
-            }
-        }
-        return null;
     }
 
     public MultipartStreamParser(String boundary, File uploadBase, FieldTypeResolver resolver) {
@@ -71,16 +60,30 @@ public class MultipartStreamParser {
         int pos = 0;
         while (pos < searchArea.length && state != State.DONE) {
             switch (state) {
-                case BEFORE_FIRST: pos = handlePreamble(searchArea, pos); break;
-                case IN_HEADERS:   pos = handleHeaders(searchArea, pos);   break;
-                case IN_CONTENT:   pos = handleContent(searchArea, pos, isLast); break;
+                case BEFORE_FIRST:
+                    pos = handlePreamble(searchArea, pos);
+                    break;
+                case IN_HEADERS:
+                    pos = handleHeaders(searchArea, pos);
+                    break;
+                case IN_CONTENT:
+                    pos = handleContent(searchArea, pos, isLast);
+                    break;
             }
         }
     }
 
-    public Map<String, String> getParameters()           { return parameters; }
-    public Map<String, List<String>> getUploadFileMap()   { return uploadFileMap; }
-    public Set<String> getUploadFileFields()              { return uploadFileFields; }
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
+
+    public Map<String, List<String>> getUploadFileMap() {
+        return uploadFileMap;
+    }
+
+    public Set<String> getUploadFileFields() {
+        return uploadFileFields;
+    }
 
     private int handlePreamble(byte[] data, int pos) {
         int idx = indexOf(data, boundaryDelimiter, pos);
@@ -205,7 +208,7 @@ public class MultipartStreamParser {
         }
     }
 
-    private static String extractValue(String headers, String key) {
+    private String extractValue(String headers, String key) {
         int start = headers.indexOf(key);
         if (start == -1) return null;
         start += key.length();
@@ -219,11 +222,14 @@ public class MultipartStreamParser {
         if (leftoverLen > 0) System.arraycopy(data, pos, leftover, 0, leftoverLen);
     }
 
-    private static int indexOf(byte[] data, byte[] pattern, int startPos) {
+    private int indexOf(byte[] data, byte[] pattern, int startPos) {
         for (int i = startPos; i <= data.length - pattern.length; i++) {
             boolean found = true;
             for (int j = 0; j < pattern.length; j++) {
-                if (data[i + j] != pattern[j]) { found = false; break; }
+                if (data[i + j] != pattern[j]) {
+                    found = false;
+                    break;
+                }
             }
             if (found) return i;
         }
