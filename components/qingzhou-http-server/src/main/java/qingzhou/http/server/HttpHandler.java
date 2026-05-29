@@ -17,6 +17,8 @@ public interface HttpHandler {
 
     interface StreamHandler {
 
+        default void init(HttpRequest request, HttpResponse response) {}
+
         /**
          * Data notification sent by the {@link Publisher} in response to requests to {@link Subscription#request(long)}.
          *

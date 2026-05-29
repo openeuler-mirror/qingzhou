@@ -15,12 +15,10 @@ import reactor.netty.http.server.HttpServerResponse;
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
     private final HttpServerImpl httpServer;
-    private final long maxBodySize;
     private final Logger logger;
 
-    DispatcherHandler(HttpServerImpl httpServer, long maxBodySize, Logger logger) {
+    DispatcherHandler(HttpServerImpl httpServer, Logger logger) {
         this.httpServer = httpServer;
-        this.maxBodySize = maxBodySize;
         this.logger = logger;
     }
 
@@ -38,24 +36,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         HttpHandler.StreamHandler streamHandler = httpHandler.getStreamHandler();
 
         boolean streamRequired = false;
-        if (request.method() == HttpMethod.POST) {
-            streamRequired = true;
-            // 检查 Content-Length
-            String contentLength = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
-            if (contentLength != null) {
-                try {
-                    long len = Long.parseLong(contentLength);
-                    if (len < maxBodySize) {
-                        streamRequired = false;
-                    }
-                } catch (NumberFormatException ignored) {
-                }
+        if (request.method() == HttpMethod.POST && streamHandler != null) {
+            String contentType = request.requestHeaders().get(HttpHeaderNames.CONTENT_TYPE);
+            if (contentType != null && contentType.contains("multipart/form-data")) {
+                streamRequired = true;
             }
-        }
-        if (streamRequired && streamHandler == null) {
-            return response
-                    .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE)
-                    .send();
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
@@ -63,11 +48,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
         if (streamRequired) {
+            streamHandler.init(httpRequest, httpResponse);
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .subscribe(byteBuf -> {
                                 byte[] bytes = new byte[byteBuf.readableBytes()];
                                 byteBuf.readBytes(bytes);
-                                byteBuf.release(); // 重要：释放资源，防止内存泄漏
                                 streamHandler.onNext(bytes);
                             },
                             err -> streamHandler.onError(err),

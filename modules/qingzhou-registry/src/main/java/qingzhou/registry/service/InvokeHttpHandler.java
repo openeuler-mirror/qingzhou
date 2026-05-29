@@ -3,7 +3,6 @@ package qingzhou.registry.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -61,7 +60,7 @@ public class InvokeHttpHandler implements HttpHandler {
             return;
         }
 
-        Set<String> originalFilePaths = new HashSet<>(); // 处理之前，须先保存原始文件路径，用于 finally 块中的清理，因应用可能修改此参数值
+        Set<String> originalFilePaths = new HashSet<>();
         try {
             parseRequestBody(httpRequest, request);
             request.getUploadFileFields().forEach(field -> originalFilePaths.add(request.getParameter(field)));
@@ -72,19 +71,13 @@ public class InvokeHttpHandler implements HttpHandler {
             logger.error(e.getMessage(), e);
             return;
         } finally {
-            for (String paths : originalFilePaths) {
-                for (String path : paths.split(",")) {
-                    File tempFile = new File(path.trim());
-                    File parentDir = tempFile.getParentFile();
-                    File tempBase = parentDir.getParentFile();
-                    if (tempBase.equals(uploadBase)) {
-                        tempFile.delete();
-                        parentDir.delete(); // 随机目录
-                    }
-                }
-            }
+            cleanupTempFiles(originalFilePaths);
         }
 
+        sendResponseOr404(request, httpResponse);
+    }
+
+    private void sendResponseOr404(RequestImpl request, HttpResponse httpResponse) {
         ResponseImpl response = request.getResponse();
         if (response.isActionInvoked()
                 || response.getData() != null
@@ -92,6 +85,20 @@ public class InvokeHttpHandler implements HttpHandler {
             sendResponse(response, httpResponse);
         } else {
             httpResponse.status404Finish();
+        }
+    }
+
+    private void cleanupTempFiles(Set<String> originalFilePaths) {
+        for (String paths : originalFilePaths) {
+            for (String path : paths.split(",")) {
+                File tempFile = new File(path.trim());
+                File parentDir = tempFile.getParentFile();
+                File tempBase = parentDir.getParentFile();
+                if (tempBase.equals(uploadBase)) {
+                    tempFile.delete();
+                    parentDir.delete();
+                }
+            }
         }
     }
 
@@ -172,210 +179,115 @@ public class InvokeHttpHandler implements HttpHandler {
                 } catch (Exception e) {
                     logger.warn("failed to parse json body: " + e.getMessage());
                 }
-            } else if (httpRequest.getContentType().contains("multipart/form-data")) { // 文件上传参数
-                parseMultipart(httpRequest, request);
             }
         }
     }
 
-    private void parseMultipart(HttpRequest httpRequest, RequestImpl request) {
-        String boundary = extractBoundary(httpRequest.getContentType());
-        if (boundary == null) {
-            logger.warn("missing boundary in multipart content type");
-            return;
+    private void applyParserResults(MultipartStreamParser parser, RequestImpl request) {
+        request.getParameters().putAll(parser.getParameters());
+        Map<String, List<String>> uploadFileMap = parser.getUploadFileMap();
+        for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
+            String fieldName = entry.getKey();
+            List<String> paths = entry.getValue();
+            String existingText = request.getParameter(fieldName);
+            StringBuilder combined = new StringBuilder();
+            if (existingText != null && !existingText.isEmpty()) {
+                combined.append(existingText.trim());
+            }
+            for (String path : paths) {
+                if (combined.length() > 0) combined.append(",");
+                combined.append(path);
+            }
+            request.getParameters().put(fieldName, combined.toString());
         }
+        request.getUploadFileFields().addAll(parser.getUploadFileFields());
+    }
 
-        try {
-            byte[] body = httpRequest.getBody();
-            byte[] boundaryBytes = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
-            byte[] headerDelimiter = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
-
-            // 收集同一字段名的多个文件
-            Map<String, List<String>> uploadFileMap = new LinkedHashMap<>();
-
-            int pos = 0;
-            while (pos < body.length) {
-                // 查找下一个 boundary
-                int boundaryStart = indexOfBytes(body, boundaryBytes, pos);
-                if (boundaryStart == -1) break;
-
-                // 跳过 boundary 标记
-                int afterBoundary = boundaryStart + boundaryBytes.length;
-
-                // 检查是否为结束 boundary（--结尾）
-                if (afterBoundary + 1 < body.length && body[afterBoundary] == '-' && body[afterBoundary + 1] == '-') {
-                    break;
-                }
-
-                // 跳过 boundary 后的 CRLF
-                if (afterBoundary + 1 < body.length && body[afterBoundary] == '\r' && body[afterBoundary + 1] == '\n') {
-                    afterBoundary += 2;
-                }
-
-                // 查找头部结束位置（双CRLF）
-                int headerEnd = indexOfBytes(body, headerDelimiter, afterBoundary);
-                if (headerEnd == -1) break;
-
-                // 解析头部为字符串
-                String headers = new String(body, afterBoundary, headerEnd - afterBoundary, StandardCharsets.UTF_8);
-                int contentStart = headerEnd + headerDelimiter.length;
-
-                // 查找下一个 boundary 以确定内容结束位置
-                int nextBoundary = indexOfBytes(body, boundaryBytes, contentStart);
-                if (nextBoundary == -1) break;
-
-                // 内容在下一个 boundary 前的 CRLF 之前结束
-                int contentEnd = nextBoundary;
-                if (contentEnd >= 2 && body[contentEnd - 2] == '\r' && body[contentEnd - 1] == '\n') {
-                    contentEnd -= 2;
-                }
-
-                // 提取字段名和文件名
-                String fieldName = extractFieldName(headers);
-                String fileName = extractFileName(headers);
-
-                if (fieldName != null) {
-                    if (fileName != null && !fileName.isEmpty()
-                            && !fileName.contains("..")
-                            && !fileName.contains("/")
-                            && !fileName.contains("\\")) {
-                        boolean isUpload = false;
-                        AppStub appStub = registry.getAppStub(request.getInstance(), request.getApp());
-                        if (appStub != null) {
-                            App app = appStub.getAppMeta().getApp();
-                            for (Model model : app.models) {
-                                if (model.code.equals(request.getModel())) {
-                                    for (ModelField field : model.fields) {
-                                        if (field.code.equals(fieldName)) {
-                                            isUpload = field.input_type == InputType.file;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (isUpload) {
-                            String uploadId = UUID.randomUUID().toString();
-                            File uploadDir = new File(uploadBase, uploadId);
-                            uploadDir.mkdirs();
-                            File tempFile = new File(uploadDir, fileName);
-
-                            // 直接写入原始字节，不做字符集转换，确保二进制文件不损坏
-                            byte[] contentBytes = new byte[contentEnd - contentStart];
-                            System.arraycopy(body, contentStart, contentBytes, 0, contentBytes.length);
-                            Files.write(tempFile.toPath(), contentBytes);
-
-                            // 收集同一字段的多个文件路径
-                            uploadFileMap.computeIfAbsent(fieldName, k -> new ArrayList<>())
-                                    .add(tempFile.getAbsolutePath());
-                            request.getUploadFileFields().add(fieldName);
-                        } else {
-                            request.getParameters().put(fieldName, fileName);
-                        }
-                    } else {
-                        // 普通字段：内容转为字符串
-                        String content = new String(body, contentStart, contentEnd - contentStart, StandardCharsets.UTF_8).trim();
-                        request.getParameters().put(fieldName, content);
+    private boolean isUploadField(RequestImpl request, String fieldName) {
+        AppStub appStub = registry.getAppStub(request.getInstance(), request.getApp());
+        if (appStub == null) return false;
+        for (Model model : appStub.getAppMeta().getApp().models) {
+            if (model.code.equals(request.getModel())) {
+                for (ModelField field : model.fields) {
+                    if (field.code.equals(fieldName)) {
+                        return field.input_type == InputType.file;
                     }
                 }
-
-                pos = nextBoundary;
-            }
-
-            // 处理多文件字段：合并已有文本值（如已有文件名）与新文件路径
-            for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
-                String fieldName = entry.getKey();
-                List<String> paths = entry.getValue();
-
-                // 获取该字段可能已有的文本值（来自 multipart 文本部分）
-                String existingText = request.getParameter(fieldName);
-
-                // 合并：已有文本 + 新文件路径
-                StringBuilder combined = new StringBuilder();
-                if (existingText != null && !existingText.isEmpty()) {
-                    combined.append(existingText.trim());
-                }
-                for (String path : paths) {
-                    if (combined.length() > 0) {
-                        combined.append(",");
-                    }
-                    combined.append(path);
-                }
-                request.getParameters().put(fieldName, combined.toString());
-            }
-        } catch (IOException e) {
-            logger.error("failed to parse multipart request", e);
-        }
-    }
-
-    /**
-     * 在字节数组中查找模式字节序列的位置
-     */
-    private int indexOfBytes(byte[] data, byte[] pattern, int startPos) {
-        if (pattern.length == 0) return startPos;
-        if (startPos < 0) startPos = 0;
-        for (int i = startPos; i <= data.length - pattern.length; i++) {
-            boolean found = true;
-            for (int j = 0; j < pattern.length; j++) {
-                if (data[i + j] != pattern[j]) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) return i;
-        }
-        return -1;
-    }
-
-    private String extractBoundary(String contentType) {
-        if (contentType == null)
-            return null;
-        String[] parts = contentType.split(";");
-        for (String part : parts) {
-            part = part.trim();
-            if (part.startsWith("boundary=")) {
-                return part.substring(9).replace("\"", "");
             }
         }
-        return null;
-    }
-
-    private String extractFieldName(String headers) {
-        int start = headers.indexOf("name=\"");
-        if (start == -1)
-            return null;
-        start += 6;
-        int end = headers.indexOf("\"", start);
-        if (end == -1)
-            return null;
-        return headers.substring(start, end);
-    }
-
-    private String extractFileName(String headers) {
-        int start = headers.indexOf("filename=\"");
-        if (start == -1)
-            return null;
-        start += 10;
-        int end = headers.indexOf("\"", start);
-        if (end == -1)
-            return null;
-        return headers.substring(start, end);
+        return false;
     }
 
     private class StreamHandlerImpl implements StreamHandler {
+        private HttpRequest httpRequest;
+        private HttpResponse httpResponse;
+        private RequestImpl request;
+        private MultipartStreamParser parser;
 
         @Override
-        public void onNext(byte[] data) {
+        public void init(HttpRequest httpRequest, HttpResponse httpResponse) {
+            this.httpRequest = httpRequest;
+            this.httpResponse = httpResponse;
 
+            this.request = buildRequest(httpRequest);
+            if (this.request == null) return;
+
+            String contentType = httpRequest.getContentType();
+            String boundary = MultipartStreamParser.extractBoundary(contentType);
+            if (boundary == null) return;
+
+            this.parser = new MultipartStreamParser(
+                    boundary, uploadBase,
+                    fieldName -> isUploadField(request, fieldName)
+            );
         }
 
         @Override
-        public void onError(Throwable t) {
-
+        public void onNext(byte[] data) {
+            if (parser == null) return;
+            try {
+                parser.feed(data, false);
+            } catch (IOException e) {
+                onError(e);
+            }
         }
 
         @Override
         public void onComplete() {
+            if (request == null || parser == null) {
+                httpResponse.status400Finish();
+                return;
+            }
 
+            AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
+            if (app == null) {
+                httpResponse.status400Finish();
+                return;
+            }
+
+            Set<String> originalFilePaths = new HashSet<>();
+            try {
+                parser.feed(new byte[0], true);
+                applyParserResults(parser, request);
+                request.getUploadFileFields().forEach(f -> originalFilePaths.add(request.getParameter(f)));
+                app.invokeApp(request);
+            } catch (Throwable e) {
+                httpResponse.status500Finish(e.getMessage());
+                logger.error(e.getMessage(), e);
+                return;
+            } finally {
+                cleanupTempFiles(originalFilePaths);
+            }
+
+            sendResponseOr404(request, httpResponse);
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            if (httpResponse != null) {
+                httpResponse.status500Finish(t.getMessage());
+            }
+            logger.error(t.getMessage(), t);
         }
     }
 }
