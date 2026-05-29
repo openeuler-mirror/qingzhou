@@ -9,17 +9,20 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
 
-public class HttpRequestImpl implements HttpRequest {
+class HttpRequestImpl implements HttpRequest {
     private final HttpServerRequest request;
     private final String requestPath;
-    private final byte[] requestBody;
+
+    private byte[] requestBody;
 
     private QueryStringDecoder queryStringDecoder;
 
-    HttpRequestImpl(HttpServerRequest request,
-                    String requestPath, byte[] requestBody) {
+    HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
         this.requestPath = requestPath;
+    }
+
+    void setRequestBody(byte[] requestBody) {
         this.requestBody = requestBody;
     }
 

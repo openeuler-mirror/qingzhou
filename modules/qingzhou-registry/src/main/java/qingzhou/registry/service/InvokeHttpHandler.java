@@ -42,6 +42,11 @@ public class InvokeHttpHandler implements HttpHandler {
     }
 
     @Override
+    public StreamHandler getStreamHandler() {
+        return new StreamHandlerImpl();
+    }
+
+    @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
@@ -354,5 +359,23 @@ public class InvokeHttpHandler implements HttpHandler {
         if (end == -1)
             return null;
         return headers.substring(start, end);
+    }
+
+    private class StreamHandlerImpl implements StreamHandler {
+
+        @Override
+        public void onNext(byte[] data) {
+
+        }
+
+        @Override
+        public void onError(Throwable t) {
+
+        }
+
+        @Override
+        public void onComplete() {
+
+        }
     }
 }
