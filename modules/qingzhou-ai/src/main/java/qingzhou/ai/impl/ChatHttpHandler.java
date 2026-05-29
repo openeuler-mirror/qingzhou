@@ -49,6 +49,8 @@ public class ChatHttpHandler implements HttpHandler {
                 config.get("chat.base_url"),
                 config.get("chat.api_key"),
                 config.get("chat.model"),
+                Long.parseLong(config.getOrDefault("chat.timeout", "300")),
+                Long.parseLong(config.getOrDefault("chat.max_tokens", "5000")),
                 knowledgeSystemMessage);
     }
 
