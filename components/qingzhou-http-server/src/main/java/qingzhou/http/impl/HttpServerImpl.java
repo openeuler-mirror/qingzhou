@@ -31,7 +31,7 @@ public class HttpServerImpl implements HttpServer {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
-        long maxBodySize = getConfig(config, "max_body_size", 10);
+        long maxBodySize = getConfig(config, "max_body_size", 2);
         maxBodySize = maxBodySize * 1024 * 1024;
 
         String host = getConfig(config, "host", "0.0.0.0");

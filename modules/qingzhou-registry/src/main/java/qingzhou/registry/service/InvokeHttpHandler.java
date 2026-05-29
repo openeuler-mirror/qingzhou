@@ -34,11 +34,18 @@ public class InvokeHttpHandler implements HttpHandler {
     @Reference
     private Logger logger;
 
+    private final StreamHandler streamHandler = new StreamHandlerImpl();
+
     private File uploadBase;
 
     @Activate
     public void init() {
         uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
+    }
+
+    @Override
+    public StreamHandler getStreamHandler() {
+        return null;
     }
 
     @Override
@@ -354,5 +361,23 @@ public class InvokeHttpHandler implements HttpHandler {
         if (end == -1)
             return null;
         return headers.substring(start, end);
+    }
+
+    private class StreamHandlerImpl implements StreamHandler {
+
+        @Override
+        public void onNext(byte[] data) {
+
+        }
+
+        @Override
+        public void onError(Throwable t) {
+
+        }
+
+        @Override
+        public void onComplete() {
+
+        }
     }
 }
