@@ -159,7 +159,9 @@ public class DefaultAction {
                 File[] files = fileBase.listFiles();
                 if (files != null) {
                     for (File file : files) {
-                        map.put(file.getName(), String.valueOf(FileUtil.getFileLength(file)));
+                        if (file.isFile() && !file.getName().startsWith(".")) {
+                            map.put(file.getName(), String.valueOf(FileUtil.getFileLength(file)));
+                        }
                     }
                 }
             } else if (fileBase.isFile()) {

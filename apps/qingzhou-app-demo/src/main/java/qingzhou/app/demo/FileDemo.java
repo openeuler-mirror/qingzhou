@@ -1,18 +1,15 @@
 package qingzhou.app.demo;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.DownloadFile;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.type.*;
 
 /**
  * 演示文件上传和下载功能
@@ -34,7 +31,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
         // 根据记录 ID 返回对应的文件目录
         String recordId = request.getId();
         File baseDir = new File(getAppContext().getTemp(), "file-demo");
-        
+
         if (recordId != null && !recordId.isEmpty()) {
             // 有 ID 时，返回该记录对应的文件目录
             File recordDir = new File(baseDir, recordId);
@@ -43,14 +40,14 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
             }
             return recordDir;
         }
-        
+
         // 无 ID 时（如列表头下载），返回基础目录
         if (!baseDir.exists()) {
             baseDir.mkdirs();
         }
         return baseDir;
     }
-    
+
     public FileDemo() {
         if (!db.isEmpty()) return;
 
@@ -81,13 +78,13 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
 
         idCounter = 4;
     }
-    
+
     @Override
     public void start() {
         // 在 start() 中初始化示例文件，此时 getAppContext() 已可用
         initSampleFiles();
     }
-    
+
     private void initSampleFiles() {
         try {
             createSampleFilesForRecord("F001", "requirements.pdf", "项目需求文档 - 示例文件内容\n");
@@ -97,7 +94,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
             // 忽略初始化错误
         }
     }
-    
+
     private void createSampleFilesForRecord(String recordId, String fileName, String content) throws Exception {
         File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), recordId);
         if (!recordDir.exists()) {
@@ -230,10 +227,10 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
         String newId = "F" + String.format("%03d", idCounter++);
         data.put("id", newId);
         data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
-        
+
         // 处理文件上传：将上传的文件移动到记录对应的目录
         processUploadedFiles(newId, data);
-        
+
         db.put(newId, new LinkedHashMap<>(data));
     }
 
@@ -243,13 +240,13 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
         if (db.containsKey(id)) {
             // 处理文件上传：将上传的文件移动到记录对应的目录
             processUploadedFiles(id, data);
-            
+
             Map<String, String> existing = db.get(id);
             existing.putAll(data);
             existing.put("id", id);
         }
     }
-    
+
     /**
      * 处理上传的文件：将后端临时目录中的文件移动到记录对应的目录，
      * 并将 attachment 字段更新为文件名（而非路径）
@@ -259,30 +256,30 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
         if (attachmentValue == null || attachmentValue.isEmpty()) {
             return;
         }
-        
+
         File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), recordId);
         if (!recordDir.exists()) {
             recordDir.mkdirs();
         }
-        
+
         // attachment 可能是逗号分隔的混合值：已有文件名 + 临时文件路径
         String[] parts = attachmentValue.split(",");
         java.util.List<String> fileNames = new ArrayList<>();
-        
+
         for (String part : parts) {
             part = part.trim();
             if (part.isEmpty()) continue;
-            
+
             File srcFile = new File(part);
             if (srcFile.exists() && srcFile.isFile()) {
                 // 临时文件路径：移动到记录目录
                 String fileName = srcFile.getName();
                 File destFile = new File(recordDir, fileName);
-                
+
                 if (destFile.exists()) {
                     destFile.delete();
                 }
-                
+
                 java.nio.file.Files.move(srcFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 fileNames.add(fileName);
             } else {
@@ -290,7 +287,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
                 fileNames.add(part);
             }
         }
-        
+
         // 将 attachment 字段更新为文件名（逗号分隔），而非路径
         if (!fileNames.isEmpty()) {
             data.put("attachment", String.join(",", fileNames));
@@ -300,5 +297,11 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     @Override
     public void delete(String id) throws Exception {
         db.remove(id);
+
+        File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), id);
+        for (File file : recordDir.listFiles()) {
+            file.delete();
+        }
+        recordDir.delete();
     }
 }

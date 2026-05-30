@@ -40,11 +40,6 @@ public class InvokeHttpHandler implements HttpHandler {
     }
 
     @Override
-    public StreamHandler buildStreamHandler() {
-        return new StreamHandlerImpl();
-    }
-
-    @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
@@ -165,6 +160,11 @@ public class InvokeHttpHandler implements HttpHandler {
             httpResponse.status500Finish(e.getMessage());
             logger.error(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public StreamHandler buildStreamHandler() {
+        return new StreamHandlerImpl();
     }
 
     private class StreamHandlerImpl implements StreamHandler {

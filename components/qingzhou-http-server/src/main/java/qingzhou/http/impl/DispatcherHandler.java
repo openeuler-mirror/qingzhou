@@ -51,8 +51,14 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     .subscribe(byteBuf -> {
                                 byte[] bytes = new byte[byteBuf.readableBytes()];
                                 byteBuf.readBytes(bytes);
-                                // todo: byteBuf.release(); // 重要：释放资源，防止内存泄漏
                                 streamHandler.onNext(bytes);
+
+                                // Reactor Netty 对 ByteBuf 的生命周期管理遵循「发布者负责释放，订阅者负责引用计数」的原则：
+                                //request.receive() 产生的 ByteBuf 由 Reactor Netty 框架管理，框架会在数据处理完成后自动释放；
+                                //手动调用 byteBuf.release() 会导致 ByteBuf 的引用计数被提前耗尽，可能引发两种严重问题：
+                                //重复释放（Double Release）：框架后续尝试释放已被手动释放的 ByteBuf，触发 IllegalReferenceCountException；
+                                // byteBuf.release();
+                        
                             },
                             err -> streamHandler.onError(err),
                             () -> streamHandler.onComplete() // 完成信号
