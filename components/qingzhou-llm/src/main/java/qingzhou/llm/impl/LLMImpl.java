@@ -1,5 +1,7 @@
 package qingzhou.llm.impl;
 
+import java.time.Duration;
+
 import org.noear.solon.ai.chat.dialect.ChatDialectManager;
 import org.noear.solon.ai.embedding.dialect.EmbeddingDialectManager;
 import org.noear.solon.ai.llm.dialect.openai.OpenaiChatDialect;
@@ -32,11 +34,12 @@ public class LLMImpl implements LLM {
     }
 
     @Override
-    public ChatModel buildChatModel(String baseUrl, String apiKey, String model, String... systemMessage) {
+    public ChatModel buildChatModel(String baseUrl, String apiKey, String model, long timeout, String... systemMessage) {
         org.noear.solon.ai.chat.ChatModel chatModel = org.noear.solon.ai.chat.ChatModel
                 .of(baseUrl)
                 .apiKey(apiKey)
                 .model(model)
+                .timeout(Duration.ofSeconds(timeout)) // 设置超时，防止无限等待
                 .build();
         return new ChatModelImpl(chatModel, systemMessage);
     }

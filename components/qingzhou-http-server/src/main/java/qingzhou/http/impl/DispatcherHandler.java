@@ -2,7 +2,6 @@ package qingzhou.http.impl;
 
 import java.util.function.BiFunction;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
@@ -33,14 +32,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     .send();
         }
         HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
-        HttpHandler.StreamHandler streamHandler = httpHandler.getStreamHandler();
+        HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
 
-        boolean streamRequired = false;
-        if (request.method() == HttpMethod.POST && streamHandler != null) {
-            String contentType = request.requestHeaders().get(HttpHeaderNames.CONTENT_TYPE);
-            if (contentType != null && contentType.contains("multipart/form-data")) {
-                streamRequired = true;
-            }
+        boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
+        if (streamRequired && streamHandler == null) {
+            return response
+                    .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE)
+                    .send();
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
@@ -48,12 +46,19 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
         if (streamRequired) {
-            streamHandler.init(httpRequest, httpResponse);
+            streamHandler.onBegin(httpRequest, httpResponse);
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .subscribe(byteBuf -> {
                                 byte[] bytes = new byte[byteBuf.readableBytes()];
                                 byteBuf.readBytes(bytes);
                                 streamHandler.onNext(bytes);
+
+                                // Reactor Netty 对 ByteBuf 的生命周期管理遵循「发布者负责释放，订阅者负责引用计数」的原则：
+                                //request.receive() 产生的 ByteBuf 由 Reactor Netty 框架管理，框架会在数据处理完成后自动释放；
+                                //手动调用 byteBuf.release() 会导致 ByteBuf 的引用计数被提前耗尽，可能引发两种严重问题：
+                                //重复释放（Double Release）：框架后续尝试释放已被手动释放的 ByteBuf，触发 IllegalReferenceCountException；
+                                // byteBuf.release();
+                        
                             },
                             err -> streamHandler.onError(err),
                             () -> streamHandler.onComplete() // 完成信号

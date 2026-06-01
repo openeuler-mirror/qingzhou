@@ -13,7 +13,6 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.http.server.HttpHandler;
@@ -41,11 +40,6 @@ public class InvokeHttpHandler implements HttpHandler {
     }
 
     @Override
-    public StreamHandler getStreamHandler() {
-        return new StreamHandlerImpl();
-    }
-
-    @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
@@ -60,49 +54,86 @@ public class InvokeHttpHandler implements HttpHandler {
             return;
         }
 
-        Set<String> originalFilePaths = new HashSet<>();
         try {
-            parseRequestBody(httpRequest, request);
-            request.getUploadFileFields().forEach(field -> originalFilePaths.add(request.getParameter(field)));
-
+            parseBodyParameters(httpRequest, request);
             app.invokeApp(request);
         } catch (Throwable e) {
             httpResponse.status500Finish(e.getMessage());
             logger.error(e.getMessage(), e);
             return;
-        } finally {
-            cleanupTempFiles(originalFilePaths);
         }
 
-        sendResponseOr404(request, httpResponse);
+        sendResponse(request, httpResponse);
     }
 
-    private void sendResponseOr404(RequestImpl request, HttpResponse httpResponse) {
-        ResponseImpl response = request.getResponse();
-        if (response.isActionInvoked()
-                || response.getData() != null
-                || response.getMsg() != null) {
-            sendResponse(response, httpResponse);
-        } else {
-            httpResponse.status404Finish();
+    private RequestImpl buildRequest(HttpRequest httpRequest) {
+        String requestPath = httpRequest.getPath();
+        int i = requestPath.indexOf("/", 1);
+        i = requestPath.indexOf("/", i + 1);
+        String restPath = requestPath.substring(i + 1);
+        String[] rest = restPath.split("/");
+
+        int restMinDepth = 4; // instance/app/model/action/[id]
+        if (rest.length < restMinDepth)
+            return null;
+
+        RequestImpl request = new RequestImpl();
+        request.setInstance(rest[0]);
+        request.setApp(rest[1]);
+        request.setModel(rest[2]);
+        request.setAction(rest[3]);
+        if (rest.length > 4) {
+            request.setId(rest[4]);
         }
+
+        // 添加 URL 里的参数
+        httpRequest.getParameters().forEach((k, v) -> request.getParameters().put(k, v.get(0)));
+        return request;
     }
 
-    private void cleanupTempFiles(Set<String> originalFilePaths) {
-        for (String paths : originalFilePaths) {
-            for (String path : paths.split(",")) {
-                File tempFile = new File(path.trim());
-                File parentDir = tempFile.getParentFile();
-                File tempBase = parentDir.getParentFile();
-                if (tempBase.equals(uploadBase)) {
-                    tempFile.delete();
-                    parentDir.delete();
+    // 添加 POST 请求体里的参数
+    private void parseBodyParameters(HttpRequest httpRequest, RequestImpl request) {
+        if (!"POST".equalsIgnoreCase(httpRequest.getMethod())) return;
+        if (httpRequest.getContentType() == null) return;
+        if (httpRequest.getBody() == null) return;
+        if (httpRequest.getBody().length == 0) return;
+
+        // 表单参数
+        if (httpRequest.getContentType().contains("application/x-www-form-urlencoded")) {
+            QueryStringDecoder bodyDecoder = new QueryStringDecoder(
+                    "/?" + new String(httpRequest.getBody(), StandardCharsets.UTF_8));
+            Map<String, List<String>> bodyParams = bodyDecoder.parameters();
+            bodyParams.forEach((k, v) -> request.getParameters().put(k, v.get(0)));
+            return;
+        }
+
+        // JSON 参数
+        if (httpRequest.getContentType().contains("application/json")) {
+            try {
+                Object parsed = json.fromJson(
+                        new String(httpRequest.getBody(), StandardCharsets.UTF_8), Object.class);
+                if (parsed instanceof Map) {
+                    for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet()) {
+                        request.getParameters().put(
+                                String.valueOf(entry.getKey()),
+                                entry.getValue() != null ? String.valueOf(entry.getValue()) : "");
+                    }
                 }
+            } catch (Exception e) {
+                logger.warn("failed to parse json body: " + e.getMessage());
             }
         }
     }
 
-    private void sendResponse(ResponseImpl response, HttpResponse httpResponse) {
+    private void sendResponse(RequestImpl request, HttpResponse httpResponse) {
+        ResponseImpl response = request.getResponse();
+        if (!response.isActionInvoked()
+                && response.getData() == null
+                && response.getMsg() == null) {
+            httpResponse.status404Finish();
+            return;
+        }
+
         if (response.getStatus() > 0) {
             httpResponse.status(response.getStatus());
         }
@@ -131,109 +162,41 @@ public class InvokeHttpHandler implements HttpHandler {
         }
     }
 
-    private RequestImpl buildRequest(HttpRequest httpRequest) {
-        String requestPath = httpRequest.getPath();
-        int i = requestPath.indexOf("/", 1);
-        i = requestPath.indexOf("/", i + 1);
-        String restPath = requestPath.substring(i + 1);
-        String[] rest = restPath.split("/");
-
-        int restMinDepth = 4; // instance/app/model/action/[id]
-        if (rest.length < restMinDepth)
-            return null;
-
-        RequestImpl request = new RequestImpl();
-        request.setInstance(rest[0]);
-        request.setApp(rest[1]);
-        request.setModel(rest[2]);
-        request.setAction(rest[3]);
-        if (rest.length > 4) {
-            request.setId(rest[4]);
-        }
-
-        // 添加 URL 里的参数
-        httpRequest.getParameters().forEach((k, v) -> request.getParameters().put(k, v.get(0)));
-        return request;
-    }
-
-    private void parseRequestBody(HttpRequest httpRequest, RequestImpl request) {
-        // 添加 POST 请求体里的参数
-        if ("POST".equalsIgnoreCase(httpRequest.getMethod()) && httpRequest.getContentType() != null
-                && httpRequest.getBody() != null && httpRequest.getBody().length > 0) {
-            if (httpRequest.getContentType().contains("application/x-www-form-urlencoded")) { // 表单参数
-                QueryStringDecoder bodyDecoder = new QueryStringDecoder(
-                        "/?" + new String(httpRequest.getBody(), StandardCharsets.UTF_8));
-                Map<String, List<String>> bodyParams = bodyDecoder.parameters();
-                bodyParams.forEach((k, v) -> request.getParameters().put(k, v.get(0)));
-            } else if (httpRequest.getContentType().contains("application/json")) { // JSON 参数
-                try {
-                    Object parsed = json.fromJson(
-                            new String(httpRequest.getBody(), StandardCharsets.UTF_8), Object.class);
-                    if (parsed instanceof Map) {
-                        for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet()) {
-                            request.getParameters().put(
-                                    String.valueOf(entry.getKey()),
-                                    entry.getValue() != null ? String.valueOf(entry.getValue()) : "");
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.warn("failed to parse json body: " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    private void applyParserResults(MultipartStreamParser parser, RequestImpl request) {
-        request.getParameters().putAll(parser.getParameters());
-        Map<String, List<String>> uploadFileMap = parser.getUploadFileMap();
-        for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
-            String fieldName = entry.getKey();
-            List<String> paths = entry.getValue();
-            String existingText = request.getParameter(fieldName);
-            StringBuilder combined = new StringBuilder();
-            if (existingText != null && !existingText.isEmpty()) {
-                combined.append(existingText.trim());
-            }
-            for (String path : paths) {
-                if (combined.length() > 0) combined.append(",");
-                combined.append(path);
-            }
-            request.getParameters().put(fieldName, combined.toString());
-        }
-        request.getUploadFileFields().addAll(parser.getUploadFileFields());
-    }
-
-    private boolean isUploadField(RequestImpl request, String fieldName) {
-        AppStub appStub = registry.getAppStub(request.getInstance(), request.getApp());
-        if (appStub == null) return false;
-        for (Model model : appStub.getAppMeta().getApp().models) {
-            if (model.code.equals(request.getModel())) {
-                for (ModelField field : model.fields) {
-                    if (field.code.equals(fieldName)) {
-                        return field.input_type == InputType.file;
-                    }
-                }
-            }
-        }
-        return false;
+    @Override
+    public StreamHandler buildStreamHandler() {
+        return new StreamHandlerImpl();
     }
 
     private class StreamHandlerImpl implements StreamHandler {
-        private HttpRequest httpRequest;
-        private HttpResponse httpResponse;
-        private RequestImpl request;
-        private MultipartStreamParser parser;
+        HttpRequest httpRequest;
+        HttpResponse httpResponse;
+
+        RequestImpl request;
+        AppStub app;
+
+        MultipartStreamParser parser;
 
         @Override
-        public void init(HttpRequest httpRequest, HttpResponse httpResponse) {
+        public void onBegin(HttpRequest httpRequest, HttpResponse httpResponse) {
             this.httpRequest = httpRequest;
             this.httpResponse = httpResponse;
 
-            this.request = buildRequest(httpRequest);
-            if (this.request == null) return;
+            request = buildRequest(httpRequest);
+            if (request == null) return;
 
+            app = registry.getAppStub(request.getInstance(), request.getApp());
+            if (app == null) return;
+
+            String boundary = null;
             String contentType = httpRequest.getContentType();
-            String boundary = MultipartStreamParser.extractBoundary(contentType);
+            if (contentType != null) {
+                for (String part : contentType.split(";")) {
+                    part = part.trim();
+                    if (part.startsWith("boundary=")) {
+                        boundary = part.substring(9).replace("\"", "");
+                    }
+                }
+            }
             if (boundary == null) return;
 
             this.parser = new MultipartStreamParser(
@@ -254,13 +217,7 @@ public class InvokeHttpHandler implements HttpHandler {
 
         @Override
         public void onComplete() {
-            if (request == null || parser == null) {
-                httpResponse.status400Finish();
-                return;
-            }
-
-            AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
-            if (app == null) {
+            if (parser == null) {
                 httpResponse.status400Finish();
                 return;
             }
@@ -279,7 +236,7 @@ public class InvokeHttpHandler implements HttpHandler {
                 cleanupTempFiles(originalFilePaths);
             }
 
-            sendResponseOr404(request, httpResponse);
+            sendResponse(request, httpResponse);
         }
 
         @Override
@@ -288,6 +245,53 @@ public class InvokeHttpHandler implements HttpHandler {
                 httpResponse.status500Finish(t.getMessage());
             }
             logger.error(t.getMessage(), t);
+        }
+
+        boolean isUploadField(RequestImpl request, String fieldName) {
+            for (Model model : app.getAppMeta().getApp().models) {
+                if (model.code.equals(request.getModel())) {
+                    for (ModelField field : model.fields) {
+                        if (field.code.equals(fieldName)) {
+                            return field.input_type == InputType.file;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        void applyParserResults(MultipartStreamParser parser, RequestImpl request) {
+            request.getParameters().putAll(parser.getParameters());
+            Map<String, List<String>> uploadFileMap = parser.getUploadFileMap();
+            for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
+                String fieldName = entry.getKey();
+                List<String> paths = entry.getValue();
+                String existingText = request.getParameter(fieldName);
+                StringBuilder combined = new StringBuilder();
+                if (existingText != null && !existingText.isEmpty()) {
+                    combined.append(existingText.trim());
+                }
+                for (String path : paths) {
+                    if (combined.length() > 0) combined.append(",");
+                    combined.append(path);
+                }
+                request.getParameters().put(fieldName, combined.toString());
+            }
+            request.getUploadFileFields().addAll(parser.getUploadFileFields());
+        }
+
+        void cleanupTempFiles(Set<String> originalFilePaths) {
+            for (String paths : originalFilePaths) {
+                for (String path : paths.split(",")) {
+                    File tempFile = new File(path.trim());
+                    File parentDir = tempFile.getParentFile();
+                    File tempBase = parentDir.getParentFile();
+                    if (tempBase.equals(uploadBase)) {
+                        tempFile.delete();
+                        parentDir.delete();
+                    }
+                }
+            }
         }
     }
 }
