@@ -1,9 +1,7 @@
 package qingzhou.llm.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.noear.solon.ai.chat.ChatResponse;
@@ -18,26 +16,17 @@ import qingzhou.llm.Tool;
 
 public class ChatModelImpl implements ChatModel {
     private final org.noear.solon.ai.chat.ChatModel chatModel;
-    private final String[] systemMessage;
 
-    public ChatModelImpl(org.noear.solon.ai.chat.ChatModel chatModel, String... systemMessage) {
+    public ChatModelImpl(org.noear.solon.ai.chat.ChatModel chatModel) {
         this.chatModel = chatModel;
-        this.systemMessage = systemMessage;
     }
 
     @Override
-    public void chat(String prompt, Collection<Tool> tools, Listener listener) {
-        List<ChatMessage> messages = new ArrayList<>();
-        if (systemMessage != null) {
-            for (String s : systemMessage) {
-                if (s != null && !s.isEmpty()) {
-                    messages.add(ChatMessage.ofSystem(s));
-                }
-            }
-        }
-        messages.add(ChatMessage.ofUser(prompt));
-
-        chatModel.prompt(messages)
+    public void chat(String message, String[] refDocs, Collection<Tool> tools, Listener listener) {
+        ChatMessage chatMessage = refDocs != null && refDocs.length > 0
+                ? ChatMessage.ofUserAugment(message, Arrays.toString(refDocs))
+                : ChatMessage.ofUser(message);
+        chatModel.prompt(chatMessage)
                 .options(op -> op.toolAdd(tools.stream().map(t -> convertTool(t, listener)).collect(Collectors.toSet())))
                 .stream()
                 .doOnSubscribe(subscription -> listener.onBegin())

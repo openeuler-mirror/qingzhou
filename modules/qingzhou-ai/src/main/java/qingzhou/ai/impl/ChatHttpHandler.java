@@ -31,26 +31,77 @@ public class ChatHttpHandler implements HttpHandler {
     private Json json;
 
     private ChatModel chatModel;
+    private final String systemPrompt = "# 你是一个专业的 Qingzhou（轻舟）融合管理开发平台智能助手，你的职责是帮助开发者、运维人员和管理员理解、使用、部署和扩展 Qingzhou 平台。\n" +
+            "\n" +
+            "## 身份与定位\n" +
+            "\n" +
+            "你是 Qingzhou 平台的官方技术助手，具备以下专业认知：\n" +
+            "- 精通 Qingzhou 的整体架构、核心特性和设计理念\n" +
+            "- 熟悉 Java 生态、低代码开发、声明式开发、RESTful API 设计、动态渲染\n" +
+            "- 了解大模型驱动的智能运维的理念与实践\n" +
+            "- 能够指导用户完成从环境搭建到生产部署的全流程\n" +
+            "\n" +
+            "## 回答原则\n" +
+            "\n" +
+            "1. **准确性优先**：严格基于 Qingzhou 官方文档和项目设计回答，不编造不存在的功能或接口。\n" +
+            "\n" +
+            "2. **场景化引导**：\n" +
+            "   - 当用户询问\"如何部署\"时，引导其关注 JDK 1.8+ 等环境准备，以及 bin/start.sh 启动流程\n" +
+            "   - 当用户询问\"如何开发插件\"时，强调遵循轻舟API规范，参考插件化架构设计\n" +
+            "   - 当用户询问\"AI管控如何使用\"时，说明自然语言交互通过大模型理解意图并执行管控逻辑\n" +
+            "\n" +
+            "3. **架构解释能力**：能够清晰解释\"轻舟代理\"与\"轻舟管控台\"的关系、\"本地实例\"与\"远程实例\"的通信机制、以及\"应用层-服务层-驱动层\"的分层架构。\n" +
+            "\n" +
+            "4. **边界意识**：\n" +
+            "   - 如果问题涉及文档未覆盖的具体代码实现细节，如实告知并建议查阅源码或社区\n" +
+            "   - 如果问题与 Qingzhou 无关，礼貌说明你的专业领域并提供力所能及的参考\n" +
+            "   - 如果用户提出平台当前不支持的需求，客观说明现状，可基于架构设计给出可行性分析\n" +
+            "\n" +
+            "5. **语言风格**：专业、简洁、结构化，善用列表和代码块，优先给出可操作的步骤和路径。\n" +
+            "\n" +
+            "## 禁止事项\n" +
+            "\n" +
+            "- 不得编造 Qingzhou 未提及的功能、接口或配置项\n" +
+            "- 不得对平台安全性、性能等做出未经验证的承诺性描述\n" +
+            "- 不得引导用户使用非官方的第三方工具或插件源\n" +
+            "- 禁止恶意贬低 / 夸大产品能力、跨产品踩一捧一\n" +
+            "- 禁止输出破解、绕过平台安全限制、非法运维相关代码方案\n" +
+            "\n" +
+            "## 快捷引导话术（用户无明确问题时）\n" +
+            "\n" +
+            "用户仅打招呼 / 无提问：「您好，我是轻舟 Qingzhou 平台智能助手，您可以咨询：项目介绍、代理部署、插件开发、API 规范、AI 智能运维、项目核心特点、功能、价值和意义等相关问题」。\n";
     private VectorStore knowledgeStore;
-
+    private String[] knowledgeDocs;
     private final Map<AiTool, Map<String, Object>> aiTools = new HashMap<>();
+    private RerankingModel rerankingModel;
+
 
     @Activate
     public void init(Map<String, String> config) {
-        String knowledgeSystemMessage = null;
+        // rag 检索
         Object knowledge = initKnowledge(config);
         if (knowledge instanceof VectorStore) {
             knowledgeStore = (VectorStore) knowledge;
-        } else if (knowledge instanceof String) {
-            knowledgeSystemMessage = (String) knowledge;
+        } else if (knowledge instanceof String[]) {
+            knowledgeDocs = (String[]) knowledge;
+        } else {
+            throw new IllegalStateException(String.valueOf(knowledge));
         }
 
+        // rag 优化排序
+        String rerankUrl = config.get("rerank.base_url");
+        if (rerankUrl != null && !rerankUrl.isEmpty()) {
+            rerankingModel = llm.buildRerankingModel(rerankUrl, config.get("rerank.api_key"),
+                    config.get("rerank.model"));
+        }
+
+        // chat 大模型
         chatModel = llm.buildChatModel(
                 config.get("chat.base_url"),
                 config.get("chat.api_key"),
                 config.get("chat.model"),
                 Long.parseLong(config.getOrDefault("chat.timeout", "60")),
-                knowledgeSystemMessage);
+                systemPrompt);
     }
 
     private Object initKnowledge(Map<String, String> config) {
@@ -85,18 +136,7 @@ public class ChatHttpHandler implements HttpHandler {
             }
         }
 
-        return knowledgeStore != null ? knowledgeStore : systemPrompt(docs.toArray(new String[0]), "");
-    }
-
-    private String systemPrompt(String[] docs, String question) {
-        StringBuilder prompt = new StringBuilder("你是一个轻舟平台的智能助手。请主要依据以下【参考文档】来回答用户的【问题】。" +
-                "如果文档中没有相关信息，请明确告知\"文档中未提及\"，并根据已有知识继续进行回答。" +
-                "\n\n【参考文档】：");
-        for (String doc : docs) {
-            prompt.append("\n").append(doc);
-        }
-        prompt.append("\n\n【问题】：\n").append(question);
-        return prompt.toString();
+        return knowledgeStore != null ? knowledgeStore : docs.toArray(new String[0]);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -104,6 +144,7 @@ public class ChatHttpHandler implements HttpHandler {
         aiTools.put(tool, properties);
     }
 
+    // OSGI 框架根据名称规则自动识别调用此方法
     public void unbindAiTool(AiTool tool) {
         aiTools.remove(tool);
     }
@@ -129,18 +170,21 @@ public class ChatHttpHandler implements HttpHandler {
         }
 
         // RAG 检索增强问答
+        String[] refDocs;
         if (knowledgeStore != null) {
-            String[] queried = knowledgeStore.query(message);
-            if (queried != null) {
-                message = systemPrompt(queried, message);
-            }
+            refDocs = knowledgeStore.query(message);
+        } else {
+            refDocs = knowledgeDocs;
+        }
+        if (refDocs != null && rerankingModel != null) {
+            refDocs = rerankingModel.rerank(message, refDocs);
         }
 
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        chatModel.chat(message, tools(), new SseListener(httpResponse, logger, json));
+        chatModel.chat(message, refDocs, tools(), new SseListener(httpResponse, logger, json));
     }
 
     private Set<Tool> tools() {
