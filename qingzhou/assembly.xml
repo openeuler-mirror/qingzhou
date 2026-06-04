@@ -134,6 +134,7 @@
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-xml</include>
                 <include>${project.groupId}:qingzhou-jdbc</include>
+                <include>${project.groupId}:qingzhou-path-sniffer</include>
                 <include>${project.groupId}:qingzhou-qr</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-http-server</include>
