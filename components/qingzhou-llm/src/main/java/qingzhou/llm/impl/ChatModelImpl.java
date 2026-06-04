@@ -30,7 +30,15 @@ public class ChatModelImpl implements ChatModel {
                 .options(op -> op.toolAdd(tools.stream().map(t -> convertTool(t, listener)).collect(Collectors.toSet())))
                 .stream()
                 .doOnSubscribe(subscription -> listener.onBegin())
-                .doOnNext(chatResponse -> doOnNext(chatResponse, listener))
+                .doOnNext(chatResponse -> {
+                    try {
+                        doOnNext(chatResponse, listener);
+                    } catch (Exception e) {
+                        // 客户端断开连接时，listener 回调中的 httpResponse.send() 会抛出异常，
+                        // 让异常继续向上传播，由 Reactor 自动取消上游 LLM 流
+                        throw new RuntimeException(e);
+                    }
+                })
                 .doOnComplete(listener::onComplete)
                 .doOnError(listener::onError)
                 .doOnCancel(listener::onComplete)
