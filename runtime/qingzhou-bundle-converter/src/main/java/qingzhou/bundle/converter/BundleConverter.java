@@ -121,6 +121,7 @@ public class BundleConverter {
                         "qingzhou.http.client," +
                         "qingzhou.qr," +
                         "qingzhou.llm," +
+                        "qingzhou.path.sniffer," +
                         "com.sun.management,javax.naming");
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
