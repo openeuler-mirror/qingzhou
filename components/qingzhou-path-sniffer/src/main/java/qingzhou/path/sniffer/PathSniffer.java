@@ -7,15 +7,17 @@ import qingzhou.path.sniffer.strategy.CommandStrategy;
 import qingzhou.path.sniffer.strategy.EnvVarStrategy;
 import qingzhou.path.sniffer.strategy.ProcessStrategy;
 import qingzhou.path.sniffer.strategy.ServiceStrategy;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 采用多策略探测应用程序安装路径
  */
-@Component(service = PathSniffer.class, configurationPid = "qingzhou-app-detector", configurationPolicy = ConfigurationPolicy.OPTIONAL)
+@Component(service = PathSniffer.class, configurationPid = "qingzhou-path-sniffer", configurationPolicy = ConfigurationPolicy.OPTIONAL)
 public class PathSniffer {
 
     private final List<SniffStrategy> strategies;
@@ -31,7 +33,7 @@ public class PathSniffer {
         // 按优先级排序
         strategies.sort(Comparator.comparingInt(SniffStrategy::getPriority));
     }
-    
+
     /**
      * 统一探测入口
      *
@@ -44,12 +46,19 @@ public class PathSniffer {
             try {
                 result.addAll(strategy.sniff(profile));
                 if (!result.isEmpty() && profile.isStopOnHit()) {
-                    return result;
+                    break;
                 }
             } catch (Exception ignored) {
             }
         }
 
-        return result;
+        return new ArrayList<>(
+                result.stream().collect(
+                        Collectors.toMap(
+                                ps -> ps.getPath().toAbsolutePath().toString(),
+                                pr -> pr,
+                                (pr1, pr2) -> pr1.getStrategy().getPriority() <= pr2.getStrategy().getPriority() ? pr1 : pr2
+                        )).values()
+        );
     }
 }
