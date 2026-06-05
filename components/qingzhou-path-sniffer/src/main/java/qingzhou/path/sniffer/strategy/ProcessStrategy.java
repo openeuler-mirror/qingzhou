@@ -199,11 +199,11 @@ public class ProcessStrategy implements SniffStrategy {
                     continue;
                 }
 
-                String procName = new String(Files.readAllBytes(Paths.get("/proc/" + pid + "/comm")), Charset.defaultCharset()).trim();
-                String executablePath = Files.readSymbolicLink(Paths.get("/proc/" + pid + "/exe")).toString();
-                if (!procName.isEmpty()) {
-                    String cmdLine = "";
-                    try {
+                try {
+                    String procName = new String(Files.readAllBytes(Paths.get("/proc/" + pid + "/comm")), Charset.defaultCharset()).trim();
+                    String executablePath = Files.readSymbolicLink(Paths.get("/proc/" + pid + "/exe")).toString();
+                    if (!procName.isEmpty()) {
+                        String cmdLine = "";
                         byte[] b = Files.readAllBytes(Paths.get(entry + "/cmdline"));
                         for (int i = 0; i < b.length; i++) {
                             if (b[i] == 0) {
@@ -211,12 +211,12 @@ public class ProcessStrategy implements SniffStrategy {
                             }
                         }
                         cmdLine = new String(b, "UTF-8").trim();
-                    } catch (IOException e) {
+                        list.add(new ProcessInfo(pid, procName, executablePath, cmdLine));
                     }
-                    list.add(new ProcessInfo(pid, procName, executablePath, cmdLine));
+                } catch (IOException ignored) {
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             // 忽略无权限或 /proc 不可读
         }
         return list;
@@ -234,41 +234,44 @@ public class ProcessStrategy implements SniffStrategy {
             if (line.isEmpty()) {
                 continue;
             }
+            try {
+                Matcher m = pattern.matcher(line);
+                if (m.find()) {
+                    String pid = m.group(1);
+                    String procName = m.group(2);
+                    String cmdLine = m.group(3).trim();
 
-            Matcher m = pattern.matcher(line);
-            if (m.find()) {
-                String pid = m.group(1);
-                String procName = m.group(2);
-                String cmdLine = m.group(3).trim();
-
-                String path;
-                String args;
-                if (cmdLine.isEmpty()) {
-                    path = "";
-                    args = "";
-                } else if (cmdLine.startsWith("'") || cmdLine.startsWith("\"")) {
-                    // 处理被引号包裹的路径
-                    char quote = cmdLine.charAt(0);
-                    int end = cmdLine.indexOf(quote, 1);
-                    if (end > 0) {
-                        path = cmdLine.substring(1, end);
-                        args = cmdLine.substring(end + 1).trim();
-                    } else {
-                        path = cmdLine;
+                    String path;
+                    String args;
+                    if (cmdLine.isEmpty()) {
+                        path = "";
                         args = "";
-                    }
-                } else {
-                    // 没有引号时，以第一个空格分割路径和参数
-                    int space = cmdLine.indexOf(' ');
-                    if (space > 0) {
-                        path = cmdLine.substring(0, space);
-                        args = cmdLine.substring(space + 1).trim();
+                    } else if (cmdLine.startsWith("'") || cmdLine.startsWith("\"")) {
+                        // 处理被引号包裹的路径
+                        char quote = cmdLine.charAt(0);
+                        int end = cmdLine.indexOf(quote, 1);
+                        if (end > 0) {
+                            path = cmdLine.substring(1, end);
+                            args = cmdLine.substring(end + 1).trim();
+                        } else {
+                            path = cmdLine;
+                            args = "";
+                        }
                     } else {
-                        path = cmdLine;
-                        args = "";
+                        // 没有引号时，以第一个空格分割路径和参数
+                        int space = cmdLine.indexOf(' ');
+                        if (space > 0) {
+                            path = cmdLine.substring(0, space);
+                            args = cmdLine.substring(space + 1).trim();
+                        } else {
+                            path = cmdLine;
+                            args = "";
+                        }
                     }
+                    list.add(new ProcessInfo(pid, procName, path, args));
                 }
-                list.add(new ProcessInfo(pid, procName, path, args));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return list;

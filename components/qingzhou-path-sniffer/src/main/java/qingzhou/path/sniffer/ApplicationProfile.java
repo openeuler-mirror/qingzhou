@@ -12,7 +12,7 @@ public interface ApplicationProfile {
     // Profile 名称
     String getName();
 
-    // 用于控制查找返回策略（true 表示探测到立即返回 | false 表示执行所有策略进行探测）
+    // 用于控制探测返回策略（true 表示探测到停止后续探测策略 | false 表示执行所有探测策略）
     default boolean isStopOnHit() {
         return true;
     }
