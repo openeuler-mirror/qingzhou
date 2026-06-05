@@ -1,7 +1,12 @@
 package qingzhou.http.client.impl;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import org.osgi.service.component.annotations.Component;
+import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
+import qingzhou.http.client.HttpResult;
+
+import javax.net.ssl.*;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -12,12 +17,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
-import javax.net.ssl.*;
-
-import org.osgi.service.component.annotations.Component;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.HttpResult;
 
 @Component
 public class HttpClientImpl implements HttpClient {
@@ -43,6 +42,89 @@ public class HttpClientImpl implements HttpClient {
         }
         byte[] bytes = bodyStr.toString().getBytes(StandardCharsets.UTF_8);
         return request(url, httpMethod, bytes, headers);
+    }
+
+    @Override
+    public HttpResult request(String url, HttpMethod httpMethod, Map<String, String> params, Map<String, String> headers, Map<String, String> files) throws Exception {
+        HttpURLConnection conn = buildConnection(url);
+        setDefaultHttpURLConnection(conn);
+
+        if (httpMethod == null) httpMethod = HttpMethod.GET;
+        conn.setRequestMethod(httpMethod.name());
+
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                conn.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+        }
+        String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        try (OutputStream output = conn.getOutputStream();
+             PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8), true)) {
+
+            if (params != null) {
+                for (Map.Entry<String, String> entry : params.entrySet()) {
+                    writer.append("--").append(boundary).append("\r\n");
+                    writer.append("Content-Disposition: form-data; name=\"").append(entry.getKey()).append("\"\r\n");
+                    writer.append("\r\n");
+                    writer.append(entry.getValue()).append("\r\n");
+                    writer.flush();
+                }
+            }
+
+            // 2. 写入文件字段
+            if (files != null) {
+                for (Map.Entry<String, String> entry : files.entrySet()) {
+                    String fieldName = entry.getKey();
+                    String values = entry.getValue();
+                    if (values == null || values.isEmpty()) {
+                        continue;
+                    }
+                    for (String f : values.split(",")) {
+                        if (f.isEmpty()) {
+                            continue;
+                        }
+                        File file = new File(f);
+                        if (!file.exists() || !file.isFile()) {
+                            throw new IOException("文件不存在: " + f);
+                        }
+
+                        // 写入文件部分的头部
+                        writer.append("--").append(boundary).append("\r\n");
+                        writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
+                                .append("\"; filename=\"").append(file.getName()).append("\"\r\n");
+                        // 根据文件扩展名猜测 Content-Type，默认 application/octet-stream
+                        String contentType = guessContentType(file.getName());
+                        writer.append("Content-Type: ").append(contentType).append("\r\n");
+                        writer.append("\r\n");
+                        writer.flush();
+
+                        // 写入文件的二进制内容
+                        try (FileInputStream fileInput = new FileInputStream(file)) {
+                            byte[] buffer = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = fileInput.read(buffer)) != -1) {
+                                output.write(buffer, 0, bytesRead);
+                            }
+                            output.flush();
+                        }
+
+                        // 文件内容结束后需要额外换行
+                        writer.append("\r\n");
+                        writer.flush();
+                    }
+                }
+            }
+
+            // 3. 结束边界
+            writer.append("--").append(boundary).append("--\r\n");
+            writer.flush();
+
+            return new HttpResultImpl(conn);
+        } finally {
+            conn.disconnect();
+        }
     }
 
     @Override
@@ -125,5 +207,17 @@ public class HttpClientImpl implements HttpClient {
         }
 
         return conn;
+    }
+
+    private static String guessContentType(String fileName) {
+        String lower = fileName.toLowerCase();
+        if (lower.endsWith(".txt")) return "text/plain";
+        if (lower.endsWith(".html") || lower.endsWith(".htm")) return "text/html";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".gif")) return "image/gif";
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".zip")) return "application/zip";
+        return "application/octet-stream";
     }
 }
