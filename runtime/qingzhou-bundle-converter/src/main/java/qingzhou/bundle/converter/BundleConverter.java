@@ -122,7 +122,7 @@ public class BundleConverter {
                         "qingzhou.qr," +
                         "qingzhou.llm," +
                         "qingzhou.path.sniffer," +
-                        "com.sun.management,javax.naming");
+                        "com.sun.management,javax.naming,javax.management");
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);

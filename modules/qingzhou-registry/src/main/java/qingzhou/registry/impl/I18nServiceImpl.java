@@ -105,6 +105,9 @@ public class I18nServiceImpl implements I18nService {
     }
 
     private void visit(String[] i18n, Visitor visitor) {
+        if (i18n == null || i18n.length == 0) {
+            return;
+        }
         for (String langLine : i18n) {
             Lang lang = null;
             int valueIndex = 0;

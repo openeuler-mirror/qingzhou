@@ -76,7 +76,16 @@ class AppStubRemoteImpl implements AppStubRemote {
                     request.setResponse(result);
                 }
             } else {
-                logger.error(response.getStatus() + ": " + agentUrl);
+                String errorMsg = "agent request failed [" + response.getStatus() + "]: " + agentUrl;
+                logger.error(errorMsg);
+                byte[] body = response.getBody();
+                if (body != null && body.length > 0) {
+                    logger.error("agent response body: " + new String(body, StandardCharsets.UTF_8));
+                }
+                ResponseImpl resp = request.getResponse();
+                resp.success(false)
+                        .msgLevel(Response.MsgLevel.error)
+                        .msg(errorMsg);
             }
         } catch (Exception e) {
             ResponseImpl resp = request.getResponse();
