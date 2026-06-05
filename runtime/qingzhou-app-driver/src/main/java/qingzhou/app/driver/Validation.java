@@ -64,7 +64,7 @@ class Validation implements ActionFilter {
 
             String parameter = request.getParameter(field.code);
             if (parameter == null || parameter.isEmpty()) {
-                if (field.required) {
+                if (field.required && DisplayEvaluator.evaluateDisplay(field.display, request.getParameters())) {
                     errors.add(i18nService.getI18n(MSG_REQUIRED, langParameter));
                 }
             } else {
