@@ -232,7 +232,7 @@ public class DefaultAction {
             if (offset >= raf.length()) return;
             raf.seek(offset);
 
-            byte[] block = new byte[1024 * 1024 * 2]; // 一次最大传输 MB
+            byte[] block = new byte[1024 * 8];
             int read = raf.read(block);
             if (read == block.length) {
                 byteRead = block;

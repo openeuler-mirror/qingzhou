@@ -31,7 +31,7 @@ public class WebResource {
     public byte[] getContent() throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try (InputStream in = url.openStream()) {
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[1024 * 8];
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
                 os.write(buffer, 0, bytesRead);

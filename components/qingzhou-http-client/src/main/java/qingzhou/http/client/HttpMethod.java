@@ -1,5 +1,5 @@
 package qingzhou.http.client;
 
 public enum HttpMethod {
-    GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE
+    GET, POST, HEAD, OPTIONS, PUT, DELETE, TRACE
 }

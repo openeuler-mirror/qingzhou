@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import qingzhou.api.Constants;
-import qingzhou.api.Response;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
@@ -17,8 +16,7 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.HttpResult;
+import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
@@ -54,7 +52,7 @@ class AppStubRemoteImpl implements AppStubRemote {
     }
 
     private void invokeApp0(RequestImpl request) throws Throwable {
-        HttpResult response;
+        Response response;
         String originTargetName = request.getInstance();
         request.setInstance(Constants.LOCAL_INSTANCE_ID); // 远程到实例后，去本地实例找
         Cipher cipher = crypto.getCipher(instanceInfo.getKey());
@@ -67,7 +65,7 @@ class AppStubRemoteImpl implements AppStubRemote {
             byte[] encrypted = cipher.encrypt(data);
             String agentUrl = String.format("http://%s:%s/agent/", instanceInfo.getHost(), instanceInfo.getPort());
 
-            response = httpClient.request(agentUrl, HttpMethod.POST, encrypted, null);
+            response = httpClient.send(httpClient.newRequest(agentUrl).body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
@@ -82,19 +80,20 @@ class AppStubRemoteImpl implements AppStubRemote {
                 if (body != null && body.length > 0) {
                     logger.error("agent response body: " + new String(body, StandardCharsets.UTF_8));
                 }
-                ResponseImpl resp = request.getResponse();
-                resp.success(false)
-                        .msgLevel(Response.MsgLevel.error)
-                        .msg(errorMsg);
+                responseError(request, errorMsg);
             }
         } catch (Exception e) {
-            ResponseImpl resp = request.getResponse();
-            resp.success(false)
-                    .msgLevel(Response.MsgLevel.error)
-                    .msg("remote processing error");
+            responseError(request, "remote processing error");
         } finally {
             request.setInstance(originTargetName);
         }
+    }
+
+    private void responseError(RequestImpl request, String error) {
+        request.getResponse()
+                .success(false)
+                .msgLevel(qingzhou.api.Response.MsgLevel.error)
+                .msg(error);
     }
 
     /**
@@ -119,7 +118,7 @@ class AppStubRemoteImpl implements AppStubRemote {
      */
     private String uploadFileToRemoteAgent(File file, Cipher cipher) throws Exception {
         String fileTempKey = "";
-        byte[] buffer = new byte[1024 * 1024 * 2]; // 8KB缓冲
+        byte[] buffer = new byte[1024 * 8];
         try (InputStream in = Files.newInputStream(file.toPath())) {
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
@@ -128,7 +127,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
                 String uploadUrl = String.format("http://%s:%s/agent/upload?key=" + fileTempKey, instanceInfo.getHost(), instanceInfo.getPort());
 
-                HttpResult uploadResult = httpClient.request(uploadUrl, HttpMethod.POST, encrypt, null);
+                Response uploadResult = httpClient.send(httpClient.newRequest(uploadUrl).body(encrypt));
                 if (uploadResult.getStatus() != 200) {
                     String msg = "response code: " + uploadResult.getStatus() + " ";
                     byte[] body = uploadResult.getBody();

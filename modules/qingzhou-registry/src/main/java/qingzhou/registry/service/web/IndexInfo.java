@@ -68,7 +68,7 @@ public class IndexInfo implements HttpHandler, AiTool {
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        httpResponse.sendFinish(WebUtil.webResult(registry, json, httpRequest, function));
+        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
     }
 
     @Override

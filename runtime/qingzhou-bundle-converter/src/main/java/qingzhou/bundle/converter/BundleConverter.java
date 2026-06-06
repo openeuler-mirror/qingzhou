@@ -25,6 +25,7 @@ import qingzhou.json.impl.JsonImpl;
 public class BundleConverter {
     private ClassPool classPool;
     private final Map<String, qingzhou.dto.meta.annotation.ModelAction> defaultActionMetaCache = new HashMap<>();
+    private String appDynamicPackages;
 
     private File targetJar;
     private String libDir;
@@ -111,18 +112,14 @@ public class BundleConverter {
                 "qingzhou.registry," +
                 "qingzhou.api,qingzhou.api.type," +
                 "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
-        attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE,
-                "qingzhou.logger," +
-                        "qingzhou.json," +
-                        "qingzhou.xml," +
-                        "qingzhou.jdbc," +
-                        "qingzhou.crypto," +
-                        "qingzhou.http.server," +
-                        "qingzhou.http.client," +
-                        "qingzhou.qr," +
-                        "qingzhou.llm," +
-                        "qingzhou.path.sniffer," +
-                        "com.sun.management,javax.naming,javax.management");
+        if (appDynamicPackages == null) {
+            String dynamicPkgs = System.getProperty("qingzhou.osgi.packages.import.app");
+            if (dynamicPkgs != null && !dynamicPkgs.trim().isEmpty())
+                appDynamicPackages = dynamicPkgs.trim();
+        }
+        if (appDynamicPackages != null) {
+            attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE, appDynamicPackages);
+        }
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);
