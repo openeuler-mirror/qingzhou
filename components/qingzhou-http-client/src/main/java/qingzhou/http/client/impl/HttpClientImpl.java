@@ -46,7 +46,6 @@ public class HttpClientImpl implements HttpClient {
             body = bodyStr.toString().getBytes(StandardCharsets.UTF_8);
         }
 
-        conn.connect();
         try {
             if (body != null) {
                 conn.setRequestProperty("Content-Length", String.valueOf(body.length));
@@ -67,8 +66,9 @@ public class HttpClientImpl implements HttpClient {
                     }
                 }
                 sendFileStream(req, conn);
+            } else {
+                conn.connect();
             }
-
             return new ResponseImpl(conn);
         } finally {
             conn.disconnect();
