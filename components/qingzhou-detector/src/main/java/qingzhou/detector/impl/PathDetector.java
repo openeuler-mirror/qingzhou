@@ -1,12 +1,4 @@
-package qingzhou.path.sniffer;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import qingzhou.path.sniffer.strategy.CandidateScanStrategy;
-import qingzhou.path.sniffer.strategy.CommandStrategy;
-import qingzhou.path.sniffer.strategy.EnvVarStrategy;
-import qingzhou.path.sniffer.strategy.ProcessStrategy;
-import qingzhou.path.sniffer.strategy.ServiceStrategy;
+package qingzhou.detector.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,15 +6,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 采用多策略探测应用程序安装路径
- */
-@Component(service = PathSniffer.class, configurationPid = "qingzhou-path-sniffer", configurationPolicy = ConfigurationPolicy.OPTIONAL)
-public class PathSniffer {
+import org.osgi.service.component.annotations.Component;
+import qingzhou.detector.ApplicationProfile;
+import qingzhou.detector.DetectionStrategy;
+import qingzhou.detector.PathResult;
+import qingzhou.detector.impl.strategy.*;
 
-    private final List<SniffStrategy> strategies;
+@Component
+public class PathDetector {
 
-    public PathSniffer() {
+    private final List<DetectionStrategy> strategies;
+
+    public PathDetector() {
         this.strategies = Arrays.asList(
                 new EnvVarStrategy(),
                 new ProcessStrategy(),
@@ -31,20 +26,17 @@ public class PathSniffer {
                 new CandidateScanStrategy()
         );
         // 按优先级排序
-        strategies.sort(Comparator.comparingInt(SniffStrategy::getPriority));
+        strategies.sort(Comparator.comparingInt(DetectionStrategy::getPriority));
     }
 
     /**
      * 统一探测入口
-     *
-     * @param profile
-     * @return
      */
-    public List<PathResult> sniff(ApplicationProfile profile) {
+    public List<PathResult> detect(ApplicationProfile profile) {
         List<PathResult> result = new ArrayList<>();
-        for (SniffStrategy strategy : strategies) {
+        for (DetectionStrategy strategy : strategies) {
             try {
-                result.addAll(strategy.sniff(profile));
+                result.addAll(strategy.detect(profile));
                 if (!result.isEmpty() && profile.isStopOnHit()) {
                     break;
                 }

@@ -1,9 +1,9 @@
-package qingzhou.path.sniffer.strategy;
+package qingzhou.detector.impl.strategy;
 
-import qingzhou.path.sniffer.ApplicationProfile;
-import qingzhou.path.sniffer.SniffStrategy;
-import qingzhou.path.sniffer.PathResult;
-import qingzhou.path.sniffer.util.PathDerivationUtil;
+import qingzhou.detector.ApplicationProfile;
+import qingzhou.detector.DetectionStrategy;
+import qingzhou.detector.PathResult;
+import qingzhou.detector.impl.PathDerivationUtil;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +18,7 @@ import java.util.List;
  * 验证逻辑： 1. 环境变量值直接指向安装目录（包含确认文件）→ 直接采纳 2. 环境变量指向子目录（如 bin/）→ 通过回溯推导安装根目录 3. 路径不存在或无法验证 → 丢弃
  * 置信度: CERTAIN（环境变量为显式配置，可靠性最高） 优先级: 10（最高优先级，零开销且最可信）
  */
-public class EnvVarStrategy implements SniffStrategy {
+public class EnvVarStrategy implements DetectionStrategy {
 
     private static final int PRIORITY = 10;
 
@@ -28,7 +28,7 @@ public class EnvVarStrategy implements SniffStrategy {
     }
 
     @Override
-    public List<PathResult> sniff(ApplicationProfile profile) {
+    public List<PathResult> detect(ApplicationProfile profile) {
         List<String> envKeys = profile.getEnvVarKeys();
         if (envKeys == null || envKeys.isEmpty()) {
             return Collections.emptyList();

@@ -1,4 +1,4 @@
-package qingzhou.path.sniffer.util;
+package qingzhou.detector.impl;
 
 import java.io.BufferedReader;
 import java.io.File;

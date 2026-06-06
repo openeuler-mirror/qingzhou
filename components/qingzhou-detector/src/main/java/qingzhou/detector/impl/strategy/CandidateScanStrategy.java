@@ -1,10 +1,10 @@
-package qingzhou.path.sniffer.strategy;
+package qingzhou.detector.impl.strategy;
 
-import qingzhou.path.sniffer.ApplicationProfile;
-import qingzhou.path.sniffer.SniffStrategy;
-import qingzhou.path.sniffer.PathResult;
-import qingzhou.path.sniffer.util.PathDerivationUtil;
-import qingzhou.path.sniffer.util.PlatformUtil;
+import qingzhou.detector.ApplicationProfile;
+import qingzhou.detector.DetectionStrategy;
+import qingzhou.detector.PathResult;
+import qingzhou.detector.impl.PathDerivationUtil;
+import qingzhou.detector.impl.PlatformUtil;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -24,7 +24,7 @@ import java.util.concurrent.*;
  *
  * 优先级: 50（兜底策略）
  */
-public class CandidateScanStrategy implements SniffStrategy {
+public class CandidateScanStrategy implements DetectionStrategy {
 
     private static final int PRIORITY = 50;
     private static final long TIMEOUT_SECONDS = 5;
@@ -38,7 +38,7 @@ public class CandidateScanStrategy implements SniffStrategy {
     }
 
     @Override
-    public List<PathResult> sniff(ApplicationProfile profile) {
+    public List<PathResult> detect(ApplicationProfile profile) {
         List<Path> candidateRoots = getCandidateRoots(profile);
 
         if (candidateRoots.isEmpty()) {

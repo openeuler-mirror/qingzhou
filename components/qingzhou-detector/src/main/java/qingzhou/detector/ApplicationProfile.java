@@ -1,4 +1,4 @@
-package qingzhou.path.sniffer;
+package qingzhou.detector;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
