@@ -22,4 +22,7 @@ public class ModelActionView extends Base {
     public String[] name;
 
     public String[] info;
+
+    // 确认提示信息，国际化数组。非空时前端在执行操作前弹出确认对话框。
+    public String[] confirm;
 }

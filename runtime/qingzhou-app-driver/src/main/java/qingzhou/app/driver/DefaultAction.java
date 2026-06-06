@@ -127,6 +127,7 @@ public class DefaultAction {
     @ModelAction(
             code = Delete.ACTION_CODE_DELETE, icon = "Delete", order = 99,
             name = {"删除", "en:Delete"}, list = true, batch = true,
+            confirm = {"确认删除该记录？此操作不可恢复。", "en:Confirm delete this record? This action cannot be undone."},
             info = {"删除该模块。", "en:Delete this module."})
     public static void delete(Delete delete, Request request) throws Exception {
         String id = request.getId();

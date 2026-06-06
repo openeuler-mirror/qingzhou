@@ -92,8 +92,10 @@ public class ModelMetaInfo implements HttpHandler, AiTool {
                 Object fromVal = field.get(from);
 
                 // 处理 i18n，只保留当期语言的数据
-                if (field.getName().equals("name") || field.getName().equals("info")) {
-                    fromVal = new String[]{i18nService.getI18n((String[]) fromVal, lang)};
+                if (field.getName().equals("name") || field.getName().equals("info") || field.getName().equals("confirm")) {
+                    if (fromVal != null) {
+                        fromVal = new String[]{i18nService.getI18n((String[]) fromVal, lang)};
+                    }
                 }
 
                 field.set(viewObject, fromVal);
