@@ -1,10 +1,7 @@
 package qingzhou.registry.service.web;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
@@ -91,11 +88,11 @@ public class ModelMetaInfo implements HttpHandler, AiTool {
             for (Field field : toClass.getFields()) {
                 Object fromVal = field.get(from);
 
-                // 处理 i18n，只保留当期语言的数据
-                if (field.getName().equals("name") || field.getName().equals("info") || field.getName().equals("confirm")) {
-                    if (fromVal != null) {
-                        fromVal = new String[]{i18nService.getI18n((String[]) fromVal, lang)};
-                    }
+                // 自动推测处理 i18n，只保留当前语言的数据
+                if (field.getType() == String[].class
+                        && fromVal != null
+                        && Arrays.stream((String[]) fromVal).anyMatch(s -> s.startsWith("en:"))) {
+                    fromVal = new String[]{i18nService.getI18n((String[]) fromVal, lang)};
                 }
 
                 field.set(viewObject, fromVal);
@@ -112,7 +109,7 @@ public class ModelMetaInfo implements HttpHandler, AiTool {
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        httpResponse.sendFinish(WebUtil.webResult(registry, json, httpRequest, function));
+        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
     }
 
     @Override

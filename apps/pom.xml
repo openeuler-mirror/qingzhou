@@ -79,7 +79,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-path-sniffer</artifactId>
+            <artifactId>qingzhou-detector</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

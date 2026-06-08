@@ -62,6 +62,7 @@ public class RequestImpl implements Request {
         return parameters;
     }
 
+    @Override
     public Set<String> getUploadFileFields() {
         return uploadFileFields;
     }

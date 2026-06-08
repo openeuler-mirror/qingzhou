@@ -1,10 +1,10 @@
-package qingzhou.path.sniffer.strategy;
+package qingzhou.detector.impl.strategy;
 
-import qingzhou.path.sniffer.ApplicationProfile;
-import qingzhou.path.sniffer.SniffStrategy;
-import qingzhou.path.sniffer.PathResult;
-import qingzhou.path.sniffer.util.PathDerivationUtil;
-import qingzhou.path.sniffer.util.PlatformUtil;
+import qingzhou.detector.ApplicationProfile;
+import qingzhou.detector.DetectionStrategy;
+import qingzhou.detector.PathResult;
+import qingzhou.detector.impl.PathDerivationUtil;
+import qingzhou.detector.impl.PlatformUtil;
 import java.io.File;
 
 import java.nio.file.Path;
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  *
  * 优先级: 40
  */
-public class CommandStrategy implements SniffStrategy {
+public class CommandStrategy implements DetectionStrategy {
 
     private static final int PRIORITY = 40;
 
@@ -35,7 +35,7 @@ public class CommandStrategy implements SniffStrategy {
     }
 
     @Override
-    public List<PathResult> sniff(ApplicationProfile profile) {
+    public List<PathResult> detect(ApplicationProfile profile) {
         List<String> exeNames = profile.getExecutableNames();
         String args = profile.getAppCommandArgs();
 

@@ -15,8 +15,7 @@ import qingzhou.crypto.PairCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.HttpResult;
+import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
@@ -113,7 +112,7 @@ public class Heartbeat {
     private String send(String url, byte[] data) {
         try {
             byte[] encrypted = pairCipher.encryptWithPublicKey(data);
-            HttpResult response = httpClient.request(url, HttpMethod.POST, encrypted, null);
+            Response response = httpClient.send(httpClient.newRequest(url).body(encrypted));
             if (response.getStatus() != 200) {
                 logger.warn("response code error [ " + response.getStatus() + " ] : " + url);
             }

@@ -1,4 +1,4 @@
-package qingzhou.path.sniffer;
+package qingzhou.detector;
 
 import java.nio.file.Path;
 
@@ -9,10 +9,10 @@ public class PathResult {
 
     private final Path path;                // 推导出的安装根目录
     private final int confidence;           // 置信度 100:HIGH、50:MEDIUM、20:LOW
-    private final SniffStrategy strategy;   // 来源策略，如 ProcessStrategy
+    private final DetectionStrategy strategy;   // 来源策略，如 ProcessStrategy
     private final String derivedFrom;       // 原始线索，如 "pid:1234, /proc/1234/exe"
 
-    public PathResult(Path path, int confidence, SniffStrategy strategy, String derivedFrom) {
+    public PathResult(Path path, int confidence, DetectionStrategy strategy, String derivedFrom) {
         this.path = path;
         this.confidence = confidence;
         this.strategy = strategy;
@@ -27,7 +27,7 @@ public class PathResult {
         return confidence;
     }
 
-    public SniffStrategy getStrategy() {
+    public DetectionStrategy getStrategy() {
         return strategy;
     }
 

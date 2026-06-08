@@ -1,6 +1,6 @@
-package qingzhou.path.sniffer.util;
+package qingzhou.detector.impl;
 
-import qingzhou.path.sniffer.ApplicationProfile;
+import qingzhou.detector.ApplicationProfile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 

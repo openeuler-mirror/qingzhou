@@ -9,7 +9,7 @@
     </parent>
 
     <packaging>bundle</packaging>
-    <artifactId>qingzhou-path-sniffer</artifactId>
+    <artifactId>qingzhou-detector</artifactId>
 
     <build>
         <plugins>
@@ -18,7 +18,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.path.sniffer</Export-Package>
+                        <Export-Package>qingzhou.detector</Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
