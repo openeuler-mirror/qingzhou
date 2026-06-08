@@ -9,7 +9,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.HttpResult;
+import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.impl.LoggerImpl;
@@ -19,7 +19,8 @@ public class HttpServerImplTest {
     public void normal_start_listenHttpService() throws Exception {
         int port = 7788;
         HttpServerImpl httpServer = build(port);
-        HttpResult result = new HttpClientImpl().request("http://localhost:" + port, HttpMethod.GET, null);
+        HttpClientImpl httpClient = new HttpClientImpl();
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源
@@ -31,7 +32,8 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build(port);
         httpServer.stop();
         try {
-            new HttpClientImpl().request("http://localhost:" + port, HttpMethod.GET, null);
+            HttpClientImpl httpClient = new HttpClientImpl();
+            httpClient.send(httpClient.newRequest("http://localhost:" + port).method(HttpMethod.GET));
             Assert.fail();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ConnectException);
@@ -47,7 +49,7 @@ public class HttpServerImplTest {
         httpServer.registerHttpHandler(httpHandler, path);
 
         HttpClient httpClient = new HttpClientImpl();
-        HttpResult result = httpClient.request("http://localhost:" + port + path, HttpMethod.GET, null);
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 200);
         Assert.assertTrue(new String(result.getBody()).contains(path));
 
@@ -64,7 +66,7 @@ public class HttpServerImplTest {
         httpServer.registerHttpHandler(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = new HttpClientImpl();
-        HttpResult result = httpClient.request("http://localhost:" + port + path, HttpMethod.GET, null);
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源

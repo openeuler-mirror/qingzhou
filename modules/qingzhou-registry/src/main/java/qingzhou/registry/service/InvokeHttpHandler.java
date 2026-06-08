@@ -152,7 +152,7 @@ public class InvokeHttpHandler implements HttpHandler {
             if (response.getContentType() != null) {
                 httpResponse.contentType(response.getContentType());
             } else {
-                httpResponse.contentType("application/json; charset=utf-8");
+                httpResponse.contentTypeJsonUtf8();
             }
             String json = this.json.toJson(result);
             httpResponse.sendFinish(json);

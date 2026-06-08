@@ -155,7 +155,7 @@ public class QingzhouMain {
         Map<String, String> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_STORAGE, Paths.get(instanceDir, "temp", "osgi-cache").toFile().getAbsolutePath());
         config.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
-        String pkgExtra = System.getProperty("qingzhou.osgi.packages.extra");
+        String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");
         if (pkgExtra != null && !pkgExtra.trim().isEmpty()) {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, pkgExtra.trim());
         }

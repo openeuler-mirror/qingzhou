@@ -9,7 +9,7 @@ public class InstanceInfo {
     private String id;
     private String host;
     private int port;
-    private String key;
+    private volatile String key;
     private String version;
     private final List<AppMeta> appMetas = new ArrayList<>();
 

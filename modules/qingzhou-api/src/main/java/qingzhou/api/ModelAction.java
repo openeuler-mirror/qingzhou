@@ -35,4 +35,7 @@ public @interface ModelAction {
 
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
     String[] info() default {};
+
+    // 确认提示信息，国际化数组。非空时前端在执行操作前弹出确认对话框。
+    String[] confirm() default {};
 }

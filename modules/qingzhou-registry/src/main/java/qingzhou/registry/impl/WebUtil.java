@@ -35,11 +35,13 @@ public class WebUtil {
         return false;
     }
 
-    public static String webResult(Registry registry, Json json, HttpRequest httpRequest, Function<Context, Object> function) throws Exception {
+    public static void sendResult(Function<Context, Object> function, HttpRequest httpRequest, HttpResponse httpResponse, Registry registry, Json json) throws Exception {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);
         metaData.put(REQUEST_PARAMETER_NAME_CACHE_KEY, registry.getRegistryDataVersion());
-        return json.toJson(metaData);
+        String jsonResult = json.toJson(metaData);
+        httpResponse.contentTypeJsonUtf8()
+                .sendFinish(jsonResult);
     }
 }

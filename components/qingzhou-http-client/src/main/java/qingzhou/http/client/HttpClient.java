@@ -1,13 +1,7 @@
 package qingzhou.http.client;
 
-import java.util.Map;
-
 public interface HttpClient {
-    HttpResult request(String url, HttpMethod httpMethod, Map<String, String> params) throws Exception;
+    Response send(Request request) throws Exception;
 
-    HttpResult request(String url, HttpMethod httpMethod, Map<String, String> params, Map<String, String> headers) throws Exception;
-
-    HttpResult request(String url, HttpMethod httpMethod, Map<String, String> params, Map<String, String> headers, Map<String,String> files) throws Exception;
-
-    HttpResult request(String url, HttpMethod httpMethod, byte[] body, Map<String, String> headers) throws Exception;
+    Request newRequest(String url);
 }

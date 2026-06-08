@@ -65,6 +65,11 @@ public class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
+    public HttpResponse contentTypeJsonUtf8() {
+        return contentType("application/json; charset=utf-8");
+    }
+
+    @Override
     public HttpResponse send(String bodyAsUtf8) {
         if (bodyAsUtf8 != null) {
             send(bodyAsUtf8.getBytes(StandardCharsets.UTF_8));
@@ -75,7 +80,10 @@ public class HttpResponseImpl implements HttpResponse {
     @Override
     public HttpResponse send(byte[] body) {
         if (body != null) {
-            streamResponse.tryEmitNext(body);
+            Sinks.EmitResult result = streamResponse.tryEmitNext(body);
+            if (result.isFailure()) {
+                throw new RuntimeException("Client disconnected, cannot send data");
+            }
         }
         return thisInstance();
     }
