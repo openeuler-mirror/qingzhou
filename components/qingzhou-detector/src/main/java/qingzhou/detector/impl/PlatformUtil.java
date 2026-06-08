@@ -122,7 +122,7 @@ public class PlatformUtil {
     /**
      * Unix/Linux/macOS: 使用 which / type / whereis 三级降级定位
      */
-    private static String locateUnix(String exeName) {
+    public static String locateUnix(String exeName) {
         // 1. 首选 which（几乎所有 Unix 系统都有）
         String[] cmdWhich = {"which", exeName};
         List<String> lines = PlatformUtil.exec(cmdWhich);

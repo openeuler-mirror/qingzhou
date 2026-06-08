@@ -43,7 +43,7 @@ public class HttpClientImpl implements HttpClient {
                 bodyStr.append(entry.getKey()).append('=');
                 bodyStr.append(URLEncoder.encode(value, "UTF-8"));
             }
-            body = bodyStr.toString().getBytes(StandardCharsets.UTF_8);
+            body = bodyStr.length() > 0 ? bodyStr.toString().getBytes(StandardCharsets.UTF_8) : null;
         }
 
         try {
