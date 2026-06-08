@@ -109,6 +109,26 @@ public class I18nServiceImpl implements I18nService {
             return;
         }
         for (String langLine : i18n) {
+            // 支持格式 2: "中文|en:English|tr:繁體" — 单个元素内嵌多语言
+            if (langLine.contains("|en:") || langLine.contains("|tr:")) {
+                String[] parts = langLine.split("\\|", -1);
+                for (String part : parts) {
+                    String trimmed = part.trim();
+                    if (trimmed.isEmpty()) continue;
+                    Lang partLang = Lang.zh;
+                    int partValIdx = 0;
+                    if (trimmed.length() > 2 && trimmed.charAt(2) == Lang.SEPARATOR) {
+                        partLang = Lang.valueOf(trimmed.substring(0, 2));
+                        partValIdx = 3;
+                    }
+                    String partVal = trimmed.substring(partValIdx).trim();
+                    boolean continueVisit = visitor.visit(partLang, partVal);
+                    if (!continueVisit) return;
+                }
+                continue; // 已处理完该元素，跳过后续逻辑
+            }
+
+            // 支持格式 1: "en:xxx"
             Lang lang = null;
             int valueIndex = 0;
             if (langLine.length() > 2 && langLine.charAt(2) == Lang.SEPARATOR) {
