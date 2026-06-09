@@ -81,7 +81,16 @@ public class CommandStrategy implements DetectionStrategy {
      */
     private PathResult tryExecute(String exe, String args, ApplicationProfile profile) {
         try {
-            List<String> lines = PlatformUtil.exec(exe, args);
+            List<String> lines;
+            if (PlatformUtil.isMac()) {
+                // 解决unix：脚本中存在if [ $have_tty -eq 1 ]; then然后echo输出，对于unix系统，这不是一个tty，所以这部分输出无法获取
+                String execPath = PlatformUtil.locateUnix(exe);
+                lines = PlatformUtil.exec("script", "-Fq", "/dev/null", "/bin/sh", "-c",
+                        execPath + " " +args);
+            } else {
+                lines = PlatformUtil.exec(exe, args);
+            }
+
             String extracted = profile.extractPath(lines);
             Path path = PathDerivationUtil.deriveInstallDir(Paths.get(extracted), profile);
             if (path != null) {

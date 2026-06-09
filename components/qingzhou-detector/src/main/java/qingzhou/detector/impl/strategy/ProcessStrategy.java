@@ -223,7 +223,9 @@ public class ProcessStrategy implements DetectionStrategy {
     }
 
     /**
-     * macOS: ps -e -o pid,comm=
+     * macOS: ps -e -o pid,comm=,args=
+     * 
+     * 注意：comm 字段默认只显示前 15 个字符，所以需要从 args 中提取完整的进程名
      */
     private List<ProcessInfo> listAllProcessesMac() {
         List<ProcessInfo> list = new ArrayList<>();
@@ -238,7 +240,7 @@ public class ProcessStrategy implements DetectionStrategy {
                 Matcher m = pattern.matcher(line);
                 if (m.find()) {
                     String pid = m.group(1);
-                    String procName = m.group(2);
+                    String truncatedProcName = m.group(2); // comm 字段可能被截断到15字符
                     String cmdLine = m.group(3).trim();
 
                     String path;
@@ -268,6 +270,13 @@ public class ProcessStrategy implements DetectionStrategy {
                             args = "";
                         }
                     }
+                    
+                    // 从路径中提取完整的进程名（避免 comm 字段被截断的问题）
+                    String procName = extractProcNameFromPath(path);
+                    if (procName.isEmpty()) {
+                        procName = truncatedProcName; // 作为备选
+                    }
+                    
                     list.add(new ProcessInfo(pid, procName, path, args));
                 }
             } catch (Exception e) {
@@ -275,6 +284,26 @@ public class ProcessStrategy implements DetectionStrategy {
             }
         }
         return list;
+    }
+    
+    /**
+     * 从路径中提取进程名（去掉路径前缀，只保留文件名）
+     */
+    private String extractProcNameFromPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return "";
+        }
+        // 处理各种路径格式
+        int lastSlash = path.lastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash < path.length() - 1) {
+            return path.substring(lastSlash + 1);
+        }
+        // 没有斜杠，可能是命令名或相对路径
+        int lastBackslash = path.lastIndexOf('\\');
+        if (lastBackslash >= 0 && lastBackslash < path.length() - 1) {
+            return path.substring(lastBackslash + 1);
+        }
+        return path;
     }
 
     // ==================== 内部类 ====================
