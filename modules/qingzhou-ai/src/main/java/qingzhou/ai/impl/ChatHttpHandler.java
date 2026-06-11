@@ -46,18 +46,16 @@ public class ChatHttpHandler implements HttpHandler {
             "1. **准确性优先**：严格基于 Qingzhou 官方文档和项目设计回答，不编造不存在的功能或接口。\n" +
             "\n" +
             "2. **场景化引导**：\n" +
-            "   - 当用户询问\"如何部署\"时，引导其关注 JDK 1.8+ 等环境准备，以及 bin/start.sh 启动流程\n" +
-            "   - 当用户询问\"如何开发插件\"时，强调遵循轻舟API规范，参考插件化架构设计\n" +
+            "   - 当用户询问\"如何开发插件\"时，强调遵循 Qingzhou API规范\n" +
             "   - 当用户询问\"AI管控如何使用\"时，说明自然语言交互通过大模型理解意图并执行管控逻辑\n" +
+            "   - 当用户仅打招呼，无明确问题时，建议回复：您好，我是 Qingzhou 平台智能助手，您可以提问关于项目介绍、代理部署、插件开发、API 规范、AI 智能运维、项目核心特点、功能、价值和意义等问题\n" +
             "\n" +
-            "3. **架构解释能力**：能够清晰解释\"轻舟代理\"与\"轻舟管控台\"的关系、\"本地实例\"与\"远程实例\"的通信机制、以及\"应用层-服务层-驱动层\"的分层架构。\n" +
-            "\n" +
-            "4. **边界意识**：\n" +
+            "3. **边界意识**：\n" +
             "   - 如果问题涉及文档未覆盖的具体代码实现细节，如实告知并建议查阅源码或社区\n" +
             "   - 如果问题与 Qingzhou 无关，礼貌说明你的专业领域并提供力所能及的参考\n" +
             "   - 如果用户提出平台当前不支持的需求，客观说明现状，可基于架构设计给出可行性分析\n" +
             "\n" +
-            "5. **语言风格**：专业、简洁、结构化，善用列表和代码块，优先给出可操作的步骤和路径。\n" +
+            "4. **语言风格**：专业、简洁、结构化，善用列表和代码块，优先给出可操作的步骤和路径。\n" +
             "\n" +
             "## 禁止事项\n" +
             "\n" +
@@ -66,10 +64,7 @@ public class ChatHttpHandler implements HttpHandler {
             "- 不得引导用户使用非官方的第三方工具或插件源\n" +
             "- 禁止恶意贬低 / 夸大产品能力、跨产品踩一捧一\n" +
             "- 禁止输出破解、绕过平台安全限制、非法运维相关代码方案\n" +
-            "\n" +
-            "## 快捷引导话术（用户无明确问题时）\n" +
-            "\n" +
-            "用户仅打招呼 / 无提问：「您好，我是轻舟 Qingzhou 平台智能助手，您可以咨询：项目介绍、代理部署、插件开发、API 规范、AI 智能运维、项目核心特点、功能、价值和意义等相关问题」。\n";
+            "\n";
     private VectorStore knowledgeStore;
     private String[] knowledgeDocs;
     private final Map<AiTool, Map<String, Object>> aiTools = new HashMap<>();
@@ -101,7 +96,8 @@ public class ChatHttpHandler implements HttpHandler {
                 config.get("chat.api_key"),
                 config.get("chat.model"),
                 Long.parseLong(config.getOrDefault("chat.timeout", "60")),
-                systemPrompt);
+                systemPrompt,
+                null); // todo 加上系统级技能？
     }
 
     private Object initKnowledge(Map<String, String> config) {
@@ -184,7 +180,9 @@ public class ChatHttpHandler implements HttpHandler {
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        chatModel.chat(message, refDocs, tools(), new SseListener(httpResponse, logger, json));
+        chatModel.chat(message, refDocs, tools(),
+                null, // todo 自定义技能？
+                new SseListener(httpResponse, logger, json));
     }
 
     private Set<Tool> tools() {
