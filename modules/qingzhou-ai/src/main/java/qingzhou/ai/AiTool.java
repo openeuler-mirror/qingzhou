@@ -3,6 +3,8 @@ package qingzhou.ai;
 import java.util.Map;
 
 public interface AiTool {
+    String TOOL_SKILL_NAME = "TOOL_SKILL_NAME"; // 所属技能
+
     String TOOL_NAME = "TOOL_NAME";
     String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
 

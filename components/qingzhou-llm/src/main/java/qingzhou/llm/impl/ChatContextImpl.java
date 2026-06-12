@@ -16,9 +16,4 @@ class ChatContextImpl implements ChatContext {
     public Map<String, Object> attributes() {
         return prompt.attrs();
     }
-
-    @Override
-    public String getLatestMessage() {
-        return prompt.getUserContent();
-    }
 }

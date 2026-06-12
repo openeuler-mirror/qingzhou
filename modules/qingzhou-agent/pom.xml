@@ -58,8 +58,7 @@
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,qingzhou.http.client,
                             qingzhou.logger,qingzhou.json,qingzhou.crypto,
-                            org.osgi.service.cm,
-                            qingzhou.ai
+                            org.osgi.service.cm
                         </Import-Package>
                     </instructions>
                 </configuration>

@@ -2,6 +2,7 @@ package qingzhou.llm.impl;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.noear.solon.ai.chat.dialect.ChatDialectManager;
 import org.noear.solon.ai.embedding.dialect.EmbeddingDialectManager;
@@ -40,6 +41,9 @@ public class LLMImpl implements LLM {
                 .apiKey(apiKey)
                 .model(model)
                 .timeout(Duration.ofSeconds(timeout)) // 设置超时，防止无限等待
+//                .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
+//                    put("type", "adaptive");
+//                }}))
                 .systemPrompt(systemPrompt)
                 .defaultSkillAdd(Converter.convertSkill(systemSkills))
                 .build();

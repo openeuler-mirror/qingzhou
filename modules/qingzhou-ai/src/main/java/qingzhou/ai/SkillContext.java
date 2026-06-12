@@ -1,7 +1,7 @@
-package qingzhou.llm;
+package qingzhou.ai;
 
 import java.util.Map;
 
-public interface ChatContext {
+public interface SkillContext {
     Map<String, Object> attributes();
 }

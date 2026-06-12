@@ -33,12 +33,11 @@ class Converter {
         return SkillDesc.builder(skill.name())
                 .description(skill.description())
                 .isSupported(prompt -> skill.isSupported(new ChatContextImpl(prompt)))
-                .onAttach(prompt -> skill.onActivate())
                 .instruction(skill.getInstruction())
                 .toolAdd(() -> {
-                    Tool[] tools = skill.getTools();
+                    Collection<Tool> tools = skill.getTools();
                     if (tools == null) return Collections.emptyList();
-                    return Arrays.stream(tools).map(Converter::convertTool).collect(Collectors.toSet());
+                    return tools.stream().map(Converter::convertTool).collect(Collectors.toSet());
                 }).build();
     }
 
