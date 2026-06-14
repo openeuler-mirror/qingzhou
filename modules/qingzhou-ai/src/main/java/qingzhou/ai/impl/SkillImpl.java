@@ -53,7 +53,7 @@ class SkillImpl implements Skill {
             String name = name() + ".md";
             try {
                 instruction = String.join("\n", Files.readAllLines(
-                        Paths.get(aiDocDir, name),
+                        Paths.get(aiDocDir, "skills", name),
                         StandardCharsets.UTF_8));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
