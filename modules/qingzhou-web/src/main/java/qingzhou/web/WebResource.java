@@ -4,31 +4,38 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.security.MessageDigest;
 
-public class WebResource {
+import qingzhou.crypto.Base16Coder;
+import qingzhou.crypto.MessageDigest;
 
-    private final String path;
+class WebResource {
+    private final MessageDigest messageDigest;
+    private final Base16Coder base16Coder;
     private final URL url;
+
     private volatile String etag = null;
 
-    public WebResource(String path, URL url) {
-        this.path = path;
+    WebResource(MessageDigest md, Base16Coder base16Coder, URL url) {
+        this.messageDigest = md;
+        this.base16Coder = base16Coder;
         this.url = url;
     }
 
-    public String getETag() throws Exception {
+    String getETag() throws Exception {
         if (etag == null) {
             synchronized (this) {
                 if (etag == null) {
-                    etag = "\"" + md5(getContent()) + "\"";
+                    byte[] content = getContent();
+                    byte[] md5Bytes = messageDigest.md5(content);
+                    String md5Str = base16Coder.encode(md5Bytes);
+                    etag = "\"" + md5Str + "\"";
                 }
             }
         }
         return etag;
     }
 
-    public byte[] getContent() throws IOException {
+    byte[] getContent() throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try (InputStream in = url.openStream()) {
             byte[] buffer = new byte[1024 * 8];
@@ -38,20 +45,5 @@ public class WebResource {
             }
         }
         return os.toByteArray();
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    private static String md5(byte[] body) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(body);
-        byte[] digest = md.digest();
-        StringBuilder sb = new StringBuilder();
-        for (byte b : digest) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 }
