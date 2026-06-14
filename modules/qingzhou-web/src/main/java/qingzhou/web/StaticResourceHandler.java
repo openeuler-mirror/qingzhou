@@ -85,7 +85,7 @@ public class StaticResourceHandler implements HttpHandler {
         }
 
         // 查找资源
-        String resourcePath = "/webapp" + path.substring(1);
+        String resourcePath = "/webapp" + path;
         WebResource webResource = resources.computeIfAbsent(resourcePath, s -> {
             URL resource = getClass().getResource(s);
             if (resource == null) {
@@ -151,10 +151,8 @@ public class StaticResourceHandler implements HttpHandler {
     }
 
     private String getCacheControl(String extension) {
-        if (extension.equals("html") || extension.equals("htm")) {
-            return "max-age=0, no-cache, must-revalidate, proxy-revalidate, no-transform";
-        }
-        if (imageExtensions.contains(extension)) {
+        if (extension.equals("html") || extension.equals("htm")
+                || imageExtensions.contains(extension)) {
             return "max-age=2592000, must-revalidate, proxy-revalidate, no-transform"; // 一个月
         }
         return "max-age=31536000, must-revalidate, proxy-revalidate, no-transform"; // 一年

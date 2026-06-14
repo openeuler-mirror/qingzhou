@@ -14,6 +14,7 @@ class WebResource {
     private final URL url;
 
     private volatile String etag = null;
+    private volatile byte[] content = null; // 内容缓存，避免每次请求重新读取流
 
     WebResource(MessageDigest md, Base16Coder base16Coder, URL url) {
         this.messageDigest = md;
@@ -25,8 +26,7 @@ class WebResource {
         if (etag == null) {
             synchronized (this) {
                 if (etag == null) {
-                    byte[] content = getContent();
-                    byte[] md5Bytes = messageDigest.md5(content);
+                    byte[] md5Bytes = messageDigest.md5(getContent());
                     String md5Str = base16Coder.encode(md5Bytes);
                     etag = "\"" + md5Str + "\"";
                 }
@@ -36,6 +36,17 @@ class WebResource {
     }
 
     byte[] getContent() throws IOException {
+        if (content == null) {
+            synchronized (this) {
+                if (content == null) {
+                    content = readContent();
+                }
+            }
+        }
+        return content;
+    }
+
+    private byte[] readContent() throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try (InputStream in = url.openStream()) {
             byte[] buffer = new byte[1024 * 8];
