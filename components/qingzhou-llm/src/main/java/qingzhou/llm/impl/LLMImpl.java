@@ -40,10 +40,12 @@ public class LLMImpl implements LLM {
                 .of(baseUrl)
                 .apiKey(apiKey)
                 .model(model)
-                .timeout(Duration.ofSeconds(timeout)) // 设置超时，防止无限等待
-//                .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
-//                    put("type", "adaptive");
-//                }}))
+                // 设置超时，防止无限等待
+                .timeout(Duration.ofSeconds(timeout))
+                // Anthropic Claude 专有参数：开启思考
+                .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
+                    put("type", "adaptive");
+                }}))
                 .systemPrompt(systemPrompt)
                 .defaultSkillAdd(Converter.convertSkill(systemSkills))
                 .build();
