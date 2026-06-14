@@ -1,8 +1,7 @@
 package qingzhou.web;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Component;
@@ -23,6 +22,20 @@ public class StaticResourceHandler implements HttpHandler {
 
     // MIME 类型映射
     private static final Map<String, String> MIME_TYPES = new HashMap<>();
+    // 优化：图片扩展名集合，供 Cache-Control 判断使用，避免与 MIME 判断各维护一套 endsWith 硬编码
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(
+            Arrays.asList("png", "jpg", "jpeg", "gif", "svg", "ico"));
+
+    // 优化：Cache-Control 取值是固定常量，预先拼好，避免每次请求 String.format 重新拼接
+    private static final String CACHE_CONTROL_NO_CACHE =
+            "max-age=0, no-cache, must-revalidate, proxy-revalidate, no-transform";
+    // 图片缓存一个月
+    private static final String CACHE_CONTROL_IMAGE =
+            "max-age=" + (30 * 24 * 60 * 60) + ", must-revalidate, proxy-revalidate, no-transform";
+    // 修复：assets 文件名自带 hash，可长期缓存。原值 30*24*60*60*365 实为约 30 年（把"一个月秒数"又乘了 365），
+    // 语义错乱，更正为 1 年 = 365*24*60*60 秒
+    private static final String CACHE_CONTROL_LONG =
+            "max-age=" + (365 * 24 * 60 * 60) + ", must-revalidate, proxy-revalidate, no-transform";
 
     static {
         MIME_TYPES.put("html", "text/html; charset=UTF-8");
@@ -47,12 +60,19 @@ public class StaticResourceHandler implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         String requestPath = httpRequest.getPath();
 
-        // 去掉 /web 前缀
-        if (requestPath.startsWith("/web")) {
+        // 修复：仅当路径恰好是 "/web" 或以 "/web/" 开头时才剥离前缀，
+        // 避免把 "/website" 等以 "web" 开头的合法路径误当作带 "/web" 前缀而错误截断
+        if (requestPath.equals("/web")) {
+            requestPath = "/";
+        } else if (requestPath.startsWith("/web/")) {
             requestPath = requestPath.substring("/web".length());
-            if (requestPath.isEmpty()) {
-                requestPath = "/";
-            }
+        }
+
+        // 安全修复（路径穿越）：getResource 在目录型 ClassLoader 下会解析 ".."，
+        // 形如 /web/../../x 的请求可能读取到 webapp/ 之外的资源，故含非法字符的路径直接拒绝
+        if (!isPathSafe(requestPath)) {
+            httpResponse.status404Finish();
+            return;
         }
 
         // 处理静态资源
@@ -87,8 +107,10 @@ public class StaticResourceHandler implements HttpHandler {
             return;
         }
 
-        String cacheControl = getCacheControl(path);
-        response.header("Cache-Control", cacheControl);
+        // 优化：扩展名只解析一次，供 Cache-Control 与 Content-Type 共用
+        String extension = getExtension(path);
+
+        response.header("Cache-Control", getCacheControl(extension));
 
         try {
             // 生成 ETag（MD5）
@@ -103,13 +125,14 @@ public class StaticResourceHandler implements HttpHandler {
 
             // 资源未修改 → 直接返回 304
             if (isEtagMatch) {
-                response.status(304);
+                // 修复：status(int) 是 builder 风格、不会结束响应，原代码漏调 finish() 导致 304 响应未真正提交
+                response.status(304)
+                        .finish();
                 return;
             }
 
             // 设置 Content-Type
-            String contentType = getContentType(path);
-            response.contentType(contentType);
+            response.contentType(getContentType(extension));
 
             // 读取并发送文件内容
             response.sendFinish(webResource.getContent());
@@ -118,44 +141,51 @@ public class StaticResourceHandler implements HttpHandler {
         }
     }
 
-    private static String getCacheControl(String path) {
-        String cacheControl;
-        if (path.endsWith(".html") || path.endsWith(".htm")) {
-            cacheControl = "max-age=0, no-cache, must-revalidate, proxy-revalidate, no-transform";
-        } else if (path.endsWith(".svg")
-                || path.endsWith(".jpg")
-                || path.endsWith(".jpeg")
-                || path.endsWith(".png")
-                || path.endsWith(".gif")
-                || path.endsWith(".ico")) {
-            // 图片设置一个月缓存
-            cacheControl = String.format(
-                    "max-age=%d, must-revalidate, proxy-revalidate, no-transform",
-                    30 * 24 * 60 * 60
-            );
-        } else {
-            // 当前assets目录下的文件名自带hash值，可以设置长期缓存
-            cacheControl = String.format(
-                    "max-age=%d, must-revalidate, proxy-revalidate, no-transform",
-                    30 * 24 * 60 * 60 * 365
-            );
+    /**
+     * 安全校验：拒绝包含路径穿越段（..）、反斜杠或空字节的路径。
+     * 按 "/" 分段比较，避免误伤文件名中合法的连续点（如 a..b.js）
+     */
+    private static boolean isPathSafe(String path) {
+        if (path.indexOf('\0') >= 0 || path.indexOf('\\') >= 0) {
+            return false;
         }
-        return cacheControl;
+        for (String segment : path.split("/")) {
+            if (segment.equals("..")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 提取文件扩展名（小写），无扩展名时返回空串
+     */
+    private static String getExtension(String path) {
+        int lastDot = path.lastIndexOf('.');
+        int lastSlash = path.lastIndexOf('/');
+        // 点必须位于最后一段文件名内，且不是文件名首字符（排除隐藏文件如 .gitignore）
+        if (lastDot > lastSlash + 1) {
+            return path.substring(lastDot + 1).toLowerCase();
+        }
+        return "";
+    }
+
+    private static String getCacheControl(String extension) {
+        if (extension.equals("html") || extension.equals("htm")) {
+            return CACHE_CONTROL_NO_CACHE;
+        }
+        if (IMAGE_EXTENSIONS.contains(extension)) {
+            return CACHE_CONTROL_IMAGE;
+        }
+        return CACHE_CONTROL_LONG;
     }
 
     /**
      * 根据文件扩展名获取 Content-Type
      */
-    private String getContentType(String path) {
-        int lastDot = path.lastIndexOf('.');
-        if (lastDot > 0) {
-            String extension = path.substring(lastDot + 1).toLowerCase();
-            String mimeType = MIME_TYPES.get(extension);
-            if (mimeType != null) {
-                return mimeType;
-            }
-        }
-        return "application/octet-stream";
+    private static String getContentType(String extension) {
+        String mimeType = MIME_TYPES.get(extension);
+        return mimeType != null ? mimeType : "application/octet-stream";
     }
 
     /**
