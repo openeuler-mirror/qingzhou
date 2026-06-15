@@ -1,10 +1,14 @@
 package qingzhou.registry.service;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
-public class MultipartStreamParser {
+class MultipartStreamParser {
     private final byte[] boundaryDelimiter;
     private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
@@ -32,19 +36,18 @@ public class MultipartStreamParser {
     private final Map<String, List<String>> uploadFileMap = new LinkedHashMap<>();
     private final Set<String> uploadFileFields = new LinkedHashSet<>();
 
-    @FunctionalInterface
-    public interface FieldTypeResolver {
+    interface FieldTypeResolver {
         boolean isFileField(String fieldName);
     }
 
-    public MultipartStreamParser(String boundary, File uploadBase, FieldTypeResolver resolver) {
+    MultipartStreamParser(String boundary, File uploadBase, FieldTypeResolver resolver) {
         this.boundaryDelimiter = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
         this.uploadBase = uploadBase;
         this.fieldTypeResolver = resolver;
         this.leftover = new byte[boundaryDelimiter.length + 4];
     }
 
-    public void feed(byte[] data, boolean isLast) throws IOException {
+    void feed(byte[] data, boolean isLast) throws IOException {
         if (state == State.DONE) return;
 
         byte[] searchArea;
@@ -73,15 +76,15 @@ public class MultipartStreamParser {
         }
     }
 
-    public Map<String, String> getParameters() {
+    Map<String, String> getParameters() {
         return parameters;
     }
 
-    public Map<String, List<String>> getUploadFileMap() {
+    Map<String, List<String>> getUploadFileMap() {
         return uploadFileMap;
     }
 
-    public Set<String> getUploadFileFields() {
+    Set<String> getUploadFileFields() {
         return uploadFileFields;
     }
 
@@ -198,10 +201,10 @@ public class MultipartStreamParser {
         if (isFileField) {
             String uploadId = UUID.randomUUID().toString();
             File uploadDir = new File(uploadBase, uploadId);
-            uploadDir.mkdirs();
+            if (!uploadDir.mkdirs()) throw new IllegalStateException(uploadDir.getAbsolutePath());
             currentTempFile = new File(uploadDir, currentFileName);
             try {
-                fileStream = new FileOutputStream(currentTempFile);
+                fileStream = Files.newOutputStream(currentTempFile.toPath());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

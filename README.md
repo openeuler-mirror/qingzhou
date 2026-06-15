@@ -96,17 +96,18 @@ Qingzhou（轻舟）是一个基于 Java
 
 轻舟服务打开的接口（HTTP 协议）如下：
 
-| 接口URI               | 接口说明          | 访问形式                                    |
-|---------------------|---------------|-----------------------------------------|
-| /registry/invoke    | 执行指定应用的模块操作   | /registry/invoke/-/admin/app/list       |
-| /registry/register  | 注册远程实例上的应用    |                                         |
-| /registry/refresh   | 刷新远程实例的通信密钥   |                                         |
-| /agent              | 在远程实例上执行应用的操作 |                                         |
-| /web                | 管控台前端静态资源     |                                         |
-| /registry/web/index | 管控台后端应用概览     |                                         |
-| /registry/web/app   | 管控台后端应用元数据    | /registry/web/app?appId=admin@-         |
-| /registry/web/model | 管控台后端应用模块元数据  | /registry/web/model?modelId=app@admin@- |
-| /ai/chat            | 智能管控自然语言交互接口  |                                         |
+| 接口URI               | 接口说明          |
+|---------------------|---------------|
+| /registry/register  | 注册远程实例上的应用    |
+| /registry/refresh   | 刷新远程实例的通信密钥   |
+| /registry/invoke    | 执行指定应用的模块操作   |
+| /registry/instance  | 获取已注册的实例列表    |
+| /registry/app/list  | 获取已注册的应用列表    |
+| /registry/app/info  | 获取特定应用的详细信息   |
+| /registry/app/model | 获取特定应用的模块信息   |
+| /agent              | 在远程实例上执行应用的操作 |
+| /web                | 管控台前端静态资源     |
+| /ai/chat            | 智能管控自然语言交互    |
 
 ### 前后端分离
 

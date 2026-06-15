@@ -25,7 +25,7 @@ import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat",
         configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class ChatHttpHandler implements HttpHandler {
+public class Chat implements HttpHandler {
     @Reference
     private LLM llm;
     @Reference

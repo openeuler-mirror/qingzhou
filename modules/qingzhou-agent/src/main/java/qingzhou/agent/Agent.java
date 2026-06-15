@@ -26,7 +26,7 @@ import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=")
-public class AgentHttpHandler implements HttpHandler {
+public class Agent implements HttpHandler {
     // 参考：qingzhou.registry.impl.AppStubRemoteImpl.uploadFileToRemoteAgent
     public static final String FILE_UPLOAD_URI = "/upload";
     public static final String FILE_UPLOAD_KEY = "key";

@@ -16,13 +16,13 @@ import qingzhou.http.server.HttpResponse;
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
 @Component(property = HttpHandler.HANDLE_PATH + "=")
-public class StaticResourceHandler implements HttpHandler {
+public class StaticResource implements HttpHandler {
     @Reference
     private Crypto crypto;
 
     private Set<String> imageExtensions; // 图片扩展名集合
     private Map<String, String> mimeTypes; // MIME 类型映射
-    private final Map<String, WebResource> resources = new ConcurrentHashMap<>(); // 资源缓存
+    private final Map<String, ResourceCache> resourceCacheMap = new ConcurrentHashMap<>(); // 资源缓存
 
     @Activate
     public void init() {
@@ -86,15 +86,15 @@ public class StaticResourceHandler implements HttpHandler {
 
         // 查找资源
         String resourcePath = "/webapp" + path;
-        WebResource webResource = resources.computeIfAbsent(resourcePath, s -> {
+        ResourceCache resourceCache = resourceCacheMap.computeIfAbsent(resourcePath, s -> {
             URL resource = getClass().getResource(s);
             if (resource == null) {
                 return null;
             }
-            return new WebResource(crypto.getMessageDigest(), crypto.getBase16Coder(),
+            return new ResourceCache(crypto.getMessageDigest(), crypto.getBase16Coder(),
                     resource);
         });
-        if (webResource == null) {
+        if (resourceCache == null) {
             response.status404Finish();
             return;
         }
@@ -104,7 +104,7 @@ public class StaticResourceHandler implements HttpHandler {
         response.header("Cache-Control", getCacheControl(extension));
 
         try {
-            String etag = webResource.getETag();
+            String etag = resourceCache.getETag();
             response.header("ETag", etag) // 返回 ETag（MD5）
                     .header("Vary", "Accept-Encoding, Accept"); // 返回辅助缓存头
 
@@ -114,7 +114,7 @@ public class StaticResourceHandler implements HttpHandler {
                 response.status(304).finish();
             } else { // 响应资源内容
                 response.contentType(getContentType(extension))
-                        .sendFinish(webResource.getContent());
+                        .sendFinish(resourceCache.getContent());
             }
         } catch (Exception e) {
             response.status500Finish("internal server error");

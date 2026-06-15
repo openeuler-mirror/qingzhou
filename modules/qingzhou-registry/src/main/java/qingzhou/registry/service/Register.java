@@ -19,7 +19,7 @@ import qingzhou.registry.impl.RegistryImpl;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/register",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class RegisterHttpHandler implements HttpHandler {
+public class Register implements HttpHandler {
 
     static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
         byte[] requestBody = httpRequest.getBody();
@@ -58,7 +58,7 @@ public class RegisterHttpHandler implements HttpHandler {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                synchronized (RefreshHttpHandler.REFRESH_KEY_LOCK) {
+                synchronized (Refresh.REFRESH_KEY_LOCK) {
                     Set<String> toRemove = new HashSet<>();
                     for (String next : registry.getAllRemoteInstances()) {
                         InstanceInfo remoteInstance = registry.getRemoteInstance(next);
@@ -84,7 +84,7 @@ public class RegisterHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        synchronized (RefreshHttpHandler.REFRESH_KEY_LOCK) {
+        synchronized (Refresh.REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
         }
     }

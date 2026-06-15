@@ -1,4 +1,4 @@
-package qingzhou.registry.service.web;
+package qingzhou.registry.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,6 @@ import qingzhou.ai.AiTool;
 import qingzhou.ai.SkillName;
 import qingzhou.api.Constants;
 import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.dto.meta.annotation.App;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -21,10 +20,10 @@ import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/web/index",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/app/list",
         AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
-        AiTool.TOOL_DESCRIPTION + "=该接口返回可用的应用列表。每个应用包含唯一标识、名称、图标、部署主机地址和描述信息。通过该接口可获取当前轻舟平台上所有可访问的应用概览，用于后续选择具体应用或展示应用清单。"})
-public class IndexInfo implements HttpHandler, AiTool {
+        AiTool.TOOL_DESCRIPTION + "=该接口返回已注册的应用列表信息。每个应用包含唯一标识、名称、描述、所属实例等信息。"})
+public class AppList implements HttpHandler, AiTool {
     @Reference
     private Registry registry;
 
@@ -34,34 +33,33 @@ public class IndexInfo implements HttpHandler, AiTool {
     @Reference
     private Json json;
 
-    private final Function<Context, Object> function = new Function<Context, Object>() {
+    private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
-        public Object apply(Context context) {
+        public Object apply(HandlingContext context) {
             String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
             List<Map<String, String>> appBasicInfoList = new ArrayList<>();
             for (String localApp : registry.getAllLocalApps()) {
-                appBasicInfoList.add(appBasicInfo(registry.getLocalInstance(), registry.getLocalApp(localApp).getAppMeta().getApp(), lang));
+                appBasicInfoList.add(appInfo(registry.getLocalInstance(), registry.getLocalApp(localApp).getAppMeta().getApp(), lang));
             }
             registry.getAllRemoteInstances().forEach(instance -> {
                 InstanceInfo remoteInstance = registry.getRemoteInstance(instance);
                 registry.getAllRemoteApps(instance).forEach(appCode -> {
-                    App app = registry.getRemoteApp(instance, appCode).getAppMeta().getApp();
-                    appBasicInfoList.add(appBasicInfo(remoteInstance, app, lang));
+                    qingzhou.dto.meta.annotation.App app = registry.getRemoteApp(instance, appCode).getAppMeta().getApp();
+                    appBasicInfoList.add(appInfo(remoteInstance, app, lang));
                 });
             });
             return appBasicInfoList;
         }
     };
 
-    private Map<String, String> appBasicInfo(InstanceInfo instanceInfo, App app, String lang) {
-        Map<String, String> appBasicInfo = new HashMap<>();
-        appBasicInfo.put(WebUtil.INSTANCE_ID, instanceInfo.getId());
-        appBasicInfo.put(WebUtil.APP_CODE, app.code);
-        appBasicInfo.put("icon", app.icon);
-        appBasicInfo.put("name", i18nService.getI18n(app.name, lang));
-        appBasicInfo.put("info", i18nService.getI18n(app.info, lang));
-        appBasicInfo.put("instanceHost", instanceInfo.getHost());
-        return appBasicInfo;
+    private Map<String, String> appInfo(InstanceInfo instanceInfo, qingzhou.dto.meta.annotation.App app, String lang) {
+        Map<String, String> appInfo = new HashMap<>();
+        appInfo.put(WebUtil.INSTANCE_ID, instanceInfo.getId());
+        appInfo.put(WebUtil.APP_CODE, app.code);
+        appInfo.put("icon", app.icon);
+        appInfo.put("name", i18nService.getI18n(app.name, lang));
+        appInfo.put("info", i18nService.getI18n(app.info, lang));
+        return appInfo;
     }
 
     @Override
@@ -75,7 +73,7 @@ public class IndexInfo implements HttpHandler, AiTool {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        Context context = name -> {
+        HandlingContext context = name -> {
             if (toolArgs == null) return null;
             Object val = toolArgs.get(name);
             return val != null ? String.valueOf(val) : null;

@@ -8,7 +8,7 @@ import java.net.URL;
 import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.MessageDigest;
 
-class WebResource {
+class ResourceCache {
     private final MessageDigest messageDigest;
     private final Base16Coder base16Coder;
     private final URL url;
@@ -16,7 +16,7 @@ class WebResource {
     private volatile String etag = null;
     private volatile byte[] content = null; // 内容缓存，避免每次请求重新读取流
 
-    WebResource(MessageDigest md, Base16Coder base16Coder, URL url) {
+    ResourceCache(MessageDigest md, Base16Coder base16Coder, URL url) {
         this.messageDigest = md;
         this.base16Coder = base16Coder;
         this.url = url;
