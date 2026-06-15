@@ -7,10 +7,10 @@ import java.util.List;
 import org.noear.solon.ai.rag.Document;
 import qingzhou.llm.RerankingModel;
 
-public class RerankingModelImpl implements RerankingModel {
+class RerankingModelImpl implements RerankingModel {
     private final org.noear.solon.ai.reranking.RerankingModel rerankingModel;
 
-    public RerankingModelImpl(org.noear.solon.ai.reranking.RerankingModel rerankingModel) {
+    RerankingModelImpl(org.noear.solon.ai.reranking.RerankingModel rerankingModel) {
         this.rerankingModel = rerankingModel;
     }
 

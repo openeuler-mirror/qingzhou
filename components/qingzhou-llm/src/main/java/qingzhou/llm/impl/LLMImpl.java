@@ -1,6 +1,8 @@
 package qingzhou.llm.impl;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.HashMap;
 
 import org.noear.solon.ai.chat.dialect.ChatDialectManager;
 import org.noear.solon.ai.embedding.dialect.EmbeddingDialectManager;
@@ -10,10 +12,7 @@ import org.noear.solon.ai.llm.dialect.openai.OpenaiResponsesDialect;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.EmbeddingModel;
-import qingzhou.llm.LLM;
-import qingzhou.llm.RerankingModel;
+import qingzhou.llm.*;
 import qingzhou.llm.impl.log.Slf4jLogBridge;
 import qingzhou.logger.Logger;
 
@@ -35,13 +34,20 @@ public class LLMImpl implements LLM {
     }
 
     @Override
-    public ChatModel buildChatModel(String baseUrl, String apiKey, String model, long timeout, String systemPrompt) {
+    public ChatModel buildChatModel(String baseUrl, String apiKey, String model,
+                                    long timeout, String systemPrompt, Collection<Skill> systemSkills) {
         org.noear.solon.ai.chat.ChatModel chatModel = org.noear.solon.ai.chat.ChatModel
                 .of(baseUrl)
                 .apiKey(apiKey)
                 .model(model)
+                // 设置超时，防止无限等待
+                .timeout(Duration.ofSeconds(timeout))
+                // Anthropic Claude 专有参数：开启思考
+                .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
+                    put("type", "adaptive");
+                }}))
                 .systemPrompt(systemPrompt)
-                .timeout(Duration.ofSeconds(timeout)) // 设置超时，防止无限等待
+                .defaultSkillAdd(Converter.convertSkill(systemSkills))
                 .build();
         return new ChatModelImpl(chatModel);
     }

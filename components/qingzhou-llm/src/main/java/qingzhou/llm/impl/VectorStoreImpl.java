@@ -8,10 +8,10 @@ import org.noear.solon.ai.rag.repository.InMemoryRepository;
 import org.noear.solon.ai.rag.splitter.TokenSizeTextSplitter;
 import qingzhou.llm.VectorStore;
 
-public class VectorStoreImpl implements VectorStore {
+class VectorStoreImpl implements VectorStore {
     private final InMemoryRepository repository;
 
-    public VectorStoreImpl(InMemoryRepository repository) {
+    VectorStoreImpl(InMemoryRepository repository) {
         this.repository = repository;
     }
 

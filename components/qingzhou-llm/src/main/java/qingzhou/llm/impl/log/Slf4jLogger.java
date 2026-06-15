@@ -3,7 +3,7 @@ package qingzhou.llm.impl.log;
 import org.slf4j.helpers.MarkerIgnoringBase;
 import org.slf4j.helpers.MessageFormatter;
 
-public class Slf4jLogger extends MarkerIgnoringBase {
+class Slf4jLogger extends MarkerIgnoringBase {
     private final qingzhou.logger.Logger delegate;
 
     Slf4jLogger(String name, qingzhou.logger.Logger delegate) {

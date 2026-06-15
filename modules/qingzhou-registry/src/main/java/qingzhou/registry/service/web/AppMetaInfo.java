@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
+import qingzhou.ai.SkillName;
 import qingzhou.api.Constants;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -20,6 +21,8 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
+        AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
+
         AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
 
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
