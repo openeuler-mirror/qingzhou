@@ -33,7 +33,7 @@ public class DemoApp implements QingzhouApp {
         logger.info("配置参数：" + properties);
         appContext.addActionFilter((request, chain) -> {
             JvmMonitor jvmMonitor = appContext.getObjectInstance(JvmMonitor.class);
-            Map<String, String> monitor = jvmMonitor.monitor(request);
+            Map<String, String> monitor = jvmMonitor.monitor(request.getId());
             String heapUsed = monitor.get("heapUsed");
             int i = Integer.parseInt(heapUsed);
             if (i >= 100) {

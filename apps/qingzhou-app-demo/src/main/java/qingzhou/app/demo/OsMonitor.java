@@ -1,12 +1,5 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Monitor;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.Method;
@@ -14,6 +7,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.Monitor;
 
 @Model(code = "os", order = 2,
         name = {"操作系统", "en:Operating System"},
@@ -126,7 +125,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     public String systemLoadAverage;
 
     @Override
-    public Map<String, String> monitor(Request request) throws Exception {
+    public Map<String, String> monitor(String id) throws Exception {
         Map<String, String> data = new HashMap<>();
 
         data.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));

@@ -1,18 +1,13 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.*;
 
 @Model(code = "config", order = 4,
         name = {"配置", "en:Config"},
@@ -92,7 +87,7 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -151,29 +146,28 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) {
         String key = data.get("configKey");
         data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
         db.put(key, new HashMap<>(data));
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
-        String key = request.getId();
-        if (db.containsKey(key)) {
-            Map<String, String> existing = db.get(key);
+    public void update(String id, Map<String, String> data) {
+        if (db.containsKey(id)) {
+            Map<String, String> existing = db.get(id);
             existing.putAll(data);
-            existing.put("configKey", key);
+            existing.put("configKey", id);
         }
     }
 
     @Override
-    public void delete(String id) throws Exception {
+    public void delete(String id) {
         db.remove(id);
     }
 }

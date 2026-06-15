@@ -8,7 +8,6 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.Request;
 import qingzhou.api.type.*;
 
 /**
@@ -27,14 +26,13 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     private static int idCounter = 1;
 
     @Override
-    public File parent(Request request) throws Exception {
+    public File files(String id) {
         // 根据记录 ID 返回对应的文件目录
-        String recordId = request.getId();
         File baseDir = new File(getAppContext().getTemp(), "file-demo");
 
-        if (recordId != null && !recordId.isEmpty()) {
+        if (id != null && !id.isEmpty()) {
             // 有 ID 时，返回该记录对应的文件目录
-            File recordDir = new File(baseDir, recordId);
+            File recordDir = new File(baseDir, id);
             if (!recordDir.exists()) {
                 recordDir.mkdirs();
             }
@@ -159,7 +157,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -218,12 +216,12 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) throws Exception {
         String newId = "F" + String.format("%03d", idCounter++);
         data.put("id", newId);
         data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
@@ -235,8 +233,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
-        String id = request.getId();
+    public void update(String id, Map<String, String> data) throws Exception {
         if (db.containsKey(id)) {
             // 处理文件上传：将上传的文件移动到记录对应的目录
             processUploadedFiles(id, data);

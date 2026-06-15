@@ -1,18 +1,13 @@
 package qingzhou.app.library;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.api.InputType;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
+import qingzhou.api.*;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Show;
 
 @Model(code = "borrow", order = 1,
         name = {"借阅记录", "en:Borrow Records"},
@@ -136,7 +131,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             update = true)
     public String remark;
 
-    @ModelAction(code = "returnBook", icon = "Check",list = true, show = true,
+    @ModelAction(code = "returnBook", icon = "Check", list = true, show = true,
             name = {"归还图书", "en:Return Book"},
             info = {"归还已借阅的图书", "en:Return borrowed book"})
     public void returnBook(Request request) {
@@ -145,7 +140,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
         if (id == null || id.isEmpty()) {
             id = request.getParameter("id");
         }
-        
+
         Map<String, String> borrowRecord = db.get(id);
         if (borrowRecord != null && "borrowing".equals(borrowRecord.get("status"))) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -156,7 +151,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             String readerId = borrowRecord.get("readerId");
             Book.increaseAvailable(bookId);
             Reader.decreaseBorrowed(readerId);
-            
+
             request.getResponse().success(true).msg("归还成功！");
         } else {
             request.getResponse().success(false).msg("归还失败，该记录不存在或已归还！");
@@ -165,7 +160,8 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
 
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) {
+        Request request = getCurrentRequest();
         String newId = "BR" + String.format("%03d", idCounter++);
         data.put("id", newId);
 
@@ -178,13 +174,13 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             request.getResponse().success(false).msg("读者不存在！");
             return;
         }
-        
+
         String readerStatus = reader.get("status");
         if (!"active".equals(readerStatus)) {
             request.getResponse().success(false).msg("读者状态为" + readerStatus + "，不能借阅！");
             return;
         }
-        
+
         // 检查读者是否超过最大借阅数量
         int borrowed = Integer.parseInt(reader.get("borrowedCount"));
         int maxBorrow = Integer.parseInt(reader.get("maxBorrow"));
@@ -192,7 +188,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             request.getResponse().success(false).msg("该读者已借阅" + borrowed + "本书，超过最大借阅数" + maxBorrow + "！");
             return;
         }
-        
+
         data.put("readerName", reader.get("name"));
 
         // 检查图书是否存在且有可借数量
@@ -201,13 +197,13 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
             request.getResponse().success(false).msg("图书不存在！");
             return;
         }
-        
+
         int available = Integer.parseInt(book.get("available"));
         if (available <= 0) {
             request.getResponse().success(false).msg("该图书已全部借出，暂无可用！");
             return;
         }
-        
+
         data.put("bookName", book.get("name"));
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -227,7 +223,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
     }
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -286,8 +282,8 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override

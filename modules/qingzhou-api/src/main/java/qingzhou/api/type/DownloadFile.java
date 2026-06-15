@@ -3,7 +3,6 @@ package qingzhou.api.type;
 import java.io.File;
 
 import qingzhou.api.QingzhouModel;
-import qingzhou.api.Request;
 
 public interface DownloadFile extends QingzhouModel {
     String ACTION_CODE_FILES = "files";
@@ -15,5 +14,5 @@ public interface DownloadFile extends QingzhouModel {
     String REQUEST_PARAMETER_BYTES = "download_bytes";
 
     // 下载文件的父目录或文件本身，安全考虑：子目录会被忽略
-    File parent(Request request) throws Exception;
+    File files(String id) throws Exception;
 }

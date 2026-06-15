@@ -1,17 +1,16 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Show;
 
 /**
  * 二级菜单演示模型
@@ -36,7 +35,7 @@ public class SubMenuDemo extends qingzhou.api.ModelBase implements Show, Monitor
     public String menuLevel;
 
     @Override
-    public Map<String, String> monitor(Request request) {
+    public Map<String, String> monitor(String id) {
         Map<String, String> result = new HashMap<>();
 
         result.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
@@ -46,7 +45,7 @@ public class SubMenuDemo extends qingzhou.api.ModelBase implements Show, Monitor
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return monitor(request);
+    public Map<String, String> show(String id) {
+        return monitor(id);
     }
 }
