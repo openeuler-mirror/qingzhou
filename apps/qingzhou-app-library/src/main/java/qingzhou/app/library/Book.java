@@ -6,6 +6,8 @@ import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.api.type.*;
+import qingzhou.jdbc.JdbcPool;
+import qingzhou.logger.Logger;
 
 @Model(code = "book", order = 1,
         name = {"图书管理", "en:Book Management"},
@@ -19,26 +21,26 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
     public Book() {
         if (!db.isEmpty()) return;
 
-        String[] names = {"深入理解计算机系统", "JavaScript高级程序设计", "百年孤独", "算法导论", "设计模式", 
-                          "编译原理", "数据库系统概念", "操作系统概念", "计算机网络", "人工智能",
-                          "Python编程", "Java核心技术", "Spring实战", "Vue.js设计与实现", "React进阶",
-                          "经济学原理", "乌合之众", "人类简史", "活着", "三体",
-                          "围城", "红楼梦", "时间简史", "万历十五年", "苏菲的世界"};
+        String[] names = {"深入理解计算机系统", "JavaScript高级程序设计", "百年孤独", "算法导论", "设计模式",
+                "编译原理", "数据库系统概念", "操作系统概念", "计算机网络", "人工智能",
+                "Python编程", "Java核心技术", "Spring实战", "Vue.js设计与实现", "React进阶",
+                "经济学原理", "乌合之众", "人类简史", "活着", "三体",
+                "围城", "红楼梦", "时间简史", "万历十五年", "苏菲的世界"};
         String[] authors = {"Randal E. Bryant", "Zakas", "加西亚·马尔克斯", "Cormen", "GoF",
-                           "Aho", "Silberschatz", "Silberschatz", "Andrew S. Tanenbaum", "Stuart Russell",
-                           "Eric Matthes", "Cay S. Horstmann", "Craig Walls", "霍春阳", "Dan Abramov",
-                           "曼昆", "勒庞", "尤瓦尔·赫拉利", "余华", "刘慈欣",
-                           "钱钟书", "曹雪芹", "霍金", "黄仁宇", "Jostein Gaarder"};
+                "Aho", "Silberschatz", "Silberschatz", "Andrew S. Tanenbaum", "Stuart Russell",
+                "Eric Matthes", "Cay S. Horstmann", "Craig Walls", "霍春阳", "Dan Abramov",
+                "曼昆", "勒庞", "尤瓦尔·赫拉利", "余华", "刘慈欣",
+                "钱钟书", "曹雪芹", "霍金", "黄仁宇", "Jostein Gaarder"};
         String[] categories = {"计算机", "计算机", "文学", "计算机", "计算机",
-                              "计算机", "计算机", "计算机", "计算机", "计算机",
-                              "计算机", "计算机", "计算机", "计算机", "计算机",
-                              "经济", "哲学", "历史", "文学", "文学",
-                              "文学", "文学", "历史", "历史", "哲学"};
+                "计算机", "计算机", "计算机", "计算机", "计算机",
+                "计算机", "计算机", "计算机", "计算机", "计算机",
+                "经济", "哲学", "历史", "文学", "文学",
+                "文学", "文学", "历史", "历史", "哲学"};
         String[] publishers = {"机械工业出版社", "人民邮电出版社", "南海出版公司", "机械工业出版社", "机械工业出版社",
-                              "机械工业出版社", "高等教育出版社", "高等教育出版社", "电子工业出版社", "清华大学出版社",
-                              "人民邮电出版社", "机械工业出版社", "人民邮电出版社", "人民邮电出版社", "人民邮电出版社",
-                              "北京大学出版社", "中央编译出版社", "中信出版社", "作家出版社", "重庆出版社",
-                              "人民文学出版社", "人民文学出版社", "湖南科学技术出版社", "生活·读书·新知三联书店", "作家出版社"};
+                "机械工业出版社", "高等教育出版社", "高等教育出版社", "电子工业出版社", "清华大学出版社",
+                "人民邮电出版社", "机械工业出版社", "人民邮电出版社", "人民邮电出版社", "人民邮电出版社",
+                "北京大学出版社", "中央编译出版社", "中信出版社", "作家出版社", "重庆出版社",
+                "人民文学出版社", "人民文学出版社", "湖南科学技术出版社", "生活·读书·新知三联书店", "作家出版社"};
 
         for (int i = 1; i <= 25; i++) {
             Map<String, String> b = new HashMap<>();
@@ -163,6 +165,9 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
 
     @Override
     public void start() {
+        Logger logger = getAppContext().getService(Logger.class);
+        JdbcPool jdbcPool = getAppContext().getService(JdbcPool.class);
+        logger.info("jdbcPool: " + jdbcPool);
         registration = getAppContext().registerSharedFunction("queryBook", new SharedFunction<String, String>() {
             @Override
             public String invoke(String o) {

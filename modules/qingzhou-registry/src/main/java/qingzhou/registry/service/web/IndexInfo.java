@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
+import qingzhou.ai.SkillName;
 import qingzhou.api.Constants;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.dto.meta.annotation.App;
@@ -21,6 +22,7 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/web/index",
+        AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
         AiTool.TOOL_DESCRIPTION + "=该接口返回可用的应用列表。每个应用包含唯一标识、名称、图标、部署主机地址和描述信息。通过该接口可获取当前轻舟平台上所有可访问的应用概览，用于后续选择具体应用或展示应用清单。"})
 public class IndexInfo implements HttpHandler, AiTool {
     @Reference

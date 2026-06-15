@@ -4,10 +4,10 @@ import org.noear.solon.ai.rag.repository.InMemoryRepository;
 import qingzhou.llm.EmbeddingModel;
 import qingzhou.llm.VectorStore;
 
-public class EmbeddingModelImpl implements EmbeddingModel {
+class EmbeddingModelImpl implements EmbeddingModel {
     private final org.noear.solon.ai.embedding.EmbeddingModel embeddingModel;
 
-    public EmbeddingModelImpl(org.noear.solon.ai.embedding.EmbeddingModel embeddingModel) {
+    EmbeddingModelImpl(org.noear.solon.ai.embedding.EmbeddingModel embeddingModel) {
         this.embeddingModel = embeddingModel;
     }
 

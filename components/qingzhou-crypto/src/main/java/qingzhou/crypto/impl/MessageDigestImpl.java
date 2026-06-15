@@ -21,7 +21,7 @@ class MessageDigestImpl implements MessageDigest {
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
-        byte[] salt = new byte[0];
+        byte[] salt = null;
         if (saltLength > 0) {
             salt = new byte[saltLength];
             random.nextBytes(salt);
@@ -46,20 +46,19 @@ class MessageDigestImpl implements MessageDigest {
 
     @Override
     public String md5(String data) {
-        return digest(data, "MD5");
-    }
-
-    @Override
-    public String sha256(String data) {
-        return digest(data, "SHA-256");
-    }
-
-    private String digest(String data, String alg) {
-        byte[] digest = digest(alg, 1, data.getBytes(StandardCharsets.UTF_8));
+        byte[] digest = md5(data.getBytes(StandardCharsets.UTF_8));
         return encode(digest);
     }
 
+    @Override
+    public byte[] md5(byte[] data) {
+        return digest("MD5", 1, data);
+    }
+
     private String mutate(String data, String algorithm, byte[] salt, int iterations) {
+        if (salt == null) {
+            salt = new byte[0];
+        }
         byte[] digest = digest(algorithm, iterations, salt, data.getBytes(StandardCharsets.UTF_8));
         String pwd = encode(digest);
         return algorithm + SP + encode(salt) + SP + iterations + SP + pwd;

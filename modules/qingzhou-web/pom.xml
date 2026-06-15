@@ -17,6 +17,11 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-crypto</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -27,7 +32,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>qingzhou.http.server</Import-Package>
+                        <Import-Package>qingzhou.http.server,qingzhou.crypto</Import-Package>
                         <Include-Resource>webapp=src/main/resources/webapp</Include-Resource>
                     </instructions>
                 </configuration>

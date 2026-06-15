@@ -147,6 +147,34 @@ public class DefaultAction {
     }
 
     @ModelAction(
+            code = Selector.ACTION_CODE_ACTIVATE,
+            name = {"激活", "en:Activate"},
+            info = {"激活指定的选项。", "en:Activate the specified option."})
+    public static void activate(Selector selector, Request request) throws Exception {
+        selector.activate(request);
+    }
+
+    @ModelAction(
+            code = Selector.ACTION_CODE_DEACTIVATE,
+            name = {"取消激活", "en:Deactivate"},
+            info = {"取消激活当前选项。", "en:Deactivate the current option."})
+    public static void deactivate(Selector selector, Request request) throws Exception {
+        selector.deactivate(request);
+    }
+
+    @ModelAction(
+            code = Selector.ACTION_CODE_ACTIVE,
+            name = {"当前激活", "en:Active"},
+            info = {"获取当前激活的选项 ID。", "en:Get the currently active option ID."})
+    public static void active(Selector selector, Request request) throws Exception {
+        String activeId = selector.activeId();
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        Map<String, String> data = new HashMap<>();
+        data.put("activeId", activeId != null ? activeId : "");
+        response.data(data);
+    }
+
+    @ModelAction(
             code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
             name = {"下载", "en:Download"}, list_head = true, show = true, update = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
