@@ -53,12 +53,12 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
+                            org.osgi.service.cm,
                             qingzhou.registry,
                             qingzhou.api,qingzhou.api.type,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,qingzhou.http.client,
-                            qingzhou.logger,qingzhou.json,qingzhou.crypto,
-                            org.osgi.service.cm
+                            qingzhou.logger,qingzhou.json,qingzhou.crypto
                         </Import-Package>
                     </instructions>
                 </configuration>

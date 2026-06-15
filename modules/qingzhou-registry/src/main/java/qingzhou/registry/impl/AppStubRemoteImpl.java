@@ -20,7 +20,7 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.service.RefreshHttpHandler;
+import qingzhou.registry.service.Refresh;
 
 class AppStubRemoteImpl implements AppStubRemote {
     private final InstanceInfo instanceInfo;
@@ -46,7 +46,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        synchronized (RefreshHttpHandler.REFRESH_KEY_LOCK) {
+        synchronized (Refresh.REFRESH_KEY_LOCK) {
             invokeApp0(request);
         }
     }

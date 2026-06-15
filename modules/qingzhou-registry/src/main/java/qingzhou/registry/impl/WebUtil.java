@@ -8,7 +8,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.web.Context;
+import qingzhou.registry.service.HandlingContext;
 
 public class WebUtil {
     private static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
@@ -35,7 +35,7 @@ public class WebUtil {
         return false;
     }
 
-    public static void sendResult(Function<Context, Object> function, HttpRequest httpRequest, HttpResponse httpResponse, Registry registry, Json json) throws Exception {
+    public static void sendResult(Function<HandlingContext, Object> function, HttpRequest httpRequest, HttpResponse httpResponse, Registry registry, Json json) throws Exception {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);

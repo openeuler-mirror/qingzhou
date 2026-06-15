@@ -19,7 +19,7 @@ import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class RefreshHttpHandler implements HttpHandler {
+public class Refresh implements HttpHandler {
     public static final Object REFRESH_KEY_LOCK = new Object();
 
     @Reference
@@ -44,7 +44,7 @@ public class RefreshHttpHandler implements HttpHandler {
     }
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
-        String decryptedRequest = RegisterHttpHandler.decryptRequest(httpRequest, httpResponse, pairCipher);
+        String decryptedRequest = Register.decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");
