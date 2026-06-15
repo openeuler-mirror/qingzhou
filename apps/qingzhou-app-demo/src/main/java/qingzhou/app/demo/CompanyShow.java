@@ -1,12 +1,11 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Show;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.Show;
 
 /**
  * 演示菜单点击直接进入Show详情页的Model
@@ -144,7 +143,7 @@ public class CompanyShow extends qingzhou.api.ModelBase implements Show {
     }
 
     @Override
-    public Map<String, String> show(Request request) {
+    public Map<String, String> show(String id) {
         // 返回固定的公司信息数据（无论id是什么，都返回同样的数据）
         return new HashMap<>(companyData);
     }

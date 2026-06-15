@@ -1,18 +1,17 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Monitor;
-
 import java.lang.management.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.Monitor;
 
 @Model(code = "jvm", order = 1,
         name = {"JVM", "en:JVM"},
@@ -126,7 +125,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     public String uptime;
 
     @Override
-    public Map<String, String> monitor(Request request) throws Exception {
+    public Map<String, String> monitor(String id) throws Exception {
         Map<String, String> data = new HashMap<>();
 
         data.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));

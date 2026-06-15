@@ -6,7 +6,6 @@ import java.util.Map;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.Request;
 import qingzhou.api.type.List;
 
 /**
@@ -74,7 +73,7 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements List {
     public String progress;
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

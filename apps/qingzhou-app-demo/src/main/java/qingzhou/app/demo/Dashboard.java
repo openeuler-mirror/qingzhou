@@ -140,7 +140,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     public String teacherDisabled;
 
     @Override
-    public Map<String, String> monitor(Request request) {
+    public Map<String, String> monitor(String id) {
         Map<String, String> stats = new HashMap<>();
 
         // 统计时间
@@ -208,8 +208,8 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return monitor(request);
+    public Map<String, String> show(String id) {
+        return monitor(id);
     }
 
     @ModelAction

@@ -88,7 +88,12 @@ class AppStubLocalImpl implements AppStubLocal {
         } else { // 执行自定义 action
             Method method = appContext.actionMethods.get(AppDriver.resolveActionKey(model, action));
             if (method != null) {
-                invokeMethod(request, method, modelBase, request);
+                modelBase.setCurrentRequest(request);
+                try {
+                    invokeMethod(request, method, modelBase, request);
+                } finally {
+                    modelBase.setCurrentRequest(null);
+                }
             }
         }
     }
