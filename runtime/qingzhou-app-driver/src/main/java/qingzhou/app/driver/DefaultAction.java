@@ -37,7 +37,7 @@ public class DefaultAction {
             info = {"保存新建的记录。", "en:Save the newly created record."})
     public static void add(Add add, Request request) throws Exception {
         Map<String, String> saveData = toSaveData(request, modelField -> modelField.add);
-        add.add(request, saveData);
+        add.add(saveData);
     }
 
     @ModelAction(
@@ -58,7 +58,7 @@ public class DefaultAction {
         if (idFields.length > 0) {
             saveData.remove(idFields[0]);
         }
-        update.update(request, saveData);
+        update.update(request.getId(), saveData);
     }
 
     @ModelAction(
@@ -66,7 +66,7 @@ public class DefaultAction {
             name = {"查看", "en:Show"}, list = true, show = true,
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void show(Show show, Request request) throws Exception {
-        Map<String, String> showData = show.show(request);
+        Map<String, String> showData = show.show(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && showData != null) {
             String[] showFields = selectFormFields(request, modelField -> modelField.show);
@@ -79,7 +79,7 @@ public class DefaultAction {
             name = {"监视", "en:Monitor"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void monitor(Monitor monitor, Request request) throws Exception {
-        Map<String, String> monitorData = monitor.monitor(request);
+        Map<String, String> monitorData = monitor.monitor(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && monitorData != null) {
             String[] monitorFields = selectMonitoringFields(request, modelField -> true);
@@ -103,7 +103,7 @@ public class DefaultAction {
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
         int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
-        List<String[]> listData = list.list(request, pageNum, pageSize, query, showFields);
+        List<String[]> listData = list.list(pageNum, pageSize, query, showFields);
         int totalSize = list.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
@@ -147,30 +147,22 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Selector.ACTION_CODE_ACTIVATE,
-            name = {"激活", "en:Activate"},
-            info = {"激活指定的选项。", "en:Activate the specified option."})
-    public static void activate(Selector selector, Request request) throws Exception {
-        selector.activate(request);
+            code = SwitchSpace.ACTION_CODE_switchspace, icon = "Switch",
+            name = {"切换", "en:Switch"},
+            info = {"切换至此空间。", "en:Switch to this space."})
+    public static void switchspace(SwitchSpace switchSpace, Request request) throws Exception {
+        switchSpace.switchSpace(request.getId());
     }
 
     @ModelAction(
-            code = Selector.ACTION_CODE_DEACTIVATE,
-            name = {"取消激活", "en:Deactivate"},
-            info = {"取消激活当前选项。", "en:Deactivate the current option."})
-    public static void deactivate(Selector selector, Request request) throws Exception {
-        selector.deactivate(request);
-    }
-
-    @ModelAction(
-            code = Selector.ACTION_CODE_ACTIVE,
-            name = {"当前激活", "en:Active"},
-            info = {"获取当前激活的选项 ID。", "en:Get the currently active option ID."})
-    public static void active(Selector selector, Request request) throws Exception {
-        String activeId = selector.activeId();
+            code = SwitchSpace.ACTION_CODE_currentspace,
+            name = {"当前空间", "en:Current Space"},
+            info = {"显示已切换至的空间。", "en:Displays the currently active space."})
+    public static void currentspace(SwitchSpace switchSpace, Request request) {
+        String currentSpace = switchSpace.currentSpace();
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> data = new HashMap<>();
-        data.put("activeId", activeId != null ? activeId : "");
+        data.put(SwitchSpace.ACTION_CODE_currentspace, currentSpace != null ? currentSpace : "");
         response.data(data);
     }
 
@@ -183,7 +175,7 @@ public class DefaultAction {
         if (response.getData() == null && downloadFile != null) {
             Map<String, String> map = new TreeMap<>();
 
-            File fileBase = downloadFile.parent(request);
+            File fileBase = downloadFile.files(request.getId());
             if (fileBase.isDirectory()) {
                 File[] files = fileBase.listFiles();
                 if (files != null) {
@@ -206,10 +198,11 @@ public class DefaultAction {
             name = {"下载", "en:Download"},
             info = {"下载选择的文件列表。", "en:Download the selected file list."})
     public static void download(DownloadFile downloadFile, Request request) throws Exception {
-        AppContext appContext = downloadFile.getAppContext();
+        ModelBase modelBase = (ModelBase) downloadFile;
+        AppContext appContext = modelBase.getAppContext();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
-        File fileBase = downloadFile.parent(request);
+        File fileBase = downloadFile.files(request.getId());
         File tempBase = new File(appContext.getTemp(), "download");
 
         String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);

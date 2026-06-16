@@ -1,11 +1,14 @@
 package qingzhou.registry.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
 import qingzhou.api.Constants;
 import qingzhou.crypto.Crypto;
@@ -23,6 +26,8 @@ import qingzhou.registry.Registry;
 public class RegistryImpl implements Registry {
     private final List<String> tempMsg = new ArrayList<>();
 
+    @Reference
+    private ConfigurationAdmin configAdmin;
     @Reference
     private Logger logger;
     @Reference
@@ -110,15 +115,24 @@ public class RegistryImpl implements Registry {
     public InstanceInfo getLocalInstance() {
         if (localInstanceInfo == null) {
             localInstanceInfo = new InstanceInfo() {
-                @Override
-                public List<AppMeta> getAppMetas() {
-                    return localApps.values().stream().map(AppStub::getAppMeta).collect(Collectors.toList());
-                }
-
                 {
                     this.setId(Constants.LOCAL_INSTANCE_ID);
                     this.setVersion(qzVersion);
-                    this.setHost(Utils.getLocalIp());
+                    this.setHost("localhost");
+
+                    // 实例端口
+                    try {
+                        Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
+                        int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
+                        this.setPort(serverPort);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                @Override
+                public List<AppMeta> getAppMetas() {
+                    return localApps.values().stream().map(AppStub::getAppMeta).collect(Collectors.toList());
                 }
             };
         }

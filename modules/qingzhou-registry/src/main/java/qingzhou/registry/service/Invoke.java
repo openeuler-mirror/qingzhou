@@ -24,7 +24,7 @@ import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/invoke")
-public class InvokeHttpHandler implements HttpHandler {
+public class Invoke implements HttpHandler {
     @Reference
     private Registry registry;
     @Reference

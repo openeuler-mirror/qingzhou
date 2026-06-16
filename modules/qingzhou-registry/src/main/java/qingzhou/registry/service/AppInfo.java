@@ -1,4 +1,4 @@
-package qingzhou.registry.service.web;
+package qingzhou.registry.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,10 +20,10 @@ import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/web/app",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/app/info",
         AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
 
-        AiTool.TOOL_DESCRIPTION + "=该接口返回指定应用的完整功能结构等详细信息。内容包括应用的基本信息（名称、图标、代码标识、描述）；应用下所有功能模块的列表，每个模块包含唯一标识、功能代码、图标、显示名称、所属菜单及排序序号；以及应用的菜单体系，包括菜单代码、父子关系、图标、名称和排序。通过该接口可理解一个应用的详细信息，如具备哪些可操作的功能模块，以及这些模块在前端菜单中的组织层级与展示顺序。",
+        AiTool.TOOL_DESCRIPTION + "=该接口返回特定应用的详细信息，内容包括：应用的基本信息（代码标识、名称、描述等等）；应用内包含的业务模块列表信息（模块的代码标识、名称、描述、所属功能菜单等）。",
 
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
         AiTool.PARAMETER_DESCRIPTION + ".1=应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。",
@@ -31,7 +31,7 @@ import qingzhou.registry.impl.WebUtil;
         AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
         AiTool.PARAMETER_DESCRIPTION + ".2=应用的唯一编码，该编码在同一个轻舟实例下不会重复。"
 })
-public class AppMetaInfo implements HttpHandler, AiTool {
+public class AppInfo implements HttpHandler, AiTool {
     @Reference
     private Registry registry;
     @Reference
@@ -40,7 +40,7 @@ public class AppMetaInfo implements HttpHandler, AiTool {
     @Reference
     private Json json;
 
-    private final Function<Context, Object> function = (context) -> {
+    private final Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
         String appCode = context.getParameter(WebUtil.APP_CODE);
         if (instanceId == null || appCode == null) return null;
@@ -104,7 +104,7 @@ public class AppMetaInfo implements HttpHandler, AiTool {
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
         if (toolArgs == null) return null;
-        Context context = name -> {
+        HandlingContext context = name -> {
             Object val = toolArgs.get(name);
             return val != null ? String.valueOf(val) : null;
         };

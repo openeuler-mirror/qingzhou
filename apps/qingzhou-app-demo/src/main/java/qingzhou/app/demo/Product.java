@@ -1,20 +1,11 @@
 package qingzhou.app.demo;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 
 @Model(code = "product", order = 3,
         name = {"产品", "en:Product"},
@@ -193,7 +184,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -252,12 +243,12 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override
-    public Map<String, String> monitor(Request request) {
+    public Map<String, String> monitor(String id) {
         Map<String, String> monitorData = new HashMap<>();
         java.util.List<Integer> salesData = new ArrayList<>();
         java.util.List<String> labels = new ArrayList<>();
@@ -273,7 +264,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) throws Exception {
         String newId = "P" + String.format("%03d", idCounter++);
         data.put("id", newId);
         data.put("sales", "0");
@@ -282,8 +273,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
-        String id = request.getId();
+    public void update(String id, Map<String, String> data) throws Exception {
         if (db.containsKey(id)) {
             Map<String, String> existing = db.get(id);
             existing.putAll(data);

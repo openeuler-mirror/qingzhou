@@ -145,7 +145,7 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
     public String status;
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -204,12 +204,12 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) {
         String newId = "ORD" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + String.format("%03d", idCounter++);
         data.put("orderNo", newId);
         data.put("orderTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
@@ -217,8 +217,7 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
-        String id = request.getId();
+    public void update(String id, Map<String, String> data) {
         if (db.containsKey(id)) {
             Map<String, String> existing = db.get(id);
             existing.putAll(data);
@@ -227,12 +226,12 @@ public class Order extends qingzhou.api.ModelBase implements List, Show, Add, Up
     }
 
     @Override
-    public void delete(String id) throws Exception {
+    public void delete(String id) {
         db.remove(id);
     }
 
     @Override
-    public File parent(Request request) throws Exception {
+    public File files(String id) {
         return new File(getAppContext().getBase(), "apps");
     }
 }

@@ -1,14 +1,13 @@
 package qingzhou.app.library;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.api.InputType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.type.*;
 
 @Model(code = "reader", order = 2,
         name = {"读者管理", "en:Reader Management"},
@@ -173,7 +172,7 @@ public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, U
     }
 
     @Override
-    public java.util.List<String[]> list(Request request, int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
@@ -232,12 +231,12 @@ public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, U
     }
 
     @Override
-    public Map<String, String> show(Request request) {
-        return db.get(request.getId());
+    public Map<String, String> show(String id) {
+        return db.get(id);
     }
 
     @Override
-    public void add(Request request, Map<String, String> data) throws Exception {
+    public void add(Map<String, String> data) {
         String newId = "R" + String.format("%03d", idCounter++);
         data.put("id", newId);
         if (!data.containsKey("borrowedCount") || data.get("borrowedCount") == null) {
@@ -248,8 +247,7 @@ public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, U
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
-        String id = request.getId();
+    public void update(String id, Map<String, String> data) throws Exception {
         if (db.containsKey(id)) {
             Map<String, String> existing = db.get(id);
             existing.putAll(data);

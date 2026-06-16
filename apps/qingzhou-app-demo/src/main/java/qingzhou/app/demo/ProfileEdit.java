@@ -1,14 +1,13 @@
 package qingzhou.app.demo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.Request;
 import qingzhou.api.type.Show;
 import qingzhou.api.type.Update;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 演示菜单点击直接进入Edit编辑页的Model
@@ -185,13 +184,13 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
     }
 
     @Override
-    public Map<String, String> show(Request request) {
+    public Map<String, String> show(String id) {
         // 返回个人设置数据（单条数据，不依赖id）
         return new HashMap<>(profileData);
     }
 
     @Override
-    public void update(Request request, Map<String, String> data) throws Exception {
+    public void update(String id, Map<String, String> data) {
         // 更新个人设置数据
         profileData.putAll(data);
         profileData.put("id", "USER001");
