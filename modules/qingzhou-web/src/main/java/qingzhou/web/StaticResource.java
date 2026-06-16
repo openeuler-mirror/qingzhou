@@ -17,6 +17,7 @@ import qingzhou.http.server.HttpResponse;
  */
 @Component(property = HttpHandler.HANDLE_PATH + "=")
 public class StaticResource implements HttpHandler {
+    private final String INDEX_FILE = "/index.html";
     @Reference
     private Crypto crypto;
 
@@ -81,7 +82,7 @@ public class StaticResource implements HttpHandler {
     private void serveStaticResource(HttpRequest httpRequest, String path, HttpResponse response) {
         // 规范化路径
         if (path.equals("/") || path.isEmpty()) {
-            path = "/index.html";
+            path = INDEX_FILE;
         }
 
         // 查找资源
@@ -95,6 +96,10 @@ public class StaticResource implements HttpHandler {
                     resource);
         });
         if (resourceCache == null) {
+            if (!path.equals(INDEX_FILE)) { // SPA 应用特性：解决问题：进入应用内部后，再切换国际化页面出错
+                serveStaticResource(httpRequest, INDEX_FILE, response);
+                return;
+            }
             response.status404Finish();
             return;
         }
