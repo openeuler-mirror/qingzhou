@@ -1,6 +1,5 @@
 package qingzhou.ai.impl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -25,56 +24,23 @@ import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat",
         configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class Chat implements HttpHandler {
+public class AiHandler implements HttpHandler {
     @Reference
-    private LLM llm;
+    private ChatModel chatModel;
+    @Reference
+    private EmbeddingModel embeddingModel;
     @Reference
     private Logger logger;
     @Reference
     private Json json;
 
-    private final String aiDocDir = new File(System.getProperty("qingzhou.version"), "ai").getAbsolutePath();
-
-    private ChatModel chatModel;
     private VectorStore knowledgeStore;
     private String[] knowledgeDocs;
     private RerankingModel rerankingModel;
     private final Map<AiSkill, Skill> llmSkills = new ConcurrentHashMap<>();
 
     @Activate
-    public void init(Map<String, String> config) throws IOException {
-        // rag 检索
-        Object knowledge = initKnowledge(config);
-        if (knowledge instanceof VectorStore) {
-            knowledgeStore = (VectorStore) knowledge;
-        } else if (knowledge instanceof String[]) {
-            knowledgeDocs = (String[]) knowledge;
-        } else {
-            throw new IllegalStateException(String.valueOf(knowledge));
-        }
-
-        // rag 优化排序
-        String rerankUrl = config.get("rerank.base_url");
-        if (rerankUrl != null && !rerankUrl.isEmpty()) {
-            rerankingModel = llm.buildRerankingModel(rerankUrl, config.get("rerank.api_key"),
-                    config.get("rerank.model"));
-        }
-
-        String systemPrompt = String.join("\n", Files.readAllLines(
-                Paths.get(aiDocDir, "system_prompt.md"),
-                StandardCharsets.UTF_8));
-
-        // chat 大模型
-        chatModel = llm.buildChatModel(
-                config.get("chat.base_url"),
-                config.get("chat.api_key"),
-                config.get("chat.model"),
-                Long.parseLong(config.getOrDefault("chat.timeout", "60")),
-                systemPrompt,
-                null);
-    }
-
-    private Object initKnowledge(Map<String, String> config) {
+    public void init() {
         List<String> docs = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(
                 Paths.get(System.getProperty("qingzhou.version"), "docs"),
@@ -87,15 +53,11 @@ public class Chat implements HttpHandler {
             }
         } catch (Exception e) {
             logger.warn("failed to read knowledge", e);
-            return null;
         }
-        if (docs.isEmpty()) return null;
+        if (docs.isEmpty()) return;
 
-        VectorStore knowledgeStore = null;
-        String embedUrl = config.get("embed.base_url");
-        if (embedUrl != null && !embedUrl.isEmpty()) {
+        if (embeddingModel != null) {
             try {
-                EmbeddingModel embeddingModel = llm.buildEmbeddingModel(embedUrl, config.get("embed.api_key"), config.get("embed.model"));
                 knowledgeStore = embeddingModel.buildVectorStore();
                 for (String doc : docs) {
                     knowledgeStore.insert(doc, 500);
@@ -106,12 +68,14 @@ public class Chat implements HttpHandler {
             }
         }
 
-        return knowledgeStore != null ? knowledgeStore : docs.toArray(new String[0]);
+        if (knowledgeStore == null) {
+            knowledgeDocs = docs.toArray(new String[0]);
+        }
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
-        llmSkills.put(skill, new SkillImpl(skill, properties, aiDocDir));
+        llmSkills.put(skill, new SkillImpl(skill, properties));
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法

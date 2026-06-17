@@ -1,9 +1,5 @@
 package qingzhou.ai.impl;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -22,14 +18,10 @@ import qingzhou.llm.Tool;
 class SkillImpl implements Skill {
     private final AiSkill skill;
     private final Map<String, Object> properties;
-    private final String aiDocDir;
 
-    private String instruction;
-
-    SkillImpl(AiSkill skill, Map<String, Object> properties, String aiDocDir) {
+    SkillImpl(AiSkill skill, Map<String, Object> properties) {
         this.skill = skill;
         this.properties = properties;
-        this.aiDocDir = aiDocDir;
     }
 
     @Override
@@ -49,17 +41,7 @@ class SkillImpl implements Skill {
 
     @Override
     public String getInstruction() {
-        if (instruction == null) {
-            String name = name() + ".md";
-            try {
-                instruction = String.join("\n", Files.readAllLines(
-                        Paths.get(aiDocDir, "skills", name),
-                        StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return instruction;
+        return skill.getInstruction();
     }
 
     @Override
