@@ -7,11 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.AiSkill;
@@ -89,14 +87,7 @@ public class AiHandler implements HttpHandler {
         String message = null;
         byte[] body = httpRequest.getBody();
         if (body != null && body.length > 0) {
-            String str = new String(body, StandardCharsets.UTF_8);
-            try {
-                // 在应用里面可包含实例id和应用code等参数
-                Map<String, String> map = json.fromJson(str, HashMap.class);
-                message = map.entrySet().stream().filter(e -> e.getValue() != null).map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", "));
-            } catch (Exception e) {
-                logger.error("failed to convert to JSON: " + str);
-            }
+            message = new String(body, StandardCharsets.UTF_8);
         }
         if (message == null || message.isEmpty()) {
             httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null"), json));
