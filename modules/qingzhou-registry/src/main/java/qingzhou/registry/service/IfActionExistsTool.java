@@ -1,4 +1,4 @@
-package qingzhou.registry.service.aitool;
+package qingzhou.registry.service;
 
 import java.util.Map;
 

@@ -3,15 +3,25 @@ package qingzhou.llm.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.noear.solon.ai.rag.Document;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import qingzhou.llm.RerankingModel;
 
-class RerankingModelImpl implements RerankingModel {
-    private final org.noear.solon.ai.reranking.RerankingModel rerankingModel;
+@Component(configurationPid = "qingzhou-llm", configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class RerankingModelImpl implements RerankingModel {
+    private org.noear.solon.ai.reranking.RerankingModel rerankingModel;
 
-    RerankingModelImpl(org.noear.solon.ai.reranking.RerankingModel rerankingModel) {
-        this.rerankingModel = rerankingModel;
+    @Activate
+    public void init(Map<String, String> config) {
+        rerankingModel = org.noear.solon.ai.reranking.RerankingModel
+                .of(config.get("rerank.base_url"))
+                .apiKey(config.get("rerank.api_key"))
+                .model(config.get("rerank.model"))
+                .build();
     }
 
     @Override
