@@ -26,4 +26,29 @@ public class InvokeActionSkill extends SkillBase implements AiSkill {
     public void unbindAiTool(AiTool tool) {
         aiTools.remove(tool);
     }
+
+    @Override
+    public String getInstruction() {
+        return "# 执行应用操作\n" +
+                "\n" +
+                "对应用模块内的业务数据执行操作或查询状态。\n" +
+                "\n" +
+                "## 核心能力\n" +
+                "\n" +
+                "### 1. 执行与查询\n" +
+                "\n" +
+                "触发模块操作，获取业务数据（如列表）。\n" +
+                "\n" +
+                "### 2. 数据详情\n" +
+                "\n" +
+                "获取指定业务数据的完整信息。\n" +
+                "\n" +
+                "### 3. 状态监控\n" +
+                "\n" +
+                "获取模块或数据的实时变量（健康、告警等）。\n" +
+                "\n" +
+                "### 4. 操作校验\n" +
+                "\n" +
+                "轻量判断模块是否支持某操作（返回是/否，不拉取完整详情）。\n";
+    }
 }
