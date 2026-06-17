@@ -3,9 +3,12 @@ package qingzhou.app.driver;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import qingzhou.api.*;
+import qingzhou.app.driver.systemcall.Icon;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
@@ -16,12 +19,12 @@ import qingzhou.registry.I18nService;
 
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;
-    private final AppMeta appMeta;
     private final List<ActionFilter> filters;
 
-    AppStubLocalImpl(AppContextImpl appContext, AppMeta appMeta) {
+    private final Map<String, SystemCall> systemCallMap;
+
+    AppStubLocalImpl(AppContextImpl appContext) {
         this.appContext = appContext;
-        this.appMeta = appMeta;
 
         filters = new ArrayList<>();
         I18nService i18nService = appContext.getService(I18nService.class);
@@ -29,11 +32,15 @@ class AppStubLocalImpl implements AppStubLocal {
         filters.add(validation);
         filters.addAll(appContext.actionFilters); // 应用拦截器：放在系统拦截器之后，最终 action 之前
         filters.add((request, c) -> invokeAction((RequestImpl) request));
+
+        systemCallMap = new HashMap<String, SystemCall>() {{
+            put("icon", new Icon(appContext));
+        }};
     }
 
     @Override
     public AppMeta getAppMeta() {
-        return appMeta;
+        return appContext.appMeta;
     }
 
     @Override
@@ -43,7 +50,12 @@ class AppStubLocalImpl implements AppStubLocal {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        for (Model m : appMeta.getApp().models) {
+        if (Constants.SYSTEM_MODEL_CODE.equals(request.getModel())) {
+            systemCall(request);
+            return;
+        }
+
+        for (Model m : appContext.appMeta.getApp().models) {
             if (m.code.equals(request.getModel())) {
                 for (ModelAction a : m.actions) {
                     if (a.code.equals(request.getAction())) {
@@ -106,5 +118,14 @@ class AppStubLocalImpl implements AppStubLocal {
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
+    }
+
+    // 轻舟系统内部通信，不进入 模块
+    private void systemCall(RequestImpl request) throws Exception {
+        SystemCall systemCall = systemCallMap.get(request.getAction());
+        if (systemCall == null) return;
+        else request.getResponse().setActionInvoked(true);
+
+        systemCall.call(request);
     }
 }
