@@ -52,7 +52,16 @@ public class AiEquip implements HttpHandler {
         List<String> prompts = promptsI18n.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
         data.put("prompts", prompts);
 
-        List<String> skills = llmSkills.values().stream().map(Skill::name).collect(Collectors.toList());
+        List<Map<String, Object>> skills = new ArrayList<>();
+        for (Map.Entry<AiSkill, Skill> entry : llmSkills.entrySet()) {
+            AiSkill aiSkill = entry.getKey();
+            Skill skill = entry.getValue();
+            Map<String, Object> map = new HashMap<>();
+            map.put("name", skill.name());
+            map.put("text", i18nService.getI18n(aiSkill.getI18n(), lang));
+            map.put("checked", true);
+            skills.add(map);
+        }
         data.put("skills", skills);
 
         String jsonData = json.toJson(data);
