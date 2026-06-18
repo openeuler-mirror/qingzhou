@@ -1,4 +1,4 @@
-package qingzhou.registry.impl;
+package qingzhou.dto.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.util.Objects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import qingzhou.api.Lang;
-import qingzhou.registry.I18nService;
+import qingzhou.dto.I18nService;
 
 @Component
 public class I18nServiceImpl implements I18nService {

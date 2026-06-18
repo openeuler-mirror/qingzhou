@@ -6,7 +6,7 @@ import qingzhou.api.Menu;
 import qingzhou.api.QingzhouApp;
 import qingzhou.logger.Logger;
 
-@App(icon = "ReadingFilled",
+@App(icon = "Reading",
         name = {"图书管理", "en:Book Management"},
         info = {"完整的图书馆业务管理系统，包含图书、读者、借阅等核心功能。", "en:Complete library management system with books, readers, and borrow records."})
 @Menu(name = {"基础管理", "en:Basic Management"}, code = "basic", icon = "Grid", order = 1)

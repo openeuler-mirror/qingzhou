@@ -27,7 +27,7 @@ import qingzhou.llm.Tool;
 import qingzhou.llm.impl.log.Slf4jLogBridge;
 import qingzhou.logger.Logger;
 
-@Component(configurationPid = "qingzhou-llm", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-llm-chat", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ChatModelImpl implements ChatModel {
     @Reference
     private Logger logger;
@@ -77,11 +77,11 @@ public class ChatModelImpl implements ChatModel {
                 "- 禁止恶意贬低 / 夸大产品能力、跨产品踩一捧一\n" +
                 "- 禁止输出破解、绕过平台安全限制、非法运维相关代码方案\n";
         chatModel = org.noear.solon.ai.chat.ChatModel
-                .of(config.get("chat.base_url"))
-                .apiKey(config.get("chat.api_key"))
-                .model(config.get("chat.model"))
+                .of(config.get("base_url"))
+                .apiKey(config.get("api_key"))
+                .model(config.get("model"))
                 // 设置超时，防止无限等待
-                .timeout(Duration.ofSeconds(Long.parseLong(config.getOrDefault("chat.timeout", "60"))))
+                .timeout(Duration.ofSeconds(Long.parseLong(config.getOrDefault("timeout", "60"))))
                 // Anthropic Claude 专有参数：开启思考
                 .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
                     put("type", "adaptive");

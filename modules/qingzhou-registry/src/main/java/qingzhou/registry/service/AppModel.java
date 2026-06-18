@@ -9,6 +9,7 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
 import qingzhou.ai.SkillName;
 import qingzhou.api.Constants;
+import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;
 import qingzhou.dto.meta.annotation.ModelFieldView;
@@ -17,7 +18,6 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
-import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
