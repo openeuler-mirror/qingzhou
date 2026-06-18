@@ -11,16 +11,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import qingzhou.llm.RerankingModel;
 
-@Component(configurationPid = "qingzhou-llm", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-llm-rerank", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RerankingModelImpl implements RerankingModel {
     private org.noear.solon.ai.reranking.RerankingModel rerankingModel;
 
     @Activate
     public void init(Map<String, String> config) {
         rerankingModel = org.noear.solon.ai.reranking.RerankingModel
-                .of(config.get("rerank.base_url"))
-                .apiKey(config.get("rerank.api_key"))
-                .model(config.get("rerank.model"))
+                .of(config.get("base_url"))
+                .apiKey(config.get("api_key"))
+                .model(config.get("model"))
                 .build();
     }
 

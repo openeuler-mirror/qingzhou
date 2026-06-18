@@ -11,7 +11,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import qingzhou.llm.EmbeddingModel;
 import qingzhou.llm.VectorStore;
 
-@Component(configurationPid = "qingzhou-llm", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-llm-embed", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class EmbeddingModelImpl implements EmbeddingModel {
     private org.noear.solon.ai.embedding.EmbeddingModel embeddingModel;
 
@@ -21,9 +21,9 @@ public class EmbeddingModelImpl implements EmbeddingModel {
         EmbeddingDialectManager.register(new OpenaiEmbeddingDialect());
 
         embeddingModel = org.noear.solon.ai.embedding.EmbeddingModel
-                .of(config.get("embed.base_url"))
-                .apiKey(config.get("embed.api_key"))
-                .model(config.get("embed.model"))
+                .of(config.get("base_url"))
+                .apiKey(config.get("api_key"))
+                .model(config.get("model"))
                 .build();
     }
 

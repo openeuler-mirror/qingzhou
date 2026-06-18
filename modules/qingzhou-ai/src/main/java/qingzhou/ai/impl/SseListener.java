@@ -97,6 +97,6 @@ public class SseListener implements Listener {
     }
 
     private String resultToString(SseResult result) {
-        return AiHandler.resultToString(result, json);
+        return AiChat.resultToString(result, json);
     }
 }
