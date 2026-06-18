@@ -113,13 +113,21 @@ public class BundleConverter {
                 "qingzhou.api,qingzhou.api.type," +
                 "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
         if (appDynamicPackages == null) {
+            String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");
+            if (pkgExtra != null && !pkgExtra.trim().isEmpty()) {
+                appDynamicPackages = pkgExtra.trim();
+            } else {
+                // 确保 if (appDynamicPackages == null) 只初始化一次就行。
+                // 注：正常情况下是不应该到这里的，因 Qingzhou 框架自身也需要 sun 的某些包
+                appDynamicPackages = "";
+            }
+
             String dynamicPkgs = System.getProperty("qingzhou.osgi.packages.import.app");
-            if (dynamicPkgs != null && !dynamicPkgs.trim().isEmpty())
-                appDynamicPackages = dynamicPkgs.trim();
+            if (dynamicPkgs != null && !dynamicPkgs.trim().isEmpty()) {
+                appDynamicPackages += ("," + dynamicPkgs.trim());
+            }
         }
-        if (appDynamicPackages != null) {
-            attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE, appDynamicPackages);
-        }
+        attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE, appDynamicPackages);
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);

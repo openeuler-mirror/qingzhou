@@ -21,6 +21,5 @@
         <module>qingzhou-http-client</module>
         <module>qingzhou-xml</module>
         <module>qingzhou-llm</module>
-        <module>qingzhou-detector</module>
     </modules>
 </project>
