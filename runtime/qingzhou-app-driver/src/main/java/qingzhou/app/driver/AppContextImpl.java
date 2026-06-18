@@ -15,10 +15,11 @@ import qingzhou.dto.meta.annotation.Model;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 
-class AppContextImpl implements AppContext {
+public class AppContextImpl implements AppContext {
+    public final AppMeta appMeta;
+    
     private final AppDriver appDriver;
     private final BundleContext bundleContext;
-    private final AppMeta appMeta;
     private final File appTemp;
 
     Properties appProperties;
@@ -79,7 +80,7 @@ class AppContextImpl implements AppContext {
         modelInstances.values().forEach(ModelBase::start);
 
         // 注册本地应用
-        AppStubLocal appStub = new AppStubLocalImpl(this, appMeta);
+        AppStubLocal appStub = new AppStubLocalImpl(this);
         appRegistration = bundleContext.registerService(AppStubLocal.class, appStub, null);
     }
 

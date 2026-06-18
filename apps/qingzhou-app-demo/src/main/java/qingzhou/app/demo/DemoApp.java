@@ -7,7 +7,7 @@ import java.util.Properties;
 import qingzhou.api.*;
 import qingzhou.logger.Logger;
 
-@App(icon = "Shop",
+@App(icon = "DataBoard",
         name = {"示例应用", "en:Demo Application"},
         info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "User", order = 1)
