@@ -6,15 +6,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import org.osgi.service.component.annotations.*;
-import qingzhou.ai.AiSkill;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -22,13 +20,18 @@ import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/chat",
-        configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class AiHandler implements HttpHandler {
+@Component(property = HttpHandler.HANDLE_PATH + "=/chat")
+public class AiChat implements HttpHandler {
     @Reference
     private ChatModel chatModel;
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private EmbeddingModel embeddingModel;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    private RerankingModel rerankingModel;
+
+    @Reference
+    private AiEquip aiEquip;
+
     @Reference
     private Logger logger;
     @Reference
@@ -36,8 +39,6 @@ public class AiHandler implements HttpHandler {
 
     private VectorStore knowledgeStore;
     private String[] knowledgeDocs;
-    private RerankingModel rerankingModel;
-    private final Map<AiSkill, Skill> llmSkills = new ConcurrentHashMap<>();
 
     @Activate
     public void init() {
@@ -73,54 +74,58 @@ public class AiHandler implements HttpHandler {
         }
     }
 
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
-        llmSkills.put(skill, new SkillImpl(skill, properties));
-    }
-
-    // OSGI 框架根据名称规则自动识别调用此方法
-    public void unbindAiSkill(AiSkill skill) {
-        llmSkills.remove(skill);
-    }
-
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         // 解析请求
-        String message = null;
+        String question = null;
+        String skills = null;
+        String apps = null;
         byte[] body = httpRequest.getBody();
         if (body != null && body.length > 0) {
             String str = new String(body, StandardCharsets.UTF_8);
             try {
                 // 在应用里面可包含实例id和应用code等参数
                 Map<String, String> map = json.fromJson(str, HashMap.class);
-                message = map.entrySet().stream().filter(e -> e.getValue() != null).map(e -> e.getKey() + ": " + e.getValue()).collect(Collectors.joining(", "));
+                question = map.get("question");
+                apps = map.get("apps");
+                skills = map.get("skills");
             } catch (Exception e) {
                 logger.error("failed to convert to JSON: " + str);
             }
         }
-        if (message == null || message.isEmpty()) {
+        if (question == null || question.isEmpty()) {
             httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null"), json));
             return;
+        }
+        if (apps != null && !apps.isEmpty()) {
+            question = ("在“" + apps + "”应用内，回复：" + question);
         }
 
         // RAG 检索增强问答
         String[] refDocs;
         if (knowledgeStore != null) {
-            refDocs = knowledgeStore.query(message);
+            refDocs = knowledgeStore.query(question);
         } else {
             refDocs = knowledgeDocs;
         }
         if (refDocs != null && rerankingModel != null) {
-            refDocs = rerankingModel.rerank(message, refDocs);
+            refDocs = rerankingModel.rerank(question, refDocs);
+        }
+
+        // 添加自定义技能
+        List<Skill> skillList = null;
+        if (skills != null && !skills.isEmpty()) {
+            String finalSkills = skills;
+            skillList = aiEquip.llmSkills.values().stream().filter(skill -> Arrays.stream(finalSkills.split(",")).anyMatch(s -> skill.name().equals(s))).collect(Collectors.toList());
         }
 
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        chatModel.chat(message, refDocs,
+        chatModel.chat(question, refDocs,
                 null,
-                llmSkills.values(),
+                skillList,
                 new SseListener(httpResponse, logger, json));
     }
 
