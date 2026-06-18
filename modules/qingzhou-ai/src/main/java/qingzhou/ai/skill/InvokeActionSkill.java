@@ -28,6 +28,11 @@ public class InvokeActionSkill extends SkillBase implements AiSkill {
     }
 
     @Override
+    public String[] getI18n() {
+        return new String[]{"应用数据管理专家", "en:App Data Expert"};
+    }
+
+    @Override
     public String getInstruction() {
         return "# 执行应用操作\n" +
                 "\n" +
