@@ -18,11 +18,15 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.llm.ChatModel;
 import qingzhou.llm.Skill;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/equip",
         service = {AiEquip.class, HttpHandler.class})
 public class AiEquip implements HttpHandler {
+    @Reference
+    private ChatModel chatModel; // 作用：利用 OSGI DS 机制，迫使本模块在没有加载 llm 的情况下不要初始化。
+
     @Reference
     private Json json;
     @Reference

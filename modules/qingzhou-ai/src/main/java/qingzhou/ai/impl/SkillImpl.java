@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import org.osgi.service.component.ComponentConstants;
 import qingzhou.ai.AiSkill;
 import qingzhou.ai.AiTool;
-import qingzhou.llm.ChatContext;
 import qingzhou.llm.Parameter;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
@@ -32,11 +31,6 @@ class SkillImpl implements Skill {
     @Override
     public String description() {
         return (String) properties.get(AiSkill.SKILL_DESCRIPTION);
-    }
-
-    @Override
-    public boolean isSupported(ChatContext chatContext) {
-        return skill.isSupported(chatContext::attributes);
     }
 
     @Override
