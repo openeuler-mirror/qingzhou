@@ -121,7 +121,6 @@
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-ai</include>
                 <include>${project.groupId}:qingzhou-web</include>
-                <include>${project.groupId}:qingzhou-detector</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
