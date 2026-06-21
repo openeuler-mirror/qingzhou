@@ -1,6 +1,5 @@
 package qingzhou.app.demo;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Properties;
 
@@ -18,11 +17,6 @@ import qingzhou.logger.Logger;
 @Menu(name = {"监视", "en:Monitor"}, code = "monitor", icon = "Monitor", order = 3)
 @Menu(name = {"系统", "en:System"}, code = "system", icon = "Setting", order = 4)
 public class DemoApp implements QingzhouApp {
-    @Override
-    public boolean available(AppContext appContext) {
-        return !new File(appContext.getTemp(), "stop").exists();
-    }
-
     @Override
     public void start(AppContext appContext) throws Exception {
         Logger logger = appContext.getService(Logger.class);
