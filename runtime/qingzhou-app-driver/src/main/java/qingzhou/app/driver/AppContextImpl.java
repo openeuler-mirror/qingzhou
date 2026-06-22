@@ -12,12 +12,11 @@ import org.osgi.framework.ServiceRegistration;
 import qingzhou.api.*;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
-import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 
 public class AppContextImpl implements AppContext {
     public final AppMeta appMeta;
-    
+
     private final AppDriver appDriver;
     private final BundleContext bundleContext;
     private final File appTemp;
@@ -33,12 +32,10 @@ public class AppContextImpl implements AppContext {
     // 应用启动过程中，可能被调用
     final List<ActionFilter> actionFilters = new ArrayList<>();
 
-    private Timer timer;
-    private boolean started;
     private ServiceRegistration<AppStubLocal> appRegistration;
-    private final Set<ServiceRegistration<?>> serviceRegistrationList = new HashSet<>();
 
-    private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
+    private final Set<ServiceRegistration<?>> sharedFunctionServiceRegistrationList = new HashSet<>();
+    private final Set<ServiceReference<?>> sharedFunctionServiceReferences = new HashSet<>();
 
     AppContextImpl(AppDriver appDriver, BundleContext bundleContext, AppMeta appMeta) {
         this.appDriver = appDriver;
@@ -47,35 +44,7 @@ public class AppContextImpl implements AppContext {
         this.appTemp = Paths.get(getBase().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
     }
 
-    void start() {
-        timer = new Timer("app-available");
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    if (qingzhouApp.available(AppContextImpl.this)) {
-                        start0();
-                    } else {
-                        stop0();
-                    }
-                } catch (Exception e) {
-                    getService(Logger.class).error(e.getMessage(), e);
-                }
-            }
-        }, 0, 1000 * Long.parseLong(appProperties.getProperty("interval", "60")));
-    }
-
-    void stop() {
-        if (timer != null) {
-            timer.cancel();
-        }
-        stop0();
-    }
-
-    private synchronized void start0() throws Exception {
-        if (started) return;
-        started = true;
-
+    void start() throws Exception {
         qingzhouApp.start(this);
         modelInstances.values().forEach(ModelBase::start);
 
@@ -84,13 +53,10 @@ public class AppContextImpl implements AppContext {
         appRegistration = bundleContext.registerService(AppStubLocal.class, appStub, null);
     }
 
-    private synchronized void stop0() {
-        if (!started) return;
-        started = false;
-
+    void stop() {
         appRegistration.unregister();
-        serviceReferences.forEach(bundleContext::ungetService);
-        serviceRegistrationList.forEach(ServiceRegistration::unregister);
+        sharedFunctionServiceRegistrationList.forEach(ServiceRegistration::unregister);
+        sharedFunctionServiceReferences.forEach(bundleContext::ungetService);
         actionFilters.clear();
 
         modelInstances.values().forEach(ModelBase::stop);
@@ -159,9 +125,9 @@ public class AppContextImpl implements AppContext {
         Dictionary<String, String> dictionary = new Hashtable<>();
         dictionary.put(Constants.SERVICE_PID, functionName);
         ServiceRegistration<?> serviceRegistration = bundleContext.registerService(SharedFunction.class, function, dictionary);
-        serviceRegistrationList.add(serviceRegistration);
+        sharedFunctionServiceRegistrationList.add(serviceRegistration);
         return () -> {
-            serviceRegistrationList.remove(serviceRegistration);
+            sharedFunctionServiceRegistrationList.remove(serviceRegistration);
             try {
                 serviceRegistration.unregister();
             } catch (IllegalStateException e) {
@@ -179,7 +145,7 @@ public class AppContextImpl implements AppContext {
                     "(" + Constants.SERVICE_PID + "=" + functionName + ")");
             if (!serviceReferences.isEmpty()) {
                 ServiceReference<SharedFunction> serviceReference = serviceReferences.iterator().next();
-                this.serviceReferences.add(serviceReference);
+                this.sharedFunctionServiceReferences.add(serviceReference);
                 return bundleContext.getService(serviceReference);
             }
         } catch (Exception e) {
