@@ -3,6 +3,9 @@ package qingzhou.engine;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -13,6 +16,7 @@ import org.osgi.framework.launch.FrameworkFactory;
 public class QingzhouMain {
     private static String instanceDir;
     private static Framework osgiFramework;
+    private static ScheduledExecutorService scheduledExecutor;
 
     public static void main(String[] args) throws Exception {
         // 解码 URL 编码的路径
@@ -92,22 +96,33 @@ public class QingzhouMain {
         }
         for (Bundle bundle : bundleList) {
             Dictionary<String, String> bundleHeaders = bundle.getHeaders();
-            String detectionFeatureFiles = bundleHeaders.get("Qingzhou-Detection-Feature-Files");
-            if (detectionFeatureFiles != null) {
-                String detectionEnvVars = bundleHeaders.get("Qingzhou-Detection-Env-Vars");
-                String scanRoots = bundleHeaders.get("Qingzhou-Detection-Scan-Roots");
-                if (scanRoots == null) {
-                    scanRoots = System.getProperty("Qingzhou-Detection-Scan-Roots");
-                }
-                String detected = PathDetector.detect(detectionFeatureFiles, detectionEnvVars, scanRoots);
-                if (detected != null) {
-                    System.setProperty("Qingzhou-Detected-Path", detected);
-                    bundle.start();
-                }
+            boolean detectionEnabled = Boolean.parseBoolean(bundleHeaders.get("Qingzhou-Detection-Enabled"));
+            if (detectionEnabled) {
+                startWithDetection(bundle);
             } else {
                 bundle.start();
             }
         }
+    }
+
+    private static void startWithDetection(Bundle bundle) {
+        if (scheduledExecutor == null) {
+            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        }
+        scheduledExecutor.scheduleAtFixedRate(() -> {
+            try { // 实际检测逻辑
+                PathDetector detector = new PathDetector(bundle.getHeaders());
+                String detected = detector.detect();
+                if (detected != null) {
+                    System.setProperty("Qingzhou-Detected-Path", detected);
+                    bundle.start();
+                } else {
+                    bundle.stop();
+                }
+            } catch (Throwable e) {
+                e.printStackTrace(); // 捕获并打印，保证任务不被取消
+            }
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
     private static boolean isFeatureDisabled(File file) {
