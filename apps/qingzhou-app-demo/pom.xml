@@ -20,7 +20,7 @@
                             <Qingzhou-Detection-Enabled>true</Qingzhou-Detection-Enabled>
                             <Qingzhou-Detection-Feature-Files>bin/java,bin/java.exe</Qingzhou-Detection-Feature-Files>
                             <Qingzhou-Detection-Env-Vars>Demo_HOME</Qingzhou-Detection-Env-Vars>
-                            <Qingzhou-Detection-Process-Names>/bin/java</Qingzhou-Detection-Process-Names>
+                            <Qingzhou-Detection-Process-Names>bin/java</Qingzhou-Detection-Process-Names>
                         </manifestEntries>
                     </archive>
                 </configuration>
