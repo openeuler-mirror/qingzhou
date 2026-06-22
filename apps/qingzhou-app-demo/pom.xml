@@ -18,7 +18,7 @@
                     <archive>
                         <manifestEntries>
                             <Qingzhou-Detection-Env-Vars>JAVA_HOME</Qingzhou-Detection-Env-Vars>
-                            <Qingzhou-Detection-Feature-Files>bin/java</Qingzhou-Detection-Feature-Files>
+                            <Qingzhou-Detection-Feature-Files>bin/java.exe,bin/java</Qingzhou-Detection-Feature-Files>
                             <Qingzhou-Detection-Scan-Roots>
                                 java.home,user.home,/usr/local,/opt
                             </Qingzhou-Detection-Scan-Roots>
