@@ -9,4 +9,23 @@
         <version>${revision}</version>
     </parent>
     <artifactId>qingzhou-app-demo</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Qingzhou-Detection-Env-Vars>JAVA_HOME</Qingzhou-Detection-Env-Vars>
+                            <Qingzhou-Detection-Feature-Files>bin/java</Qingzhou-Detection-Feature-Files>
+                            <Qingzhou-Detection-Scan-Roots>
+                                java.home,user.home,/usr/local,/opt
+                            </Qingzhou-Detection-Scan-Roots>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

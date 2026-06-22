@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -128,8 +129,47 @@ public class QingzhouMain {
             bundleList.add(bundle);
         }
         for (Bundle bundle : bundleList) {
-            bundle.start();
+            Dictionary<String, String> bundleHeaders = bundle.getHeaders();
+            String detectionFeatureFiles = bundleHeaders.get("Qingzhou-Detection-Feature-Files");
+            if (detectionFeatureFiles != null) {
+                String detectionEnvVars = bundleHeaders.get("Qingzhou-Detection-Env-Vars");
+                String scanRoots = bundleHeaders.get("Qingzhou-Detection-Scan-Roots");
+                if (scanRoots == null) {
+                    scanRoots = System.getProperty("Qingzhou-Detection-Scan-Roots");
+                }
+                String detected = detect(detectionFeatureFiles, detectionEnvVars, scanRoots);
+                if (detected != null) {
+                    System.setProperty("Qingzhou-Detected-Path", detected);
+                    bundle.start();
+                }
+            } else {
+                bundle.start();
+            }
         }
+    }
+
+    // ================= 核心探测逻辑 =================
+    private static String detect(String detectionFeatureFiles, String detectionEnvVars, String scanRoots) {
+        // 1. 环境变量直接指定的路径
+        Stream<String> envPaths = Stream.empty();
+        if (detectionEnvVars != null) {
+            envPaths = Arrays.stream(detectionEnvVars.split(",")).map(System::getenv).filter(p -> p != null && !p.isEmpty());
+        }
+        // 2. 常见根目录的子目录扫描
+        Stream<String> scanPaths = Stream.empty();
+        if (scanRoots != null) {
+            scanPaths = Arrays.stream(scanRoots.split(","))
+                    .filter(r -> new File(r).isDirectory())
+                    .flatMap(r -> Arrays.stream(new File(r).listFiles()))
+                    .filter(File::isDirectory)
+                    .map(File::getAbsolutePath);
+        }
+
+        // 3. 合并流：统一用特征文件校验，找到第一个有效路径立即返回 (短路)
+        return Stream.concat(envPaths, scanPaths)
+                .filter(p -> Arrays.stream(detectionFeatureFiles.split(",")).anyMatch(f -> !f.isEmpty() && Files.exists(Paths.get(p, f))))
+                .findFirst()
+                .orElse(null);
     }
 
     private static boolean isFeatureDisabled(File file) {
