@@ -5,10 +5,10 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.List;
 
 public class PathDetector {
     private final String featureFiles;
@@ -18,15 +18,8 @@ public class PathDetector {
 
     PathDetector(Dictionary<String, String> attributes) {
         this.featureFiles = attributes.get("Qingzhou-Detection-Feature-Files");
-
         this.detectionEnvVars = attributes.get("Qingzhou-Detection-Env-Vars");
-
-        String scanRootsStr = attributes.get("Qingzhou-Detection-Scan-Roots");
-        if (scanRootsStr == null) {
-            scanRootsStr = System.getProperty("Qingzhou-Detection-Scan-Roots");
-        }
-        this.scanRoots = scanRootsStr;
-
+        this.scanRoots = attributes.get("Qingzhou-Detection-Scan-Roots");
         this.processNames = attributes.get("Qingzhou-Detection-Process-Names");
     }
 
@@ -45,27 +38,46 @@ public class PathDetector {
     }
 
     private String detectByFile() {
+        List<File> detectPaths = new ArrayList<>();
+
         // 1. 环境变量直接指定的路径
-        Stream<String> envPaths = Stream.empty();
         if (detectionEnvVars != null) {
-            envPaths = Arrays.stream(detectionEnvVars.split(",")).map(System::getenv).filter(p -> p != null && !p.isEmpty());
+            Arrays.stream(detectionEnvVars.split(","))
+                    .map(System::getenv)
+                    .filter(p -> p != null && !p.trim().isEmpty())
+                    .map(s -> new File(s.trim()))
+                    .forEach(detectPaths::add);
         }
 
         // 2. 常见根目录的子目录扫描
-        Stream<String> scanPaths = Stream.empty();
         if (scanRoots != null) {
-            scanPaths = Arrays.stream(scanRoots.split(","))
-                    .filter(r -> new File(r).isDirectory())
-                    .flatMap(r -> Arrays.stream(Objects.requireNonNull(new File(r).listFiles())))
-                    .filter(File::isDirectory)
-                    .map(File::getAbsolutePath);
+            for (String s : scanRoots.split(",")) {
+                s = s.trim();
+                if (s.isEmpty()) continue;
+                File file = new File(s);
+                if (!file.isDirectory()) continue;
+
+                detectPaths.add(file); // 直接配置了软件的安装目录
+
+                File[] files = file.listFiles();
+                if (files != null) {
+                    for (File sub : files) {
+                        if (sub.isDirectory()) {
+                            detectPaths.add(sub);
+                        }
+                    }
+                }
+            }
         }
 
         // 3. 合并流：统一用特征文件校验，找到第一个有效路径立即返回 (短路)
-        return Stream.concat(envPaths, scanPaths)
-                .filter(this::matchesFeatureFile)
-                .findFirst()
-                .orElse(null);
+        for (File detectPath : detectPaths) {
+            String targetPath = detectPath.getAbsolutePath();
+            if (matchesFeatureFile(targetPath)) {
+                return targetPath;
+            }
+        }
+        return null;
     }
 
     // 通过扫描系统进程，反向推断软件的安装目录
