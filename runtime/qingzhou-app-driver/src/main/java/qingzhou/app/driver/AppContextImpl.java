@@ -22,6 +22,7 @@ public class AppContextImpl implements AppContext {
     private final File appTemp;
 
     Properties appProperties;
+    String detectedPath;
     QingzhouApp qingzhouApp;
     final Map<Model, ModelBase> modelInstances = new HashMap<>();
     final Map<String, Method> actionMethods = new HashMap<>();
@@ -66,6 +67,11 @@ public class AppContextImpl implements AppContext {
     @Override
     public Properties getProperties() {
         return appProperties;
+    }
+
+    @Override
+    public String getDetectedPath() {
+        return detectedPath;
     }
 
     @Override

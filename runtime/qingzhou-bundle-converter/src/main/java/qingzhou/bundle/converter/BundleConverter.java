@@ -336,9 +336,12 @@ public class BundleConverter {
                 if (entry.isDirectory()) {
                     targetFile.mkdirs();
                 } else {
-                    targetFile.getParentFile().mkdirs();
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        copyStream(zip.getInputStream(entry), out);
+                    Path targetFilePath = targetFile.toPath();
+                    if (!Files.exists(targetFilePath)) { // 不要让 app-driver 里面的 META-INF.MANIFEST.MF 覆盖了 应用 jar 里面的 META-INF.MANIFEST.MF
+                        targetFile.getParentFile().mkdirs();
+                        try (OutputStream out = Files.newOutputStream(targetFilePath)) {
+                            copyStream(zip.getInputStream(entry), out);
+                        }
                     }
                 }
             }

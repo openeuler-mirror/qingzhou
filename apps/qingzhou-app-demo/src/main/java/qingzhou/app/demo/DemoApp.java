@@ -23,6 +23,9 @@ public class DemoApp implements QingzhouApp {
         logger.info("Demo 应用启动成功！");
         logger.info("当前进程 PID: " + appContext.getPid());
 
+        String detectionPath = appContext.getDetectedPath();
+        logger.info("探测到的 Java 安装路径：" + detectionPath);
+
         Properties properties = appContext.getProperties();
         logger.info("配置参数：" + properties);
         appContext.addActionFilter((request, chain) -> {
