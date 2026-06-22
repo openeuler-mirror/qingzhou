@@ -41,7 +41,11 @@ public class DemoApp implements QingzhouApp {
 
         Thread.sleep(2000); // 确保图书管理应用启动完成
         SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
-        String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
-        logger.info(bookInfo);
+        if (testSharedFunction != null) {
+            String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
+            logger.info(bookInfo);
+        } else {
+            logger.warn("未找到共享函数 queryBook，跳过图书查询。请确认图书管理应用已启动并注册了该共享函数。");
+        }
     }
 }
