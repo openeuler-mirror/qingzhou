@@ -77,7 +77,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             input_type = InputType.decimal,
             min = 0,
-            group = {"库存与价格", "en:Inventory & Price"})
+            group = "Inventory")
     public String price;
 
     @ModelField(
@@ -88,7 +88,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             input_type = InputType.number,
             min = 0,
-            group = {"库存与价格", "en:Inventory & Price"})
+            group = "Inventory")
     public Integer stock;
 
     @ModelField(
@@ -98,7 +98,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = false,
             input_type = InputType.number,
             numeric = true,
-            group = {"库存与价格", "en:Inventory & Price"})
+            group = "Inventory")
     public Integer sales;
 
     @ModelField(
