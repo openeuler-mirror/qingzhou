@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Groups {
-    Group[] value();
+public @interface I18ns {
+    I18n[] value();
 }

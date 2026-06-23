@@ -90,14 +90,14 @@ public class AppInfo implements HttpHandler, AiTool {
         appMetaInfo.put("menus", menus);
 
 
-        List<Map<String, String>> groups = new ArrayList<>();
-        app.groups.forEach(group -> {
-            Map<String, String> groupMetaInfo = new HashMap<>();
-            groupMetaInfo.put("code", group.code);
-            groupMetaInfo.put("name", i18nService.getI18n(group.name, lang));
-            groups.add(groupMetaInfo);
+        List<Map<String, String>> i18ns = new ArrayList<>();
+        app.i18ns.forEach(i18n -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("code", i18n.code);
+            map.put("name", i18nService.getI18n(i18n.name, lang));
+            i18ns.add(map);
         });
-        appMetaInfo.put("groups", groups);
+        appMetaInfo.put("i18ns", i18ns);
 
         return appMetaInfo;
     };

@@ -202,13 +202,13 @@ public class BundleConverter {
             parseModelAnnotations(model, ctClass, metaApp);
         }
 
-        // Process single @Menu annotation (since @Menu is @Repeatable)
+        // Process single @Menu
         Menu singleMenu = (Menu) ctClass.getAnnotation(Menu.class);
         if (singleMenu != null) {
             addMenu(singleMenu, metaApp);
         }
 
-        // Process @Menus annotation (multiple @Menu)
+        // Process @Menus (multiple @Menu)
         Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
         if (menus != null) {
             for (Menu menu : menus.value()) {
@@ -216,17 +216,17 @@ public class BundleConverter {
             }
         }
 
-        // Process single @Group annotation (since @Group is @Repeatable)
-        Group singleGroup = (Group) ctClass.getAnnotation(Group.class);
-        if (singleGroup != null) {
-            addGroup(singleGroup, metaApp);
+        // single @I18n is @Repeatable)
+        I18n singleI18n = (I18n) ctClass.getAnnotation(I18n.class);
+        if (singleI18n != null) {
+            addI18n(singleI18n, metaApp);
         }
 
-        // Process @Groups annotation (multiple @Group)
-        Groups groups = (Groups) ctClass.getAnnotation(Groups.class);
-        if (groups != null) {
-            for (Group group : groups.value()) {
-                addGroup(group, metaApp);
+        // @I18ns contains multiple @I18n
+        I18ns i18ns = (I18ns) ctClass.getAnnotation(I18ns.class);
+        if (i18ns != null) {
+            for (I18n i18n : i18ns.value()) {
+                addI18n(i18n, metaApp);
             }
         }
     }
@@ -237,10 +237,10 @@ public class BundleConverter {
         metaApp.menus.add(dtoMenu);
     }
 
-    private void addGroup(Group group, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
-        qingzhou.dto.meta.annotation.Group dtoGroup = new qingzhou.dto.meta.annotation.Group();
-        setObjAnnotation(dtoGroup, group);
-        metaApp.groups.add(dtoGroup);
+    private void addI18n(I18n i18n, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
+        qingzhou.dto.meta.annotation.I18n dtoI18n = new qingzhou.dto.meta.annotation.I18n();
+        setObjAnnotation(dtoI18n, i18n);
+        metaApp.i18ns.add(dtoI18n);
     }
 
     private void parseModelAnnotations(Model model, CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
