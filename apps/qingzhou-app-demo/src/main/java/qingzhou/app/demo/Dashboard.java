@@ -40,7 +40,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.stat,
-            group = {"业务数据", "en:Business Data"})
+            group = "Business")
     public String teacherCount;
 
     @ModelField(
@@ -49,7 +49,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.stat,
-            group = {"业务数据", "en:Business Data"})
+            group = "Business")
     public String studentCount;
 
     @ModelField(
@@ -58,7 +58,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.stat,
-            group = {"业务数据", "en:Business Data"})
+            group = "Business")
     public String productCount;
 
     @ModelField(
@@ -67,7 +67,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.stat,
-            group = {"业务数据", "en:Business Data"})
+            group = "Business")
     public String orderCount;
 
     // ========== 教师性别分布（饼图） ==========
@@ -78,7 +78,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.pie,
-            group = {"教师性别分布", "en:Teacher Gender Distribution"})
+            group = "TeacherGender")
     public String teacherMale;
 
     @ModelField(
@@ -87,7 +87,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.pie,
-            group = {"教师性别分布", "en:Teacher Gender Distribution"})
+            group = "TeacherGender")
     public String teacherFemale;
 
     // ========== 教师职称分布（柱状图） ==========
@@ -98,7 +98,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"教师职称分布", "en:Teacher Title Distribution"})
+            group = "TeacherTitle")
     public String titleLecturer;
 
     @ModelField(
@@ -107,7 +107,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"教师职称分布", "en:Teacher Title Distribution"})
+            group = "TeacherTitle")
     public String titleAssociate;
 
     @ModelField(
@@ -116,7 +116,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"教师职称分布", "en:Teacher Title Distribution"})
+            group = "TeacherTitle")
     public String titleProfessor;
 
     // ========== 教师启用状态（饼图） ==========
@@ -127,7 +127,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.pie,
-            group = {"教师启用状态", "en:Teacher Status"})
+            group = "TeacherStatus")
     public String teacherEnabled;
 
     @ModelField(
@@ -136,7 +136,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.pie,
-            group = {"教师启用状态", "en:Teacher Status"})
+            group = "TeacherStatus")
     public String teacherDisabled;
 
     @Override

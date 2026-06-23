@@ -1,13 +1,22 @@
-# Qingzhou Unified Management Development Platform
+# Qingzhou One-Stop Intelligent Management Platform
 
 ## Overview
 
-Qingzhou is a lightweight Java-based software development platform primarily designed for centralized unified management
-and intelligent operations of heterogeneous business systems across multiple categories. Through automatic agent
-registration, plug-in based extensibility, unified API specifications, front-end/back-end separation, and large
-model-driven natural language interaction, it enables enterprises to remotely manage, configure, and operate various
-business systems in a standardized, low-cost, and highly flexible manner, upgrading traditional manual operations to
-intent-driven intelligent governance.
+Qingzhou is a lightweight Java-based software development platform primarily designed to enable unified management and
+intelligent operations for heterogeneous business systems across multiple categories.
+
+Driven by an innovative model-driven architecture, it allows developers to dynamically generate front-end pages by
+simply writing plain Java classes and using declarative annotations, thereby completely eliminating the tedious work of
+front-end development.
+
+This core advantage not only significantly reduces initial development costs and greatly improves delivery efficiency,
+but also fundamentally lowers system maintenance complexity, delivering substantial value through reduced maintenance
+costs and long-term gains.
+
+Additionally, Qingzhou leverages auto-discovery, plug-in-based extensibility, unified API specifications,
+front-end/back-end separation, and large-model-driven natural language interaction to empower enterprises to manage
+various business systems in a standardized, cost-effective, and highly flexible manner, while upgrading traditional
+manual operations to intent-driven intelligent management and control.
 
 ### Core Features and Capabilities
 
@@ -38,13 +47,13 @@ intent-driven intelligent governance.
    human-driven" to "rule-driven" standardized operations systems.
 
 4. **Front-End/Back-End Separation**  
-   Supports independent deployment of the front end (e.g., management UI) and back end (business logic and data
-   services), with the front end capable of being hosted separately on high-performance web servers like Nginx. This
-   architecture delivers two core benefits: first, the front end and back end can scale elastically independently to
-   handle different load scenarios – for example, high-concurrency UI access does not consume back-end computing
-   resources; second, development and release are decoupled – front-end teams can iterate the UI independently while
-   back-end teams focus on service stability, improving team collaboration efficiency. Additionally, front-end static
-   assets can leverage CDN acceleration to further enhance user access experience globally.
+   Supports the independent deployment of the front-end and back-end, allowing the front-end to be hosted separately on
+   high-performance servers such as Nginx. This architecture brings three core values: First, the front-end and back-end
+   can scale independently, ensuring that high-concurrency front-end access does not squeeze back-end computing
+   resources. Second, it decouples development and deployment, enabling the front-end to iterate UI independently while
+   the back-end focuses on services, thereby enhancing team collaboration efficiency. Third, communication via standard
+   APIs facilitates flexible integration with components like unified authentication and API gateways in cloud-native
+   environments, and supports UI-level integration with third-party systems.
 
 5. **AI-Driven Intelligent Governance**  
    After integrating large model capabilities, administrators no longer need to memorize complex operation paths or

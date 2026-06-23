@@ -56,7 +56,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             readonly = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String username;
 
     @ModelField(
@@ -65,7 +65,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             required = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String nickname;
 
     @ModelField(
@@ -73,7 +73,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             info = {"真实姓名", "en:Real name"},
             show = true,
             update = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String realName;
 
     @ModelField(
@@ -83,7 +83,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             update = true,
             required = true,
             email = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String email;
 
     @ModelField(
@@ -91,7 +91,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             info = {"手机号码", "en:Mobile phone number"},
             show = true,
             update = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String phone;
 
     @ModelField(
@@ -101,7 +101,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             update = true,
             input_type = InputType.select,
             options = {"技术部", "产品部", "运营部", "市场部", "人事部", "财务部"},
-            group = {"工作信息", "en:Work Info"})
+            group = "Work")
     public String department;
 
     @ModelField(
@@ -109,7 +109,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             info = {"职位/岗位", "en:Job position"},
             show = true,
             update = true,
-            group = {"工作信息", "en:Work Info"})
+            group = "Work")
     public String position;
 
     @ModelField(
@@ -118,7 +118,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             input_type = InputType.textarea,
-            group = {"个人介绍", "en:About"})
+            group = "Personal")
     public String bio;
 
     @ModelField(
@@ -128,7 +128,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             update = true,
             input_type = InputType.select,
             options = {"zh-CN", "en-US"},
-            group = {"系统设置", "en:System Settings"})
+            group = "System")
     public String language;
 
     @ModelField(
@@ -138,7 +138,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             update = true,
             input_type = InputType.select,
             options = {"Asia/Shanghai", "Asia/Tokyo", "Europe/London", "America/New_York"},
-            group = {"系统设置", "en:System Settings"})
+            group = "System")
     public String timezone;
 
     @ModelField(
@@ -148,7 +148,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             update = true,
             input_type = InputType.select,
             options = {"light", "dark", "auto"},
-            group = {"系统设置", "en:System Settings"})
+            group = "System")
     public String theme;
 
     @ModelField(
@@ -157,7 +157,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             input_type = InputType.bool,
-            group = {"通知设置", "en:Notification Settings"})
+            group = "Notification")
     public Boolean notifications;
 
     @ModelField(
@@ -166,7 +166,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             input_type = InputType.bool,
-            group = {"通知设置", "en:Notification Settings"})
+            group = "Notification")
     public Boolean emailAlert;
 
     @ModelField(
@@ -175,7 +175,7 @@ public class ProfileEdit extends qingzhou.api.ModelBase implements Show, Update 
             show = true,
             update = true,
             input_type = InputType.bool,
-            group = {"通知设置", "en:Notification Settings"})
+            group = "Notification")
     public Boolean smsAlert;
 
     public boolean contains(String id) {

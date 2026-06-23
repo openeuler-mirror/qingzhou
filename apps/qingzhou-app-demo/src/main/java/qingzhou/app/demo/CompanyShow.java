@@ -50,91 +50,91 @@ public class CompanyShow extends qingzhou.api.ModelBase implements Show {
             name = {"企业名称", "en:Company Name"},
             info = {"企业全称", "en:Full company name"},
             show = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String name;
 
     @ModelField(
             name = {"企业代码", "en:Company Code"},
             info = {"企业代码/简称", "en:Company code"},
             show = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String code;
 
     @ModelField(
             name = {"所属行业", "en:Industry"},
             info = {"所属行业领域", "en:Industry sector"},
             show = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String industry;
 
     @ModelField(
             name = {"企业规模", "en:Scale"},
             info = {"企业人员规模", "en:Company scale"},
             show = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String scale;
 
     @ModelField(
             name = {"企业地址", "en:Address"},
             info = {"企业注册地址", "en:Registered address"},
             show = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String address;
 
     @ModelField(
             name = {"联系电话", "en:Phone"},
             info = {"企业联系电话", "en:Contact phone"},
             show = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String phone;
 
     @ModelField(
             name = {"企业邮箱", "en:Email"},
             info = {"企业官方邮箱", "en:Official email"},
             show = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String email;
 
     @ModelField(
             name = {"官方网站", "en:Website"},
             info = {"企业官方网站", "en:Official website"},
             show = true,
-            group = {"联系信息", "en:Contact Info"})
+            group = "Contact")
     public String website;
 
     @ModelField(
             name = {"创始人", "en:Founder"},
             info = {"企业创始人", "en:Company founder"},
             show = true,
-            group = {"企业信息", "en:Company Info"})
+            group = "company")
     public String founder;
 
     @ModelField(
             name = {"成立时间", "en:Founded Date"},
             info = {"企业成立日期", "en:Date of establishment"},
             show = true,
-            group = {"企业信息", "en:Company Info"})
+            group = "company")
     public String foundedAt;
 
     @ModelField(
             name = {"企业简介", "en:Description"},
             info = {"企业详细介绍", "en:Company description"},
             show = true,
-            group = {"企业介绍", "en:About"})
+            group = "About")
     public String description;
 
     @ModelField(
             name = {"企业使命", "en:Mission"},
             info = {"企业使命宣言", "en:Company mission"},
             show = true,
-            group = {"企业介绍", "en:About"})
+            group = "About")
     public String mission;
 
     @ModelField(
             name = {"企业愿景", "en:Vision"},
             info = {"企业愿景目标", "en:Company vision"},
             show = true,
-            group = {"企业介绍", "en:About"})
+            group = "About")
     public String vision;
 
     public boolean contains(String id) {

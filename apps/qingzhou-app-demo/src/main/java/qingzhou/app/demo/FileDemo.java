@@ -133,7 +133,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
             add = true,
             update = true,
             input_type = InputType.file,
-            group = {"文件信息", "en:File Info"})
+            group = "FileInfo")
     public String attachment;
 
     @ModelField(
@@ -144,7 +144,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
             add = true,
             update = true,
             input_type = InputType.textarea,
-            group = {"文件信息", "en:File Info"})
+            group = "FileInfo")
     public String description;
 
     @ModelField(

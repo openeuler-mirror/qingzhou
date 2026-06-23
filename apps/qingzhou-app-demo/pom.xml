@@ -17,9 +17,15 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
+                            <!-- 是否启用自动发现，未启用时后续参数全部无效，非必填，默认：false。 -->
                             <Qingzhou-Detection-Enabled>true</Qingzhou-Detection-Enabled>
+                            <!-- 检测特征文件，该特征文件是从待检测软件安装目录开始的**相对路径**。任意一个特征文件匹配成功则结束探测，应用程序可以通过 AppContext.getDetectedPath() 获取发现的路径。必填。 -->
                             <Qingzhou-Detection-Feature-Files>bin/java,bin/java.exe</Qingzhou-Detection-Feature-Files>
+                            <!-- 一些软件通过环境变量设置了安装目录，如 JAVA_HOME、M2_HOME 等，这可提高探测效率，可选。 -->
                             <Qingzhou-Detection-Env-Vars>Demo_HOME</Qingzhou-Detection-Env-Vars>
+                            <!-- 如果未能通过环境变量找到软件的安装目录，则在此路径下扫描。注：仅会扫描配置的当前目录及其第一次子目录。可选。 -->
+                            <Qingzhou-Detection-Scan-Roots>user.home,/usr/local,/opt,/opt/homebrew/opt</Qingzhou-Detection-Scan-Roots>
+                            <!-- 如果未能通过环境变量和目录扫描找到软件的安装目录，则会检测当前正在运行的所有程序列表。可选。 -->
                             <Qingzhou-Detection-Process-Names>bin/java</Qingzhou-Detection-Process-Names>
                         </manifestEntries>
                     </archive>

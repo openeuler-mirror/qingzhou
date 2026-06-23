@@ -6,9 +6,6 @@ import java.util.Properties;
 import qingzhou.api.*;
 import qingzhou.logger.Logger;
 
-@App(icon = "DataBoard",
-        name = {"示例应用", "en:Demo Application"},
-        info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "User", order = 1)
 @Menu(name = {"高级功能", "en:Advanced"}, code = "advanced", icon = "Tools", order = 2)
 @Menu(name = {"子菜单一", "en:Sub Menu 1"}, code = "sub1", parent = "advanced", icon = "Document", order = 1)
@@ -16,6 +13,37 @@ import qingzhou.logger.Logger;
 @Menu(name = {"三级菜单示例", "en:Level 3 Menu"}, code = "level3", parent = "sub2", icon = "Star", order = 1)
 @Menu(name = {"监视", "en:Monitor"}, code = "monitor", icon = "Monitor", order = 3)
 @Menu(name = {"系统", "en:System"}, code = "system", icon = "Setting", order = 4)
+
+@Group(name = {"基本信息", "en:Basic Info"}, code = "basic")
+@Group(name = {"学术信息", "en:Academic Info"}, code = "academic")
+@Group(name = {"企业信息", "en:Company Info"}, code = "company")
+@Group(name = {"CPU", "en:CPU"}, code = "cpu")
+@Group(name = {"内存", "en:Memory"}, code = "memory")
+@Group(name = {"交换空间", "en:Swap"}, code = "swap")
+@Group(name = {"文件描述符", "en:File Descriptors"}, code = "file")
+@Group(name = {"联系信息", "en:Contact Info"}, code = "Contact")
+@Group(name = {"企业介绍", "en:About"}, code = "About")
+@Group(name = {"配送信息", "en:Delivery"}, code = "Delivery")
+@Group(name = {"订单详情", "en:Order Details"}, code = "Order")
+@Group(name = {"线程", "en:Thread"}, code = "Thread")
+@Group(name = {"类加载", "en:Class Loading"}, code = "Class")
+@Group(name = {"GC", "en:GC"}, code = "GC")
+@Group(name = {"文件信息", "en:File Info"}, code = "FileInfo")
+@Group(name = {"库存与价格", "en:Inventory & Price"}, code = "Inventory")
+@Group(name = {"工作信息", "en:Work Info"}, code = "Work")
+@Group(name = {"系统设置", "en:System Settings"}, code = "System")
+@Group(name = {"通知设置", "en:Notification Settings"}, code = "Notification")
+@Group(name = {"联系方式", "en:Contact"}, code = "Contact")
+@Group(name = {"个人信息", "en:Personal Info"}, code = "Personal")
+@Group(name = {"业务数据", "en:Business Data"}, code = "Business")
+@Group(name = {"教师性别分布", "en:Teacher Gender Distribution"}, code = "TeacherGender")
+@Group(name = {"教师职称分布", "en:Teacher Title Distribution"}, code = "TeacherTitle")
+@Group(name = {"教师启用状态", "en:Teacher Status"}, code = "TeacherStatus")
+@Group(name = {"配置详情", "en:Config Details"}, code = "ConfigDetails")
+
+@App(icon = "DataBoard",
+        name = {"示例应用", "en:Demo Application"},
+        info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 public class DemoApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) throws Exception {
