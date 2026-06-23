@@ -94,16 +94,7 @@ public class AppModel implements HttpHandler, AiTool {
                 if (field.getType() == String[].class && fromVal != null) {
                     String[] arr = (String[]) fromVal;
 
-                    // 多值 i18n 格式：任一元素包含 "|en:" 或 "|tr:"，逐元素翻译
-                    boolean isMultiValueI18n = Arrays.stream(arr).anyMatch(s -> s.contains("|en:") || s.contains("|tr:"));
-                    if (isMultiValueI18n) {
-                        String[] translated = new String[arr.length];
-                        for (int i = 0; i < arr.length; i++) {
-                            translated[i] = i18nService.getI18n(new String[]{arr[i]}, lang);
-                            if (translated[i] == null) translated[i] = arr[i];
-                        }
-                        fromVal = translated;
-                    } else if (Arrays.stream(arr).anyMatch(s -> s.startsWith("en:"))) {
+                    if (Arrays.stream(arr).anyMatch(s -> s.startsWith("en:"))) {
                         // 单值 i18n：整体翻译为一个字符串
                         fromVal = new String[]{i18nService.getI18n(arr, lang)};
                     }

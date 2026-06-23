@@ -10,4 +10,5 @@ public class App extends Base {
     public String icon;
     public final Set<Model> models = new HashSet<>();
     public final Set<Menu> menus = new HashSet<>();
+    public final Set<Group> groups = new HashSet<>();
 }

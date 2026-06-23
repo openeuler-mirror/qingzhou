@@ -65,7 +65,7 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
             add = true,
             update = true,
             input_type = InputType.textarea,
-            group = {"配置详情", "en:Config Details"})
+            group = "ConfigDetails")
     public String configValue;
 
     @ModelField(
@@ -74,7 +74,7 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
             list = true,
             add = true,
             update = true,
-            group = {"配置详情", "en:Config Details"})
+            group = "ConfigDetails")
     public String description;
 
     @ModelField(

@@ -59,9 +59,7 @@ public class ModelFieldView extends Base {
 
     public ChartType chart_type;
 
-    public String[] group;
-
-    public String[] chart_group;
+    public String group;
 
     public String[] color;
 

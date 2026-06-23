@@ -70,9 +70,7 @@ public @interface ModelField {
 
     ChartType chart_type() default ChartType.line; // 监视字段的图表类型，仅在 numeric=true 时有效
 
-    String[] chart_group() default {}; // 图表字段的分组，一个字段可同时属于多个图表分组。
-
-    String[] group() default {}; // 表单字段的分组，国际化数组格式。
+    String group() default ""; // 表单字段的分组，国际化数组格式。
 
     String[] color() default {}; // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
 

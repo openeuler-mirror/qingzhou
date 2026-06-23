@@ -80,7 +80,7 @@ public class AppInfo implements HttpHandler, AiTool {
         List<Map<String, String>> menus = new ArrayList<>();
         app.menus.forEach(menu -> {
             Map<String, String> menuMetaInfo = new HashMap<>();
-            menuMetaInfo.put("menuCode", menu.code);
+            menuMetaInfo.put("code", menu.code);
             menuMetaInfo.put("icon", menu.icon);
             menuMetaInfo.put("parent", menu.parent);
             menuMetaInfo.put("order", menu.order + "");
@@ -88,6 +88,16 @@ public class AppInfo implements HttpHandler, AiTool {
             menus.add(menuMetaInfo);
         });
         appMetaInfo.put("menus", menus);
+
+
+        List<Map<String, String>> groups = new ArrayList<>();
+        app.groups.forEach(group -> {
+            Map<String, String> groupMetaInfo = new HashMap<>();
+            groupMetaInfo.put("code", group.code);
+            groupMetaInfo.put("name", i18nService.getI18n(group.name, lang));
+            groups.add(groupMetaInfo);
+        });
+        appMetaInfo.put("groups", groups);
 
         return appMetaInfo;
     };

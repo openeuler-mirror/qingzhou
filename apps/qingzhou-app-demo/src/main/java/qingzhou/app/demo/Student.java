@@ -102,7 +102,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             email = true,
-            group = {"联系方式", "en:Contact"})
+            group = "Contact")
     public String email;
 
     @ModelField(
@@ -111,7 +111,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.password,
             add = true,
             update = true,
-            group = {"联系方式", "en:Contact"})
+            group = "Contact")
     public String password;
 
     @ModelField(
@@ -120,7 +120,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.textarea,
             add = true,
             update = true,
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String bio;
 
     @ModelField(
@@ -131,7 +131,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             separator = ",",
             options = {"篮球", "足球", "音乐", "绘画", "编程", "阅读", "游泳", "游戏"},
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String hobbies;
 
     @ModelField(
@@ -151,7 +151,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             display = "status==suspended",
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String suspensionReason;
 
     @ModelField(
@@ -160,7 +160,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.file,
             add = true,
             update = true,
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String avatar;
 
     @ModelField(
@@ -188,7 +188,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             separator = ",",
             add = true,
             update = true,
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String skills;
 
     @ModelField(
@@ -198,7 +198,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             separator = "|",
             add = true,
             update = true,
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String fullName;
 
     @ModelField(
@@ -208,7 +208,7 @@ public class Student extends qingzhou.api.ModelBase implements List, Show, Add, 
             color = {"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"},
             add = true,
             update = true,
-            group = {"个人信息", "en:Personal Info"})
+            group = "Personal")
     public String themeColor;
 
     @Override

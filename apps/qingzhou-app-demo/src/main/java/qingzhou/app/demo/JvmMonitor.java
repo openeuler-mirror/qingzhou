@@ -32,7 +32,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String heapUsed;
 
     @ModelField(
@@ -41,7 +41,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String heapMax;
 
     @ModelField(
@@ -50,7 +50,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String heapCommitted;
 
     @ModelField(
@@ -59,7 +59,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String nonHeapUsed;
 
     @ModelField(
@@ -68,7 +68,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"线程", "en:Thread"})
+            group = "Thread")
     public String threadCount;
 
     @ModelField(
@@ -77,7 +77,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"线程", "en:Thread"})
+            group = "Thread")
     public String peakThreadCount;
 
     @ModelField(
@@ -86,7 +86,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"线程", "en:Thread"})
+            group = "Thread")
     public String daemonThreadCount;
 
     @ModelField(
@@ -95,7 +95,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"类加载", "en:Class Loading"})
+            group = "Class")
     public String totalLoadedClassCount;
 
     @ModelField(
@@ -104,7 +104,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"GC", "en:GC"})
+            group = "GC")
     public String gcCount;
 
     @ModelField(
@@ -113,7 +113,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"GC", "en:GC"})
+            group = "GC")
     public String gcTime;
 
     @ModelField(

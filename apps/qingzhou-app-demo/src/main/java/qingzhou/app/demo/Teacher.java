@@ -132,7 +132,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             list = true,
             add = true,
             update = true,
-            group = {"学术信息", "en:Academic Info"})
+            group = "academic")
     public String researchArea;
 
     @ModelField(
@@ -142,7 +142,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             email = true,
-            group = {"联系方式", "en:Contact"})
+            group = "Contact")
     public String email;
 
     @ModelField(
@@ -151,7 +151,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             list = true,
             add = true,
             update = true,
-            group = {"联系方式", "en:Contact"})
+            group = "Contact")
     public String phone;
 
     @ModelField(
@@ -162,7 +162,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             update = true,
             input_type = InputType.decimal,
             min = 0,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String salary;
 
     @ModelField(
@@ -171,7 +171,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             list = true,
             add = true,
             update = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String hireDate;
 
     @ModelField(
@@ -191,7 +191,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.bool,
-            group = {"学术信息", "en:Academic Info"})
+            group = "academic")
     public Boolean isAdvisor;
 
     @ModelField(
@@ -200,7 +200,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             input_type = InputType.textarea,
             add = true,
             update = true,
-            group = {"基本信息", "en:Basic Info"})
+            group = "basic")
     public String bio;
 
     @ModelField(

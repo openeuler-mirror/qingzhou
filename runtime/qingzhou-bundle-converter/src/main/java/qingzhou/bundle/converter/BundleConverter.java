@@ -205,19 +205,42 @@ public class BundleConverter {
         // Process single @Menu annotation (since @Menu is @Repeatable)
         Menu singleMenu = (Menu) ctClass.getAnnotation(Menu.class);
         if (singleMenu != null) {
-            qingzhou.dto.meta.annotation.Menu dtoMenu = new qingzhou.dto.meta.annotation.Menu();
-            setObjAnnotation(dtoMenu, singleMenu);
-            metaApp.menus.add(dtoMenu);
+            addMenu(singleMenu, metaApp);
         }
-        // Process @Menus annotation (multiple menus)
+
+        // Process @Menus annotation (multiple @Menu)
         Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
         if (menus != null) {
             for (Menu menu : menus.value()) {
-                qingzhou.dto.meta.annotation.Menu dtoMenu = new qingzhou.dto.meta.annotation.Menu();
-                setObjAnnotation(dtoMenu, menu);
-                metaApp.menus.add(dtoMenu);
+                addMenu(menu, metaApp);
             }
         }
+
+        // Process single @Group annotation (since @Group is @Repeatable)
+        Group singleGroup = (Group) ctClass.getAnnotation(Group.class);
+        if (singleGroup != null) {
+            addGroup(singleGroup, metaApp);
+        }
+
+        // Process @Groups annotation (multiple @Group)
+        Groups groups = (Groups) ctClass.getAnnotation(Groups.class);
+        if (groups != null) {
+            for (Group group : groups.value()) {
+                addGroup(group, metaApp);
+            }
+        }
+    }
+
+    private void addMenu(Menu menu, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
+        qingzhou.dto.meta.annotation.Menu dtoMenu = new qingzhou.dto.meta.annotation.Menu();
+        setObjAnnotation(dtoMenu, menu);
+        metaApp.menus.add(dtoMenu);
+    }
+
+    private void addGroup(Group group, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
+        qingzhou.dto.meta.annotation.Group dtoGroup = new qingzhou.dto.meta.annotation.Group();
+        setObjAnnotation(dtoGroup, group);
+        metaApp.groups.add(dtoGroup);
     }
 
     private void parseModelAnnotations(Model model, CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp) throws Exception {

@@ -33,7 +33,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.gauge,
-            group = {"CPU", "en:CPU"})
+            group = "cpu")
     public String cpuProcessUsage;
 
     @ModelField(
@@ -42,7 +42,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.gauge,
-            group = {"CPU", "en:CPU"})
+            group = "cpu")
     public String cpuSystemUsage;
 
     @ModelField(
@@ -51,7 +51,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String totalPhysicalMemory;
 
     @ModelField(
@@ -60,7 +60,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String freePhysicalMemory;
 
     @ModelField(
@@ -69,7 +69,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"内存", "en:Memory"})
+            group = "memory")
     public String usedPhysicalMemory;
 
     @ModelField(
@@ -78,7 +78,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"交换空间", "en:Swap"})
+            group = "swap")
     public String totalSwapSpace;
 
     @ModelField(
@@ -87,7 +87,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.line,
-            group = {"交换空间", "en:Swap"})
+            group = "swap")
     public String freeSwapSpace;
 
     @ModelField(
@@ -96,7 +96,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"文件描述符", "en:File Descriptors"})
+            group = "file")
     public String openFileDescriptorCount;
 
     @ModelField(
@@ -105,7 +105,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
             field_type = FieldType.MONITORING,
             numeric = true,
             chart_type = ChartType.bar,
-            group = {"文件描述符", "en:File Descriptors"})
+            group = "file")
     public String maxFileDescriptorCount;
 
     @ModelField(
