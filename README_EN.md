@@ -1,4 +1,4 @@
-# Qingzhou Unified Management Development Platform
+# Qingzhou One-Stop Intelligent Management Platform
 
 ## Overview
 

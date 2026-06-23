@@ -114,8 +114,13 @@ public class QingzhouMain {
                 PathDetector detector = new PathDetector(bundle.getHeaders());
                 String detected = detector.detect();
                 if (detected != null) {
-                    System.setProperty("Qingzhou-Detected-Path", detected);
-                    bundle.start();
+                    String dataFlag = "Qingzhou-Detected-Path";
+                    System.setProperty(dataFlag, detected);
+                    try {
+                        bundle.start();
+                    } finally {
+                        System.clearProperty(dataFlag);
+                    }
                 } else {
                     bundle.stop();
                 }
