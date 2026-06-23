@@ -9,4 +9,22 @@
         <version>${revision}</version>
     </parent>
     <artifactId>qingzhou-app-demo</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Qingzhou-Detection-Enabled>true</Qingzhou-Detection-Enabled>
+                            <Qingzhou-Detection-Feature-Files>bin/java,bin/java.exe</Qingzhou-Detection-Feature-Files>
+                            <Qingzhou-Detection-Env-Vars>Demo_HOME</Qingzhou-Detection-Env-Vars>
+                            <Qingzhou-Detection-Process-Names>bin/java</Qingzhou-Detection-Process-Names>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -1,6 +1,5 @@
 package qingzhou.app.demo;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Properties;
 
@@ -19,15 +18,13 @@ import qingzhou.logger.Logger;
 @Menu(name = {"系统", "en:System"}, code = "system", icon = "Setting", order = 4)
 public class DemoApp implements QingzhouApp {
     @Override
-    public boolean available(AppContext appContext) {
-        return !new File(appContext.getTemp(), "stop").exists();
-    }
-
-    @Override
     public void start(AppContext appContext) throws Exception {
         Logger logger = appContext.getService(Logger.class);
         logger.info("Demo 应用启动成功！");
         logger.info("当前进程 PID: " + appContext.getPid());
+
+        String detectionPath = appContext.getDetectedPath();
+        logger.info("探测到的 Java 安装路径：" + detectionPath);
 
         Properties properties = appContext.getProperties();
         logger.info("配置参数：" + properties);
@@ -44,7 +41,11 @@ public class DemoApp implements QingzhouApp {
 
         Thread.sleep(2000); // 确保图书管理应用启动完成
         SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
-        String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
-        logger.info(bookInfo);
+        if (testSharedFunction != null) {
+            String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
+            logger.info(bookInfo);
+        } else {
+            logger.warn("未找到共享函数 queryBook，跳过图书查询。请确认图书管理应用已启动并注册了该共享函数。");
+        }
     }
 }

@@ -28,6 +28,11 @@ public class PlatformRegistrySkill extends SkillBase implements AiSkill {
     }
 
     @Override
+    public String[] getI18n() {
+        return new String[]{"注册资产检索技能", "en:Asset Retrieval Skill"};
+    }
+
+    @Override
     public String getInstruction() {
         return "# 平台应用信息检索技能\n" +
                 "\n" +

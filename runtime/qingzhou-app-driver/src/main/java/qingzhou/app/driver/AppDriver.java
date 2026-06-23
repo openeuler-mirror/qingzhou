@@ -49,6 +49,7 @@ public class AppDriver implements BundleActivator {
             appMeta.getApp().code = code.trim();
         }
         appContext.appProperties = appProperties;
+        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path");
 
         // 初始化对象
         appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).newInstance();

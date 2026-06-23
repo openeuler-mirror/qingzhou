@@ -1,18 +1,11 @@
 package qingzhou.engine;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -21,10 +14,9 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
 public class QingzhouMain {
-    private static String libDir;
     private static String instanceDir;
     private static Framework osgiFramework;
-    private static URLClassLoader tempClassLoader;
+    private static ScheduledExecutorService scheduledExecutor;
 
     public static void main(String[] args) throws Exception {
         // 解码 URL 编码的路径
@@ -35,7 +27,7 @@ public class QingzhouMain {
                         .toURI()
         ).toString();
 
-        libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
+        String libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");
 
         // 获取 FrameworkFactory
@@ -55,12 +47,7 @@ public class QingzhouMain {
         startDirAndJars(new File(libDir, "modules"));
 
         // 驱动应用
-        deployApps();
-
-        // 清理资源
-        if (tempClassLoader != null) {
-            tempClassLoader.close();
-        }
+        new AppDeployer(instanceDir, libDir).deployApps();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
@@ -71,27 +58,7 @@ public class QingzhouMain {
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
     }
 
-    private static void deployApps() throws Exception {
-        File appCacheDir = Paths.get(instanceDir, "temp", "app-bundle-cache").toFile();
-        if (appCacheDir.exists()) {
-            deleteFile(appCacheDir);
-        }
-        appCacheDir.mkdirs();
-
-        File[] listFiles = new File(instanceDir, "apps").listFiles();
-        if (listFiles != null) {
-            for (File appFile : listFiles) {
-                if (appFile.getName().endsWith(".jar")) {
-                    File appCache = new File(appCacheDir, appFile.getName());
-                    convertBundleJar(appFile, appCache, libDir);
-                }
-            }
-        }
-
-        startDirAndJars(appCacheDir);
-    }
-
-    private static void startDirAndJars(File bundleDir) throws BundleException {
+    static void startDirAndJars(File bundleDir) throws BundleException {
         List<File> subDirs = new ArrayList<>();
         List<File> subJars = new ArrayList<>();
 
@@ -128,8 +95,34 @@ public class QingzhouMain {
             bundleList.add(bundle);
         }
         for (Bundle bundle : bundleList) {
-            bundle.start();
+            Dictionary<String, String> bundleHeaders = bundle.getHeaders();
+            boolean detectionEnabled = Boolean.parseBoolean(bundleHeaders.get("Qingzhou-Detection-Enabled"));
+            if (detectionEnabled) {
+                startWithDetection(bundle);
+            } else {
+                bundle.start();
+            }
         }
+    }
+
+    private static void startWithDetection(Bundle bundle) {
+        if (scheduledExecutor == null) {
+            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        }
+        scheduledExecutor.scheduleAtFixedRate(() -> {
+            try { // 实际检测逻辑
+                PathDetector detector = new PathDetector(bundle.getHeaders());
+                String detected = detector.detect();
+                if (detected != null) {
+                    System.setProperty("Qingzhou-Detected-Path", detected);
+                    bundle.start();
+                } else {
+                    bundle.stop();
+                }
+            } catch (Throwable e) {
+                e.printStackTrace(); // 捕获并打印，保证任务不被取消
+            }
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
     private static boolean isFeatureDisabled(File file) {
@@ -160,91 +153,5 @@ public class QingzhouMain {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, pkgExtra.trim());
         }
         return config;
-    }
-
-    private static Method bundleConverterMethod;
-    private static Object bundleConverterInstance;
-
-    private static void convertBundleJar(File sourceJar, File targetJar, String libDir) throws Exception {
-        if (bundleConverterMethod == null || bundleConverterInstance == null) {
-            File appCacheDir = Paths.get(instanceDir, "temp", "bundle-converter-classpath-cache").toFile();
-            if (appCacheDir.exists()) {
-                deleteFile(appCacheDir);
-            }
-            if (!appCacheDir.mkdirs()) throw new IllegalStateException(appCacheDir.getPath());
-
-            List<URL> urls = new ArrayList<>();
-            addFiles(urls, "runtime", "bundle-converter");
-            addFiles(urls, "runtime", "app-driver");
-
-            urls.add(Paths.get(libDir, "modules", "qingzhou-api.jar").toUri().toURL());
-            urls.add(Paths.get(libDir, "modules", "qingzhou-dto.jar").toUri().toURL());
-
-            Path jsonBundlePath = Paths.get(libDir, "components", "qingzhou-json.jar");
-            urls.add(jsonBundlePath.toUri().toURL());
-            unZipToDir(jsonBundlePath.toFile(), appCacheDir); // 添加 bundle-converter 依赖的三方库
-            File[] listFiles = appCacheDir.listFiles();
-            for (File temp : Objects.requireNonNull(listFiles)) {
-                if (temp.getName().equals("OSGI-INF")) {
-                    File[] embeddedJars = Paths.get(appCacheDir.getAbsolutePath(), "OSGI-INF", "lib").toFile().listFiles();
-                    for (File embeddedJar : Objects.requireNonNull(embeddedJars)) {
-                        urls.add(embeddedJar.toURI().toURL());
-                    }
-                } else {
-                    deleteFile(temp);
-                }
-            }
-
-            tempClassLoader = new URLClassLoader(urls.toArray(new URL[0]), osgiFramework.getClass().getClassLoader());
-            Class<?> loadedClass = tempClassLoader.loadClass("qingzhou.bundle.converter.BundleConverter");
-            bundleConverterMethod = loadedClass.getMethod("build", File.class, File.class, String.class);
-            bundleConverterInstance = loadedClass.newInstance();
-        }
-        bundleConverterMethod.invoke(bundleConverterInstance, sourceJar, targetJar, libDir);
-    }
-
-    private static void addFiles(List<URL> urls, String... dirs) throws Exception {
-        File[] listFiles = Paths.get(libDir, dirs).toFile().listFiles();
-        if (listFiles != null) {
-            for (File file : listFiles) {
-                urls.add(file.toURI().toURL());
-            }
-        }
-    }
-
-    private static void unZipToDir(File srcFile, File unZipDir) throws IOException {
-        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
-            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
-                ZipEntry entry = e.nextElement();
-                File targetFile = new File(unZipDir, entry.getName());
-                if (entry.isDirectory()) {
-                    targetFile.mkdirs();
-                } else {
-                    targetFile.getParentFile().mkdirs();
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        InputStream inputStream = zip.getInputStream(entry);
-                        byte[] buffer = new byte[1024 * 4];
-                        int n;
-                        while (-1 != (n = inputStream.read(buffer))) {
-                            out.write(buffer, 0, n);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private static void deleteFile(File file) {
-        if (!file.exists()) return;
-
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteFile(child);
-                }
-            }
-        }
-        file.delete();
     }
 }

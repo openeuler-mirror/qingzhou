@@ -10,6 +10,9 @@ public interface AppContext {
     // 应用配置属性
     Properties getProperties();
 
+    // 自动探测到的路径，在 MANIFEST 中配置了 Qingzhou-Detection-Feature-Files 等参数后有效
+    String getDetectedPath();
+
     // 平台实例的根目录
     File getBase();
 
