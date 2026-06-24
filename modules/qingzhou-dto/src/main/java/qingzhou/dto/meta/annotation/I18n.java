@@ -1,5 +1,5 @@
 package qingzhou.dto.meta.annotation;
 
-public class Group extends Base {
+public class I18n extends Base {
     public String[] name;
 }
