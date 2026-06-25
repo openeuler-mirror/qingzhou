@@ -32,9 +32,9 @@ class Converter {
     private static org.noear.solon.ai.chat.skill.Skill convertSkill(Skill skill) {
         return SkillDesc.builder(skill.name())
                 .description(skill.description())
-                .instruction(skill.getInstruction())
+                .instruction(skill.instruction())
                 .toolAdd(() -> {
-                    Collection<Tool> tools = skill.getTools();
+                    Collection<Tool> tools = skill.tools();
                     if (tools == null) return Collections.emptyList();
                     return tools.stream().map(Converter::convertTool).collect(Collectors.toSet());
                 }).build();
