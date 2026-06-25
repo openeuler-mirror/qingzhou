@@ -1,6 +1,5 @@
 package qingzhou.llm;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 public interface Skill {
@@ -14,7 +13,7 @@ public interface Skill {
     // 技能的工具集：该技能需要挂载的功能工具
     Collection<Tool> tools();
 
-    static Skill of(String name, String description, String instruction, Tool... tool) {
+    static Skill of(String name, String description, String instruction, Collection<Tool> tools) {
         return new Skill() {
             @Override
             public String name() {
@@ -33,7 +32,7 @@ public interface Skill {
 
             @Override
             public Collection<Tool> tools() {
-                return Arrays.asList(tool);
+                return tools;
             }
         };
     }

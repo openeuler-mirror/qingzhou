@@ -9,7 +9,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.SkillName;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
@@ -21,8 +21,6 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/app/info",
-        AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
-
         AiTool.TOOL_DESCRIPTION + "=该接口返回特定应用的详细信息，内容包括：应用的基本信息（代码标识、名称、描述等等）；应用内包含的业务模块列表信息（模块的代码标识、名称、描述、所属功能菜单等）。",
 
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
@@ -31,7 +29,7 @@ import qingzhou.registry.impl.WebUtil;
         AiTool.PARAMETER_NAME + ".2=" + WebUtil.APP_CODE,
         AiTool.PARAMETER_DESCRIPTION + ".2=应用的唯一编码，该编码在同一个轻舟实例下不会重复。"
 })
-public class AppInfo implements HttpHandler, AiTool {
+public class AppInfo implements HttpHandler, SystemAiTool {
     @Reference
     private Registry registry;
     @Reference

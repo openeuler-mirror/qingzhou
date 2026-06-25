@@ -6,7 +6,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.SkillName;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -16,9 +16,8 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/instance",
-        AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
         AiTool.TOOL_DESCRIPTION + "=该接口返回平台上注册的实例列表，每个实例包含实例ID和所在服务器的IP地址。"})
-public class Instance implements HttpHandler, AiTool {
+public class Instance implements HttpHandler, SystemAiTool {
     @Reference
     private Registry registry;
 
