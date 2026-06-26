@@ -1,6 +1,7 @@
 package qingzhou.llm.impl;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,8 +12,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.llm.ChatModelBuilder;
-import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.*;
 import qingzhou.llm.impl.log.Slf4jLogBridge;
 import qingzhou.logger.Logger;
 
@@ -76,12 +76,43 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
                     put("type", "adaptive");
                 }}))
                 .systemPrompt(systemPrompt)
-                .defaultSkillAdd(Converter.convertSkill(null))
                 .build();
     }
 
     @Override
-    public ChatModelBuilder newChatModelBuilder() {
-        return new ChatModelBuilderImpl(chatModel);
+    public ChatModel.Builder newChatModelBuilder() {
+        return new ChatModel.Builder() {
+            private String[] docs;
+            private Collection<Tool> tools;
+            private Collection<Skill> skills;
+
+            @Override
+            public ChatModel.Builder withDoc(String[] docs) {
+                this.docs = docs;
+                return this;
+            }
+
+            @Override
+            public ChatModel.Builder withTool(Collection<Tool> tools) {
+                this.tools = tools;
+                return this;
+            }
+
+            @Override
+            public ChatModel.Builder withSkill(Collection<Skill> skills) {
+                this.skills = skills;
+                return this;
+            }
+
+            @Override
+            public ChatModel build() {
+                return new ChatModelImpl(chatModel, docs, tools, skills);
+            }
+        };
+    }
+
+    @Override
+    public Attachment buildImageAttachment(String base64) {
+        return new ImageAttachment(base64);
     }
 }

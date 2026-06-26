@@ -9,7 +9,7 @@ import java.util.function.Function;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.SkillName;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.InstanceInfo;
@@ -21,9 +21,8 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/app/list",
-        AiTool.TOOL_SKILL_NAME + "=" + SkillName.PLATFORM_REGISTRY,
         AiTool.TOOL_DESCRIPTION + "=该接口返回已注册的应用列表信息。每个应用包含唯一标识、名称、描述、所属实例等信息。"})
-public class AppList implements HttpHandler, AiTool {
+public class AppList implements HttpHandler, SystemAiTool {
     @Reference
     private Registry registry;
 

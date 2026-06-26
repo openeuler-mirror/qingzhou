@@ -10,7 +10,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.SkillName;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 import qingzhou.dto.RequestImpl;
@@ -59,10 +59,9 @@ public class ActionToolRegister {
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(AiTool.TOOL_SKILL_NAME, SkillName.ACTION_INVOKER);
             properties.put(AiTool.TOOL_NAME, ActionToolRegister.class.getSimpleName() + "_" + invokedActionCode);
             properties.put(AiTool.TOOL_DESCRIPTION, toolDescription);
-            ServiceRegistration<AiTool> serviceRegistration = bundleContext.registerService(AiTool.class, toolArgs -> invokeActionTool(invokedActionCode, toolArgs), properties);
+            ServiceRegistration<SystemAiTool> serviceRegistration = bundleContext.registerService(SystemAiTool.class, toolArgs -> invokeActionTool(invokedActionCode, toolArgs), properties);
             registrations.add(serviceRegistration);
         });
     }

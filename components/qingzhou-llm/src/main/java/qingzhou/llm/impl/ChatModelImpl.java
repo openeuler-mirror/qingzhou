@@ -1,19 +1,22 @@
 package qingzhou.llm.impl;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.noear.solon.ai.chat.ChatResponse;
+import org.noear.solon.ai.chat.content.ContentBlock;
+import org.noear.solon.ai.chat.content.ImageBlock;
 import org.noear.solon.ai.chat.interceptor.ChatInterceptor;
 import org.noear.solon.ai.chat.interceptor.ToolChain;
 import org.noear.solon.ai.chat.interceptor.ToolRequest;
 import org.noear.solon.ai.chat.message.AssistantMessage;
 import org.noear.solon.ai.chat.message.ChatMessage;
 import org.noear.solon.ai.chat.tool.ToolResult;
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.Listener;
-import qingzhou.llm.Skill;
-import qingzhou.llm.Tool;
+import qingzhou.llm.*;
 
 public class ChatModelImpl implements ChatModel {
     private final org.noear.solon.ai.chat.ChatModel chatModel;
@@ -32,10 +35,20 @@ public class ChatModelImpl implements ChatModel {
     }
 
     @Override
-    public void chat(String message, Listener listener) {
-        ChatMessage chatMessage = docs != null && docs.length > 0
-                ? ChatMessage.ofUserAugment(message, Arrays.toString(docs))
-                : ChatMessage.ofUser(message);
+    public void chat(String message, Listener listener, Attachment... attachment) {
+        if (docs != null && docs.length > 0) {
+            message = String.format("%s\n\n Now: %s\n\n References: %s",
+                    message, LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), Arrays.toString(docs));
+        }
+        List<ContentBlock> blocks = new ArrayList<>();
+        if (attachment != null) {
+            for (Attachment attach : attachment) {
+                if (attach instanceof ImageAttachment) {
+                    blocks.add(ImageBlock.ofBase64(((ImageAttachment) attach).base64));
+                }
+            }
+        }
+        ChatMessage chatMessage = ChatMessage.ofUser(message, blocks);
         chatModel.prompt(chatMessage)
                 .options(op -> {
                     op.toolAdd(Converter.convertTool(tools));

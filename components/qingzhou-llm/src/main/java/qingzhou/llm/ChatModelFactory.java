@@ -1,5 +1,7 @@
 package qingzhou.llm;
 
 public interface ChatModelFactory {
-    ChatModelBuilder newChatModelBuilder();
+    ChatModel.Builder newChatModelBuilder();
+
+    Attachment buildImageAttachment(String base64);
 }

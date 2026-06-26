@@ -5,7 +5,7 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.AiTool;
-import qingzhou.ai.SkillName;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.json.Json;
@@ -15,8 +15,6 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {
-        AiTool.TOOL_SKILL_NAME + "=" + SkillName.ACTION_INVOKER,
-        
         AiTool.TOOL_DESCRIPTION + "=该接口用于检查某个模块是否具有某个操作，返回true表示有，false则没有，其它则输入参数有误。如果只需要知道某模块是否具有某操作或方法，那么应该调用此方法而不是调用获取应用模块详细信息的方法。",
 
         AiTool.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
@@ -31,7 +29,7 @@ import qingzhou.registry.impl.WebUtil;
         AiTool.PARAMETER_NAME + ".4=" + WebUtil.ACTION_CODE,
         AiTool.PARAMETER_DESCRIPTION + ".4=待检查的操作名"
 })
-public class IfActionExistsTool implements AiTool {
+public class IfActionExistsTool implements SystemAiTool {
     @Reference
     private Registry registry;
     @Reference
