@@ -23,7 +23,7 @@ import qingzhou.logger.Logger;
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat")
 public class AiChat implements HttpHandler {
     @Reference
-    private ChatModel chatModel;
+    private ChatModelFactory chatModelFactory;
     @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private EmbeddingModel embeddingModel;
     @Reference(cardinality = ReferenceCardinality.OPTIONAL)
@@ -123,10 +123,12 @@ public class AiChat implements HttpHandler {
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        chatModel.chat(question, refDocs,
-                null,
-                skillList,
-                new SseListener(httpResponse, logger, json));
+
+        ChatModel chatModel = chatModelFactory.newChatModelBuilder()
+                .withDoc(refDocs)
+                .withSkill(skillList)
+                .build();
+        chatModel.chat(question, new SseListener(httpResponse, logger, json));
     }
 
     static String resultToString(SseResult result, Json json) {

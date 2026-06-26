@@ -34,12 +34,12 @@ class SkillImpl implements Skill {
     }
 
     @Override
-    public String getInstruction() {
+    public String instruction() {
         return skill.getInstruction();
     }
 
     @Override
-    public Collection<Tool> getTools() {
+    public Collection<Tool> tools() {
         return skill.getTools().entrySet().stream().map(entry -> {
             AiTool aiTool = entry.getKey();
             Map<String, Object> toolProp = entry.getValue();

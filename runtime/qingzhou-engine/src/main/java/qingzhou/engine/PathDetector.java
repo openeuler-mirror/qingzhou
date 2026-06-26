@@ -13,13 +13,16 @@ import java.util.List;
 public class PathDetector {
     private final String featureFiles;
     private final String detectionEnvVars;
-    private final String scanRoots;
+    private String scanRoots;
     private final String processNames;
 
     PathDetector(Dictionary<String, String> attributes) {
         this.featureFiles = attributes.get("Qingzhou-Detection-Feature-Files");
         this.detectionEnvVars = attributes.get("Qingzhou-Detection-Env-Vars");
         this.scanRoots = attributes.get("Qingzhou-Detection-Scan-Roots");
+        if (this.scanRoots == null) {
+            this.scanRoots = System.getProperty("Qingzhou-Detection-Scan-Roots");
+        }
         this.processNames = attributes.get("Qingzhou-Detection-Process-Names");
     }
 
