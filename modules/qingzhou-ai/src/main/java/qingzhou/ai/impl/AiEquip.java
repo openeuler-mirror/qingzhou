@@ -18,14 +18,14 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.ChatModel;
+import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/equip",
         service = {AiEquip.class, HttpHandler.class})
 public class AiEquip implements HttpHandler {
     @Reference
-    private ChatModel chatModel; // 作用：利用 OSGI DS 机制，迫使本模块在没有加载 llm 的情况下不要初始化。
+    private ChatModelFactory chatModelFactory; // 作用：利用 OSGI DS 机制，迫使本模块在没有加载 llm 的情况下不要初始化。
 
     @Reference
     private Json json;
@@ -71,7 +71,12 @@ public class AiEquip implements HttpHandler {
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
-        llmSkills.put(skill, new SkillImpl(skill, properties));
+        llmSkills.put(skill,
+                Skill.of((String) properties.get(AiSkill.SKILL_NAME),
+                        skill.description(),
+                        skill.getInstruction(),
+                        Converter.convertAiTool(skill.getTools()))
+        );
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法

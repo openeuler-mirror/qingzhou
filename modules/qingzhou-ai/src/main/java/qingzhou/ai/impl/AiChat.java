@@ -7,12 +7,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.*;
+import qingzhou.ai.SystemAiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -39,6 +38,18 @@ public class AiChat implements HttpHandler {
 
     private VectorStore knowledgeStore;
     private String[] knowledgeDocs;
+
+    private final Map<SystemAiTool, Map<String, Object>> systemAiTools = new ConcurrentHashMap<>();
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    public void bindSystemAiTool(SystemAiTool tool, Map<String, Object> properties) {
+        systemAiTools.put(tool, properties);
+    }
+
+    // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
+    public void unbindSystemAiTool(SystemAiTool tool) {
+        systemAiTools.remove(tool);
+    }
 
     @Activate
     public void init() {
@@ -79,6 +90,7 @@ public class AiChat implements HttpHandler {
         // 解析请求
         String question = null;
         String skills = null;
+        String attachments = null;
         String apps = null;
         byte[] body = httpRequest.getBody();
         if (body != null && body.length > 0) {
@@ -89,6 +101,7 @@ public class AiChat implements HttpHandler {
                 question = map.get("question");
                 apps = map.get("apps");
                 skills = map.get("skills");
+                attachments = map.get("attachments");
             } catch (Exception e) {
                 logger.error("failed to convert to JSON: " + str);
             }
@@ -113,7 +126,7 @@ public class AiChat implements HttpHandler {
         }
 
         // 添加自定义技能
-        List<Skill> skillList = null;
+        List<Skill> skillList = new ArrayList<>();
         if (skills != null && !skills.isEmpty()) {
             String finalSkills = skills;
             skillList = aiEquip.llmSkills.values().stream().filter(skill -> Arrays.stream(finalSkills.split(",")).anyMatch(s -> skill.name().equals(s))).collect(Collectors.toList());
@@ -124,11 +137,20 @@ public class AiChat implements HttpHandler {
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
 
+
+        List<Attachment> attachmentList = new ArrayList<>();
+        if (attachments != null && !attachments.isEmpty()) {
+            for (String attach : attachments.split(",")) {
+                attachmentList.add(chatModelFactory.buildImageAttachment(attach));
+            }
+        }
+
         ChatModel chatModel = chatModelFactory.newChatModelBuilder()
                 .withDoc(refDocs)
+                .withTool(Converter.convertSystemAiTool(systemAiTools))
                 .withSkill(skillList)
                 .build();
-        chatModel.chat(question, new SseListener(httpResponse, logger, json));
+        chatModel.chat(question, new SseListener(httpResponse, logger, json), attachmentList.toArray(new Attachment[0]));
     }
 
     static String resultToString(SseResult result, Json json) {
