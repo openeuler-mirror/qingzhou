@@ -8,13 +8,14 @@ import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.*;
+import qingzhou.logger.Logger;
 
 @Model(code = "config", order = 4,
         name = {"配置", "en:Config"},
         info = {"系统配置管理", "en:System configuration management"},
         icon = "Setting",
         menu = "system")
-public class Config extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Config extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, SwitchSpace {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Config() {
@@ -169,5 +170,18 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
     @Override
     public void delete(String id) {
         db.remove(id);
+    }
+
+    private String currentSpace;
+
+    @Override
+    public void switchSpace(String id) throws Exception {
+        currentSpace = id;
+        getAppContext().getService(Logger.class).info("切换到：" + id);
+    }
+
+    @Override
+    public String currentSpace() {
+        return currentSpace;
     }
 }
