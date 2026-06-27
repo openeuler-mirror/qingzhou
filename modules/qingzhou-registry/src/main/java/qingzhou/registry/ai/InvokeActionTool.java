@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.ai;
 
 import java.util.*;
 
@@ -19,10 +19,10 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
-import qingzhou.registry.impl.WebUtil;
+import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
-public class ActionToolRegister {
+public class InvokeActionTool {
     @Reference
     private Registry registry;
     @Reference
@@ -53,13 +53,13 @@ public class ActionToolRegister {
         }};
 
         Map<String, String> tools = new HashMap<String, String>() {{
-            put(qingzhou.api.type.List.ACTION_CODE_LIST, "该接口返回某个应用模块的业务数据列表信息。");
-            put(Show.ACTION_CODE_SHOW, "该接口返回某个应用模块的某条业务数据的详细信息。");
-            put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某条数据的实时变量，一般可用来反映健康状况、危险告警等。");
+            put(qingzhou.api.type.List.ACTION_CODE_LIST, "该接口返回某个应用模块的业务数据或资源的列表信息。");
+            put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
+            put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(AiTool.TOOL_NAME, ActionToolRegister.class.getSimpleName() + "_" + invokedActionCode);
+            properties.put(AiTool.TOOL_NAME, InvokeActionTool.class.getSimpleName() + "_" + invokedActionCode);
             properties.put(AiTool.TOOL_DESCRIPTION, toolDescription);
             ServiceRegistration<SystemAiTool> serviceRegistration = bundleContext.registerService(SystemAiTool.class, toolArgs -> invokeActionTool(invokedActionCode, toolArgs), properties);
             registrations.add(serviceRegistration);

@@ -20,7 +20,7 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.service.Refresh;
+import qingzhou.registry.web.Refresh;
 
 class AppStubRemoteImpl implements AppStubRemote {
     private final InstanceInfo instanceInfo;

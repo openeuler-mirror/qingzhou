@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.ai;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
-import qingzhou.registry.impl.WebUtil;
+import qingzhou.registry.web.WebUtil;
 
 @Component(property = {
         AiTool.TOOL_DESCRIPTION + "=该接口用于检查某个模块是否具有某个操作，返回true表示有，false则没有，其它则输入参数有误。如果只需要知道某模块是否具有某操作或方法，那么应该调用此方法而不是调用获取应用模块详细信息的方法。",

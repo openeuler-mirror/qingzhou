@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.web;
 
 import java.util.*;
 import java.util.function.Function;
@@ -13,10 +13,9 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
-import qingzhou.registry.impl.WebUtil;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/instance",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回平台上注册的实例列表，每个实例包含实例ID和所在服务器的IP地址。"})
+        AiTool.TOOL_DESCRIPTION + "=该接口返回轻舟平台上注册的所有轻舟实例的列表信息，每个实例包含实例ID和所在服务器的IP地址等信息。"})
 public class Instance implements HttpHandler, SystemAiTool {
     @Reference
     private Registry registry;

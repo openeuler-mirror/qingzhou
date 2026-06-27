@@ -1,4 +1,4 @@
-package qingzhou.qr.impl;
+package qingzhou.image.impl;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -7,18 +7,17 @@ import java.util.List;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
-import io.nayuki.qrcodegen.QrCode;
 import io.nayuki.qrcodegen.QrSegment;
 import org.osgi.service.component.annotations.Component;
-import qingzhou.qr.QrGenerator;
+import qingzhou.image.QrCode;
 
 @Component
-public class QrGeneratorImpl implements QrGenerator {
+public class QrCodeImpl implements QrCode {
     @Override
-    public byte[] generateQrImage(String qrCode, String format, int scale, int border, int lightColor, int darkColor) throws IOException {
-        BufferedImage qrImage = genQrImage(qrCode, scale, border, lightColor, darkColor);
+    public byte[] genImage(String qrCode, int scale) throws IOException {
+        BufferedImage qrImage = genQrImage(qrCode, scale, 1, 0xFFFFFFFF, 0xFF000000);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ImageIO.write(qrImage, format, bos);
+        ImageIO.write(qrImage, "png", bos);
         return bos.toByteArray();
     }
 
@@ -40,7 +39,7 @@ public class QrGeneratorImpl implements QrGenerator {
      */
     private BufferedImage genQrImage(String qrCode, int scale, int border, int lightColor, int darkColor) {
         List<QrSegment> segs = QrSegment.makeSegments(qrCode);
-        QrCode qr = QrCode.encodeSegments(segs, QrCode.Ecc.HIGH, QrCode.MIN_VERSION, QrCode.MAX_VERSION, -1, true);  // Automatic mask
+        io.nayuki.qrcodegen.QrCode qr = io.nayuki.qrcodegen.QrCode.encodeSegments(segs, io.nayuki.qrcodegen.QrCode.Ecc.HIGH, io.nayuki.qrcodegen.QrCode.MIN_VERSION, io.nayuki.qrcodegen.QrCode.MAX_VERSION, -1, true);  // Automatic mask
         Objects.requireNonNull(qr);
         if (scale <= 0 || border < 0) {
             throw new IllegalArgumentException("QrCode Value out of range");

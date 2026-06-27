@@ -1,4 +1,4 @@
-package qingzhou.registry.impl;
+package qingzhou.registry.web;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +8,6 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
-import qingzhou.registry.service.HandlingContext;
 
 public class WebUtil {
     private static final String REQUEST_PARAMETER_NAME_CACHE_KEY = "cache_key";
@@ -19,7 +18,7 @@ public class WebUtil {
     public static final String ACTION_CODE = "actionCode";
     public static final String DATA_ID = "dataId";
 
-    public static boolean cached(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
+    static boolean cached(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
         String cacheKey = httpRequest.getParameter(REQUEST_PARAMETER_NAME_CACHE_KEY);
         if (cacheKey != null) {
             try {
@@ -35,7 +34,7 @@ public class WebUtil {
         return false;
     }
 
-    public static void sendResult(Function<HandlingContext, Object> function, HttpRequest httpRequest, HttpResponse httpResponse, Registry registry, Json json) throws Exception {
+    static void sendResult(Function<HandlingContext, Object> function, HttpRequest httpRequest, HttpResponse httpResponse, Registry registry, Json json) throws Exception {
         Object result = function.apply(httpRequest::getParameter);
         Map<String, Object> metaData = new HashMap<>();
         metaData.put("data", result);

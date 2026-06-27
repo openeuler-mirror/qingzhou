@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.web;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;

@@ -15,7 +15,7 @@
         <module>qingzhou-logger</module>
         <module>qingzhou-json</module>
         <module>qingzhou-jdbc</module>
-        <module>qingzhou-qr</module>
+        <module>qingzhou-image</module>
         <module>qingzhou-crypto</module>
         <module>qingzhou-http-server</module>
         <module>qingzhou-http-client</module>

@@ -1,4 +1,4 @@
-package qingzhou.registry.service;
+package qingzhou.registry.web;
 
 public interface HandlingContext {
     String getParameter(String name);
