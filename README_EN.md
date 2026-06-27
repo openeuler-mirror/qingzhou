@@ -1,109 +1,57 @@
-# Qingzhou One-Stop Intelligent Management Platform
+# Qingzhou – One‑Stop Intelligent Management Platform
 
 ## Overview
 
-Qingzhou is a lightweight Java-based software development platform primarily designed to enable unified management and
-intelligent operations for heterogeneous business systems across multiple categories.
-
-Driven by an innovative model-driven architecture, it allows developers to dynamically generate front-end pages by
-simply writing plain Java classes and using declarative annotations, thereby completely eliminating the tedious work of
-front-end development.
-
-This core advantage not only significantly reduces initial development costs and greatly improves delivery efficiency,
-but also fundamentally lowers system maintenance complexity, delivering substantial value through reduced maintenance
-costs and long-term gains.
-
-Additionally, Qingzhou leverages auto-discovery, plug-in-based extensibility, unified API specifications,
-front-end/back-end separation, and large-model-driven natural language interaction to empower enterprises to manage
-various business systems in a standardized, cost-effective, and highly flexible manner, while upgrading traditional
-manual operations to intent-driven intelligent management and control.
+Qingzhou (轻舟) is a lightweight Java‑based software development platform designed primarily for unified management and intelligent operations of heterogeneous business systems across multiple categories. Through an innovative model‑driven architecture, it enables developers to simply write plain JavaBeans and use declarative annotations to dynamically generate front‑end pages, completely eliminating tedious front‑end development work. This core advantage not only significantly reduces initial development costs and greatly improves delivery efficiency, but also fundamentally lowers system maintenance complexity, delivering substantial value through reduced upkeep costs and long‑term benefits. In addition, Qingzhou leverages auto‑discovery, plugin‑based extensibility, unified API specifications, front‑end/back‑end separation, and large‑model‑driven natural language interaction, empowering enterprises to manage various business systems in a standardized, cost‑effective, and highly flexible manner, while upgrading traditional manual operations to intent‑driven intelligent governance.
 
 ### Core Features and Capabilities
 
 1. **Centralized Management**  
-   By deploying the "Qingzhou Agent" on the server side, enterprises no longer need to configure separate management
-   entry points for each business system. The agent automatically discovers and remotely registers various systems to
-   the "Qingzhou Management Console." This mechanism greatly reduces operational complexity and avoids information silos
-   and redundant effort caused by decentralized management of multiple systems. At the same time, centralized management
-   enables global monitoring, unified configuration, and batch operations, significantly improving the transparency and
-   efficiency of enterprise IT governance and laying the foundation for large-scale operations.
+   By deploying a "Qingzhou Agent" on the server side, enterprises no longer need to configure separate management entry points for each business system. The agent automatically discovers and remotely registers various systems to the "Qingzhou Management Console." This mechanism greatly reduces operational complexity and avoids information silos and redundant efforts caused by decentralized management of multiple systems. At the same time, centralized management enables global monitoring, unified configuration, and batch operations, significantly enhancing the transparency and efficiency of enterprise IT governance and laying a solid foundation for large‑scale operations.
 
-2. **Plug-in Architecture**  
-   The Qingzhou Agent does not hardcode governance logic directly. Instead, it executes specific operations by
-   dispatching "Qingzhou Apps" (plug-ins) that comply with the Qingzhou API specifications. This plug-in design
-   decouples the core framework from business implementations. When adding or upgrading governance capabilities for a
-   business system, only the corresponding plug-in needs to be added or removed, without modifying the agent core. The
-   significance lies in providing extremely high extensibility and flexibility: enterprises can combine governance
-   capabilities as needed, while third-party developers are supported in contributing plug-ins, fostering an open
-   ecosystem and effectively avoiding system reconstruction costs caused by business changes.
+2. **Plugin‑Based Architecture**  
+   Qingzhou does not hardcode management logic directly; instead, it dispatches plugins that conform to the Qingzhou API specification—called "Qingzhou Apps"—to perform specific actions. This plugin‑based design decouples the core framework from business implementations, allowing easy addition or removal of plugins when new management capabilities are needed or existing ones are upgraded. The significance lies in offering extremely high extensibility and flexibility: enterprises can combine management capabilities on demand, while third‑party developers are encouraged to contribute plugins, fostering an open ecosystem and effectively avoiding system refactoring costs caused by evolving business requirements.
 
-3. **Unified Specifications**  
-   Qingzhou APIs provide a set of standard development specifications for all business systems, covering interface
-   definitions, interaction patterns, and integration modes. This enables multiple originally heterogeneous and
-   disparate systems to present a consistent "language" and "look and feel" to administrators, achieving truly
-   consistent management. The value lies in drastically reducing learning costs and error rates – administrators no
-   longer need to familiarize themselves with the proprietary operation methods of each different system. Meanwhile,
-   standardized interfaces provide a solid foundation for automated and scripted operations, driving enterprises from "
-   human-driven" to "rule-driven" standardized operations systems.
+3. **Unified Standards**  
+   Qingzhou provides a set of standard development specifications for all business systems, covering interface definitions, user interaction, and integration patterns. This enables heterogeneous systems with diverse styles to present a consistent "language" and "look‑and‑feel" to administrators, achieving truly uniform management. The value lies in drastically reducing learning curves and operational errors—administrators no longer need to memorize different proprietary operations for each system. Moreover, standardized interfaces lay a robust foundation for automated and scripted operations, driving enterprises from human‑driven to rule‑based standardized operations.
 
-4. **Front-End/Back-End Separation**  
-   Supports the independent deployment of the front-end and back-end, allowing the front-end to be hosted separately on
-   high-performance servers such as Nginx. This architecture brings three core values: First, the front-end and back-end
-   can scale independently, ensuring that high-concurrency front-end access does not squeeze back-end computing
-   resources. Second, it decouples development and deployment, enabling the front-end to iterate UI independently while
-   the back-end focuses on services, thereby enhancing team collaboration efficiency. Third, communication via standard
-   APIs facilitates flexible integration with components like unified authentication and API gateways in cloud-native
-   environments, and supports UI-level integration with third-party systems.
+4. **Front‑End / Back‑End Separation**  
+   Qingzhou supports independent deployment of the front end and back end, with the front end able to be hosted separately on high‑performance servers such as Nginx. This architecture delivers three core benefits: first, the front end and back end can scale elastically independently, so high concurrent UI traffic does not consume back‑end computing resources; second, development and release are decoupled—the front end can iterate its UI independently while the back end focuses on services, improving team collaboration efficiency; third, standard API communication facilitates integration with unified authentication, API gateways, and other cloud‑native components, while also enabling UI‑level integration with third‑party systems.
 
-5. **AI-Driven Intelligent Governance**  
-   After integrating large model capabilities, administrators no longer need to memorize complex operation paths or
-   scripts. They simply describe their intent in natural language (e.g., "adjust the timeout threshold of the order
-   system to 30 seconds"), and the system automatically understands and executes the corresponding governance logic.
-   This achieves a fundamental upgrade from traditional manual configuration and click-based operations to intent-driven
-   management, greatly lowering operational barriers and even enabling non-technical personnel to participate in daily
-   management. The deeper value is that AI can proactively recommend optimization strategies and predict anomalies based
-   on historical data and context, shifting the governance system from passive response to proactive intelligent
-   stewardship, freeing up productivity and reducing human errors.
+5. **AI‑Driven Intelligent Operations**  
+   Qingzhou integrates large language model capabilities, allowing administrators to use natural language to describe their intent (e.g., "Summarize the overall health status of the system") without needing to remember complex operation paths or scripts. The system automatically understands and executes the corresponding management logic. This represents a fundamental upgrade from traditional manual configuration and click‑based operations to intent‑driven management, dramatically lowering the operational barrier—even non‑technical personnel can participate in daily administration. More profoundly, AI can proactively recommend optimization strategies and predict anomalies based on historical data and context, transforming the management system from reactive to proactive intelligent governance, unleashing productivity and reducing human errors.
 
-### Applicability
+6. **Support for REST and MCP Multi‑Protocol Integration**  
+   Qingzhou’s multi‑protocol integration is not a simple superposition but rather generates both REST and MCP access capabilities on the same business model:
+    - **REST protocol**: targets traditional web front ends, mobile apps, and third‑party system integrations, meeting conventional HTTP API invocation needs;
+    - **MCP protocol**: targets intelligent application scenarios such as large language models and AI agents, providing standardized tool‑call interfaces.  
+      Developers only need to maintain a single set of JavaBean business models, which simultaneously support both "manual operation interfaces" and "AI‑driven intelligent calls"—truly enabling "write once, output via dual protocols." This greatly reduces maintenance costs associated with adapting systems across multiple ecosystems.
 
-Based on Qingzhou's positioning of "centralized governance and intelligent operations for heterogeneous systems," it is
-most suitable for developing enterprise-level management applications that are **cross-system, governance-heavy, and
-standardization-oriented** – i.e., "systems that manage business systems":
+### Scope of Application
 
-1. **Unified IT Operations & Governance**
-    - Typical scenarios: multi-cloud management platforms, hybrid cloud monitoring centers, automated operations
-      platforms.
-    - Fit: leverages "agent registration" to automatically connect across network nodes, and centralized monitoring with
-      batch operations solves the pain points of decentralized operations.
+Given Qingzhou’s positioning as a platform for "centralized management and intelligent operations of heterogeneous systems," it is best suited for developing **cross‑system, management‑oriented, and standardized** enterprise management applications (i.e., "systems that manage business systems"):
+
+1. **Unified IT Operations and Management Platforms**
+    - Typical scenarios: multi‑cloud management platforms, hybrid cloud monitoring centers, automated operations platforms.
+    - Fit: The "agent registration" mechanism enables automatic access across network nodes, and centralized monitoring with batch operations addresses the pain points of distributed operations.
 
 2. **Heterogeneous Business System Aggregation Portals**
-    - Typical scenarios: enterprise unified management portals (integrating ERP, CRM, OA, etc.), cross-system data
-      dashboards.
-    - Fit: uses "plug-ins" to adapt to different underlying systems, and employs "unified APIs and UI specifications" to
-      mask heterogeneity and deliver a consistent experience.
+    - Typical scenarios: enterprise unified management portals (integrating ERP, CRM, OA, etc.), cross‑system data dashboards.
+    - Fit: The "plugin" approach adapts to different underlying systems, while "unified APIs and UI specifications" mask heterogeneity to provide a consistent experience.
 
 3. **IoT and Edge Device Management**
-    - Typical scenarios: edge gateway consoles, distributed IoT device monitoring and configuration systems.
-    - Fit: the agent mechanism naturally suits edge node access, and plug-ins are suitable for handling proprietary
-      protocols of diverse device types.
+    - Typical scenarios: edge gateway management consoles, distributed IoT device monitoring and configuration systems.
+    - Fit: The agent model naturally fits edge node access, and plugins are well‑suited to handle private protocols of diverse device types.
 
 4. **Security and Compliance Auditing**
-    - Typical scenarios: unified permission governance centers, global security policy inspection and distribution
-      systems.
-    - Fit: centralized governance facilitates unified global policy distribution and auditing, while standardized
-      interfaces enable cross-system compliance comparison.
+    - Typical scenarios: unified permission governance centers, global security policy inspection and distribution systems.
+    - Fit: Centralized control facilitates unified policy distribution and auditing across systems, while standardized interfaces enable cross‑system compliance comparisons.
 
-5. **Intent-Driven Intelligent Operations**
-    - Typical scenarios: AIOps intelligent operations assistants, natural language-driven business configuration
-      centers.
-    - Fit: leverages the platform's "AI + large model" advantages to transform complex cross-system configuration and
-      inspection tasks into simple natural-language interactive commands.
+5. **Intent‑Driven Intelligent Operations**
+    - Typical scenarios: AIOps intelligent assistants, natural‑language‑driven business configuration centers.
+    - Fit: Leveraging the platform’s "AI + large model" strengths, complex cross‑system configuration and inspection tasks are converted into simple natural‑language commands.
 
-> **Core conclusion**: The Qingzhou platform is not meant for developing specific production business systems (such as
-> transaction cores or order systems). Instead, it is meant for developing **"management systems" – systems that manage
-other systems**. Any application featuring "multi-source heterogeneous access, centralized unified governance, and
-> intent-based intelligent operations" is an ideal fit.
+> **Core takeaway**: The Qingzhou platform is not intended for developing specific production business systems (such as trading cores or order systems), but rather for building **"management systems"** – applications that exhibit the characteristics of "multi‑source heterogeneous access, centralized unified control, and intent‑driven intelligent operations" are its ideal use cases.
 
 ### Qingzhou Architecture Diagram
 
@@ -112,12 +60,9 @@ other systems**. Any application featuring "multi-source heterogeneous access, c
 ## Quick Start
 
 - Environment requirements: JDK 1.8+ and Maven 3.8+.
-- Build: In the source root directory, run `mvn clean install -DskipTests` to obtain the binary product package (
-  `/qingzhou/target/qingzhou`).
-- Startup: Go to the `bin` directory of the product package and execute the startup script (e.g., `sh start.sh` on
-  Linux/macOS).
-- Access: After startup, open `http://localhost:7900/web` in a browser to access the Qingzhou visual web management
-  console.
+- Build: Run `mvn clean install -DskipTests` in the source root directory to obtain the binary product package (`/qingzhou/target/qingzhou`).
+- Start: Go to the `bin` directory of the product package and execute the startup script (e.g., on Linux/macOS run `sh start.sh`).
+- Access: After startup, open your browser and visit `http://localhost:7900/web` to access the Qingzhou visual web console.
 
 ## Features
 
@@ -131,61 +76,50 @@ other systems**. Any application featuring "multi-source heterogeneous access, c
 
 ### Configuration Parameters
 
-The configuration file is located at `product-package/instances/default/conf/qingzhou.properties`. After modification,
-restart the Qingzhou instance for changes to take effect.
+The configuration parameters file is located at `product-package/instances/default/conf/qingzhou.properties`. After modification, restart the Qingzhou instance for the changes to take effect.
 
 ### Directory Structure
 
 The directory structure of the Qingzhou binary product package is as follows:
 
 - `bin`: Executable programs directory.
-    - `start.sh`: Startup script for Linux/Mac; you can append a space and an instance name to specify the instance to
-      start (i.e., a subdirectory name under `instances`), default is `default`.
-    - `start.bat`: Startup script for Windows; you can append a space and an instance name to specify the instance to
-      start (i.e., a subdirectory name under `instances`), default is `default`.
-    - `gen-cipher-key.sh`: Generates a random symmetric encryption key for the service
-      `qingzhou.crypto.Crypto.getCipher(String key)`.
-    - `gen-pair-key.sh`: Generates a random asymmetric public/private key pair for the service
-      `qingzhou.crypto.Crypto.getPairCipher(String publicKey, String privateKey)`.
-- `instances`: Instance data directory; you can duplicate multiple instances for different purposes, e.g., development,
-  testing, etc.
-    - `default`: The default instance directory.
-- `lib`: Contains compiled binary `*.jar` files from the source code.
-    - `version*.zip`: Distribution zip package containing Qingzhou binary `*.jar` files; it is automatically extracted
-      at startup. After extraction, this file is no longer needed and can be deleted or kept.
-    - `version*` directory: Automatically generated at startup from the `version*.zip` extraction; the `*.jar` files
-      under this directory are loaded into memory.
-    - Important note: At startup, if the `version*` directory already exists, it will be compared with `version*.zip`;
-      if inconsistent, the directory will be deleted and regenerated. To disable this behavior, move `version*.zip` out
-      of this directory or rename it so it does not start with `version`.
+    - `start.sh`: Startup script for Linux/Mac platforms. You can specify the instance to start by appending a space and the instance name (i.e., a subdirectory name under `instances`). The default is `default`.
+    - `start.bat`: Startup script for Windows platforms. You can specify the instance to start by appending a space and the instance name (i.e., a subdirectory name under `instances`). The default is `default`.
+    - `gen-cipher-key.sh`: Generates a random symmetric encryption key for the service `qingzhou.crypto.Crypto.getCipher(String key)`.
+    - `gen-pair-key.sh`: Generates a random asymmetric public/private key pair for the service `qingzhou.crypto.Crypto.getPairCipher(String publicKey, String privateKey)`.
+- `instances`: Instance data directories. You can create multiple copies for different purposes, e.g., development, testing, etc.
+    - `default`: The default instance directory used at startup.
+- `lib`: Contains the compiled binary `*.jar` files of Qingzhou source code.
+    - `version*.zip`: Distribution zip package of the Qingzhou binary `*.jar` files. It is automatically extracted during startup; after extraction, this file is no longer needed and may be deleted or kept.
+    - `version*` directory: Automatically generated during startup by extracting `version*.zip`. The `*.jar` files under this directory are loaded into memory.
+    - **Important note**: At startup, if the `version*` directory already exists, its contents are compared with `version*.zip`. If they do not match, the directory is deleted and regenerated. To disable this behavior, move the `version*.zip` file out of this directory or rename it so that it no longer starts with `version`.
 
-### Service Endpoints
+### Service Interfaces
 
-The service endpoints (HTTP) exposed by Qingzhou are as follows:
+The HTTP interfaces opened by Qingzhou services are as follows:
 
-| Endpoint URI          | Description                                              |
-|-----------------------|----------------------------------------------------------|
-| `/registry/register`  | Register an application on a remote instance             |
-| `/registry/refresh`   | Refresh the communication key of a remote instance       |
-| `/registry/invoke`    | Invoke a module operation of a specified application     |
-| `/registry/instance`  | Get the list of registered instances                     |
-| `/registry/app/list`  | Get the list of registered applications                  |
-| `/registry/app/info`  | Get detailed information of a specific application       |
-| `/registry/app/model` | Get module information of a specific application         |
-| `/agent`              | Execute operations on a remote instance                  |
-| `/web`                | Management console front-end static assets               |
-| `/ai/chat`            | Natural language interaction for intelligent governance  |
-| `/ai/equip`           | Prompt configuration supported by intelligent governance |
+| Interface URI         | Description                                 |
+|-----------------------|---------------------------------------------|
+| /registry/register    | Register an application on a remote instance |
+| /registry/refresh     | Refresh the communication key of a remote instance |
+| /registry/invoke      | Execute a module operation of a specified application |
+| /registry/instance    | Retrieve the list of registered instances    |
+| /registry/app/list    | Retrieve the list of registered applications |
+| /registry/app/info    | Retrieve detailed information of a specific application |
+| /registry/app/model   | Retrieve module information of a specific application |
+| /agent                | Execute an application operation on a remote instance |
+| /web                  | Front‑end static resources of the management console |
+| /ai/chat              | Natural language interaction for intelligent management |
+| /ai/equip             | Prompt configuration supported by the intelligent management feature |
 
-### Front-End/Back-End Separation
+### Front‑End / Back‑End Separation
 
-Qingzhou adopts a front-end/back-end separation architecture, supporting independent deployment of the front end and
-back end.
+Qingzhou adopts a front‑end / back‑end separation architecture, supporting independent deployment of the two tiers.
 
 Below is an example of deploying the Qingzhou front end independently on Nginx:
 
-1. The front-end static assets are located in the source directory `modules/qingzhou-web/src/main/resources/webapp`.
-2. Add the following configuration to Nginx:
+1. The front‑end static resources are located in the source directory `modules/qingzhou-web/src/main/resources/webapp`.
+2. Add the following configuration to your Nginx configuration:
     ```nginx
     server {
         listen 8000;
@@ -210,7 +144,7 @@ Below is an example of deploying the Qingzhou front end independently on Nginx:
     }
     ```
 3. Start the Nginx service.
-4. Access `http://localhost:8000/web` to open the Qingzhou management console.
+4. Visit `http://localhost:8000/web` to open the Qingzhou management console.
 
 ### Frequently Asked Questions
 
