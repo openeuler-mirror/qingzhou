@@ -256,7 +256,7 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-web</artifactId>
+            <artifactId>qingzhou-static-assets</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

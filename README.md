@@ -126,14 +126,14 @@ Qingzhou（轻舟）还通过自动发现、插件化扩展、统一API规范、
 
 以下是将轻舟前端独立部署到 Nginx 上的示例：
 
-1. 前端静态资源位于源码目录 `modules/qingzhou-web/src/main/resources/webapp`。
+1. 前端静态资源位于源码目录 `modules/qingzhou-static-assets/src/main/resources/webapp`。
 2. 在 Nginx 配置中添加以下内容：
     ```asciidoc
     server {
         listen 8000;
 
         location /web {
-            alias /modules/qingzhou-web/src/main/resources/webapp;
+            alias /modules/qingzhou-static-assets/src/main/resources/webapp;
             index index.html;
             try_files $uri $uri/ /web/index.html;
         }

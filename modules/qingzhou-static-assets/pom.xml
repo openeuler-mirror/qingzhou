@@ -9,7 +9,7 @@
     </parent>
 
     <packaging>bundle</packaging>
-    <artifactId>qingzhou-web</artifactId>
+    <artifactId>qingzhou-static-assets</artifactId>
 
     <dependencies>
         <dependency>

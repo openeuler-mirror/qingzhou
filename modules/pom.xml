@@ -18,6 +18,6 @@
         <module>qingzhou-registry</module>
         <module>qingzhou-agent</module>
         <module>qingzhou-ai</module>
-        <module>qingzhou-web</module>
+        <module>qingzhou-static-assets</module>
     </modules>
 </project>

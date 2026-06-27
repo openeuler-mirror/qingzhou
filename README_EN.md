@@ -184,14 +184,14 @@ back end.
 
 Below is an example of deploying the Qingzhou front end independently on Nginx:
 
-1. The front-end static assets are located in the source directory `modules/qingzhou-web/src/main/resources/webapp`.
+1. The front-end static assets are located in the source directory `modules/qingzhou-static-assets/src/main/resources/webapp`.
 2. Add the following configuration to Nginx:
     ```nginx
     server {
         listen 8000;
 
         location /web {
-            alias /modules/qingzhou-web/src/main/resources/webapp;
+            alias /modules/qingzhou-static-assets/src/main/resources/webapp;
             index index.html;
             try_files $uri $uri/ /web/index.html;
         }
