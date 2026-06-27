@@ -11,18 +11,16 @@ import qingzhou.ai.AiTool;
 import qingzhou.ai.OpenSkills;
 
 @Component(property = AiSkill.SKILL_NAME + "=" + OpenSkills.Inspection)
-public class Inspection extends AiSkillBase implements AiSkill {
-    public Inspection() {
+public class InspectionAiSkill extends AiSkillBase implements AiSkill {
+    public InspectionAiSkill() {
         super(new String[]{"系统巡检", "en:System Inspection"},
-                "该技能在用户请求检查系统健康状态、查看资源负载或生成巡检报告时触发，旨在对IT基础设施进行例行排查与状态评估。",
-                "技能名称：系统巡检 (System Inspection)\n" +
-                        "\n" +
-                        "触发描述：\n" +
-                        "当用户意图涉及对服务器、应用或IT基础设施的健康状态检查、性能监控或例行排查时触发此技能。具体触发场景包括但不限于：\n" +
+                "当用户意图涉及对服务器、应用或IT基础设施的健康状态检查、性能监控或例行排查时触发此技能。具体触发场景包括但不限于：\n" +
                         "用户明确请求进行系统巡检、健康检查（Health Check）或状态诊断（如：“帮我做个系统巡检”、“检查下服务器状态”）。\n" +
                         "用户要求查看或汇报当前的资源使用情况（如 CPU、内存、磁盘、网络负载等）。\n" +
                         "用户询问系统指标是否达到或超过预设的安全告警阈值。\n" +
-                        "用户要求基于当前系统状态生成一份结构化的巡检报告或运维诊断总结。");
+                        "用户要求基于当前系统状态生成一份结构化的巡检报告或运维诊断总结。",
+                "操作指令：\n" +
+                        "\n");
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
