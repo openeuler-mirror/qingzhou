@@ -190,12 +190,6 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void unregisterHttpHandler(HttpHandler httpHandler) {
-        for (Map.Entry<String, HttpHandler> entry : handlerMap.entrySet()) {
-            if (entry.getValue().equals(httpHandler)) {
-                String key = entry.getKey();
-                handlerMap.remove(key);
-                break;
-            }
-        }
+        removeHttpHandler(httpHandler);
     }
 }

@@ -1,4 +1,4 @@
-package qingzhou.ai.impl;
+package qingzhou.ai;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,17 +8,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.ComponentConstants;
-import qingzhou.ai.AiTool;
-import qingzhou.ai.SystemAiTool;
 import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 
-class Converter {
-    static Collection<Tool> convertSystemAiTool(Map<SystemAiTool, Map<String, Object>> aiTools) {
+public class Converter {
+    public static Collection<Tool> convertSystemAiTool(Map<SystemAiTool, Map<String, Object>> aiTools) {
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
-    static Collection<Tool> convertAiTool(Map<AiTool, Map<String, Object>> aiTools) {
+    public static Collection<Tool> convertAiTool(Map<AiTool, Map<String, Object>> aiTools) {
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 

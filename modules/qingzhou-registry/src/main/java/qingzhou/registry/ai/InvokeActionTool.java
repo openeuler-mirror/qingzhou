@@ -61,8 +61,8 @@ public class InvokeActionTool {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
             properties.put(AiTool.TOOL_NAME, InvokeActionTool.class.getSimpleName() + "_" + invokedActionCode);
             properties.put(AiTool.TOOL_DESCRIPTION, toolDescription);
-            ServiceRegistration<SystemAiTool> serviceRegistration = bundleContext.registerService(SystemAiTool.class, toolArgs -> invokeActionTool(invokedActionCode, toolArgs), properties);
-            registrations.add(serviceRegistration);
+            SystemAiTool systemAiTool = toolArgs -> InvokeActionTool.this.invokeActionTool(invokedActionCode, toolArgs);
+            registrations.add(bundleContext.registerService(SystemAiTool.class, systemAiTool, properties));
         });
     }
 
