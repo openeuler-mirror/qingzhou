@@ -20,7 +20,7 @@ public class InspectionAiSkill extends AiSkillBase implements AiSkill {
                         "用户询问系统指标是否达到或超过预设的安全告警阈值。\n" +
                         "用户要求基于当前系统状态生成一份结构化的巡检报告或运维诊断总结。",
                 "操作指令：\n" +
-                        "\n");
+                        "遍历所选的应用，检查应用下的所有模块，检查模块是否具有名字为\"monitor\"的操作，如果有则调用这个操作，该操作返回的数据用作本次系统巡检的素材。\n");
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,

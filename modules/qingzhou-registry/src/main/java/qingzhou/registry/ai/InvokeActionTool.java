@@ -48,7 +48,7 @@ public class InvokeActionTool {
             put(AiTool.PARAMETER_DESCRIPTION + ".3", "模块的唯一编码，该编码在同一个应用内不会重复。");
 
             put(AiTool.PARAMETER_NAME + ".4", WebUtil.DATA_ID);
-            put(AiTool.PARAMETER_DESCRIPTION + ".4", "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前执行的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
+            put(AiTool.PARAMETER_DESCRIPTION + ".4", "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前调用的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
             put(AiTool.PARAMETER_REQUIRED + ".4", "false");
         }};
 
