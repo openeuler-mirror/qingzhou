@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.*;
+import qingzhou.ai.Converter;
 import qingzhou.ai.SystemAiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;

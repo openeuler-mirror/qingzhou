@@ -116,11 +116,12 @@
             <includes>
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-api</include>
-                <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-dto</include>
+                <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-agent</include>
-                <include>${project.groupId}:qingzhou-ai</include>
                 <include>${project.groupId}:qingzhou-web</include>
+                <include>${project.groupId}:qingzhou-ai</include>
+                <include>${project.groupId}:qingzhou-mcp</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -134,7 +135,7 @@
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-xml</include>
                 <include>${project.groupId}:qingzhou-jdbc</include>
-                <include>${project.groupId}:qingzhou-qr</include>
+                <include>${project.groupId}:qingzhou-image</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-http-server</include>
                 <include>${project.groupId}:qingzhou-http-client</include>

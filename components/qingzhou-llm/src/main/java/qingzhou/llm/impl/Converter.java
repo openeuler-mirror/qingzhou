@@ -1,6 +1,5 @@
 package qingzhou.llm.impl;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -49,11 +48,6 @@ class Converter {
         if (parameters != null) {
             for (Parameter parameter : parameters) {
                 functionTool.paramAdd(parameter.name(), String.class, parameter.required(), parameter.description(), null, null);
-                String[] list = parameter.enumValues();
-                if (list != null && list.length != 0) {
-                    String enumValues = Arrays.toString(list);
-                    functionTool.description(functionTool.description() + " Optional values: " + enumValues + ", you can only choose one of these values as input.");
-                }
             }
         }
         return functionTool;

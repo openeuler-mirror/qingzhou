@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import qingzhou.ai.AiSkill;
 import qingzhou.ai.AiTool;
 
-public abstract class AiSkillBase implements AiSkill {
+abstract class AiSkillBase implements AiSkill {
     private final String[] nameI18n;
     private final String description;
     private final String instruction;
