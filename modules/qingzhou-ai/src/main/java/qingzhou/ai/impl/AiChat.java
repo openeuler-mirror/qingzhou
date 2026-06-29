@@ -91,20 +91,20 @@ public class AiChat implements HttpHandler {
         // 解析请求
         String question = null;
         String skills = null;
-        String attachments = null;
+        Object attachments = null;
         String apps = null;
         byte[] body = httpRequest.getBody();
         if (body != null && body.length > 0) {
             String str = new String(body, StandardCharsets.UTF_8);
             try {
                 // 在应用里面可包含实例id和应用code等参数
-                Map<String, String> map = json.fromJson(str, HashMap.class);
-                question = map.get("question");
-                apps = map.get("apps");
-                skills = map.get("skills");
+                Map<String, Object> map = json.fromJson(str, HashMap.class);
+                question = (String) map.get("question");
+                apps = (String) map.get("apps");
+                skills = (String) map.get("skills");
                 attachments = map.get("attachments");
             } catch (Exception e) {
-                logger.error("failed to convert to JSON: " + str);
+                logger.error("failed to convert to JSON: " + str, e);
             }
         }
         if (question == null || question.isEmpty()) {
@@ -140,10 +140,25 @@ public class AiChat implements HttpHandler {
 
 
         List<Attachment> attachmentList = new ArrayList<>();
-        if (attachments != null && !attachments.isEmpty()) {
-            for (String attach : attachments.split(",")) {
-                attachmentList.add(chatModelFactory.buildImageAttachment(attach));
+        StringBuilder textAttachmentBuilder = new StringBuilder();
+        if (attachments instanceof List) {
+            for (Object item : (List<?>) attachments) {
+                if (!(item instanceof Map)) continue;
+                Map<?, ?> map = (Map<?, ?>) item;
+                String type = map.get("type") == null ? null : String.valueOf(map.get("type"));
+                String content = map.get("content") == null ? null : String.valueOf(map.get("content"));
+                if (content == null || content.isEmpty()) continue;
+                if ("image".equals(type)) {
+                    attachmentList.add(chatModelFactory.buildImageAttachment(content));
+                } else if ("text".equals(type)) {
+                    textAttachmentBuilder.append("\n\n[附件: 文本文件.txt]\n").append(content);
+                } else {
+                    logger.warn("unsupported attachment type: " + type);
+                }
             }
+        }
+        if (textAttachmentBuilder.length() > 0) {
+            question = question + textAttachmentBuilder;
         }
 
         ChatModel chatModel = chatModelFactory.newChatModelBuilder()
