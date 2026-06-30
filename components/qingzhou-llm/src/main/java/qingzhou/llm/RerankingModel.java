@@ -1,6 +1,8 @@
 package qingzhou.llm;
 
 
+import java.util.List;
+
 public interface RerankingModel {
-    String[] rerank(String query, String[] documents);
+    List<String> rerank(String query, List<String> documents);
 }

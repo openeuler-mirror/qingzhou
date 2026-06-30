@@ -1,7 +1,6 @@
 package qingzhou.ai.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +66,12 @@ public class AiEquip implements HttpHandler {
         data.put("skills", skills);
 
         Map<String, Object> attachments = new HashMap<>();
-        attachments.put("accept", Arrays.asList(".txt", ".jpg", ".jpeg", ".png", ".gif", ".webp"));
-        attachments.put("types", Arrays.asList("text/plain", "image/*"));
-        attachments.put("maxSize", 1024 * 1024); // 1MB
+        attachments.put("accept", new HashMap<String, String[]>() {{
+            put("text", new String[]{".md", ".adoc", ".txt", ".log", ".java"});
+            put("image", new String[]{".jpg", ".jpeg", ".png"});
+        }});
+        attachments.put("maxFiles", 10);
+        attachments.put("maxFileSize", 1);
         data.put("attachments", attachments);
 
         String jsonData = json.toJson(data);
