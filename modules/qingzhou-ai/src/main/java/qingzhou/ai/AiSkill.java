@@ -14,4 +14,9 @@ public interface AiSkill {
 
     // 技能的工具集：该技能需要挂载的功能工具
     Map<AiTool, Map<String, Object>> getTools();
+
+    // 返回附件类型和支持的后缀，客户端会回传此类型
+    default Map<String, String[]> supportedAttachmentTypes() {
+        return null;
+    }
 }
