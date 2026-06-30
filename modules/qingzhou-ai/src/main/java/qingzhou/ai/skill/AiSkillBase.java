@@ -9,14 +9,12 @@ import qingzhou.ai.AiTool;
 abstract class AiSkillBase implements AiSkill {
     private final String[] nameI18n;
     private final String description;
-    private final String instruction;
 
     protected final Map<AiTool, Map<String, Object>> aiTools = new ConcurrentHashMap<>();
 
-    protected AiSkillBase(String[] nameI18n, String description, String instruction) {
+    protected AiSkillBase(String[] nameI18n, String description) {
         this.nameI18n = nameI18n;
         this.description = description;
-        this.instruction = instruction;
     }
 
     @Override
@@ -27,11 +25,6 @@ abstract class AiSkillBase implements AiSkill {
     @Override
     public String description() {
         return description;
-    }
-
-    @Override
-    public String getInstruction() {
-        return instruction;
     }
 
     @Override
