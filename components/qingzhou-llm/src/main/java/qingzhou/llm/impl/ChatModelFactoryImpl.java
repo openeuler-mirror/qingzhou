@@ -3,6 +3,7 @@ package qingzhou.llm.impl;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.noear.solon.ai.chat.dialect.ChatDialectManager;
@@ -82,12 +83,12 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
     @Override
     public ChatModel.Builder newChatModelBuilder() {
         return new ChatModel.Builder() {
-            private String[] docs;
+            private List<String> docs;
             private Collection<Tool> tools;
             private Collection<Skill> skills;
 
             @Override
-            public ChatModel.Builder withDoc(String[] docs) {
+            public ChatModel.Builder withDoc(List<String> docs) {
                 this.docs = docs;
                 return this;
             }

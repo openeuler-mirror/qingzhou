@@ -2,6 +2,7 @@ package qingzhou.llm.impl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.noear.solon.ai.rag.Document;
 import org.noear.solon.ai.rag.repository.InMemoryRepository;
@@ -24,8 +25,8 @@ class VectorStoreImpl implements VectorStore {
     }
 
     @Override
-    public String[] query(String question) throws IOException {
+    public List<String> query(String question) throws IOException {
         List<Document> searched = repository.search(question);
-        return searched.stream().map(Document::getContent).toArray(String[]::new);
+        return searched.stream().map(Document::getContent).collect(Collectors.toList());
     }
 }

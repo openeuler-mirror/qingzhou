@@ -97,6 +97,13 @@ public class SseListener implements Listener {
     }
 
     private String resultToString(SseResult result) {
-        return AiChat.resultToString(result, json);
+        String toJson;
+        try {
+            toJson = json.toJson(result.data);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            toJson = e.getMessage();
+        }
+        return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
     }
 }

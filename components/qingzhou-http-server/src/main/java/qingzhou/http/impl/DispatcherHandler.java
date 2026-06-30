@@ -1,5 +1,8 @@
 package qingzhou.http.impl;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.function.BiFunction;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -24,6 +27,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     @Override
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         String requestPath = request.uri().split("\\?")[0];
+        try {
+            requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
         String matches = httpServer.matches(normalizedPath);
         if (matches == null) {
@@ -58,7 +66,6 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                                 //手动调用 byteBuf.release() 会导致 ByteBuf 的引用计数被提前耗尽，可能引发两种严重问题：
                                 //重复释放（Double Release）：框架后续尝试释放已被手动释放的 ByteBuf，触发 IllegalReferenceCountException；
                                 // byteBuf.release();
-                        
                             },
                             err -> streamHandler.onError(err),
                             () -> streamHandler.onComplete() // 完成信号
