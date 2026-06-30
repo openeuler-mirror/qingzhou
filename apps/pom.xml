@@ -48,7 +48,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-qr</artifactId>
+            <artifactId>qingzhou-image</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
             <scope>provided</scope>

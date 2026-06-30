@@ -1,6 +1,7 @@
 package qingzhou.ai.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.AiSkill;
+import qingzhou.ai.Converter;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
@@ -63,6 +65,12 @@ public class AiEquip implements HttpHandler {
             skills.add(map);
         }
         data.put("skills", skills);
+
+        Map<String, Object> attachments = new HashMap<>();
+        attachments.put("accept", Arrays.asList(".txt", ".jpg", ".jpeg", ".png", ".gif", ".webp"));
+        attachments.put("types", Arrays.asList("text/plain", "image/*"));
+        attachments.put("maxSize", 1024 * 1024); // 1MB
+        data.put("attachments", attachments);
 
         String jsonData = json.toJson(data);
         httpResponse.contentTypeJsonUtf8()

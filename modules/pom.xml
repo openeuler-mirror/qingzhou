@@ -17,7 +17,8 @@
         <module>qingzhou-dto</module>
         <module>qingzhou-registry</module>
         <module>qingzhou-agent</module>
-        <module>qingzhou-ai</module>
         <module>qingzhou-web</module>
+        <module>qingzhou-ai</module>
+        <module>qingzhou-mcp</module>
     </modules>
 </project>
