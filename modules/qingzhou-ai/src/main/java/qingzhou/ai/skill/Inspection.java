@@ -9,6 +9,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.AiSkill;
 import qingzhou.ai.AiTool;
 import qingzhou.ai.OpenSkills;
+import qingzhou.llm.ChatContext;
 
 @Component(property = AiSkill.SKILL_NAME + "=" + OpenSkills.Inspection)
 public class Inspection extends AiSkillBase implements AiSkill {
@@ -22,7 +23,7 @@ public class Inspection extends AiSkillBase implements AiSkill {
     }
 
     @Override
-    public String getInstruction() {
+    public String getInstruction(ChatContext chatContext) {
         return "操作指令：\n" +
                 "遍历所选的应用，检查应用下的所有模块，检查模块是否具有名字为\"monitor\"的操作，如果有则调用这个操作，该操作返回的数据用作本次系统巡检的素材。\n";
     }

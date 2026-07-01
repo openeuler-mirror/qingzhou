@@ -2,31 +2,30 @@ package qingzhou.ai.impl;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.*;
-import qingzhou.ai.Converter;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import qingzhou.ai.AiSkill;
+import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SystemAiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.*;
+import qingzhou.llm.Attachment;
+import qingzhou.llm.ChatModel;
+import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat")
 public class AiChat implements HttpHandler {
     @Reference
     private ChatModelFactory chatModelFactory;
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
-    private EmbeddingModel embeddingModel;
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
-    private RerankingModel rerankingModel;
 
     @Reference
     private AiEquip aiEquip;
@@ -35,9 +34,6 @@ public class AiChat implements HttpHandler {
     private Logger logger;
     @Reference
     private Json json;
-
-    private VectorStore knowledgeStore;
-    private List<String> knowledgeDocs;
 
     private final Map<SystemAiTool, Map<String, Object>> systemAiTools = new ConcurrentHashMap<>();
 
@@ -49,40 +45,6 @@ public class AiChat implements HttpHandler {
     // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
     public void unbindSystemAiTool(SystemAiTool tool) {
         systemAiTools.remove(tool);
-    }
-
-    @Activate
-    public void init() {
-        List<String> docs = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(
-                Paths.get(System.getProperty("qingzhou.version"), "docs"),
-                "*.md")) {
-            for (Path md : stream) {
-                List<String> contents = Files.readAllLines(md);
-                if (!contents.isEmpty()) {
-                    docs.add(String.join(System.lineSeparator(), contents));
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("failed to read knowledge", e);
-        }
-        if (docs.isEmpty()) return;
-
-        if (embeddingModel != null) {
-            try {
-                knowledgeStore = embeddingModel.buildVectorStore();
-                for (String doc : docs) {
-                    knowledgeStore.insert(doc, 500);
-                }
-            } catch (Exception e) {
-                logger.warn("failed to initialize knowledge store", e);
-                knowledgeStore = null;
-            }
-        }
-
-        if (knowledgeStore == null) {
-            knowledgeDocs = docs;
-        }
     }
 
     @Override
@@ -99,64 +61,56 @@ public class AiChat implements HttpHandler {
                 logger.error("failed to convert to JSON: " + str, e);
             }
         }
-        if (question == null || question.trim().isEmpty()) {
-            logger.error("message is null");
-            return;
+
+        Skill llmSkill = null;
+        List<String> refDocs = null;
+        Attachment[] images = null;
+        String skillName = (String) params.get("skill");
+        if (skillName != null) {
+            for (Map.Entry<AiSkill, Skill> entry : aiEquip.llmSkills.entrySet()) {
+                AiSkill aiSkill = entry.getKey();
+                Skill skill = entry.getValue();
+                if (skill.name().equals(skillName)) {
+                    llmSkill = skill;
+                    Map<AiSkill.AttachmentType, String[]> attachmentTypeMap = aiSkill.supportedAttachmentTypes();
+                    if (attachmentTypeMap != null) {
+                        for (AiSkill.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
+                            List<String> attachments = findAttachments(params, attachmentType);
+                            switch (attachmentType) {
+                                case text:
+                                    refDocs = attachments;
+                                    break;
+                                case image:
+                                    images = attachments.stream().map(s -> chatModelFactory.buildImageAttachment(s)).toArray(Attachment[]::new);
+                                    break;
+                                default:
+                                    logger.warn("unsupported type: " + attachmentType);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
-        List<String> refDocs = parseRefDocs(params, question);
-        Skill skill = parseSkill(params);
-        Attachment[] images = findAttachments(params, "image").stream().map(s -> chatModelFactory.buildImageAttachment(s)).toArray(Attachment[]::new);
         // 放在最后
         String app = (String) params.get("app");
         if (app != null && !app.isEmpty()) {
-            question = ("在“" + app + "”应用内，回复：" + question);
+            question = ("在“" + app + "”应用范围内，回复：" + question);
         }
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
-        if (rerankingModel != null) {
-            try {
-                refDocs = rerankingModel.rerank(question, refDocs);
-            } catch (Throwable e) { // 误打开配置文件里的注释后，若配置为空也会报错
-                logger.warn("failed to load the re-ranking model", e);
-            }
-        }
         ChatModel chatModel = chatModelFactory.newChatModelBuilder()
                 .withDoc(refDocs)
-                .withTool(Converter.convertSystemAiTool(systemAiTools))
-                .withSkill(Collections.singleton(skill))
+                .withTool(LlmConverter.convertSystemAiTool(systemAiTools))
+                .withSkill(Collections.singleton(llmSkill))
                 .build();
         chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
     }
 
-    private List<String> parseRefDocs(Map<String, Object> params, String question) throws IOException {
-        // RAG 检索增强问答
-        List<String> refDocs = new ArrayList<>();
-        if (knowledgeStore != null) {
-            refDocs.addAll(knowledgeStore.query(question));
-        } else {
-            refDocs.addAll(knowledgeDocs);
-        }
-
-        List<String> textList = findAttachments(params, "text");
-        refDocs.addAll(textList);
-
-        return refDocs;
-    }
-
-    private Skill parseSkill(Map<String, Object> params) {
-        String skill = (String) params.get("skill");
-        if (skill != null && !skill.isEmpty()) {
-            for (Skill value : aiEquip.llmSkills.values()) {
-                if (value.name().equals(skill)) return value;
-            }
-        }
-        return null;
-    }
-
-    private List<String> findAttachments(Map<String, Object> params, String expectedType) {
+    private List<String> findAttachments(Map<String, Object> params, AiSkill.AttachmentType expectedType) {
         List<String> found = new ArrayList<>();
         Object attachments = params.get("attachments");
         if (attachments instanceof List) {
@@ -166,7 +120,7 @@ public class AiChat implements HttpHandler {
                 String type = map.get("type") == null ? null : String.valueOf(map.get("type"));
                 String content = map.get("content") == null ? null : String.valueOf(map.get("content"));
                 if (content == null || content.isEmpty()) continue;
-                if (Objects.equals(type, expectedType)) {
+                if (Objects.equals(type, expectedType.name())) {
                     found.add(content);
                 }
             }

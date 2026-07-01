@@ -11,7 +11,7 @@ import org.osgi.service.component.ComponentConstants;
 import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 
-public class Converter {
+public class LlmConverter {
     public static Collection<Tool> convertSystemAiTool(Map<SystemAiTool, Map<String, Object>> aiTools) {
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
