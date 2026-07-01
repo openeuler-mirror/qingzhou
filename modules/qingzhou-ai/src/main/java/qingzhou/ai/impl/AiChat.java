@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.Converter;
@@ -38,7 +37,7 @@ public class AiChat implements HttpHandler {
     private Json json;
 
     private VectorStore knowledgeStore;
-    private String[] knowledgeDocs;
+    private List<String> knowledgeDocs;
 
     private final Map<SystemAiTool, Map<String, Object>> systemAiTools = new ConcurrentHashMap<>();
 
@@ -82,65 +81,84 @@ public class AiChat implements HttpHandler {
         }
 
         if (knowledgeStore == null) {
-            knowledgeDocs = docs.toArray(new String[0]);
+            knowledgeDocs = docs;
         }
     }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
-        // 解析请求
+        Map<String, Object> params = null;
         String question = null;
-        String skills = null;
-        Object attachments = null;
-        String apps = null;
         byte[] body = httpRequest.getBody();
         if (body != null && body.length > 0) {
             String str = new String(body, StandardCharsets.UTF_8);
             try {
-                // 在应用里面可包含实例id和应用code等参数
-                Map<String, Object> map = json.fromJson(str, HashMap.class);
-                question = (String) map.get("question");
-                apps = (String) map.get("apps");
-                skills = (String) map.get("skills");
-                attachments = map.get("attachments");
+                params = json.fromJson(str, HashMap.class);
+                question = (String) params.get("question");
             } catch (Exception e) {
                 logger.error("failed to convert to JSON: " + str, e);
             }
         }
-        if (question == null || question.isEmpty()) {
-            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message("message cannot be null"), json));
+        if (question == null || question.trim().isEmpty()) {
+            logger.error("message is null");
             return;
         }
-        if (apps != null && !apps.isEmpty()) {
-            question = ("在“" + apps + "”应用内，回复：" + question);
-        }
 
-        // RAG 检索增强问答
-        String[] refDocs;
-        if (knowledgeStore != null) {
-            refDocs = knowledgeStore.query(question);
-        } else {
-            refDocs = knowledgeDocs;
+        List<String> refDocs = parseRefDocs(params, question);
+        Skill skill = parseSkill(params);
+        Attachment[] images = findAttachments(params, "image").stream().map(s -> chatModelFactory.buildImageAttachment(s)).toArray(Attachment[]::new);
+        // 放在最后
+        String app = (String) params.get("app");
+        if (app != null && !app.isEmpty()) {
+            question = ("在“" + app + "”应用内，回复：" + question);
         }
-        if (refDocs != null && rerankingModel != null) {
-            refDocs = rerankingModel.rerank(question, refDocs);
-        }
-
-        // 添加自定义技能
-        List<Skill> skillList = new ArrayList<>();
-        if (skills != null && !skills.isEmpty()) {
-            String finalSkills = skills;
-            skillList = aiEquip.llmSkills.values().stream().filter(skill -> Arrays.stream(finalSkills.split(",")).anyMatch(s -> skill.name().equals(s))).collect(Collectors.toList());
-        }
-
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
+        if (rerankingModel != null) {
+            try {
+                refDocs = rerankingModel.rerank(question, refDocs);
+            } catch (Throwable e) { // 误打开配置文件里的注释后，若配置为空也会报错
+                logger.warn("failed to load the re-ranking model", e);
+            }
+        }
+        ChatModel chatModel = chatModelFactory.newChatModelBuilder()
+                .withDoc(refDocs)
+                .withTool(Converter.convertSystemAiTool(systemAiTools))
+                .withSkill(Collections.singleton(skill))
+                .build();
+        chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
+    }
 
+    private List<String> parseRefDocs(Map<String, Object> params, String question) throws IOException {
+        // RAG 检索增强问答
+        List<String> refDocs = new ArrayList<>();
+        if (knowledgeStore != null) {
+            refDocs.addAll(knowledgeStore.query(question));
+        } else {
+            refDocs.addAll(knowledgeDocs);
+        }
 
-        List<Attachment> attachmentList = new ArrayList<>();
-        StringBuilder textAttachmentBuilder = new StringBuilder();
+        List<String> textList = findAttachments(params, "text");
+        refDocs.addAll(textList);
+
+        return refDocs;
+    }
+
+    private Skill parseSkill(Map<String, Object> params) {
+        String skill = (String) params.get("skill");
+        if (skill != null && !skill.isEmpty()) {
+            for (Skill value : aiEquip.llmSkills.values()) {
+                if (value.name().equals(skill)) return value;
+            }
+        }
+        return null;
+    }
+
+    private List<String> findAttachments(Map<String, Object> params, String expectedType) {
+        List<String> found = new ArrayList<>();
+        Object attachments = params.get("attachments");
         if (attachments instanceof List) {
             for (Object item : (List<?>) attachments) {
                 if (!(item instanceof Map)) continue;
@@ -148,34 +166,11 @@ public class AiChat implements HttpHandler {
                 String type = map.get("type") == null ? null : String.valueOf(map.get("type"));
                 String content = map.get("content") == null ? null : String.valueOf(map.get("content"));
                 if (content == null || content.isEmpty()) continue;
-                if ("image".equals(type)) {
-                    attachmentList.add(chatModelFactory.buildImageAttachment(content));
-                } else if ("text".equals(type)) {
-                    textAttachmentBuilder.append("\n\n[附件: 文本文件.txt]\n").append(content);
-                } else {
-                    logger.warn("unsupported attachment type: " + type);
+                if (Objects.equals(type, expectedType)) {
+                    found.add(content);
                 }
             }
         }
-        if (textAttachmentBuilder.length() > 0) {
-            question = question + textAttachmentBuilder;
-        }
-
-        ChatModel chatModel = chatModelFactory.newChatModelBuilder()
-                .withDoc(refDocs)
-                .withTool(Converter.convertSystemAiTool(systemAiTools))
-                .withSkill(skillList)
-                .build();
-        chatModel.chat(question, new SseListener(httpResponse, logger, json), attachmentList.toArray(new Attachment[0]));
-    }
-
-    static String resultToString(SseResult result, Json json) {
-        String toJson;
-        try {
-            toJson = json.toJson(result.data);
-        } catch (Exception e) {
-            toJson = e.getMessage();
-        }
-        return String.format("event: %s\ndata: %s\n\n", result.type, toJson);
+        return found;
     }
 }

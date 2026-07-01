@@ -1,7 +1,6 @@
 package qingzhou.ai.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.AiSkill;
 import qingzhou.ai.Converter;
+import qingzhou.ai.skill.PlatformHelp;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
@@ -61,15 +61,20 @@ public class AiEquip implements HttpHandler {
             Map<String, Object> map = new HashMap<>();
             map.put("name", skill.name());
             map.put("text", i18nService.getI18n(aiSkill.getI18n(), lang));
-            map.put("checked", true);
+            if (aiSkill.getClass() == PlatformHelp.class) {
+                map.put("checked", true);
+            }
+            Map<String, String[]> types = aiSkill.supportedAttachmentTypes();
+            if (types != null && !types.isEmpty()) {
+                map.put("supportedAttachmentTypes", types);
+            }
             skills.add(map);
         }
         data.put("skills", skills);
 
         Map<String, Object> attachments = new HashMap<>();
-        attachments.put("accept", Arrays.asList(".txt", ".jpg", ".jpeg", ".png", ".gif", ".webp"));
-        attachments.put("types", Arrays.asList("text/plain", "image/*"));
-        attachments.put("maxSize", 1024 * 1024); // 1MB
+        attachments.put("maxFiles", 10);
+        attachments.put("maxFileSize", 1);
         data.put("attachments", attachments);
 
         String jsonData = json.toJson(data);

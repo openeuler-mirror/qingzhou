@@ -1,9 +1,6 @@
 package qingzhou.llm.impl;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,12 +18,12 @@ import qingzhou.llm.*;
 public class ChatModelImpl implements ChatModel {
     private final org.noear.solon.ai.chat.ChatModel chatModel;
 
-    private final String[] docs;
+    private final List<String> docs;
     private final Collection<Tool> tools;
     private final Collection<Skill> skills;
 
     public ChatModelImpl(org.noear.solon.ai.chat.ChatModel chatModel,
-                         String[] docs, Collection<Tool> tools, Collection<Skill> skills) {
+                         List<String> docs, Collection<Tool> tools, Collection<Skill> skills) {
         this.chatModel = chatModel;
 
         this.docs = docs;
@@ -36,9 +33,9 @@ public class ChatModelImpl implements ChatModel {
 
     @Override
     public void chat(String message, Listener listener, Attachment... attachment) {
-        if (docs != null && docs.length > 0) {
-            message = String.format("%s\n\n Now: %s\n\n References: %s",
-                    message, LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), Arrays.toString(docs));
+        if (docs != null && !docs.isEmpty()) {
+            String sp = "\n\n[参考附件]\n";
+            message += sp + String.join(sp, docs);
         }
         List<ContentBlock> blocks = new ArrayList<>();
         if (attachment != null) {
