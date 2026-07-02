@@ -1,9 +1,6 @@
 package qingzhou.ai.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -12,7 +9,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.AiSkill;
-import qingzhou.ai.Converter;
+import qingzhou.ai.LlmConverter;
 import qingzhou.ai.skill.PlatformHelp;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
@@ -20,8 +17,10 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.llm.ChatContext;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
+import qingzhou.llm.Tool;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/equip",
         service = {AiEquip.class, HttpHandler.class})
@@ -64,7 +63,7 @@ public class AiEquip implements HttpHandler {
             if (aiSkill.getClass() == PlatformHelp.class) {
                 map.put("checked", true);
             }
-            Map<String, String[]> types = aiSkill.supportedAttachmentTypes();
+            Map<AiSkill.AttachmentType, String[]> types = aiSkill.supportedAttachmentTypes();
             if (types != null && !types.isEmpty()) {
                 map.put("supportedAttachmentTypes", types);
             }
@@ -85,10 +84,27 @@ public class AiEquip implements HttpHandler {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
         llmSkills.put(skill,
-                Skill.of((String) properties.get(AiSkill.SKILL_NAME),
-                        skill.description(),
-                        skill.getInstruction(),
-                        Converter.convertAiTool(skill.getTools()))
+                new Skill() {
+                    @Override
+                    public String name() {
+                        return (String) properties.get(AiSkill.SKILL_NAME);
+                    }
+
+                    @Override
+                    public String description() {
+                        return skill.description();
+                    }
+
+                    @Override
+                    public String instruction(ChatContext chatContext) {
+                        return skill.getInstruction(chatContext);
+                    }
+
+                    @Override
+                    public Collection<Tool> tools() {
+                        return LlmConverter.convertAiTool(skill.getTools());
+                    }
+                }
         );
     }
 

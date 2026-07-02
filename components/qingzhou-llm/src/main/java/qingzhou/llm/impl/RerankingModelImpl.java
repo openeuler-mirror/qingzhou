@@ -10,14 +10,23 @@ import org.noear.solon.ai.rag.Document;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.llm.RerankingModel;
+import qingzhou.llm.impl.log.Slf4jLogBridge;
+import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-llm-rerank", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RerankingModelImpl implements RerankingModel {
+    @Reference
+    private Logger logger;
+    
     private org.noear.solon.ai.reranking.RerankingModel rerankingModel;
 
     @Activate
     public void init(Map<String, String> config) {
+        // 放在 solon 加载最前面
+        Slf4jLogBridge.qingzhouLogger = logger;
+
         rerankingModel = org.noear.solon.ai.reranking.RerankingModel
                 .of(config.get("base_url"))
                 .apiKey(config.get("api_key"))

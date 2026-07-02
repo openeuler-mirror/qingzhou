@@ -8,15 +8,24 @@ import org.noear.solon.ai.rag.repository.InMemoryRepository;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.llm.EmbeddingModel;
 import qingzhou.llm.VectorStore;
+import qingzhou.llm.impl.log.Slf4jLogBridge;
+import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-llm-embed", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class EmbeddingModelImpl implements EmbeddingModel {
+    @Reference
+    private Logger logger;
+    
     private org.noear.solon.ai.embedding.EmbeddingModel embeddingModel;
 
     @Activate
     public void init(Map<String, String> config) {
+        // 放在 solon 加载最前面
+        Slf4jLogBridge.qingzhouLogger = logger;
+
         // 嵌入模型需求
         EmbeddingDialectManager.register(new OpenaiEmbeddingDialect());
 

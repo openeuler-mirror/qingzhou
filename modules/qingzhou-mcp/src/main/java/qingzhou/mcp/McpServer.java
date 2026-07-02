@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.*;
-import qingzhou.ai.Converter;
+import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SystemAiTool;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -84,7 +84,7 @@ public class McpServer implements HttpHandler {
     private Object tools() {
         List<Map<String, Object>> tools = new ArrayList<>();
 
-        Collection<Tool> llmTools = Converter.convertSystemAiTool(systemAiTools);
+        Collection<Tool> llmTools = LlmConverter.convertSystemAiTool(systemAiTools);
         llmTools.forEach(tool -> {
             Map<String, Object> toolMap = new HashMap<>();
             toolMap.put("name", tool.name());
@@ -129,7 +129,7 @@ public class McpServer implements HttpHandler {
         String invokeResult = null;
         try {
             boolean found = false;
-            Collection<Tool> llmTools = Converter.convertSystemAiTool(systemAiTools);
+            Collection<Tool> llmTools = LlmConverter.convertSystemAiTool(systemAiTools);
             for (Tool tool : llmTools) {
                 if (tool.name().equals(toolName)) {
                     invokeResult = tool.invoke(arguments);

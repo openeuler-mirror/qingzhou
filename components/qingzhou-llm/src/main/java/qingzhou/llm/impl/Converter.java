@@ -31,7 +31,7 @@ class Converter {
     private static org.noear.solon.ai.chat.skill.Skill convertSkill(Skill skill) {
         return SkillDesc.builder(skill.name())
                 .description(skill.description())
-                .instruction(skill.instruction())
+                .instruction(prompt -> skill.instruction(() -> prompt.getLastMessage().getContent()))
                 .toolAdd(() -> {
                     Collection<Tool> tools = skill.tools();
                     if (tools == null) return Collections.emptyList();
