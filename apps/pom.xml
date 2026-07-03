@@ -13,6 +13,7 @@
     <modules>
         <module>qingzhou-app-demo</module>
         <module>qingzhou-app-library</module>
+        <module>qingzhou-app-redis</module>
     </modules>
 
     <dependencies>
