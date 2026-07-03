@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <linearGradient id="a" x1="64" y1="20" x2="64" y2="108" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF4444"/>
+    <stop offset="1" stop-color="#C8102E"/>
+  </linearGradient>
+  <path fill="url(#a)" d="M64 8L120 40v48L64 120 8 88V40z"/>
+  <path fill="#fff" d="M64 8L120 40v48L64 120 8 88V40z" opacity="0.1"/>
+  <text x="64" y="72" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#fff" text-anchor="middle">Redis</text>
+</svg>
