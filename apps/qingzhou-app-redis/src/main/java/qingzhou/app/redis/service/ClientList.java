@@ -6,7 +6,7 @@ import redis.clients.jedis.Jedis;
 
 import java.util.*;
 
-@Model(code = "clientList", icon = "Computer", menu = "redis-monitor", order = 4,
+@Model(code = "clientList", icon = "UserFilled", menu = "redis-monitor", order = 4,
         name = {"客户端列表", "en:Client List"},
         info = {"查看所有已连接的 Redis 客户端信息。", "en:View all connected Redis client information."})
 public class ClientList extends RedisModelBase implements qingzhou.api.type.List {

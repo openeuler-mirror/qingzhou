@@ -5,6 +5,7 @@ import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.util.RedisUtil;
 import redis.clients.jedis.Jedis;
@@ -464,7 +465,7 @@ public class MemoryAnalysis extends RedisModelBase implements qingzhou.api.type.
     @ModelAction(name = {"刷新缓存", "en:Refresh Cache"},
             info = {"清除采样缓存并重新分析", "en:Clear sampling cache and re-analyze"},
             list_head = true)
-    public void refreshCache(String id) {
+    public void refreshCache(Request request) {
         clearCache();
     }
 }

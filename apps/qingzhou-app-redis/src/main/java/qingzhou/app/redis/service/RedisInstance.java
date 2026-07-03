@@ -106,8 +106,8 @@ public class RedisInstance extends RedisModelBase implements qingzhou.api.type.L
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 
-    @ModelAction(name = {"激活", "en:Activate"},
-            confirm = {"确认激活该 Redis 实例？将切换当前连接。", "en:Confirm activate this Redis instance? Current connection will switch."},
+    @ModelAction(name = {"切换", "en:Switch"},
+            confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
             info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"})
     public void switchSpace(String id) throws Exception {
         String previousName = RedisApp.getCurrentInstanceName();

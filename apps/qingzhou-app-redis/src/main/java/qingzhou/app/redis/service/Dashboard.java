@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Model(code = "dashboard", icon = "Dashboard", menu = "redis-monitor", order = 1,
+@Model(code = "dashboard", icon = "Odometer", menu = "redis-monitor", order = 1,
         name = {"监控面板", "en:Dashboard"},
         info = {"Redis 服务器核心指标监控面板。", "en:Redis server key metrics dashboard."})
 public class Dashboard extends RedisModelBase implements Monitor {
