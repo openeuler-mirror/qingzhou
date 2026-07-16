@@ -84,10 +84,14 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
                 .model(config.get("model"))
                 // 设置超时，防止无限等待
                 .timeout(Duration.ofSeconds(Long.parseLong(config.getOrDefault("timeout", "60"))))
-                // Anthropic Claude 专有参数：开启思考
-                .modelOptions(op -> op.optionSet("thinking", new HashMap<String, Object>() {{
-                    put("type", "adaptive");
-                }}))
+//                .modelOptions(op -> {
+//                    // Anthropic Claude 专有参数：开启思考
+//                    op.optionSet("thinking", new HashMap<String, Object>() {{
+//                        put("type", "adaptive");
+//                    }});
+//                    // Open AI 专有参数：开启思考
+//                    op.optionSet("reasoning_effort", "high");
+//                })
                 .systemPrompt(systemPrompt)
                 .build();
     }

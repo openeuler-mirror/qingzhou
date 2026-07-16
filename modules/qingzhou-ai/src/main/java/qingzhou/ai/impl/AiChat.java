@@ -105,7 +105,7 @@ public class AiChat implements HttpHandler {
         ChatModel chatModel = chatModelFactory.newChatModelBuilder()
                 .withDoc(refDocs)
                 .withTool(LlmConverter.convertSystemAiTool(systemAiTools))
-                .withSkill(Collections.singleton(llmSkill))
+                .withSkill(llmSkill == null ? null : Collections.singleton(llmSkill))
                 .build();
         chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
     }
