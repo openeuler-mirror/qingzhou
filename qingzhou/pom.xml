@@ -322,5 +322,15 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-app-tomcat</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-app-nacos</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

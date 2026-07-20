@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>apps</artifactId>
+        <version>${revision}</version>
+    </parent>
+    <artifactId>qingzhou-app-nacos</artifactId>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Qingzhou-Detection-Enabled>false</Qingzhou-Detection-Enabled>
+                            <Qingzhou-Detection-Feature-Files>bin/startup.sh,bin/shutdown.sh,conf,data</Qingzhou-Detection-Feature-Files>
+                            <Qingzhou-Detection-Env-Vars>nacos.home,NACOS_HOME</Qingzhou-Detection-Env-Vars>
+                            <Qingzhou-Detection-Process-Names/>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
