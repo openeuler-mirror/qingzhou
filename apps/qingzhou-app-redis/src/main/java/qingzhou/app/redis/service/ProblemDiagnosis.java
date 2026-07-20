@@ -104,8 +104,14 @@ public class ProblemDiagnosis extends RedisModelBase implements List, Show {
     @ModelAction(name = {"刷新诊断", "en:Refresh Diagnosis"},
             info = {"立即重新执行诊断分析", "en:Run diagnostic analysis immediately"},
             list_head = true)
-    public void refresh(String id) throws Exception {
-        RedisUtil util = getRedisUtil();
+    public void refresh(Request request) throws Exception {
+        RedisUtil util = RedisApp.getRedisUtil();
+        if (util == null || !util.isConnected()) {
+            request.getResponse()
+                    .success(false)
+                    .msg("请先切换到一个 Redis 实例");
+            return;
+        }
         DiagnosticEngine engine = DiagnosticEngine.getInstance();
         if (engine != null) {
             engine.diagnose(util);

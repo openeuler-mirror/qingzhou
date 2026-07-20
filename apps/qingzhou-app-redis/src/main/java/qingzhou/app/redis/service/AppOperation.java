@@ -66,7 +66,7 @@ public class AppOperation extends RedisModelBase implements List {
 
     @ModelAction(name = {"全节点 PING", "en:Ping All Nodes"},
             info = {"对所有节点执行 PING 探测", "en:Ping all nodes"})
-    public void ping(String id) throws Exception {
+    public void ping(Request request) throws Exception {
         RedisUtil util = getRedisUtil();
         long latency = util.latencyPing();
         if (latency < 0) {
@@ -80,7 +80,7 @@ public class AppOperation extends RedisModelBase implements List {
     public void reconnect(String id) throws Exception {
         String current = RedisApp.getCurrentInstanceName();
         if (current == null) {
-            throw new Exception("未激活任何实例");
+            throw new Exception("未切换到任何实例");
         }
         RedisApp.activateInstance(current);
     }

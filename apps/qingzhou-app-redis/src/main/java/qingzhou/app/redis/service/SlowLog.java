@@ -9,7 +9,7 @@ import redis.clients.jedis.resps.Slowlog;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Model(code = "slowLog", icon = "Time", menu = "redis-monitor", order = 3,
+@Model(code = "slowLog", icon = "Clock", menu = "redis-monitor", order = 3,
         name = {"慢查询日志", "en:Slow Log"},
         info = {"查看 Redis 慢查询日志，用于排查性能问题。", "en:View Redis slow query logs for performance diagnosis."})
 public class SlowLog extends RedisModelBase implements qingzhou.api.type.List, Delete {

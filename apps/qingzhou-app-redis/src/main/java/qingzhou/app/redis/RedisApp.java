@@ -14,8 +14,8 @@ import qingzhou.app.redis.store.*;
 import qingzhou.app.redis.store.model.AuditEntry;
 import qingzhou.app.redis.util.RedisUtil;
 
-@Menu(name = {"Redis 管理", "en:Redis Manager"}, code = "redis", icon = "DataStore", order = 1)
-@Menu(name = {"运维管理", "en:Operations"}, code = "redis-ops", icon = "Setting", order = 4, parent = "redis")
+@Menu(name = {"Redis 管理", "en:Redis Manager"}, code = "redis", icon = "Connection", order = 1)
+@Menu(name = {"运维管理", "en:Operations"}, code = "redis-ops", icon = "Operation", order = 4, parent = "redis")
 @Menu(name = {"统计监控", "en:Monitoring"}, code = "redis-monitor", icon = "Monitor", order = 5, parent = "redis")
 
 @I18n(name = {"Key 数量分布", "en:Key Count Distribution"}, code = "KeyCount")
@@ -41,6 +41,11 @@ public class RedisApp implements QingzhouApp {
 
     private static final String ENCRYPTED_PREFIX = "ENC:";
 
+    private static final Set<String> NO_REDIS_NEEDED_MODELS = new HashSet<>(Arrays.asList(
+            "redisInstance", "appOperation", "appStatistics",
+            "monitorAlert", "problemDiagnosis", "appAudit", "hostEnvironment"
+    ));
+
     public static String getEncryptedPrefix() {
         return ENCRYPTED_PREFIX;
     }
@@ -60,6 +65,22 @@ public class RedisApp implements QingzhouApp {
             activateInstance(currentInstanceName);
         }
 
+
+        appContext.addActionFilter((request, chain) -> {
+            String model = request.getModel();
+            if (model != null && NO_REDIS_NEEDED_MODELS.contains(model)) {
+                chain.doFilter();
+                return;
+            }
+            RedisUtil util = redisUtil;
+            if (util == null || !util.isConnected()) {
+                request.getResponse()
+                        .success(false)
+                        .msg("请先切换到一个 Redis 实例");
+                return;
+            }
+            chain.doFilter();
+        });
 
         appContext.addActionFilter((request, chain) -> {
             chain.doFilter();

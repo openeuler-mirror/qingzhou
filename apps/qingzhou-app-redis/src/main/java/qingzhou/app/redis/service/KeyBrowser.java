@@ -18,7 +18,7 @@ import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.params.ScanParams;
 import redis.clients.jedis.resps.ScanResult;
 
-@Model(code = "keyBrowser", icon = "Data", menu = "redis", order = 1,
+@Model(code = "keyBrowser", icon = "Search", menu = "redis", order = 1,
         name = {"Key 管理", "en:Key Browser"},
         info = {"浏览和管理 Redis Key 数据，支持新增、查看、修改、删除操作。",
                 "en:Browse and manage Redis keys, supporting add, view, edit, and delete operations."})

@@ -12,7 +12,7 @@ public class RedisModelBase extends ModelBase {
     protected RedisUtil getRedisUtil() {
         RedisUtil util = RedisApp.getRedisUtil();
         if (util == null) {
-            throw new RuntimeException("请先激活一个 Redis 实例");
+            throw new RuntimeException("请先切换到一个 Redis 实例");
         }
         return util;
     }

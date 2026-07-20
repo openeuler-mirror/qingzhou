@@ -21,8 +21,8 @@ import java.util.*;
         info = {"告警规则配置与告警历史", "en:Alert rules and alert history"})
 public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.List, Show, Add, Update, Delete {
 
-    
-    @ModelField(id = true, show = true, add = false, update = false, readonly = true,
+
+    @ModelField(id = true, list = true, show = true, add = false, update = false, readonly = true,
             name = {"规则 ID", "en:Rule ID"},
             info = {"告警规则唯一标识", "en:Unique alert rule ID"})
     public String id;
@@ -32,7 +32,7 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
             info = {"告警规则名称", "en:Alert rule name"})
     public String name;
 
-    @ModelField(show = true, add = true, update = true, required = true,
+    @ModelField(list = true, show = true, add = true, update = true, required = true,
             options = {"redis.used_memory", "redis.connected_clients", "redis.instantaneous_ops_per_sec",
                     "redis.hit_rate", "redis.mem_fragmentation_ratio", "redis.latency_ms",
                     "redis.rejected_connections", "redis.total_keys", "machine.process_cpu_usage",
@@ -55,43 +55,44 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
             info = {"告警阈值", "en:Alert threshold"})
     public String threshold;
 
-    @ModelField(show = true, add = true, update = true, required = true,
+    @ModelField(list = true, show = true, add = true, update = true, required = true,
             options = {"严重", "警告"},
             input_type = InputType.select,
             name = {"告警级别", "en:Level"},
             info = {"告警级别", "en:Alert level"})
     public String level;
 
-    @ModelField(show = true, add = true, update = true,
+    @ModelField(list = true, show = true, add = true, update = true,
             input_type = InputType.checkbox,
+            options = {"true", "false"},
             name = {"启用状态", "en:Enabled"},
             info = {"是否启用该规则", "en:Whether the rule is enabled"})
     public String enabled;
 
-    
-    @ModelField(list = true,
+
+    @ModelField(show = true,
             name = {"触发值", "en:Triggered Value"},
             info = {"触发告警时的指标值", "en:Metric value when triggered"})
     public String triggeredValue;
 
-    @ModelField(list = true,
+    @ModelField(show = true,
             name = {"阈值", "en:Threshold"},
             info = {"告警阈值", "en:Alert threshold"})
     public String historyThreshold;
 
-    @ModelField(list = true,
+    @ModelField(show = true,
             color = {"严重:#F56C6C", "警告:#E6A23C"},
             name = {"级别", "en:Level"},
             info = {"告警级别", "en:Alert level"})
     public String historyLevel;
 
-    @ModelField(list = true,
+    @ModelField(show = true,
             color = {"未确认:#F56C6C", "已确认:#67C23A"},
             name = {"状态", "en:Status"},
             info = {"告警状态", "en:Alert status"})
     public String status;
 
-    @ModelField(list = true,
+    @ModelField(show = true,
             name = {"触发时间", "en:Triggered At"},
             info = {"告警触发时间", "en:Alert trigger time"})
     public String triggeredAt;
@@ -100,18 +101,18 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
 
     @Override
     public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        String status = query != null ? query.get("status") : null;
-        java.util.List<AlertRecord> records = RedisApp.getAlertStore().queryRecords(status, pageNum, pageSize);
+        java.util.List<AlertRule> rules = RedisApp.getAlertStore().listRules();
+        int start = (pageNum - 1) * pageSize;
+        int end = Math.min(start + pageSize, rules.size());
+        java.util.List<AlertRule> page = start < rules.size() ? rules.subList(start, end) : new ArrayList<>();
         java.util.List<String[]> rows = new ArrayList<>();
-        for (AlertRecord record : records) {
+        for (AlertRule rule : page) {
             rows.add(new String[]{
-                    record.getId(),
-                    record.getRuleName(),
-                    String.valueOf(record.getValue()),
-                    String.valueOf(record.getThreshold()),
-                    record.getLevel(),
-                    record.getStatus(),
-                    record.getTriggeredAt() > 0 ? Instant.ofEpochMilli(record.getTriggeredAt()).atZone(ZoneId.systemDefault()).format(DATE_FORMAT) : "-"
+                    rule.getId(),
+                    rule.getName(),
+                    rule.getMetric(),
+                    rule.getLevel(),
+                    String.valueOf(rule.isEnabled())
             });
         }
         return rows;
@@ -119,15 +120,13 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
 
     @Override
     public int totalSize(Map<String, String> query) {
-        String status = query != null ? query.get("status") : null;
-        return RedisApp.getAlertStore().totalRecords(status);
+        return RedisApp.getAlertStore().listRules().size();
     }
 
     @Override
     public boolean contains(String id) {
         if (id == null) return false;
-        return RedisApp.getAlertStore().getRule(id) != null
-                || RedisApp.getAlertStore().getRecord(id) != null;
+        return RedisApp.getAlertStore().getRule(id) != null;
     }
 
     @Override
@@ -187,9 +186,9 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
 
     @ModelAction(name = {"确认告警", "en:Confirm Alert"},
             info = {"确认该告警已处理", "en:Confirm this alert has been handled"})
-    public void confirm(String id) throws Exception {
-        String operator = getCurrentRequest() != null
-                ? getCurrentRequest().getParameter("operator") : null;
+    public void confirm(Request request) throws Exception {
+        String id = request.getId();
+        String operator = request.getParameter("operator");
         if (operator == null || operator.isEmpty()) {
             operator = "unknown";
         }
