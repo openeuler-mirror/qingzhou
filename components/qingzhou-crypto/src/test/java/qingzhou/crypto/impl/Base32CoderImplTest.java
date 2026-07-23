@@ -5,13 +5,6 @@ import org.testng.annotations.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-/**
- * Base32CoderImpl 单元测试类，TestNG框架
- * 命名规范：场景_行为_结果 三段式英文命名
- * 用例完全独立，每个方法新建实例，无共享变量
- * 仅使用Assert断言，无控制台打印、日志输出
- * 不修改业务实现类，try-catch兼容decode(null)空指针异常
- */
 public class Base32CoderImplTest {
     // Base32合法字符正则：仅大写A-Z、数字2-7、填充符=
     private static final Pattern BASE32_VALID_REGEX = Pattern.compile("^[A-Z2-7=]*$");
