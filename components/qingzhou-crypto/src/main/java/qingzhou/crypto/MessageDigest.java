@@ -9,4 +9,8 @@ public interface MessageDigest {
     String md5(String data);
 
     byte[] md5(byte[] data);
+
+    String sha256(String data);
+
+    byte[] sha256(byte[] data);
 }
