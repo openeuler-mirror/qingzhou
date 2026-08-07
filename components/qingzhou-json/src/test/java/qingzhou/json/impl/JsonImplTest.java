@@ -226,7 +226,7 @@ public class JsonImplTest {
     public static class EmptyBean {
     }
 
-    public static class SimpleBcdean {
+    public static class SimpleBean {
         private String name;
         private int age;
 
