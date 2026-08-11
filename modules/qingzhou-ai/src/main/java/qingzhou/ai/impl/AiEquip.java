@@ -17,7 +17,6 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.ChatContext;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
@@ -96,8 +95,8 @@ public class AiEquip implements HttpHandler {
                     }
 
                     @Override
-                    public String instruction(ChatContext chatContext) {
-                        return skill.getInstruction(chatContext);
+                    public String instruction() {
+                        return skill.getInstruction();
                     }
 
                     @Override

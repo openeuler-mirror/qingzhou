@@ -10,7 +10,6 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.AiSkill;
 import qingzhou.ai.AiTool;
 import qingzhou.ai.OpenSkills;
-import qingzhou.llm.ChatContext;
 
 @Component(property = AiSkill.SKILL_NAME + "=" + OpenSkills.Troubleshooting)
 public class Troubleshooting extends AiSkillBase implements AiSkill {
@@ -24,7 +23,7 @@ public class Troubleshooting extends AiSkillBase implements AiSkill {
     }
 
     @Override
-    public String getInstruction(ChatContext chatContext) {
+    public String getInstruction() {
         return "";
     }
 

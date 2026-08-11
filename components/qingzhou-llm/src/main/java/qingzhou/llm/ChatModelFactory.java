@@ -1,7 +1,22 @@
 package qingzhou.llm;
 
-public interface ChatModelFactory {
-    ChatModel.Builder newChatModelBuilder();
+import java.util.Collection;
+import java.util.List;
 
-    Attachment buildImageAttachment(String base64);
+public interface ChatModelFactory {
+    ChatModelBuilder newChatModelBuilder();
+
+    Attachment newImageAttachment(String base64);
+
+    interface ChatModelBuilder {
+        ChatModelBuilder systemPrompt(String systemPrompt);
+
+        ChatModelBuilder docs(List<String> docs);
+
+        ChatModelBuilder tools(Collection<Tool> tools);
+
+        ChatModelBuilder skills(Collection<Skill> skills);
+
+        ChatModel build();
+    }
 }
