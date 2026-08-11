@@ -10,17 +10,29 @@ import java.util.concurrent.Executors;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ConnectionManager;
-import qingzhou.llm.impl.ImageAttachment;
 
 class OpenAiChatModel implements ChatModel {
+    private static final int MAX_TOOL_ITERATIONS = 20;
+    private static final int MAX_RETRIES = 3;
+    private static final long INITIAL_BACKOFF_MS = 1000;
+    private static final ExecutorService CHAT_EXECUTOR = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "qingzhou-llm");
+        t.setDaemon(true);
+        return t;
+    });
+
     private final OpenAiChatModelBuilder builder;
     private final ConnectionManager connectionManager;
     private final Json json;
+    private final MessageBuilder messageBuilder;
+    private final ToolHandler toolHandler;
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, ConnectionManager connectionManager, Json json) {
         this.builder = builder;
         this.connectionManager = connectionManager;
         this.json = json;
+        this.messageBuilder = new MessageBuilder(builder);
+        this.toolHandler = new ToolHandler(builder, json);
     }
 
     @Override
@@ -28,10 +40,10 @@ class OpenAiChatModel implements ChatModel {
         CHAT_EXECUTOR.submit(() -> {
             try {
                 List<Object> messages = new ArrayList<>();
-                messages.add(buildSystemMessage());
-                messages.add(buildUserMessage(message, attachment));
+                messages.add(messageBuilder.buildSystemMessage());
+                messages.add(messageBuilder.buildUserMessage(message, attachment));
 
-                List<Object> toolDefs = buildToolDefinitions();
+                List<Object> toolDefs = toolHandler.buildToolDefinitions();
 
                 listener.onBegin();
 
@@ -46,7 +58,7 @@ class OpenAiChatModel implements ChatModel {
 
                     listener.onReasoningPause();
                     for (Map<String, Object> toolCall : result.toolCalls) {
-                        executeToolCall(toolCall, messages, listener);
+                        toolHandler.executeToolCall(toolCall, messages, listener);
                     }
                     listener.onReasoningResume();
                 }
@@ -56,124 +68,6 @@ class OpenAiChatModel implements ChatModel {
                 listener.onError(t);
             }
         });
-    }
-
-
-    private static final int MAX_TOOL_ITERATIONS = 20;
-    private static final int MAX_RETRIES = 3;
-    private static final long INITIAL_BACKOFF_MS = 1000;
-    private static final ExecutorService CHAT_EXECUTOR = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "qingzhou-llm");
-        t.setDaemon(true);
-        return t;
-    });
-
-
-    private Map<String, Object> buildSystemMessage() {
-        String system = builder.systemPrompt;
-        if (builder.skills != null) {
-            StringBuilder sb = new StringBuilder(builder.systemPrompt);
-            for (Skill skill : builder.skills) {
-                String instruction = skill.instruction();
-                if (instruction != null && !instruction.isEmpty()) {
-                    sb.append("\n\n").append(instruction);
-                }
-            }
-            system = sb.toString();
-        }
-        Map<String, Object> msg = new HashMap<>();
-        msg.put("role", "system");
-        msg.put("content", system);
-        return msg;
-    }
-
-    private Map<String, Object> buildUserMessage(String message, Attachment[] attachments) {
-        String content = message;
-        if (builder.docs != null && !builder.docs.isEmpty()) {
-            String sp = "\n\n[参考附件]\n";
-            content += sp + String.join(sp, builder.docs);
-        }
-
-        if (attachments != null && attachments.length > 0) {
-            List<Object> parts = new ArrayList<>();
-            Map<String, Object> textPart = new HashMap<>();
-            textPart.put("type", "text");
-            textPart.put("text", content);
-            parts.add(textPart);
-
-            for (Attachment attach : attachments) {
-                if (attach instanceof ImageAttachment) {
-                    Map<String, Object> imagePart = new HashMap<>();
-                    imagePart.put("type", "image_url");
-                    Map<String, Object> imageUrl = new HashMap<>();
-                    imageUrl.put("url", "data:image/jpeg;base64," + ((ImageAttachment) attach).base64);
-                    imagePart.put("image_url", imageUrl);
-                    parts.add(imagePart);
-                }
-            }
-
-            Map<String, Object> msg = new HashMap<>();
-            msg.put("role", "user");
-            msg.put("content", parts);
-            return msg;
-        }
-
-        Map<String, Object> msg = new HashMap<>();
-        msg.put("role", "user");
-        msg.put("content", content);
-        return msg;
-    }
-
-    private List<Object> buildToolDefinitions() {
-        List<Tool> allTools = new ArrayList<>();
-        if (builder.tools != null) allTools.addAll(builder.tools);
-        if (builder.skills != null) {
-            for (Skill skill : builder.skills) {
-                Collection<Tool> skillTools = skill.tools();
-                if (skillTools != null) allTools.addAll(skillTools);
-            }
-        }
-
-        if (allTools.isEmpty()) return Collections.emptyList();
-
-        List<Object> toolDefs = new ArrayList<>();
-        for (Tool tool : allTools) {
-            Map<String, Object> toolDef = new HashMap<>();
-            toolDef.put("type", "function");
-
-            Map<String, Object> function = new HashMap<>();
-            function.put("name", tool.name());
-            function.put("description", tool.description());
-
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("type", "object");
-
-            Parameter[] params = tool.parameters();
-            if (params != null && params.length > 0) {
-                Map<String, Object> properties = new HashMap<>();
-                List<String> required = new ArrayList<>();
-                for (Parameter param : params) {
-                    Map<String, Object> prop = new HashMap<>();
-                    prop.put("type", "string");
-                    prop.put("description", param.description());
-                    properties.put(param.name(), prop);
-                    if (param.required()) {
-                        required.add(param.name());
-                    }
-                }
-                parameters.put("properties", properties);
-                if (!required.isEmpty()) {
-                    parameters.put("required", required);
-                }
-            } else {
-                parameters.put("properties", new HashMap<>());
-            }
-
-            function.put("parameters", parameters);
-            toolDef.put("function", function);
-            toolDefs.add(toolDef);
-        }
-        return toolDefs;
     }
 
     private StreamResult streamChat(List<Object> messages, List<Object> toolDefs,
@@ -293,61 +187,6 @@ class OpenAiChatModel implements ChatModel {
                 conn.disconnect();
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void executeToolCall(Map<String, Object> toolCall, List<Object> messages, Listener listener) {
-        Map<String, Object> function = (Map<String, Object>) toolCall.get("function");
-        String toolName = (String) function.get("name");
-        String argumentsStr = (String) function.get("arguments");
-
-        Map<String, Object> args = new HashMap<>();
-        if (argumentsStr != null && !argumentsStr.isEmpty()) {
-            try {
-                args = json.fromJson(argumentsStr, Map.class);
-            } catch (Exception ignored) {
-                args = new HashMap<>();
-            }
-        }
-
-        Tool tool = findTool(toolName);
-        String result;
-        if (tool != null) {
-            try {
-                result = tool.invoke(args);
-            } catch (Throwable t) {
-                result = "Error: " + t.getMessage();
-            }
-        } else {
-            result = "Tool not found: " + toolName;
-        }
-
-        listener.onToolCall(toolName, args, result);
-
-        Map<String, Object> toolResultMsg = new HashMap<>();
-        toolResultMsg.put("role", "tool");
-        toolResultMsg.put("tool_call_id", toolCall.get("id"));
-        toolResultMsg.put("content", result);
-        messages.add(toolResultMsg);
-    }
-
-    private Tool findTool(String name) {
-        if (builder.tools != null) {
-            for (Tool tool : builder.tools) {
-                if (tool.name().equals(name)) return tool;
-            }
-        }
-        if (builder.skills != null) {
-            for (Skill skill : builder.skills) {
-                Collection<Tool> skillTools = skill.tools();
-                if (skillTools != null) {
-                    for (Tool tool : skillTools) {
-                        if (tool.name().equals(name)) return tool;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private String readAll(InputStream is) throws Exception {
