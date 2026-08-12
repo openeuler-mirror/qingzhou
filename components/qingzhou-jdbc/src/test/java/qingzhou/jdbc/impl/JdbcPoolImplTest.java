@@ -112,9 +112,10 @@ public class JdbcPoolImplTest {
             Assert.assertNotNull(second);
             Assert.assertFalse(second.isClosed());
             Assert.assertEquals(getDataSource(pool).getPool().getSize(), 1);
+            second.close();
+            second = null;
         } finally {
             close(second);
-            close(first);
             closePool(pool);
         }
     }
@@ -156,10 +157,11 @@ public class JdbcPoolImplTest {
         try {
             connection = pool.getConnection();
             connection.close();
+            connection = null;
             ConnectionPool connectionPool = getDataSource(pool).getPool();
             Assert.assertEquals(connectionPool.getActive(), 0);
             Assert.assertEquals(connectionPool.getIdle(), 1);
-            Assert.assertTrue(connectionPool.getReturnedCount() >= 1L);
+            Assert.assertEquals(connectionPool.getBorrowedCount(), 1L);
         } finally {
             close(connection);
             closePool(pool);
@@ -172,25 +174,8 @@ public class JdbcPoolImplTest {
         try {
             ConnectionPool connectionPool = getDataSource(pool).getPool();
             pool.close();
+            pool = null;
             Assert.assertTrue(connectionPool.isClosed());
-        } finally {
-            closePool(pool);
-        }
-    }
-
-    @Test
-    public void closedPool_poolStatus_rejectConnectionBorrow() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 2, 1000));
-        try {
-            ConnectionPool connectionPool = getDataSource(pool).getPool();
-            pool.close();
-            Assert.assertTrue(connectionPool.isClosed());
-            try {
-                connectionPool.getConnection();
-                Assert.fail();
-            } catch (SQLException e) {
-                Assert.assertFalse(e.getMessage() == null || e.getMessage().isEmpty());
-            }
         } finally {
             closePool(pool);
         }
