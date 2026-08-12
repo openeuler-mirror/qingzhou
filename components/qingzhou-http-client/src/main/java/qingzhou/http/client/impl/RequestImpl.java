@@ -13,6 +13,8 @@ class RequestImpl implements Request {
     Map<String, String> params;
     byte[] body;
     Map<String, String> files;
+    int connectTimeout;
+    int readTimeout;
 
     public RequestImpl(String url) {
         this.url = url;
@@ -52,6 +54,18 @@ class RequestImpl implements Request {
     @Override
     public Request files(Map<String, String> files) {
         this.files = files;
+        return this;
+    }
+
+    @Override
+    public Request connectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
+        return this;
+    }
+
+    @Override
+    public Request readTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
         return this;
     }
 }

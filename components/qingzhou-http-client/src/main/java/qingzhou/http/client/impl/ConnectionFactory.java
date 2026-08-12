@@ -7,10 +7,13 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.*;
 
-public class ConnectionFactory {
+class ConnectionFactory {
+    private static final int DEFAULT_CONNECT_TIMEOUT = 60 * 1000;
+    private static final int DEFAULT_READ_TIMEOUT = 10 * 60 * 1000;
+
     private static final ConnectionFactory instance = new ConnectionFactory();
 
-    public static ConnectionFactory getInstance() {
+    static ConnectionFactory getInstance() {
         return instance;
     }
 
@@ -30,7 +33,7 @@ public class ConnectionFactory {
         }
     };
 
-    public HttpURLConnection getConnection(String url) throws Exception {
+    HttpURLConnection getConnection(String url, int connectTimeout, int readTimeout) throws Exception {
         if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is missing");
 
         HttpURLConnection conn;
@@ -50,6 +53,8 @@ public class ConnectionFactory {
         }
 
         setDefaultConfig(conn);
+        conn.setConnectTimeout(connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
+        conn.setReadTimeout(readTimeout > 0 ? readTimeout : DEFAULT_READ_TIMEOUT);
 
         return conn;
     }
@@ -59,12 +64,9 @@ public class ConnectionFactory {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         conn.setUseCaches(false);
-        conn.setConnectTimeout(60 * 1000);
-        conn.setReadTimeout(10 * 60 * 1000);
-        conn.setRequestProperty("Connection", "close");
-        conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setRequestProperty("accept", "*/*");
         conn.setInstanceFollowRedirects(false);
+        // 不强制 Connection: close，交由 JDK 默认 keep-alive 复用连接
     }
 }

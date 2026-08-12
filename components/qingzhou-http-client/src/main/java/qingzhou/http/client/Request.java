@@ -14,4 +14,8 @@ public interface Request {
     Request body(byte[] body);
 
     Request files(Map<String, String> files);
+
+    Request connectTimeout(int connectTimeout);
+
+    Request readTimeout(int readTimeout);
 }
