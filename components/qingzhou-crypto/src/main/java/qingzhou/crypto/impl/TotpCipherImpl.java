@@ -40,6 +40,9 @@ class TotpCipherImpl implements TotpCipher {
 
     @Override
     public boolean verifyCode(String key, String code) throws Exception {
+        if (key == null || key.isEmpty() || code == null || code.isEmpty()) {
+            return false;
+        }
         return getCode(key).equals(code);
     }
 
