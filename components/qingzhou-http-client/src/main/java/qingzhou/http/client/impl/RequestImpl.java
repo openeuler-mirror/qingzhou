@@ -1,5 +1,6 @@
 package qingzhou.http.client.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.http.client.HttpMethod;
@@ -20,6 +21,13 @@ class RequestImpl implements Request {
     @Override
     public Request method(HttpMethod method) {
         this.method = method;
+        return this;
+    }
+
+    @Override
+    public Request header(String key, String val) {
+        if (headers == null) headers = new HashMap<>();
+        headers.put(key, val);
         return this;
     }
 

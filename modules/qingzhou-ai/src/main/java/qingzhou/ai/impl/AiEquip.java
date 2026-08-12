@@ -1,6 +1,9 @@
 package qingzhou.ai.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -19,7 +22,6 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
-import qingzhou.llm.Tool;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/equip",
         service = {AiEquip.class, HttpHandler.class})
@@ -83,28 +85,10 @@ public class AiEquip implements HttpHandler {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
         llmSkills.put(skill,
-                new Skill() {
-                    @Override
-                    public String name() {
-                        return (String) properties.get(AiSkill.SKILL_NAME);
-                    }
-
-                    @Override
-                    public String description() {
-                        return skill.description();
-                    }
-
-                    @Override
-                    public String instruction() {
-                        return skill.getInstruction();
-                    }
-
-                    @Override
-                    public Collection<Tool> tools() {
-                        return LlmConverter.convertAiTool(skill.getTools());
-                    }
-                }
-        );
+                Skill.of((String) properties.get(AiSkill.SKILL_NAME),
+                        skill.description(),
+                        skill.getInstruction(),
+                        LlmConverter.convertAiTool(skill.getTools())));
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法

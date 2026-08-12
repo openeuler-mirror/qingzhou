@@ -60,6 +60,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
 
     @Override
     public ChatModel build() {
+        checkSealed();
         sealed = true;
         return buildInternal();
     }

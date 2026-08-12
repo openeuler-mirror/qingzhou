@@ -1,6 +1,5 @@
 package qingzhou.ai.impl;
 
-import java.util.Map;
 import java.util.UUID;
 
 import qingzhou.http.server.HttpResponse;
@@ -53,13 +52,9 @@ public class SseListener implements Listener {
     }
 
     @Override
-    public void onToolCall(String toolName, Map<String, Object> args, Object result) {
+    public void onToolCall(String toolName) {
         try {
-            httpResponse.send(resultToString(
-                    SseResult.type("TOOL_CALL")
-                            .content(json.toJson(args))
-                            .message(json.toJson(result))
-                            .toolName(toolName)
+            httpResponse.send(resultToString(SseResult.type("TOOL_CALL").toolName(toolName)
             ));
         } catch (Exception e) {
             logger.error("failed to serialize tool call: " + e.getMessage());

@@ -33,7 +33,7 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
 
     @Override
     public ChatModelBuilder newChatModelBuilder() {
-        return new qingzhou.llm.impl.openai.OpenAiChatModelBuilder(baseUrl, apiKey, model, json);
+        return new qingzhou.llm.impl.openai.OpenAiChatModelBuilder(baseUrl, apiKey, model, httpClient, json);
     }
 
     @Override

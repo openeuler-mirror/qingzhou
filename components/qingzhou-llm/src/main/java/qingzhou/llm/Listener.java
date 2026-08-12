@@ -1,7 +1,5 @@
 package qingzhou.llm;
 
-import java.util.Map;
-
 public interface Listener {
     void onBegin();
 
@@ -11,7 +9,7 @@ public interface Listener {
 
     void onReasoningResume();
 
-    void onToolCall(String toolName, Map<String, Object> args, Object result);
+    void onToolCall(String toolName);
 
     void onMessage(String content);
 

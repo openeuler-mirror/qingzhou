@@ -12,4 +12,28 @@ public interface Skill {
 
     // 技能的工具集：该技能需要挂载的功能工具
     Collection<Tool> tools();
+
+    static Skill of(String name, String description, String instruction, Collection<Tool> tools) {
+        return new Skill() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public String description() {
+                return description;
+            }
+
+            @Override
+            public String instruction() {
+                return instruction;
+            }
+
+            @Override
+            public Collection<Tool> tools() {
+                return tools;
+            }
+        };
+    }
 }

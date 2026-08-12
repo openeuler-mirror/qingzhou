@@ -10,11 +10,17 @@ import org.osgi.service.component.annotations.Component;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
+import qingzhou.http.client.ResponseListener;
 
 @Component
 public class HttpClientImpl implements HttpClient {
     @Override
     public Response send(Request request) throws Exception {
+        return send(request, null);
+    }
+
+    @Override
+    public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
         HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url);
 
@@ -46,6 +52,7 @@ public class HttpClientImpl implements HttpClient {
             body = bodyStr.length() > 0 ? bodyStr.toString().getBytes(StandardCharsets.UTF_8) : null;
         }
 
+        boolean doDisconnect = true;
         try {
             if (body != null) {
                 conn.setRequestProperty("Content-Length", String.valueOf(body.length));
@@ -69,9 +76,14 @@ public class HttpClientImpl implements HttpClient {
             } else {
                 conn.connect();
             }
-            return new ResponseImpl(conn);
+
+            ResponseImpl response = new ResponseImpl(conn, listener);
+            doDisconnect = listener == null;
+            return response;
         } finally {
-            conn.disconnect();
+            if (doDisconnect) {
+                conn.disconnect();
+            }
         }
     }
 
