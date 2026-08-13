@@ -4,8 +4,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import qingzhou.json.Json;
-import qingzhou.llm.*;
+import qingzhou.llm.Attachment;
+import qingzhou.llm.Parameter;
+import qingzhou.llm.Skill;
+import qingzhou.llm.Tool;
 import qingzhou.llm.impl.ImageAttachment;
 
 public class OpenAiDialect {
@@ -81,7 +83,7 @@ public class OpenAiDialect {
         return msg;
     }
 
-    static List<Object> buildToolDefinition(Collection<Tool> tools) {
+    static List<Object> buildToolDefinitions(Collection<Tool> tools) {
         return tools.stream().map((Function<Tool, Object>) tool -> {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("type", "object");
@@ -127,34 +129,10 @@ public class OpenAiDialect {
         return req;
     }
 
-    static Map<String, Object> callTool(Map<String, Object> llmToolCall, Listener listener, Map<String, Tool> tools, Json json) {
-        Map<String, Object> function = (Map<String, Object>) llmToolCall.get("function");
-        String toolName = (String) function.get("name");
-        String toolArgs = (String) function.get("arguments");
-
-        String result;
-        Tool tool = tools.get(toolName);
-        if (tool != null) {
-            Map<String, Object> args = null;
-            if (toolArgs != null && !toolArgs.isEmpty()) {
-                try {
-                    args = json.fromJson(toolArgs, Map.class);
-                } catch (Exception ignored) {
-                }
-            }
-            try {
-                listener.onToolCall(tool.name());
-                result = tool.invoke(args);
-            } catch (Throwable t) {
-                result = "Error: " + t.getMessage();
-            }
-        } else {
-            result = "Tool not found: " + toolName;
-        }
-
+    static Map<String, Object> buildToolMessage(String toolId, String result) {
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
-        toolResultMsg.put("tool_call_id", llmToolCall.get("id"));
+        toolResultMsg.put("tool_call_id", toolId);
         toolResultMsg.put("content", result);
         return toolResultMsg;
     }

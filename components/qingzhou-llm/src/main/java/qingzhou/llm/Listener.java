@@ -7,13 +7,13 @@ public interface Listener {
 
     void onReasoningPause();
 
-    void onReasoningResume();
-
     void onToolCall(String toolName);
+
+    void onReasoningResume();
 
     void onMessage(String content);
 
     void onComplete();
 
-    void onError(Throwable t);
+    void onError(String error);
 }

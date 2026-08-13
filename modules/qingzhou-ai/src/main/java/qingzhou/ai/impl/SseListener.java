@@ -75,11 +75,10 @@ public class SseListener implements Listener {
     }
 
     @Override
-    public void onError(Throwable t) {
-        String errMsg = t.getMessage();
-        logger.error(errMsg);
+    public void onError(String error) {
+        logger.error(error);
         try {
-            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(errMsg)));
+            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(error)));
         } catch (Exception e) {
             // 客户端已断开连接，无法发送错误信息，忽略
         }
