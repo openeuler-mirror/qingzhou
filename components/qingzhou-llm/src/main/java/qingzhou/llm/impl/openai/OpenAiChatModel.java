@@ -226,7 +226,7 @@ class OpenAiChatModel implements ChatModel {
         public void onComplete() {
             try {
                 if (!toolCalls.isEmpty()) {
-                    messages.add(OpenAiDialect.buildAssistantMessage(content.toString(), new ArrayList<>(toolCalls.values())));
+                    messages.add(OpenAiDialect.buildAssistantMessage(content.toString(), toolCalls.values()));
 
                     chatListener.onReasoningPause();
                     for (ToolCall toolCall : toolCalls.values()) {

@@ -71,14 +71,33 @@ public class OpenAiDialect {
         return userMsg;
     }
 
-    static Map<String, Object> buildAssistantMessage(String content, Object toolCalls) {
+    /**
+     * 将流式累积的 ToolCall 转为标准 OpenAI assistant 消息的 tool_calls 结构：
+     * [{"id":"...","type":"function","function":{"name":"...","arguments":"..."}}]
+     * <p>
+     * 注意：不能直接把 ToolCall 对象交给 JSON 序列化——其 package-private 字段会被
+     * Jackson 默认忽略（序列化为空对象），导致服务端校验报"工具类型不能为空"。
+     */
+    static Map<String, Object> buildAssistantMessage(String content, Collection<OpenAiChatModel.ToolCall> toolCalls) {
+        List<Map<String, Object>> calls = new ArrayList<>();
+        for (OpenAiChatModel.ToolCall tc : toolCalls) {
+            Map<String, Object> call = new HashMap<>();
+            call.put("id", tc.id);
+            call.put("type", "function");
+            Map<String, Object> fn = new HashMap<>();
+            fn.put("name", tc.name);
+            fn.put("arguments", tc.arguments != null && !tc.arguments.isEmpty() ? tc.arguments : "{}");
+            call.put("function", fn);
+            calls.add(call);
+        }
+
         Map<String, Object> msg = new HashMap<>();
         msg.put("role", "assistant");
         if (content != null && !content.isEmpty()) {
             msg.put("content", content);
         }
-        if (toolCalls != null) {
-            msg.put("tool_calls", toolCalls);
+        if (!calls.isEmpty()) {
+            msg.put("tool_calls", calls);
         }
         return msg;
     }
