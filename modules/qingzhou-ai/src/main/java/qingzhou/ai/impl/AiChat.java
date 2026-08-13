@@ -130,7 +130,7 @@ public class AiChat implements HttpHandler {
                                     refDocs = attachments;
                                     break;
                                 case image:
-                                    images = attachments.stream().map(s -> chatModelFactory.newImageAttachment(s)).toArray(Attachment[]::new);
+                                    images = attachments.stream().map(s -> chatModelFactory.newImageAttachment(s, null)).toArray(Attachment[]::new);
                                     break;
                                 default:
                                     logger.warn("unsupported type: " + attachmentType);
@@ -156,6 +156,7 @@ public class AiChat implements HttpHandler {
                 .docs(refDocs)
                 .tools(LlmConverter.convertSystemAiTool(systemAiTools))
                 .skills(llmSkill == null ? null : Collections.singleton(llmSkill))
+                .imageDetail(ChatModelFactory.ImageDetail.low)
                 .build();
         chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
     }

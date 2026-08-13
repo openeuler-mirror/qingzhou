@@ -17,6 +17,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public List<String> docs;
     public Collection<Tool> tools;
     public Collection<Skill> skills;
+    public String imageDetail;
 
     private boolean sealed;
 
@@ -55,6 +56,15 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase skills(Collection<Skill> skills) {
         checkSealed();
         this.skills = skills;
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder imageDetail(ChatModelFactory.ImageDetail imageDetail) {
+        checkSealed();
+        if (imageDetail != null) {
+            this.imageDetail = imageDetail.name();
+        }
         return this;
     }
 

@@ -75,6 +75,11 @@ public class SseListener implements Listener {
     }
 
     @Override
+    public void onUsage(int promptTokens, int completionTokens, int totalTokens) {
+        logger.info("LLM usage: prompt=" + promptTokens + ", completion=" + completionTokens + ", total=" + totalTokens);
+    }
+
+    @Override
     public void onError(String error) {
         logger.error(error);
         try {

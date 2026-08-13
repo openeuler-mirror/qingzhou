@@ -47,7 +47,7 @@ class OpenAiChatModel implements ChatModel {
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
             Map<String, Object> systemMessage = OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs);
-            Map<String, Object> userMessage = OpenAiDialect.buildUserMessage(message, attachment);
+            Map<String, Object> userMessage = OpenAiDialect.buildUserMessage(message, attachment, builder.imageDetail);
             List<Object> toolDefinitions = OpenAiDialect.buildToolDefinitions(tools.values());
 
             List<Object> messages = new ArrayList<>();
@@ -159,6 +159,8 @@ class OpenAiChatModel implements ChatModel {
         private final StringBuilder content = new StringBuilder();
         private final Map<Integer, ToolCall> toolCalls = new TreeMap<>();
         private boolean streamRetried; // 流式读取中断后是否已重发过（仅允许一次，避免重复输出）
+        private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
+        private Map<String, Object> usage; // 流式末尾 usage chunk（依赖 stream_options.include_usage）
 
         HttpListener(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration) {
             this.messages = messages;
@@ -176,10 +178,23 @@ class OpenAiChatModel implements ChatModel {
 
             try {
                 Map<String, Object> chunk = json.fromJson(data, Map.class);
+
+                // 流式末尾的 usage chunk：choices 为空、携带 usage（依赖 stream_options.include_usage）
+                Map<String, Object> chunkUsage = (Map<String, Object>) chunk.get("usage");
+                if (chunkUsage != null && !chunkUsage.isEmpty()) {
+                    usage = chunkUsage;
+                }
+
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
                 if (choices == null || choices.isEmpty()) return;
 
                 Map<String, Object> choice = choices.get(0);
+
+                Object finishReasonObj = choice.get("finish_reason");
+                if (finishReasonObj != null) {
+                    finishReason = String.valueOf(finishReasonObj);
+                }
+
                 Map<String, Object> delta = (Map<String, Object>) choice.get("delta");
                 if (delta == null) return;
 
@@ -225,6 +240,13 @@ class OpenAiChatModel implements ChatModel {
         @Override
         public void onComplete() {
             try {
+                if (usage != null) {
+                    chatListener.onUsage(
+                            ((Number) usage.getOrDefault("prompt_tokens", 0)).intValue(),
+                            ((Number) usage.getOrDefault("completion_tokens", 0)).intValue(),
+                            ((Number) usage.getOrDefault("total_tokens", 0)).intValue());
+                }
+
                 if (!toolCalls.isEmpty()) {
                     messages.add(OpenAiDialect.buildAssistantMessage(content.toString(), toolCalls.values()));
 
@@ -258,6 +280,10 @@ class OpenAiChatModel implements ChatModel {
 
                     doChat(messages, toolDefs, chatListener, toolIteration + 1);
                 } else {
+                    if ("length".equals(finishReason)) {
+                        // 输出被 max_tokens 等长度上限截断，明确告知调用方
+                        chatListener.onMessage("（输出已达长度上限，内容被截断）");
+                    }
                     chatListener.onComplete();
                 }
             } catch (Throwable t) {

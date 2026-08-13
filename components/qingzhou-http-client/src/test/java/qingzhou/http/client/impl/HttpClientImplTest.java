@@ -30,7 +30,7 @@ public class HttpClientImplTest {
 
         HttpClient httpClient = new HttpClientImpl();
         Request request = httpClient.newRequest("https://www.baidu.com/");
-        Response response = httpClient.send(request, new ResponseListener() {
+        httpClient.send(request, new ResponseListener() {
             @Override
             public void onBody(String line) {
                 lines.add(line);

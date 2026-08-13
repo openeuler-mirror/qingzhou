@@ -37,7 +37,7 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
     }
 
     @Override
-    public Attachment newImageAttachment(String base64) {
-        return new ImageAttachment(base64);
+    public Attachment newImageAttachment(String base64, String mimeType) {
+        return new ImageAttachment(base64, mimeType);
     }
 }

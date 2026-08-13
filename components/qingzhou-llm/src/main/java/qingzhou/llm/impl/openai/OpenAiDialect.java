@@ -11,6 +11,15 @@ import qingzhou.llm.Tool;
 import qingzhou.llm.impl.ImageAttachment;
 
 public class OpenAiDialect {
+    /**
+     * 单篇技能描述/参考文档最多注入系统提示的字符数，超出截断以控制输入 token 消耗
+     */
+    private static final int MAX_SYSTEM_REF_CHARS = 6000;
+    /**
+     * 工具执行结果最多回传给模型的字符数，超出截断（OpenAI 官方建议截断工具结果）
+     */
+    private static final int MAX_TOOL_RESULT_CHARS = 2000;
+
     static Map<String, Object> buildSystemMessage(String systemPrompt, Collection<Skill> skills, List<String> docs) {
         StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
 
@@ -21,7 +30,7 @@ public class OpenAiDialect {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考技能]\n").append(msg);
+                    sysMsg.append("[参考技能]\n").append(truncate(msg, MAX_SYSTEM_REF_CHARS));
                 }
             }
         }
@@ -32,7 +41,7 @@ public class OpenAiDialect {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(doc);
+                    sysMsg.append("[参考文档]\n").append(truncate(doc, MAX_SYSTEM_REF_CHARS));
                 }
             }
         }
@@ -43,7 +52,7 @@ public class OpenAiDialect {
         return sysMsgForJson;
     }
 
-    static Map<String, Object> buildUserMessage(String message, Attachment[] attachments) {
+    static Map<String, Object> buildUserMessage(String message, Attachment[] attachments, String imageDetail) {
         List<Object> parts = null;
         if (attachments != null && attachments.length > 0) {
             parts = new ArrayList<>();
@@ -55,12 +64,7 @@ public class OpenAiDialect {
 
             for (Attachment attach : attachments) {
                 if (attach instanceof ImageAttachment) {
-                    Map<String, Object> imagePart = new HashMap<>();
-                    imagePart.put("type", "image_url");
-                    Map<String, Object> imageUrl = new HashMap<>();
-                    imageUrl.put("url", "data:image/jpeg;base64," + ((ImageAttachment) attach).base64);
-                    imagePart.put("image_url", imageUrl);
-                    parts.add(imagePart);
+                    parts.add(getImagePart((ImageAttachment) attach, imageDetail));
                 }
             }
         }
@@ -69,6 +73,20 @@ public class OpenAiDialect {
         userMsg.put("role", "user");
         userMsg.put("content", parts != null ? parts : message);
         return userMsg;
+    }
+
+    private static Map<String, Object> getImagePart(ImageAttachment image, String imageDetail) {
+        Map<String, Object> imageUrl = new HashMap<>();
+        String mimeType = image.mimeType != null ? image.mimeType : "image/jpeg";
+        imageUrl.put("url", "data:" + mimeType + ";base64," + image.base64);
+        if (imageDetail != null) {
+            imageUrl.put("detail", imageDetail);
+        }
+
+        Map<String, Object> imagePart = new HashMap<>();
+        imagePart.put("type", "image_url");
+        imagePart.put("image_url", imageUrl);
+        return imagePart;
     }
 
     /**
@@ -113,7 +131,9 @@ public class OpenAiDialect {
                 for (Parameter param : params) {
                     Map<String, Object> prop = new HashMap<>();
                     prop.put("type", "string");
-                    prop.put("description", param.description());
+                    if (param.description() != null) {
+                        prop.put("description", param.description());
+                    }
                     paramMap.put(param.name(), prop);
                     if (param.required()) {
                         required.add(param.name());
@@ -127,7 +147,9 @@ public class OpenAiDialect {
 
             Map<String, Object> function = new HashMap<>();
             function.put("name", tool.name());
-            function.put("description", tool.description());
+            if (tool.description() != null) {
+                function.put("description", tool.description());
+            }
             function.put("parameters", parameters);
 
             Map<String, Object> toolDef = new HashMap<>();
@@ -142,6 +164,10 @@ public class OpenAiDialect {
         req.put("model", modelName);
         req.put("messages", messages);
         req.put("stream", true);
+        // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
+        Map<String, Object> streamOptions = new HashMap<>();
+        streamOptions.put("include_usage", true);
+        req.put("stream_options", streamOptions);
         if (toolDefs != null && !toolDefs.isEmpty()) {
             req.put("tools", toolDefs);
         }
@@ -152,7 +178,16 @@ public class OpenAiDialect {
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", result);
+        toolResultMsg.put("content", truncate(result, MAX_TOOL_RESULT_CHARS));
         return toolResultMsg;
+    }
+
+    /**
+     * 超过 maxChars 的文本截断并追加省略提示，避免长文本全量计入输入 token。
+     */
+    private static String truncate(String s, int maxChars) {
+        if (s == null) return null;
+        if (s.length() <= maxChars) return s;
+        return s.substring(0, maxChars) + "\n…（内容过长已截断，原长度 " + s.length() + " 字符）";
     }
 }
