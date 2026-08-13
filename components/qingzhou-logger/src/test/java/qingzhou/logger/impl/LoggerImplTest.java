@@ -3,6 +3,8 @@ package qingzhou.logger.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -10,36 +12,35 @@ import java.util.function.BooleanSupplier;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.tinylog.core.LogEntry;
+import org.tinylog.core.LogEntryValue;
+import org.tinylog.writers.Writer;
 
 /**
  * 覆盖 LoggerImpl 在 debug 级别下的常用日志 API。
  *
- * <p>本类只使用 debug 级别初始化，可覆盖 debug/info/warn/error 输出、异常堆栈、
- * 格式化输出以及开关查询 API。</p>
+ * <p>使用测试类内部的自定义 BufferWriter 接收 tinylog 输出，避免启动 banner 干扰，
+ * 也不需要重定向 System.out。各测试方法清空静态缓冲后读取断言。</p>
  */
 public class LoggerImplTest {
     private static final long AWAIT_TIMEOUT_MS = 5000L;
 
+    private static final ByteArrayOutputStream OUTPUT = new ByteArrayOutputStream();
+    private static final PrintStream OUTPUT_STREAM = new PrintStream(OUTPUT, true);
+    private static final String CUSTOM_WRITER = LoggerImplTest.class.getName() + "$BufferWriter";
+
     /**
-     * 初始化 debug 级别配置，并吞掉启动 banner，避免干扰后续日志断言。
+     * 初始化 debug 级别配置，并等待启动 banner 写入后清空缓冲。
      */
     @BeforeClass
     public static void setUp() throws InterruptedException {
         Map<String, Object> config = new HashMap<>();
         config.put("level", "debug");
-        config.put("writer", "console");
-        config.put("writer.format", "{level} | {message}");
-        config.put("writer.stream", "out");
+        config.put("writer", CUSTOM_WRITER);
 
-        PrintStream originalOut = System.out;
-        ByteArrayOutputStream startupOutput = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(startupOutput, true));
-        try {
-            new LoggerImpl().init(config);
-            awaitUntil(() -> textOf(startupOutput).contains("'~~"), "startup banner was not written");
-        } finally {
-            System.setOut(originalOut);
-        }
+        new LoggerImpl().init(config);
+        awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
+        clearOutput();
     }
 
     /**
@@ -111,18 +112,17 @@ public class LoggerImplTest {
      */
     @Test
     public void formattedOutput_infoMessage_matchesTemplate() throws Exception {
-        try (OutputCapture capture = new OutputCapture()) {
-            LoggerImpl logger = new LoggerImpl();
-            logger.info("format-message");
+        clearOutput();
+        LoggerImpl logger = new LoggerImpl();
+        logger.info("format-message");
 
-            awaitUntil(() -> capture.outText().contains("INFO | format-message"), "formatted message was not written");
-            for (String line : capture.outText().split("\\r?\\n")) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                Assert.assertTrue(line.matches("(DEBUG|INFO|WARN|ERROR) \\| .+"),
-                        "unexpected log line: " + line);
+        awaitUntil(() -> outputText().contains("INFO | format-message"), "formatted message was not written");
+        for (String line : outputText().split("\\r?\\n")) {
+            if (line.trim().isEmpty()) {
+                continue;
             }
+            Assert.assertTrue(line.matches("(DEBUG|INFO|WARN|ERROR) \\| .+"),
+                    "unexpected log line: " + line);
         }
     }
 
@@ -142,31 +142,29 @@ public class LoggerImplTest {
      * 验证指定级别普通日志按配置模板输出。
      */
     private static void assertLogEntry(String level, String message) throws Exception {
-        try (OutputCapture capture = new OutputCapture()) {
-            LoggerImpl logger = new LoggerImpl();
-            invoke(logger, level, message);
-            String expected = level.toUpperCase() + " | " + message;
-            awaitUntil(() -> capture.outText().contains(expected), level + " log was not written");
-        }
+        clearOutput();
+        LoggerImpl logger = new LoggerImpl();
+        invoke(logger, level, message);
+        String expected = level.toUpperCase() + " | " + message;
+        awaitUntil(() -> outputText().contains(expected), level + " log was not written");
     }
 
     /**
      * 验证带异常的日志同时包含异常消息、异常类名和测试类堆栈帧。
      */
     private static void assertThrowableLog(String level, String message) throws Exception {
-        try (OutputCapture capture = new OutputCapture()) {
-            LoggerImpl logger = new LoggerImpl();
-            RuntimeException exception = new RuntimeException(message + "-stack-detail");
-            invoke(logger, level, message, exception);
+        clearOutput();
+        LoggerImpl logger = new LoggerImpl();
+        RuntimeException exception = new RuntimeException(message + "-stack-detail");
+        invoke(logger, level, message, exception);
 
-            String expected = level.toUpperCase() + " | " + message;
-            awaitUntil(() -> capture.outText().contains(expected), level + " throwable log was not written");
+        String expected = level.toUpperCase() + " | " + message;
+        awaitUntil(() -> outputText().contains(expected), level + " throwable log was not written");
 
-            String text = capture.outText();
-            Assert.assertTrue(text.contains(exception.getMessage()), "throwable message was not written");
-            Assert.assertTrue(text.contains(RuntimeException.class.getName()), "throwable class was not written");
-            Assert.assertTrue(text.contains("LoggerImplTest"), "stack trace frame was not written");
-        }
+        String text = outputText();
+        Assert.assertTrue(text.contains(exception.getMessage()), "throwable message was not written");
+        Assert.assertTrue(text.contains(RuntimeException.class.getName()), "throwable class was not written");
+        Assert.assertTrue(text.contains("LoggerImplTest"), "stack trace frame was not written");
     }
 
     /**
@@ -199,8 +197,16 @@ public class LoggerImplTest {
         }
     }
 
-    private static String textOf(ByteArrayOutputStream buffer) {
-        return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+    private static void clearOutput() {
+        synchronized (OUTPUT) {
+            OUTPUT.reset();
+        }
+    }
+
+    private static String outputText() {
+        synchronized (OUTPUT) {
+            return new String(OUTPUT.toByteArray(), StandardCharsets.UTF_8);
+        }
     }
 
     /**
@@ -218,27 +224,36 @@ public class LoggerImplTest {
     }
 
     /**
-     * 临时接管 System.out/System.err，将日志写入内存并在关闭时恢复原流。
+     * 自定义 tinylog writer，将日志写入测试类控制的静态内存缓冲。
      */
-    private static final class OutputCapture implements AutoCloseable {
-        private final PrintStream originalOut = System.out;
-        private final PrintStream originalErr = System.err;
-        private final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        private final ByteArrayOutputStream err = new ByteArrayOutputStream();
-
-        OutputCapture() {
-            System.setOut(new PrintStream(out, true));
-            System.setErr(new PrintStream(err, true));
+    public static final class BufferWriter implements Writer {
+        public BufferWriter(Map<String, String> configuration) {
         }
 
-        String outText() {
-            return textOf(out);
+        @Override
+        public Collection<LogEntryValue> getRequiredLogEntryValues() {
+            return EnumSet.of(LogEntryValue.LEVEL, LogEntryValue.MESSAGE, LogEntryValue.EXCEPTION);
+        }
+
+        @Override
+        public void write(LogEntry logEntry) {
+            synchronized (OUTPUT) {
+                OUTPUT_STREAM.print(logEntry.getLevel());
+                OUTPUT_STREAM.print(" | ");
+                OUTPUT_STREAM.println(logEntry.getMessage());
+                Throwable exception = logEntry.getException();
+                if (exception != null) {
+                    exception.printStackTrace(OUTPUT_STREAM);
+                }
+            }
+        }
+
+        @Override
+        public void flush() {
         }
 
         @Override
         public void close() {
-            System.setOut(originalOut);
-            System.setErr(originalErr);
         }
     }
 }
