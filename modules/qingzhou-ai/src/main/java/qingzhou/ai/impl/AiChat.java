@@ -105,7 +105,8 @@ public class AiChat implements HttpHandler {
                 params = json.fromJson(str, HashMap.class);
                 question = (String) params.get("question");
             } catch (Exception e) {
-                logger.error("failed to convert to JSON: " + str, e);
+                // 仅记录请求体长度与异常，不输出原文：请求体可能含问题原文、附件文本或 base64 图片等敏感内容
+                logger.error("failed to convert request body to JSON, body length=" + str.length(), e);
             }
         }
         if (params == null || question == null || question.trim().isEmpty()) return;
