@@ -36,6 +36,14 @@ public interface Response {
      */
     Response header(String name, String value);
 
+    /**
+     * 等价于:
+     * this.msg(error);
+     * this.msgLevel(Response.MsgLevel.error);
+     * this.success(false);
+     */
+    Response error(String error);
+
     enum MsgLevel {
         info, warn, error
     }

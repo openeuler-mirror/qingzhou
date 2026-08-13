@@ -60,6 +60,14 @@ public class ResponseImpl implements Response {
         return this;
     }
 
+    @Override
+    public Response error(String error) {
+        this.msg(error);
+        this.msgLevel(Response.MsgLevel.error);
+        this.success(false);
+        return this;
+    }
+
     public boolean isSuccess() {
         return success;
     }

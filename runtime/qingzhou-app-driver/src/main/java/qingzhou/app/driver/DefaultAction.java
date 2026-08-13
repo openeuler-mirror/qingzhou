@@ -208,22 +208,24 @@ public class DefaultAction {
         String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);
         if (downloadKey == null || downloadKey.isEmpty()) {
             String downloadFileNames = request.getParameter(DownloadFile.REQUEST_PARAMETER_FILE_NAMES);
-            if (downloadFileNames == null
-                    || downloadFileNames.isEmpty()
-                    || downloadFileNames.contains("..")
-                    || downloadFileNames.contains(File.separator)) {
-                response.msg("illegal file name");
-                response.msgLevel(Response.MsgLevel.warn);
-                response.success(false);
+            if (downloadFileNames == null) {
+                response.error("empty file name");
                 return;
             }
+
             java.util.List<File> downloadFiles = new ArrayList<>();
             for (String s : downloadFileNames.split(",")) {
+                s = s.trim();
+                if (hasIllegalPath(s)) {
+                    response.error("illegal file name");
+                    return;
+                }
                 File file = new File(fileBase, s);
                 if (file.isFile()) {
                     downloadFiles.add(file);
                 }
             }
+
             if (!downloadFiles.isEmpty()) {
                 if (downloadFiles.size() == 1) {
                     downloadKey = downloadFiles.get(0).getName();
@@ -231,6 +233,9 @@ public class DefaultAction {
                     downloadKey = buildDownloadKey(downloadFiles, tempBase);
                 }
             }
+        } else if (hasIllegalPath(downloadKey)) { // 防止通过 download_serial_key 参数进行目录穿越
+            response.error("illegal file name");
+            return;
         }
         if (downloadKey == null || downloadKey.isEmpty()) return;
 
@@ -245,9 +250,16 @@ public class DefaultAction {
 
         boolean isTempFile = false;
         File toDownloadFile = new File(fileBase, downloadKey); // 单文件直接下载
+        File allowedBase = fileBase;
         if (!toDownloadFile.exists()) {
             toDownloadFile = new File(tempBase, downloadKey); // 多文件压缩下载
+            allowedBase = tempBase;
             isTempFile = true;
+        }
+        // 兜底校验：解析后的文件必须位于允许的基准目录内，防止符号链接等方式绕过上述检查
+        if (!isInAllowedBase(toDownloadFile, allowedBase)) {
+            response.error("illegal file name");
+            return;
         }
         try (RandomAccessFile raf = new RandomAccessFile(toDownloadFile, "r")) {
             if (offset >= raf.length()) return;
@@ -279,6 +291,22 @@ public class DefaultAction {
         data.put(DownloadFile.REQUEST_PARAMETER_OFFSET, String.valueOf(offset));
         data.put(DownloadFile.REQUEST_PARAMETER_BYTES, byteEncoded);
         response.data(data);
+    }
+
+    // 校验文件名/路径参数中不含目录穿越（..）或路径分隔符，防止任意文件读取
+    private static boolean hasIllegalPath(String name) {
+        return name.contains("..") || name.contains("/") || name.contains("\\");
+    }
+
+    // 校验目标文件解析（含符号链接）后仍位于允许的基准目录内
+    private static boolean isInAllowedBase(File file, File base) {
+        try {
+            String basePath = base.getCanonicalPath();
+            String filePath = file.getCanonicalPath();
+            return filePath.startsWith(basePath);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private static Map<String, String> filterMapData(Map<String, String> data, String[] useFields) {
