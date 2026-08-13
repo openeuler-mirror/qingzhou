@@ -45,6 +45,15 @@ public class Agent implements HttpHandler {
     public void init() {
         uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "agent-upload").toFile();
         uploadBase.mkdirs();
+        cleanLegacyUploads();
+    }
+
+    private void cleanLegacyUploads() {
+        File[] legacy = uploadBase.listFiles();
+        if (legacy == null) return;
+        for (File file : legacy) {
+            file.delete();
+        }
     }
 
     @Override
@@ -93,10 +102,15 @@ public class Agent implements HttpHandler {
     private String processFileUpload(byte[] data, String key) throws Throwable {
         String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
         File tempFile = new File(uploadBase, uploadId);
-        if (tempFile.exists()) {
-            Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
-        } else {
-            Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
+        try {
+            if (tempFile.exists()) {
+                Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
+            } else {
+                Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
+            }
+        } catch (Throwable e) {
+            tempFile.delete();
+            throw e;
         }
 
         return uploadId;
@@ -108,9 +122,14 @@ public class Agent implements HttpHandler {
 
         // 4. 处理
         Set<String> originalFilePaths = new HashSet<>(); // 处理之前，须先保存原始文件路径，用于 finally 块中的清理，因应用可能修改此参数值
+        Set<String> rawTempFiles = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
         try {
             request.getUploadFileFields().forEach(field -> {
-                String newPaths = Arrays.stream(request.getParameter(field).split(",")).map(s -> {
+                String[] keyNames = request.getParameter(field).split(",");
+                for (String keyName : keyNames) {
+                    rawTempFiles.add(new File(uploadBase, keyName.split(FILE_UPLOAD_NAME_SP)[0]).getAbsolutePath());
+                }
+                String newPaths = Arrays.stream(keyNames).map(s -> {
                     String[] keyName = s.split(FILE_UPLOAD_NAME_SP);
                     File tempFile = new File(uploadBase, keyName[0]);
                     File localFile = new File(uploadBase, keyName[1]);
@@ -132,6 +151,9 @@ public class Agent implements HttpHandler {
                         tempFile.delete();
                     }
                 }
+            }
+            for (String path : rawTempFiles) {
+                new File(path).delete(); // 已被 rename 的文件此处删除无副作用
             }
         }
 

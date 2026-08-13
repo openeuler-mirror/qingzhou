@@ -177,6 +177,7 @@ class MultipartStreamParser {
         if (currentFieldName == null) return;
         if (isFileField) {
             fileStream.close();
+            fileStream = null;
             uploadFileMap.computeIfAbsent(currentFieldName, k -> new ArrayList<>())
                     .add(currentTempFile.getAbsolutePath());
             uploadFileFields.add(currentFieldName);
@@ -187,6 +188,38 @@ class MultipartStreamParser {
         currentFieldName = null;
         currentFileName = null;
         isFileField = false;
+    }
+
+    /**
+     * 中断解析时调用：关闭未完成的文件流并清理已写入的临时文件，防止句柄与临时文件残留。此方法可重复调用。
+     */
+    void abort() {
+        if (fileStream != null) {
+            try {
+                fileStream.close();
+            } catch (IOException ignored) {
+            }
+            fileStream = null;
+        }
+        deleteUploadedFile(currentTempFile);
+        currentTempFile = null;
+        for (List<String> paths : uploadFileMap.values()) {
+            for (String path : paths) {
+                deleteUploadedFile(new File(path));
+            }
+        }
+        uploadFileMap.clear();
+        state = State.DONE;
+    }
+
+    private void deleteUploadedFile(File tempFile) {
+        if (tempFile == null || !tempFile.exists()) return;
+        File parentDir = tempFile.getParentFile();
+        if (parentDir != null && parentDir.getParentFile() != null
+                && parentDir.getParentFile().equals(uploadBase)) {
+            tempFile.delete();
+            parentDir.delete();
+        }
     }
 
     private void parsePartHeaders(String headers) {
