@@ -50,6 +50,9 @@ public class QingzhouMain {
         new AppDeployer(instanceDir, libDir).deployApps();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (scheduledExecutor != null) {
+                scheduledExecutor.shutdown();
+            }
             try {
                 osgiFramework.stop();
                 osgiFramework.waitForStop(0);
@@ -107,7 +110,11 @@ public class QingzhouMain {
 
     private static void startWithDetection(Bundle bundle) {
         if (scheduledExecutor == null) {
-            scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread thread = new Thread(r, "qz-path-detector");
+                thread.setDaemon(true);
+                return thread;
+            });
         }
         scheduledExecutor.scheduleAtFixedRate(() -> {
             try { // 实际检测逻辑

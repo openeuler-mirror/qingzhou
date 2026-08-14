@@ -37,6 +37,25 @@ public class Invoke implements HttpHandler {
     @Activate
     public void init() {
         uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
+        cleanLegacyUploads();
+    }
+
+    private void cleanLegacyUploads() {
+        File[] legacy = uploadBase.listFiles();
+        if (legacy == null) return;
+        for (File file : legacy) {
+            deleteRecursively(file);
+        }
+    }
+
+    private void deleteRecursively(File file) {
+        File[] children = file.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                deleteRecursively(child);
+            }
+        }
+        file.delete();
     }
 
     @Override
@@ -229,6 +248,9 @@ public class Invoke implements HttpHandler {
                 request.getUploadFileFields().forEach(f -> originalFilePaths.add(request.getParameter(f)));
                 app.invokeApp(request);
             } catch (Throwable e) {
+                if (parser != null) {
+                    parser.abort();
+                }
                 httpResponse.status500Finish(e.getMessage());
                 logger.error(e.getMessage(), e);
                 return;
@@ -241,6 +263,9 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onError(Throwable t) {
+            if (parser != null) {
+                parser.abort();
+            }
             if (httpResponse != null) {
                 httpResponse.status500Finish(t.getMessage());
             }

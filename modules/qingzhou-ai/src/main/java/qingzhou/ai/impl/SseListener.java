@@ -1,6 +1,5 @@
 package qingzhou.ai.impl;
 
-import java.util.Map;
 import java.util.UUID;
 
 import qingzhou.http.server.HttpResponse;
@@ -53,13 +52,9 @@ public class SseListener implements Listener {
     }
 
     @Override
-    public void onToolCall(String toolName, Map<String, Object> args, Object result) {
+    public void onToolCall(String toolName) {
         try {
-            httpResponse.send(resultToString(
-                    SseResult.type("TOOL_CALL")
-                            .content(json.toJson(args))
-                            .message(json.toJson(result))
-                            .toolName(toolName)
+            httpResponse.send(resultToString(SseResult.type("TOOL_CALL").toolName(toolName)
             ));
         } catch (Exception e) {
             logger.error("failed to serialize tool call: " + e.getMessage());
@@ -80,11 +75,15 @@ public class SseListener implements Listener {
     }
 
     @Override
-    public void onError(Throwable t) {
-        String errMsg = t.getMessage();
-        logger.error(errMsg);
+    public void onUsage(int promptTokens, int completionTokens, int totalTokens) {
+        logger.info("LLM usage: prompt=" + promptTokens + ", completion=" + completionTokens + ", total=" + totalTokens);
+    }
+
+    @Override
+    public void onError(String error) {
+        logger.error(error);
         try {
-            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(errMsg)));
+            httpResponse.sendFinish(resultToString(SseResult.type("RUN_ERROR").message(error)));
         } catch (Exception e) {
             // 客户端已断开连接，无法发送错误信息，忽略
         }

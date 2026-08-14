@@ -7,16 +7,28 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
+import qingzhou.http.client.ResponseListener;
 
 @Component
 public class HttpClientImpl implements HttpClient {
+    @Deactivate
+    public void deactivate() {
+        ResponseImpl.shutdown();
+    }
+
     @Override
     public Response send(Request request) throws Exception {
+        return send(request, null);
+    }
+
+    @Override
+    public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
-        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url);
+        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout);
 
         if (req.method != null) {
             conn.setRequestMethod(req.method.name());
@@ -46,6 +58,7 @@ public class HttpClientImpl implements HttpClient {
             body = bodyStr.length() > 0 ? bodyStr.toString().getBytes(StandardCharsets.UTF_8) : null;
         }
 
+        boolean doDisconnect = true;
         try {
             if (body != null) {
                 conn.setRequestProperty("Content-Length", String.valueOf(body.length));
@@ -69,9 +82,14 @@ public class HttpClientImpl implements HttpClient {
             } else {
                 conn.connect();
             }
-            return new ResponseImpl(conn);
+
+            ResponseImpl response = new ResponseImpl(conn, listener);
+            doDisconnect = false; // 连接交由 ResponseImpl 管理：正常读完可复用，取消时强制断开
+            return response;
         } finally {
-            conn.disconnect();
+            if (doDisconnect) {
+                conn.disconnect(); // 请求构造失败时兜底断开
+            }
         }
     }
 
