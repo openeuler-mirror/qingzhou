@@ -20,7 +20,9 @@
                             <Qingzhou-Detection-Enabled>true</Qingzhou-Detection-Enabled>
                             <Qingzhou-Detection-Feature-Files>bin/catalina.sh, bin/catalina.bat, conf/server.xml</Qingzhou-Detection-Feature-Files>
                             <Qingzhou-Detection-Env-Vars>CATALINA_HOME,TOMCAT_HOME</Qingzhou-Detection-Env-Vars>
-                            <Qingzhou-Detection-Scan-Roots>/Users/fuderong/Desktop</Qingzhou-Detection-Scan-Roots>
+                            <!-- 如果未能通过环境变量找到软件的安装目录，则在此路径下扫描。注：仅会扫描配置的当前目录及其第一次子目录。可选。 -->
+                            <Qingzhou-Detection-Scan-Roots>user.home,/usr/local,/opt,/opt/homebrew/opt</Qingzhou-Detection-Scan-Roots>
+                            <!-- 如果未能通过环境变量和目录扫描找到软件的安装目录，则会检测当前正在运行的所有程序列表。可选。 -->
                             <Qingzhou-Detection-Process-Names/>
                         </manifestEntries>
                     </archive>
