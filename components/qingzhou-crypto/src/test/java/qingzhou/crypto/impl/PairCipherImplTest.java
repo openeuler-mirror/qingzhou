@@ -45,12 +45,7 @@ public class PairCipherImplTest {
             Assert.fail("null 输入应抛出异常");
         } catch (Throwable e) {
             Assert.assertNotNull(e);
-        try {
-            pairCipher.encryptWithPublicKey((byte[]) null);
-        } catch (Exception e) {
-            return;
         }
-        Assert.fail("null 输入应抛出异常");
     }
 
     @Test
