@@ -136,7 +136,7 @@ class OpenAiChatModel implements ChatModel {
                 throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
             }
             if ("http".equalsIgnoreCase(scheme) && !isLoopback(host)) {
-                throw new IllegalArgumentException("LLM baseUrl must use https (http is only allowed for loopback addresses like localhost)");
+                System.err.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
             }
         } catch (IllegalArgumentException e) {
             throw e;
