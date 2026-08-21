@@ -44,6 +44,11 @@ class OpenAiChatModel implements ChatModel {
     }
 
     @Override
+    public String chat(String message, Attachment... attachment) {
+        return "";
+    }
+
+    @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
             Map<String, Object> systemMessage = OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs);
