@@ -159,15 +159,17 @@ public class OpenAiDialect {
         }).collect(Collectors.toList());
     }
 
-    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs) {
+    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
         req.put("model", modelName);
         req.put("messages", messages);
-        req.put("stream", true);
-        // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
-        Map<String, Object> streamOptions = new HashMap<>();
-        streamOptions.put("include_usage", true);
-        req.put("stream_options", streamOptions);
+        req.put("stream", stream);
+        if (stream) {
+            // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
+            Map<String, Object> streamOptions = new HashMap<>();
+            streamOptions.put("include_usage", true);
+            req.put("stream_options", streamOptions);
+        }
         if (toolDefs != null && !toolDefs.isEmpty()) {
             req.put("tools", toolDefs);
         }
