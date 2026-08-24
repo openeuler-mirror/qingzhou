@@ -23,6 +23,16 @@ public interface ChatModelFactory {
 
         ChatModelBuilder imageDetail(ImageDetail imageDetail);
 
+        /**
+         * 工具执行结果最多回传给模型的字符数，超出截断（OpenAI 官方建议截断工具结果）
+         */
+        ChatModelBuilder maxToolResultChars(int maxToolResultChars);
+
+        /**
+         * 单篇技能描述/参考文档最多注入系统提示的字符数，超出截断以控制输入 token 消耗
+         */
+        ChatModelBuilder maxPerRefChars(int maxPerRefChars);
+
         ChatModel build();
     }
 

@@ -19,6 +19,9 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public Collection<Skill> skills;
     public String imageDetail;
 
+    public int maxToolResultChars = 2000;
+    public int maxPerRefChars = 6000;
+
     private boolean sealed;
 
     protected ChatModelBuilderBase(String baseUrl, String apiKey, String model) {
@@ -64,6 +67,24 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
         checkSealed();
         if (imageDetail != null) {
             this.imageDetail = imageDetail.name();
+        }
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder maxToolResultChars(int maxToolResultChars) {
+        checkSealed();
+        if (maxToolResultChars > 0) {
+            this.maxToolResultChars = maxToolResultChars;
+        }
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder maxPerRefChars(int maxPerRefChars) {
+        checkSealed();
+        if (maxPerRefChars > 0) {
+            this.maxPerRefChars = maxPerRefChars;
         }
         return this;
     }

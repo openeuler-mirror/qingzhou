@@ -47,7 +47,7 @@ class OpenAiChatModel implements ChatModel {
     public String chat(String message, Attachment... attachment) {
         try {
             List<Object> messages = new ArrayList<>();
-            messages.add(OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs));
+            messages.add(OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs, builder.maxPerRefChars));
             messages.add(OpenAiDialect.buildUserMessage(message, attachment, builder.imageDetail));
             List<Object> toolDefs = OpenAiDialect.buildToolDefinitions(tools.values());
 
@@ -66,7 +66,7 @@ class OpenAiChatModel implements ChatModel {
                 }
                 messages.add(OpenAiDialect.buildAssistantMessage(extractText(msg.get("content")), toolCalls));
                 for (ToolCall toolCall : toolCalls) {
-                    messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall)));
+                    messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall), builder.maxToolResultChars));
                 }
             }
             return "（已达工具调用次数上限，停止继续执行工具）";
@@ -148,7 +148,7 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            Map<String, Object> systemMessage = OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs);
+            Map<String, Object> systemMessage = OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs, builder.maxPerRefChars);
             Map<String, Object> userMessage = OpenAiDialect.buildUserMessage(message, attachment, builder.imageDetail);
             List<Object> toolDefinitions = OpenAiDialect.buildToolDefinitions(tools.values());
 
@@ -348,7 +348,7 @@ class OpenAiChatModel implements ChatModel {
                     chatListener.onReasoningPause();
                     for (ToolCall toolCall : toolCalls.values()) {
                         chatListener.onToolCall(toolCall.name);
-                        messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall)));
+                        messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall), builder.maxToolResultChars));
                     }
                     chatListener.onReasoningResume();
 
