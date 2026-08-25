@@ -94,8 +94,8 @@ public class PathDetector {
                 // Windows: 使用 wmic 获取所有进程的可执行文件路径
                 cmd = new String[]{"cmd", "/c", "wmic process where \"ExecutablePath is not null\" get ExecutablePath /format:list"};
             } else {
-                // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数 (通用性最强)
-                cmd = new String[]{"sh", "-c", "ps -e -o args="};
+                // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）
+                cmd = new String[]{"sh", "-c", "ps -ww -e -o args="};
             }
 
             process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
@@ -105,15 +105,6 @@ public class PathDetector {
             return reader.lines()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
-                    .map(line -> { // 按空格分隔后，取第一个（即进程的可执行文件路径或命令本身）
-                        return line.trim().split("\\s+")[0];
-                    })
-                    .map(line -> { // Windows wmic 输出格式是 "ExecutablePath=C:\xxx"，截取等号后的内容
-                        if (line.contains("=")) {
-                            line = line.substring(line.indexOf('=') + 1);
-                        }
-                        return line;
-                    })
                     .map(line -> { // 从行中提取匹配到的目录前缀 (到关键字为止)
                         // 统一转为小写查找，兼容大小写
                         String lowerPath = line.toLowerCase();
