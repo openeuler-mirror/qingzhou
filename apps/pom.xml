@@ -16,6 +16,7 @@
         <module>qingzhou-app-redis</module>
         <module>qingzhou-app-tomcat</module>
         <module>qingzhou-app-nacos</module>
+        <module>qingzhou-app-zookeeper</module>
     </modules>
 
     <dependencies>
