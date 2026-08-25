@@ -33,6 +33,10 @@ public interface ChatModelFactory {
          */
         ChatModelBuilder maxPerRefChars(int maxPerRefChars);
 
+        ChatModelBuilder maxRetries(int maxRetries);
+
+        ChatModelBuilder maxToolIterations(int maxToolIterations);
+
         ChatModel build();
     }
 

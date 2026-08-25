@@ -22,6 +22,9 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public int maxToolResultChars = 2000;
     public int maxPerRefChars = 6000;
 
+    public int maxRetries = 3;
+    public int maxToolIterations = 20;
+
     private boolean sealed;
 
     protected ChatModelBuilderBase(String baseUrl, String apiKey, String model) {
@@ -85,6 +88,24 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
         checkSealed();
         if (maxPerRefChars > 0) {
             this.maxPerRefChars = maxPerRefChars;
+        }
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder maxRetries(int maxRetries) {
+        checkSealed();
+        if (maxRetries > 0) {
+            this.maxRetries = maxRetries;
+        }
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder maxToolIterations(int maxToolIterations) {
+        checkSealed();
+        if (maxToolIterations > 0) {
+            this.maxToolIterations = maxToolIterations;
         }
         return this;
     }
