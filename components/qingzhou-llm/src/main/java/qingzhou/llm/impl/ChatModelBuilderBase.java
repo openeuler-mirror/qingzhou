@@ -25,6 +25,9 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public int maxRetries = 3;
     public int maxToolIterations = 20;
 
+    public int connectTimeout = 60 * 1000;
+    public int readTimeout = 10 * 60 * 1000;
+
     private boolean sealed;
 
     protected ChatModelBuilderBase(String baseUrl, String apiKey, String model) {
@@ -107,6 +110,26 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
         if (maxToolIterations > 0) {
             this.maxToolIterations = maxToolIterations;
         }
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder connectTimeout(int connectTimeout) {
+        checkSealed();
+        if (connectTimeout < 0) {
+            throw new IllegalArgumentException("timeout can not be negative");
+        }
+        this.connectTimeout = connectTimeout;
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder readTimeout(int readTimeout) {
+        checkSealed();
+        if (readTimeout < 0) {
+            throw new IllegalArgumentException("timeout can not be negative");
+        }
+        this.readTimeout = readTimeout;
         return this;
     }
 

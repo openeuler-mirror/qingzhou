@@ -101,6 +101,8 @@ class OpenAiChatModel implements ChatModel {
                 .header("Authorization", "Bearer " + builder.apiKey)
                 .header("Accept", stream ? "text/event-stream" : "application/json");
         request.body(json.toJson(llmRequest).getBytes(StandardCharsets.UTF_8));
+        request.connectTimeout(builder.connectTimeout);
+        request.readTimeout(builder.readTimeout);
         return request;
     }
 
