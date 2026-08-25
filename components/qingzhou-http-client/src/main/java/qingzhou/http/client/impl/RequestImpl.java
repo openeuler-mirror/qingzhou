@@ -13,8 +13,8 @@ class RequestImpl implements Request {
     Map<String, String> params;
     byte[] body;
     Map<String, String> files;
-    int connectTimeout;
-    int readTimeout;
+    int connectTimeout = 60 * 1000;
+    int readTimeout = 10 * 60 * 1000;
 
     public RequestImpl(String url) {
         this.url = url;
@@ -59,12 +59,20 @@ class RequestImpl implements Request {
 
     @Override
     public Request connectTimeout(int connectTimeout) {
+        if (connectTimeout < 0) {
+            throw new IllegalArgumentException("timeout can not be negative");
+        }
+
         this.connectTimeout = connectTimeout;
         return this;
     }
 
     @Override
     public Request readTimeout(int readTimeout) {
+        if (readTimeout < 0) {
+            throw new IllegalArgumentException("timeout can not be negative");
+        }
+
         this.readTimeout = readTimeout;
         return this;
     }

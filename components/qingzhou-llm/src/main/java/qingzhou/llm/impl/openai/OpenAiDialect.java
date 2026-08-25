@@ -11,16 +11,7 @@ import qingzhou.llm.Tool;
 import qingzhou.llm.impl.ImageAttachment;
 
 public class OpenAiDialect {
-    /**
-     * 单篇技能描述/参考文档最多注入系统提示的字符数，超出截断以控制输入 token 消耗
-     */
-    private static final int MAX_SYSTEM_REF_CHARS = 6000;
-    /**
-     * 工具执行结果最多回传给模型的字符数，超出截断（OpenAI 官方建议截断工具结果）
-     */
-    private static final int MAX_TOOL_RESULT_CHARS = 2000;
-
-    static Map<String, Object> buildSystemMessage(String systemPrompt, Collection<Skill> skills, List<String> docs) {
+    static Map<String, Object> buildSystemMessage(String systemPrompt, Collection<Skill> skills, List<String> docs, int maxPerRefChars) {
         StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
 
         if (skills != null) {
@@ -30,7 +21,7 @@ public class OpenAiDialect {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考技能]\n").append(truncate(msg, MAX_SYSTEM_REF_CHARS));
+                    sysMsg.append("[参考技能]\n").append(truncate(msg, maxPerRefChars));
                 }
             }
         }
@@ -41,7 +32,7 @@ public class OpenAiDialect {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(truncate(doc, MAX_SYSTEM_REF_CHARS));
+                    sysMsg.append("[参考文档]\n").append(truncate(doc, maxPerRefChars));
                 }
             }
         }
@@ -159,26 +150,28 @@ public class OpenAiDialect {
         }).collect(Collectors.toList());
     }
 
-    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs) {
+    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
         req.put("model", modelName);
         req.put("messages", messages);
-        req.put("stream", true);
-        // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
-        Map<String, Object> streamOptions = new HashMap<>();
-        streamOptions.put("include_usage", true);
-        req.put("stream_options", streamOptions);
+        req.put("stream", stream);
+        if (stream) {
+            // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
+            Map<String, Object> streamOptions = new HashMap<>();
+            streamOptions.put("include_usage", true);
+            req.put("stream_options", streamOptions);
+        }
         if (toolDefs != null && !toolDefs.isEmpty()) {
             req.put("tools", toolDefs);
         }
         return req;
     }
 
-    static Map<String, Object> buildToolMessage(String toolId, String result) {
+    static Map<String, Object> buildToolMessage(String toolId, String result, int maxToolResultChars) {
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", truncate(result, MAX_TOOL_RESULT_CHARS));
+        toolResultMsg.put("content", truncate(result, maxToolResultChars));
         return toolResultMsg;
     }
 

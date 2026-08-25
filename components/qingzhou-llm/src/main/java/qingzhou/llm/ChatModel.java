@@ -1,6 +1,9 @@
 package qingzhou.llm;
 
 public interface ChatModel {
+    // 发起一次同步对话。
+    String chat(String message, Attachment... attachment);
+    
     /**
      * 发起一次流式对话。
      * <p>

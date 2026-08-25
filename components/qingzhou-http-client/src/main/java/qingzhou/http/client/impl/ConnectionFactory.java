@@ -8,9 +8,6 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.*;
 
 class ConnectionFactory {
-    private static final int DEFAULT_CONNECT_TIMEOUT = 60 * 1000;
-    private static final int DEFAULT_READ_TIMEOUT = 10 * 60 * 1000;
-
     private static final ConnectionFactory instance = new ConnectionFactory();
 
     static ConnectionFactory getInstance() {
@@ -53,8 +50,8 @@ class ConnectionFactory {
         }
 
         setDefaultConfig(conn);
-        conn.setConnectTimeout(connectTimeout > 0 ? connectTimeout : DEFAULT_CONNECT_TIMEOUT);
-        conn.setReadTimeout(readTimeout > 0 ? readTimeout : DEFAULT_READ_TIMEOUT);
+        conn.setConnectTimeout(connectTimeout);
+        conn.setReadTimeout(readTimeout);
 
         return conn;
     }
