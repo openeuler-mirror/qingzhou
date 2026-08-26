@@ -28,6 +28,7 @@ import qingzhou.http.server.HttpRequest;
         service = {HttpAuthenticator.class, AuthLoginService.class})
 public class TokenAuthenticator implements HttpAuthenticator, AuthLoginService {
     private static final String BEARER = "Bearer ";
+    private static final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder URL_DECODER = Base64.getUrlDecoder();
@@ -54,8 +55,13 @@ public class TokenAuthenticator implements HttpAuthenticator, AuthLoginService {
         passwordDigest = password.startsWith("digest:")
                 ? password.substring("digest:".length()) // 预生成摘要：算法$盐$迭代次数$摘要
                 : crypto.getMessageDigest().digest(password, "SHA-256", 16,
-                        (int) parsePositive(config.get("password_iterations"), 2));
+                (int) parsePositive(config.get("password_iterations"), 2));
         passwordFingerprint = crypto.getMessageDigest().sha256(passwordDigest);
+    }
+
+    @Override
+    public String[] excludedPaths() {
+        return EXCLUDED_PATHS;
     }
 
     @Override

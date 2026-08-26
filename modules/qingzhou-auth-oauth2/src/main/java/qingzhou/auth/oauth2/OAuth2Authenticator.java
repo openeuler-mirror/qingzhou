@@ -12,16 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
 import qingzhou.auth.AuthLoginService;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
-import qingzhou.http.server.AuthResult;
-import qingzhou.http.server.HttpAuthenticator;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
@@ -37,6 +32,7 @@ import qingzhou.logger.Logger;
         property = HttpHandler.HANDLE_PATH + "=/callback")
 public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
     private static final String COOKIE_NAME = "oauth2_session";
+    private static final String[] EXCLUDED_PATHS = {"/auth-oauth2/callback"};
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
     private static final long STATE_TTL_MILLIS = 10 * 60_000;
@@ -85,11 +81,19 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
     }
 
     @Override
+    public String[] excludedPaths() {
+        return EXCLUDED_PATHS;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
         String code = request.getParameter("code");
         PendingState pending = pendingStates.remove(request.getParameter("state")); // 验证 state 防登录 CSRF
-        if (code == null || pending == null) { response.status400Finish(); return; }
+        if (code == null || pending == null) {
+            response.status400Finish();
+            return;
+        }
 
         Map<String, String> params = new HashMap<>();
         params.put("grant_type", "authorization_code");
@@ -109,7 +113,10 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         Map<String, Object> tokenBody = json.fromJson(
                 new String(tokenResponse.getBody(), StandardCharsets.UTF_8), Map.class);
         String user = extractUser(tokenBody);
-        if (user == null) { response.status(500).sendFinish("failed to get user info"); return; }
+        if (user == null) {
+            response.status(500).sendFinish("failed to get user info");
+            return;
+        }
 
         response.status(302).header("Location", pending.path)
                 .header("Set-Cookie", COOKIE_NAME + "=" + authLoginService.createToken(user)

@@ -18,7 +18,6 @@ import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
-    private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private final HttpServerImpl httpServer;
     private final Logger logger;
 
@@ -50,7 +49,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             }
             logger.info("http auth rejected, path: " + requestPath + ", reason: " + authResult.getReason());
             return response.status(HttpResponseStatus.UNAUTHORIZED)
-                    .header(WWW_AUTHENTICATE, "Bearer")
+                    .header("WWW-Authenticate", "Bearer")
                     .header("Cache-Control", "no-store")
                     .sendString(Mono.just("Unauthorized"));
         }

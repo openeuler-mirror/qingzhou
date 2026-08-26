@@ -22,7 +22,6 @@ public class HttpServerImpl implements HttpServer {
 
     final Map<String, HttpHandler> handlerMap = new HashMap<>();
 
-    private String[] authExcludes = new String[0]; // 白名单前缀由配置注入，http-server 不感知认证模块的具体路径
     private final List<HttpAuthenticator> authenticators = new ArrayList<>();
 
     private LoopResources loopResources;
@@ -30,17 +29,6 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public synchronized void start(Map<String, String> config) {
-        String exclude = config.get("auth_exclude");
-        if (exclude != null && !exclude.trim().isEmpty()) {
-            String[] excludes = exclude.split(",");
-            for (int i = 0; i < excludes.length; i++) { // 启动时一次性 trim，避免请求路径每次比较都重复计算
-                if (excludes[i] != null && !excludes[i].trim().isEmpty()) {
-                    excludes[i] = excludes[i].trim();
-                }
-            }
-            authExcludes = excludes;
-        }
-
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
@@ -190,7 +178,7 @@ public class HttpServerImpl implements HttpServer {
     }
 
     /**
-     * 安全认证：未开启或命中白名单放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 安全认证：未开启或命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
      * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
      * 全部无凭据时才用重定向引导登录。
      */
@@ -198,8 +186,13 @@ public class HttpServerImpl implements HttpServer {
         if (authenticators.isEmpty()) return AuthResult.pass();
 
         String path = request.getPath();
-        for (String exclude : authExcludes) {
-            if (path.startsWith(exclude)) return AuthResult.pass();
+        for (HttpAuthenticator authenticator : authenticators) {
+            String[] excludedPaths = authenticator.excludedPaths();
+            if (excludedPaths != null) {
+                for (String exclude : excludedPaths) {
+                    if (path.startsWith(exclude)) return AuthResult.pass();
+                }
+            }
         }
 
         AuthResult reject = null;
