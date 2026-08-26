@@ -8,14 +8,17 @@ import java.util.function.BiFunction;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
+    private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
     private final HttpServerImpl httpServer;
     private final Logger logger;
 
@@ -33,6 +36,28 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             throw new RuntimeException(e);
         }
         String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
+
+        HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
+
+        // 安全认证：未通过则拒绝或质询重定向（拒绝原因仅记日志，避免泄露 token 状态）
+        AuthResult authResult = httpServer.authenticate(httpRequest);
+        if (!authResult.isPassed()) {
+            if (authResult.isChallenge()) {
+                return response.status(HttpResponseStatus.FOUND)
+                        .header("Location", authResult.getLocation())
+                        .header("Cache-Control", "no-store")
+                        .sendString(Mono.just("redirecting"));
+            }
+            logger.info("http auth rejected, path: " + requestPath + ", reason: " + authResult.getReason());
+            return response.status(HttpResponseStatus.UNAUTHORIZED)
+                    .header(WWW_AUTHENTICATE, "Bearer")
+                    .header("Cache-Control", "no-store")
+                    .sendString(Mono.just("Unauthorized"));
+        }
+        if (authResult.getPrincipal() != null) {
+            httpRequest.setAttribute("auth.principal", authResult.getPrincipal());
+        }
+
         String matches = httpServer.matches(normalizedPath);
         if (matches == null) {
             return response
@@ -50,7 +75,6 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
-        HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
         if (streamRequired) {

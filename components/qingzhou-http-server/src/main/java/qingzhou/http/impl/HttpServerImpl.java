@@ -7,8 +7,7 @@ import io.netty.channel.ChannelOption;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.*;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -23,11 +22,25 @@ public class HttpServerImpl implements HttpServer {
 
     final Map<String, HttpHandler> handlerMap = new HashMap<>();
 
+    private String[] authExcludes = new String[0]; // 白名单前缀由配置注入，http-server 不感知认证模块的具体路径
+    private final List<HttpAuthenticator> authenticators = new ArrayList<>();
+
     private LoopResources loopResources;
     private DisposableServer disposableServer;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
+        String exclude = config.get("auth_exclude");
+        if (exclude != null && !exclude.trim().isEmpty()) {
+            String[] excludes = exclude.split(",");
+            for (int i = 0; i < excludes.length; i++) { // 启动时一次性 trim，避免请求路径每次比较都重复计算
+                if (excludes[i] != null && !excludes[i].trim().isEmpty()) {
+                    excludes[i] = excludes[i].trim();
+                }
+            }
+            authExcludes = excludes;
+        }
+
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
@@ -160,6 +173,57 @@ public class HttpServerImpl implements HttpServer {
         handlerMap.remove(contextPath);
 
         logger.info("http handler unregistered: " + contextPath);
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
+            unbind = "removeAuthentication")
+    public void addAuthentication(HttpAuthenticator authenticator) {
+        authenticators.add(authenticator);
+
+        if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
+            logger.info("http authenticator registered: " + authenticator.getClass().getName());
+        }
+    }
+
+    public void removeAuthentication(HttpAuthenticator authentication) {
+        authenticators.remove(authentication);
+    }
+
+    /**
+     * 安全认证：未开启或命中白名单放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
+     * 全部无凭据时才用重定向引导登录。
+     */
+    AuthResult authenticate(HttpRequest request) {
+        if (authenticators.isEmpty()) return AuthResult.pass();
+
+        String path = request.getPath();
+        for (String exclude : authExcludes) {
+            if (path.startsWith(exclude)) return AuthResult.pass();
+        }
+
+        AuthResult reject = null;
+        AuthResult challenge = null;
+        for (HttpAuthenticator authentication : authenticators) {
+            AuthResult r;
+            try {
+                r = authentication.authenticate(request);
+            } catch (Exception e) {
+                logger.error("authentication error: " + authentication.getClass().getName(), e);
+                r = AuthResult.reject("authentication error");
+            }
+            if (r.isPassed()) return r;
+
+            if (r.isChallenge()) {
+                if (challenge == null) challenge = r;
+            } else if (!r.isMissing() && reject == null) {
+                reject = r;
+            }
+        }
+        if (reject != null) return reject;
+        if (challenge != null) return challenge;
+
+        return AuthResult.reject("no credential provided");
     }
 
     @Deactivate

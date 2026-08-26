@@ -23,4 +23,8 @@ public interface HttpRequest {
     boolean isFormUrlencoded();
 
     byte[] getBody();
+
+    void setAttribute(String name, Object value);
+
+    Object getAttribute(String name);
 }

@@ -155,6 +155,7 @@
                 <include>${project.groupId}:qingzhou-app-redis</include>
                 <include>${project.groupId}:qingzhou-app-tomcat</include>
                 <include>${project.groupId}:qingzhou-app-nacos</include>
+                <include>${project.groupId}:qingzhou-app-zookeeper</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
