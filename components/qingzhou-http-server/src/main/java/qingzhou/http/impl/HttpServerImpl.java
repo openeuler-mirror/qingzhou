@@ -214,10 +214,10 @@ public class HttpServerImpl implements HttpServer {
             }
             if (r.isPassed()) return r;
 
-            if (r.isChallenge()) {
-                if (challenge == null) challenge = r;
-            } else if (!r.isMissing() && reject == null) {
+            if (r.isRejected() && reject == null) {
                 reject = r;
+            } else if (r.isChallenge() && challenge == null) {
+                challenge = r;
             }
         }
         if (reject != null) return reject;

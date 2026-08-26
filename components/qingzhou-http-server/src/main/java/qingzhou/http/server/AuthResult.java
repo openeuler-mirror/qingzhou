@@ -62,6 +62,10 @@ public final class AuthResult {
         return missing;
     }
 
+    public boolean isRejected() {
+        return reason != null;
+    }
+
     public boolean isChallenge() {
         return location != null;
     }
