@@ -11,7 +11,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.ai.AiSkill;
+import qingzhou.ai.SkillService;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.skill.PlatformHelp;
 import qingzhou.api.Constants;
@@ -24,8 +24,8 @@ import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/equip",
-        service = {AiEquip.class, HttpHandler.class})
-public class AiEquip implements HttpHandler {
+        service = {ChatConfig.class, HttpHandler.class})
+public class ChatConfig implements HttpHandler {
     @Reference
     private ChatModelFactory chatModelFactory; // 作用：利用 OSGI DS 机制，迫使本模块在没有加载 llm 的情况下不要初始化。
 
@@ -34,9 +34,9 @@ public class AiEquip implements HttpHandler {
     @Reference
     private I18nService i18nService;
 
-    final Map<AiSkill, Skill> llmSkills = new ConcurrentHashMap<>();
+    final Map<SkillService, Skill> llmSkills = new ConcurrentHashMap<>();
 
-    private final List<String[]> promptsI18n = new ArrayList<String[]>() {{
+    private final List<String[]> promptSamples = new ArrayList<String[]>() {{
         add(new String[]{"请概述轻舟平台的价值和意义", "en:Please summarize the value and significance of the Qingzhou platform"});
         add(new String[]{"请帮我查询轻舟平台上部署了哪些应用", "en:Please check what applications are deployed on the Qingzhou platform"});
         add(new String[]{"请问“图书管理”系统有多少读者数据？", "en:Could you tell me how many reader records are in the \"Book Management\" system?"});
@@ -51,20 +51,20 @@ public class AiEquip implements HttpHandler {
         Map<String, Object> data = new HashMap<>();
 
         String lang = httpRequest.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
-        List<String> prompts = promptsI18n.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
+        List<String> prompts = promptSamples.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
         data.put("prompts", prompts);
 
         List<Map<String, Object>> skills = new ArrayList<>();
-        for (Map.Entry<AiSkill, Skill> entry : llmSkills.entrySet()) {
-            AiSkill aiSkill = entry.getKey();
+        for (Map.Entry<SkillService, Skill> entry : llmSkills.entrySet()) {
+            SkillService skillService = entry.getKey();
             Skill skill = entry.getValue();
             Map<String, Object> map = new HashMap<>();
             map.put("name", skill.name());
-            map.put("text", i18nService.getI18n(aiSkill.getI18n(), lang));
-            if (aiSkill.getClass() == PlatformHelp.class) {
+            map.put("text", i18nService.getI18n(skillService.displayNames(), lang));
+            if (skillService.getClass() == PlatformHelp.class) {
                 map.put("checked", true);
             }
-            Map<AiSkill.AttachmentType, String[]> types = aiSkill.supportedAttachmentTypes();
+            Map<SkillService.AttachmentType, String[]> types = skillService.supportedAttachmentTypes();
             if (types != null && !types.isEmpty()) {
                 map.put("supportedAttachmentTypes", types);
             }
@@ -83,16 +83,16 @@ public class AiEquip implements HttpHandler {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindAiSkill(AiSkill skill, Map<String, Object> properties) {
+    public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
         llmSkills.put(skill,
-                Skill.of((String) properties.get(AiSkill.SKILL_NAME),
+                Skill.of((String) properties.get(SkillService.NAME),
                         skill.description(),
-                        skill.getInstruction(),
-                        LlmConverter.convertAiTool(skill.getTools())));
+                        skill.instruction(),
+                        LlmConverter.convertAiTool(skill.tools())));
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法
-    public void unbindAiSkill(AiSkill skill) {
+    public void unbindAiSkill(SkillService skill) {
         llmSkills.remove(skill);
     }
 }

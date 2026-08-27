@@ -3,35 +3,35 @@ package qingzhou.ai.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-class SseResult {
+class SseEvent {
 
     final String type;
     final Map<String, String> data = new HashMap<>();
 
-    SseResult(String type) {
+    SseEvent(String type) {
         this.type = type;
     }
 
-    static SseResult type(String type) {
-        return new SseResult(type);
+    static SseEvent of(String type) {
+        return new SseEvent(type);
     }
 
-    SseResult message(String message) {
+    SseEvent message(String message) {
         this.data.put("message", message);
         return this;
     }
 
-    SseResult messageId(String messageId) {
+    SseEvent messageId(String messageId) {
         this.data.put("messageId", messageId);
         return this;
     }
 
-    SseResult content(String content) {
+    SseEvent content(String content) {
         this.data.put("content", content);
         return this;
     }
 
-    SseResult toolName(String value) {
+    SseEvent toolName(String value) {
         this.data.put("toolName", value);
         return this;
     }

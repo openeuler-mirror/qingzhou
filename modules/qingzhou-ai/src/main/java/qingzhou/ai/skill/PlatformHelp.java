@@ -10,11 +10,11 @@ import java.util.List;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.AiSkill;
+import qingzhou.ai.SkillService;
 import qingzhou.logger.Logger;
 
-@Component(property = AiSkill.SKILL_NAME + "=PlatformHelp")
-public class PlatformHelp extends AiSkillBase implements AiSkill {
+@Component(property = SkillService.NAME + "=" + SkillService.SKILL_PLATFORM_HELP)
+public class PlatformHelp extends SkillServiceBase implements SkillService {
     @Reference
     private Logger logger;
 
@@ -52,7 +52,7 @@ public class PlatformHelp extends AiSkillBase implements AiSkill {
     }
 
     @Override
-    public String getInstruction() {
+    public String instruction() {
         return String.join("\n\n[参考附件]\n", knowledgeDocs);
     }
 }

@@ -5,8 +5,7 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.AiTool;
-import qingzhou.ai.SystemAiTool;
+import qingzhou.ai.ToolService;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -15,8 +14,8 @@ import qingzhou.json.Json;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/instance",
-        AiTool.TOOL_DESCRIPTION + "=该接口返回轻舟平台上注册的所有轻舟实例的列表信息，每个实例包含实例ID和所在服务器的IP地址等信息。"})
-public class Instance implements HttpHandler, SystemAiTool {
+        ToolService.TOOL_DESCRIPTION + "=该接口返回轻舟平台上注册的所有轻舟实例的列表信息，每个实例包含实例ID和所在服务器的IP地址等信息。"})
+public class Instance implements HttpHandler, ToolService {
     @Reference
     private Registry registry;
 

@@ -12,24 +12,20 @@ import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 
 public class LlmConverter {
-    public static Collection<Tool> convertSystemAiTool(Map<SystemAiTool, Map<String, Object>> aiTools) {
+    public static Collection<Tool> convertAiTool(Map<ToolService, Map<String, Object>> aiTools) {
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
-    public static Collection<Tool> convertAiTool(Map<AiTool, Map<String, Object>> aiTools) {
-        return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
-    }
-
-    private static Tool convertTool(AiTool aiTool, Map<String, Object> toolProp) {
-        String toolDescription = toolProp.get(AiTool.TOOL_DESCRIPTION).toString();
+    private static Tool convertTool(ToolService toolService, Map<String, Object> toolProp) {
+        String toolDescription = toolProp.get(ToolService.TOOL_DESCRIPTION).toString();
         String toolName;
-        Object toolNameObj = toolProp.get(AiTool.TOOL_NAME);
+        Object toolNameObj = toolProp.get(ToolService.TOOL_NAME);
         if (toolNameObj != null) {
             toolName = (String) toolNameObj;
         } else {
             Object componentName = toolProp.get(ComponentConstants.COMPONENT_NAME);
             if (componentName == null) {
-                throw new IllegalArgumentException("missing parameter [" + AiTool.TOOL_NAME + "] for: " + toolDescription);
+                throw new IllegalArgumentException("missing parameter [" + ToolService.TOOL_NAME + "] for: " + toolDescription);
             }
             String component = componentName.toString();
             int i = component.lastIndexOf(".");
@@ -38,7 +34,7 @@ public class LlmConverter {
 
         return Tool.of(toolName, toolDescription, parameters(toolProp), toolArgs -> {
             try {
-                return aiTool.invoke(toolArgs);
+                return toolService.invoke(toolArgs);
             } catch (Exception e) {
                 throw new RuntimeException(
                         toolArgs != null ? toolArgs.toString() : e.getMessage(),
@@ -51,23 +47,23 @@ public class LlmConverter {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
 
         toolProp.forEach((key, value) -> Stream.of(
-                AiTool.PARAMETER_NAME, AiTool.PARAMETER_DESCRIPTION, AiTool.PARAMETER_REQUIRED).forEach(flag -> {
+                ToolService.PARAMETER_NAME, ToolService.PARAMETER_DESCRIPTION, ToolService.PARAMETER_REQUIRED).forEach(flag -> {
             if (key.startsWith(flag)) {
-                String sp = "";
+                String keyPrefix = "";
                 int i = key.indexOf(".");
                 if (i != -1) {
-                    sp = key.substring(i);
+                    keyPrefix = key.substring(i);
                 }
-                Map<String, String> param = params.computeIfAbsent(sp, s -> new HashMap<>());
+                Map<String, String> param = params.computeIfAbsent(keyPrefix, s -> new HashMap<>());
                 param.put(flag, (String) value);
             }
         }));
 
         return params.values().stream()
                 .map(map -> Parameter.of(
-                        map.get(AiTool.PARAMETER_NAME),
-                        map.get(AiTool.PARAMETER_DESCRIPTION),
-                        Boolean.parseBoolean(map.getOrDefault(AiTool.PARAMETER_REQUIRED, "true"))))
+                        map.get(ToolService.PARAMETER_NAME),
+                        map.get(ToolService.PARAMETER_DESCRIPTION),
+                        Boolean.parseBoolean(map.getOrDefault(ToolService.PARAMETER_REQUIRED, "true"))))
                 .toArray(Parameter[]::new);
     }
 }

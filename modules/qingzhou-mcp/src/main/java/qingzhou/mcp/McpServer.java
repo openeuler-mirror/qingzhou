@@ -2,11 +2,10 @@ package qingzhou.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.*;
-import qingzhou.ai.LlmConverter;
-import qingzhou.ai.SystemAiTool;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -23,7 +22,6 @@ public class McpServer implements HttpHandler {
     @Reference
     private Logger logger;
 
-    private final Map<SystemAiTool, Map<String, Object>> systemAiTools = new ConcurrentHashMap<>();
     private Map<String, Object> initializeData;
 
     @Activate
@@ -42,16 +40,6 @@ public class McpServer implements HttpHandler {
         initializeData.put("protocolVersion", "2024-11-05");
         initializeData.put("serverInfo", serverInfo);
         initializeData.put("capabilities", capabilities);
-    }
-
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindSystemAiTool(SystemAiTool tool, Map<String, Object> properties) {
-        systemAiTools.put(tool, properties);
-    }
-
-    // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
-    public void unbindSystemAiTool(SystemAiTool tool) {
-        systemAiTools.remove(tool);
     }
 
     @Override
@@ -81,10 +69,14 @@ public class McpServer implements HttpHandler {
                 .sendFinish(json.toJson(result));
     }
 
+    private Collection<Tool> llmTools() {
+        return null;
+    }
+
     private Object tools() {
         List<Map<String, Object>> tools = new ArrayList<>();
 
-        Collection<Tool> llmTools = LlmConverter.convertSystemAiTool(systemAiTools);
+        Collection<Tool> llmTools = llmTools();
         llmTools.forEach(tool -> {
             Map<String, Object> toolMap = new HashMap<>();
             toolMap.put("name", tool.name());
@@ -129,7 +121,7 @@ public class McpServer implements HttpHandler {
         String invokeResult = null;
         try {
             boolean found = false;
-            Collection<Tool> llmTools = LlmConverter.convertSystemAiTool(systemAiTools);
+            Collection<Tool> llmTools = llmTools();
             for (Tool tool : llmTools) {
                 if (tool.name().equals(toolName)) {
                     invokeResult = tool.invoke(arguments);
