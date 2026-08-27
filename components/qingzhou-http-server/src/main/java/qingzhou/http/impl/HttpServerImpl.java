@@ -183,7 +183,7 @@ public class HttpServerImpl implements HttpServer {
      * 全部无凭据时才用重定向引导登录。
      */
     AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.pass();
+        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
 
         String path = request.getPath();
         for (HttpAuthenticator authenticator : authenticators) {

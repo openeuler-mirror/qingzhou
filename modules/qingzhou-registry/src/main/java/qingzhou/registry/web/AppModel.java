@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
@@ -20,6 +21,8 @@ import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/app/model",
+        SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
+
         ToolService.TOOL_DESCRIPTION + "=该接口返回特定应用的特定模块的详细信息，内容包括：模块的概要信息和模块内定义的数据字段列表和支持的操作列表。对于数据字段，可提供每个字段的数据类型、显示行为、取值校验等信息，每个操作包含代码、图标、顺序、操作名称、描述，以及该操作在列表头、列表行或批处理场景下的可用性标识。通过该接口可理解一个功能模块有哪些可用的数据字段、每个字段的填写和展示规则，以及该模块支持哪些操作，从而动态生成数据管理界面或执行相应的数据操作。",
 
         ToolService.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,

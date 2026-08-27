@@ -9,6 +9,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
@@ -22,7 +23,7 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
-public class SystemActionTools {
+public class AppActionTools {
     @Reference
     private Registry registry;
     @Reference
@@ -59,9 +60,10 @@ public class SystemActionTools {
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(ToolService.TOOL_NAME, "action_" + invokedActionCode);
+            properties.put(ToolService.TOOL_NAME, "app_action_" + invokedActionCode);
+            properties.put(SkillService.SKILL_NAME, SkillService.SYSTEM_SKILL);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> SystemActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
+            ToolService systemToolService = toolArgs -> AppActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
         });
     }

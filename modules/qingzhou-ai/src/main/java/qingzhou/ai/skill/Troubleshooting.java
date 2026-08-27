@@ -10,7 +10,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 
-@Component(property = SkillService.NAME + "=" + SkillService.SKILL_TROUBLESHOOTING)
+@Component(property = SkillService.SKILL_NAME + "=" + SkillService.TROUBLESHOOTING_SKILL)
 public class Troubleshooting extends SkillServiceBase implements SkillService {
     public Troubleshooting() {
         super(new String[]{"故障诊断", "en:Troubleshooting"},
@@ -22,7 +22,7 @@ public class Troubleshooting extends SkillServiceBase implements SkillService {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            target = "(" + SkillService.NAME + "=" + SkillService.SKILL_TROUBLESHOOTING + ")", // 按服务属性过滤
+            target = "(" + SkillService.SKILL_NAME + "=" + SkillService.TROUBLESHOOTING_SKILL + ")", // 按服务属性过滤
             unbind = "unbindAiTool")
     public void bindAiTool(ToolService tool, Map<String, Object> properties) {
         aiTools.put(tool, properties);
@@ -34,7 +34,7 @@ public class Troubleshooting extends SkillServiceBase implements SkillService {
     }
 
     @Override
-    public Map<AttachmentType, String[]> supportedAttachmentTypes() {
+    public Map<AttachmentType, String[]> attachments() {
         return new HashMap<AttachmentType, String[]>() {{
             put(AttachmentType.text, new String[]{".md", ".adoc", ".txt", ".log", ".java"});
             put(AttachmentType.image, new String[]{".jpg", ".jpeg", ".png"});

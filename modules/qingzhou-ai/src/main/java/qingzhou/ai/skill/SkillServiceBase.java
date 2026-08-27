@@ -18,7 +18,7 @@ abstract class SkillServiceBase implements SkillService {
     }
 
     @Override
-    public String[] displayNames() {
+    public String[] nameI18n() {
         return displayNames;
     }
 

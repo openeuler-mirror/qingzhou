@@ -9,14 +9,16 @@
     </parent>
 
     <packaging>bundle</packaging>
-    <artifactId>qingzhou-auth-oauth2</artifactId>
+    <artifactId>qingzhou-oauth2</artifactId>
 
     <dependencies>
+
         <dependency>
             <artifactId>qingzhou-auth</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <artifactId>qingzhou-http-server</artifactId>
             <groupId>${project.groupId}</groupId>
@@ -32,11 +34,6 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <artifactId>qingzhou-logger</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -47,7 +44,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>qingzhou.auth,qingzhou.http.server,qingzhou.http.client,qingzhou.json,qingzhou.logger</Import-Package>
+                        <Import-Package>qingzhou.http.server,qingzhou.http.client,qingzhou.json</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

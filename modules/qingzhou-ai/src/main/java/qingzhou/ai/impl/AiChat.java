@@ -105,7 +105,7 @@ public class AiChat implements HttpHandler {
                 Skill skill = entry.getValue();
                 if (skill.name().equals(skillName)) {
                     selectedSkill = skill;
-                    Map<SkillService.AttachmentType, String[]> attachmentTypeMap = skillService.supportedAttachmentTypes();
+                    Map<SkillService.AttachmentType, String[]> attachmentTypeMap = skillService.attachments();
                     if (attachmentTypeMap != null) {
                         for (SkillService.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
                             List<String> attachments = findAttachments(params, attachmentType);

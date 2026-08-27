@@ -3,13 +3,13 @@ package qingzhou.ai;
 import java.util.Map;
 
 public interface SkillService {
-    String HEALTH_CHECK = "HealthCheck";
-    String SKILL_TROUBLESHOOTING = "Troubleshooting";
-    String SKILL_PLATFORM_HELP = "PlatformHelp";
+    String SKILL_NAME = "SKILL_NAME";
 
-    String NAME = "SKILL_NAME";
+    String HEALTH_CHECK_SKILL = "HealthCheck";
+    String TROUBLESHOOTING_SKILL = "Troubleshooting";
+    String SYSTEM_SKILL = "SystemSkill";
 
-    String[] displayNames();
+    String[] nameI18n();
 
     String description();
 
@@ -22,7 +22,7 @@ public interface SkillService {
     Map<ToolService, Map<String, Object>> tools();
 
     // 返回附件类型和支持的后缀，客户端会回传此类型
-    default Map<AttachmentType, String[]> supportedAttachmentTypes() {
+    default Map<AttachmentType, String[]> attachments() {
         return null;
     }
 

@@ -1,4 +1,4 @@
-package qingzhou.auth.oauth2;
+package qingzhou.oauth2;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -18,24 +18,14 @@ import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.server.*;
 import qingzhou.json.Json;
-import qingzhou.logger.Logger;
 
-/**
- * OAuth2 Authorization Code 认证器（浏览器场景）。
- * 无 session cookie 时返回 challenge（302 重定向至授权服务器）；回调端点交换 code 后签发签名 token 作为 session cookie。
- * 会话签发/校验复用 AuthLoginService（TokenAuthenticator），与 Bearer Token 同一密钥体系。
- * 与 TokenAuthenticator 并存时：无凭据浏览器 -> challenge（302 登录），无效 token -> reject（401），有效 token -> pass。
- * 注意：id_token 仅作提示性解析，生产环境须校验 JWT 签名或配置 userinfo_endpoint 获取身份。
- */
-@Component(immediate = true, configurationPid = "qingzhou-auth-oauth2",
-        service = {HttpAuthenticator.class, HttpHandler.class},
-        property = HttpHandler.HANDLE_PATH + "=/callback")
+@Component(configurationPid = "qingzhou-oauth2", property = HttpHandler.HANDLE_PATH + "=/callback")
 public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
-    private static final String COOKIE_NAME = "oauth2_session";
-    private static final String[] EXCLUDED_PATHS = {"/auth-oauth2/callback"};
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
-    private static final long STATE_TTL_MILLIS = 10 * 60_000;
+    private final String COOKIE_NAME = "oauth2_session";
+    private final String[] EXCLUDED_PATHS = {"/qingzhou-oauth2/callback"};
+    private final SecureRandom RANDOM = new SecureRandom();
+    private final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
+    private final long STATE_TTL_MILLIS = 10 * 60_000;
 
     @Reference
     private AuthLoginService authLoginService;
@@ -43,8 +33,6 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
     private HttpClient httpClient;
     @Reference
     private Json json;
-    @Reference
-    private Logger logger;
 
     private String authorizationEndpoint;
     private String tokenEndpoint;
@@ -105,7 +93,6 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         Response tokenResponse = httpClient.send(
                 httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
         if (tokenResponse.getStatus() != 200) {
-            logger.error("oauth2 token exchange failed: " + tokenResponse.getStatus());
             response.status(500).sendFinish("token exchange failed");
             return;
         }
@@ -167,7 +154,7 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         pendingStates.entrySet().removeIf(entry -> now - entry.getValue().createdAt > STATE_TTL_MILLIS);
     }
 
-    private static String getCookie(String cookieHeader, String name) {
+    private String getCookie(String cookieHeader, String name) {
         if (cookieHeader == null) return null;
         for (String cookie : cookieHeader.split(";")) {
             String trimmed = cookie.trim();
@@ -176,7 +163,7 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         return null;
     }
 
-    private static String encode(String val) {
+    private String encode(String val) {
         try {
             return URLEncoder.encode(val, StandardCharsets.UTF_8.name());
         } catch (UnsupportedEncodingException e) {
@@ -184,13 +171,13 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         }
     }
 
-    private static byte[] randomBytes(int size) {
+    private byte[] randomBytes(int size) {
         byte[] bytes = new byte[size];
         RANDOM.nextBytes(bytes);
         return bytes;
     }
 
-    private static final class PendingState {
+    private final class PendingState {
         final long createdAt = System.currentTimeMillis();
         final String path;
 

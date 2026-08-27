@@ -9,7 +9,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 
-@Component(property = SkillService.NAME + "=" + SkillService.HEALTH_CHECK)
+@Component(property = SkillService.SKILL_NAME + "=" + SkillService.HEALTH_CHECK_SKILL)
 public class HealthCheck extends SkillServiceBase implements SkillService {
     public HealthCheck() {
         super(new String[]{"系统巡检", "en:System Inspection"},
@@ -27,7 +27,7 @@ public class HealthCheck extends SkillServiceBase implements SkillService {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            target = "(" + SkillService.NAME + "=" + SkillService.HEALTH_CHECK + ")", // 按服务属性过滤
+            target = "(" + SkillService.SKILL_NAME + "=" + SkillService.HEALTH_CHECK_SKILL + ")", // 按服务属性过滤
             unbind = "unbindAiTool")
     public void bindAiTool(ToolService tool, Map<String, Object> properties) {
         aiTools.put(tool, properties);

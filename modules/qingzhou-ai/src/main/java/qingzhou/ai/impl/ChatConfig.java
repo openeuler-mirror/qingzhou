@@ -13,7 +13,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.LlmConverter;
-import qingzhou.ai.skill.PlatformHelp;
+import qingzhou.ai.skill.SystemSkill;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
@@ -60,11 +60,11 @@ public class ChatConfig implements HttpHandler {
             Skill skill = entry.getValue();
             Map<String, Object> map = new HashMap<>();
             map.put("name", skill.name());
-            map.put("text", i18nService.getI18n(skillService.displayNames(), lang));
-            if (skillService.getClass() == PlatformHelp.class) {
+            map.put("text", i18nService.getI18n(skillService.nameI18n(), lang));
+            if (skillService.getClass() == SystemSkill.class) {
                 map.put("checked", true);
             }
-            Map<SkillService.AttachmentType, String[]> types = skillService.supportedAttachmentTypes();
+            Map<SkillService.AttachmentType, String[]> types = skillService.attachments();
             if (types != null && !types.isEmpty()) {
                 map.put("supportedAttachmentTypes", types);
             }
@@ -85,7 +85,7 @@ public class ChatConfig implements HttpHandler {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
         llmSkills.put(skill,
-                Skill.of((String) properties.get(SkillService.NAME),
+                Skill.of((String) properties.get(SkillService.SKILL_NAME),
                         skill.description(),
                         skill.instruction(),
                         LlmConverter.convertAiTool(skill.tools())));

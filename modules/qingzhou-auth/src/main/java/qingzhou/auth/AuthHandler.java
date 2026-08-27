@@ -6,23 +6,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.logger.Logger;
 
 /**
  * 登录/登出接口：POST /auth/login、POST /auth/logout（含 IP 维度防暴力破解）。
  */
-@Component(immediate = true, configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=")
+@Component(configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=")
 public class AuthHandler implements HttpHandler {
     private static final String BEARER = "Bearer ";
 
     @Reference
     private AuthLoginService authLoginService;
-    @Reference
-    private Logger logger;
 
     private int maxFailures = 5;
     private long lockMillis = 300_000;
@@ -60,7 +56,6 @@ public class AuthHandler implements HttpHandler {
         String password = request.getParameter("password");
         if (!authLoginService.verifyCredentials(user, password)) {
             recordFailure(ip);
-            logger.info("login failed, ip: " + ip);
             response.status(401).sendFinish("invalid user or password");
             return;
         }

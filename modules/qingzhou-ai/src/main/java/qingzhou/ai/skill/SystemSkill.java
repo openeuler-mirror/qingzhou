@@ -13,14 +13,14 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
 import qingzhou.logger.Logger;
 
-@Component(property = SkillService.NAME + "=" + SkillService.SKILL_PLATFORM_HELP)
-public class PlatformHelp extends SkillServiceBase implements SkillService {
+@Component(property = SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL)
+public class SystemSkill extends SkillServiceBase implements SkillService {
     @Reference
     private Logger logger;
 
     private List<String> knowledgeDocs;
 
-    public PlatformHelp() {
+    public SystemSkill() {
         super(new String[]{"平台咨询", "en:Platform Help"},
                 "你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
                         "具备以下专业认知：\n" +

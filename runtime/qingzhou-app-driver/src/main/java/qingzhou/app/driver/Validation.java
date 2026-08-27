@@ -26,7 +26,7 @@ class Validation implements ActionFilter {
                 new String[]{"须是正整数或小数", "en:Must be a positive integer or decimal"}));
         put(context -> context.field.input_type == InputType.bool, new PatternValidator("^(true|false)$",
                 new String[]{"只能是 true 或 false", "en:Must be either true or false"}));
-        put(context -> context.field.min != Long.MIN_VALUE || context.field.max != Long.MAX_VALUE, new Range());
+        put(context -> context.field.min_value != Long.MIN_VALUE || context.field.max_value != Long.MAX_VALUE, new Range());
         put(context -> context.field.min_length != -1 || context.field.max_length != Integer.MAX_VALUE, new Length());
         put(context -> context.field.email, new PatternValidator("^[a-zA-Z0-9_+.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
                 new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"}));
@@ -150,17 +150,17 @@ class Validation implements ActionFilter {
         public String validate(ValidationContext context) {
             try {
                 double value = Double.parseDouble(context.parameter);
-                boolean outOfRange = context.field.min != Long.MIN_VALUE && value < context.field.min;
-                if (context.field.max != Long.MAX_VALUE && value > context.field.max) {
+                boolean outOfRange = context.field.min_value != Long.MIN_VALUE && value < context.field.min_value;
+                if (context.field.max_value != Long.MAX_VALUE && value > context.field.max_value) {
                     outOfRange = true;
                 }
                 if (outOfRange) {
-                    if (context.field.min != Long.MIN_VALUE && context.field.max != Long.MAX_VALUE) {
-                        return i18nService.getI18n(MSG_RANGE_BETWEEN, context.lang, context.field.min, context.field.max);
-                    } else if (context.field.min != Long.MIN_VALUE) {
-                        return i18nService.getI18n(MSG_RANGE_MIN, context.lang, context.field.min);
+                    if (context.field.min_value != Long.MIN_VALUE && context.field.max_value != Long.MAX_VALUE) {
+                        return i18nService.getI18n(MSG_RANGE_BETWEEN, context.lang, context.field.min_value, context.field.max_value);
+                    } else if (context.field.min_value != Long.MIN_VALUE) {
+                        return i18nService.getI18n(MSG_RANGE_MIN, context.lang, context.field.min_value);
                     } else {
-                        return i18nService.getI18n(MSG_RANGE_MAX, context.lang, context.field.max);
+                        return i18nService.getI18n(MSG_RANGE_MAX, context.lang, context.field.max_value);
                     }
                 }
                 return null;

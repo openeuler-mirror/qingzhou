@@ -6,6 +6,8 @@ import java.util.*;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.ai.LlmConverter;
+import qingzhou.ai.SkillService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -16,6 +18,9 @@ import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=")
 public class McpServer implements HttpHandler {
+    @Reference(target = "(" + SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL + ")")
+    private SkillService systemSkill;
+
     @Reference
     private Json json;
 
@@ -23,6 +28,8 @@ public class McpServer implements HttpHandler {
     private Logger logger;
 
     private Map<String, Object> initializeData;
+
+    private Collection<Tool> systemTools;
 
     @Activate
     public void init() {
@@ -70,7 +77,12 @@ public class McpServer implements HttpHandler {
     }
 
     private Collection<Tool> llmTools() {
-        return null;
+        if (systemSkill == null) return Collections.EMPTY_SET;
+
+        if (systemTools == null) {
+            systemTools = LlmConverter.convertAiTool(systemSkill.tools());
+        }
+        return systemTools;
     }
 
     private Object tools() {

@@ -47,7 +47,9 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         .header("Cache-Control", "no-store")
                         .sendString(Mono.just("redirecting"));
             }
-            logger.info("http auth rejected, path: " + requestPath + ", reason: " + authResult.getReason());
+            if (logger.isDebugEnabled()) {
+                logger.debug("http auth rejected, path: " + requestPath + ", reason: " + authResult.getReason());
+            }
             return response.status(HttpResponseStatus.UNAUTHORIZED)
                     .header("WWW-Authenticate", "Bearer")
                     .header("Cache-Control", "no-store")

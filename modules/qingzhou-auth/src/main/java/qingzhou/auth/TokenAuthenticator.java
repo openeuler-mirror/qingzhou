@@ -19,19 +19,13 @@ import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpAuthenticator;
 import qingzhou.http.server.HttpRequest;
 
-/**
- * 基于 HMAC-SHA256 无状态签名 Token 的认证器与登录服务。
- * Token 格式：base64url(payload).base64url(hmac(payload, secret))，payload = user|expireMillis|密码指纹。
- * 密码指纹 = sha256(密码摘要)，改密码配置后旧 token 全部立即失效（无状态全局失效）。
- */
-@Component(immediate = true, configurationPid = "qingzhou-auth",
-        service = {HttpAuthenticator.class, AuthLoginService.class})
+@Component(configurationPid = "qingzhou-auth")
 public class TokenAuthenticator implements HttpAuthenticator, AuthLoginService {
-    private static final String BEARER = "Bearer ";
-    private static final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
-    private static final Base64.Decoder URL_DECODER = Base64.getUrlDecoder();
+    private final String BEARER = "Bearer ";
+    private final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
+    private final SecureRandom RANDOM = new SecureRandom();
+    private final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
+    private final Base64.Decoder URL_DECODER = Base64.getUrlDecoder();
 
     @Reference
     private Crypto crypto;
@@ -137,12 +131,12 @@ public class TokenAuthenticator implements HttpAuthenticator, AuthLoginService {
         }
     }
 
-    private static String get(Map<String, String> config, String key, String defaultValue) {
+    private String get(Map<String, String> config, String key, String defaultValue) {
         String val = config.get(key);
         return val == null || val.isEmpty() ? defaultValue : val;
     }
 
-    private static long parsePositive(String val, long defaultValue) {
+    private long parsePositive(String val, long defaultValue) {
         try {
             long parsed = Long.parseLong(val);
             return parsed > 0 ? parsed : defaultValue;
@@ -151,14 +145,14 @@ public class TokenAuthenticator implements HttpAuthenticator, AuthLoginService {
         }
     }
 
-    private static boolean constantTimeEquals(byte[] a, byte[] b) {
+    private boolean constantTimeEquals(byte[] a, byte[] b) {
         if (a.length != b.length) return false;
         int result = 0;
         for (int i = 0; i < a.length; i++) result |= a[i] ^ b[i];
         return result == 0;
     }
 
-    private static byte[] randomBytes(int size) {
+    private byte[] randomBytes(int size) {
         byte[] bytes = new byte[size];
         RANDOM.nextBytes(bytes);
         return bytes;

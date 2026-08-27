@@ -300,6 +300,16 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-auth</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-oauth2</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.javassist</groupId>

@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
@@ -14,6 +15,8 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.web.WebUtil;
 
 @Component(property = {
+        SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
+
         ToolService.TOOL_DESCRIPTION + "=该接口用于检查某个模块是否具有某个操作，返回true表示有，false则没有，其它则输入参数有误。如果只需要知道某模块是否具有某操作或方法，那么应该调用此方法而不是调用获取应用模块详细信息的方法。",
 
         ToolService.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,
@@ -28,7 +31,7 @@ import qingzhou.registry.web.WebUtil;
         ToolService.PARAMETER_NAME + ".4=" + WebUtil.ACTION_CODE,
         ToolService.PARAMETER_DESCRIPTION + ".4=待检查的操作名"
 })
-public class ActionExistsToolService implements ToolService {
+public class ActionCheckTool implements ToolService {
     @Reference
     private Registry registry;
     @Reference

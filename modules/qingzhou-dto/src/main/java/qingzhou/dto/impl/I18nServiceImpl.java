@@ -106,7 +106,7 @@ public class I18nServiceImpl implements I18nService {
 
     private void visit(String[] i18n, Visitor visitor) {
         if (i18n == null) return;
-        
+
         for (String langLine : i18n) {
             Lang lang = null;
             int valueIndex = 0;
@@ -123,12 +123,7 @@ public class I18nServiceImpl implements I18nService {
                 lang = Lang.zh_Hans;
             }
 
-            String val = langLine.substring(valueIndex);
-            val = val.trim();
-            if (val.contains("'")) {
-                String msg = "Single quotes (') are not supported: " + langLine;
-                System.err.println(msg);
-            }
+            String val = langLine.substring(valueIndex).trim();
 
             boolean continueVisit = visitor.visit(lang, val);
             if (!continueVisit) {
