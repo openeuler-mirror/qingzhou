@@ -1,8 +1,8 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;

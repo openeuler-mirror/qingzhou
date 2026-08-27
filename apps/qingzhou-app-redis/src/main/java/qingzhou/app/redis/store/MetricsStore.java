@@ -5,7 +5,6 @@ import qingzhou.app.redis.store.model.MetricPoint;
 import qingzhou.json.Json;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -30,7 +29,7 @@ public class MetricsStore {
     }
 
     private Path getStorageFile() {
-        File base = appContext.getBase();
+        File base = appContext.getRoot();
         File dir = new File(base, StoreConstants.DATA_DIR);
         if (!dir.exists()) {
             dir.mkdirs();

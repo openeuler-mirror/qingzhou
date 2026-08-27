@@ -1,7 +1,7 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.alert.AlertEngine;

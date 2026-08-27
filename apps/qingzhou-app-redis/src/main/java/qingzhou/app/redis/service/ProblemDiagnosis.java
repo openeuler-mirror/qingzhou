@@ -1,8 +1,8 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.diagnosis.DiagnosticEngine;
@@ -109,7 +109,7 @@ public class ProblemDiagnosis extends RedisModelBase implements Page, Show {
         if (util == null || !util.isConnected()) {
             request.getResponse()
                     .success(false)
-                    .msg("请先切换到一个 Redis 实例");
+                    .message("请先切换到一个 Redis 实例");
             return;
         }
         DiagnosticEngine engine = DiagnosticEngine.getInstance();

@@ -1,13 +1,11 @@
 package qingzhou.app.demo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.logger.Logger;
 
 @Model(code = "config", order = 4,
@@ -88,9 +86,9 @@ public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, U
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> config : db.values()) {
             if (matchesQuery(config, query)) {
@@ -154,7 +152,7 @@ public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, U
     @Override
     public void add(Map<String, String> data) {
         String key = data.get("configKey");
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         db.put(key, new HashMap<>(data));
     }
 

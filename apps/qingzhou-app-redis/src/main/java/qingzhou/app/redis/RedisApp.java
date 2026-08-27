@@ -76,7 +76,7 @@ public class RedisApp implements QingzhouApp {
             if (util == null || !util.isConnected()) {
                 request.getResponse()
                         .success(false)
-                        .msg("请先切换到一个 Redis 实例");
+                        .message("请先切换到一个 Redis 实例");
                 return;
             }
             chain.doFilter();

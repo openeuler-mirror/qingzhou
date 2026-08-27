@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.jdbc.JdbcPool;
 import qingzhou.logger.Logger;
 
@@ -122,7 +122,7 @@ public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Upd
             add = true,
             update = true,
             input_type = InputType.number,
-            min = 1)
+            min_value = 1)
     public Integer total;
 
     @ModelField(
@@ -140,7 +140,7 @@ public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Upd
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0)
+            min_value = 0)
     public String price;
 
     @ModelField(
@@ -170,8 +170,8 @@ public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Upd
         logger.info("jdbcPool: " + jdbcPool);
         registration = getAppContext().registerSharedFunction("queryBook", new SharedFunction<String, String>() {
             @Override
-            public String invoke(String o) {
-                return "From 图书管理：" + o + "库存 " + db.size();
+            public String invoke(String input) {
+                return "From 图书管理：" + input + "库存 " + db.size();
             }
         });
     }

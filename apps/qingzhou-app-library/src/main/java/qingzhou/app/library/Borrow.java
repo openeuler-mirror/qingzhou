@@ -4,10 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Delete;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 
 @Model(code = "borrow", order = 1,
         name = {"借阅记录", "en:Borrow Records"},
@@ -152,9 +152,9 @@ public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, D
             Book.increaseAvailable(bookId);
             Reader.decreaseBorrowed(readerId);
 
-            request.getResponse().success(true).msg("归还成功！");
+            request.getResponse().success(true).message("归还成功！");
         } else {
-            request.getResponse().success(false).msg("归还失败，该记录不存在或已归还！");
+            request.getResponse().success(false).message("归还失败，该记录不存在或已归还！");
         }
     }
 
@@ -171,13 +171,13 @@ public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, D
         // 检查读者是否存在且状态正常
         Map<String, String> reader = Reader.db.get(readerId);
         if (reader == null) {
-            request.getResponse().success(false).msg("读者不存在！");
+            request.getResponse().success(false).message("读者不存在！");
             return;
         }
 
         String readerStatus = reader.get("status");
         if (!"active".equals(readerStatus)) {
-            request.getResponse().success(false).msg("读者状态为" + readerStatus + "，不能借阅！");
+            request.getResponse().success(false).message("读者状态为" + readerStatus + "，不能借阅！");
             return;
         }
 
@@ -185,7 +185,7 @@ public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, D
         int borrowed = Integer.parseInt(reader.get("borrowedCount"));
         int maxBorrow = Integer.parseInt(reader.get("maxBorrow"));
         if (borrowed >= maxBorrow) {
-            request.getResponse().success(false).msg("该读者已借阅" + borrowed + "本书，超过最大借阅数" + maxBorrow + "！");
+            request.getResponse().success(false).message("该读者已借阅" + borrowed + "本书，超过最大借阅数" + maxBorrow + "！");
             return;
         }
 
@@ -194,13 +194,13 @@ public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, D
         // 检查图书是否存在且有可借数量
         Map<String, String> book = Book.db.get(bookId);
         if (book == null) {
-            request.getResponse().success(false).msg("图书不存在！");
+            request.getResponse().success(false).message("图书不存在！");
             return;
         }
 
         int available = Integer.parseInt(book.get("available"));
         if (available <= 0) {
-            request.getResponse().success(false).msg("该图书已全部借出，暂无可用！");
+            request.getResponse().success(false).message("该图书已全部借出，暂无可用！");
             return;
         }
 
@@ -219,7 +219,7 @@ public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, D
         Reader.increaseBorrowed(readerId);
 
         db.put(newId, new HashMap<>(data));
-        request.getResponse().success(true).msg("借阅成功！");
+        request.getResponse().success(true).message("借阅成功！");
     }
 
     @Override

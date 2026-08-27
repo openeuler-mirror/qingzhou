@@ -1,8 +1,8 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Page;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Page;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.MetricsStore;
@@ -19,67 +19,67 @@ import java.util.*;
 public class AppStatistics extends RedisModelBase implements Monitor, Page {
 
     
-    @ModelField(field_type = FieldType.MONITORING,
+    @ModelField(field_type = FieldType.monitor,
             name = {"统计时间", "en:Stats Time"},
             info = {"统计时间", "en:Statistics time"})
     public String statsTime;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.stat,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.stat,
             name = {"当前总 Key 数", "en:Total Keys"},
             info = {"当前总 Key 数", "en:Current total keys"})
     public String totalKeys;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.stat,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.stat,
             name = {"当前 OPS", "en:Current OPS"},
             info = {"当前每秒操作数", "en:Current operations per second"})
     public String currentOps;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.stat,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.stat,
             name = {"当前连接数", "en:Current Connections"},
             info = {"当前连接数", "en:Current connected clients"})
     public String connectedClients;
 
-    @ModelField(field_type = FieldType.MONITORING, chart_type = ChartType.stat,
+    @ModelField(field_type = FieldType.monitor, chart_type = ChartType.stat,
             name = {"当前内存", "en:Current Memory"},
             info = {"当前已用内存", "en:Current used memory"})
     public String usedMemory;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.gauge,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.gauge,
             name = {"命中率(%)", "en:Hit Rate (%)"},
             info = {"缓存命中率", "en:Cache hit rate"})
     public String hitRate;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.line,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.line,
             name = {"近 5 分钟平均 OPS", "en:Avg OPS (5m)"},
             info = {"近 5 分钟平均 OPS", "en:Average OPS in last 5 minutes"})
     public String avgOps5m;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.line,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.line,
             name = {"近 1 小时内存增长(MB)", "en:Memory Growth (1h)"},
             info = {"近 1 小时内存增长", "en:Memory growth in last hour"})
     public String memoryGrowth1h;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.stat,
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.stat,
             name = {"慢日志总数", "en:Slow Log Total"},
             info = {"当前慢日志总数", "en:Total slow logs"})
     public String slowLogTotal;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.line, group = "latency",
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.line, group = "latency",
             name = {"平均延迟(ms)", "en:Avg Latency (ms)"},
             info = {"最近探测平均延迟", "en:Average latency of recent probes"})
     public String avgLatency;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.line, group = "latency",
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.line, group = "latency",
             name = {"最大延迟(ms)", "en:Max Latency (ms)"},
             info = {"最近探测最大延迟", "en:Maximum latency of recent probes"})
     public String maxLatency;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.gauge, group = "usage",
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.gauge, group = "usage",
             name = {"连接数使用率(%)", "en:Client Usage (%)"},
             info = {"当前连接数占 maxclients 比例", "en:Connected clients as percentage of maxclients"})
     public String clientUsageRate;
 
-    @ModelField(field_type = FieldType.MONITORING, numeric = true, chart_type = ChartType.gauge, group = "usage",
+    @ModelField(field_type = FieldType.monitor, numeric = true, chart_type = ChartType.gauge, group = "usage",
             name = {"内存使用率(%)", "en:Memory Usage (%)"},
             info = {"当前使用内存占 maxmemory 比例（无限制时显示 -1）", "en:Used memory as percentage of maxmemory"})
     public String memoryUsageRate;

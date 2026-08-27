@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Show;
 
 /**
  * Dashboard 首页模型
@@ -21,14 +21,14 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
 
     @ModelField(id = true,
             name = {"编号", "en:ID"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             show = true)
     public String id;
 
     @ModelField(
             name = {"统计时间", "en:Stats Time"},
             info = {"数据统计时间", "en:Statistics generation time"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             show = true)
     public String statsTime;
 
@@ -37,7 +37,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"教师总数", "en:Teacher Count"},
             info = {"系统中教师总数", "en:Total teacher count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat,
             group = "Business")
@@ -46,7 +46,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"学生总数", "en:Student Count"},
             info = {"系统中学生总数", "en:Total student count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat,
             group = "Business")
@@ -55,7 +55,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"产品总数", "en:Product Count"},
             info = {"系统中产品总数", "en:Total product count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat,
             group = "Business")
@@ -64,7 +64,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"订单总数", "en:Order Count"},
             info = {"系统中订单总数", "en:Total order count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat,
             group = "Business")
@@ -75,7 +75,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"男教师", "en:Male Teachers"},
             info = {"男性教师数量", "en:Male teacher count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.pie,
             group = "TeacherGender")
@@ -84,7 +84,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"女教师", "en:Female Teachers"},
             info = {"女性教师数量", "en:Female teacher count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.pie,
             group = "TeacherGender")
@@ -95,7 +95,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"讲师", "en:Lecturer"},
             info = {"讲师数量", "en:Lecturer count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "TeacherTitle")
@@ -104,7 +104,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"副教授", "en:Associate Professor"},
             info = {"副教授数量", "en:Associate professor count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "TeacherTitle")
@@ -113,7 +113,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"教授", "en:Professor"},
             info = {"教授数量", "en:Professor count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "TeacherTitle")
@@ -124,7 +124,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"已启用", "en:Enabled"},
             info = {"已启用教师数量", "en:Enabled teacher count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.pie,
             group = "TeacherStatus")
@@ -133,7 +133,7 @@ public class Dashboard extends qingzhou.api.ModelBase implements Show, Monitor {
     @ModelField(
             name = {"已禁用", "en:Disabled"},
             info = {"已禁用教师数量", "en:Disabled teacher count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.pie,
             group = "TeacherStatus")

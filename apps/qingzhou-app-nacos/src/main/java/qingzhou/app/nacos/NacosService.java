@@ -11,7 +11,7 @@ import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "nacos-service", order = 2,
         name = {"服务管理", "en:Service Management"},
@@ -58,8 +58,8 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
             show = true,
             add = true,
             input_type = InputType.number,
-            min = 1,
-            max = 65535)
+            min_value = 1,
+            max_value = 65535)
     public Integer port;
 
     @ModelField(
@@ -68,8 +68,8 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
             show = true,
             add = true,
             input_type = InputType.decimal,
-            min = 0,
-            max = 1)
+            min_value = 0,
+            max_value = 1)
     public Double weight = 1.0;
 
     @ModelField(
@@ -259,7 +259,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
     public void queryInstances(Request request) {
         String serviceName = request.getId();
         if (serviceName == null) {
-            request.getResponse().msg("服务名称不能为空").msgLevel(Response.MsgLevel.error);
+            request.getResponse().message("服务名称不能为空").messageLevel(Response.MessageLevel.error);
             return;
         }
         
@@ -268,7 +268,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
             Map<String, Object> data = nacosApi.getServiceInstances(serviceName);
             request.getResponse().data(data);
         } catch (Exception e) {
-            request.getResponse().msg("查询失败: " + e.getMessage()).msgLevel(Response.MsgLevel.error);
+            request.getResponse().message("查询失败: " + e.getMessage()).messageLevel(Response.MessageLevel.error);
         }
     }
 }

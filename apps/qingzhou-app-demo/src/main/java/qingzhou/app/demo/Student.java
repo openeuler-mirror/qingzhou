@@ -1,13 +1,11 @@
 package qingzhou.app.demo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "student", order = 1,
         name = {"学生", "en:Student"},
@@ -73,8 +71,8 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
             info = {"学生年龄", "en:Student age"},
             list = true,
             input_type = InputType.number,
-            min = 0,
-            max = 150)
+            min_value = 0,
+            max_value = 150)
     public Integer age;
 
     @ModelField(
@@ -212,9 +210,9 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
     public String themeColor;
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> student : db.values()) {
             if (matchesQuery(student, query)) {
@@ -279,7 +277,7 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
     public void add(Map<String, String> data) {
         String newId = "S" + String.format("%03d", idCounter++);
         data.put("id", newId);
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         db.put(newId, new HashMap<>(data));
     }
 

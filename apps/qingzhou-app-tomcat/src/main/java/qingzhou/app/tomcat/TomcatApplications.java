@@ -1,7 +1,7 @@
 package qingzhou.app.tomcat;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Page;
+import qingzhou.api.action.Page;
 
 import java.io.File;
 import java.nio.file.*;

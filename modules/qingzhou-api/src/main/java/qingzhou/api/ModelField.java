@@ -6,21 +6,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>该注解用于标注模型字段，应用于字段级别，并在运行时提供对字段的检索和处理能力。</p>
- *
- * <p>注意：此注解不支持原数据查询，如唯一性校验等需要比对源库数据的操作。
- * 这类逻辑不应在此注解中实现，而应在具体的业务逻辑Action中处理。</p>
+ * 标注模型字段，运行时提供对字段的检索和处理能力。
+ * 注意：此注解不支持原数据查询，如唯一性校验等需要比对源库数据的操作，
+ * 这类逻辑应在具体的业务逻辑 Action 中处理。
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.CLASS)
 public @interface ModelField {
     String code() default "";
 
-    FieldType field_type() default FieldType.FORM;
+    FieldType field_type() default FieldType.form;
 
-    InputType input_type() default InputType.text; // 字段的显示类型
+    InputType input_type() default InputType.text;
 
-    String display() default ""; // 在页面上显示或隐藏的条件
+    String display() default "";
 
     String ref_model() default ""; // 使用指定的模块的所有数据id作为字段的取值范围
 
@@ -28,17 +27,17 @@ public @interface ModelField {
 
     String[] options() default {};
 
-    String separator() default ","; // 当使用 options() 或 refModel()，用以分割多值
+    String separator() default ","; // 用以分割多值
 
-    boolean id() default false; // 当 Model 为 List 类型时，用此字段作 ID
+    boolean id() default false; // 当 Model 为 Page 类型时，用此字段作 ID
 
     boolean readonly() default false; // 在form页面显示为无样式 会传值 样式为readonly
 
     boolean required() default false;
 
-    long min() default Long.MIN_VALUE;
+    long min_value() default Long.MIN_VALUE;
 
-    long max() default Long.MAX_VALUE;
+    long max_value() default Long.MAX_VALUE;
 
     int min_length() default -1;
 
@@ -48,25 +47,25 @@ public @interface ModelField {
 
     boolean port() default false;
 
-    boolean email() default false; // 填值须是一个合法的邮箱地址
+    boolean email() default false;
 
     boolean file() default false;
 
-    String pattern() default ""; // 填值须要符合此正则表达式规则
+    String pattern() default "";
 
     // 列表类型的相关信息
 
-    boolean add() default true; // 支持创建页面输入
+    boolean add() default true;
 
-    boolean update() default true; // 支持编辑修改
+    boolean update() default true;
 
-    boolean show() default true; // 是否显示在 show 中。
+    boolean show() default true;
 
-    boolean list() default false; // 是否显示在列表中。
+    boolean list() default false;
 
-    boolean search() default false; // 是否支持列头搜索
+    boolean search() default false;
 
-    boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
+    boolean numeric() default false; // 监视类型中的动态数字，可用于绘制折线图
 
     ChartType chart_type() default ChartType.line; // 监视字段的图表类型，仅在 numeric=true 时有效
 
@@ -78,9 +77,7 @@ public @interface ModelField {
 
     int width_percent() default -1;
 
-    // 字段的国际化名称数组，用于多语言环境下展示在用户界面。
     String[] name();
 
-    // 字段的国际化描述信息数组，用于提供字段的详细说明信息。
     String[] info() default {};
 }

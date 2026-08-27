@@ -3,9 +3,9 @@ package com.tongtech.zookeeper.starter.service;
 import com.tongtech.zookeeper.starter.ZookeeperApp;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Show;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

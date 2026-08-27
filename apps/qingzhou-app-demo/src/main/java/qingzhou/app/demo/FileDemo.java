@@ -1,14 +1,12 @@
 package qingzhou.app.demo;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 /**
  * 演示文件上传和下载功能
@@ -28,7 +26,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     @Override
     public File files(String id) {
         // 根据记录 ID 返回对应的文件目录
-        File baseDir = new File(getAppContext().getTemp(), "file-demo");
+        File baseDir = new File(getAppContext().getTempDir(), "file-demo");
 
         if (id != null && !id.isEmpty()) {
             // 有 ID 时，返回该记录对应的文件目录
@@ -94,7 +92,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     }
 
     private void createSampleFilesForRecord(String recordId, String fileName, String content) throws Exception {
-        File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), recordId);
+        File recordDir = new File(new File(getAppContext().getTempDir(), "file-demo"), recordId);
         if (!recordDir.exists()) {
             recordDir.mkdirs();
         }
@@ -157,9 +155,9 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> file : db.values()) {
             if (matchesQuery(file, query)) {
@@ -224,7 +222,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     public void add(Map<String, String> data) throws Exception {
         String newId = "F" + String.format("%03d", idCounter++);
         data.put("id", newId);
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 
         // 处理文件上传：将上传的文件移动到记录对应的目录
         processUploadedFiles(newId, data);
@@ -254,14 +252,14 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
             return;
         }
 
-        File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), recordId);
+        File recordDir = new File(new File(getAppContext().getTempDir(), "file-demo"), recordId);
         if (!recordDir.exists()) {
             recordDir.mkdirs();
         }
 
         // attachment 可能是逗号分隔的混合值：已有文件名 + 临时文件路径
         String[] parts = attachmentValue.split(",");
-        java.util.List<String> fileNames = new ArrayList<>();
+        List<String> fileNames = new ArrayList<>();
 
         for (String part : parts) {
             part = part.trim();
@@ -295,7 +293,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     public void delete(String id) throws Exception {
         db.remove(id);
 
-        File recordDir = new File(new File(getAppContext().getTemp(), "file-demo"), id);
+        File recordDir = new File(new File(getAppContext().getTempDir(), "file-demo"), id);
         for (File file : recordDir.listFiles()) {
             file.delete();
         }

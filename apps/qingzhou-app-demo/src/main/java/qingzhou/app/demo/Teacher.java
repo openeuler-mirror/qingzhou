@@ -7,7 +7,7 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "teacher", order = 2,
         name = {"教师", "en:Teacher"},
@@ -161,7 +161,7 @@ public class Teacher extends qingzhou.api.ModelBase implements Page, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0,
+            min_value = 0,
             group = "basic")
     public String salary;
 

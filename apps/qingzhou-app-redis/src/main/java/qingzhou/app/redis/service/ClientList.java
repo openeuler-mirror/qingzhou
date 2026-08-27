@@ -1,7 +1,7 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Page;
+import qingzhou.api.action.Page;
 import qingzhou.app.redis.RedisModelBase;
 import redis.clients.jedis.Jedis;
 

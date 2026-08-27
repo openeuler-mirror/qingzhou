@@ -5,7 +5,7 @@ import java.util.*;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;

@@ -1,4 +1,4 @@
-package qingzhou.api.type;
+package qingzhou.api.action;
 
 import qingzhou.api.QingzhouModel;
 

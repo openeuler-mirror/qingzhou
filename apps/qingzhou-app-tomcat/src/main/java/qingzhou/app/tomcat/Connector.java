@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "connector", order = 2,
         name = {"Connector通道", "en:Connector"},

@@ -6,8 +6,8 @@ import java.net.URLDecoder;
 import java.util.*;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 
 @Model(code = "threadpool", order = 3, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},

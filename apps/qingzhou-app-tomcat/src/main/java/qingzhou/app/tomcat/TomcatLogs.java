@@ -15,8 +15,8 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Page;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 
 @Model(code = "logs", order = 4, icon = "Document",
         name = {"日志查看", "en:Log Viewer"},

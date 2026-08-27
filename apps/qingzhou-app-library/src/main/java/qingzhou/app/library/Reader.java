@@ -7,7 +7,7 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "reader", order = 2,
         name = {"读者管理", "en:Reader Management"},
@@ -131,7 +131,7 @@ public class Reader extends qingzhou.api.ModelBase implements Page, Show, Add, U
             add = true,
             update = true,
             input_type = InputType.number,
-            min = 1)
+            min_value = 1)
     public Integer maxBorrow;
 
     @ModelField(

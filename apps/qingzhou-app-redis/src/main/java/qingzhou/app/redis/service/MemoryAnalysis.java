@@ -6,7 +6,7 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
 import qingzhou.api.Request;
-import qingzhou.api.type.Page;
+import qingzhou.api.action.Page;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.util.RedisUtil;
 import redis.clients.jedis.Jedis;
@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
         name = {"内存分析", "en:Memory Analysis"},
         info = {"按 Key 前缀、大 Key、数据类型多维度分析内存分布，帮助定位内存热点。",
                 "en:Analyze memory distribution by key prefix, big keys, and data types to identify memory hotspots."})
-public class MemoryAnalysis extends RedisModelBase implements Page, qingzhou.api.type.Show {
+public class MemoryAnalysis extends RedisModelBase implements Page, qingzhou.api.action.Show {
 
     private static final int MAX_SAMPLE = 10000;
     private static final long CACHE_TTL_MS = 5 * 60 * 1000;

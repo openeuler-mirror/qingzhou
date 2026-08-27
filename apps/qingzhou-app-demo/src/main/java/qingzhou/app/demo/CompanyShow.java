@@ -5,7 +5,7 @@ import java.util.Map;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Show;
 
 /**
  * 演示菜单点击直接进入Show详情页的Model

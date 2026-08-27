@@ -8,7 +8,7 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "nacos-namespace", order = 4,
         name = {"命名空间", "en:Namespace Management"},

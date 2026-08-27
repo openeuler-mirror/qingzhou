@@ -42,7 +42,7 @@ public class AppContextImpl implements AppContext {
         this.appDriver = appDriver;
         this.bundleContext = bundleContext;
         this.appMeta = appMeta;
-        this.appTemp = Paths.get(getBase().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
+        this.appTemp = Paths.get(getRoot().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
     }
 
     void start() throws Exception {
@@ -75,7 +75,7 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public File getBase() {
+    public File getRoot() {
         return instanceFile;
     }
 
@@ -90,7 +90,7 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public File getTemp() {
+    public File getTempDir() {
         return appTemp;
     }
 
@@ -101,17 +101,17 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public <T> T getService(Class<T> clazz) {
-        return getService(clazz, null);
+    public <T> T getService(Class<T> type) {
+        return getService(type, null);
     }
 
     @Override
-    public <T> T getService(Class<T> serviceType, String name) {
-        return appDriver.getService(serviceType, name);
+    public <T> T getService(Class<T> type, String name) {
+        return appDriver.getService(type, name);
     }
 
     @Override
-    public <T> T getObjectInstance(Class<T> type) {
+    public <T> T getAppObject(Class<T> type) {
         if (type != null) {
             for (ModelBase modelBase : modelInstances.values()) {
                 if (type.isInstance(modelBase)) return (T) modelBase;

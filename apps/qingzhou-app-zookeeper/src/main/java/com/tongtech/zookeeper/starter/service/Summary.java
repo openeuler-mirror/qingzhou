@@ -4,7 +4,7 @@ import com.tongtech.zookeeper.starter.ZookeeperApp;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Monitor;
+import qingzhou.api.action.Monitor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,22 +16,22 @@ import java.util.Map;
 public class Summary extends AbstractZkCommandService implements Monitor {
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"JAVA 主目录", "en:JAVA HOME"})
     public String javaHome;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"Zookeeper 目录", "en:Zookeeper Home"})
     public String zookeeperHome;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"配置文件", "en:Zookeeper Config"})
     public String zookeeperCfg;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"版本号", "en:Zookeeper Version"})
     public String zookeeperVersion;
 

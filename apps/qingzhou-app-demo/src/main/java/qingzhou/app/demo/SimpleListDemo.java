@@ -2,11 +2,12 @@ package qingzhou.app.demo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Page;
+import qingzhou.api.action.Page;
 
 /**
  * 演示无行操作的纯列表页面（仅实现List接口，不实现Show/Update/Delete）
@@ -73,9 +74,9 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
     public String progress;
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> task : db.values()) {
             if (matchesQuery(task, query)) {

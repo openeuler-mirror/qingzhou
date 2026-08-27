@@ -11,7 +11,7 @@ import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Monitor;
+import qingzhou.api.action.Monitor;
 
 @Model(code = "jvm", order = 1,
         name = {"JVM", "en:JVM"},
@@ -23,13 +23,13 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"统计时间", "en:Stats Time"},
             info = {"数据统计时间", "en:Statistics generation time"},
-            field_type = FieldType.MONITORING)
+            field_type = FieldType.monitor)
     public String statsTime;
 
     @ModelField(
             name = {"堆内存使用(MB)", "en:Heap Used (MB)"},
             info = {"JVM堆内存已使用量", "en:JVM heap memory used"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -38,7 +38,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"堆内存最大(MB)", "en:Heap Max (MB)"},
             info = {"JVM堆内存最大值", "en:JVM heap memory max"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -47,7 +47,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"堆内存已提交(MB)", "en:Heap Committed (MB)"},
             info = {"JVM堆内存已提交量", "en:JVM heap memory committed"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -56,7 +56,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"非堆内存使用(MB)", "en:Non-Heap Used (MB)"},
             info = {"JVM非堆内存已使用量", "en:JVM non-heap memory used"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -65,7 +65,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"活动线程数", "en:Live Threads"},
             info = {"当前活动线程数量", "en:Current live thread count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "Thread")
@@ -74,7 +74,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"峰值线程数", "en:Peak Threads"},
             info = {"峰值线程数量", "en:Peak thread count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "Thread")
@@ -83,7 +83,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"守护线程数", "en:Daemon Threads"},
             info = {"当前守护线程数量", "en:Current daemon thread count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "Thread")
@@ -92,7 +92,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"已加载类总数", "en:Total Loaded Classes"},
             info = {"JVM已加载的类总数", "en:Total number of loaded classes"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "Class")
@@ -101,7 +101,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"GC总次数", "en:GC Count"},
             info = {"垃圾回收总次数", "en:Total garbage collection count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "GC")
@@ -110,7 +110,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"GC总时间(ms)", "en:GC Time (ms)"},
             info = {"垃圾回收总耗时(毫秒)", "en:Total garbage collection time in ms"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "GC")
@@ -119,7 +119,7 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"运行时间", "en:Uptime"},
             info = {"JVM运行时长", "en:JVM uptime"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat)
     public String uptime;

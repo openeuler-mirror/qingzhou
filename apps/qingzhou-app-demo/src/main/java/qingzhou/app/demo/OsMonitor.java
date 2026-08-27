@@ -12,7 +12,7 @@ import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Monitor;
+import qingzhou.api.action.Monitor;
 
 @Model(code = "os", order = 2,
         name = {"操作系统", "en:Operating System"},
@@ -24,13 +24,13 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"统计时间", "en:Stats Time"},
             info = {"数据统计时间", "en:Statistics generation time"},
-            field_type = FieldType.MONITORING)
+            field_type = FieldType.monitor)
     public String statsTime;
 
     @ModelField(
             name = {"进程CPU使用率(%)", "en:Process CPU Usage (%)"},
             info = {"当前进程CPU使用率", "en:Current process CPU usage"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.gauge,
             group = "cpu")
@@ -39,7 +39,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"系统CPU使用率(%)", "en:System CPU Usage (%)"},
             info = {"系统整体CPU使用率", "en:System overall CPU usage"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.gauge,
             group = "cpu")
@@ -48,7 +48,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"总物理内存(MB)", "en:Total Physical Memory (MB)"},
             info = {"系统总物理内存", "en:Total physical memory"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -57,7 +57,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"空闲物理内存(MB)", "en:Free Physical Memory (MB)"},
             info = {"系统空闲物理内存", "en:Free physical memory"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -66,7 +66,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"已用物理内存(MB)", "en:Used Physical Memory (MB)"},
             info = {"系统已用物理内存", "en:Used physical memory"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "memory")
@@ -75,7 +75,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"总交换空间(MB)", "en:Total Swap Space (MB)"},
             info = {"系统总交换空间", "en:Total swap space"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "swap")
@@ -84,7 +84,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"空闲交换空间(MB)", "en:Free Swap Space (MB)"},
             info = {"系统空闲交换空间", "en:Free swap space"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line,
             group = "swap")
@@ -93,7 +93,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"打开文件描述符数", "en:Open File Descriptors"},
             info = {"当前打开的文件描述符数量", "en:Open file descriptor count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "file")
@@ -102,7 +102,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"最大文件描述符数", "en:Max File Descriptors"},
             info = {"文件描述符上限", "en:Max file descriptor count"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.bar,
             group = "file")
@@ -111,7 +111,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"可用处理器数", "en:Available Processors"},
             info = {"可用CPU核心数", "en:Available CPU cores"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.stat)
     public String availableProcessors;
@@ -119,7 +119,7 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
     @ModelField(
             name = {"系统负载均值", "en:System Load Average"},
             info = {"系统1分钟负载均值", "en:System 1-minute load average"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             numeric = true,
             chart_type = ChartType.line)
     public String systemLoadAverage;

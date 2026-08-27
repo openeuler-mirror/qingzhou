@@ -57,7 +57,7 @@ public class DemoApp implements QingzhouApp {
         Properties properties = appContext.getProperties();
         logger.info("配置参数：" + properties);
         appContext.addActionFilter((request, chain) -> {
-            JvmMonitor jvmMonitor = appContext.getObjectInstance(JvmMonitor.class);
+            JvmMonitor jvmMonitor = appContext.getAppObject(JvmMonitor.class);
             Map<String, String> monitor = jvmMonitor.monitor(request.getId());
             String heapUsed = monitor.get("heapUsed");
             int i = Integer.parseInt(heapUsed);

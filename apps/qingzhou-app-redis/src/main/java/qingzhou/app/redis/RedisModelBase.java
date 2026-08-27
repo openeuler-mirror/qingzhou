@@ -60,8 +60,8 @@ public class RedisModelBase extends ModelBase {
                 : "当前为测试环境，确认执行此写操作？";
         request.getResponse()
                 .success(false)
-                .msg(msg)
-                .msgLevel(Response.MsgLevel.warn);
+                .message(msg)
+                .messageLevel(Response.MessageLevel.warn);
         return false;
     }
 
@@ -88,8 +88,8 @@ public class RedisModelBase extends ModelBase {
                 : "⚠️ 当前为测试环境，确认执行此危险操作？";
         request.getResponse()
                 .success(false)
-                .msg(msg)
-                .msgLevel(Response.MsgLevel.warn);
+                .message(msg)
+                .messageLevel(Response.MessageLevel.warn);
         return false;
     }
 

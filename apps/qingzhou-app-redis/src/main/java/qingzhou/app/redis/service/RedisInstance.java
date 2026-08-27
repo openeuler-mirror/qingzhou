@@ -3,7 +3,7 @@ package qingzhou.app.redis.service;
 import java.util.*;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -39,7 +39,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
 
     @ModelField(list = true, show = true, numeric = true, required = true,
             input_type = InputType.number,
-            min = 1, max = 65535,
+            min_value = 1, max_value = 65535,
             display = "mode==standalone",
             name = {"端口", "en:Port"},
             info = {"单机模式的 Redis 端口（1-65535）", "en:Redis port for standalone mode (1-65535)"})
@@ -52,7 +52,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
 
     @ModelField(show = true, numeric = true,
             input_type = InputType.number,
-            min = 0, max = 15,
+            min_value = 0, max_value = 15,
             display = "mode==standalone",
             name = {"数据库", "en:Database"},
             info = {"单机模式使用的数据库编号（0-15）", "en:Database index for standalone mode (0-15)"})

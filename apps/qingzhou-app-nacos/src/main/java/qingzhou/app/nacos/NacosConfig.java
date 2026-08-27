@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "nacos-config", order = 3,
         name = {"配置列表", "en:Config Management"},

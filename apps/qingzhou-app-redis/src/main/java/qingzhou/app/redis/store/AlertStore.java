@@ -31,7 +31,7 @@ public class AlertStore {
     }
 
     private Path getStorageFile() {
-        File base = appContext.getBase();
+        File base = appContext.getRoot();
         File dir = new File(base, StoreConstants.DATA_DIR);
         if (!dir.exists()) {
             dir.mkdirs();

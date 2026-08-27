@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Update;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Update;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.annotation.ModelAction;
@@ -39,17 +39,17 @@ class Validation implements ActionFilter {
         this.i18nService = i18nService;
     }
 
-    Map<String, java.util.List<String>> validate(ModelAction action, RequestImpl request) {
+    Map<String, List<String>> validate(ModelAction action, RequestImpl request) {
         // 确定要检验哪些字段
         Set<ModelField> validateFields = null;
         if (action.code.equals(Add.ACTION_CODE_ADD)) {
             validateFields = request.getCurrentModel().fields.stream()
-                    .filter(field -> field.field_type == FieldType.FORM && field.add && !field.readonly)
+                    .filter(field -> field.field_type == FieldType.form && field.add && !field.readonly)
                     .filter(field -> request.getParameter(field.code) != null) // 只校验前端传递了的字段，支持部分字段创建（默认值由后端处理）
                     .collect(Collectors.toSet());
         } else if (action.code.equals(Update.ACTION_CODE_UPDATE)) {
             validateFields = request.getCurrentModel().fields.stream()
-                    .filter(field -> field.field_type == FieldType.FORM && field.update && !field.readonly)
+                    .filter(field -> field.field_type == FieldType.form && field.update && !field.readonly)
                     .filter(field -> !field.id) // 更新的 id 不校验
                     .filter(field -> request.getParameter(field.code) != null) // rest 更新，可以指定要更新的字段，只校验传递过来的字段
                     .collect(Collectors.toSet());
@@ -57,10 +57,10 @@ class Validation implements ActionFilter {
         if (validateFields == null || validateFields.isEmpty()) return null;
 
         // 开始校验
-        Map<String, java.util.List<String>> validation = new HashMap<>();
+        Map<String, List<String>> validation = new HashMap<>();
         String langParameter = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
         for (ModelField field : validateFields) {
-            java.util.List<String> errors = new ArrayList<>();
+            List<String> errors = new ArrayList<>();
 
             String parameter = request.getParameter(field.code);
             if (parameter == null || parameter.isEmpty()) {
@@ -94,8 +94,8 @@ class Validation implements ActionFilter {
             request.getResponse()
                     .status(400)
                     .success(false)
-                    .msg(msg)
-                    .msgLevel(Response.MsgLevel.error);
+                    .message(msg)
+                    .messageLevel(Response.MessageLevel.error);
             request.getResponse().data(errors);
             return;
         }

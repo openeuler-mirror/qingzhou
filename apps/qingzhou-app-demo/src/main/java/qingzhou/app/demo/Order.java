@@ -1,12 +1,10 @@
 package qingzhou.app.demo;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "order", order = 2,
         name = {"订单", "en:Order"},
@@ -91,7 +89,7 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0,
+            min_value = 0,
             group = "Order")
     public String amount;
 
@@ -145,9 +143,9 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
     public String status;
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> order : db.values()) {
             if (matchesQuery(order, query)) {
@@ -210,9 +208,9 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
 
     @Override
     public void add(Map<String, String> data) {
-        String newId = "ORD" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + String.format("%03d", idCounter++);
+        String newId = "ORD" + new java.text.SimpleDateFormat("yyyyMMdd").format(new Date()) + String.format("%03d", idCounter++);
         data.put("orderNo", newId);
-        data.put("orderTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+        data.put("orderTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         db.put(newId, new HashMap<>(data));
     }
 
@@ -232,6 +230,6 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
 
     @Override
     public File files(String id) {
-        return new File(getAppContext().getBase(), "apps");
+        return new File(getAppContext().getRoot(), "apps");
     }
 }
