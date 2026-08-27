@@ -25,7 +25,7 @@ public class SseListener implements Listener {
 
     @Override
     public void onBegin() {
-        httpResponse.send(toSseText(SseEvent.of("RUN_STARTED")));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.RUN_STARTED)));
     }
 
     @Override
@@ -33,29 +33,28 @@ public class SseListener implements Listener {
         if (!isReasoning) {
             isReasoning = true;
             if (isMessage) {
-                httpResponse.send(toSseText(SseEvent.of("TEXT_MESSAGE_END").messageId(messageId)));
+                httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_END).messageId(messageId)));
             }
             isMessage = false;
-            httpResponse.send(toSseText(SseEvent.of("REASONING_START")));
+            httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.REASONING_START)));
         }
-        httpResponse.send(toSseText(SseEvent.of("REASONING_CONTENT").content(content)));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.REASONING_CONTENT).content(content)));
     }
 
     @Override
     public void onReasoningPause() {
-        httpResponse.send(toSseText(SseEvent.of("REASONING_PAUSE")));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.REASONING_PAUSE)));
     }
 
     @Override
     public void onReasoningResume() {
-        httpResponse.send(toSseText(SseEvent.of("REASONING_RESUME")));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.REASONING_RESUME)));
     }
 
     @Override
     public void onToolCall(String toolName) {
         try {
-            httpResponse.send(toSseText(SseEvent.of("TOOL_CALL").toolName(toolName)
-            ));
+            httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.TOOL_CALL).toolName(toolName)));
         } catch (Exception e) {
             logger.error("failed to serialize tool call: " + e.getMessage());
         }
@@ -66,12 +65,12 @@ public class SseListener implements Listener {
         if (!isMessage) {
             isMessage = true;
             if (isReasoning) {
-                httpResponse.send(toSseText(SseEvent.of("REASONING_END")));
+                httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.REASONING_END)));
             }
             isReasoning = false;
-            httpResponse.send(toSseText(SseEvent.of("TEXT_MESSAGE_START").messageId(messageId)));
+            httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_START).messageId(messageId)));
         }
-        httpResponse.send(toSseText(SseEvent.of("TEXT_MESSAGE_CONTENT").messageId(messageId).content(content)));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT).messageId(messageId).content(content)));
     }
 
     @Override
@@ -83,7 +82,7 @@ public class SseListener implements Listener {
     public void onError(String error) {
         logger.error(error);
         try {
-            httpResponse.sendFinish(toSseText(SseEvent.of("RUN_ERROR").message(error)));
+            httpResponse.sendFinish(toSseText(SseEvent.of(SseEvent.Type.RUN_ERROR).message(error)));
         } catch (Exception e) {
             // 客户端已断开连接，无法发送错误信息，忽略
         }
@@ -91,8 +90,8 @@ public class SseListener implements Listener {
 
     @Override
     public void onComplete() {
-        httpResponse.send(toSseText(SseEvent.of("TEXT_MESSAGE_END").messageId(messageId)));
-        httpResponse.sendFinish(toSseText(SseEvent.of("RUN_FINISHED")));
+        httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_END).messageId(messageId)));
+        httpResponse.sendFinish(toSseText(SseEvent.of(SseEvent.Type.RUN_FINISHED)));
     }
 
     private String toSseText(SseEvent event) {

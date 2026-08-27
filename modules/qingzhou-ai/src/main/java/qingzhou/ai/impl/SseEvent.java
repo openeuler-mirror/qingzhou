@@ -4,15 +4,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 class SseEvent {
+    // 枚举名即 SSE 协议事件名，修改需同步前端
+    enum Type {
+        RUN_STARTED, RUN_FINISHED, RUN_ERROR,
+        REASONING_START, REASONING_CONTENT, REASONING_PAUSE, REASONING_RESUME, REASONING_END,
+        TEXT_MESSAGE_START, TEXT_MESSAGE_CONTENT, TEXT_MESSAGE_END,
+        TOOL_CALL
+    }
 
-    final String type;
+    final Type type;
     final Map<String, String> data = new HashMap<>();
 
-    SseEvent(String type) {
+    private SseEvent(Type type) {
         this.type = type;
     }
 
-    static SseEvent of(String type) {
+    static SseEvent of(Type type) {
         return new SseEvent(type);
     }
 
