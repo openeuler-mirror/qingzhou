@@ -1,10 +1,7 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.type.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.alert.AlertEngine;
@@ -19,7 +16,7 @@ import java.util.*;
 @Model(code = "monitorAlert", icon = "Bell", menu = "redis-monitor", order = 2,
         name = {"监控告警", "en:Monitor Alert"},
         info = {"告警规则配置与告警历史", "en:Alert rules and alert history"})
-public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.List, Show, Add, Update, Delete {
+public class MonitorAlert extends RedisModelBase implements Page, Show, Add, Update, Delete {
 
 
     @ModelField(id = true, list = true, show = true, add = false, update = false, readonly = true,
@@ -100,7 +97,7 @@ public class MonitorAlert extends RedisModelBase implements qingzhou.api.type.Li
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<AlertRule> rules = RedisApp.getAlertStore().listRules();
         int start = (pageNum - 1) * pageSize;
         int end = Math.min(start + pageSize, rules.size());

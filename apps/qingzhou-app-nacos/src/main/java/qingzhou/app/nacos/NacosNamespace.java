@@ -14,7 +14,7 @@ import qingzhou.api.type.*;
         name = {"命名空间", "en:Namespace Management"},
         info = {"Nacos命名空间管理", "en:Nacos Namespace Management"},
         icon = "FolderOpened")
-public class NacosNamespace extends NacosModelBase implements qingzhou.api.type.List, Show, Add, Update, Delete {
+public class NacosNamespace extends NacosModelBase implements Page, Show, Add, Update, Delete {
 
     @ModelField(
             name = {"命名空间名称", "en:Namespace Name"},
@@ -44,7 +44,7 @@ public class NacosNamespace extends NacosModelBase implements qingzhou.api.type.
     public String configCount;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
         
         try {

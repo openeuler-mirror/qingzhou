@@ -2,6 +2,7 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Page;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.MetricsStore;
@@ -15,7 +16,7 @@ import java.util.*;
 @Model(code = "appStatistics", icon = "Histogram", menu = "redis-monitor", order = 5,
         name = {"应用统计", "en:App Statistics"},
         info = {"Redis 应用关键统计指标趋势", "en:Key Redis application statistics and trends"})
-public class AppStatistics extends RedisModelBase implements Monitor, qingzhou.api.type.List {
+public class AppStatistics extends RedisModelBase implements Monitor, Page {
 
     
     @ModelField(field_type = FieldType.MONITORING,
@@ -167,7 +168,7 @@ public class AppStatistics extends RedisModelBase implements Monitor, qingzhou.a
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         MetricsStore metricsStore = RedisApp.getMetricsStore();
         Map<String, List<MetricPoint>> latest = metricsStore.queryLatest(1);
         java.util.List<String[]> rows = new ArrayList<>();

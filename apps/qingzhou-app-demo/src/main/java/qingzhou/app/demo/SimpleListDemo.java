@@ -6,7 +6,7 @@ import java.util.Map;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.List;
+import qingzhou.api.type.Page;
 
 /**
  * 演示无行操作的纯列表页面（仅实现List接口，不实现Show/Update/Delete）
@@ -17,7 +17,7 @@ import qingzhou.api.type.List;
         info = {"演示纯列表页（无行操作），25条数据验证分页和无操作列", "en:Demo list-only page with pagination, no row actions"},
         icon = "List",
         menu = "advanced")
-public class SimpleListDemo extends qingzhou.api.ModelBase implements List {
+public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
 
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
@@ -73,7 +73,7 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements List {
     public String progress;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

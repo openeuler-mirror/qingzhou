@@ -21,7 +21,7 @@ import qingzhou.api.type.*;
         info = {"演示文件上传与下载功能", "en:Demo file upload and download"},
         icon = "FolderOpened",
         menu = "advanced")
-public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, DownloadFile {
+public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, DownloadFile {
     private static final Map<String, Map<String, String>> db = new LinkedHashMap<>();
     private static int idCounter = 1;
 
@@ -157,7 +157,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements List, Show, Add,
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

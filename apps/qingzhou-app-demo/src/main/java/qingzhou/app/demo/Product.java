@@ -12,7 +12,7 @@ import qingzhou.api.type.*;
         info = {"产品信息管理，演示Monitor和自定义Action", "en:Product management with Monitor"},
         icon = "Box",
         menu = "advanced")
-public class Product extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, Monitor {
+public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -184,7 +184,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

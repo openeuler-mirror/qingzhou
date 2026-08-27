@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.function.Predicate;
 
 import qingzhou.api.*;
@@ -88,10 +87,10 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = qingzhou.api.type.List.ACTION_CODE_LIST, icon = "List",
+            code = Page.ACTION_CODE_LIST, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public static void list(qingzhou.api.type.List list, Request request) throws Exception {
+    public static void list(Page page, Request request) throws Exception {
         Map<String, String> query = new HashMap<>();
         for (String search : selectFormFields(request, modelField -> modelField.search)) {
             String parameter = request.getParameter(search);
@@ -103,8 +102,8 @@ public class DefaultAction {
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
         int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
-        List<String[]> listData = list.list(pageNum, pageSize, query, showFields);
-        int totalSize = list.totalSize(query);
+        List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
+        int totalSize = page.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
             Map<String, Object> finalResult = new HashMap<>();

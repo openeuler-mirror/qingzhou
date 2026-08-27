@@ -2,6 +2,7 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Delete;
+import qingzhou.api.type.Page;
 import qingzhou.app.redis.RedisModelBase;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.resps.Slowlog;
@@ -12,7 +13,7 @@ import java.util.*;
 @Model(code = "slowLog", icon = "Clock", menu = "redis-monitor", order = 3,
         name = {"慢查询日志", "en:Slow Log"},
         info = {"查看 Redis 慢查询日志，用于排查性能问题。", "en:View Redis slow query logs for performance diagnosis."})
-public class SlowLog extends RedisModelBase implements qingzhou.api.type.List, Delete {
+public class SlowLog extends RedisModelBase implements Page, Delete {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"日志 ID", "en:Log ID"},
@@ -42,7 +43,7 @@ public class SlowLog extends RedisModelBase implements qingzhou.api.type.List, D
     
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<Object[]> allLogs = Collections.synchronizedList(new ArrayList<>());
 

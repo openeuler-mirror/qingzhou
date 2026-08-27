@@ -11,6 +11,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolService;
 import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Page;
 import qingzhou.api.type.Show;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
@@ -52,7 +53,7 @@ public class SystemActionTools {
         }};
 
         Map<String, String> tools = new HashMap<String, String>() {{
-            put(qingzhou.api.type.List.ACTION_CODE_LIST, "该接口返回某个应用模块的业务数据或资源的列表信息。");
+            put(Page.ACTION_CODE_LIST, "该接口返回某个应用模块的业务数据或资源的列表信息。");
             put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
         }};

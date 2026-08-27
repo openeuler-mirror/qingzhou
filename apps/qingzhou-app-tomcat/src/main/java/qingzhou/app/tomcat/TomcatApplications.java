@@ -1,6 +1,8 @@
 package qingzhou.app.tomcat;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Page;
+
 import java.io.File;
 import java.nio.file.*;
 import java.util.*;
@@ -9,7 +11,7 @@ import java.util.List;
 @Model(code = "applications", order = 1, icon = "ShoppingBag",
         name = {"应用管理", "en:Applications"},
         info = {"从server.xml解析并管理Tomcat应用(Context)", "en:Parse and manage Tomcat applications from server.xml"})
-public class TomcatApplications extends TomcatModelBase implements qingzhou.api.type.List {
+public class TomcatApplications extends TomcatModelBase implements Page {
     @ModelField(
             id = true,
             name = {"应用名称", "en:App Name"},
@@ -50,7 +52,7 @@ public class TomcatApplications extends TomcatModelBase implements qingzhou.api.
     private List<Map<String, String>> applications;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize,
+    public List<String[]> page(int pageNum, int pageSize,
                                Map<String, String> query, String[] listFields) throws Exception {
         loadApplications();
         List<Map<String, String>> filtered = filterByQuery(applications, query);

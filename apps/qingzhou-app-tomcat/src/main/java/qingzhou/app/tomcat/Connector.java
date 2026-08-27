@@ -15,7 +15,7 @@ import qingzhou.api.type.*;
         name = {"Connector通道", "en:Connector"},
         info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
         icon = "Fries")
-public class Connector extends TomcatModelBase implements qingzhou.api.type.List, Show, Add, Update, Delete {
+public class Connector extends TomcatModelBase implements Page, Show, Add, Update, Delete {
     private java.util.List<Map<String, String>> db;
     
     // Connector 字段定义
@@ -107,7 +107,7 @@ public class Connector extends TomcatModelBase implements qingzhou.api.type.List
     public String redirectPort;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         db = parseServerXml();
         List<Map<String, String>> filtered = filterByQuery(db, query);
         return buildListResult(filtered, pageNum, pageSize, listFields);

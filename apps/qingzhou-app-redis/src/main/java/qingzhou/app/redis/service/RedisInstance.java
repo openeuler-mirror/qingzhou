@@ -12,7 +12,7 @@ import qingzhou.app.redis.store.model.AuditEntry;
         name = {"实例管理", "en:Instance Manager"},
         info = {"只读展示 Redis 连接实例，支持通过切换按钮或下拉框选择当前使用的实例。",
                 "en:Display Redis connection instances in read-only mode, switch via button or dropdown."})
-public class RedisInstance extends RedisModelBase implements qingzhou.api.type.List, Show, SwitchSpace {
+public class RedisInstance extends RedisModelBase implements Page, Show, SwitchSpace {
 
     @ModelField(id = true, show = true, list = true, readonly = true,
             name = {"ID", "en:ID"},
@@ -159,7 +159,7 @@ public class RedisInstance extends RedisModelBase implements qingzhou.api.type.L
     
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) throws Exception {
         Map<String, Map<String, String>> instances = RedisApp.getInstances();
         java.util.List<String[]> rows = new ArrayList<>();

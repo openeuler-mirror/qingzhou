@@ -15,7 +15,7 @@ import qingzhou.logger.Logger;
         info = {"系统配置管理", "en:System configuration management"},
         icon = "Setting",
         menu = "system")
-public class Config extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, SwitchSpace {
+public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, SwitchSpace {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Config() {
@@ -88,7 +88,7 @@ public class Config extends qingzhou.api.ModelBase implements List, Show, Add, U
     public String createdAt;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

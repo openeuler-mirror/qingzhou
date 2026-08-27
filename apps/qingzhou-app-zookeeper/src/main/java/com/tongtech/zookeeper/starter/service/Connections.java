@@ -1,10 +1,9 @@
 package com.tongtech.zookeeper.starter.service;
 
 import com.tongtech.zookeeper.starter.ZookeeperApp;
-import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.List;
+import qingzhou.api.type.Page;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 
@@ -18,7 +17,7 @@ import java.util.Map;
         name = {"连接", "en:Connections"},
         info = {"关于客户端到服务器连接的信息。",
                 "en:Information on client connections to server."})
-public class Connections extends AbstractZkCommandService implements Monitor, List, Show {
+public class Connections extends AbstractZkCommandService implements Monitor, Page, Show {
 
     private static final String ID_KEY = "remote_socket_address";
 
@@ -103,7 +102,7 @@ public class Connections extends AbstractZkCommandService implements Monitor, Li
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] showFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] showFields) throws Exception {
         java.util.List<String> allIds = allIds();
         if (allIds.isEmpty()) {
             return new ArrayList<>();

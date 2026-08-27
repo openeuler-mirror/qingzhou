@@ -17,7 +17,7 @@ import qingzhou.api.type.*;
         name = {"服务管理", "en:Service Management"},
         info = {"Nacos服务注册与发现管理", "en:Nacos Service Discovery Management"},
         icon = "Cpu")
-public class NacosService extends NacosModelBase implements qingzhou.api.type.List, Show, Add, Delete {
+public class NacosService extends NacosModelBase implements Page, Show, Add, Delete {
 
     @ModelField(id = true,
             name = {"服务名称", "en:Service Name"},
@@ -100,7 +100,7 @@ public class NacosService extends NacosModelBase implements qingzhou.api.type.Li
     public String metadata;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
         
         try {

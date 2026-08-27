@@ -6,12 +6,13 @@ import java.net.URLDecoder;
 import java.util.*;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
+import qingzhou.api.type.Page;
 import qingzhou.api.type.Show;
 
 @Model(code = "threadpool", order = 3, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},
         info = {"Tomcat线程池监控", "en:Tomcat thread pool monitoring"})
-public class TomcatThreadPool extends TomcatModelBase implements qingzhou.api.type.List, Show {
+public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"池名称", "en:Pool Name"},
@@ -36,7 +37,7 @@ public class TomcatThreadPool extends TomcatModelBase implements qingzhou.api.ty
     private List<Map<String, String>> threadPools;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize,
+    public List<String[]> page(int pageNum, int pageSize,
                                Map<String, String> query, String[] listFields) {
         loadThreadPools();
         List<Map<String, String>> filtered = filterByQuery(threadPools, query);

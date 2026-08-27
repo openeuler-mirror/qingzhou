@@ -14,7 +14,7 @@ import qingzhou.logger.Logger;
         info = {"图书信息管理", "en:Book information management"},
         icon = "Reading",
         menu = "basic")
-public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -230,7 +230,7 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

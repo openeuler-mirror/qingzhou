@@ -6,7 +6,7 @@ import java.util.*;
 import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
-import qingzhou.api.type.List;
+import qingzhou.api.type.Page;
 import qingzhou.api.type.Show;
 
 @Model(code = "borrow", order = 1,
@@ -14,7 +14,7 @@ import qingzhou.api.type.Show;
         info = {"图书借阅与归还管理", "en:Book borrow and return management"},
         icon = "Operation",
         menu = "borrow")
-public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, Delete {
+public class Borrow extends qingzhou.api.ModelBase implements Page, Show, Add, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 3;
 
@@ -223,7 +223,7 @@ public class Borrow extends qingzhou.api.ModelBase implements List, Show, Add, D
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 
