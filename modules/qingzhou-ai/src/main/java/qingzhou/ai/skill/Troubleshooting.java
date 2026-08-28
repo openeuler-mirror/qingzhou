@@ -36,7 +36,7 @@ public class Troubleshooting extends SkillServiceBase implements SkillService {
     @Override
     public Map<AttachmentType, String[]> attachments() {
         return new HashMap<AttachmentType, String[]>() {{
-            put(AttachmentType.text, new String[]{".md", ".adoc", ".txt", ".log", ".java"});
+            put(AttachmentType.document, new String[]{".md", ".adoc", ".txt", ".log", ".java"});
             put(AttachmentType.image, new String[]{".jpg", ".jpeg", ".png"});
         }};
     }

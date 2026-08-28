@@ -11,8 +11,8 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.ai.SkillService;
 import qingzhou.ai.LlmConverter;
+import qingzhou.ai.SkillService;
 import qingzhou.ai.skill.SystemSkill;
 import qingzhou.api.Constants;
 import qingzhou.dto.I18nService;
@@ -23,7 +23,7 @@ import qingzhou.json.Json;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/equip",
+@Component(property = HttpHandler.HANDLE_PATH + "=/chat/config",
         service = {ChatConfig.class, HttpHandler.class})
 public class ChatConfig implements HttpHandler {
     @Reference

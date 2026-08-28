@@ -27,6 +27,6 @@ public interface SkillService {
     }
 
     enum AttachmentType {
-        text, image
+        document, image
     }
 }

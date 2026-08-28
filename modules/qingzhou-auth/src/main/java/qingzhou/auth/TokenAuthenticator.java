@@ -18,8 +18,18 @@ public class TokenAuthenticator implements HttpAuthenticator {
         return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid token");
     }
 
+    /**
+     * 校验 token，返回用户名；无效或已过期返回 null。
+     */
     private String verifyToken(String token) {
-        return null;// todo
+        try {
+            String payload = tokenCipher.decrypt(token);
+            int sep = payload.lastIndexOf('|');
+            return System.currentTimeMillis() < Long.parseLong(payload.substring(sep + 1))
+                    ? payload.substring(0, sep) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

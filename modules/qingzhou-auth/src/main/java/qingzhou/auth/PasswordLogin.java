@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -20,19 +21,30 @@ public class PasswordLogin implements HttpHandler {
     private Crypto crypto;
 
     private String username;
-    private String password;
+    private String passwordDigest;
     private long tokenExpireMillis;
     private int maxFailures;
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
+    private static volatile Cipher tokenCipher; // token 加解密密钥，静态共享给 TokenAuthenticator 校验
+
     @Activate
-    public void start(Map<String, String> config) {
-        username = config.get("username");
-        password = config.get("password");
-        tokenExpireMillis = Long.parseLong(config.get("token_expire_seconds")) * 1000;
-        maxFailures = Integer.parseInt(config.get("max_failures"));
-        lockMillis = Long.parseLong(config.get("lock_seconds")) * 1000;
+    public void start(Map<String, String> config) throws Exception {
+        username = config.getOrDefault("user", "admin");
+        String password = config.getOrDefault("password", "admin");
+        passwordDigest = password.split("\\$").length == 4
+                ? password // 已是摘要格式（alg$salt$iterations$digest），配置文件可免存明文
+                : crypto.getMessageDigest().digest(password, "SHA-256", 16,
+                parseInt(config.get("password_iterations"), 2));
+        tokenExpireMillis = parseInt(config.get("token_expire_seconds"), 3600) * 1000L;
+        maxFailures = parseInt(config.get("max_failures"), 5);
+        lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
+
+        String secret = config.get("secret");
+        tokenCipher = crypto.getCipher(secret == null || secret.isEmpty()
+                ? crypto.generateKey() // 未配置则随机生成，重启后已签发 token 全部失效
+                : secret);
     }
 
     @Override
@@ -45,7 +57,7 @@ public class PasswordLogin implements HttpHandler {
             }
             login(request, response);
         } else if (path.endsWith("/auth/logout")) {
-            logout(request, response);
+            logout(response);
         } else {
             response.status400Finish();
         }
@@ -64,13 +76,9 @@ public class PasswordLogin implements HttpHandler {
 
         if (verified) {
             failures.remove(ip);
-        } else {
-            recordFailure(ip);
-        }
-
-        if (verified) {
             response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + createToken(user) + "\"}");
         } else {
+            recordFailure(ip);
             response.status(401).sendFinish("invalid user or password");
         }
     }
@@ -101,23 +109,27 @@ public class PasswordLogin implements HttpHandler {
     }
 
     private boolean verifyCredentials(String user, String password) {
-        return Objects.equals(username, user) && crypto.getMessageDigest().matches(password, this.password);
+        return Objects.equals(username, user) && crypto.getMessageDigest().matches(password, passwordDigest);
     }
 
     private String createToken(String user) {
-//        Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
-//        String payload = user + "|" + (System.currentTimeMillis() + tokenExpireMillis) + "|" + passwordFingerprint;
-//        return URL_ENCODER.encodeToString(payload.getBytes(StandardCharsets.UTF_8))
-//                + "." + URL_ENCODER.encodeToString(sign(payload));
-        return "todo";
+        try {
+            return tokenCipher.encrypt(user + "|" + (System.currentTimeMillis() + tokenExpireMillis));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
-    private void logout(HttpRequest request, HttpResponse response) {
-        String header = request.getHeader("Authorization");
-        String BEARER = "Bearer ";
-        if (header != null && header.startsWith(BEARER)) {
-            // authLoginService.revoke(header.substring(BEARER.length()).trim());
-        }
+    private void logout(HttpResponse response) {
+        // 无状态 token 无法服务端撤销，客户端删除凭据即完成登出
         response.sendFinish("ok");
+    }
+
+    private static int parseInt(String val, int defaultValue) {
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 }

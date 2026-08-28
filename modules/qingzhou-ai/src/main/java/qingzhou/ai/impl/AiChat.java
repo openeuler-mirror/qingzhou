@@ -110,7 +110,7 @@ public class AiChat implements HttpHandler {
                         for (SkillService.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
                             List<String> attachments = findAttachments(params, attachmentType);
                             switch (attachmentType) {
-                                case text:
+                                case document:
                                     refDocs = attachments;
                                     break;
                                 case image:
