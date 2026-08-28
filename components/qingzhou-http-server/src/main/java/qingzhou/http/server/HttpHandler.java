@@ -8,6 +8,7 @@ import org.reactivestreams.Subscription;
  */
 public interface HttpHandler {
     String HANDLE_PATH = "HANDLE_PATH";
+    String HANDLE_NO_AUTH = "HANDLE_NO_AUTH";
 
     void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 

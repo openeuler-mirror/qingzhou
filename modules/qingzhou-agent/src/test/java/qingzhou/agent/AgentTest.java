@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.api.AppContext;
-import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
@@ -23,7 +22,6 @@ import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.impl.HttpServerImpl;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.json.impl.JsonImpl;
 import qingzhou.logger.impl.LoggerImpl;
 import qingzhou.registry.AppStub;
@@ -50,7 +48,7 @@ public class AgentTest {
             StubAppStub appStub = new StubAppStub();
             registry.apps.put("demo", appStub);
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, registry), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, registry), "/agent");
 
             RequestImpl request = new RequestImpl();
             request.setApp("demo");
@@ -87,7 +85,7 @@ public class AgentTest {
             CryptoImpl crypto = new CryptoImpl();
             Heartbeat.thisInstanceInfo = buildInstanceInfo(crypto.generateKey());
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             byte[] body = crypto.getCipher(crypto.generateKey())
                     .encrypt("tampered".getBytes(StandardCharsets.UTF_8)); // 用另一把密钥加密
@@ -113,7 +111,7 @@ public class AgentTest {
         try {
             Heartbeat.thisInstanceInfo = buildInstanceInfo(new CryptoImpl().generateKey());
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             HttpClient client = new HttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
@@ -135,7 +133,7 @@ public class AgentTest {
         try {
             Heartbeat.thisInstanceInfo = null; // 代理尚未注册
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             CryptoImpl crypto = new CryptoImpl();
             byte[] body = crypto.getCipher(crypto.generateKey())
@@ -163,7 +161,7 @@ public class AgentTest {
             String key = crypto.generateKey();
             Heartbeat.thisInstanceInfo = buildInstanceInfo(key);
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             RequestImpl request = new RequestImpl();
             request.setApp("ghost"); // 未注册的应用
@@ -196,7 +194,7 @@ public class AgentTest {
 
             StubRegistry registry = new StubRegistry();
             registry.apps.put("demo", new StubAppStub(true)); // invokeApp 抛异常
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, registry), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, registry), "/agent");
 
             RequestImpl request = new RequestImpl();
             request.setApp("demo");
@@ -227,7 +225,7 @@ public class AgentTest {
             String key = crypto.generateKey();
             Heartbeat.thisInstanceInfo = buildInstanceInfo(key);
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             byte[] plain = "hello-upload-data".getBytes(StandardCharsets.UTF_8);
             byte[] body = crypto.getCipher(key).encrypt(plain);
@@ -257,7 +255,7 @@ public class AgentTest {
             String key = crypto.generateKey();
             Heartbeat.thisInstanceInfo = buildInstanceInfo(key);
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             byte[] plain = "no-key-data".getBytes(StandardCharsets.UTF_8);
             byte[] body = crypto.getCipher(key).encrypt(plain);
@@ -289,7 +287,7 @@ public class AgentTest {
             String key = crypto.generateKey();
             Heartbeat.thisInstanceInfo = buildInstanceInfo(key);
 
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, new StubRegistry()), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, new StubRegistry()), "/agent");
 
             HttpClient client = new HttpClientImpl();
             String url = "http://localhost:" + testServer.port + "/agent/upload?key=dup";
@@ -326,7 +324,7 @@ public class AgentTest {
             StubRegistry registry = new StubRegistry();
             StubAppStub appStub = new StubAppStub();
             registry.apps.put("demo", appStub);
-            testServer.server.registerHttpHandler(buildAgent(uploadBase, registry), "/agent");
+            testServer.server.registerHttpHandlerNoAuth(buildAgent(uploadBase, registry), "/agent");
 
             RequestImpl request = new RequestImpl();
             request.setApp("demo");

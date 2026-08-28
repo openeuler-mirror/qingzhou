@@ -21,12 +21,13 @@ public class HttpServerImpl implements HttpServer {
     private Logger logger;
 
     final Map<String, HttpHandler> handlerMap = new HashMap<>();
+    final Set<HttpHandler> noAuthHandlerSet = new HashSet<>();
 
     private final List<HttpAuthenticator> authenticators = new ArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
-    private boolean isAuthDisabled;
+    boolean isAuthDisabled;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
@@ -122,6 +123,10 @@ public class HttpServerImpl implements HttpServer {
         }
 
         handlerMap.put(path, httpHandler);
+        boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
+        if (isNoAuth) {
+            noAuthHandlerSet.add(httpHandler);
+        }
 
         String msg = "http handler registered: " + path;
         if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
@@ -162,7 +167,10 @@ public class HttpServerImpl implements HttpServer {
                 contextPath = e.getKey();
             }
         }
-        handlerMap.remove(contextPath);
+        HttpHandler removed = handlerMap.remove(contextPath);
+        if (removed != null) {
+            noAuthHandlerSet.remove(removed);
+        }
 
         logger.info("http handler unregistered: " + contextPath);
     }
@@ -187,7 +195,6 @@ public class HttpServerImpl implements HttpServer {
      * 全部无凭据时才用重定向引导登录。
      */
     AuthResult authenticate(HttpRequest request) {
-        if (isAuthDisabled) return AuthResult.pass();
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
 
         String path = request.getPath();
@@ -247,6 +254,14 @@ public class HttpServerImpl implements HttpServer {
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
         addHttpHandler(httpHandler, new HashMap<String, String>() {{
             put(HttpHandler.HANDLE_PATH, handlePath);
+        }}, null);
+    }
+
+    @Override
+    public void registerHttpHandlerNoAuth(HttpHandler httpHandler, String handlePath) {
+        addHttpHandler(httpHandler, new HashMap<String, String>() {{
+            put(HttpHandler.HANDLE_PATH, handlePath);
+            put(HttpHandler.HANDLE_NO_AUTH, "true");
         }}, null);
     }
 

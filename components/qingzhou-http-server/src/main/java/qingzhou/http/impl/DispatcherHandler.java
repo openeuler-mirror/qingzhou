@@ -32,47 +32,46 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            return response.status(HttpResponseStatus.BAD_REQUEST).send();
         }
-        String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
-
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
 
-        // 安全认证：未通过则拒绝或质询重定向（拒绝原因仅记日志，避免泄露 token 状态）
-        AuthResult authResult = httpServer.authenticate(httpRequest);
-        if (!authResult.isPassed()) {
-            if (authResult.isChallenge()) {
-                return response.status(HttpResponseStatus.FOUND)
-                        .header("Location", authResult.getLocation())
-                        .header("Cache-Control", "no-store")
-                        .sendString(Mono.just("redirecting"));
-            }
-            if (logger.isDebugEnabled()) {
-                logger.debug("http auth rejected, path: " + requestPath + ", reason: " + authResult.getReason());
-            }
-            return response.status(HttpResponseStatus.UNAUTHORIZED)
-                    .header("WWW-Authenticate", "Bearer")
-                    .header("Cache-Control", "no-store")
-                    .sendString(Mono.just("Unauthorized"));
-        }
-        if (authResult.getPrincipal() != null) {
-            httpRequest.setAttribute("auth.principal", authResult.getPrincipal());
-        }
-
+        final HttpHandler httpHandler;
+        String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
         String matches = httpServer.matches(normalizedPath);
-        if (matches == null) {
-            return response
-                    .status(HttpResponseStatus.NOT_FOUND)
-                    .send();
+        if (matches != null) {
+            httpHandler = this.httpServer.handlerMap.get(matches);
+        } else {
+            return response.status(HttpResponseStatus.NOT_FOUND).send();
         }
-        HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
-        HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
 
+        // 安全认证
+        boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
+        if (needAuth) {
+            AuthResult authResult = httpServer.authenticate(httpRequest);
+            if (!authResult.isPassed()) {
+                if (authResult.isChallenge()) {
+                    return response.status(HttpResponseStatus.FOUND)
+                            .header("Location", authResult.getLocation())
+                            .header("Cache-Control", "no-store")
+                            .sendString(Mono.just("redirecting"));
+                } else {
+                    return response.status(HttpResponseStatus.UNAUTHORIZED)
+                            .header("WWW-Authenticate", "Bearer")
+                            .header("Cache-Control", "no-store")
+                            .sendString(Mono.just("Unauthorized"));
+                }
+            }
+            if (authResult.getPrincipal() != null) {
+                httpRequest.setAttribute("auth.principal", authResult.getPrincipal());
+            }
+        }
+
+        // 开始处理业务...
+        HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
         boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
         if (streamRequired && streamHandler == null) {
-            return response
-                    .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE)
-                    .send();
+            return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
