@@ -1,6 +1,5 @@
 package qingzhou.http.impl;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.function.BiFunction;
@@ -31,7 +30,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         String requestPath = request.uri().split("\\?")[0];
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             return response.status(HttpResponseStatus.BAD_REQUEST).send();
         }
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
