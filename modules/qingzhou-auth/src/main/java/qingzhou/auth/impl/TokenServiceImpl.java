@@ -11,12 +11,13 @@ import java.util.Properties;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.auth.TokenService;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 
-@Component(configurationPid = "qingzhou-auth")
+@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class TokenServiceImpl implements TokenService {
     @Reference
     private Crypto crypto;

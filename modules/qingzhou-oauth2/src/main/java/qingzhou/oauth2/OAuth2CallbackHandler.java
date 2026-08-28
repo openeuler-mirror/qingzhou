@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.auth.TokenService;
 import qingzhou.http.client.HttpClient;
@@ -17,9 +18,10 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-@Component(configurationPid = "qingzhou-oauth2", property = HttpHandler.HANDLE_PATH + "=/callback")
+@Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = HttpHandler.HANDLE_PATH + "=/callback")
 public class OAuth2CallbackHandler implements HttpHandler {
-    static final String EXCLUDED_CALLBACK_PATH = "/qingzhou-oauth2/callback";
+    static final String EXCLUDED_CALLBACK_PATH = "/oauth2/callback";
     static final String COOKIE_NAME = "oauth2_session";
 
     @Reference

@@ -7,13 +7,14 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.auth.TokenService;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpAuthenticator;
 import qingzhou.http.server.HttpRequest;
 
-@Component(configurationPid = "qingzhou-oauth2")
+@Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class OAuth2Authenticator implements HttpAuthenticator {
     @Reference
     private TokenService tokenService;

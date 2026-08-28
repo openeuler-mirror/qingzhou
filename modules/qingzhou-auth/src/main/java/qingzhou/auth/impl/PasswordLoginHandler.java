@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.auth.TokenService;
 import qingzhou.crypto.Crypto;
@@ -13,9 +14,10 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-@Component(configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=/auth")
+@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = HttpHandler.HANDLE_PATH + "=")
 public class PasswordLoginHandler implements HttpHandler {
-    static final String[] EXCLUDED_PATHS = {"/qingzhou-auth/auth/login", "/qingzhou-auth/auth/logout"};
+    static final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
 
     @Reference
     private Crypto crypto;

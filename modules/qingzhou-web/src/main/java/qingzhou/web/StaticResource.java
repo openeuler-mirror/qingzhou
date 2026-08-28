@@ -15,7 +15,7 @@ import qingzhou.http.server.HttpResponse;
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
-@Component(property = HttpHandler.HANDLE_PATH + "=")
+@Component(property = {HttpHandler.HANDLE_PATH + "=", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
     @Reference
     private Crypto crypto;
@@ -80,7 +80,7 @@ public class StaticResource implements HttpHandler {
      */
     private void serveStaticResource(HttpRequest httpRequest, String path, HttpResponse response) {
         String INDEX_FILE = "/index.html";
-        
+
         // 规范化路径
         if (path.equals("/") || path.isEmpty()) {
             path = INDEX_FILE;

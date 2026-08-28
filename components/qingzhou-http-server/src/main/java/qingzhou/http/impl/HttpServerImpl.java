@@ -128,7 +128,7 @@ public class HttpServerImpl implements HttpServer {
             noAuthHandlerSet.add(httpHandler);
         }
 
-        String msg = "http handler registered: " + path;
+        String msg = "http handler registered: " + path + (isNoAuth ? " (no auth)" : "");
         if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
             logger.info(msg);
         } else {
@@ -165,14 +165,17 @@ public class HttpServerImpl implements HttpServer {
         for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
             if (Objects.equals(e.getValue(), httpHandler)) {
                 contextPath = e.getKey();
+                break;
             }
         }
-        HttpHandler removed = handlerMap.remove(contextPath);
-        if (removed != null) {
-            noAuthHandlerSet.remove(removed);
-        }
+        if (contextPath == null) return;
 
-        logger.info("http handler unregistered: " + contextPath);
+        handlerMap.remove(contextPath);
+        noAuthHandlerSet.remove(httpHandler);
+
+        if (logger != null) { // osgi ds 尚未规范：解绑可能早于 logger 注入
+            logger.info("http handler unregistered: " + contextPath);
+        }
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
