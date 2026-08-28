@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 
-import io.netty.handler.codec.http.QueryStringDecoder;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -116,15 +115,6 @@ public class Invoke implements HttpHandler {
         if (httpRequest.getContentType() == null) return;
         if (httpRequest.getBody() == null) return;
         if (httpRequest.getBody().length == 0) return;
-
-        // 表单参数
-        if (httpRequest.getContentType().contains("application/x-www-form-urlencoded")) {
-            QueryStringDecoder bodyDecoder = new QueryStringDecoder(
-                    "/?" + new String(httpRequest.getBody(), StandardCharsets.UTF_8));
-            Map<String, List<String>> bodyParams = bodyDecoder.parameters();
-            bodyParams.forEach((k, v) -> request.getParameters().put(k, v.get(0)));
-            return;
-        }
 
         // JSON 参数
         if (httpRequest.getContentType().contains("application/json")) {

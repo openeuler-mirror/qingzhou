@@ -12,7 +12,7 @@ public abstract class NacosModelBase extends ModelBase {
      * 获取 NacosApp 实例
      */
     protected NacosApp getNacosApp() {
-        return getAppContext().getObjectInstance(NacosApp.class);
+        return getAppContext().getAppObject(NacosApp.class);
     }
     
     /**

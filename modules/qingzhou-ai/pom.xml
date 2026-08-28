@@ -48,7 +48,7 @@
                     <instructions>
                         <Export-Package>qingzhou.ai</Export-Package>
                         <Import-Package>
-                            qingzhou.api,qingzhou.api.type,
+                            qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,
                             qingzhou.http.server,
                             qingzhou.logger,

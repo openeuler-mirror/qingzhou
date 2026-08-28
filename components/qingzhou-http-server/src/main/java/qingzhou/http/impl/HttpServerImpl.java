@@ -7,8 +7,7 @@ import io.netty.channel.ChannelOption;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpServer;
+import qingzhou.http.server.*;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -23,8 +22,11 @@ public class HttpServerImpl implements HttpServer {
 
     final Map<String, HttpHandler> handlerMap = new HashMap<>();
 
+    private final List<HttpAuthenticator> authenticators = new ArrayList<>();
+
     private LoopResources loopResources;
     private DisposableServer disposableServer;
+    private boolean isAuthDisabled;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
@@ -34,6 +36,9 @@ public class HttpServerImpl implements HttpServer {
 
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
+
+        isAuthDisabled = getConfig(config, "auth_disabled", false);
+        if (isAuthDisabled) logger.warn("http server authentication is disabled");
 
         // 1. 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -160,6 +165,63 @@ public class HttpServerImpl implements HttpServer {
         handlerMap.remove(contextPath);
 
         logger.info("http handler unregistered: " + contextPath);
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
+            unbind = "removeAuthentication")
+    public void addAuthentication(HttpAuthenticator authenticator) {
+        authenticators.add(authenticator);
+
+        if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
+            logger.info("http authenticator registered: " + authenticator.getClass().getName());
+        }
+    }
+
+    public void removeAuthentication(HttpAuthenticator authentication) {
+        authenticators.remove(authentication);
+    }
+
+    /**
+     * 安全认证：配置 auth_disabled=true 时全局关闭；命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
+     * 全部无凭据时才用重定向引导登录。
+     */
+    AuthResult authenticate(HttpRequest request) {
+        if (isAuthDisabled) return AuthResult.pass();
+        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
+
+        String path = request.getPath();
+        for (HttpAuthenticator authenticator : authenticators) {
+            String[] excludedPaths = authenticator.excludedPaths();
+            if (excludedPaths != null) {
+                for (String exclude : excludedPaths) {
+                    if (path.startsWith(exclude)) return AuthResult.pass();
+                }
+            }
+        }
+
+        AuthResult reject = null;
+        AuthResult challenge = null;
+        for (HttpAuthenticator authentication : authenticators) {
+            AuthResult r;
+            try {
+                r = authentication.authenticate(request);
+            } catch (Exception e) {
+                logger.error("authentication error: " + authentication.getClass().getName(), e);
+                r = AuthResult.reject("authentication error");
+            }
+            if (r.isPassed()) return r;
+
+            if (r.isRejected() && reject == null) {
+                reject = r;
+            } else if (r.isChallenge() && challenge == null) {
+                challenge = r;
+            }
+        }
+        if (reject != null) return reject;
+        if (challenge != null) return challenge;
+
+        return AuthResult.reject("no credential provided");
     }
 
     @Deactivate

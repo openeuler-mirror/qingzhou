@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.jdbc.JdbcPool;
 import qingzhou.logger.Logger;
 
@@ -14,7 +14,7 @@ import qingzhou.logger.Logger;
         info = {"图书信息管理", "en:Book information management"},
         icon = "Reading",
         menu = "basic")
-public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -122,7 +122,7 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
             add = true,
             update = true,
             input_type = InputType.number,
-            min = 1)
+            min_value = 1)
     public Integer total;
 
     @ModelField(
@@ -140,7 +140,7 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0)
+            min_value = 0)
     public String price;
 
     @ModelField(
@@ -170,8 +170,8 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
         logger.info("jdbcPool: " + jdbcPool);
         registration = getAppContext().registerSharedFunction("queryBook", new SharedFunction<String, String>() {
             @Override
-            public String invoke(String o) {
-                return "From 图书管理：" + o + "库存 " + db.size();
+            public String invoke(String input) {
+                return "From 图书管理：" + input + "库存 " + db.size();
             }
         });
     }
@@ -230,7 +230,7 @@ public class Book extends qingzhou.api.ModelBase implements List, Show, Add, Upd
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

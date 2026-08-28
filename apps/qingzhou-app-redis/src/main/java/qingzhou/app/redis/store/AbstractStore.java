@@ -31,7 +31,7 @@ abstract class AbstractStore<T extends StoreEntry> {
     }
 
     private Path resolveStorageFile(String fileName) {
-        File base = appContext.getBase();
+        File base = appContext.getRoot();
         File dir = new File(base, StoreConstants.DATA_DIR);
         if (!dir.exists()) {
             dir.mkdirs();

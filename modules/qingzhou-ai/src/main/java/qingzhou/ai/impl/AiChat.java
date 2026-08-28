@@ -3,15 +3,10 @@ package qingzhou.ai.impl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.ai.AiSkill;
-import qingzhou.ai.LlmConverter;
-import qingzhou.ai.SystemAiTool;
+import qingzhou.ai.SkillService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -24,7 +19,7 @@ import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat")
 public class AiChat implements HttpHandler {
-    private static final String systemPrompt = "\n" +
+    private static final String SYSTEM_PROMPT = "\n" +
             "# 你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
             "\n" +
             "## 专业认知 \n" +
@@ -74,25 +69,13 @@ public class AiChat implements HttpHandler {
     private ChatModelFactory chatModelFactory;
 
     @Reference
-    private AiEquip aiEquip;
+    private ChatConfig chatConfig;
 
     @Reference
     private Logger logger;
 
     @Reference
     private Json json;
-
-    private final Map<SystemAiTool, Map<String, Object>> systemAiTools = new ConcurrentHashMap<>();
-
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindSystemAiTool(SystemAiTool tool, Map<String, Object> properties) {
-        systemAiTools.put(tool, properties);
-    }
-
-    // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
-    public void unbindSystemAiTool(SystemAiTool tool) {
-        systemAiTools.remove(tool);
-    }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
@@ -112,22 +95,22 @@ public class AiChat implements HttpHandler {
         if (params == null || question == null || question.trim().isEmpty()) return;
         question = question.trim();
 
-        Skill llmSkill = null;
+        Skill selectedSkill = null;
         List<String> refDocs = null;
         Attachment[] images = null;
         String skillName = (String) params.get("skill");
         if (skillName != null) {
-            for (Map.Entry<AiSkill, Skill> entry : aiEquip.llmSkills.entrySet()) {
-                AiSkill aiSkill = entry.getKey();
+            for (Map.Entry<SkillService, Skill> entry : chatConfig.llmSkills.entrySet()) {
+                SkillService skillService = entry.getKey();
                 Skill skill = entry.getValue();
                 if (skill.name().equals(skillName)) {
-                    llmSkill = skill;
-                    Map<AiSkill.AttachmentType, String[]> attachmentTypeMap = aiSkill.supportedAttachmentTypes();
+                    selectedSkill = skill;
+                    Map<SkillService.AttachmentType, String[]> attachmentTypeMap = skillService.attachments();
                     if (attachmentTypeMap != null) {
-                        for (AiSkill.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
+                        for (SkillService.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
                             List<String> attachments = findAttachments(params, attachmentType);
                             switch (attachmentType) {
-                                case text:
+                                case document:
                                     refDocs = attachments;
                                     break;
                                 case image:
@@ -153,16 +136,15 @@ public class AiChat implements HttpHandler {
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
         ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
-                .systemPrompt(systemPrompt)
+                .systemPrompt(SYSTEM_PROMPT)
                 .docs(refDocs)
-                .tools(LlmConverter.convertSystemAiTool(systemAiTools))
-                .skills(llmSkill == null ? null : Collections.singleton(llmSkill))
+                .skills(selectedSkill == null ? null : Collections.singleton(selectedSkill))
                 .imageDetail(ChatModelFactory.ImageDetail.low)
                 .build();
         chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
     }
 
-    private List<String> findAttachments(Map<String, Object> params, AiSkill.AttachmentType expectedType) {
+    private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {
         List<String> found = new ArrayList<>();
         Object attachments = params.get("attachments");
         if (attachments instanceof List) {

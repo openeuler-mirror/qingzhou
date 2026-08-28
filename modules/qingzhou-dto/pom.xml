@@ -27,7 +27,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation</Export-Package>
-                        <Import-Package>qingzhou.api,qingzhou.api.type</Import-Package>
+                        <Import-Package>qingzhou.api,qingzhou.api.action</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

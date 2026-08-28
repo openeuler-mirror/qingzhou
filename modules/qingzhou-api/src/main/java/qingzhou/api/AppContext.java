@@ -4,40 +4,34 @@ import java.io.File;
 import java.util.Properties;
 
 public interface AppContext {
-    // 平台框架版本
     String getVersion();
 
-    // 应用配置属性
     Properties getProperties();
 
     // 自动探测到的路径，在 MANIFEST 中配置了 Qingzhou-Detection-Feature-Files 等参数后有效
     String getDetectedPath();
 
-    // 平台实例的根目录
-    File getBase();
+    File getRoot();
 
-    // 应用专属的临时目录
-    File getTemp();
+    File getTempDir();
 
     /**
      * 获取平台提供的共享服务，如：qingzhou.logger.Logger、qingzhou.json.Json等。
      */
-    <T> T getService(Class<T> clazz);
+    <T> T getService(Class<T> type);
 
     /**
      * 获取平台提供的指定名字的共享服务，如：qingzhou.jdbc.JdbcPool 的多实例服务。
      */
-    <T> T getService(Class<T> clazz, String name);
+    <T> T getService(Class<T> type, String name);
 
-    // 添加请求拦截器
     void addActionFilter(ActionFilter... actionFilter);
 
     /**
      * 获取应用内 @App @Model 注解的类实例化后的对象
      */
-    <T> T getObjectInstance(Class<T> type);
+    <T> T getAppObject(Class<T> type);
 
-    // 获取当前进程 PID
     long getPid();
 
     <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function);

@@ -25,9 +25,6 @@ public abstract class ModelBase implements QingzhouModel {
         REQUEST_THREAD_LOCAL.set(request);
     }
 
-    /**
-     * 初始化函数，子类可以在此进行定制化初始化，例如 i18n 等。
-     */
     public void start() {
     }
 

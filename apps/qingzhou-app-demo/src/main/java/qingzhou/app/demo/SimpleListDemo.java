@@ -2,11 +2,12 @@ package qingzhou.app.demo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.List;
+import qingzhou.api.action.Page;
 
 /**
  * 演示无行操作的纯列表页面（仅实现List接口，不实现Show/Update/Delete）
@@ -17,7 +18,7 @@ import qingzhou.api.type.List;
         info = {"演示纯列表页（无行操作），25条数据验证分页和无操作列", "en:Demo list-only page with pagination, no row actions"},
         icon = "List",
         menu = "advanced")
-public class SimpleListDemo extends qingzhou.api.ModelBase implements List {
+public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
 
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
@@ -73,9 +74,9 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements List {
     public String progress;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> task : db.values()) {
             if (matchesQuery(task, query)) {

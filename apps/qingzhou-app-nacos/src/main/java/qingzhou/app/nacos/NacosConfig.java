@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "nacos-config", order = 3,
         name = {"配置列表", "en:Config Management"},
         info = {"Nacos配置管理中心", "en:Nacos Configuration Management"},
         icon = "Setting")
-public class NacosConfig extends NacosModelBase implements qingzhou.api.type.List, Show, Add, Update, Delete {
+public class NacosConfig extends NacosModelBase implements Page, Show, Add, Update, Delete {
 
     private Map<String, Map<String, String>> configCache = new HashMap<>();
 
@@ -94,7 +94,7 @@ public class NacosConfig extends NacosModelBase implements qingzhou.api.type.Lis
     public String content;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
         
         try {

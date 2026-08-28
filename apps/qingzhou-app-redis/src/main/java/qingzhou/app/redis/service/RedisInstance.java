@@ -3,7 +3,7 @@ package qingzhou.app.redis.service;
 import java.util.*;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -12,7 +12,7 @@ import qingzhou.app.redis.store.model.AuditEntry;
         name = {"实例管理", "en:Instance Manager"},
         info = {"只读展示 Redis 连接实例，支持通过切换按钮或下拉框选择当前使用的实例。",
                 "en:Display Redis connection instances in read-only mode, switch via button or dropdown."})
-public class RedisInstance extends RedisModelBase implements qingzhou.api.type.List, Show, SwitchSpace {
+public class RedisInstance extends RedisModelBase implements Page, Show, SwitchSpace {
 
     @ModelField(id = true, show = true, list = true, readonly = true,
             name = {"ID", "en:ID"},
@@ -39,7 +39,7 @@ public class RedisInstance extends RedisModelBase implements qingzhou.api.type.L
 
     @ModelField(list = true, show = true, numeric = true, required = true,
             input_type = InputType.number,
-            min = 1, max = 65535,
+            min_value = 1, max_value = 65535,
             display = "mode==standalone",
             name = {"端口", "en:Port"},
             info = {"单机模式的 Redis 端口（1-65535）", "en:Redis port for standalone mode (1-65535)"})
@@ -52,7 +52,7 @@ public class RedisInstance extends RedisModelBase implements qingzhou.api.type.L
 
     @ModelField(show = true, numeric = true,
             input_type = InputType.number,
-            min = 0, max = 15,
+            min_value = 0, max_value = 15,
             display = "mode==standalone",
             name = {"数据库", "en:Database"},
             info = {"单机模式使用的数据库编号（0-15）", "en:Database index for standalone mode (0-15)"})
@@ -159,7 +159,7 @@ public class RedisInstance extends RedisModelBase implements qingzhou.api.type.L
     
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) throws Exception {
         Map<String, Map<String, String>> instances = RedisApp.getInstances();
         java.util.List<String[]> rows = new ArrayList<>();

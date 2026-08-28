@@ -20,19 +20,19 @@ public class I18nServiceImpl implements I18nService {
 
     @Activate
     public void init() {
-        try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream("/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/") + "/CharMap.txt")) {
+        try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream("/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/") + "/zh_Hant.txt")) {
             String zh = "";
-            String tr = "";
+            String zhHant = "";
             BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream), StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
-                if (line.startsWith(Lang.zh + "=")) {
+                if (line.startsWith(Lang.zh_Hans + "=")) {
                     zh = line;
-                } else if (line.startsWith(Lang.tr + "=")) {
-                    tr = line;
+                } else if (line.startsWith(Lang.zh_Hant + "=")) {
+                    zhHant = line;
                 }
             }
             for (int i = 0; i < zh.length(); i++) {
-                Character check = ZH_TR_MAP.put(zh.charAt(i), tr.charAt(i));
+                Character check = ZH_TR_MAP.put(zh.charAt(i), zhHant.charAt(i));
                 if (check != null) {
                     throw new IllegalArgumentException("Please remove duplicate characters");
                 }
@@ -43,7 +43,7 @@ public class I18nServiceImpl implements I18nService {
     }
 
     private String getI18n(String[] i18n, Lang lang, Object... args) {
-        if (lang == null) lang = Lang.zh;
+        if (lang == null) lang = Lang.zh_Hans;
 
         // 查找素材
         final String[] foundI18n = new String[1];
@@ -54,7 +54,7 @@ public class I18nServiceImpl implements I18nService {
                 foundI18n[0] = currentI18n;
                 return false;
             } else {
-                if (finalLang == Lang.tr && currentLang == Lang.zh) {
+                if (finalLang == Lang.zh_Hant && currentLang == Lang.zh_Hans) {
                     zhI18nBak[0] = currentI18n;
                 }
                 return true;
@@ -105,26 +105,25 @@ public class I18nServiceImpl implements I18nService {
     }
 
     private void visit(String[] i18n, Visitor visitor) {
-        if (i18n == null || i18n.length == 0) {
-            return;
-        }
+        if (i18n == null) return;
+
         for (String langLine : i18n) {
             Lang lang = null;
             int valueIndex = 0;
-            if (langLine.length() > 2 && langLine.charAt(2) == Lang.SEPARATOR) {
-                lang = Lang.valueOf(langLine.substring(0, 2));
-                valueIndex = 2 + 1;
+            int sep = langLine.indexOf(Lang.SEPARATOR);
+            if (sep > 0) {
+                try {
+                    lang = Lang.valueOf(langLine.substring(0, sep));
+                    valueIndex = sep + 1;
+                } catch (IllegalArgumentException e) {
+                    // 前缀不是语言代码，整行视为 zh 文案
+                }
             }
             if (lang == null) {
-                lang = Lang.zh;
+                lang = Lang.zh_Hans;
             }
 
-            String val = langLine.substring(valueIndex);
-            val = val.trim();
-            if (val.contains("'")) {
-                String msg = "Single quotes (') are not supported: " + langLine;
-                System.err.println(msg);
-            }
+            String val = langLine.substring(valueIndex).trim();
 
             boolean continueVisit = visitor.visit(lang, val);
             if (!continueVisit) {

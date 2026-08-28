@@ -1,18 +1,16 @@
 package qingzhou.app.demo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "product", order = 3,
         name = {"产品", "en:Product"},
         info = {"产品信息管理，演示Monitor和自定义Action", "en:Product management with Monitor"},
         icon = "Box",
         menu = "advanced")
-public class Product extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete, Monitor {
+public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -76,7 +74,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0,
+            min_value = 0,
             group = "Inventory")
     public String price;
 
@@ -87,7 +85,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.number,
-            min = 0,
+            min_value = 0,
             group = "Inventory")
     public Integer stock;
 
@@ -184,9 +182,9 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        java.util.List<String[]> result = new ArrayList<>();
-        java.util.List<Map<String, String>> filtered = new ArrayList<>();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        List<String[]> result = new ArrayList<>();
+        List<Map<String, String>> filtered = new ArrayList<>();
 
         for (Map<String, String> product : db.values()) {
             if (matchesQuery(product, query)) {
@@ -250,8 +248,8 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
     @Override
     public Map<String, String> monitor(String id) {
         Map<String, String> monitorData = new HashMap<>();
-        java.util.List<Integer> salesData = new ArrayList<>();
-        java.util.List<String> labels = new ArrayList<>();
+        List<Integer> salesData = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
 
         for (Map<String, String> product : db.values()) {
             labels.add(product.get("name"));
@@ -268,7 +266,7 @@ public class Product extends qingzhou.api.ModelBase implements List, Show, Add, 
         String newId = "P" + String.format("%03d", idCounter++);
         data.put("id", newId);
         data.put("sales", "0");
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         db.put(newId, new HashMap<>(data));
     }
 

@@ -7,14 +7,14 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "teacher", order = 2,
         name = {"教师", "en:Teacher"},
         info = {"教师信息管理，演示完整CRUD功能", "en:Teacher information management"},
         icon = "Postcard",
         menu = "basic")
-public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Teacher extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -161,7 +161,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
             add = true,
             update = true,
             input_type = InputType.decimal,
-            min = 0,
+            min_value = 0,
             group = "basic")
     public String salary;
 
@@ -222,7 +222,7 @@ public class Teacher extends qingzhou.api.ModelBase implements List, Show, Add, 
     public Boolean enabled;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

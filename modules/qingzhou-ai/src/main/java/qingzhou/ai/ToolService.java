@@ -2,7 +2,7 @@ package qingzhou.ai;
 
 import java.util.Map;
 
-public interface AiTool {
+public interface ToolService {
     String TOOL_NAME = "TOOL_NAME";
     String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
 

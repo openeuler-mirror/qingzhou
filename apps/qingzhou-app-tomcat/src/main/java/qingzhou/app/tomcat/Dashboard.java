@@ -1,7 +1,7 @@
 package qingzhou.app.tomcat;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Show;
 import java.util.HashMap;
 import java.util.Map;
 

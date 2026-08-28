@@ -5,11 +5,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.function.Predicate;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
@@ -25,26 +24,12 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Add.ACTION_CODE_CREATE, icon = "Plus", order = 1,
-            name = {"新增", "en:Create"}, list_head = true,
-            info = {"新增一条记录。", "en:Create a new record."})
-    public static void create(Add add, Request request) {
-    }
-
-    @ModelAction(
             code = Add.ACTION_CODE_ADD, icon = "Check", order = 1,
             name = {"保存", "en:Add"}, add = true,
             info = {"保存新建的记录。", "en:Save the newly created record."})
     public static void add(Add add, Request request) throws Exception {
         Map<String, String> saveData = toSaveData(request, modelField -> modelField.add);
         add.add(saveData);
-    }
-
-    @ModelAction(
-            code = Update.ACTION_CODE_EDIT, icon = "Edit", order = 1,
-            name = {"编辑", "en:Edit"}, list = true,
-            info = {"编辑本条记录。", "en:Edit this record."})
-    public static void edit(Update update, Request request) {
     }
 
     @ModelAction(
@@ -88,10 +73,10 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = qingzhou.api.type.List.ACTION_CODE_LIST, icon = "List",
+            code = Page.ACTION_CODE_PAGE, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public static void list(qingzhou.api.type.List list, Request request) throws Exception {
+    public static void list(Page page, Request request) throws Exception {
         Map<String, String> query = new HashMap<>();
         for (String search : selectFormFields(request, modelField -> modelField.search)) {
             String parameter = request.getParameter(search);
@@ -103,8 +88,8 @@ public class DefaultAction {
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
         int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
-        List<String[]> listData = list.list(pageNum, pageSize, query, showFields);
-        int totalSize = list.totalSize(query);
+        List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
+        int totalSize = page.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
             Map<String, Object> finalResult = new HashMap<>();
@@ -147,7 +132,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = SwitchSpace.ACTION_CODE_switchspace, icon = "Switch",
+            code = SwitchSpace.ACTION_CODE_SWITCHSPACE, icon = "Switch",
             name = {"切换", "en:Switch"},
             info = {"切换至此空间。", "en:Switch to this space."})
     public static void switchspace(SwitchSpace switchSpace, Request request) throws Exception {
@@ -155,14 +140,14 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = SwitchSpace.ACTION_CODE_currentspace,
+            code = SwitchSpace.ACTION_CODE_CURRENTSPACE,
             name = {"当前空间", "en:Current Space"},
             info = {"显示已切换至的空间。", "en:Displays the currently active space."})
     public static void currentspace(SwitchSpace switchSpace, Request request) {
         String currentSpace = switchSpace.currentSpace();
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> data = new HashMap<>();
-        data.put(SwitchSpace.ACTION_CODE_currentspace, currentSpace != null ? currentSpace : "");
+        data.put(SwitchSpace.ACTION_CODE_CURRENTSPACE, currentSpace != null ? currentSpace : "");
         response.data(data);
     }
 
@@ -203,7 +188,7 @@ public class DefaultAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         File fileBase = downloadFile.files(request.getId());
-        File tempBase = new File(appContext.getTemp(), "download");
+        File tempBase = new File(appContext.getTempDir(), "download");
 
         String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);
         if (downloadKey == null || downloadKey.isEmpty()) {
@@ -213,7 +198,7 @@ public class DefaultAction {
                 return;
             }
 
-            java.util.List<File> downloadFiles = new ArrayList<>();
+            List<File> downloadFiles = new ArrayList<>();
             for (String s : downloadFileNames.split(",")) {
                 s = s.trim();
                 if (hasIllegalPath(s)) {
@@ -346,17 +331,17 @@ public class DefaultAction {
     private static String[] selectFormFields(Request request, Predicate<ModelField> predicate) {
         RequestImpl requestImpl = (RequestImpl) request;
         Model currentModel = requestImpl.getCurrentModel();
-        return currentModel.fields.stream().filter(modelField -> modelField.field_type == FieldType.FORM).filter(predicate).map(mf -> mf.code).toArray(String[]::new);
+        return currentModel.fields.stream().filter(modelField -> modelField.field_type == FieldType.form).filter(predicate).map(mf -> mf.code).toArray(String[]::new);
     }
 
     private static String[] selectMonitoringFields(Request request, Predicate<ModelField> predicate) {
         RequestImpl requestImpl = (RequestImpl) request;
         Model currentModel = requestImpl.getCurrentModel();
-        return currentModel.fields.stream().filter(modelField -> modelField.field_type == FieldType.MONITORING).filter(predicate).map(mf -> mf.code).toArray(String[]::new);
+        return currentModel.fields.stream().filter(modelField -> modelField.field_type == FieldType.monitor).filter(predicate).map(mf -> mf.code).toArray(String[]::new);
     }
 
     // 为支持大文件续传，下载必需有 key
-    private static String buildDownloadKey(java.util.List<File> downloadFiles, File keyDir) throws IOException {
+    private static String buildDownloadKey(List<File> downloadFiles, File keyDir) throws IOException {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
         String keySP = "-";
 

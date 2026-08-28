@@ -3,7 +3,7 @@ package com.tongtech.zookeeper.starter.service;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Monitor;
+import qingzhou.api.action.Monitor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,47 +16,47 @@ import java.util.Map;
 public class ServerStats extends AbstractZkCommandService implements Monitor {
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"只读", "en:Read Only"})
     public String read_only;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"节点总数", "en:Node Count"})
     public String node_count;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"快照目录大小", "en:Data Dir Size"})
     public String data_dir_size;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"事务日志目录大小", "en:Log Dir Size"})
     public String log_dir_size;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"最后Zxid", "en:Last Processed Zxid"})
     public String last_processed_zxid;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"服务模式", "en:Server Stat"})
     public String server_state;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"已建立的客户端连接数", "en:Number of established client connections"})
     public String num_alive_client_connections;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"最大延迟", "en:Max Latency"})
     public String max_latency;
 
     @ModelField(
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             name = {"平均延迟", "en:Avg Latency"})
     public String avg_latency;
 

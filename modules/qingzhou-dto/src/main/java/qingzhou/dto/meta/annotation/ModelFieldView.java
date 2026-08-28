@@ -27,9 +27,9 @@ public class ModelFieldView extends Base {
 
     public boolean required;
 
-    public long min;
+    public long min_value;
 
-    public long max;
+    public long max_value;
 
     public int min_length;
 

@@ -60,7 +60,7 @@
                         <Import-Package>
                             org.osgi.framework,org.osgi.service.component,
                             org.osgi.service.cm,
-                            qingzhou.api,qingzhou.api.type,
+                            qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,
                             qingzhou.http.client,

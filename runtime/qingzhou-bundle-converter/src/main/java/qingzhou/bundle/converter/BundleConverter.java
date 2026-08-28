@@ -110,7 +110,7 @@ public class BundleConverter {
         attributes.putValue(Constants.BUNDLE_ACTIVATOR, "qingzhou.app.driver.AppDriver"); // osgi bundle
         attributes.putValue(Constants.IMPORT_PACKAGE, "org.osgi.framework,org.osgi.service.cm," + // osgi
                 "qingzhou.registry," +
-                "qingzhou.api,qingzhou.api.type," +
+                "qingzhou.api,qingzhou.api.action," +
                 "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
         if (appDynamicPackages == null) {
             String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");

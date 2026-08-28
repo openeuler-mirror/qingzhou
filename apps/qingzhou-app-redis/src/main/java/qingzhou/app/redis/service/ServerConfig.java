@@ -5,10 +5,10 @@ import java.util.*;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.api.action.Update;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -16,7 +16,7 @@ import qingzhou.app.redis.store.model.AuditEntry;
 @Model(code = "serverConfig", icon = "Setting", menu = "redis", order = 2,
         name = {"配置查看", "en:Server Config"},
         info = {"查看 Redis 服务器的运行配置参数。", "en:View Redis server runtime configuration."})
-public class ServerConfig extends RedisModelBase implements List, Show, Update, Add {
+public class ServerConfig extends RedisModelBase implements Page, Show, Update, Add {
 
     
     private static final Set<String> READONLY_CONFIGS = new HashSet<>(Arrays.asList(
@@ -43,7 +43,7 @@ public class ServerConfig extends RedisModelBase implements List, Show, Update, 
     public String readonly;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) throws Exception {
         Map<String, String> rawMap;
         if (getRedisUtil().isCluster()) {

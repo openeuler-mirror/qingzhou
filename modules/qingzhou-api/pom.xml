@@ -18,7 +18,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.api,qingzhou.api.type</Export-Package>
+                        <Export-Package>qingzhou.api,qingzhou.api.action</Export-Package>
                         <Import-Package/>
                     </instructions>
                 </configuration>

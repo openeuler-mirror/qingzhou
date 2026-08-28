@@ -1,10 +1,10 @@
-package qingzhou.api.type;
+package qingzhou.api.action;
 
 import qingzhou.api.QingzhouModel;
 
 public interface SwitchSpace extends QingzhouModel {
-    String ACTION_CODE_switchspace = "switchspace";
-    String ACTION_CODE_currentspace = "currentspace";
+    String ACTION_CODE_SWITCHSPACE = "switchspace";
+    String ACTION_CODE_CURRENTSPACE = "currentspace";
 
     void switchSpace(String id) throws Exception;
 

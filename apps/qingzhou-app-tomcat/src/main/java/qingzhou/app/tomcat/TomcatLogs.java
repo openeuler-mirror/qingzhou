@@ -15,12 +15,13 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 
 @Model(code = "logs", order = 4, icon = "Document",
         name = {"日志查看", "en:Log Viewer"},
         info = {"查看Tomcat日志文件", "en:View Tomcat log files"})
-public class TomcatLogs extends TomcatModelBase implements qingzhou.api.type.List, Show {
+public class TomcatLogs extends TomcatModelBase implements Page, Show {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"文件名", "en:File Name"},
@@ -55,7 +56,7 @@ public class TomcatLogs extends TomcatModelBase implements qingzhou.api.type.Lis
     public String lineCount;
 
     @Override
-    public List<String[]> list(int pageNum, int pageSize,
+    public List<String[]> page(int pageNum, int pageSize,
                                Map<String, String> query, String[] listFields) throws Exception {
         List<Map<String, String>> allLogs = listLogFiles();
         List<Map<String, String>> filtered = filterByQuery(allLogs, query);

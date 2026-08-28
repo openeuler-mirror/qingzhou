@@ -10,7 +10,7 @@ public class ResponseImpl implements Response {
     private boolean success = true;
     private Object data;
     private String msg;
-    private MsgLevel msgLevel;
+    private MessageLevel messageLevel;
     private int status;
     private String contentType;
     private final Map<String, String> headers = new HashMap<>();
@@ -31,14 +31,14 @@ public class ResponseImpl implements Response {
     }
 
     @Override
-    public Response msg(String msg) {
-        this.msg = msg;
+    public Response message(String message) {
+        this.msg = message;
         return this;
     }
 
     @Override
-    public Response msgLevel(MsgLevel msgLevel) {
-        this.msgLevel = msgLevel;
+    public Response messageLevel(MessageLevel messageLevel) {
+        this.messageLevel = messageLevel;
         return this;
     }
 
@@ -62,8 +62,8 @@ public class ResponseImpl implements Response {
 
     @Override
     public Response error(String error) {
-        this.msg(error);
-        this.msgLevel(Response.MsgLevel.error);
+        this.message(error);
+        this.messageLevel(MessageLevel.error);
         this.success(false);
         return this;
     }
@@ -80,8 +80,8 @@ public class ResponseImpl implements Response {
         return msg;
     }
 
-    public MsgLevel getMsgLevel() {
-        return msgLevel;
+    public MessageLevel getMsgLevel() {
+        return messageLevel;
     }
 
     public int getStatus() {

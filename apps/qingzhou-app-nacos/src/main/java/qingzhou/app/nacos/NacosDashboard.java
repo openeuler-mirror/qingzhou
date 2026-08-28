@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Show;
 
 @Model(code = "nacos-dashboard", order = 1,
         name = {"Nacos仪表盘", "en:Nacos Dashboard"},
@@ -17,20 +17,20 @@ public class NacosDashboard extends NacosModelBase implements Show, Monitor {
 
     @ModelField(id = true,
             name = {"编号", "en:ID"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             show = true)
     public String id;
 
     @ModelField(
             name = {"统计时间", "en:Stats Time"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             show = true)
     public String statsTime;
 
     @ModelField(
             name = {"安装路径", "en:Install Path"},
             info = {"安装路径", "en:installation path"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             group = "SystemInfo")
     public String path;
 

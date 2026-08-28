@@ -9,8 +9,8 @@ import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Show;
 
 /**
  * 多级菜单演示模型
@@ -25,20 +25,20 @@ public class NestedMenuDemo extends qingzhou.api.ModelBase implements Show, Moni
     @ModelField(
             name = {"统计时间", "en:Stats Time"},
             info = {"数据统计时间", "en:Statistics generation time"},
-            field_type = FieldType.MONITORING)
+            field_type = FieldType.monitor)
     public String statsTime;
 
     @ModelField(
             name = {"菜单层级", "en:Menu Level"},
             info = {"当前菜单所在层级", "Current menu level"},
-            field_type = FieldType.MONITORING,
+            field_type = FieldType.monitor,
             chart_type = ChartType.stat)
     public String menuLevel;
 
     @ModelField(
             name = {"演示说明", "en:Description"},
             info = {"多级菜单功能说明", "Multi-level menu description"},
-            field_type = FieldType.MONITORING)
+            field_type = FieldType.monitor)
     public String description;
 
     @Override

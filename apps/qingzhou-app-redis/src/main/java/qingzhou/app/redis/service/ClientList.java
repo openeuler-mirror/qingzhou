@@ -1,6 +1,7 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
+import qingzhou.api.action.Page;
 import qingzhou.app.redis.RedisModelBase;
 import redis.clients.jedis.Jedis;
 
@@ -9,7 +10,7 @@ import java.util.*;
 @Model(code = "clientList", icon = "UserFilled", menu = "redis-monitor", order = 4,
         name = {"客户端列表", "en:Client List"},
         info = {"查看所有已连接的 Redis 客户端信息。", "en:View all connected Redis client information."})
-public class ClientList extends RedisModelBase implements qingzhou.api.type.List {
+public class ClientList extends RedisModelBase implements Page {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"客户端 ID", "en:Client ID"},
@@ -47,7 +48,7 @@ public class ClientList extends RedisModelBase implements qingzhou.api.type.List
     public String cmd;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> allClients = Collections.synchronizedList(new ArrayList<>());
 

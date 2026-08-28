@@ -1,10 +1,9 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.List;
+import qingzhou.api.action.Page;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
-import qingzhou.app.redis.diagnosis.DiagnosticEngine;
 import qingzhou.app.redis.util.RedisUtil;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,7 @@ import java.util.*;
 @Model(code = "appOperation", icon = "Tools", menu = "redis-ops", order = 2,
         name = {"应用运维", "en:App Operation"},
         info = {"Redis 实例主动运维操作", "en:Active Redis instance operations"})
-public class AppOperation extends RedisModelBase implements List {
+public class AppOperation extends RedisModelBase implements Page {
 
     @ModelField(id = true, list = true, readonly = true,
             name = {"运维项 ID", "en:Operation ID"},
@@ -40,7 +39,7 @@ public class AppOperation extends RedisModelBase implements List {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> rows = new ArrayList<>();
         RedisUtil util = RedisApp.getRedisUtil();
         String checkTime = LocalDateTime.now().format(DATE_FORMAT);

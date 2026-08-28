@@ -120,6 +120,8 @@
                 <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-web</include>
+                <include>${project.groupId}:qingzhou-auth</include>
+                <include>${project.groupId}:qingzhou-oauth2</include>
                 <include>${project.groupId}:qingzhou-ai</include>
                 <include>${project.groupId}:qingzhou-mcp</include>
             </includes>
@@ -155,6 +157,7 @@
                 <include>${project.groupId}:qingzhou-app-redis</include>
                 <include>${project.groupId}:qingzhou-app-tomcat</include>
                 <include>${project.groupId}:qingzhou-app-nacos</include>
+                <include>${project.groupId}:qingzhou-app-zookeeper</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

@@ -1,8 +1,8 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.diagnosis.DiagnosticEngine;
@@ -17,7 +17,7 @@ import java.util.*;
 @Model(code = "problemDiagnosis", icon = "FirstAidKit", menu = "redis-ops", order = 3,
         name = {"诊断分析", "en:Diagnostic Analysis"},
         info = {"Redis 问题综合诊断报告", "en:Comprehensive Redis problem diagnosis reports"})
-public class ProblemDiagnosis extends RedisModelBase implements List, Show {
+public class ProblemDiagnosis extends RedisModelBase implements Page, Show {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"报告 ID", "en:Report ID"},
@@ -71,7 +71,7 @@ public class ProblemDiagnosis extends RedisModelBase implements List, Show {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         String category = query != null ? query.get("category") : null;
         java.util.List<DiagnosisReport> reports = RedisApp.getDiagnosisStore().query(category, pageNum, pageSize);
         java.util.List<String[]> rows = new ArrayList<>();
@@ -109,7 +109,7 @@ public class ProblemDiagnosis extends RedisModelBase implements List, Show {
         if (util == null || !util.isConnected()) {
             request.getResponse()
                     .success(false)
-                    .msg("请先切换到一个 Redis 实例");
+                    .message("请先切换到一个 Redis 实例");
             return;
         }
         DiagnosticEngine engine = DiagnosticEngine.getInstance();

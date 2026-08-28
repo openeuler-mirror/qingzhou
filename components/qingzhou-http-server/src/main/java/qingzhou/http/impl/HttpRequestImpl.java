@@ -1,8 +1,7 @@
 package qingzhou.http.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -14,8 +13,8 @@ class HttpRequestImpl implements HttpRequest {
     private final String requestPath;
 
     private byte[] requestBody;
-
-    private QueryStringDecoder queryStringDecoder;
+    private Map<String, List<String>> parameters;
+    private Map<String, Object> attributes;
 
     HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
@@ -24,6 +23,7 @@ class HttpRequestImpl implements HttpRequest {
 
     void setRequestBody(byte[] requestBody) {
         this.requestBody = requestBody;
+        this.parameters = null; // 请求体变化后需重新解析
     }
 
     @Override
@@ -78,14 +78,34 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public Map<String, List<String>> getParameters() {
-        if (queryStringDecoder == null) {
-            queryStringDecoder = new QueryStringDecoder(request.uri());
+        if (parameters == null) {
+            parameters = new HashMap<>(new QueryStringDecoder(request.uri()).parameters());
+            if (requestBody != null && requestBody.length > 0 && isFormUrlencoded()) {
+                // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
+                new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8)).parameters()
+                        .forEach((key, values) -> parameters.merge(key, values, (oldValues, newValues) -> {
+                            List<String> merged = new ArrayList<>(oldValues);
+                            merged.addAll(newValues);
+                            return merged;
+                        }));
+            }
         }
-        return queryStringDecoder.parameters();
+        return parameters;
     }
 
     @Override
     public byte[] getBody() {
         return requestBody;
+    }
+
+    @Override
+    public void setAttribute(String name, Object value) {
+        if (attributes == null) attributes = new HashMap<>();
+        attributes.put(name, value);
+    }
+
+    @Override
+    public Object getAttribute(String name) {
+        return attributes != null ? attributes.get(name) : null;
     }
 }

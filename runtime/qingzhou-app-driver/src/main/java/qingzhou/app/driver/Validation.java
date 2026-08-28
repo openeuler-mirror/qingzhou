@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Update;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Update;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.annotation.ModelAction;
@@ -26,7 +26,7 @@ class Validation implements ActionFilter {
                 new String[]{"须是正整数或小数", "en:Must be a positive integer or decimal"}));
         put(context -> context.field.input_type == InputType.bool, new PatternValidator("^(true|false)$",
                 new String[]{"只能是 true 或 false", "en:Must be either true or false"}));
-        put(context -> context.field.min != Long.MIN_VALUE || context.field.max != Long.MAX_VALUE, new Range());
+        put(context -> context.field.min_value != Long.MIN_VALUE || context.field.max_value != Long.MAX_VALUE, new Range());
         put(context -> context.field.min_length != -1 || context.field.max_length != Integer.MAX_VALUE, new Length());
         put(context -> context.field.email, new PatternValidator("^[a-zA-Z0-9_+.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
                 new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"}));
@@ -39,17 +39,17 @@ class Validation implements ActionFilter {
         this.i18nService = i18nService;
     }
 
-    Map<String, java.util.List<String>> validate(ModelAction action, RequestImpl request) {
+    Map<String, List<String>> validate(ModelAction action, RequestImpl request) {
         // 确定要检验哪些字段
         Set<ModelField> validateFields = null;
         if (action.code.equals(Add.ACTION_CODE_ADD)) {
             validateFields = request.getCurrentModel().fields.stream()
-                    .filter(field -> field.field_type == FieldType.FORM && field.add && !field.readonly)
+                    .filter(field -> field.field_type == FieldType.form && field.add && !field.readonly)
                     .filter(field -> request.getParameter(field.code) != null) // 只校验前端传递了的字段，支持部分字段创建（默认值由后端处理）
                     .collect(Collectors.toSet());
         } else if (action.code.equals(Update.ACTION_CODE_UPDATE)) {
             validateFields = request.getCurrentModel().fields.stream()
-                    .filter(field -> field.field_type == FieldType.FORM && field.update && !field.readonly)
+                    .filter(field -> field.field_type == FieldType.form && field.update && !field.readonly)
                     .filter(field -> !field.id) // 更新的 id 不校验
                     .filter(field -> request.getParameter(field.code) != null) // rest 更新，可以指定要更新的字段，只校验传递过来的字段
                     .collect(Collectors.toSet());
@@ -57,10 +57,10 @@ class Validation implements ActionFilter {
         if (validateFields == null || validateFields.isEmpty()) return null;
 
         // 开始校验
-        Map<String, java.util.List<String>> validation = new HashMap<>();
+        Map<String, List<String>> validation = new HashMap<>();
         String langParameter = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
         for (ModelField field : validateFields) {
-            java.util.List<String> errors = new ArrayList<>();
+            List<String> errors = new ArrayList<>();
 
             String parameter = request.getParameter(field.code);
             if (parameter == null || parameter.isEmpty()) {
@@ -94,8 +94,8 @@ class Validation implements ActionFilter {
             request.getResponse()
                     .status(400)
                     .success(false)
-                    .msg(msg)
-                    .msgLevel(Response.MsgLevel.error);
+                    .message(msg)
+                    .messageLevel(Response.MessageLevel.error);
             request.getResponse().data(errors);
             return;
         }
@@ -150,17 +150,17 @@ class Validation implements ActionFilter {
         public String validate(ValidationContext context) {
             try {
                 double value = Double.parseDouble(context.parameter);
-                boolean outOfRange = context.field.min != Long.MIN_VALUE && value < context.field.min;
-                if (context.field.max != Long.MAX_VALUE && value > context.field.max) {
+                boolean outOfRange = context.field.min_value != Long.MIN_VALUE && value < context.field.min_value;
+                if (context.field.max_value != Long.MAX_VALUE && value > context.field.max_value) {
                     outOfRange = true;
                 }
                 if (outOfRange) {
-                    if (context.field.min != Long.MIN_VALUE && context.field.max != Long.MAX_VALUE) {
-                        return i18nService.getI18n(MSG_RANGE_BETWEEN, context.lang, context.field.min, context.field.max);
-                    } else if (context.field.min != Long.MIN_VALUE) {
-                        return i18nService.getI18n(MSG_RANGE_MIN, context.lang, context.field.min);
+                    if (context.field.min_value != Long.MIN_VALUE && context.field.max_value != Long.MAX_VALUE) {
+                        return i18nService.getI18n(MSG_RANGE_BETWEEN, context.lang, context.field.min_value, context.field.max_value);
+                    } else if (context.field.min_value != Long.MIN_VALUE) {
+                        return i18nService.getI18n(MSG_RANGE_MIN, context.lang, context.field.min_value);
                     } else {
-                        return i18nService.getI18n(MSG_RANGE_MAX, context.lang, context.field.max);
+                        return i18nService.getI18n(MSG_RANGE_MAX, context.lang, context.field.max_value);
                     }
                 }
                 return null;

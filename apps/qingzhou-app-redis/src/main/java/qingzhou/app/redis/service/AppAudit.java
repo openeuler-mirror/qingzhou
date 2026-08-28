@@ -1,8 +1,8 @@
 package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -15,7 +15,7 @@ import java.util.*;
 @Model(code = "appAudit", icon = "DocumentChecked", menu = "redis-ops", order = 4,
         name = {"应用审计", "en:App Audit"},
         info = {"记录 Redis 实例相关的关键操作日志", "en:Audit logs for Redis instance operations"})
-public class AppAudit extends RedisModelBase implements List, Show {
+public class AppAudit extends RedisModelBase implements Page, Show {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"审计 ID", "en:Audit ID"},
@@ -72,7 +72,7 @@ public class AppAudit extends RedisModelBase implements List, Show {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         String keyword = query != null ? query.get("operator") : null;
         String type = query != null ? query.get("operationType") : null;
         if (type != null && type.isEmpty()) {

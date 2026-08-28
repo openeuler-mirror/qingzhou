@@ -10,17 +10,17 @@ import java.util.List;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.AiSkill;
+import qingzhou.ai.SkillService;
 import qingzhou.logger.Logger;
 
-@Component(property = AiSkill.SKILL_NAME + "=PlatformHelp")
-public class PlatformHelp extends AiSkillBase implements AiSkill {
+@Component(property = SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL)
+public class SystemSkill extends SkillServiceBase implements SkillService {
     @Reference
     private Logger logger;
 
     private List<String> knowledgeDocs;
 
-    public PlatformHelp() {
+    public SystemSkill() {
         super(new String[]{"平台咨询", "en:Platform Help"},
                 "你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
                         "具备以下专业认知：\n" +
@@ -52,7 +52,7 @@ public class PlatformHelp extends AiSkillBase implements AiSkill {
     }
 
     @Override
-    public String getInstruction() {
+    public String instruction() {
         return String.join("\n\n[参考附件]\n", knowledgeDocs);
     }
 }

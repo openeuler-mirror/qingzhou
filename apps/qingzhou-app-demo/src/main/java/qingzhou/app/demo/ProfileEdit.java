@@ -6,8 +6,8 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.action.Show;
+import qingzhou.api.action.Update;
 
 /**
  * 演示菜单点击直接进入Edit编辑页的Model

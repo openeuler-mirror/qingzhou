@@ -7,14 +7,14 @@ import java.util.Map;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.*;
+import qingzhou.api.action.*;
 
 @Model(code = "reader", order = 2,
         name = {"读者管理", "en:Reader Management"},
         info = {"读者信息管理", "en:Reader information management"},
         icon = "Avatar",
         menu = "basic")
-public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, Update, Delete {
+public class Reader extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -131,7 +131,7 @@ public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, U
             add = true,
             update = true,
             input_type = InputType.number,
-            min = 1)
+            min_value = 1)
     public Integer maxBorrow;
 
     @ModelField(
@@ -172,7 +172,7 @@ public class Reader extends qingzhou.api.ModelBase implements List, Show, Add, U
     }
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         java.util.List<String[]> result = new ArrayList<>();
         java.util.List<Map<String, String>> filtered = new ArrayList<>();
 

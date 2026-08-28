@@ -5,10 +5,7 @@ import java.util.*;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -22,7 +19,7 @@ import redis.clients.jedis.resps.ScanResult;
         name = {"Key 管理", "en:Key Browser"},
         info = {"浏览和管理 Redis Key 数据，支持新增、查看、修改、删除操作。",
                 "en:Browse and manage Redis keys, supporting add, view, edit, and delete operations."})
-public class KeyBrowser extends RedisModelBase implements qingzhou.api.type.List, Add, Delete, Show, Update {
+public class KeyBrowser extends RedisModelBase implements Page, Add, Delete, Show, Update {
 
     private static final int MAX_SCAN_COUNT = 10000;
 
@@ -74,7 +71,7 @@ public class KeyBrowser extends RedisModelBase implements qingzhou.api.type.List
     public String ttlFilter;
 
     @Override
-    public java.util.List<String[]> list(int pageNum, int pageSize,
+    public java.util.List<String[]> page(int pageNum, int pageSize,
                                          Map<String, String> query, String[] listFields) {
         String rawPattern = query != null ? query.get("key") : null;
         final String pattern = (rawPattern == null || rawPattern.isEmpty()) ? "*" : "*" + rawPattern + "*";

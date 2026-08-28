@@ -92,8 +92,8 @@ class AppStubRemoteImpl implements AppStubRemote {
     private void responseError(RequestImpl request, String error) {
         request.getResponse()
                 .success(false)
-                .msgLevel(qingzhou.api.Response.MsgLevel.error)
-                .msg(error);
+                .messageLevel(qingzhou.api.Response.MessageLevel.error)
+                .message(error);
     }
 
     /**
