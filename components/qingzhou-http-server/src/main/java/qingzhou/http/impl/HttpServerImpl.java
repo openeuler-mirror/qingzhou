@@ -26,6 +26,7 @@ public class HttpServerImpl implements HttpServer {
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
+    private boolean isAuthDisabled;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
@@ -35,6 +36,9 @@ public class HttpServerImpl implements HttpServer {
 
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
+
+        isAuthDisabled = getConfig(config, "auth_disabled", false);
+        if (isAuthDisabled) logger.warn("http server authentication is disabled");
 
         // 1. 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -178,11 +182,12 @@ public class HttpServerImpl implements HttpServer {
     }
 
     /**
-     * 安全认证：未开启或命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 安全认证：配置 auth_disabled=true 时全局关闭；命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
      * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
      * 全部无凭据时才用重定向引导登录。
      */
     AuthResult authenticate(HttpRequest request) {
+        if (isAuthDisabled) return AuthResult.pass();
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
 
         String path = request.getPath();
