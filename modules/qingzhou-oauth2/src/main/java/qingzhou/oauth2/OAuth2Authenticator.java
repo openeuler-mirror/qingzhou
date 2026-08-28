@@ -3,113 +3,57 @@ package qingzhou.oauth2;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.auth.AuthLoginService;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Response;
-import qingzhou.http.server.*;
-import qingzhou.json.Json;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.Crypto;
+import qingzhou.http.server.AuthResult;
+import qingzhou.http.server.HttpAuthenticator;
+import qingzhou.http.server.HttpRequest;
 
-@Component(configurationPid = "qingzhou-oauth2", property = HttpHandler.HANDLE_PATH + "=/callback")
-public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
-    private final String COOKIE_NAME = "oauth2_session";
-    private final String[] EXCLUDED_PATHS = {"/qingzhou-oauth2/callback"};
-    private final SecureRandom RANDOM = new SecureRandom();
-    private final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
-    private final long STATE_TTL_MILLIS = 10 * 60_000;
-
+@Component(configurationPid = "qingzhou-oauth2")
+public class OAuth2Authenticator implements HttpAuthenticator {
     @Reference
-    private AuthLoginService authLoginService;
-    @Reference
-    private HttpClient httpClient;
-    @Reference
-    private Json json;
+    private Crypto crypto;
 
     private String authorizationEndpoint;
-    private String tokenEndpoint;
-    private String userinfoEndpoint;
     private String clientId;
-    private String clientSecret;
     private String redirectUri;
     private String scope;
 
-    private final Map<String, PendingState> pendingStates = new ConcurrentHashMap<>(); // state -> 原路径，防登录 CSRF
+    private Cipher cipher;
+    private String[] excludedPaths;
 
     @Activate
-    public void start(Map<String, String> config) {
-        authorizationEndpoint = config.get("authorization_endpoint");
-        tokenEndpoint = config.get("token_endpoint");
-        userinfoEndpoint = config.get("userinfo_endpoint");
+    public void init(Map<String, String> config) throws Exception {
+        authorizationEndpoint = config.get("authorize_endpoint");
         clientId = config.get("client_id");
-        clientSecret = config.get("client_secret");
-        redirectUri = config.get("redirect_uri");
+        redirectUri = config.get("redirect_uri") + OAuth2Callback.EXCLUDED_CALLBACK_PATH;
         scope = config.get("scope");
+
+        cipher = crypto.getCipher(crypto.generateKey());
     }
 
     @Override
     public AuthResult authenticate(HttpRequest request) {
-        String cookie = getCookie(request.getHeader("Cookie"), COOKIE_NAME);
+        String cookie = getCookie(request.getHeader("Cookie"));
         if (cookie == null) {
-            String state = URL_ENCODER.encodeToString(randomBytes(16));
-            pendingStates.put(state, new PendingState(request.getPath()));
-            cleanStates();
+            String state = "0"; // 无状态设计，不可在单机上随机生成
             return AuthResult.challenge(buildAuthorizationUrl(state));
         }
-        String user = authLoginService.verifyToken(cookie);
+        String user = verifySession(cookie);
         return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid session");
     }
 
     @Override
     public String[] excludedPaths() {
-        return EXCLUDED_PATHS;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void handle(HttpRequest request, HttpResponse response) throws Exception {
-        String code = request.getParameter("code");
-        PendingState pending = pendingStates.remove(request.getParameter("state")); // 验证 state 防登录 CSRF
-        if (code == null || pending == null) {
-            response.status400Finish();
-            return;
+        if (excludedPaths == null) {
+            excludedPaths = new String[]{OAuth2Callback.EXCLUDED_CALLBACK_PATH};
         }
-
-        Map<String, String> params = new HashMap<>();
-        params.put("grant_type", "authorization_code");
-        params.put("code", code);
-        params.put("redirect_uri", redirectUri);
-        params.put("client_id", clientId);
-        params.put("client_secret", clientSecret);
-
-        Response tokenResponse = httpClient.send(
-                httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
-        if (tokenResponse.getStatus() != 200) {
-            response.status(500).sendFinish("token exchange failed");
-            return;
-        }
-
-        Map<String, Object> tokenBody = json.fromJson(
-                new String(tokenResponse.getBody(), StandardCharsets.UTF_8), Map.class);
-        String user = extractUser(tokenBody);
-        if (user == null) {
-            response.status(500).sendFinish("failed to get user info");
-            return;
-        }
-
-        response.status(302).header("Location", pending.path)
-                .header("Set-Cookie", COOKIE_NAME + "=" + authLoginService.createToken(user)
-                        + "; Path=/; HttpOnly; Secure; SameSite=Lax")
-                .header("Cache-Control", "no-store")
-                .sendFinish("redirecting");
+        return excludedPaths;
     }
 
     private String buildAuthorizationUrl(String state) {
@@ -122,43 +66,23 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
         return url.toString();
     }
 
-    @SuppressWarnings("unchecked")
-    private String extractUser(Map<String, Object> tokenBody) throws Exception {
-        // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
-        String accessToken = (String) tokenBody.get("access_token");
-        if (accessToken != null && userinfoEndpoint != null) {
-            Response resp = httpClient.send(httpClient.newRequest(userinfoEndpoint)
-                    .header("Authorization", "Bearer " + accessToken));
-            if (resp.getStatus() == 200) {
-                Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-                String sub = (String) info.get("sub");
-                if (sub != null) return sub;
-            }
+    private String verifySession(String token) {
+        try {
+            String payload = cipher.decrypt(token);
+            int sep = payload.lastIndexOf('|');
+            long expire = Long.parseLong(payload.substring(sep + 1));
+            return System.currentTimeMillis() > expire ? null : payload.substring(0, sep);
+        } catch (Exception e) {
+            return null;
         }
-        // 回退：从 id_token 的 JWT payload 提取（未验签，仅作提示性解析）
-        String idToken = (String) tokenBody.get("id_token");
-        if (idToken != null) {
-            String[] parts = idToken.split("\\.");
-            if (parts.length >= 2) {
-                Map<String, Object> claims = json.fromJson(
-                        new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8), Map.class);
-                return (String) claims.get("sub");
-            }
-        }
-        return null;
     }
 
-    private void cleanStates() {
-        if (pendingStates.size() <= 1000) return;
-        long now = System.currentTimeMillis();
-        pendingStates.entrySet().removeIf(entry -> now - entry.getValue().createdAt > STATE_TTL_MILLIS);
-    }
-
-    private String getCookie(String cookieHeader, String name) {
+    private String getCookie(String cookieHeader) {
         if (cookieHeader == null) return null;
         for (String cookie : cookieHeader.split(";")) {
             String trimmed = cookie.trim();
-            if (trimmed.startsWith(name + "=")) return trimmed.substring(name.length() + 1);
+            if (trimmed.startsWith(OAuth2Callback.COOKIE_NAME + "="))
+                return trimmed.substring(OAuth2Callback.COOKIE_NAME.length() + 1);
         }
         return null;
     }
@@ -168,21 +92,6 @@ public class OAuth2Authenticator implements HttpAuthenticator, HttpHandler {
             return URLEncoder.encode(val, StandardCharsets.UTF_8.name());
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    private byte[] randomBytes(int size) {
-        byte[] bytes = new byte[size];
-        RANDOM.nextBytes(bytes);
-        return bytes;
-    }
-
-    private final class PendingState {
-        final long createdAt = System.currentTimeMillis();
-        final String path;
-
-        PendingState(String path) {
-            this.path = path;
         }
     }
 }

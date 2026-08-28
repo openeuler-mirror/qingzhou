@@ -1,33 +1,38 @@
 package qingzhou.auth;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-/**
- * 登录/登出接口：POST /auth/login、POST /auth/logout（含 IP 维度防暴力破解）。
- */
-@Component(configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=")
-public class AuthHandler implements HttpHandler {
-    private static final String BEARER = "Bearer ";
+@Component(configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=/auth")
+public class PasswordLogin implements HttpHandler {
+    static final String[] EXCLUDED_PATHS = {"/qingzhou-auth/auth/login", "/qingzhou-auth/auth/logout"};
 
     @Reference
-    private AuthLoginService authLoginService;
+    private Crypto crypto;
 
-    private int maxFailures = 5;
-    private long lockMillis = 300_000;
+    private String username;
+    private String password;
+    private long tokenExpireMillis;
+    private int maxFailures;
+    private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
     @Activate
     public void start(Map<String, String> config) {
-        maxFailures = (int) parsePositive(config.get("max_failures"), maxFailures);
-        lockMillis = parsePositive(config.get("lock_seconds"), 300) * 1000;
+        username = config.get("username");
+        password = config.get("password");
+        tokenExpireMillis = Long.parseLong(config.get("token_expire_seconds")) * 1000;
+        maxFailures = Integer.parseInt(config.get("max_failures"));
+        lockMillis = Long.parseLong(config.get("lock_seconds")) * 1000;
     }
 
     @Override
@@ -52,34 +57,32 @@ public class AuthHandler implements HttpHandler {
             response.status(429).sendFinish("too many login failures, try again later");
             return;
         }
+
         String user = request.getParameter("user");
         String password = request.getParameter("password");
-        if (!authLoginService.verifyCredentials(user, password)) {
-            recordFailure(ip);
-            response.status(401).sendFinish("invalid user or password");
-            return;
-        }
-        failures.remove(ip);
-        response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + authLoginService.createToken(user) + "\"}");
-    }
+        boolean verified = verifyCredentials(user, password);
 
-    private void logout(HttpRequest request, HttpResponse response) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith(BEARER)) {
-            authLoginService.revoke(header.substring(BEARER.length()).trim());
+        if (verified) {
+            failures.remove(ip);
+        } else {
+            recordFailure(ip);
         }
-        response.sendFinish("ok");
+
+        if (verified) {
+            response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + createToken(user) + "\"}");
+        } else {
+            response.status(401).sendFinish("invalid user or password");
+        }
     }
 
     private boolean isLocked(String ip) {
         long[] record = failures.get(ip);
         if (record == null) return false;
+
+        if (record[0] < maxFailures) return false;
+
         long now = System.currentTimeMillis();
-        if (now - record[1] > lockMillis) {
-            failures.remove(ip);
-            return false;
-        }
-        return record[0] >= maxFailures;
+        return now - record[1] <= lockMillis;
     }
 
     private void recordFailure(String ip) {
@@ -97,12 +100,24 @@ public class AuthHandler implements HttpHandler {
         }
     }
 
-    private static long parsePositive(String val, long defaultValue) {
-        try {
-            long parsed = Long.parseLong(val);
-            return parsed > 0 ? parsed : defaultValue;
-        } catch (NumberFormatException e) {
-            return defaultValue;
+    private boolean verifyCredentials(String user, String password) {
+        return Objects.equals(username, user) && crypto.getMessageDigest().matches(password, this.password);
+    }
+
+    private String createToken(String user) {
+//        Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
+//        String payload = user + "|" + (System.currentTimeMillis() + tokenExpireMillis) + "|" + passwordFingerprint;
+//        return URL_ENCODER.encodeToString(payload.getBytes(StandardCharsets.UTF_8))
+//                + "." + URL_ENCODER.encodeToString(sign(payload));
+        return "todo";
+    }
+
+    private void logout(HttpRequest request, HttpResponse response) {
+        String header = request.getHeader("Authorization");
+        String BEARER = "Bearer ";
+        if (header != null && header.startsWith(BEARER)) {
+            // authLoginService.revoke(header.substring(BEARER.length()).trim());
         }
+        response.sendFinish("ok");
     }
 }
