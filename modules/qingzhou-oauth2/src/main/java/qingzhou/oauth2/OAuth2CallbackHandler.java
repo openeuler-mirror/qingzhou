@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.crypto.Cipher;
-import qingzhou.crypto.Crypto;
+import qingzhou.auth.TokenService;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
@@ -18,33 +18,31 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-@Component(configurationPid = "qingzhou-oauth2", property = HttpHandler.HANDLE_PATH + "=/callback")
-public class OAuth2Callback implements HttpHandler {
-    static final String EXCLUDED_CALLBACK_PATH = "/qingzhou-oauth2/callback";
+@Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = HttpHandler.HANDLE_PATH + "=/callback")
+public class OAuth2CallbackHandler implements HttpHandler {
+    static final String EXCLUDED_CALLBACK_PATH = "/oauth2/callback";
     static final String COOKIE_NAME = "oauth2_session";
 
     @Reference
     private HttpClient httpClient;
     @Reference
     private Json json;
+
     @Reference
-    private Crypto crypto;
+    private TokenService tokenService;
 
     private String clientId;
     private String clientSecret;
     private String tokenEndpoint;
     private String userinfoEndpoint;
 
-    private Cipher cipher;
-
     @Activate
-    public void init(Map<String, String> config) throws Exception {
+    public void init(Map<String, String> config) {
         clientId = config.get("client_id");
         clientSecret = config.get("client_secret");
         tokenEndpoint = config.get("token_endpoint");
         userinfoEndpoint = config.get("userinfo_endpoint");
-
-        cipher = crypto.getCipher(crypto.generateKey());
     }
 
     @Override
@@ -77,7 +75,7 @@ public class OAuth2Callback implements HttpHandler {
         }
 
         response.status(302).header("Location", "/") // 因当前无状态设计，未使用 state 暂存路径等状态，故一律重定向到根路径
-                .header("Set-Cookie", COOKIE_NAME + "=" + createSession(user)
+                .header("Set-Cookie", COOKIE_NAME + "=" + tokenService.createToken(user)
                         + "; Path=/; HttpOnly; Secure; SameSite=Lax")
                 .header("Cache-Control", "no-store")
                 .sendFinish("redirecting");
@@ -106,13 +104,5 @@ public class OAuth2Callback implements HttpHandler {
             }
         }
         return null;
-    }
-
-    private String createSession(String user) {
-        try {
-            return cipher.encrypt(user + "|" + (System.currentTimeMillis() + 24 * 60 * 60_000));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
     }
 }

@@ -31,7 +31,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package/>
+                        <Export-Package>qingzhou.auth</Export-Package>
                         <Import-Package>qingzhou.http.server,qingzhou.crypto</Import-Package>
                     </instructions>
                 </configuration>
