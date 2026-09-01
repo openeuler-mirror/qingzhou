@@ -19,6 +19,8 @@ public interface ChatModelFactory {
 
         ChatModelBuilder tools(Collection<Tool> tools);
 
+        ChatModelBuilder dynamicTool(Collection<Tool> tools);
+
         ChatModelBuilder skills(Collection<Skill> skills);
 
         ChatModelBuilder imageDetail(ImageDetail imageDetail);

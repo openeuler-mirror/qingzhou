@@ -9,16 +9,16 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
-import qingzhou.llm.Attachment;
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.Listener;
-import qingzhou.llm.Tool;
+import qingzhou.llm.*;
 
 class OpenAiChatModel implements ChatModel {
+    private static final int MAX_TEMP_TOOL_NUM = 10;
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
     private final Map<String, Tool> tools = new HashMap<>();
+    private final Map<String, Tool> dynamicTools = new HashMap<>();
+    private final Deque<Tool> tempTools = new LinkedList<>();
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
@@ -30,6 +30,9 @@ class OpenAiChatModel implements ChatModel {
 
         if (builder.tools != null) {
             builder.tools.forEach(tool -> tools.put(tool.name(), tool));
+        }
+        if (builder.dynamicTool != null) {
+            builder.dynamicTool.forEach(tool -> dynamicTools.put(tool.name(), tool));
         }
         if (builder.skills != null) {
             builder.skills.forEach(skill -> {
@@ -49,6 +52,9 @@ class OpenAiChatModel implements ChatModel {
             List<Object> toolDefs = OpenAiDialect.buildToolDefinitions(tools.values());
 
             for (int i = 0; i < builder.maxToolIterations; i++) {
+                if (!tempTools.isEmpty()) {
+                    toolDefs.addAll(OpenAiDialect.buildToolDefinitions(tempTools));
+                }
                 Response response = sendSync(messages, toolDefs, 0);
                 Map<String, Object> data = json.fromJson(new String(response.getBody(), StandardCharsets.UTF_8), Map.class);
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
@@ -127,6 +133,7 @@ class OpenAiChatModel implements ChatModel {
 
     private String invokeTool(ToolCall toolCall) {
         Tool tool = tools.get(toolCall.name);
+        if (tool == null) tool = dynamicTools.get(toolCall.name);
         if (tool == null) return "Tool not found: " + toolCall.name;
 
         Map<String, Object> args = null;
@@ -137,10 +144,27 @@ class OpenAiChatModel implements ChatModel {
             }
         }
         try {
-            return tool.invoke(args);
+            String result = tool.invoke(args);
+            if (tool instanceof SearchTool && result != null) {
+                loadDynamicTools(result);
+            }
+            return result;
         } catch (Throwable t) {
             // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
             return "Error: " + errorMessage(t);
+        }
+    }
+
+    private void loadDynamicTools(String result) {
+        for (String name : result.split(",")) {
+            Tool tool = dynamicTools.get(name);
+            if (tempTools.contains(tool)) {
+                continue;
+            }
+            if (tempTools.size() >= MAX_TEMP_TOOL_NUM) {
+                tempTools.removeFirst();
+            }
+            tempTools.addLast(tool);
         }
     }
 
@@ -174,6 +198,12 @@ class OpenAiChatModel implements ChatModel {
         }
 
         HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, toolIteration);
+        if (!tempTools.isEmpty()) {
+            List<Object> toolDefinitions = OpenAiDialect.buildToolDefinitions(tempTools);
+            toolDefs = new ArrayList<>(toolDefs);
+            toolDefs.addAll(toolDefinitions);
+        }
+
         sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, 0);
     }
 

@@ -16,6 +16,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public String systemPrompt;
     public List<String> docs;
     public Collection<Tool> tools;
+    public Collection<Tool> dynamicTool;
     public Collection<Skill> skills;
     public String imageDetail;
 
@@ -58,6 +59,13 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase tools(Collection<Tool> tools) {
         checkSealed();
         this.tools = tools;
+        return this;
+    }
+
+    @Override
+    public ChatModelFactory.ChatModelBuilder dynamicTool(Collection<Tool> tools) {
+        checkSealed();
+        this.dynamicTool = tools;
         return this;
     }
 
