@@ -1,4 +1,4 @@
-package qingzhou.auth;
+package qingzhou.auth.impl;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -8,32 +8,30 @@ import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.auth.TokenService;
 import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-public class PasswordLoginTest {
+public class PasswordLoginHandlerTest {
 
     @Test
     public void validCredentials_login_returnsToken() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 5, 300);
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), response);
+        StubTokenService tokenService = new StubTokenService();
+        PasswordLoginHandler handler = buildHandler("secret", 5, 300, tokenService);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 200);
-        String token = tokenFrom(response.body);
-        Assert.assertNotNull(token);
-        String payload = PasswordLogin.tokenCipher.decrypt(token);
-        int sep = payload.lastIndexOf('|');
-        Assert.assertEquals(payload.substring(0, sep), "admin");
-        Assert.assertTrue(Long.parseLong(payload.substring(sep + 1)) > System.currentTimeMillis());
+        Assert.assertEquals(response.body, "{\"token\":\"stub-token\"}");
+        Assert.assertEquals(tokenService.user, "admin"); // 登录成功以用户名签发 token
     }
 
     @Test
     public void invalidPassword_login_returns401() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 5, 300);
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), response);
+        PasswordLoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), response);
 
         Assert.assertEquals(response.status, 401);
         Assert.assertEquals(response.body, "invalid user or password");
@@ -42,8 +40,8 @@ public class PasswordLoginTest {
     @Test
     public void getMethod_login_returns405() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 5, 300);
-        login.handle(request("/auth/login", "GET", "127.0.0.1", "admin", "secret"), response);
+        PasswordLoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        handler.handle(request("/auth/login", "GET", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 405);
         Assert.assertEquals(response.body, "method not allowed");
@@ -52,8 +50,8 @@ public class PasswordLoginTest {
     @Test
     public void unknownPath_request_returns400() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 5, 300);
-        login.handle(request("/auth/other", "POST", "127.0.0.1", "admin", "secret"), response);
+        PasswordLoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        handler.handle(request("/auth/other", "POST", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 400);
     }
@@ -61,8 +59,8 @@ public class PasswordLoginTest {
     @Test
     public void logoutPath_request_returns200() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 5, 300);
-        login.handle(request("/auth/logout", "POST", "127.0.0.1", null, null), response);
+        PasswordLoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        handler.handle(request("/auth/logout", "POST", "127.0.0.1", null, null), response);
 
         Assert.assertEquals(response.status, 200);
         Assert.assertEquals(response.body, "ok");
@@ -73,8 +71,16 @@ public class PasswordLoginTest {
         CryptoImpl crypto = new CryptoImpl();
         String digest = crypto.getMessageDigest().digest("secret", "SHA-256", 16, 2);
         StubHttpResponse response = new StubHttpResponse();
-        PasswordLogin login = buildLogin(digest, 5, 300);
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), response);
+        PasswordLoginHandler handler = new PasswordLoginHandler();
+        setField(handler, "crypto", crypto);
+        setField(handler, "tokenService", new StubTokenService());
+        Map<String, String> config = new HashMap<>();
+        config.put("username", "admin");
+        config.put("password", digest); // 直接提供摘要格式（alg$salt$iterations$digest）
+        config.put("max_failures", "5");
+        config.put("lock_seconds", "300");
+        handler.start(config);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 200);
     }
@@ -84,10 +90,10 @@ public class PasswordLoginTest {
         StubHttpResponse first = new StubHttpResponse();
         StubHttpResponse second = new StubHttpResponse();
         StubHttpResponse third = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 2, 300); // 失败 2 次后锁定
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), first);
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), second);
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), third);
+        PasswordLoginHandler handler = buildHandler("secret", 2, 300, new StubTokenService()); // 失败 2 次后锁定
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), first);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), second);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), third);
 
         Assert.assertEquals(first.status, 401);
         Assert.assertEquals(second.status, 401);
@@ -100,37 +106,46 @@ public class PasswordLoginTest {
         StubHttpResponse firstFailure = new StubHttpResponse();
         StubHttpResponse locked = new StubHttpResponse();
         StubHttpResponse unlocked = new StubHttpResponse();
-        PasswordLogin login = buildLogin("secret", 1, 1); // 失败 1 次即锁定，1 秒后解锁
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), firstFailure);
+        PasswordLoginHandler handler = buildHandler("secret", 1, 1, new StubTokenService()); // 失败 1 次即锁定，1 秒后解锁
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), firstFailure);
         Assert.assertEquals(firstFailure.status, 401); // 第 1 次失败仅 401
 
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), locked);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), locked);
         Assert.assertEquals(locked.status, 429); // 达阈值后锁定
 
         Thread.sleep(1100); // 等待锁定窗口过期
-        login.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), unlocked);
+        handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), unlocked);
 
         Assert.assertEquals(unlocked.status, 200);
     }
 
+    @Test
+    public void anyRequest_excludedPaths_returnsLoginEndpoints() {
+        Assert.assertEquals(PasswordLoginHandler.EXCLUDED_PATHS,
+                new String[]{"/auth/login", "/auth/logout"});
+    }
+
     // ---------- 辅助 ----------
 
-    private PasswordLogin buildLogin(String password, int maxFailures, int lockSeconds) throws Exception {
-        PasswordLogin login = new PasswordLogin();
+    private PasswordLoginHandler buildHandler(String plainPassword, int maxFailures, int lockSeconds, TokenService tokenService) throws Exception {
+        PasswordLoginHandler handler = new PasswordLoginHandler();
         CryptoImpl crypto = new CryptoImpl();
-        Field cryptoField = PasswordLogin.class.getDeclaredField("crypto");
-        cryptoField.setAccessible(true);
-        cryptoField.set(login, crypto);
+        setField(handler, "crypto", crypto);
+        setField(handler, "tokenService", tokenService);
 
         Map<String, String> config = new HashMap<>();
-        config.put("user", "admin");
-        config.put("password", password);
-        config.put("secret", crypto.generateKey()); // 随机生成合法 Base64 密钥
+        config.put("username", "admin");
+        config.put("password", crypto.getMessageDigest().digest(plainPassword, "SHA-256", 16, 2)); // 新实现仅接受摘要格式
         config.put("max_failures", String.valueOf(maxFailures));
         config.put("lock_seconds", String.valueOf(lockSeconds));
-        config.put("token_expire_seconds", "60");
-        login.start(config);
-        return login;
+        handler.start(config);
+        return handler;
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private StubHttpRequest request(String path, String method, String ip, String user, String password) {
@@ -143,10 +158,19 @@ public class PasswordLoginTest {
         return request;
     }
 
-    private String tokenFrom(String body) {
-        int begin = body.indexOf(":\"") + 2;
-        int end = body.indexOf('"', begin);
-        return body.substring(begin, end);
+    static class StubTokenService implements TokenService {
+        String user;
+
+        @Override
+        public String createToken(String user) {
+            this.user = user;
+            return "stub-token";
+        }
+
+        @Override
+        public String verifyToken(String token) {
+            return null;
+        }
     }
 
     static class StubHttpRequest implements HttpRequest {

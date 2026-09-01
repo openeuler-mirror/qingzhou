@@ -31,11 +31,6 @@ public class PasswordLoginHandler implements HttpHandler {
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
-<<<<<<< HEAD:modules/qingzhou-auth/src/main/java/qingzhou/auth/PasswordLogin.java
-    static volatile Cipher tokenCipher; // token 加解密密钥，静态共享给 TokenAuthenticator 校验
-
-=======
->>>>>>> 6a77da100e2512f761f030433cb058e6f5b2755c:modules/qingzhou-auth/src/main/java/qingzhou/auth/impl/PasswordLoginHandler.java
     @Activate
     public void start(Map<String, String> config) {
         username = config.get("username");
