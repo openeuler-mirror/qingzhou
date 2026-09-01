@@ -23,7 +23,7 @@ public class TokenAuthenticator implements HttpAuthenticator {
      */
     private String verifyToken(String token) {
         try {
-            String payload = tokenCipher.decrypt(token);
+            String payload = PasswordLogin.tokenCipher.decrypt(token);
             int sep = payload.lastIndexOf('|');
             return System.currentTimeMillis() < Long.parseLong(payload.substring(sep + 1))
                     ? payload.substring(0, sep) : null;

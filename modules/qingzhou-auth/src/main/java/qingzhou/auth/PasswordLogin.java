@@ -27,7 +27,7 @@ public class PasswordLogin implements HttpHandler {
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
-    private static volatile Cipher tokenCipher; // token 加解密密钥，静态共享给 TokenAuthenticator 校验
+    static volatile Cipher tokenCipher; // token 加解密密钥，静态共享给 TokenAuthenticator 校验
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
