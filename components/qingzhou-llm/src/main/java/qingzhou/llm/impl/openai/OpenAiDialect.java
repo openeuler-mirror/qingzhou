@@ -1,14 +1,11 @@
 package qingzhou.llm.impl.openai;
 
+import qingzhou.llm.*;
+import qingzhou.llm.impl.ImageAttachment;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import qingzhou.llm.Attachment;
-import qingzhou.llm.Parameter;
-import qingzhou.llm.Skill;
-import qingzhou.llm.Tool;
-import qingzhou.llm.impl.ImageAttachment;
 
 public class OpenAiDialect {
     static Map<String, Object> buildSystemMessage(String systemPrompt, Collection<Skill> skills, List<String> docs, int maxPerRefChars) {
@@ -87,7 +84,7 @@ public class OpenAiDialect {
      * 注意：不能直接把 ToolCall 对象交给 JSON 序列化——其 package-private 字段会被
      * Jackson 默认忽略（序列化为空对象），导致服务端校验报"工具类型不能为空"。
      */
-    static Map<String, Object> buildAssistantMessage(String content, Collection<OpenAiChatModel.ToolCall> toolCalls) {
+    static Map<String, Object> buildAssistantMessage(String content, String reasoningContent, Collection<OpenAiChatModel.ToolCall> toolCalls) {
         List<Map<String, Object>> calls = new ArrayList<>();
         for (OpenAiChatModel.ToolCall tc : toolCalls) {
             Map<String, Object> call = new HashMap<>();
@@ -105,6 +102,7 @@ public class OpenAiDialect {
         if (content != null && !content.isEmpty()) {
             msg.put("content", content);
         }
+        msg.put("reasoning_content", reasoningContent);
         if (!calls.isEmpty()) {
             msg.put("tool_calls", calls);
         }
@@ -150,11 +148,23 @@ public class OpenAiDialect {
         }).collect(Collectors.toList());
     }
 
-    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs, boolean stream) {
+    static Map<String, Object> buildLlmRequest(String modelName, List<Object> messages, List<Object> toolDefs, boolean stream, ReasoningEffort effort) {
         Map<String, Object> req = new HashMap<>();
         req.put("model", modelName);
         req.put("messages", messages);
         req.put("stream", stream);
+        if (effort != null) {
+            if (effort == ReasoningEffort.none) {
+                req.put("thinking", new HashMap<String, String>() {{
+                    put("type", "disabled");
+                }});
+            } else {
+                req.put("thinking", new HashMap<String, String>() {{
+                    put("type", "enabled");
+                }});
+                req.put("reasoning_effort", effort.name());
+            }
+        }
         if (stream) {
             // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
             Map<String, Object> streamOptions = new HashMap<>();
