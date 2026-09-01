@@ -86,7 +86,8 @@ class AppStubLocalImpl implements AppStubLocal {
         ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
             for (Method method : DefaultAction.class.getMethods()) {
-                if (method.getName().equals(action.code)) {
+                // 默认操作名已由 list 改为 page（action.code），方法名仍为 list，用 methodName 匹配
+                if (method.getName().equals(action.methodName)) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     if (parameterTypes.length == 2) {
                         if (QingzhouModel.class.isAssignableFrom(parameterTypes[0])
