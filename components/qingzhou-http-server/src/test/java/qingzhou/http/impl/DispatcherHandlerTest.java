@@ -36,7 +36,7 @@ public class DispatcherHandlerTest {
     public void unregisteredPath_request_returns404() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) -> response.sendFinish("ok"), "/test");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/test");
 
             HttpClient client = new HttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/other")
@@ -52,7 +52,7 @@ public class DispatcherHandlerTest {
     public void registeredPath_getRequest_handlerInvokedWithResponse() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) ->
+            testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("hello-" + request.getMethod()), "/test");
 
             HttpClient client = new HttpClientImpl();
@@ -71,7 +71,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = startServer();
         try {
             HttpHandler handler = (request, response) -> response.sendFinish("ok");
-            testServer.server.registerHttpHandler(handler, "/temp");
+            testServer.server.registerHttpHandlerNoAuth(handler, "/temp");
             testServer.server.unregisterHttpHandler(handler);
 
             HttpClient client = new HttpClientImpl();
@@ -88,7 +88,7 @@ public class DispatcherHandlerTest {
     public void requestInfo_readViaHttpRequestApi_handlerReceivesMethodPathBody() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) -> {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> {
                 String method = request.getMethod();
                 String path = request.getPath();
                 byte[] body = request.getBody();
@@ -113,7 +113,7 @@ public class DispatcherHandlerTest {
     public void responseWrite_httpResponseApi_clientReceivesStatusHeaderBody() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) ->
+            testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.status(201)
                             .header("X-Test-Header", "test-value")
                             .sendFinish("created-body"), "/respTest");
@@ -144,7 +144,7 @@ public class DispatcherHandlerTest {
     public void postParams_postRequest_handlerReceivesAggregatedBody() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) ->
+            testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish(new String(request.getBody(), StandardCharsets.UTF_8)), "/postTest");
 
             Map<String, String> params = new HashMap<>();
@@ -168,7 +168,7 @@ public class DispatcherHandlerTest {
             Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
             TestServer testServer = startServer();
             try {
-                testServer.server.registerHttpHandler((request, response) -> response.sendFinish("ok"), "/upload");
+                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/upload");
                 Map<String, String> files = new HashMap<>();
                 files.put("upload", tempFile.getAbsolutePath());
 
@@ -195,7 +195,7 @@ public class DispatcherHandlerTest {
             try {
                 String path = "/streamUpload";
                 AtomicReference<byte[]> received = new AtomicReference<>();
-                testServer.server.registerHttpHandler(new HttpHandler() {
+                testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
                     @Override
                     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
                         httpResponse.status400Finish(); // multipart 请求不会进入此方法
@@ -257,7 +257,7 @@ public class DispatcherHandlerTest {
     public void handlerThrowsException_request_returns500() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) -> {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> {
                 throw new IllegalStateException("boom");
             }, "/boom");
 
@@ -281,7 +281,7 @@ public class DispatcherHandlerTest {
     public void prefixPathRegistered_request_routesByPrefix() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) -> response.sendFinish("prefix"), "/a");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("prefix"), "/a");
 
             HttpClient client = new HttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/a/b/c")
@@ -298,11 +298,11 @@ public class DispatcherHandlerTest {
     public void overlappingPathRegister_registerHttpHandler_throwsException() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) -> response.sendFinish("a"), "/a");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("a"), "/a");
 
             // HttpServer 注册阶段禁止前缀包含的重叠路径（DispatcherHandler 的长路径优先排序为防御性逻辑）
             try {
-                testServer.server.registerHttpHandler((request, response) -> response.sendFinish("ab"), "/a/b");
+                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ab"), "/a/b");
                 Assert.fail("registering overlapping path should throw");
             } catch (IllegalArgumentException e) {
                 Assert.assertTrue(e.getMessage() != null && e.getMessage().contains("/a/b"));
@@ -316,7 +316,7 @@ public class DispatcherHandlerTest {
     public void urlEncodedPath_request_decodedAndRouted() throws Exception {
         TestServer testServer = startServer();
         try {
-            testServer.server.registerHttpHandler((request, response) ->
+            testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("decoded-" + request.getPath()), "/hello world");
 
             HttpClient client = new HttpClientImpl();

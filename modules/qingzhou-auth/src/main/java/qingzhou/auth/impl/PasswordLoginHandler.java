@@ -1,4 +1,4 @@
-package qingzhou.auth;
+package qingzhou.auth.impl;
 
 import java.util.Map;
 import java.util.Objects;
@@ -6,45 +6,42 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.crypto.Cipher;
+import qingzhou.auth.TokenService;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-@Component(configurationPid = "qingzhou-auth", property = HttpHandler.HANDLE_PATH + "=/auth")
-public class PasswordLogin implements HttpHandler {
-    static final String[] EXCLUDED_PATHS = {"/qingzhou-auth/auth/login", "/qingzhou-auth/auth/logout"};
+@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = HttpHandler.HANDLE_PATH + "=")
+public class PasswordLoginHandler implements HttpHandler {
+    static final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
 
     @Reference
     private Crypto crypto;
 
+    @Reference
+    private TokenService tokenService;
+
     private String username;
     private String passwordDigest;
-    private long tokenExpireMillis;
     private int maxFailures;
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
+<<<<<<< HEAD:modules/qingzhou-auth/src/main/java/qingzhou/auth/PasswordLogin.java
     static volatile Cipher tokenCipher; // token 加解密密钥，静态共享给 TokenAuthenticator 校验
 
+=======
+>>>>>>> 6a77da100e2512f761f030433cb058e6f5b2755c:modules/qingzhou-auth/src/main/java/qingzhou/auth/impl/PasswordLoginHandler.java
     @Activate
-    public void start(Map<String, String> config) throws Exception {
-        username = config.getOrDefault("user", "admin");
-        String password = config.getOrDefault("password", "admin");
-        passwordDigest = password.split("\\$").length == 4
-                ? password // 已是摘要格式（alg$salt$iterations$digest），配置文件可免存明文
-                : crypto.getMessageDigest().digest(password, "SHA-256", 16,
-                parseInt(config.get("password_iterations"), 2));
-        tokenExpireMillis = parseInt(config.get("token_expire_seconds"), 3600) * 1000L;
+    public void start(Map<String, String> config) {
+        username = config.get("username");
+        passwordDigest = config.get("password");
         maxFailures = parseInt(config.get("max_failures"), 5);
         lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
-
-        String secret = config.get("secret");
-        tokenCipher = crypto.getCipher(secret == null || secret.isEmpty()
-                ? crypto.generateKey() // 未配置则随机生成，重启后已签发 token 全部失效
-                : secret);
     }
 
     @Override
@@ -72,11 +69,12 @@ public class PasswordLogin implements HttpHandler {
 
         String user = request.getParameter("user");
         String password = request.getParameter("password");
-        boolean verified = verifyCredentials(user, password);
+        boolean verified = Objects.equals(user, username)
+                && crypto.getMessageDigest().matches(password, passwordDigest);
 
         if (verified) {
             failures.remove(ip);
-            response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + createToken(user) + "\"}");
+            response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + tokenService.createToken(user) + "\"}");
         } else {
             recordFailure(ip);
             response.status(401).sendFinish("invalid user or password");
@@ -105,18 +103,6 @@ public class PasswordLogin implements HttpHandler {
         if (failures.size() > 10_000) { // 惰性清理过期记录，防止不同 IP 洪水导致内存膨胀
             long now = System.currentTimeMillis();
             failures.entrySet().removeIf(entry -> now - entry.getValue()[1] > lockMillis);
-        }
-    }
-
-    private boolean verifyCredentials(String user, String password) {
-        return Objects.equals(username, user) && crypto.getMessageDigest().matches(password, passwordDigest);
-    }
-
-    private String createToken(String user) {
-        try {
-            return tokenCipher.encrypt(user + "|" + (System.currentTimeMillis() + tokenExpireMillis));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
         }
     }
 

@@ -46,7 +46,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build(port);
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
-        httpServer.registerHttpHandler(httpHandler, path);
+        httpServer.registerHttpHandlerNoAuth(httpHandler, path);
 
         HttpClient httpClient = new HttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));
@@ -63,7 +63,7 @@ public class HttpServerImplTest {
 
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
-        httpServer.registerHttpHandler(httpHandler, path);
+        httpServer.registerHttpHandlerNoAuth(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = new HttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));

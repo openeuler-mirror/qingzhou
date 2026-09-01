@@ -276,11 +276,12 @@ public class RegistryImplTest {
             Assert.fail("缺失 qingzhou.version 系统属性应抛出异常");
         } catch (Throwable e) {
             Assert.assertNotNull(e);
-        try {
-            registry.start();
-            Assert.fail("缺失 qingzhou.version 系统属性应抛出异常");
-        } catch (NullPointerException expected) {
-            // 预期：System.getProperty 返回 null 后，new File(null) 构造触发 NPE
+            try {
+                registry.start();
+                Assert.fail("缺失 qingzhou.version 系统属性应抛出异常");
+            } catch (NullPointerException expected) {
+                // 预期：System.getProperty 返回 null 后，new File(null) 构造触发 NPE
+            }
         }
     }
 

@@ -35,7 +35,7 @@ public class HttpClientServerIntegrationTest {
         HttpServerImpl httpServer = testServer.server;
         try {
             String path = "/headerTest";
-            httpServer.registerHttpHandler((request, response) ->
+            httpServer.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("received: " + request.getHeader("X-Request-Id")), path);
 
             HttpClient client = new HttpClientImpl();
@@ -57,7 +57,7 @@ public class HttpClientServerIntegrationTest {
         HttpServerImpl httpServer = testServer.server;
         try {
             String path = "/headersTest";
-            httpServer.registerHttpHandler((request, response) -> {
+            httpServer.registerHttpHandlerNoAuth((request, response) -> {
                 String headerA = request.getHeader("Header-A");
                 String headerB = request.getHeader("Header-B");
                 String oldHeader = request.getHeader("Old-Header");
@@ -97,7 +97,7 @@ public class HttpClientServerIntegrationTest {
             try {
                 String path = "/filesTest";
                 AtomicReference<byte[]> receivedBody = new AtomicReference<>();
-                httpServer.registerHttpHandler(new HttpHandler() {
+                httpServer.registerHttpHandlerNoAuth(new HttpHandler() {
                     @Override
                     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
                         httpResponse.status400Finish(); // multipart 请求不会进入此方法
