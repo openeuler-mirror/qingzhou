@@ -15,9 +15,13 @@ public interface ChatModelFactory {
     interface ChatModelBuilder {
         ChatModelBuilder systemPrompt(String systemPrompt);
 
+        ChatModelBuilder reasoningEffort(ReasoningEffort reasoningEffort);
+
         ChatModelBuilder docs(List<String> docs);
 
         ChatModelBuilder tools(Collection<Tool> tools);
+
+        ChatModelBuilder dynamicTool(Collection<Tool> tools);
 
         ChatModelBuilder skills(Collection<Skill> skills);
 
