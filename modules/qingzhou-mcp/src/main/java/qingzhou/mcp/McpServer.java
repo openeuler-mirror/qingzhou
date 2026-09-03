@@ -29,8 +29,6 @@ public class McpServer implements HttpHandler {
 
     private Map<String, Object> initializeData;
 
-    private Collection<Tool> systemTools;
-
     @Activate
     public void init() {
         initializeData = new HashMap<>();
@@ -77,12 +75,10 @@ public class McpServer implements HttpHandler {
     }
 
     private Collection<Tool> llmTools() {
-        if (systemSkill == null) return Collections.EMPTY_SET;
-
-        if (systemTools == null) {
-            systemTools = LlmConverter.convertAiTool(systemSkill.tools());
+        if (systemSkill != null) {
+            return LlmConverter.convertAiTool(systemSkill.tools());
         }
-        return systemTools;
+        return Collections.emptyList();
     }
 
     private Object tools() {
