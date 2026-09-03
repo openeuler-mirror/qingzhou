@@ -140,17 +140,17 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return toolResultMsg;
     }
 
-    Map<String, Object> buildSystemMessage() {
+    Map<String, Object> buildSystemMessage(Collection<Skill> activeSkills) {
         StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
 
-        if (skills != null) {
-            for (Skill skill : skills) {
-                String msg = skill.description();
+        if (activeSkills != null) {
+            for (Skill skill : activeSkills) {
+                String msg = skill.instruction();
                 if (msg != null && !msg.isEmpty()) {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考技能]\n").append(truncate(msg, maxPerRefChars));
+                    sysMsg.append("[技能：").append(skill.name()).append("]\n").append(truncate(msg, maxPerRefChars));
                 }
             }
         }
