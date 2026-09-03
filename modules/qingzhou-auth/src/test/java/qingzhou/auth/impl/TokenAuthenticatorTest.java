@@ -16,7 +16,7 @@ public class TokenAuthenticatorTest {
 
         AuthResult result = authenticator.authenticate(request);
 
-        Assert.assertTrue(result.isMissing());
+        Assert.assertSame(result.status(), AuthResult.Status.MISSING);
     }
 
     @Test
@@ -27,7 +27,7 @@ public class TokenAuthenticatorTest {
 
         AuthResult result = authenticator.authenticate(request);
 
-        Assert.assertTrue(result.isMissing());
+        Assert.assertSame(result.status(), AuthResult.Status.MISSING);
     }
 
     @Test
@@ -38,7 +38,7 @@ public class TokenAuthenticatorTest {
 
         AuthResult result = authenticator.authenticate(request);
 
-        Assert.assertTrue(result.isPassed());
+        Assert.assertSame(result.status(), AuthResult.Status.PASS);
         Assert.assertEquals(result.getPrincipal(), "admin");
     }
 
@@ -50,7 +50,7 @@ public class TokenAuthenticatorTest {
 
         AuthResult result = authenticator.authenticate(request);
 
-        Assert.assertTrue(result.isRejected());
+        Assert.assertSame(result.status(), AuthResult.Status.REJECT);
         Assert.assertEquals(result.getReason(), "invalid token");
     }
 
