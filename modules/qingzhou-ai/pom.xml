@@ -53,7 +53,7 @@
                             qingzhou.http.server,
                             qingzhou.logger,
                             qingzhou.json,
-                            qingzhou.llm
+                            qingzhou.llm,qingzhou.llm.openai
                         </Import-Package>
                     </instructions>
                 </configuration>

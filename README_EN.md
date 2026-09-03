@@ -1,4 +1,4 @@
-# Qingzhou – One‑Stop Intelligent Management Platform
+# Qingzhou – Lightweight Intelligent Management Platform
 
 ## Overview
 

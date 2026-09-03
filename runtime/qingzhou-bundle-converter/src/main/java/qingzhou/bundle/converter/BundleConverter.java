@@ -309,10 +309,10 @@ public class BundleConverter {
                 for (CtMethod ctMethod : ctClassForDefaultAction.getMethods()) {
                     ModelAction methodAnnotation = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
                     if (methodAnnotation != null) {
-                        // 默认操作的方法名与对外 code 可能不一致（如 list 方法对外 code 为 page），
+                        // 默认操作的方法名与对外 code 可能不一致（如 SwitchSpace switchSpace 方法对外 code 为 switchspace，大小写有差别），
                         // 因此按注解声明的 code 或方法名匹配，且 methodName 必须取真实方法名以便反射调用。
-                        String annotationCode = methodAnnotation.code();
-                        if (annotationCode.equals(actionName) || ctMethod.getName().equals(actionName)) {
+                        if (methodAnnotation.code().equals(actionName)
+                                || ctMethod.getName().equals(actionName)) {
                             qingzhou.dto.meta.annotation.ModelAction dtoModelAction = new qingzhou.dto.meta.annotation.ModelAction();
                             dtoModelAction.isDefaultAction = true;
                             dtoModelAction.methodName = ctMethod.getName();

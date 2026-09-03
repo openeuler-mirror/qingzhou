@@ -31,7 +31,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.llm</Export-Package>
+                        <Export-Package>qingzhou.llm,qingzhou.llm.openai</Export-Package>
                         <Import-Package>qingzhou.json,qingzhou.http.client</Import-Package>
                     </instructions>
                 </configuration>

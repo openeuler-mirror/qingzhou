@@ -11,7 +11,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.skill.SystemSkill;
 import qingzhou.api.Constants;
@@ -21,7 +20,6 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatModelFactory;
-import qingzhou.llm.Skill;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/config",
         service = {ChatConfig.class, HttpHandler.class})
@@ -34,7 +32,7 @@ public class ChatConfig implements HttpHandler {
     @Reference
     private I18nService i18nService;
 
-    final Map<SkillService, Skill> llmSkills = new ConcurrentHashMap<>();
+    final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
 
     private final List<String[]> promptSamples = new ArrayList<String[]>() {{
         add(new String[]{"请概述轻舟平台的价值和意义", "en:Please summarize the value and significance of the Qingzhou platform"});
@@ -55,11 +53,11 @@ public class ChatConfig implements HttpHandler {
         data.put("prompts", prompts);
 
         List<Map<String, Object>> skills = new ArrayList<>();
-        for (Map.Entry<SkillService, Skill> entry : llmSkills.entrySet()) {
+        for (Map.Entry<SkillService, Map<String, Object>> entry : llmSkills.entrySet()) {
             SkillService skillService = entry.getKey();
-            Skill skill = entry.getValue();
+            Map<String, Object> skillProperties = entry.getValue();
             Map<String, Object> map = new HashMap<>();
-            map.put("name", skill.name());
+            map.put("name", skillProperties.get(SkillService.SKILL_NAME));
             map.put("text", i18nService.getI18n(skillService.nameI18n(), lang));
             if (skillService.getClass() == SystemSkill.class) {
                 map.put("checked", true);
@@ -84,11 +82,7 @@ public class ChatConfig implements HttpHandler {
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
-        llmSkills.put(skill,
-                Skill.of((String) properties.get(SkillService.SKILL_NAME),
-                        skill.description(),
-                        skill.instruction(),
-                        LlmConverter.convertAiTool(skill.tools())));
+        llmSkills.put(skill, properties);
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法
