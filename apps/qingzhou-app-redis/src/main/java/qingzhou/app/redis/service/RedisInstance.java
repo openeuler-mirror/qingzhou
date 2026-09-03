@@ -106,9 +106,11 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 
-    @ModelAction(name = {"切换", "en:Switch"},
+    @ModelAction(code = SwitchSpace.ACTION_CODE_SWITCHSPACE, icon = "Switch",
+            name = {"切换", "en:Switch"}, list = true,
             confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
             info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"})
+    @Override
     public void switchSpace(String id) throws Exception {
         String previousName = RedisApp.getCurrentInstanceName();
         try {
@@ -131,7 +133,6 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
             audit.setDetail("switch to instance: " + RedisApp.getCurrentInstanceName());
             RedisApp.getAuditStore().log(audit);
         } catch (Exception e) {
-            
             if (previousName != null && RedisApp.getInstances().containsKey(previousName)) {
                 try {
                     RedisApp.activateInstance(previousName);
@@ -155,8 +156,6 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
         String id = config.get("id");
         return (id != null && !id.isEmpty()) ? id : null;
     }
-
-    
 
     @Override
     public java.util.List<String[]> page(int pageNum, int pageSize,
@@ -224,8 +223,6 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
         
         return RedisApp.getInstances().containsKey(id);
     }
-
-    
 
     @Override
     public Map<String, String> show(String id) throws Exception {

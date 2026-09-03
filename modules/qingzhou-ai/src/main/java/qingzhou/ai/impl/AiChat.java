@@ -17,7 +17,7 @@ import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/chat")
+@Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
             "# 你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +

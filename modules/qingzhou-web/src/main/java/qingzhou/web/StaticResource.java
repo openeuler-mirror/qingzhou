@@ -97,7 +97,10 @@ public class StaticResource implements HttpHandler {
                     resource);
         });
         if (resourceCache == null) {
-            if (!path.equals(INDEX_FILE)) { // SPA 应用特性：解决问题：进入应用内部后，再切换国际化页面出错
+            // SPA 应用特性：无扩展名的路径视为前端路由（如 /web/model/xxx），回退到 index.html；
+            // 带扩展名的资源（如已被清理的旧 hash .js/.css）必须返回 404，
+            // 否则浏览器会把 HTML 当 JS 解析导致模块加载失败
+            if (!path.equals(INDEX_FILE) && getExtension(path).isEmpty()) {
                 serveStaticResource(httpRequest, INDEX_FILE, response);
                 return;
             }
