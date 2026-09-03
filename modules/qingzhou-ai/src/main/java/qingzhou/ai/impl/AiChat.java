@@ -6,6 +6,7 @@ import java.util.*;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -95,16 +96,16 @@ public class AiChat implements HttpHandler {
         if (params == null || question == null || question.trim().isEmpty()) return;
         question = question.trim();
 
-        Skill selectedSkill = null;
+        SkillService selectedSkillService = null;
         List<String> refDocs = null;
         Attachment[] images = null;
         String skillName = (String) params.get("skill");
         if (skillName != null) {
-            for (Map.Entry<SkillService, Skill> entry : chatConfig.llmSkills.entrySet()) {
+            for (Map.Entry<SkillService, Map<String, Object>> entry : chatConfig.llmSkills.entrySet()) {
                 SkillService skillService = entry.getKey();
-                Skill skill = entry.getValue();
-                if (skill.name().equals(skillName)) {
-                    selectedSkill = skill;
+                Map<String, Object> skillProperties = entry.getValue();
+                if (skillProperties.get(SkillService.SKILL_NAME).equals(skillName)) {
+                    selectedSkillService = skillService;
                     Map<SkillService.AttachmentType, String[]> attachmentTypeMap = skillService.attachments();
                     if (attachmentTypeMap != null) {
                         for (SkillService.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
@@ -135,6 +136,14 @@ public class AiChat implements HttpHandler {
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
+
+        Skill selectedSkill = null;
+        if (selectedSkillService != null) {
+            selectedSkill = Skill.of(skillName,
+                    selectedSkillService.description(),
+                    selectedSkillService.instruction(),
+                    LlmConverter.convertAiTool(selectedSkillService.tools()));
+        }
         ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
                 .systemPrompt(SYSTEM_PROMPT)
                 .docs(refDocs)

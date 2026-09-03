@@ -3,7 +3,10 @@ package qingzhou.llm.impl;
 import java.util.Collection;
 import java.util.List;
 
-import qingzhou.llm.*;
+import qingzhou.llm.ChatModel;
+import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.Skill;
+import qingzhou.llm.Tool;
 
 public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModelBuilder {
     public final String baseUrl;
@@ -11,10 +14,8 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public final String model;
 
     public String systemPrompt;
-    public ReasoningEffort reasoningEffort;
     public List<String> docs;
     public Collection<Tool> tools;
-    public Collection<Tool> dynamicTool;
     public Collection<Skill> skills;
     public String imageDetail;
 
@@ -35,7 +36,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
         this.model = model;
     }
 
-    private void checkSealed() {
+    public void checkSealed() {
         if (sealed) throw new IllegalStateException(this.getClass().getName() + " has been sealed.");
     }
 
@@ -43,13 +44,6 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase systemPrompt(String systemPrompt) {
         checkSealed();
         this.systemPrompt = systemPrompt;
-        return this;
-    }
-
-    @Override
-    public ChatModelFactory.ChatModelBuilder reasoningEffort(ReasoningEffort reasoningEffort) {
-        checkSealed();
-        this.reasoningEffort = reasoningEffort;
         return this;
     }
 
@@ -64,13 +58,6 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase tools(Collection<Tool> tools) {
         checkSealed();
         this.tools = tools;
-        return this;
-    }
-
-    @Override
-    public ChatModelFactory.ChatModelBuilder dynamicTool(Collection<Tool> tools) {
-        checkSealed();
-        this.dynamicTool = tools;
         return this;
     }
 

@@ -38,7 +38,8 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
-                            qingzhou.http.server,qingzhou.json,qingzhou.logger,qingzhou.ai,qingzhou.llm
+                            qingzhou.http.server,qingzhou.json,qingzhou.logger,qingzhou.ai,
+                            qingzhou.llm,qingzhou.llm.openai
                         </Import-Package>
                     </instructions>
                 </configuration>

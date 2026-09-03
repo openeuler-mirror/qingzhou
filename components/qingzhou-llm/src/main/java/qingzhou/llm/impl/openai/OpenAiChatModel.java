@@ -9,16 +9,16 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
-import qingzhou.llm.*;
+import qingzhou.llm.Attachment;
+import qingzhou.llm.ChatModel;
+import qingzhou.llm.Listener;
+import qingzhou.llm.Tool;
 
 class OpenAiChatModel implements ChatModel {
-    private static final int MAX_TEMP_TOOL_NUM = 10;
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
     private final Map<String, Tool> tools = new HashMap<>();
-    private final Map<String, Tool> dynamicTools = new HashMap<>();
-    private final Deque<Tool> tempTools = new LinkedList<>();
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
@@ -30,9 +30,6 @@ class OpenAiChatModel implements ChatModel {
 
         if (builder.tools != null) {
             builder.tools.forEach(tool -> tools.put(tool.name(), tool));
-        }
-        if (builder.dynamicTool != null) {
-            builder.dynamicTool.forEach(tool -> dynamicTools.put(tool.name(), tool));
         }
         if (builder.skills != null) {
             builder.skills.forEach(skill -> {
@@ -47,14 +44,11 @@ class OpenAiChatModel implements ChatModel {
     public String chat(String message, Attachment... attachment) {
         try {
             List<Object> messages = new ArrayList<>();
-            messages.add(OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs, builder.maxPerRefChars));
-            messages.add(OpenAiDialect.buildUserMessage(message, attachment, builder.imageDetail));
-            List<Object> toolDefs = OpenAiDialect.buildToolDefinitions(tools.values());
+            messages.add(builder.buildSystemMessage());
+            messages.add(builder.buildUserMessage(message, attachment));
+            List<Object> toolDefs = builder.buildToolDefinitions(tools.values());
 
             for (int i = 0; i < builder.maxToolIterations; i++) {
-                if (!tempTools.isEmpty()) {
-                    toolDefs.addAll(OpenAiDialect.buildToolDefinitions(tempTools));
-                }
                 Response response = sendSync(messages, toolDefs, 0);
                 Map<String, Object> msg = getResponseMessage(response);
                 if (msg == null) return "";
@@ -66,12 +60,12 @@ class OpenAiChatModel implements ChatModel {
                 }
                 messages.add(msg);
                 for (ToolCall toolCall : toolCalls) {
-                    messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall), builder.maxToolResultChars));
+                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall)));
                 }
             }
-            System.err.println("Tool iterations have reached the limit: " + builder.maxToolIterations);
-            messages.add(OpenAiDialect.buildUserMessage("已达工具调用次数上限，停止继续执行工具，无论数据是否充分，请给出最后结论并提醒工具调用次数已达上限", null, null));
-            Response response = sendSync(messages, null, 0);
+            System.err.println("Tool iterations have reached the limit: " + builder.maxToolIterations); // 方便TW等集成，不用Logger对象
+            messages.add(builder.buildUserMessageForMaxToolIterations());
+            Response response = sendSync(messages, null, 0); // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
             Map<String, Object> msg = getResponseMessage(response);
             if (msg == null) return "";
             String content = extractText(msg.get("content"));
@@ -85,9 +79,7 @@ class OpenAiChatModel implements ChatModel {
         Map<String, Object> data = json.fromJson(new String(response.getBody(), StandardCharsets.UTF_8), Map.class);
         List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
         if (choices == null || choices.isEmpty()) return null;
-        Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
-        if (msg == null) return null;
-        return msg;
+        return (Map<String, Object>) choices.get(0).get("message");
     }
 
     private Response sendSync(List<Object> messages, List<Object> toolDefs, int attempt) throws Exception {
@@ -113,7 +105,7 @@ class OpenAiChatModel implements ChatModel {
     }
 
     private Request newLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) throws Exception {
-        Map<String, Object> llmRequest = OpenAiDialect.buildLlmRequest(builder.model, messages, toolDefs, stream, builder.reasoningEffort);
+        Map<String, Object> llmRequest = builder.buildLlmRequest(messages, toolDefs, stream);
         Request request = httpClient.newRequest(builder.baseUrl)
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + builder.apiKey)
@@ -145,7 +137,6 @@ class OpenAiChatModel implements ChatModel {
 
     private String invokeTool(ToolCall toolCall) {
         Tool tool = tools.get(toolCall.name);
-        if (tool == null) tool = dynamicTools.get(toolCall.name);
         if (tool == null) return "Tool not found: " + toolCall.name;
 
         Map<String, Object> args = null;
@@ -156,36 +147,19 @@ class OpenAiChatModel implements ChatModel {
             }
         }
         try {
-            String result = tool.invoke(args);
-            if (tool instanceof SearchTool && result != null) {
-                loadDynamicTools(result);
-            }
-            return result;
+            return tool.invoke(args);
         } catch (Throwable t) {
             // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
             return "Error: " + errorMessage(t);
         }
     }
 
-    private void loadDynamicTools(String result) {
-        for (String name : result.split(",")) {
-            Tool tool = dynamicTools.get(name);
-            if (tempTools.contains(tool)) {
-                continue;
-            }
-            if (tempTools.size() >= MAX_TEMP_TOOL_NUM) {
-                tempTools.removeFirst();
-            }
-            tempTools.addLast(tool);
-        }
-    }
-
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            Map<String, Object> systemMessage = OpenAiDialect.buildSystemMessage(builder.systemPrompt, builder.skills, builder.docs, builder.maxPerRefChars);
-            Map<String, Object> userMessage = OpenAiDialect.buildUserMessage(message, attachment, builder.imageDetail);
-            List<Object> toolDefinitions = OpenAiDialect.buildToolDefinitions(tools.values());
+            Map<String, Object> systemMessage = builder.buildSystemMessage();
+            Map<String, Object> userMessage = builder.buildUserMessage(message, attachment);
+            List<Object> toolDefinitions = builder.buildToolDefinitions(tools.values());
 
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
@@ -202,22 +176,13 @@ class OpenAiChatModel implements ChatModel {
      * 请求返回 200 后本方法立即返回，流式读取与后续回调（onBody/onComplete/onError）在后台线程进行。
      */
     private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration) {
-        if (toolIteration >= builder.maxToolIterations) {
-            // 达到工具调用上限：明确告知调用方，避免静默终止
+        if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
             System.err.println("Tool iterations have reached the limit: " + toolIteration);
-            messages.add(OpenAiDialect.buildUserMessage("已达工具调用次数上限，停止继续执行工具，无论数据是否充分，请给出最后结论并说明", null, null));
-            HttpListener httpListener = new HttpListener(messages, null, chatListener, toolIteration);
-            sendWithRetry(messages, null, chatListener, toolIteration, httpListener, 0);
-        } else {
-            HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, toolIteration);
-            if (!tempTools.isEmpty()) {
-                List<Object> toolDefinitions = OpenAiDialect.buildToolDefinitions(tempTools);
-                toolDefs = new ArrayList<>(toolDefs);
-                toolDefs.addAll(toolDefinitions);
-            }
-
-            sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, 0);
+            messages.add(builder.buildUserMessageForMaxToolIterations());
+            toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
+        HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, toolIteration);
+        sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, 0);
     }
 
     /**
@@ -338,15 +303,15 @@ class OpenAiChatModel implements ChatModel {
 
                 String reasoning = (String) delta.get("reasoning_content");
                 if (reasoning != null && !reasoning.isEmpty()) {
-                    reasoningContent.append(reasoning);
                     chatListener.onReasoning(reasoning);
+                    reasoningContent.append(reasoning);
                 }
 
                 // 兼容 content 为字符串或数组（多模态 delta：[{type:text,text:...}]）的返回格式
                 String text = extractText(delta.get("content"));
                 if (text != null && !text.isEmpty()) {
-                    content.append(text);
                     chatListener.onMessage(text);
+                    content.append(text);
                 }
 
                 List<Map<String, Object>> deltaToolCalls = (List<Map<String, Object>>) delta.get("tool_calls");
@@ -387,12 +352,13 @@ class OpenAiChatModel implements ChatModel {
                 }
 
                 if (!toolCalls.isEmpty()) {
-                    messages.add(OpenAiDialect.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
+                    // 前次的思考内容在后面轮次请求时也会提交，（deepseek 强制要求存在tool参数时，将前面的思维链内容带上，其他国内厂商的最新模型也有这个要求）
+                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
 
                     chatListener.onReasoningPause();
                     for (ToolCall toolCall : toolCalls.values()) {
                         chatListener.onToolCall(toolCall.name);
-                        messages.add(OpenAiDialect.buildToolMessage(toolCall.id, invokeTool(toolCall), builder.maxToolResultChars));
+                        messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall)));
                     }
                     chatListener.onReasoningResume();
 

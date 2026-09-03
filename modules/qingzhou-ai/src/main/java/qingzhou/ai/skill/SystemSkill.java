@@ -6,11 +6,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.ToolService;
 import qingzhou.logger.Logger;
 
 @Component(property = SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL)
@@ -54,5 +54,17 @@ public class SystemSkill extends SkillServiceBase implements SkillService {
     @Override
     public String instruction() {
         return String.join("\n\n[参考附件]\n", knowledgeDocs);
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
+            target = "(" + SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL + ")", // 按服务属性过滤
+            unbind = "unbindAiTool")
+    public void bindAiTool(ToolService tool, Map<String, Object> properties) {
+        aiTools.put(tool, properties);
+    }
+
+    // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
+    public void unbindAiTool(ToolService tool) {
+        aiTools.remove(tool);
     }
 }
