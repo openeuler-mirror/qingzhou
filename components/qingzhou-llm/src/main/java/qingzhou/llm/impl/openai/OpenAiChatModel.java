@@ -9,16 +9,15 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
-import qingzhou.llm.Attachment;
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.Listener;
-import qingzhou.llm.Tool;
+import qingzhou.llm.*;
+import qingzhou.llm.impl.ModelSkillMatcher;
 
 class OpenAiChatModel implements ChatModel {
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
-    private final Map<String, Tool> tools = new HashMap<>();
+    private final Map<String, Tool> baseTools = new HashMap<>();
+    private SkillMatcher defaultMatcher; // 默认匹配策略：调用大模型选择（懒创建，复用同一模型配置）
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
@@ -29,22 +28,55 @@ class OpenAiChatModel implements ChatModel {
         validateBaseUrl(builder.baseUrl);
 
         if (builder.tools != null) {
-            builder.tools.forEach(tool -> tools.put(tool.name(), tool));
+            builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
         }
-        if (builder.skills != null) {
-            builder.skills.forEach(skill -> {
-                if (skill.tools() != null) {
-                    skill.tools().forEach(tool -> tools.put(tool.name(), tool));
-                }
-            });
+    }
+
+    // 按需加载：optional()==false 的技能恒激活，其余交匹配策略按 description 选择
+    private List<Skill> resolveSkills(Collection<Skill> skills, String message) {
+        if (skills == null || skills.isEmpty()) return Collections.emptyList();
+
+        List<Skill> active = new ArrayList<>();
+        List<Skill> candidates = new ArrayList<>();
+        for (Skill skill : skills) {
+            if (skill.optional()) candidates.add(skill);
+            else active.add(skill);
         }
+        if (!candidates.isEmpty()) {
+            active.addAll(matcher().match(candidates, message));
+        }
+        return active;
+    }
+
+    private SkillMatcher matcher() {
+        if (builder.skillMatcher != null) return builder.skillMatcher;
+        if (defaultMatcher == null) {
+            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
+            OpenAiChatModelBuilder selectionBuilder = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json);
+            defaultMatcher = new ModelSkillMatcher(selectionBuilder.build());
+        }
+        return defaultMatcher;
+    }
+
+    // 激活技能的 tools 随对话挂载（显式工具 baseTools 恒挂载）
+    private Map<String, Tool> collectTools(Collection<Skill> activeSkills) {
+        Map<String, Tool> tools = new HashMap<>(baseTools);
+        for (Skill skill : activeSkills) {
+            if (skill.tools() != null) {
+                skill.tools().forEach(tool -> tools.put(tool.name(), tool));
+            }
+        }
+        return tools;
     }
 
     @Override
     public String chat(String message, Attachment... attachment) {
         try {
+            List<Skill> activeSkills = resolveSkills(builder.skills, message);
+            Map<String, Tool> tools = collectTools(activeSkills);
+
             List<Object> messages = new ArrayList<>();
-            messages.add(builder.buildSystemMessage());
+            messages.add(builder.buildSystemMessage(activeSkills));
             messages.add(builder.buildUserMessage(message, attachment));
             List<Object> toolDefs = builder.buildToolDefinitions(tools.values());
 
@@ -60,7 +92,7 @@ class OpenAiChatModel implements ChatModel {
                 }
                 messages.add(msg);
                 for (ToolCall toolCall : toolCalls) {
-                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall)));
+                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, tools)));
                 }
             }
             System.err.println("Tool iterations have reached the limit: " + builder.maxToolIterations); // 方便TW等集成，不用Logger对象
@@ -135,7 +167,7 @@ class OpenAiChatModel implements ChatModel {
         return result;
     }
 
-    private String invokeTool(ToolCall toolCall) {
+    private String invokeTool(ToolCall toolCall, Map<String, Tool> tools) {
         Tool tool = tools.get(toolCall.name);
         if (tool == null) return "Tool not found: " + toolCall.name;
 
@@ -157,7 +189,10 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            Map<String, Object> systemMessage = builder.buildSystemMessage();
+            List<Skill> activeSkills = resolveSkills(builder.skills, message);
+            Map<String, Tool> tools = collectTools(activeSkills);
+
+            Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
             Map<String, Object> userMessage = builder.buildUserMessage(message, attachment);
             List<Object> toolDefinitions = builder.buildToolDefinitions(tools.values());
 
@@ -165,7 +200,7 @@ class OpenAiChatModel implements ChatModel {
             messages.add(systemMessage);
             messages.add(userMessage);
             chatListener.onBegin();
-            doChat(messages, toolDefinitions, chatListener, 0);
+            doChat(messages, toolDefinitions, chatListener, tools, 0);
         } catch (Throwable t) {
             chatListener.onError(errorMessage(t));
         }
@@ -175,13 +210,13 @@ class OpenAiChatModel implements ChatModel {
      * 一轮模型对话：新建流式监听器并发送请求（含 429/5xx/网络异常重试）。
      * 请求返回 200 后本方法立即返回，流式读取与后续回调（onBody/onComplete/onError）在后台线程进行。
      */
-    private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration) {
+    private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
         if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
             System.err.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
-        HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, toolIteration);
+        HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, tools, toolIteration);
         sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, 0);
     }
 
@@ -256,6 +291,7 @@ class OpenAiChatModel implements ChatModel {
         private final List<Object> messages;
         private final List<Object> toolDefs;
         private final Listener chatListener;
+        private final Map<String, Tool> tools;
         private final int toolIteration;
 
         private final StringBuilder content = new StringBuilder();
@@ -265,10 +301,11 @@ class OpenAiChatModel implements ChatModel {
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
         private Map<String, Object> usage; // 流式末尾 usage chunk（依赖 stream_options.include_usage）
 
-        HttpListener(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration) {
+        HttpListener(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
             this.messages = messages;
             this.toolDefs = toolDefs;
             this.chatListener = chatListener;
+            this.tools = tools;
             this.toolIteration = toolIteration;
         }
 
@@ -358,11 +395,11 @@ class OpenAiChatModel implements ChatModel {
                     chatListener.onReasoningPause();
                     for (ToolCall toolCall : toolCalls.values()) {
                         chatListener.onToolCall(toolCall.name);
-                        messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall)));
+                        messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, tools)));
                     }
                     chatListener.onReasoningResume();
 
-                    doChat(messages, toolDefs, chatListener, toolIteration + 1);
+                    doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);
                 } else {
                     if ("length".equals(finishReason)) {
                         // 输出被 max_tokens 等长度上限截断，明确告知调用方

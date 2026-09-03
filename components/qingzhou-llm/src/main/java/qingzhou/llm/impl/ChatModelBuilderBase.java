@@ -6,6 +6,7 @@ import java.util.List;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
+import qingzhou.llm.SkillMatcher;
 import qingzhou.llm.Tool;
 
 public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModelBuilder {
@@ -17,6 +18,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public List<String> docs;
     public Collection<Tool> tools;
     public Collection<Skill> skills;
+    public SkillMatcher skillMatcher;
     public String imageDetail;
 
     public int maxToolResultChars = 2000;
@@ -65,6 +67,13 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase skills(Collection<Skill> skills) {
         checkSealed();
         this.skills = skills;
+        return this;
+    }
+
+    @Override
+    public ChatModelBuilderBase skillMatcher(SkillMatcher skillMatcher) {
+        checkSealed();
+        this.skillMatcher = skillMatcher;
         return this;
     }
 

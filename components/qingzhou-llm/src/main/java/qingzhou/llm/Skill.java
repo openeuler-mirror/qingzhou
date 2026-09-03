@@ -13,6 +13,13 @@ public interface Skill {
     // 技能的工具集：该技能需要挂载的功能工具
     Collection<Tool> tools();
 
+    /**
+     * 是否需按 description 匹配激活：默认 true（参与匹配，命中才激活）；false 表示恒激活（跳过匹配直接加载）。
+     */
+    default boolean optional() {
+        return true;
+    }
+
     static Skill of(String name, String description, String instruction, Collection<Tool> tools) {
         return new Skill() {
             @Override
