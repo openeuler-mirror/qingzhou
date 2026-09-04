@@ -1,9 +1,17 @@
 package qingzhou.http.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.time.Duration;
 import java.util.*;
 
+import javax.net.ssl.KeyManagerFactory;
+
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
@@ -39,6 +47,10 @@ public class HttpServerImpl implements HttpServer {
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
 
+        boolean sslEnabled = getConfig(config, "ssl_enabled", false);
+        // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
+        SslContext sslContext = sslEnabled ? buildSslContext(config) : null;
+
         isAuthDisabled = getConfig(config, "auth_disabled", false);
         if (isAuthDisabled) logger.warn("http server authentication is disabled");
 
@@ -64,11 +76,53 @@ public class HttpServerImpl implements HttpServer {
                 // 业务路由（生产环境建议抽离到单独的 Handler 类，解耦业务逻辑）
                 .handle(new DispatcherHandler(this, logger));
 
+        // https 模式：HTTP 与 HTTPS 二选一，不提供明文兜底监听
+        if (sslContext != null) {
+            httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
+        }
+
         // 3. 启动服务并持有 Disposable（关键：用于后续优雅停止）
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
-        logger.info("http server started: http://localhost:" + port + "/web");
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
+    }
+
+    /**
+     * 加载 SSL 密钥库并构建服务端 SslContext。
+     * 任何配置缺失或错误（未配置路径、文件不存在、口令错误、类型非法）都会在此抛出异常，
+     * 使服务在绑定端口前启动失败，绝不回退为明文监听。
+     */
+    private static SslContext buildSslContext(Map<String, String> config) {
+        String keystorePath = config.get("ssl_keystore_path");
+        if (keystorePath == null || keystorePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
+        }
+
+        File keystoreFile = new File(keystorePath.trim());
+        if (!keystoreFile.isFile()) {
+            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile);
+        }
+
+        String type = config.get("ssl_keystore_type");
+        type = (type == null || type.trim().isEmpty()) ? "PKCS12" : type.trim().toUpperCase(Locale.ROOT);
+        if (!"PKCS12".equals(type) && !"JKS".equals(type)) {
+            throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
+        }
+
+        String password = config.get("ssl_keystore_password");
+        char[] keyPassword = password == null ? new char[0] : password.toCharArray();
+
+        try (InputStream in = new FileInputStream(keystoreFile)) {
+            KeyStore keyStore = KeyStore.getInstance(type);
+            keyStore.load(in, keyPassword);
+
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            keyManagerFactory.init(keyStore, keyPassword);
+            return SslContextBuilder.forServer(keyManagerFactory).build();
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
+        }
     }
 
     private <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
