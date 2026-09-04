@@ -117,17 +117,11 @@ Qingzhou（轻舟）还通过自动发现、插件化扩展、统一API规范、
 
 | 接口URI               | 接口说明          |
 |---------------------|---------------|
-| /registry/register  | 注册远程实例上的应用    |
-| /registry/refresh   | 刷新远程实例的通信密钥   |
 | /registry/invoke    | 执行指定应用的模块操作   |
 | /registry/instance  | 获取已注册的实例列表    |
-| /registry/app/page  | 获取已注册的应用列表    |
+| /registry/app/list  | 获取已注册的应用列表    |
 | /registry/app/info  | 获取特定应用的详细信息   |
 | /registry/app/model | 获取特定应用的模块信息   |
-| /agent              | 在远程实例上执行应用的操作 |
-| /web                | 管控台前端静态资源     |
-| /ai/chat            | 智能管控自然语言交互    |
-| /ai/equip           | 智能管控支持的提示词配置  |
 
 ### 前后端分离
 

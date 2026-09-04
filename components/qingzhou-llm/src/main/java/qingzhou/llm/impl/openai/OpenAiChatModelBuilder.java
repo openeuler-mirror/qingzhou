@@ -9,6 +9,8 @@ import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ChatModelBuilderBase;
 import qingzhou.llm.impl.ImageAttachment;
+import qingzhou.llm.impl.ToolCallInfo;
+import qingzhou.llm.impl.Utils;
 import qingzhou.llm.openai.ImageDetail;
 import qingzhou.llm.openai.OpenAiDialect;
 import qingzhou.llm.openai.ReasoningEffort;
@@ -19,6 +21,8 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     public ReasoningEffort effort;
     public ImageDetail imageDetail;
+
+    private String reasoningField;
 
     public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json) {
         super(baseUrl, apiKey, model);
@@ -121,18 +125,38 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     /**
+     * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
+     * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
+     * （见 https://docs.vllm.ai/en/latest/features/reasoning_outputs/），
+     * 而 DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
+     */
+    String extractReasoning(Map<String, Object> delta) {
+        Object value = delta.get("reasoning");
+        if (value != null) {
+            reasoningField = "reasoning";
+        } else {
+            value = delta.get("reasoning_content");
+            if (value != null) {
+                reasoningField = "reasoning_content";
+            }
+        }
+
+        return value != null ? value.toString() : "";
+    }
+
+    /**
      * 将流式累积的 ToolCall 转为标准 OpenAI assistant 消息的 tool_calls 结构：
      * [{"id":"...","type":"function","function":{"name":"...","arguments":"..."}}]
      * <p>
      * 注意：不能直接把 ToolCall 对象交给 JSON 序列化——其 package-private 字段会被
      * Jackson 默认忽略（序列化为空对象），导致服务端校验报"工具类型不能为空"。
-     *
-     * @param reasoningField 本轮服务端实际使用的思考字段名（reasoning / reasoning_content）。
-     *                       思考内容需按原字段名回传，否则部分服务端（如 deepseek）会校验失败。
+     * <p>
+     * reasoningField 本轮服务端实际使用的思考字段名（reasoning / reasoning_content）。
+     * 思考内容需按原字段名回传，否则部分服务端（如 deepseek）会校验失败。
      */
-    Map<String, Object> buildAssistantMessage(String content, String reasoning, String reasoningField, Collection<OpenAiChatModel.ToolCall> toolCalls) {
+    Map<String, Object> buildAssistantMessage(String content, String reasoning, Collection<ToolCallInfo> toolCalls) {
         List<Map<String, Object>> calls = new ArrayList<>();
-        for (OpenAiChatModel.ToolCall tc : toolCalls) {
+        for (ToolCallInfo tc : toolCalls) {
             Map<String, Object> call = new HashMap<>();
             call.put("id", tc.id);
             call.put("type", "function");
@@ -146,8 +170,12 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         Map<String, Object> msg = new HashMap<>();
         msg.put("role", "assistant");
         msg.put("content", content);
-        // 用服务端本轮实际返回的字段名回传；未收到思考内容时沿用 reasoning_content（空串），保持向后兼容
-        msg.put(reasoningField == null || reasoningField.isEmpty() ? "reasoning_content" : reasoningField, reasoning);
+
+        if (reasoningField != null && reasoning != null && !reasoning.isEmpty()) {
+            // 用服务端本轮实际返回的字段名回传；未收到思考内容时沿用 reasoning_content（空串），保持向后兼容
+            msg.put(reasoningField, reasoning);
+        }
+
         if (!calls.isEmpty()) {
             msg.put("tool_calls", calls);
         }
@@ -158,7 +186,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", truncate(result, maxToolResultChars));
+        toolResultMsg.put("content", Utils.truncate(result, maxToolResultChars));
         return toolResultMsg;
     }
 
@@ -171,7 +199,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                 if (sysMsg.length() > 0) {
                     sysMsg.append("\n\n");
                 }
-                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(truncate(msg, maxPerRefChars));
+                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, maxPerRefChars));
             }
         }
 
@@ -181,7 +209,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(truncate(doc, maxPerRefChars));
+                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, maxPerRefChars));
                 }
             }
         }
@@ -234,11 +262,23 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     /**
-     * 超过 maxChars 的文本截断并追加省略提示，避免长文本全量计入输入 token。
+     * 兼容 OpenAI 兼容接口中 content 为字符串或数组（多模态 delta：[{type:text,text:...}]）的两种返回格式。
      */
-    private String truncate(String s, int maxChars) {
-        if (s == null) return null;
-        if (s.length() <= maxChars) return s;
-        return s.substring(0, maxChars) + "\n…（内容过长已截断，原长度 " + s.length() + " 字符）";
+    String extractText(Object content) {
+        if (content == null) return null;
+        if (content instanceof String) return (String) content;
+        if (content instanceof List) {
+            StringBuilder sb = new StringBuilder();
+            for (Object item : (List<?>) content) {
+                if (item instanceof Map) {
+                    Object text = ((Map<?, ?>) item).get("text");
+                    if (text instanceof String) {
+                        sb.append((String) text);
+                    }
+                }
+            }
+            return sb.length() > 0 ? sb.toString() : null;
+        }
+        return String.valueOf(content);
     }
 }

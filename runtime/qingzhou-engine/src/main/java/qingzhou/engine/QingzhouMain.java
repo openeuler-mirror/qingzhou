@@ -51,7 +51,7 @@ public class QingzhouMain {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (scheduledExecutor != null) {
-                scheduledExecutor.shutdown();
+                scheduledExecutor.shutdownNow();
             }
             try {
                 osgiFramework.stop();

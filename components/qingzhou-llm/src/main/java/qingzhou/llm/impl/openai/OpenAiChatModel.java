@@ -9,27 +9,16 @@ import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
-import qingzhou.llm.impl.LiteralSkillMatcher;
-import qingzhou.llm.impl.LogUtil;
-import qingzhou.llm.impl.ModelSkillMatcher;
-import qingzhou.llm.impl.SkillMatcher;
+import qingzhou.llm.impl.ToolCallInfo;
+import qingzhou.llm.impl.Utils;
 
 class OpenAiChatModel implements ChatModel {
-    /**
-     * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
-     * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
-     * （见 https://docs.vllm.ai/en/latest/features/reasoning_outputs/），
-     * 而 DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
-     */
-    static final String REASONING_FIELD = "reasoning";
-    static final String REASONING_FIELD_LEGACY = "reasoning_content";
-
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
     private final Map<String, Tool> baseTools = new HashMap<>();
 
-    private List<SkillMatcher> skillMatchers; // 技能匹配策略
+    private final SyncSender syncSender;
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
@@ -39,175 +28,13 @@ class OpenAiChatModel implements ChatModel {
         if (builder.tools != null) {
             builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
         }
-    }
 
-    // 按需加载技能恒
-    private List<Skill> getActiveSkills(Collection<Skill> skills, String message) {
-        if (skills == null || skills.isEmpty()) return Collections.emptyList();
-
-        List<Skill> active = new ArrayList<>();
-        List<Skill> candidates = new ArrayList<>();
-        for (Skill skill : skills) {
-            if (skill.required()) active.add(skill);
-            else candidates.add(skill);
-        }
-        if (!candidates.isEmpty()) {
-            for (SkillMatcher matcher : getSkillMatchers()) {
-                Collection<Skill> matched = matcher.match(candidates, message);
-                if (matched != null && !matched.isEmpty()) {
-                    active.addAll(matched);
-                    break;
-                }
-            }
-        }
-        return active;
-    }
-
-    private List<SkillMatcher> getSkillMatchers() {
-        if (skillMatchers == null) {
-            skillMatchers = new ArrayList<>();
-
-            // 词面强相关：直接激活，不再调用模型
-            skillMatchers.add(LiteralSkillMatcher.getInstance());
-            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
-            ChatModel selectionChatModel = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json)
-                    // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
-                    .connectTimeout(15_000)
-                    .readTimeout(60_000)
-                    .maxRetries(2)
-                    .build();
-            skillMatchers.add(new ModelSkillMatcher(selectionChatModel));
-        }
-        return skillMatchers;
-    }
-
-    // 激活技能的 tools 随对话挂载（显式工具 baseTools 恒挂载）
-    private Map<String, Tool> getActiveTools(Collection<Skill> activeSkills) {
-        Map<String, Tool> tools = new HashMap<>(baseTools);
-        for (Skill skill : activeSkills) {
-            if (skill.tools() != null) {
-                skill.tools().forEach(tool -> tools.put(tool.name(), tool));
-            }
-        }
-        return tools;
+        syncSender = new SyncSender(builder, httpClient, json);
     }
 
     @Override
     public String chat(String message, Attachment... attachment) {
-        try {
-            List<Skill> activeSkills = getActiveSkills(builder.skills, message);
-            Map<String, Tool> activeTools = getActiveTools(activeSkills);
-
-            List<Object> messages = new ArrayList<>();
-            messages.add(builder.buildSystemMessage(activeSkills));
-            messages.add(builder.buildUserMessage(message, attachment));
-            List<Object> toolDefs = builder.buildToolDefinitions(activeTools.values());
-
-            for (int i = 0; i < builder.maxToolIterations; i++) {
-                Response response = sendSync(messages, toolDefs, 0);
-                Map<String, Object> msg = getResponseMessage(response);
-                if (msg == null) return "";
-
-                List<ToolCall> toolCalls = parseToolCalls((List<Map<String, Object>>) msg.get("tool_calls"));
-                if (toolCalls.isEmpty()) {
-                    String content = extractText(msg.get("content"));
-                    return content != null ? content : "";
-                }
-                messages.add(msg);
-                for (ToolCall toolCall : toolCalls) {
-                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, activeTools)));
-                }
-            }
-            LogUtil.println("Tool iterations have reached the limit: " + builder.maxToolIterations);
-            messages.add(builder.buildUserMessageForMaxToolIterations());
-            Response response = sendSync(messages, null, 0); // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
-            Map<String, Object> msg = getResponseMessage(response);
-            if (msg == null) return "";
-            String content = extractText(msg.get("content"));
-            return content != null ? content : "";
-        } catch (Throwable t) {
-            LogUtil.println("Chat failed: " + errorMessage(t));
-            return null;
-        }
-    }
-
-    private Map<String, Object> getResponseMessage(Response response) throws Exception {
-        Map<String, Object> data = json.fromJson(new String(response.getBody(), StandardCharsets.UTF_8), Map.class);
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
-        if (choices == null || choices.isEmpty()) return null;
-        return (Map<String, Object>) choices.get(0).get("message");
-    }
-
-    private Response sendSync(List<Object> messages, List<Object> toolDefs, int attempt) throws Exception {
-        Response response;
-        try {
-            response = httpClient.send(newLlmRequest(messages, toolDefs, false));
-        } catch (Exception e) {
-            if (attempt < builder.maxRetries) {
-                sleepBackoff(attempt);
-                return sendSync(messages, toolDefs, attempt + 1);
-            }
-            throw e;
-        }
-        int status = response.getStatus();
-        if (status != 200) {
-            if ((status == 429 || status >= 500) && attempt < builder.maxRetries) {
-                sleepBackoff(attempt);
-                return sendSync(messages, toolDefs, attempt + 1);
-            }
-            throw new IllegalStateException("API error " + status + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
-        }
-        return response;
-    }
-
-    private Request newLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) throws Exception {
-        Map<String, Object> llmRequest = builder.buildLlmRequest(messages, toolDefs, stream);
-        Request request = httpClient.newRequest(builder.baseUrl)
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + builder.apiKey)
-                .header("Accept", stream ? "text/event-stream" : "application/json");
-        request.body(json.toJson(llmRequest).getBytes(StandardCharsets.UTF_8));
-        request.connectTimeout(builder.connectTimeout);
-        request.readTimeout(builder.readTimeout);
-        return request;
-    }
-
-    private List<ToolCall> parseToolCalls(List<Map<String, Object>> toolCalls) {
-        List<ToolCall> result = new ArrayList<>();
-        if (toolCalls == null) return result;
-
-        for (Map<String, Object> tc : toolCalls) {
-            Map<String, Object> fn = (Map<String, Object>) tc.get("function");
-            if (fn == null) continue;
-            ToolCall call = new ToolCall();
-            Object id = tc.get("id");
-            call.id = id != null ? String.valueOf(id) : "";
-            Object name = fn.get("name");
-            call.name = name != null ? String.valueOf(name) : "";
-            Object arguments = fn.get("arguments");
-            call.arguments = arguments != null ? String.valueOf(arguments) : null;
-            result.add(call);
-        }
-        return result;
-    }
-
-    private String invokeTool(ToolCall toolCall, Map<String, Tool> tools) {
-        Tool tool = tools.get(toolCall.name);
-        if (tool == null) return "Tool not found: " + toolCall.name;
-
-        Map<String, Object> args = null;
-        if (toolCall.arguments != null && !toolCall.arguments.isEmpty()) {
-            try {
-                args = json.fromJson(toolCall.arguments, Map.class);
-            } catch (Exception ignored) {
-            }
-        }
-        try {
-            return tool.invoke(args);
-        } catch (Throwable t) {
-            // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
-            return "Error: " + errorMessage(t);
-        }
+        return syncSender.chat(baseTools, message, attachment);
     }
 
     @Override
@@ -215,10 +42,10 @@ class OpenAiChatModel implements ChatModel {
         try {
             if (builder.skills != null && !builder.skills.isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
-                chatListener.onStatus(ChatStage.matching);
+                chatListener.onSkillMatching();
             }
-            List<Skill> activeSkills = getActiveSkills(builder.skills, message);
-            Map<String, Tool> activeTools = getActiveTools(activeSkills);
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json));
+            Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
             Map<String, Object> userMessage = builder.buildUserMessage(message, attachment);
@@ -230,7 +57,7 @@ class OpenAiChatModel implements ChatModel {
             // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
             doChat(messages, toolDefinitions, chatListener, activeTools, 0);
         } catch (Throwable t) {
-            chatListener.onError(errorMessage(t));
+            chatListener.onError(Utils.errorMessage(t));
         }
     }
 
@@ -240,7 +67,7 @@ class OpenAiChatModel implements ChatModel {
      */
     private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
         if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
-            LogUtil.println("Tool iterations have reached the limit: " + toolIteration);
+            Utils.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
@@ -255,12 +82,13 @@ class OpenAiChatModel implements ChatModel {
     private void sendWithRetry(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration,
                                HttpListener httpListener, int attempt) {
         try {
-            Response response = httpClient.send(newLlmRequest(messages, toolDefs, true), httpListener);
+            Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json);
+            Response response = httpClient.send(request, httpListener);
             if (response.getStatus() == 200) return;
 
             response.cancel();
             if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.maxRetries) {
-                sleepBackoff(attempt);
+                Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, attempt + 1);
                 return;
             }
@@ -268,25 +96,12 @@ class OpenAiChatModel implements ChatModel {
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.maxRetries) {
-                sleepBackoff(attempt);
+                Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, attempt + 1);
                 return;
             }
-            chatListener.onError(errorMessage(e));
+            chatListener.onError(Utils.errorMessage(e));
         }
-    }
-
-    private void sleepBackoff(int attempt) {
-        try {
-            Thread.sleep(1000L << attempt); // 指数退避：1s / 2s / 4s
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private String errorMessage(Throwable t) {
-        if (t == null) return "unknown error";
-        return t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
     }
 
     private class HttpListener implements ResponseListener {
@@ -298,9 +113,7 @@ class OpenAiChatModel implements ChatModel {
 
         private final StringBuilder content = new StringBuilder();
         private final StringBuilder reasoningContent = new StringBuilder();
-        /** 本轮服务端实际使用的思考字段名，多轮回传 assistant 消息时保持同名 */
-        private String reasoningField;
-        private final Map<Integer, ToolCall> toolCalls = new TreeMap<>();
+        private final Map<Integer, ToolCallInfo> toolCalls = new TreeMap<>();
         private boolean streamRetried; // 流式读取中断后是否已重发过（仅允许一次，避免重复输出）
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
         private Map<String, Object> usage; // 流式末尾 usage chunk（依赖 stream_options.include_usage）
@@ -342,14 +155,14 @@ class OpenAiChatModel implements ChatModel {
                 Map<String, Object> delta = (Map<String, Object>) choice.get("delta");
                 if (delta == null) return;
 
-                String reasoning = extractReasoning(delta);
+                String reasoning = builder.extractReasoning(delta);
                 if (!reasoning.isEmpty()) {
                     chatListener.onReasoning(reasoning);
                     reasoningContent.append(reasoning);
                 }
 
                 // 兼容 content 为字符串或数组（多模态 delta：[{type:text,text:...}]）的返回格式
-                String text = extractText(delta.get("content"));
+                String text = builder.extractText(delta.get("content"));
                 if (text != null && !text.isEmpty()) {
                     chatListener.onMessage(text);
                     content.append(text);
@@ -361,18 +174,18 @@ class OpenAiChatModel implements ChatModel {
                         Object indexObj = dtc.get("index");
                         if (indexObj == null) continue; // 缺少 index 的增量无法正确归位，跳过
                         int index = ((Number) indexObj).intValue();
-                        ToolCall toolCall = toolCalls.computeIfAbsent(index, k -> new ToolCall());
+                        ToolCallInfo toolCallInfo = toolCalls.computeIfAbsent(index, k -> new ToolCallInfo());
                         if (dtc.get("id") != null) {
-                            toolCall.id = String.valueOf(dtc.get("id"));
+                            toolCallInfo.id = String.valueOf(dtc.get("id"));
                         }
                         Map<String, Object> dfn = (Map<String, Object>) dtc.get("function");
                         if (dfn != null) {
                             if (dfn.get("name") != null) {
-                                toolCall.name = String.valueOf(dfn.get("name"));
+                                toolCallInfo.name = String.valueOf(dfn.get("name"));
                             }
                             if (dfn.get("arguments") != null) {
-                                String args = toolCall.arguments != null ? toolCall.arguments : "";
-                                toolCall.arguments = args + dfn.get("arguments");
+                                String args = toolCallInfo.arguments != null ? toolCallInfo.arguments : "";
+                                toolCallInfo.arguments = args + dfn.get("arguments");
                             }
                         }
                     }
@@ -380,32 +193,6 @@ class OpenAiChatModel implements ChatModel {
             } catch (Exception ignored) {
                 // 单行解析失败不影响流式输出
             }
-        }
-
-        /**
-         * 取本轮 delta 中的思考内容，并记住服务端使用的字段名（供多轮回传）。
-         * 优先级：reasoning（vLLM 新版）→ reasoning_content（DeepSeek 及旧版）。
-         */
-        private String extractReasoning(Map<String, Object> delta) {
-            Object value = delta.get(REASONING_FIELD);
-            String field = REASONING_FIELD;
-            String text = toStringOrEmpty(value);
-
-            if (text.isEmpty()) {
-                value = delta.get(REASONING_FIELD_LEGACY);
-                field = REASONING_FIELD_LEGACY;
-                text = toStringOrEmpty(value);
-            }
-
-            if (!text.isEmpty()) {
-                reasoningField = field;
-            }
-            return text;
-        }
-
-        private String toStringOrEmpty(Object value) {
-            if (value == null) return "";
-            return value instanceof String ? (String) value : String.valueOf(value);
         }
 
         @Override
@@ -420,12 +207,12 @@ class OpenAiChatModel implements ChatModel {
 
                 if (!toolCalls.isEmpty()) {
                     // 前次的思考内容在后面轮次请求时也会提交，（deepseek 强制要求存在tool参数时，将前面的思维链内容带上，其他国内厂商的最新模型也有这个要求）
-                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), reasoningField, toolCalls.values()));
+                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
 
                     chatListener.onReasoningPause();
-                    for (ToolCall toolCall : toolCalls.values()) {
-                        chatListener.onToolCall(toolCall.name);
-                        messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, tools)));
+                    for (ToolCallInfo toolCallInfo : toolCalls.values()) {
+                        chatListener.onToolCall(toolCallInfo.name);
+                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json)));
                     }
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);
@@ -437,7 +224,7 @@ class OpenAiChatModel implements ChatModel {
                     chatListener.onComplete();
                 }
             } catch (Throwable t) {
-                chatListener.onError(errorMessage(t));
+                chatListener.onError(Utils.errorMessage(t));
             }
         }
 
@@ -446,38 +233,11 @@ class OpenAiChatModel implements ChatModel {
             // 流式读取中断（如网络抖动）：若尚未输出任何内容（无正文、无工具调用），静默重发一次
             if (!streamRetried && content.length() == 0 && toolCalls.isEmpty()) {
                 streamRetried = true;
-                sleepBackoff(0);
+                Utils.sleepBackoff(0);
                 sendWithRetry(messages, toolDefs, chatListener, toolIteration, this, 0);
                 return;
             }
-            chatListener.onError(errorMessage(t));
+            chatListener.onError(Utils.errorMessage(t));
         }
-    }
-
-    /**
-     * 兼容 OpenAI 兼容接口中 content 为字符串或数组（多模态 delta：[{type:text,text:...}]）的两种返回格式。
-     */
-    private String extractText(Object content) {
-        if (content == null) return null;
-        if (content instanceof String) return (String) content;
-        if (content instanceof List) {
-            StringBuilder sb = new StringBuilder();
-            for (Object item : (List<?>) content) {
-                if (item instanceof Map) {
-                    Object text = ((Map<?, ?>) item).get("text");
-                    if (text instanceof String) {
-                        sb.append((String) text);
-                    }
-                }
-            }
-            return sb.length() > 0 ? sb.toString() : null;
-        }
-        return String.valueOf(content);
-    }
-
-    static class ToolCall {
-        String id;
-        String name;
-        String arguments;
     }
 }
