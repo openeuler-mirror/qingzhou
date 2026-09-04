@@ -390,6 +390,7 @@ public class AgentTest {
         setField(httpServer, "logger", new LoggerImpl());
         Map<String, String> config = new HashMap<>();
         config.put("port", "0"); // 由操作系统分配空闲端口
+        config.put("ssl_enabled", "false"); // 由操作系统分配空闲端口
         httpServer.start(config);
         Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
         field.setAccessible(true);

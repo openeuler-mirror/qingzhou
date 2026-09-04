@@ -51,6 +51,8 @@ public interface ChatModelFactory {
          */
         ChatModelBuilder readTimeout(int readTimeout);
 
+        ChatModelBuilder enableThinking(boolean enableThinking);
+
         LlmDialect getLlmDialect();
 
         ChatModel build();

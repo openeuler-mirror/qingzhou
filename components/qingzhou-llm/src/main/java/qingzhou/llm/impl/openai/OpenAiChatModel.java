@@ -1,6 +1,5 @@
 package qingzhou.llm.impl.openai;
 
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -10,6 +9,8 @@ import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
+import qingzhou.llm.impl.LiteralSkillMatcher;
+import qingzhou.llm.impl.LogUtil;
 import qingzhou.llm.impl.ModelSkillMatcher;
 import qingzhou.llm.impl.SkillMatcher;
 
@@ -18,15 +19,13 @@ class OpenAiChatModel implements ChatModel {
     private final HttpClient httpClient;
     private final Json json;
     private final Map<String, Tool> baseTools = new HashMap<>();
-    private SkillMatcher skillMatcher; // 技能匹配策略
+
+    private List<SkillMatcher> skillMatchers; // 技能匹配策略
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
         this.httpClient = httpClient;
         this.json = json;
-
-        // 安全校验：API Key 不应通过明文 HTTP 传输（本机回环除外）
-        validateBaseUrl(builder.baseUrl);
 
         if (builder.tools != null) {
             builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
@@ -44,9 +43,33 @@ class OpenAiChatModel implements ChatModel {
             else candidates.add(skill);
         }
         if (!candidates.isEmpty()) {
-            active.addAll(getSkillMatcher().match(candidates, message));
+            for (SkillMatcher matcher : getSkillMatchers()) {
+                Collection<Skill> matched = matcher.match(candidates, message);
+                if (matched != null && !matched.isEmpty()) {
+                    active.addAll(matched);
+                    break;
+                }
+            }
         }
         return active;
+    }
+
+    private List<SkillMatcher> getSkillMatchers() {
+        if (skillMatchers == null) {
+            skillMatchers = new ArrayList<>();
+
+            // 词面强相关：直接激活，不再调用模型
+            skillMatchers.add(LiteralSkillMatcher.getInstance());
+            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
+            ChatModel selectionChatModel = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json)
+                    // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
+                    .connectTimeout(15_000)
+                    .readTimeout(60_000)
+                    .maxRetries(2)
+                    .build();
+            skillMatchers.add(new ModelSkillMatcher(selectionChatModel));
+        }
+        return skillMatchers;
     }
 
     // 激活技能的 tools 随对话挂载（显式工具 baseTools 恒挂载）
@@ -58,19 +81,6 @@ class OpenAiChatModel implements ChatModel {
             }
         }
         return tools;
-    }
-
-    private SkillMatcher getSkillMatcher() {
-        if (skillMatcher == null) {
-            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
-            OpenAiChatModelBuilder selectionBuilder = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json);
-            // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
-            selectionBuilder.connectTimeout(15_000);
-            selectionBuilder.readTimeout(60_000);
-            selectionBuilder.maxRetries(2);
-            skillMatcher = new ModelSkillMatcher(selectionBuilder.build());
-        }
-        return skillMatcher;
     }
 
     @Override
@@ -99,15 +109,16 @@ class OpenAiChatModel implements ChatModel {
                     messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, activeTools)));
                 }
             }
-            System.err.println("Tool iterations have reached the limit: " + builder.maxToolIterations); // 方便TW等集成，不用Logger对象
+            LogUtil.println("Tool iterations have reached the limit: " + builder.maxToolIterations);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             Response response = sendSync(messages, null, 0); // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
             Map<String, Object> msg = getResponseMessage(response);
             if (msg == null) return "";
             String content = extractText(msg.get("content"));
             return content != null ? content : "";
-        } catch (Exception e) {
-            throw new IllegalStateException(errorMessage(e), e);
+        } catch (Throwable t) {
+            LogUtil.println("Chat failed: " + errorMessage(t));
+            return null;
         }
     }
 
@@ -220,7 +231,7 @@ class OpenAiChatModel implements ChatModel {
      */
     private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
         if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
-            System.err.println("Tool iterations have reached the limit: " + toolIteration);
+            LogUtil.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
@@ -267,32 +278,6 @@ class OpenAiChatModel implements ChatModel {
     private String errorMessage(Throwable t) {
         if (t == null) return "unknown error";
         return t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName();
-    }
-
-    private void validateBaseUrl(String baseUrl) {
-        if (baseUrl == null || baseUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("LLM baseUrl is missing");
-        }
-        try {
-            URL url = new URL(baseUrl);
-            String scheme = url.getProtocol();
-            String host = url.getHost();
-            if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
-                throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
-            }
-            if ("http".equalsIgnoreCase(scheme) && !isLoopback(host)) {
-                System.err.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
-            }
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid LLM baseUrl: " + baseUrl, e);
-        }
-    }
-
-    private boolean isLoopback(String host) {
-        if (host == null) return false;
-        return "localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host) || "::1".equals(host);
     }
 
     private class HttpListener implements ResponseListener {

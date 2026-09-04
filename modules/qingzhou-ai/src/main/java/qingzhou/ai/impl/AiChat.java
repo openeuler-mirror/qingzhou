@@ -116,22 +116,22 @@ public class AiChat implements HttpHandler {
         if (app != null && !app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
+
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache")
-                // 告知反代不要缓冲 SSE（如 nginx），否则事件会攒到连接结束才一次性到达
-                .header("x-accel-buffering", "no");
+                .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
 
         // 先告知“已受理”：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
         SseListener sseListener = new SseListener(httpResponse, logger, json);
         sseListener.sendStarted();
-
         try {
             ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
                     .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
+                    .enableThinking(true)
                     .build();
             chatModel.chat(question, sseListener, images);
         } catch (Throwable t) {

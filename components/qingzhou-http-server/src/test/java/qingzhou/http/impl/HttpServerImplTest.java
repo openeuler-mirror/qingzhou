@@ -132,6 +132,7 @@ public class HttpServerImplTest {
     static HttpServerImpl build(int port) throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("port", port + "");
+        config.put("ssl_enabled", "false");
         return start(config);
     }
 

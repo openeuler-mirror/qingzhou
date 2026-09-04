@@ -21,7 +21,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public int maxToolResultChars = 2000;
     public int maxPerRefChars = 6000;
 
-    public int maxRetries = 3;
+    public int maxRetries = 4;
     public int maxToolIterations = 20;
 
     public int connectTimeout = 60 * 1000;

@@ -175,7 +175,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.http.server</Export-Package>
-                        <Import-Package>qingzhou.logger,javax.security.cert,org.osgi.framework</Import-Package>
+                        <Import-Package>
+                            qingzhou.logger,
+                            org.osgi.framework,
+                            javax.net.ssl,javax.security.cert
+                        </Import-Package>
                         <Embed-Dependency>
                             reactor-netty-core,reactor-netty-http,
                             reactor-core,reactive-streams,
