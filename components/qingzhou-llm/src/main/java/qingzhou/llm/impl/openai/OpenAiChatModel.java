@@ -15,6 +15,15 @@ import qingzhou.llm.impl.ModelSkillMatcher;
 import qingzhou.llm.impl.SkillMatcher;
 
 class OpenAiChatModel implements ChatModel {
+    /**
+     * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
+     * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
+     * （见 https://docs.vllm.ai/en/latest/features/reasoning_outputs/），
+     * 而 DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
+     */
+    static final String REASONING_FIELD = "reasoning";
+    static final String REASONING_FIELD_LEGACY = "reasoning_content";
+
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
@@ -206,7 +215,7 @@ class OpenAiChatModel implements ChatModel {
         try {
             if (builder.skills != null && !builder.skills.isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
-                chatListener.onStatus("matching");
+                chatListener.onStatus(ChatStage.matching);
             }
             List<Skill> activeSkills = getActiveSkills(builder.skills, message);
             Map<String, Tool> activeTools = getActiveTools(activeSkills);
@@ -289,6 +298,8 @@ class OpenAiChatModel implements ChatModel {
 
         private final StringBuilder content = new StringBuilder();
         private final StringBuilder reasoningContent = new StringBuilder();
+        /** 本轮服务端实际使用的思考字段名，多轮回传 assistant 消息时保持同名 */
+        private String reasoningField;
         private final Map<Integer, ToolCall> toolCalls = new TreeMap<>();
         private boolean streamRetried; // 流式读取中断后是否已重发过（仅允许一次，避免重复输出）
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
@@ -331,8 +342,8 @@ class OpenAiChatModel implements ChatModel {
                 Map<String, Object> delta = (Map<String, Object>) choice.get("delta");
                 if (delta == null) return;
 
-                String reasoning = (String) delta.get("reasoning_content");
-                if (reasoning != null && !reasoning.isEmpty()) {
+                String reasoning = extractReasoning(delta);
+                if (!reasoning.isEmpty()) {
                     chatListener.onReasoning(reasoning);
                     reasoningContent.append(reasoning);
                 }
@@ -371,6 +382,32 @@ class OpenAiChatModel implements ChatModel {
             }
         }
 
+        /**
+         * 取本轮 delta 中的思考内容，并记住服务端使用的字段名（供多轮回传）。
+         * 优先级：reasoning（vLLM 新版）→ reasoning_content（DeepSeek 及旧版）。
+         */
+        private String extractReasoning(Map<String, Object> delta) {
+            Object value = delta.get(REASONING_FIELD);
+            String field = REASONING_FIELD;
+            String text = toStringOrEmpty(value);
+
+            if (text.isEmpty()) {
+                value = delta.get(REASONING_FIELD_LEGACY);
+                field = REASONING_FIELD_LEGACY;
+                text = toStringOrEmpty(value);
+            }
+
+            if (!text.isEmpty()) {
+                reasoningField = field;
+            }
+            return text;
+        }
+
+        private String toStringOrEmpty(Object value) {
+            if (value == null) return "";
+            return value instanceof String ? (String) value : String.valueOf(value);
+        }
+
         @Override
         public void onComplete() {
             try {
@@ -383,7 +420,7 @@ class OpenAiChatModel implements ChatModel {
 
                 if (!toolCalls.isEmpty()) {
                     // 前次的思考内容在后面轮次请求时也会提交，（deepseek 强制要求存在tool参数时，将前面的思维链内容带上，其他国内厂商的最新模型也有这个要求）
-                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
+                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), reasoningField, toolCalls.values()));
 
                     chatListener.onReasoningPause();
                     for (ToolCall toolCall : toolCalls.values()) {
