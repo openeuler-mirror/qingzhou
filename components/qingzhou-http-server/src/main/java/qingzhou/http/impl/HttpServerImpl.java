@@ -8,6 +8,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.*;
+import qingzhou.http.server.AuthResult.Status;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -205,7 +206,7 @@ public class HttpServerImpl implements HttpServer {
             String[] excludedPaths = authenticator.excludedPaths();
             if (excludedPaths != null) {
                 for (String exclude : excludedPaths) {
-                    if (path.startsWith(exclude)) return AuthResult.pass();
+                    if (path.startsWith(exclude)) return AuthResult.pass(null);
                 }
             }
         }
@@ -220,11 +221,11 @@ public class HttpServerImpl implements HttpServer {
                 logger.error("authentication error: " + authentication.getClass().getName(), e);
                 r = AuthResult.reject("authentication error");
             }
-            if (r.isPassed()) return r;
+            if (r.status() == Status.PASS) return r;
 
-            if (r.isRejected() && reject == null) {
+            if (r.status() == Status.REJECT && reject == null) {
                 reject = r;
-            } else if (r.isChallenge() && challenge == null) {
+            } else if (r.status() == Status.CHALLENGE && challenge == null) {
                 challenge = r;
             }
         }

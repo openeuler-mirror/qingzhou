@@ -70,6 +70,19 @@ public class HttpRequestImplTest {
         Assert.assertNull(request.getParameter("name"));
     }
 
+    // ---------- 3.1 表单类型但请求体是二进制密文 ----------
+
+    @Test
+    public void binaryBodyWithFormType_getParameters_keepsQueryParams() {
+        HttpRequestImpl request = newRequest("/path?key=dup", "/path", HttpMethod.POST, formHeaders(), true);
+        request.setRequestBody("ab%zz=1".getBytes(StandardCharsets.UTF_8));
+
+        Map<String, java.util.List<String>> parameters = request.getParameters();
+
+        Assert.assertEquals(parameters.get("key"), Arrays.asList("dup"));
+        Assert.assertEquals(request.getParameter("key"), "dup");
+    }
+
     // ---------- 4. 无 query 无 body 返回空集合 ----------
 
     @Test

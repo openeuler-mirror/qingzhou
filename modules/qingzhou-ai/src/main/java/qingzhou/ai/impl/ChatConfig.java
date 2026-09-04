@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Component;
@@ -32,7 +31,7 @@ public class ChatConfig implements HttpHandler {
     @Reference
     private I18nService i18nService;
 
-    final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
+    final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 
     private final List<String[]> promptSamples = new ArrayList<String[]>() {{
         add(new String[]{"请概述轻舟平台的价值和意义", "en:Please summarize the value and significance of the Qingzhou platform"});

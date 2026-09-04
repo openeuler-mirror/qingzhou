@@ -11,13 +11,14 @@ import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ModelSkillMatcher;
+import qingzhou.llm.impl.SkillMatcher;
 
 class OpenAiChatModel implements ChatModel {
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
     private final Map<String, Tool> baseTools = new HashMap<>();
-    private SkillMatcher defaultMatcher; // 默认匹配策略：调用大模型选择（懒创建，复用同一模型配置）
+    private SkillMatcher skillMatcher; // 技能匹配策略
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
         this.builder = builder;
@@ -32,34 +33,24 @@ class OpenAiChatModel implements ChatModel {
         }
     }
 
-    // 按需加载：optional()==false 的技能恒激活，其余交匹配策略按 description 选择
-    private List<Skill> resolveSkills(Collection<Skill> skills, String message) {
+    // 按需加载技能恒
+    private List<Skill> getActiveSkills(Collection<Skill> skills, String message) {
         if (skills == null || skills.isEmpty()) return Collections.emptyList();
 
         List<Skill> active = new ArrayList<>();
         List<Skill> candidates = new ArrayList<>();
         for (Skill skill : skills) {
-            if (skill.optional()) candidates.add(skill);
-            else active.add(skill);
+            if (skill.required()) active.add(skill);
+            else candidates.add(skill);
         }
         if (!candidates.isEmpty()) {
-            active.addAll(matcher().match(candidates, message));
+            active.addAll(getSkillMatcher().match(candidates, message));
         }
         return active;
     }
 
-    private SkillMatcher matcher() {
-        if (builder.skillMatcher != null) return builder.skillMatcher;
-        if (defaultMatcher == null) {
-            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
-            OpenAiChatModelBuilder selectionBuilder = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json);
-            defaultMatcher = new ModelSkillMatcher(selectionBuilder.build());
-        }
-        return defaultMatcher;
-    }
-
     // 激活技能的 tools 随对话挂载（显式工具 baseTools 恒挂载）
-    private Map<String, Tool> collectTools(Collection<Skill> activeSkills) {
+    private Map<String, Tool> getActiveTools(Collection<Skill> activeSkills) {
         Map<String, Tool> tools = new HashMap<>(baseTools);
         for (Skill skill : activeSkills) {
             if (skill.tools() != null) {
@@ -69,16 +60,25 @@ class OpenAiChatModel implements ChatModel {
         return tools;
     }
 
+    private SkillMatcher getSkillMatcher() {
+        if (skillMatcher == null) {
+            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
+            OpenAiChatModelBuilder selectionBuilder = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json);
+            skillMatcher = new ModelSkillMatcher(selectionBuilder.build());
+        }
+        return skillMatcher;
+    }
+
     @Override
     public String chat(String message, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = resolveSkills(builder.skills, message);
-            Map<String, Tool> tools = collectTools(activeSkills);
+            List<Skill> activeSkills = getActiveSkills(builder.skills, message);
+            Map<String, Tool> activeTools = getActiveTools(activeSkills);
 
             List<Object> messages = new ArrayList<>();
             messages.add(builder.buildSystemMessage(activeSkills));
             messages.add(builder.buildUserMessage(message, attachment));
-            List<Object> toolDefs = builder.buildToolDefinitions(tools.values());
+            List<Object> toolDefs = builder.buildToolDefinitions(activeTools.values());
 
             for (int i = 0; i < builder.maxToolIterations; i++) {
                 Response response = sendSync(messages, toolDefs, 0);
@@ -92,7 +92,7 @@ class OpenAiChatModel implements ChatModel {
                 }
                 messages.add(msg);
                 for (ToolCall toolCall : toolCalls) {
-                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, tools)));
+                    messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, activeTools)));
                 }
             }
             System.err.println("Tool iterations have reached the limit: " + builder.maxToolIterations); // 方便TW等集成，不用Logger对象
@@ -189,18 +189,18 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = resolveSkills(builder.skills, message);
-            Map<String, Tool> tools = collectTools(activeSkills);
+            List<Skill> activeSkills = getActiveSkills(builder.skills, message);
+            Map<String, Tool> activeTools = getActiveTools(activeSkills);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
             Map<String, Object> userMessage = builder.buildUserMessage(message, attachment);
-            List<Object> toolDefinitions = builder.buildToolDefinitions(tools.values());
+            List<Object> toolDefinitions = builder.buildToolDefinitions(activeTools.values());
 
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
             messages.add(userMessage);
             chatListener.onBegin();
-            doChat(messages, toolDefinitions, chatListener, tools, 0);
+            doChat(messages, toolDefinitions, chatListener, activeTools, 0);
         } catch (Throwable t) {
             chatListener.onError(errorMessage(t));
         }

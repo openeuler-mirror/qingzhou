@@ -48,8 +48,8 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
         if (needAuth) {
             AuthResult authResult = httpServer.authenticate(httpRequest);
-            if (!authResult.isPassed()) {
-                if (authResult.isChallenge()) {
+            if (authResult.status() != AuthResult.Status.PASS) {
+                if (authResult.status() == AuthResult.Status.CHALLENGE) {
                     return response.status(HttpResponseStatus.FOUND)
                             .header("Location", authResult.getLocation())
                             .header("Cache-Control", "no-store")

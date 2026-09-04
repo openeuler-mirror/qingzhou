@@ -4,10 +4,7 @@ import java.util.Map;
 
 public interface SkillService {
     String SKILL_NAME = "SKILL_NAME";
-
-    String HEALTH_CHECK_SKILL = "HealthCheck";
-    String TROUBLESHOOTING_SKILL = "Troubleshooting";
-    String SYSTEM_SKILL = "SystemSkill";
+    String SKILL_REQUIRED = "SKILL_REQUIRED";
 
     String[] nameI18n();
 
@@ -29,4 +26,9 @@ public interface SkillService {
     enum AttachmentType {
         document, image
     }
+
+    // 内置技能
+    String HEALTH_CHECK_SKILL = "HealthCheck";
+    String TROUBLESHOOTING_SKILL = "Troubleshooting";
+    String SYSTEM_SKILL = "SystemSkill";
 }

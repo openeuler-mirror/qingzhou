@@ -81,13 +81,17 @@ class HttpRequestImpl implements HttpRequest {
         if (parameters == null) {
             parameters = new HashMap<>(new QueryStringDecoder(request.uri()).parameters());
             if (requestBody != null && requestBody.length > 0 && isFormUrlencoded()) {
-                // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
-                new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8)).parameters()
-                        .forEach((key, values) -> parameters.merge(key, values, (oldValues, newValues) -> {
-                            List<String> merged = new ArrayList<>(oldValues);
-                            merged.addAll(newValues);
-                            return merged;
-                        }));
+                try {
+                    // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
+                    new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8)).parameters()
+                            .forEach((key, values) -> parameters.merge(key, values, (oldValues, newValues) -> {
+                                List<String> merged = new ArrayList<>(oldValues);
+                                merged.addAll(newValues);
+                                return merged;
+                            }));
+                } catch (IllegalArgumentException e) {
+                    // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
+                }
             }
         }
         return parameters;

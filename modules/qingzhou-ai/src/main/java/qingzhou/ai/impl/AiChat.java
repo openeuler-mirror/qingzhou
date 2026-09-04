@@ -15,7 +15,6 @@ import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
-import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
@@ -96,34 +95,19 @@ public class AiChat implements HttpHandler {
         if (params == null || question == null || question.trim().isEmpty()) return;
         question = question.trim();
 
-        SkillService selectedSkillService = null;
         List<String> refDocs = null;
         Attachment[] images = null;
-        String skillName = (String) params.get("skill");
-        if (skillName != null) {
-            for (Map.Entry<SkillService, Map<String, Object>> entry : chatConfig.llmSkills.entrySet()) {
-                SkillService skillService = entry.getKey();
-                Map<String, Object> skillProperties = entry.getValue();
-                if (skillProperties.get(SkillService.SKILL_NAME).equals(skillName)) {
-                    selectedSkillService = skillService;
-                    Map<SkillService.AttachmentType, String[]> attachmentTypeMap = skillService.attachments();
-                    if (attachmentTypeMap != null) {
-                        for (SkillService.AttachmentType attachmentType : attachmentTypeMap.keySet()) {
-                            List<String> attachments = findAttachments(params, attachmentType);
-                            switch (attachmentType) {
-                                case document:
-                                    refDocs = attachments;
-                                    break;
-                                case image:
-                                    images = attachments.stream().map(s -> chatModelFactory.newImageAttachment(s, null)).toArray(Attachment[]::new);
-                                    break;
-                                default:
-                                    logger.warn("unsupported type: " + attachmentType);
-                            }
-                        }
-                    }
+        for (SkillService.AttachmentType attachmentType : SkillService.AttachmentType.values()) {
+            List<String> attachments = findAttachments(params, attachmentType);
+            switch (attachmentType) {
+                case document:
+                    refDocs = attachments;
                     break;
-                }
+                case image:
+                    images = attachments.stream().map(s -> chatModelFactory.newImageAttachment(s, null)).toArray(Attachment[]::new);
+                    break;
+                default:
+                    logger.warn("unsupported type: " + attachmentType);
             }
         }
 
@@ -137,18 +121,10 @@ public class AiChat implements HttpHandler {
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache");
 
-        Skill selectedSkill = null;
-        if (selectedSkillService != null) {
-            selectedSkill = Skill.of(skillName,
-                    selectedSkillService.description(),
-                    selectedSkillService.instruction(),
-                    LlmConverter.convertAiTool(selectedSkillService.tools()));
-        }
         ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
                 .systemPrompt(SYSTEM_PROMPT)
                 .docs(refDocs)
-                .skills(selectedSkill == null ? null : Collections.singleton(selectedSkill))
-                .imageDetail(ChatModelFactory.ImageDetail.low)
+                .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
                 .build();
         chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
     }
