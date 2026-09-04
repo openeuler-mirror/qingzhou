@@ -1,5 +1,5 @@
 package qingzhou.llm.openai;
 
 public enum ReasoningEffort {
-    low, medium, high
+    none, minimal, low, medium, high, xhigh, max
 }

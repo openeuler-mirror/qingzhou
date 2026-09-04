@@ -33,6 +33,15 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     @Override
+    public ChatModelFactory.ChatModelBuilder enableThinking(boolean enableThinking) {
+        checkSealed();
+        if (this.effort == null || this.effort == ReasoningEffort.none) {
+            this.effort = ReasoningEffort.medium;
+        }
+        return this;
+    }
+
+    @Override
     public LlmDialect getLlmDialect() {
         checkSealed();
         return this;

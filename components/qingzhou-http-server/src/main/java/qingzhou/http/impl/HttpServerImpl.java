@@ -1,12 +1,11 @@
 package qingzhou.http.impl;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.time.Duration;
 import java.util.*;
-
 import javax.net.ssl.KeyManagerFactory;
 
 import io.netty.channel.ChannelOption;
@@ -47,8 +46,8 @@ public class HttpServerImpl implements HttpServer {
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
 
-        boolean sslEnabled = getConfig(config, "ssl_enabled", false);
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
+        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
         SslContext sslContext = sslEnabled ? buildSslContext(config) : null;
 
         isAuthDisabled = getConfig(config, "auth_disabled", false);
@@ -113,7 +112,7 @@ public class HttpServerImpl implements HttpServer {
         String password = config.get("ssl_keystore_password");
         char[] keyPassword = password == null ? new char[0] : password.toCharArray();
 
-        try (InputStream in = new FileInputStream(keystoreFile)) {
+        try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
             keyStore.load(in, keyPassword);
 
