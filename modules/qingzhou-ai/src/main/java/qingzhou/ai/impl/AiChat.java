@@ -119,14 +119,28 @@ public class AiChat implements HttpHandler {
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
-                .header("cache-control", "no-cache");
+                .header("cache-control", "no-cache")
+                // 告知反代不要缓冲 SSE（如 nginx），否则事件会攒到连接结束才一次性到达
+                .header("x-accel-buffering", "no");
 
-        ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
-                .systemPrompt(SYSTEM_PROMPT)
-                .docs(refDocs)
-                .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
-                .build();
-        chatModel.chat(question, new SseListener(httpResponse, logger, json), images);
+        // 先告知“已受理”：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
+        SseListener sseListener = new SseListener(httpResponse, logger, json);
+        sseListener.sendStarted();
+
+        try {
+            ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
+                    .systemPrompt(SYSTEM_PROMPT)
+                    .docs(refDocs)
+                    .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
+                    .build();
+            chatModel.chat(question, sseListener, images);
+        } catch (Throwable t) {
+            // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
+            // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”
+            String msg = t.getMessage() != null && !t.getMessage().isEmpty() ? t.getMessage() : t.toString();
+            logger.error("ai chat request failed: " + msg, t);
+            sseListener.onError(msg);
+        }
     }
 
     private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {

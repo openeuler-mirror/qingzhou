@@ -64,6 +64,10 @@ class OpenAiChatModel implements ChatModel {
         if (skillMatcher == null) {
             // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
             OpenAiChatModelBuilder selectionBuilder = new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json);
+            // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
+            selectionBuilder.connectTimeout(15_000);
+            selectionBuilder.readTimeout(60_000);
+            selectionBuilder.maxRetries(2);
             skillMatcher = new ModelSkillMatcher(selectionBuilder.build());
         }
         return skillMatcher;
@@ -189,6 +193,10 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
+            if (builder.skills != null && !builder.skills.isEmpty()) {
+                // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
+                chatListener.onStatus("matching");
+            }
             List<Skill> activeSkills = getActiveSkills(builder.skills, message);
             Map<String, Tool> activeTools = getActiveTools(activeSkills);
 
@@ -199,7 +207,7 @@ class OpenAiChatModel implements ChatModel {
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
             messages.add(userMessage);
-            chatListener.onBegin();
+            // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
             doChat(messages, toolDefinitions, chatListener, activeTools, 0);
         } catch (Throwable t) {
             chatListener.onError(errorMessage(t));
@@ -397,7 +405,6 @@ class OpenAiChatModel implements ChatModel {
                         chatListener.onToolCall(toolCall.name);
                         messages.add(builder.buildToolMessage(toolCall.id, invokeTool(toolCall, tools)));
                     }
-                    chatListener.onReasoningResume();
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);
                 } else {
