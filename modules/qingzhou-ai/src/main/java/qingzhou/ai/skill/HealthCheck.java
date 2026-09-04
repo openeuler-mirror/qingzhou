@@ -13,11 +13,11 @@ import qingzhou.ai.ToolService;
 public class HealthCheck extends SkillServiceBase implements SkillService {
     public HealthCheck() {
         super(new String[]{"系统巡检", "en:System Inspection"},
-                "当用户意图涉及对服务器、应用或IT基础设施的健康状态检查、性能监控或例行排查时触发此技能。具体触发场景包括但不限于：\n" +
-                        "用户明确请求进行系统巡检、健康检查（Health Check）或状态诊断（如：“帮我做个系统巡检”、“检查下服务器状态”）。\n" +
-                        "用户要求查看或汇报当前的资源使用情况（如 CPU、内存、磁盘、网络负载等）。\n" +
-                        "用户询问系统指标是否达到或超过预设的安全告警阈值。\n" +
-                        "用户要求基于当前系统状态生成一份结构化的巡检报告或运维诊断总结。");
+                "当用户意图涉及对平台资源进行性能监控、健康检查时激活此技能。具体激活场景包括但不限于：\n" +
+                        "- 系统巡检、健康检查（Health Check）或状态诊断（如：“帮我做个系统巡检”、“检查下服务器状态”）；\n" +
+                        "- 查看或汇报当前的资源使用情况（如 CPU、内存、磁盘、网络负载等）；\n" +
+                        "- 系统指标是否达到安全告警阈值；\n" +
+                        "- 生成一份结构化的巡检报告；\n");
     }
 
     @Override

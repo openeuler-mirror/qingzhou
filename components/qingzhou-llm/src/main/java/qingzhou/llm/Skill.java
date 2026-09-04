@@ -14,13 +14,11 @@ public interface Skill {
     Collection<Tool> tools();
 
     /**
-     * 是否需按 description 匹配激活：默认 true（参与匹配，命中才激活）；false 表示恒激活（跳过匹配直接加载）。
+     * 是否需按 description 匹配激活。false：参与匹配，命中才激活；true：表示恒激活（跳过匹配直接加载）。
      */
-    default boolean optional() {
-        return true;
-    }
-
-    static Skill of(String name, String description, String instruction, Collection<Tool> tools) {
+    boolean required();
+    
+    static Skill of(String name, String description, String instruction, Collection<Tool> tools, boolean required) {
         return new Skill() {
             @Override
             public String name() {
@@ -40,6 +38,11 @@ public interface Skill {
             @Override
             public Collection<Tool> tools() {
                 return tools;
+            }
+
+            @Override
+            public boolean required() {
+                return required;
             }
         };
     }

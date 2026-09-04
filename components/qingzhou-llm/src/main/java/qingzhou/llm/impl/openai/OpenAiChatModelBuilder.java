@@ -9,6 +9,7 @@ import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ChatModelBuilderBase;
 import qingzhou.llm.impl.ImageAttachment;
+import qingzhou.llm.openai.ImageDetail;
 import qingzhou.llm.openai.OpenAiDialect;
 import qingzhou.llm.openai.ReasoningEffort;
 
@@ -17,6 +18,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     private final Json json;
 
     public ReasoningEffort effort;
+    public ImageDetail imageDetail;
 
     public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json) {
         super(baseUrl, apiKey, model);
@@ -40,6 +42,13 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     public OpenAiDialect reasoningEffort(ReasoningEffort effort) {
         checkSealed();
         this.effort = effort;
+        return this;
+    }
+
+    @Override
+    public OpenAiDialect imageDetail(ImageDetail imageDetail) {
+        checkSealed();
+        this.imageDetail = imageDetail;
         return this;
     }
 
@@ -143,15 +152,13 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     Map<String, Object> buildSystemMessage(Collection<Skill> activeSkills) {
         StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
 
-        if (activeSkills != null) {
-            for (Skill skill : activeSkills) {
-                String msg = skill.instruction();
-                if (msg != null && !msg.isEmpty()) {
-                    if (sysMsg.length() > 0) {
-                        sysMsg.append("\n\n");
-                    }
-                    sysMsg.append("[技能：").append(skill.name()).append("]\n").append(truncate(msg, maxPerRefChars));
+        for (Skill skill : activeSkills) {
+            String msg = skill.instruction();
+            if (msg != null && !msg.isEmpty()) {
+                if (sysMsg.length() > 0) {
+                    sysMsg.append("\n\n");
                 }
+                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(truncate(msg, maxPerRefChars));
             }
         }
 
@@ -199,12 +206,12 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return buildUserMessage("已达工具调用次数上限，停止继续执行工具，无论数据是否充分，请给出最后结论并提醒工具调用次数已达上限。", null);
     }
 
-    private Map<String, Object> getImagePart(ImageAttachment image, String imageDetail) {
+    private Map<String, Object> getImagePart(ImageAttachment image, ImageDetail imageDetail) {
         Map<String, Object> imageUrl = new HashMap<>();
         String mimeType = image.mimeType != null ? image.mimeType : "image/jpeg";
         imageUrl.put("url", "data:" + mimeType + ";base64," + image.base64);
         if (imageDetail != null) {
-            imageUrl.put("detail", imageDetail);
+            imageUrl.put("detail", imageDetail.name());
         }
 
         Map<String, Object> imagePart = new HashMap<>();
@@ -212,7 +219,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         imagePart.put("image_url", imageUrl);
         return imagePart;
     }
-    
+
     /**
      * 超过 maxChars 的文本截断并追加省略提示，避免长文本全量计入输入 token。
      */

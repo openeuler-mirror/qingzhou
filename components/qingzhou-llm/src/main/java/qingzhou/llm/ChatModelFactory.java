@@ -22,13 +22,6 @@ public interface ChatModelFactory {
         ChatModelBuilder skills(Collection<Skill> skills);
 
         /**
-         * 技能匹配策略：默认调用大模型选择（ModelSkillMatcher）；可注入自定义 SkillMatcher。
-         */
-        ChatModelBuilder skillMatcher(SkillMatcher skillMatcher);
-
-        ChatModelBuilder imageDetail(ImageDetail imageDetail);
-
-        /**
          * 工具执行结果最多回传给模型的字符数，超出截断（OpenAI 官方建议截断工具结果）
          */
         ChatModelBuilder maxToolResultChars(int maxToolResultChars);
@@ -61,9 +54,5 @@ public interface ChatModelFactory {
         LlmDialect getLlmDialect();
 
         ChatModel build();
-    }
-
-    enum ImageDetail {
-        low, high, auto
     }
 }

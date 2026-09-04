@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import org.osgi.service.component.ComponentConstants;
 import qingzhou.llm.Parameter;
+import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
 public class LlmConverter {
@@ -16,7 +17,24 @@ public class LlmConverter {
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
-    private static Tool convertTool(ToolService toolService, Map<String, Object> toolProp) {
+    public static Collection<Skill> convertAiSkill(Map<SkillService, Map<String, Object>> aiSkills) {
+        return aiSkills.entrySet().stream().map(entry -> convertSkill(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
+    }
+
+    public static Skill convertSkill(SkillService skillService, Map<String, Object> skillProp) {
+        String skillName = skillProp.get(SkillService.SKILL_NAME).toString();
+        boolean required = false;
+        Object requiredStr = skillProp.get(SkillService.SKILL_REQUIRED);
+        if (requiredStr != null) {
+            required = Boolean.parseBoolean(requiredStr.toString());
+        }
+        return Skill.of(skillName,
+                skillService.description(),
+                skillService.instruction(),
+                LlmConverter.convertAiTool(skillService.tools()), required);
+    }
+
+    public static Tool convertTool(ToolService toolService, Map<String, Object> toolProp) {
         String toolDescription = toolProp.get(ToolService.TOOL_DESCRIPTION).toString();
         String toolName;
         Object toolNameObj = toolProp.get(ToolService.TOOL_NAME);

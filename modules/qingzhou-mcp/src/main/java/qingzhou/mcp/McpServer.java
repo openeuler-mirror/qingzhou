@@ -2,10 +2,11 @@ package qingzhou.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
 import qingzhou.http.server.HttpHandler;
@@ -13,13 +14,13 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Parameter;
+import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=")
 public class McpServer implements HttpHandler {
-    @Reference(target = "(" + SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL + ")")
-    private SkillService systemSkill;
+    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 
     @Reference
     private Json json;
@@ -45,6 +46,17 @@ public class McpServer implements HttpHandler {
         initializeData.put("protocolVersion", "2024-11-05");
         initializeData.put("serverInfo", serverInfo);
         initializeData.put("capabilities", capabilities);
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
+            target = "(" + SkillService.SKILL_REQUIRED + "=true)")
+    public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
+        llmSkills.put(skill, properties);
+    }
+
+    // OSGI 框架根据名称规则自动识别调用此方法
+    public void unbindAiSkill(SkillService skill) {
+        llmSkills.remove(skill);
     }
 
     @Override
@@ -75,10 +87,7 @@ public class McpServer implements HttpHandler {
     }
 
     private Collection<Tool> llmTools() {
-        if (systemSkill != null) {
-            return LlmConverter.convertAiTool(systemSkill.tools());
-        }
-        return Collections.emptyList();
+        return LlmConverter.convertAiSkill(llmSkills).stream().flatMap((Function<Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
     }
 
     private Object tools() {

@@ -14,11 +14,9 @@ import qingzhou.ai.ToolService;
 public class Troubleshooting extends SkillServiceBase implements SkillService {
     public Troubleshooting() {
         super(new String[]{"故障诊断", "en:Troubleshooting"},
-                "当用户意图涉及系统异常排查、错误定位、性能瓶颈分析或寻求故障解决方案时触发此技能。具体触发场景包括但不限于：\n" +
-                        "用户报告了具体的系统异常、报错信息或崩溃现象（如：“服务器报 502 错误”、“数据库连接超时”、“应用频繁重启”）。\n" +
-                        "用户要求分析特定的系统日志、错误堆栈（Stack Trace）或告警通知，以定位问题根源。\n" +
-                        "用户询问系统运行缓慢、卡顿或资源耗尽的原因，并要求提供排查思路或优化建议。\n" +
-                        "用户明确请求进行故障排查、问题诊断或根因分析（如：“帮我诊断一下这个问题”、“排查下网络不通的原因”、“找出宕机的根本原因”）。");
+                "当用户意图涉及系统异常排查、错误定位、性能瓶颈分析或寻求故障解决方案时激活此技能。具体激活场景包括但不限于：\n" +
+                        "- 分析特定的系统日志、错误堆栈（Stack Trace）或告警通知，以定位问题根源；\n" +
+                        "- 分析系统运行缓慢、卡顿或资源耗尽的原因，并提供排查思路或优化建议；\n");
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
