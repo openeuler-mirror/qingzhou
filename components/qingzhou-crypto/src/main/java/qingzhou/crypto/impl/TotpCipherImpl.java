@@ -108,7 +108,7 @@ class TotpCipherImpl implements TotpCipher {
      * text:     the message or text to be authenticated
      */
     private byte[] hMac(byte[] key, byte[] text) throws NoSuchAlgorithmException, InvalidKeyException {
-        Mac hmac = Mac.getInstance("HmacSHA1");
+        Mac hmac = Mac.getInstance("HmacSHA256");
         hmac.init(new SecretKeySpec(key, "RAW"));
         return hmac.doFinal(text);
     }
