@@ -100,17 +100,11 @@ The HTTP interfaces opened by Qingzhou services are as follows:
 
 | Interface URI         | Description                                 |
 |-----------------------|---------------------------------------------|
-| /registry/register    | Register an application on a remote instance |
-| /registry/refresh     | Refresh the communication key of a remote instance |
 | /registry/invoke      | Execute a module operation of a specified application |
 | /registry/instance    | Retrieve the page of registered instances    |
-| /registry/app/page    | Retrieve the page of registered applications |
+| /registry/app/list    | Retrieve the page of registered applications |
 | /registry/app/info    | Retrieve detailed information of a specific application |
 | /registry/app/model   | Retrieve module information of a specific application |
-| /agent                | Execute an application operation on a remote instance |
-| /web                  | Front‑end static resources of the management console |
-| /ai/chat              | Natural language interaction for intelligent management |
-| /ai/equip             | Prompt configuration supported by the intelligent management feature |
 
 ### Front‑End / Back‑End Separation
 

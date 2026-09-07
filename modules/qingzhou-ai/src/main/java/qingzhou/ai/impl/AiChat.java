@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
@@ -77,6 +78,11 @@ public class AiChat implements HttpHandler {
     @Reference
     private Json json;
 
+    @Deactivate
+    public void deactivate() {
+        SseListener.WATCHDOG_EXECUTOR.shutdownNow();
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, Object> params = null;
@@ -125,8 +131,8 @@ public class AiChat implements HttpHandler {
 
         // 先告知“已受理”：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
         SseListener sseListener = new SseListener(httpResponse, logger, json);
-        sseListener.sendStarted();
         try {
+            sseListener.setStarted();
             ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)

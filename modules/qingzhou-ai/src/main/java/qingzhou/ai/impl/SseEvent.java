@@ -30,13 +30,17 @@ class SseEvent {
         return this;
     }
 
-    /** 阶段状态标识：matching / working 等，配合 STATUS 事件使用 */
+    /**
+     * 阶段状态标识：matching / working 等，配合 STATUS 事件使用
+     */
     SseEvent stage(String stage) {
         this.data.put("stage", stage);
         return this;
     }
 
-    /** 错误分类编码：MODEL_TIMEOUT / MODEL_ERROR 等，配合 RUN_ERROR 事件使用 */
+    /**
+     * 错误分类编码：MODEL_TIMEOUT / MODEL_ERROR 等，配合 RUN_ERROR 事件使用
+     */
     SseEvent code(String code) {
         this.data.put("code", code);
         return this;
@@ -52,7 +56,9 @@ class SseEvent {
         return this;
     }
 
-    /** 本轮请求的 token 用量，工具调用多轮时前端累加 */
+    /**
+     * 本轮请求的 token 用量，工具调用多轮时前端累加
+     */
     SseEvent usage(int promptTokens, int completionTokens, int totalTokens) {
         this.data.put("promptTokens", promptTokens);
         this.data.put("completionTokens", completionTokens);
