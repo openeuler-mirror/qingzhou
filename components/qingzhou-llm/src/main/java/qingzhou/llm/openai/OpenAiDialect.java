@@ -9,6 +9,6 @@ public interface OpenAiDialect extends LlmDialect {
 
     OpenAiDialect imageDetail(ImageDetail imageDetail);
 
-    OpenAiDialect responseFormat(Map<String, String> format);
+    OpenAiDialect responseFormat(ResponseFormat format);
 
 }
