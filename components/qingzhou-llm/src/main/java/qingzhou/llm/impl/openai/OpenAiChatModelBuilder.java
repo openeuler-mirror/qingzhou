@@ -21,6 +21,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     public ReasoningEffort effort;
     public ImageDetail imageDetail;
+    public Map<String, String> format;
 
     private String reasoningField;
 
@@ -65,6 +66,13 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return this;
     }
 
+    @Override
+    public OpenAiDialect responseFormat(Map<String, String> format) {
+        checkSealed();
+        this.format = format;
+        return this;
+    }
+
     Map<String, Object> buildLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
         req.put("model", model);
@@ -72,6 +80,9 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         req.put("stream", stream);
         if (effort != null) {
             req.put("reasoning_effort", effort.name());
+        }
+        if (format != null) {
+            req.put("response_format", format);
         }
         if (stream) {
             // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
