@@ -177,9 +177,9 @@ public class HttpRequestImplTest {
         HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
         Object attribute = new Object();
 
-        request.setAttribute("user", attribute);
+        request.setAttribute("username", attribute);
 
-        Assert.assertSame(request.getAttribute("user"), attribute);
+        Assert.assertSame(request.getAttribute("username"), attribute);
     }
 
     @Test

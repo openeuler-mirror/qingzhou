@@ -10,6 +10,8 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.auth.TokenService;
 import qingzhou.crypto.Crypto;
+import qingzhou.crypto.MessageDigest;
+import qingzhou.crypto.TotpCipher;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -31,12 +33,32 @@ public class PasswordLoginHandler implements HttpHandler {
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
+    private MessageDigest messageDigest;
+
+    private boolean totpEnabled;
+    private String totpSecret;
+    private int totpWindow;
+    private TotpCipher totpCipher;
+
     @Activate
-    public void start(Map<String, String> config) {
+    public void start(Map<String, String> config) throws Exception {
         username = config.get("username");
         passwordDigest = config.get("password");
         maxFailures = parseInt(config.get("max_failures"), 5);
         lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
+
+        messageDigest = crypto.getMessageDigest();
+
+        totpEnabled = Boolean.parseBoolean(config.get("totp_enabled"));
+        if (totpEnabled) {
+            totpWindow = parseInt(config.get("totp_window"), 1);
+            totpSecret = config.get("totp_secret");
+            if (totpSecret == null || totpSecret.isEmpty()) {
+                throw new IllegalStateException("totp_secret is required when totp_enabled is true"); // 配置缺失须启动失败，否则会静默降级为单因子
+            }
+            totpSecret = CipherManager.getInstance(crypto).getCipher().decrypt(totpSecret);
+            totpCipher = crypto.getTotpCipher();
+        }
     }
 
     @Override
@@ -62,18 +84,40 @@ public class PasswordLoginHandler implements HttpHandler {
             return;
         }
 
-        String user = request.getParameter("user");
+        String reqUser = request.getParameter("username");
         String password = request.getParameter("password");
-        boolean verified = Objects.equals(user, username)
-                && crypto.getMessageDigest().matches(password, passwordDigest);
-
-        if (verified) {
-            failures.remove(ip);
-            response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + tokenService.createToken(user) + "\"}");
-        } else {
+        boolean verified = Objects.equals(reqUser, username)
+                && messageDigest.matches(password, passwordDigest);
+        if (!verified) {
             recordFailure(ip);
-            response.status(401).sendFinish("invalid user or password");
+            response.status(401).sendFinish("invalid username or password");
+            return;
         }
+
+        if (totpEnabled) {
+            String code = request.getParameter("code");
+            if (code == null || code.isEmpty()) {
+                response.status(401).sendFinish("totp code required"); // 请求不完整，不计入失败
+                return;
+            }
+            if (!verifyCode(code, response)) {
+                recordFailure(ip);
+                return;
+            }
+        }
+
+        failures.remove(ip);
+        response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + tokenService.createToken(reqUser) + "\"}");
+    }
+
+    private boolean verifyCode(String code, HttpResponse response) {
+        try {
+            if (totpCipher.verifyCode(totpSecret, code, totpWindow)) return true;
+        } catch (Exception e) {
+            // 密钥非法或算法异常一律判为校验失败，避免异常穿透为 500
+        }
+        response.status(401).sendFinish("invalid totp code");
+        return false;
     }
 
     private boolean isLocked(String ip) {

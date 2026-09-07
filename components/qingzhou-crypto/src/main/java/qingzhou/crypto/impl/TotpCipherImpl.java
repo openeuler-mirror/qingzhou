@@ -31,19 +31,27 @@ class TotpCipherImpl implements TotpCipher {
 
     @Override
     public String getCode(String key) throws Exception {
-        long currentTime = System.currentTimeMillis() / 1000L;
-        long t = currentTime / 30;
-        String time = Long.toHexString(t).toUpperCase();
+        return getCode(key, 0);
+    }
 
-        return generateTOTP(base32Coder.decode(key), time);
+    private String getCode(String key, int stepOffset) throws Exception {
+        long step = System.currentTimeMillis() / 30_000L + stepOffset;
+        return generateTOTP(base32Coder.decode(key), Long.toHexString(step).toUpperCase());
     }
 
     @Override
     public boolean verifyCode(String key, String code) throws Exception {
-        if (key == null || key.isEmpty() || code == null || code.isEmpty()) {
-            return false;
+        return verifyCode(key, code, 0);
+    }
+
+    @Override
+    public boolean verifyCode(String key, String code, int window) throws Exception {
+        if (key == null || key.isEmpty() || code == null || code.isEmpty()) return false;
+        int tolerance = Math.max(0, window); // 负值一律按 0 处理，否则任何口令都无法通过
+        for (int offset = -tolerance; offset <= tolerance; offset++) {
+            if (code.equals(getCode(key, offset))) return true;
         }
-        return getCode(key).equals(code);
+        return false;
     }
 
     /**

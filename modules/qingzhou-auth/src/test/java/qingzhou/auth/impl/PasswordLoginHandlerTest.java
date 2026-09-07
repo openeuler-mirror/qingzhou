@@ -153,7 +153,7 @@ public class PasswordLoginHandlerTest {
         request.path = path;
         request.method = method;
         request.remoteHost = ip;
-        request.params.put("user", user);
+        request.params.put("username", user);
         request.params.put("password", password);
         return request;
     }
