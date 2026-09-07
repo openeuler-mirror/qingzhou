@@ -37,7 +37,6 @@ public class PasswordLoginHandler implements HttpHandler {
 
     private boolean totpEnabled;
     private String totpSecret;
-    private int totpWindow;
     private TotpCipher totpCipher;
 
     @Activate
@@ -51,13 +50,19 @@ public class PasswordLoginHandler implements HttpHandler {
 
         totpEnabled = Boolean.parseBoolean(config.get("totp_enabled"));
         if (totpEnabled) {
-            totpWindow = parseInt(config.get("totp_window"), 1);
-            totpSecret = config.get("totp_secret");
-            if (totpSecret == null || totpSecret.isEmpty()) {
-                throw new IllegalStateException("totp_secret is required when totp_enabled is true"); // 配置缺失须启动失败，否则会静默降级为单因子
-            }
-            totpSecret = CipherManager.getInstance(crypto).getCipher().decrypt(totpSecret);
+            totpSecret = decryptSecret(config.get("totp_secret"));
             totpCipher = crypto.getTotpCipher();
+        }
+    }
+
+    private String decryptSecret(String encrypted) {
+        if (encrypted == null || encrypted.isEmpty()) {
+            throw new IllegalStateException("totp_secret is required when totp_enabled is true"); // 配置缺失须启动失败，否则会静默降级为单因子
+        }
+        try {
+            return CipherManager.getInstance(crypto).getCipher().decrypt(encrypted);
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to decrypt totp_secret", e);
         }
     }
 
@@ -112,7 +117,7 @@ public class PasswordLoginHandler implements HttpHandler {
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (totpCipher.verifyCode(totpSecret, code, totpWindow)) return true;
+            if (totpCipher.verifyCode(totpSecret, code)) return true; // 内置容忍前后各 1 个时间窗口
         } catch (Exception e) {
             // 密钥非法或算法异常一律判为校验失败，避免异常穿透为 500
         }

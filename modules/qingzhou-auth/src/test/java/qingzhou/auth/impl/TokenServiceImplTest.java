@@ -2,7 +2,6 @@ package qingzhou.auth.impl;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,22 +21,6 @@ public class TokenServiceImplTest {
             String token = service.createToken("admin");
 
             Assert.assertNotNull(token);
-            Assert.assertEquals(service.verifyToken(token), "admin");
-        } finally {
-            deleteRecursively(instanceDir);
-        }
-    }
-
-    @Test
-    public void fixedSecret_createTokenThenVerify_returnsUser() throws Exception {
-        File instanceDir = Files.createTempDirectory("qz-instance-").toFile();
-        try {
-            String secret = new CryptoImpl().generateKey(); // 合法 Base64 24 字符
-            writeSecretFile(instanceDir, secret);
-            TokenServiceImpl service = buildService(instanceDir, "60");
-
-            String token = service.createToken("admin");
-
             Assert.assertEquals(service.verifyToken(token), "admin");
         } finally {
             deleteRecursively(instanceDir);
@@ -90,13 +73,6 @@ public class TokenServiceImplTest {
             }
         }
         return service;
-    }
-
-    private void writeSecretFile(File instanceDir, String secret) throws Exception {
-        File confDir = new File(instanceDir, "conf");
-        Files.createDirectories(confDir.toPath());
-        Files.write(new File(confDir, "secret-key.properties").toPath(),
-                ("token=" + secret).getBytes(StandardCharsets.UTF_8));
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {

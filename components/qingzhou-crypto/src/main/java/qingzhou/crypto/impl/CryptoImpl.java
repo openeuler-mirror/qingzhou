@@ -10,19 +10,6 @@ import qingzhou.crypto.MessageDigest;
 
 @Component
 public class CryptoImpl implements Crypto {
-    public static void main(String[] args) throws Exception {
-        Crypto crypto = new CryptoImpl();
-        String key = "8KMpguI9vZz29JuEwFVyyQ==";
-        Cipher cipher = crypto.getCipher(key);
-
-        TotpCipher totpCipher = crypto.getTotpCipher();
-        System.out.println("ssssss  "+totpCipher.getCode("UGT5GF4WLWDJ4==="));
-        String key1 = totpCipher.generateKey();
-        System.out.println("key1="+key1);
-        String encrypt = cipher.encrypt(key1);
-        System.out.println(encrypt);
-        System.out.println(cipher.decrypt(encrypt));
-    }
     private final Base64Coder base64Coder = new Base64CoderImpl();
     private final Base32Coder base32Coder = new Base32CoderImpl();
     private final Base16Coder base16Coder = new Base16CoderImpl();
