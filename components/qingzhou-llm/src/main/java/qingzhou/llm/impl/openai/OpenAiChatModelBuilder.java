@@ -14,6 +14,7 @@ import qingzhou.llm.impl.Utils;
 import qingzhou.llm.openai.ImageDetail;
 import qingzhou.llm.openai.OpenAiDialect;
 import qingzhou.llm.openai.ReasoningEffort;
+import qingzhou.llm.openai.ResponseFormat;
 
 public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements OpenAiDialect {
     private final HttpClient httpClient;
@@ -21,7 +22,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     public ReasoningEffort effort;
     public ImageDetail imageDetail;
-    public Map<String, String> format;
+    public ResponseFormat format;
 
     private String reasoningField;
 
@@ -67,7 +68,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     @Override
-    public OpenAiDialect responseFormat(Map<String, String> format) {
+    public OpenAiDialect responseFormat(ResponseFormat format) {
         checkSealed();
         this.format = format;
         return this;
@@ -82,7 +83,9 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
             req.put("reasoning_effort", effort.name());
         }
         if (format != null) {
-            req.put("response_format", format);
+            req.put("response_format", new HashMap<String, String>() {{
+                put("type", format.name());
+            }});
         }
         if (stream) {
             // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
