@@ -60,10 +60,16 @@ public class McpServer implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         // 解析JSON请求
         String body = new String(httpRequest.getBody(), StandardCharsets.UTF_8);
-        Map<String, Object> requestMap = json.fromJson(body, HashMap.class);
+        Map<String, Object> requestMap;
+        try {
+            requestMap = json.fromJson(body, HashMap.class);
+        } catch (Exception e) {
+            httpResponse.status(400).sendFinish("Invalid JSON");
+            return;
+        }
 
         // 响应对象
         Map<String, Object> result = new HashMap<>();
@@ -82,8 +88,13 @@ public class McpServer implements HttpHandler {
         }
 
         // 响应
-        httpResponse.contentTypeJsonUtf8()
-                .sendFinish(json.toJson(result));
+        try {
+            httpResponse.contentTypeJsonUtf8()
+                    .sendFinish(json.toJson(result));
+        } catch (Exception e) {
+            httpResponse.status(500).sendFinish("Internal Server Error");
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private Collection<Tool> llmTools() {

@@ -34,7 +34,7 @@ public class PasswordLoginHandlerTest {
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), response);
 
         Assert.assertEquals(response.status, 401);
-        Assert.assertEquals(response.body, "invalid user or password");
+        Assert.assertEquals(response.body, "invalid username or password");
     }
 
     @Test
@@ -153,7 +153,7 @@ public class PasswordLoginHandlerTest {
         request.path = path;
         request.method = method;
         request.remoteHost = ip;
-        request.params.put("user", user);
+        request.params.put("username", user);
         request.params.put("password", password);
         return request;
     }

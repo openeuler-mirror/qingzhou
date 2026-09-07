@@ -1,13 +1,6 @@
 package qingzhou.auth.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
-import java.util.Properties;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -22,31 +15,13 @@ public class TokenServiceImpl implements TokenService {
     @Reference
     private Crypto crypto;
 
-    private Cipher tokenCipher;
     private long tokenExpireMillis;
+    private Cipher tokenCipher;
 
     @Activate
-    public void init(Map<String, String> config) throws Exception {
+    public void init(Map<String, String> config) {
         tokenExpireMillis = Integer.parseInt(config.getOrDefault("token_expire_seconds", "" + 30 * 60)) * 1000L;
-
-        String tokenSecret = getSecret();
-        tokenCipher = crypto.getCipher(tokenSecret);
-    }
-
-    private String getSecret() throws IOException {
-        String secret = null;
-        Path secretFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "secret-key.properties");
-        if (secretFile.toFile().exists()) {
-            try (InputStream inputStream = Files.newInputStream(secretFile, StandardOpenOption.READ)) {
-                Properties properties = new Properties();
-                properties.load(inputStream);
-                secret = properties.getProperty("token");
-            }
-        }
-        if (secret == null || secret.isEmpty()) {
-            secret = crypto.generateKey(); // 未配置则随机生成，重启后已签发 token 全部失效
-        }
-        return secret;
+        tokenCipher = CipherManager.getInstance(crypto).getCipher();
     }
 
     @Override
