@@ -1,7 +1,14 @@
 package qingzhou.crypto.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.*;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
@@ -10,25 +17,14 @@ import qingzhou.crypto.MessageDigest;
 
 @Component
 public class CryptoImpl implements Crypto {
-    public static void main(String[] args) throws Exception {
-        Crypto crypto = new CryptoImpl();
-        String key = "8KMpguI9vZz29JuEwFVyyQ==";
-        Cipher cipher = crypto.getCipher(key);
-
-        TotpCipher totpCipher = crypto.getTotpCipher();
-        System.out.println("ssssss  "+totpCipher.getCode("UGT5GF4WLWDJ4==="));
-        String key1 = totpCipher.generateKey();
-        System.out.println("key1="+key1);
-        String encrypt = cipher.encrypt(key1);
-        System.out.println(encrypt);
-        System.out.println(cipher.decrypt(encrypt));
-    }
     private final Base64Coder base64Coder = new Base64CoderImpl();
     private final Base32Coder base32Coder = new Base32CoderImpl();
     private final Base16Coder base16Coder = new Base16CoderImpl();
 
     // MD5 / SHA-1 / SHA-256 等哈希值：当你在下载文件时看到的 MD5 校验码（比如 d41d8cd98f00b204e9800998ecf8427e），本质上就是 Base16（十六进制）编码。
     private final MessageDigest messageDigest = new MessageDigestImpl(base16Coder);
+
+    private volatile Cipher globalCipher;
 
     @Override
     public String generateKey() {
@@ -43,6 +39,23 @@ public class CryptoImpl implements Crypto {
             throw new InvalidKeyException();
         }
         return new CipherImpl(key.trim(), base64Coder);
+    }
+
+    @Override
+    public Cipher getGlobalCipher() {
+        if (globalCipher == null) {
+            synchronized (this) {
+                if (globalCipher == null) {
+                    try {
+                        String secret = getSecret();
+                        globalCipher = getCipher(secret);
+                    } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            }
+        }
+        return globalCipher;
     }
 
     @Override
@@ -106,5 +119,21 @@ public class CryptoImpl implements Crypto {
 
         kpg.initialize(1024, secureRandom);// 2048 不支持
         return kpg.generateKeyPair();
+    }
+
+    private String getSecret() throws IOException {
+        String secret = null;
+        Path secretFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "secret-key.properties");
+        if (secretFile.toFile().exists()) {
+            try (InputStream inputStream = Files.newInputStream(secretFile, StandardOpenOption.READ)) {
+                Properties properties = new Properties();
+                properties.load(inputStream);
+                secret = properties.getProperty("global");
+            }
+        }
+        if (secret == null || secret.isEmpty()) {
+            secret = generateKey(); // 未配置则随机生成，不适用于生产环境
+        }
+        return secret;
     }
 }

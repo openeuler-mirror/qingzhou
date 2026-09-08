@@ -104,7 +104,7 @@ public class StaticResource implements HttpHandler {
                 serveStaticResource(httpRequest, INDEX_FILE, response);
                 return;
             }
-            response.status404Finish();
+            response.status(404).finish();
             return;
         }
 

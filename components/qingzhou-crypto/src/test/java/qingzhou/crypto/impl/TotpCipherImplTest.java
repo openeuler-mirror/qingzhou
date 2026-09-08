@@ -14,7 +14,7 @@ public class TotpCipherImplTest {
     private static final int KEY_LENGTH = 16;
 
     // 每个用例独立创建实例，避免共享状态
-    private TotpCipher newTotp() {
+    private TotpCipherImpl newTotp() {
         return new TotpCipherImpl(new Base16CoderImpl(), new Base32CoderImpl());
     }
 
@@ -58,6 +58,32 @@ public class TotpCipherImplTest {
         TotpCipher totp = newTotp();
         String code = totp.getCode(totp.generateKey());
         Assert.assertTrue(code.matches("\\d{6}"), "验证码不是 6 位数字: " + code);
+    }
+
+    // ===================== 内置窗口容忍 =====================
+    @Test
+    public void previousWindowCode_verifyCode_returnTrue() throws Exception {
+        TotpCipherImpl totp = newTotp();
+        String key = totp.generateKey();
+        long step = System.currentTimeMillis() / 30_000L;
+        Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step - 1))); // 窗口末尾读到口令、跨窗后才提交
+    }
+
+    @Test
+    public void nextWindowCode_verifyCode_returnTrue() throws Exception {
+        TotpCipherImpl totp = newTotp();
+        String key = totp.generateKey();
+        long step = System.currentTimeMillis() / 30_000L;
+        Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step + 1))); // 覆盖服务端时钟偏慢
+    }
+
+    @Test
+    public void outOfRangeCode_verifyCode_returnFalse() throws Exception {
+        TotpCipherImpl totp = newTotp();
+        String key = totp.generateKey();
+        long step = System.currentTimeMillis() / 30_000L;
+        Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step - 2)));
+        Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step + 2)));
     }
 
     // ===================== verifyCode(String key, String code) =====================

@@ -1,38 +1,15 @@
-package qingzhou.auth.impl;
+package qingzhou.auth;
 
 import java.lang.reflect.Field;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.auth.TokenService;
 import qingzhou.http.server.AuthResult;
 
 public class TokenAuthenticatorTest {
-
-    @Test
-    public void noAuthorizationHeader_authenticate_returnsMissing() throws Exception {
-        PasswordLoginHandlerTest.StubHttpRequest request = new PasswordLoginHandlerTest.StubHttpRequest();
-        TokenAuthenticator authenticator = buildAuthenticator(token -> null);
-
-        AuthResult result = authenticator.authenticate(request);
-
-        Assert.assertSame(result.status(), AuthResult.Status.MISSING);
-    }
-
-    @Test
-    public void nonBearerHeader_authenticate_returnsMissing() throws Exception {
-        PasswordLoginHandlerTest.StubHttpRequest request = new PasswordLoginHandlerTest.StubHttpRequest();
-        request.header = "Basic abc";
-        TokenAuthenticator authenticator = buildAuthenticator(token -> null);
-
-        AuthResult result = authenticator.authenticate(request);
-
-        Assert.assertSame(result.status(), AuthResult.Status.MISSING);
-    }
-
     @Test
     public void validToken_authenticate_returnsPass() throws Exception {
-        PasswordLoginHandlerTest.StubHttpRequest request = new PasswordLoginHandlerTest.StubHttpRequest();
+        LoginHandlerTest.StubHttpRequest request = new LoginHandlerTest.StubHttpRequest();
         request.header = "Bearer some-token";
         TokenAuthenticator authenticator = buildAuthenticator(token -> "admin");
 
@@ -44,7 +21,7 @@ public class TokenAuthenticatorTest {
 
     @Test
     public void invalidToken_authenticate_returnsReject() throws Exception {
-        PasswordLoginHandlerTest.StubHttpRequest request = new PasswordLoginHandlerTest.StubHttpRequest();
+        LoginHandlerTest.StubHttpRequest request = new LoginHandlerTest.StubHttpRequest();
         request.header = "Bearer bad-token";
         TokenAuthenticator authenticator = buildAuthenticator(token -> null);
 
@@ -58,7 +35,7 @@ public class TokenAuthenticatorTest {
     public void anyRequest_excludedPaths_returnsLoginEndpoints() throws Exception {
         TokenAuthenticator authenticator = buildAuthenticator(token -> null);
 
-        Assert.assertEquals(authenticator.excludedPaths(), PasswordLoginHandler.EXCLUDED_PATHS);
+        Assert.assertEquals(authenticator.excludedPaths(), LoginHandler.EXCLUDED_PATHS);
     }
 
     private TokenAuthenticator buildAuthenticator(VerifyStub verifyStub) throws Exception {

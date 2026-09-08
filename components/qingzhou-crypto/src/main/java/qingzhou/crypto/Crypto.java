@@ -17,6 +17,8 @@ public interface Crypto {
      */
     Cipher getCipher(String key) throws InvalidKeyException;
 
+    Cipher getGlobalCipher();
+
     String[] generatePairKey();
 
     PairCipher getPairCipher(String publicKey, String privateKey) throws InvalidKeyException;

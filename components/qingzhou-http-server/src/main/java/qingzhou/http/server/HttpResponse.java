@@ -1,11 +1,11 @@
 package qingzhou.http.server;
 
 public interface HttpResponse {
+    void status400Finish();
+
     void status500Finish(String msg);
 
-    void status404Finish();
-
-    void status400Finish();
+    void redirect(String url);
 
     HttpResponse status(int status);
 

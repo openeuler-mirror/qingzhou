@@ -31,7 +31,7 @@ public class HttpServerImpl implements HttpServer {
     final Map<String, HttpHandler> handlerMap = new HashMap<>();
     final Set<HttpHandler> noAuthHandlerSet = new HashSet<>();
 
-    private final List<HttpAuthenticator> authenticators = new ArrayList<>();
+    private final List<Authenticator> authenticators = new ArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
@@ -233,8 +233,8 @@ public class HttpServerImpl implements HttpServer {
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            unbind = "removeAuthentication")
-    public void addAuthentication(HttpAuthenticator authenticator) {
+            unbind = "removeAuthenticator")
+    public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
         if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
@@ -242,8 +242,8 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
-    public void removeAuthentication(HttpAuthenticator authentication) {
-        authenticators.remove(authentication);
+    public void removeAuthenticator(Authenticator authenticator) {
+        authenticators.remove(authenticator);
     }
 
     /**
@@ -255,7 +255,7 @@ public class HttpServerImpl implements HttpServer {
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
 
         String path = request.getPath();
-        for (HttpAuthenticator authenticator : authenticators) {
+        for (Authenticator authenticator : authenticators) {
             String[] excludedPaths = authenticator.excludedPaths();
             if (excludedPaths != null) {
                 for (String exclude : excludedPaths) {
@@ -265,25 +265,21 @@ public class HttpServerImpl implements HttpServer {
         }
 
         AuthResult reject = null;
-        AuthResult challenge = null;
-        for (HttpAuthenticator authentication : authenticators) {
+        for (Authenticator authenticator : authenticators) {
             AuthResult r;
             try {
-                r = authentication.authenticate(request);
+                r = authenticator.authenticate(request);
             } catch (Exception e) {
-                logger.error("authentication error: " + authentication.getClass().getName(), e);
+                logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error");
             }
             if (r.status() == Status.PASS) return r;
 
             if (r.status() == Status.REJECT && reject == null) {
                 reject = r;
-            } else if (r.status() == Status.CHALLENGE && challenge == null) {
-                challenge = r;
             }
         }
         if (reject != null) return reject;
-        if (challenge != null) return challenge;
 
         return AuthResult.reject("no credential provided");
     }
