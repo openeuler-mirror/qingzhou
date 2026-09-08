@@ -259,11 +259,6 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <artifactId>qingzhou-mcp</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <artifactId>qingzhou-logger</artifactId>

@@ -31,13 +31,6 @@ public class TokenAuthenticatorTest {
         Assert.assertEquals(result.getReason(), "invalid token");
     }
 
-    @Test
-    public void anyRequest_excludedPaths_returnsLoginEndpoints() throws Exception {
-        TokenAuthenticator authenticator = buildAuthenticator(token -> null);
-
-        Assert.assertEquals(authenticator.excludedPaths(), LoginHandler.EXCLUDED_PATHS);
-    }
-
     private TokenAuthenticator buildAuthenticator(VerifyStub verifyStub) throws Exception {
         TokenAuthenticator authenticator = new TokenAuthenticator();
         Field field = TokenAuthenticator.class.getDeclaredField("tokenService");

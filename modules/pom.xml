@@ -21,6 +21,5 @@
         <module>qingzhou-agent</module>
         <module>qingzhou-web</module>
         <module>qingzhou-ai</module>
-        <module>qingzhou-mcp</module>
     </modules>
 </project>

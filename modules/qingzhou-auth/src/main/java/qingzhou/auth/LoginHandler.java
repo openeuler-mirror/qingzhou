@@ -16,11 +16,10 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = HttpHandler.HANDLE_PATH + "=")
+        property = {HttpHandler.HANDLE_PATH + "=", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class LoginHandler implements HttpHandler {
     private static final String LOGIN_PATH = "/auth/login";
     private static final String LOGOUT_PATH = "/auth/logout";
-    static final String[] EXCLUDED_PATHS = {LOGIN_PATH, LOGOUT_PATH};
 
     @Reference
     private Crypto crypto;

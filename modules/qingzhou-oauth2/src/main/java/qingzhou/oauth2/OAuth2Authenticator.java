@@ -17,11 +17,6 @@ public class OAuth2Authenticator implements Authenticator {
         return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid session");
     }
 
-    @Override
-    public String[] excludedPaths() {
-        return OAuth2CallbackHandler.EXCLUDED_PATHS;
-    }
-
     private String getCookie(String cookieHeader) {
         if (cookieHeader == null) return null;
         for (String cookie : cookieHeader.split(";")) {

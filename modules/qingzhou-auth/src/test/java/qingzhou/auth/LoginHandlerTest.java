@@ -118,12 +118,6 @@ public class LoginHandlerTest {
         Assert.assertEquals(unlocked.status, 200);
     }
 
-    @Test
-    public void anyRequest_excludedPaths_returnsLoginEndpoints() {
-        Assert.assertEquals(LoginHandler.EXCLUDED_PATHS,
-                new String[]{"/auth/login", "/auth/logout"});
-    }
-
     // ---------- 辅助 ----------
 
     private LoginHandler buildHandler(String plainPassword, int maxFailures, int lockSeconds, TokenService tokenService) throws Exception {
