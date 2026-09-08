@@ -1,4 +1,4 @@
-package qingzhou.auth.impl;
+package qingzhou.auth;
 
 import java.util.Map;
 import java.util.Objects;
@@ -8,7 +8,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.auth.TokenService;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.TotpCipher;
@@ -18,8 +17,10 @@ import qingzhou.http.server.HttpResponse;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = HttpHandler.HANDLE_PATH + "=")
-public class PasswordLoginHandler implements HttpHandler {
-    static final String[] EXCLUDED_PATHS = {"/auth/login", "/auth/logout"};
+public class LoginHandler implements HttpHandler {
+    private static final String LOGIN_PATH = "/auth/login";
+    private static final String LOGOUT_PATH = "/auth/logout";
+    static final String[] EXCLUDED_PATHS = {LOGIN_PATH, LOGOUT_PATH};
 
     @Reference
     private Crypto crypto;
@@ -40,7 +41,7 @@ public class PasswordLoginHandler implements HttpHandler {
     private TotpCipher totpCipher;
 
     @Activate
-    public void start(Map<String, String> config) throws Exception {
+    public void start(Map<String, String> config) {
         username = config.get("username");
         passwordDigest = config.get("password");
         maxFailures = parseInt(config.get("max_failures"), 5);
@@ -50,32 +51,21 @@ public class PasswordLoginHandler implements HttpHandler {
 
         totpEnabled = Boolean.parseBoolean(config.get("totp_enabled"));
         if (totpEnabled) {
-            totpSecret = decryptSecret(config.get("totp_secret"));
+            totpSecret = config.get("totp_secret"); // 安全考虑：此处不要解密
             totpCipher = crypto.getTotpCipher();
-        }
-    }
-
-    private String decryptSecret(String encrypted) {
-        if (encrypted == null || encrypted.isEmpty()) {
-            throw new IllegalStateException("totp_secret is required when totp_enabled is true"); // 配置缺失须启动失败，否则会静默降级为单因子
-        }
-        try {
-            return CipherManager.getInstance(crypto).getCipher().decrypt(encrypted);
-        } catch (Exception e) {
-            throw new IllegalStateException("failed to decrypt totp_secret", e);
         }
     }
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) {
         String path = request.getPath();
-        if (path.endsWith("/auth/login")) {
+        if (path.endsWith(LOGIN_PATH)) {
             if (!"POST".equals(request.getMethod())) { // 防密码经 GET 进入 URL/访问日志
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
             login(request, response);
-        } else if (path.endsWith("/auth/logout")) {
+        } else if (path.endsWith(LOGOUT_PATH)) {
             logout(response);
         } else {
             response.status400Finish();
@@ -117,7 +107,8 @@ public class PasswordLoginHandler implements HttpHandler {
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (totpCipher.verifyCode(totpSecret, code)) return true; // 内置容忍前后各 1 个时间窗口
+            if (totpCipher.verifyCode(crypto.getGlobalCipher().decrypt(totpSecret), code))
+                return true;
         } catch (Exception e) {
             // 密钥非法或算法异常一律判为校验失败，避免异常穿透为 500
         }

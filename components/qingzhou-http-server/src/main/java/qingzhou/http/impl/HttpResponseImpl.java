@@ -35,12 +35,6 @@ public class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public void status404Finish() {
-        response.status(HttpResponseStatus.NOT_FOUND);
-        finish();
-    }
-
-    @Override
     public void status400Finish() {
         response.status(HttpResponseStatus.BAD_REQUEST);
         finish();
@@ -56,6 +50,14 @@ public class HttpResponseImpl implements HttpResponse {
     public HttpResponse header(String name, String value) {
         response.responseHeaders().set(name, value);
         return thisInstance();
+    }
+
+    @Override
+    public void redirect(String url) {
+        response.status(HttpResponseStatus.FOUND)
+                .responseHeaders().set("Location", url)
+                .set(HttpHeaderNames.CONTENT_LENGTH, "0");
+        finish();
     }
 
     @Override

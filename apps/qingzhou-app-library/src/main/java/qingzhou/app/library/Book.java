@@ -6,8 +6,6 @@ import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
-import qingzhou.jdbc.JdbcPool;
-import qingzhou.logger.Logger;
 
 @Model(code = "book", order = 1,
         name = {"图书管理", "en:Book Management"},
@@ -165,15 +163,7 @@ public class Book extends qingzhou.api.ModelBase implements Page, Show, Add, Upd
 
     @Override
     public void start() {
-        Logger logger = getAppContext().getService(Logger.class);
-        JdbcPool jdbcPool = getAppContext().getService(JdbcPool.class);
-        logger.info("jdbcPool: " + jdbcPool);
-        registration = getAppContext().registerSharedFunction("queryBook", new SharedFunction<String, String>() {
-            @Override
-            public String invoke(String input) {
-                return "From 图书管理：" + input + "库存 " + db.size();
-            }
-        });
+        registration = getAppContext().registerSharedFunction("queryBook", (SharedFunction<String, String>) input -> "From 图书管理：" + input + "库存 " + db.size());
     }
 
     @Override

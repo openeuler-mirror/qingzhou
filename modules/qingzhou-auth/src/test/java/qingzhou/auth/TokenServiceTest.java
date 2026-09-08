@@ -1,4 +1,4 @@
-package qingzhou.auth.impl;
+package qingzhou.auth;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -10,13 +10,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.crypto.impl.CryptoImpl;
 
-public class TokenServiceImplTest {
+public class TokenServiceTest {
 
     @Test
     public void randomSecret_createTokenThenVerify_returnsUser() throws Exception {
         File instanceDir = Files.createTempDirectory("qz-instance-").toFile();
         try {
-            TokenServiceImpl service = buildService(instanceDir, "60"); // 无 secret 文件 → 随机密钥
+            TokenService service = buildService(instanceDir, "60"); // 无 secret 文件 → 随机密钥
 
             String token = service.createToken("admin");
 
@@ -31,7 +31,7 @@ public class TokenServiceImplTest {
     public void expiredToken_verify_returnsNull() throws Exception {
         File instanceDir = Files.createTempDirectory("qz-instance-").toFile();
         try {
-            TokenServiceImpl service = buildService(instanceDir, "0"); // 过期时间为 0，签发即过期
+            TokenService service = buildService(instanceDir, "0"); // 过期时间为 0，签发即过期
 
             String token = service.createToken("admin");
 
@@ -45,7 +45,7 @@ public class TokenServiceImplTest {
     public void invalidToken_verify_returnsNull() throws Exception {
         File instanceDir = Files.createTempDirectory("qz-instance-").toFile();
         try {
-            TokenServiceImpl service = buildService(instanceDir, "60");
+            TokenService service = buildService(instanceDir, "60");
 
             Assert.assertEquals(service.verifyToken("not-a-valid-token"), null);
         } finally {
@@ -55,8 +55,8 @@ public class TokenServiceImplTest {
 
     // ---------- 辅助 ----------
 
-    private TokenServiceImpl buildService(File instanceDir, String expireSeconds) throws Exception {
-        TokenServiceImpl service = new TokenServiceImpl();
+    private TokenService buildService(File instanceDir, String expireSeconds) throws Exception {
+        TokenService service = new TokenService();
         setField(service, "crypto", new CryptoImpl());
 
         Map<String, String> config = new HashMap<>();

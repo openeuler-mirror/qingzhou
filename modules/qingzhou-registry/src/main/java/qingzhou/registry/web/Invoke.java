@@ -139,7 +139,7 @@ public class Invoke implements HttpHandler {
         if (!response.isActionInvoked()
                 && response.getData() == null
                 && response.getMsg() == null) {
-            httpResponse.status404Finish();
+            httpResponse.status(404).finish();
             return;
         }
 

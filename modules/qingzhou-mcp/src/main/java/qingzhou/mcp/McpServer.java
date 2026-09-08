@@ -92,7 +92,7 @@ public class McpServer implements HttpHandler {
             httpResponse.contentTypeJsonUtf8()
                     .sendFinish(json.toJson(result));
         } catch (Exception e) {
-            httpResponse.status(500).sendFinish("Internal Server Error");
+            httpResponse.status500Finish("Internal Server Error");
             logger.error(e.getMessage(), e);
         }
     }

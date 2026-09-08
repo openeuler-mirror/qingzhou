@@ -49,20 +49,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         if (needAuth) {
             AuthResult authResult = httpServer.authenticate(httpRequest);
             if (authResult.status() != AuthResult.Status.PASS) {
-                if (authResult.status() == AuthResult.Status.CHALLENGE) {
-                    return response.status(HttpResponseStatus.FOUND)
-                            .header("Location", authResult.getLocation())
-                            .header("Cache-Control", "no-store")
-                            .sendString(Mono.just("redirecting"));
-                } else {
-                    return response.status(HttpResponseStatus.UNAUTHORIZED)
-                            .header("WWW-Authenticate", "Bearer")
-                            .header("Cache-Control", "no-store")
-                            .sendString(Mono.just("Unauthorized"));
-                }
+                return response.status(HttpResponseStatus.UNAUTHORIZED)
+                        .header("WWW-Authenticate", "Bearer")
+                        .header("Cache-Control", "no-store")
+                        .sendString(Mono.just("Unauthorized"));
             }
             if (authResult.getPrincipal() != null) {
-                httpRequest.setAttribute("auth.principal", authResult.getPrincipal());
+                httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_USERNAME_ATTRIBUTE, authResult.getPrincipal());
             }
         }
 
