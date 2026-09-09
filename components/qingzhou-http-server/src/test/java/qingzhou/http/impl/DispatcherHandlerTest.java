@@ -313,6 +313,77 @@ public class DispatcherHandlerTest {
     }
 
     @Test
+    public void deepPathRegistered_requestRoot_returns404() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("deep"), "/a/b");
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 404);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void childPathRegistered_requestParent_returns404() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("stream"), "/ai/chat/stream");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("config"), "/ai/chat/config");
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/ai/chat")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 404);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void siblingPrefixPath_requestSibling_returns404() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("foo"), "/foo");
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/foobar")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 404);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void rootAndChildRegistered_requestChild_routesToLongest() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("root"), "/");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("child"), "/child");
+
+            HttpClient client = new HttpClientImpl();
+            Response child = client.send(client.newRequest("http://localhost:" + testServer.port + "/child/deep")
+                    .method(HttpMethod.GET));
+            Assert.assertEquals(child.getStatus(), 200);
+            Assert.assertEquals(new String(child.getBody(), StandardCharsets.UTF_8), "child");
+
+            Response root = client.send(client.newRequest("http://localhost:" + testServer.port + "/other")
+                    .method(HttpMethod.GET));
+            Assert.assertEquals(root.getStatus(), 200);
+            Assert.assertEquals(new String(root.getBody(), StandardCharsets.UTF_8), "root");
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
     public void urlEncodedPath_request_decodedAndRouted() throws Exception {
         TestServer testServer = startServer();
         try {

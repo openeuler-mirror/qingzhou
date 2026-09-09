@@ -35,14 +35,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         }
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
 
-        final HttpHandler httpHandler;
-        String normalizedPath = requestPath.endsWith("/") ? requestPath : requestPath + "/";
-        String matches = httpServer.matches(normalizedPath);
-        if (matches != null) {
-            httpHandler = this.httpServer.handlerMap.get(matches);
-        } else {
+        String matches = httpServer.matches(requestPath);
+        if (matches == null) {
             return response.status(HttpResponseStatus.NOT_FOUND).send();
         }
+        HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
 
         // 安全认证
         boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);

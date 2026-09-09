@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.security.KeyStore;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.KeyManagerFactory;
 
 import io.netty.channel.ChannelOption;
@@ -28,8 +29,9 @@ public class HttpServerImpl implements HttpServer {
     @Reference
     private Logger logger;
 
-    final Map<String, HttpHandler> handlerMap = new HashMap<>();
-    final Set<HttpHandler> noAuthHandlerSet = new HashSet<>();
+    // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
+    final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
+    final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
 
     private final List<Authenticator> authenticators = new ArrayList<>();
 
@@ -92,7 +94,7 @@ public class HttpServerImpl implements HttpServer {
      * 任何配置缺失或错误（未配置路径、文件不存在、口令错误、类型非法）都会在此抛出异常，
      * 使服务在绑定端口前启动失败，绝不回退为明文监听。
      */
-    private static SslContext buildSslContext(Map<String, String> config) {
+    private SslContext buildSslContext(Map<String, String> config) {
         String keystorePath = config.get("ssl_keystore_path");
         if (keystorePath == null || keystorePath.trim().isEmpty()) {
             throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
@@ -161,19 +163,19 @@ public class HttpServerImpl implements HttpServer {
             throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be null");
         path = path.trim();
 
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
         if (reference != null) {
             String prefix = reference.getBundle().getSymbolicName();
             prefix = prefix.replace("qingzhou-", "");
             path = "/" + prefix + path;
         }
+        path = withTrailingSlash(path); // 统一以尾斜杠存储，匹配时无需逐个 key 再做转换
 
-        if (handlerMap.containsKey(path)) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] already exists: " + path + " of [" + handlerMap.get(path).getClass().getName() + "]");
-        } else {
-            String matches = matches(path);
-            if (matches != null && !matches.equals("/")) {
-                throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] matches: " + matches + " of [" + handlerMap.get(matches).getClass().getName() + "]");
-            }
+        String conflict = conflict(path);
+        if (conflict != null) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
         }
 
         handlerMap.put(path, httpHandler);
@@ -190,21 +192,37 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
+    /**
+     * 分发专用：只按「请求路径以已注册路径为前缀」匹配，并取最长者。
+     * 反向匹配（已注册路径以请求路径为前缀）会让后代 handler 服务祖先请求，
+     * 例如请求 / 命中 /ai/chat/config、请求 /ai/chat 命中 /ai/chat/stream，故不做。
+     */
     String matches(String checkPath) {
-        // 排序：长路径优先匹配（避免短路径覆盖长路径）
-        List<String> existsPaths = new ArrayList<>(handlerMap.keySet());
-        existsPaths.sort((a, b) -> b.length() - a.length());
-
-        if (!checkPath.endsWith("/")) checkPath = checkPath + "/";
-        for (String existsPath : existsPaths) {
-            String tempPath = existsPath;
-            if (!tempPath.endsWith("/")) tempPath = tempPath + "/";
-            if (checkPath.startsWith(tempPath)
-                    || tempPath.startsWith(checkPath)) {
-                return existsPath;
+        String request = withTrailingSlash(checkPath);
+        String matched = null;
+        int matchedLength = 0;
+        for (String existsPath : handlerMap.keySet()) {
+            if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
+                matched = existsPath;
+                matchedLength = existsPath.length();
             }
         }
+        return matched;
+    }
+
+    // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽
+    private String conflict(String checkPath) {
+        String request = withTrailingSlash(checkPath);
+        for (String existsPath : handlerMap.keySet()) {
+            if (existsPath.equals("/")) continue; // 根路径仅作兜底（它必然与所有路径重叠）
+            if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
+        }
         return null;
+    }
+
+    // 补尾部斜杠：使 /a 只匹配 /a/...，不会误匹配 /abc
+    private static String withTrailingSlash(String path) {
+        return path.endsWith("/") ? path : path + "/";
     }
 
     /**
