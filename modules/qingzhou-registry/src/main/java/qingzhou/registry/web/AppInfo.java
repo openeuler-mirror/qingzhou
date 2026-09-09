@@ -10,7 +10,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
-import qingzhou.api.Constants;
+import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -21,7 +21,7 @@ import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/app/info",
         SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
-        
+
         ToolService.TOOL_DESCRIPTION + "=该接口返回特定应用的详细信息，内容包括：应用的基本信息（代码标识、名称、描述等等）；应用内包含的业务模块列表信息（模块的代码标识、名称、描述、所属功能菜单等）。",
 
         ToolService.PARAMETER_NAME + ".1=" + WebUtil.INSTANCE_ID,

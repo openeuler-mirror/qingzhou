@@ -12,7 +12,7 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.skill.SystemSkill;
-import qingzhou.api.Constants;
+import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;

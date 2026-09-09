@@ -384,6 +384,39 @@ public class DispatcherHandlerTest {
     }
 
     @Test
+    public void traversalPath_request_returns400() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test/../../etc/passwd")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 400);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void redundantSlashPath_request_normalized() throws Exception {
+        TestServer testServer = startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "//test//a")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 200);
+            Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "echo:/test/a");
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
     public void urlEncodedPath_request_decodedAndRouted() throws Exception {
         TestServer testServer = startServer();
         try {

@@ -48,6 +48,7 @@ public class Refresh implements HttpHandler {
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");
+        if (split.length < 2) return;
         String instanceId = split[0];
         String newKey = split[1];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);

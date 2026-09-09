@@ -11,7 +11,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.api.AppContext;
-import qingzhou.api.Constants;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;

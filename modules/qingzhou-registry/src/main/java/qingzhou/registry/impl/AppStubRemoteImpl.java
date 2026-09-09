@@ -8,9 +8,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-import qingzhou.api.Constants;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
@@ -63,7 +63,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = cipher.encrypt(data);
-            String agentUrl = String.format("http://%s:%s/agent/", instanceInfo.getHost(), instanceInfo.getPort());
+            String agentUrl = String.format("http://%s:%s/agent" + Constants.AGENT_INVOKE_URI, instanceInfo.getHost(), instanceInfo.getPort());
 
             response = httpClient.send(httpClient.newRequest(agentUrl).body(encrypted));
             if (response.getStatus() == 200) {
@@ -102,13 +102,13 @@ class AppStubRemoteImpl implements AppStubRemote {
     private void doFileUploads(RequestImpl request, Cipher cipher) throws Exception {
         for (String field : request.getUploadFileFields()) {
             List<String> remotePaths = new ArrayList<>();
-            String[] filePaths = request.getParameter(field).split(","); // 处理多文件字段（逗号分隔的路径）
+            String[] filePaths = request.getParameter(field).split(","); // 来自客户端：多文件字段（逗号分隔的路径）, TODO：应引用 ModelField.separator()
             for (String path : filePaths) {
                 File file = new File(path);
                 String remoteFileTempKey = uploadFileToRemoteAgent(file, cipher);
-                remotePaths.add(remoteFileTempKey + "=" + file.getName());
+                remotePaths.add(remoteFileTempKey + Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP + file.getName());
             }
-            String remotePathsStr = String.join(",", remotePaths); // 将远程路径列表保存到 request
+            String remotePathsStr = String.join(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP, remotePaths); // 将远程路径列表保存到 request
             request.getParameters().put(field, remotePathsStr); // 更新 request 中的参数为远程路径
         }
     }
@@ -125,7 +125,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                 byte[] encrypt = cipher.encrypt(buffer, 0, bytesRead);
 
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
-                String uploadUrl = String.format("http://%s:%s/agent/upload?key=" + fileTempKey, instanceInfo.getHost(), instanceInfo.getPort());
+                String uploadUrl = String.format("http://%s:%s/agent" + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey, instanceInfo.getHost(), instanceInfo.getPort());
 
                 Response uploadResult = httpClient.send(httpClient.newRequest(uploadUrl).body(encrypt));
                 if (uploadResult.getStatus() != 200) {

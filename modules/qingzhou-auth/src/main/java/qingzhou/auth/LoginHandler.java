@@ -58,13 +58,14 @@ public class LoginHandler implements HttpHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response) {
         String path = request.getPath();
-        if (path.endsWith(LOGIN_PATH)) {
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
+        if (path.equals(LOGIN_PATH)) {
             if (!"POST".equals(request.getMethod())) { // 防密码经 GET 进入 URL/访问日志
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
             login(request, response);
-        } else if (path.endsWith(LOGOUT_PATH)) {
+        } else if (path.equals(LOGOUT_PATH)) {
             logout(response);
         } else {
             response.status400Finish();

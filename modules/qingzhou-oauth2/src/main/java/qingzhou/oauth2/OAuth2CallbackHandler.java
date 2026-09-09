@@ -65,10 +65,11 @@ public class OAuth2CallbackHandler implements HttpHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
         String path = request.getPath();
-        if (path.endsWith(AUTHORIZE_PATH)) {
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
+        if (path.equals(AUTHORIZE_PATH)) {
             String authorizationUrl = buildAuthorizationUrl();
             response.redirect(authorizationUrl);
-        } else if (path.endsWith(CALLBACK_PATH)) {
+        } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
             response.status400Finish();

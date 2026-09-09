@@ -33,13 +33,16 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         } catch (Exception e) {
             return response.status(HttpResponseStatus.BAD_REQUEST).send();
         }
+        requestPath = normalize(requestPath);
+        if (requestPath == null) { // 含 ".." 段一律拒绝：handler 各自解析路径，无法保证都能防住穿越
+            return response.status(HttpResponseStatus.BAD_REQUEST).send();
+        }
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
 
-        String matches = httpServer.matches(requestPath);
-        if (matches == null) {
+        HttpHandler httpHandler = httpServer.findHandler(requestPath);
+        if (httpHandler == null) {
             return response.status(HttpResponseStatus.NOT_FOUND).send();
         }
-        HttpHandler httpHandler = this.httpServer.handlerMap.get(matches);
 
         // 安全认证
         boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
@@ -63,6 +66,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
         }
 
+        addSecurityHeaders(response);
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
@@ -103,6 +107,31 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         }
                         return response.sendByteArray(streamResponse.asFlux()).then();
                     });
+        }
+    }
+
+    /**
+     * 路径规范化：折叠重复斜杠与 "." 段；发现 ".." 段返回 null（拒绝请求）。
+     * 各 handler 自行解析路径，防护难以统一，故在分发入口一次性拦截穿越。
+     */
+    private static String normalize(String path) {
+        StringBuilder normalized = new StringBuilder(path.length());
+        for (String segment : path.split("/")) {
+            if (segment.isEmpty() || segment.equals(".")) continue;
+            if (segment.equals("..")) return null;
+            normalized.append('/').append(segment);
+        }
+        if (path.endsWith("/") && normalized.length() > 0) normalized.append('/');
+        return normalized.length() == 0 ? "/" : normalized.toString();
+    }
+
+    private void addSecurityHeaders(HttpServerResponse response) {
+        response.responseHeaders()
+                .set("X-Content-Type-Options", "nosniff")
+                .set("X-Frame-Options", "SAMEORIGIN")
+                .set("Referrer-Policy", "no-referrer");
+        if (httpServer.isSslEnabled) {
+            response.responseHeaders().set("Strict-Transport-Security", "max-age=31536000");
         }
     }
 

@@ -38,6 +38,7 @@ public class HttpServerImpl implements HttpServer {
     private LoopResources loopResources;
     private DisposableServer disposableServer;
     boolean isAuthDisabled;
+    boolean isSslEnabled;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
@@ -49,8 +50,8 @@ public class HttpServerImpl implements HttpServer {
         int port = Integer.parseInt(config.get("port"));
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
-        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
-        SslContext sslContext = sslEnabled ? buildSslContext(config) : null;
+        isSslEnabled = getConfig(config, "ssl_enabled", true);
+        SslContext sslContext = isSslEnabled ? buildSslContext(config) : null;
 
         isAuthDisabled = getConfig(config, "auth_disabled", false);
         if (isAuthDisabled) logger.warn("http server authentication is disabled");
@@ -86,7 +87,7 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     /**
@@ -196,14 +197,16 @@ public class HttpServerImpl implements HttpServer {
      * 分发专用：只按「请求路径以已注册路径为前缀」匹配，并取最长者。
      * 反向匹配（已注册路径以请求路径为前缀）会让后代 handler 服务祖先请求，
      * 例如请求 / 命中 /ai/chat/config、请求 /ai/chat 命中 /ai/chat/stream，故不做。
+     * 直接返回 handler 而非路径：OSGi 可并发解绑 handler，先查路径再取 handler 会取到 null。
      */
-    String matches(String checkPath) {
+    HttpHandler findHandler(String checkPath) {
         String request = withTrailingSlash(checkPath);
-        String matched = null;
+        HttpHandler matched = null;
         int matchedLength = 0;
-        for (String existsPath : handlerMap.keySet()) {
+        for (Map.Entry<String, HttpHandler> entry : handlerMap.entrySet()) {
+            String existsPath = entry.getKey();
             if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
-                matched = existsPath;
+                matched = entry.getValue();
                 matchedLength = existsPath.length();
             }
         }
@@ -265,22 +268,12 @@ public class HttpServerImpl implements HttpServer {
     }
 
     /**
-     * 安全认证：配置 auth_disabled=true 时全局关闭；命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 安全认证：配置 auth_disabled=true 时全局关闭；多认证器按 pass > reject > challenge > missing 组合——
      * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
      * 全部无凭据时才用重定向引导登录。
      */
     AuthResult authenticate(HttpRequest request) {
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
-
-        String path = request.getPath();
-        for (Authenticator authenticator : authenticators) {
-            String[] excludedPaths = authenticator.excludedPaths();
-            if (excludedPaths != null) {
-                for (String exclude : excludedPaths) {
-                    if (path.startsWith(exclude)) return AuthResult.pass(null);
-                }
-            }
-        }
 
         AuthResult reject = null;
         for (Authenticator authenticator : authenticators) {
@@ -288,7 +281,9 @@ public class HttpServerImpl implements HttpServer {
             try {
                 r = authenticator.authenticate(request);
             } catch (Exception e) {
-                logger.error("authentication error: " + authenticator.getClass().getName(), e);
+                if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
+                    logger.error("authentication error: " + authenticator.getClass().getName(), e);
+                }
                 r = AuthResult.reject("authentication error");
             }
             if (r.status() == Status.PASS) return r;
