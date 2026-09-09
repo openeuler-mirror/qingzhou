@@ -15,7 +15,7 @@ import qingzhou.http.server.HttpResponse;
 /**
  * 静态资源服务，提供前端 UI 的静态文件访问
  */
-@Component(property = {HttpHandler.HANDLE_PATH + "=", HttpHandler.HANDLE_NO_AUTH + "=true"})
+@Component(property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
     @Reference
     private Crypto crypto;

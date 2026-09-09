@@ -27,6 +27,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
 
     @Override
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
+        addSecurityHeaders(response); // 须在首个 return 之前：400/401/404/413 等分支同样需要安全头
         String requestPath = request.uri().split("\\?")[0];
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
@@ -66,7 +67,6 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
         }
 
-        addSecurityHeaders(response);
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 

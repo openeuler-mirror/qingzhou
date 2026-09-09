@@ -51,6 +51,7 @@ public class AgentInvoker implements HttpHandler {
                 }
                 String newPaths = Arrays.stream(keyNames).map(s -> {
                     String[] keyName = s.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP);
+                    if (keyName.length < 2) throw new IllegalArgumentException("illegal file name: " + s);
                     File tempFile = resolveInUploadBase(keyName[0]);
                     File localFile = resolveInUploadBase(keyName[1]);
                     tempFile.renameTo(localFile);
@@ -61,6 +62,7 @@ public class AgentInvoker implements HttpHandler {
             });
 
             AppStubLocal appStub = registry.getLocalApp(request.getApp());
+            if (appStub == null) throw new IllegalArgumentException("business processing error");
             appStub.invokeApp(request);
         } finally {
             for (String paths : originalFilePaths) {

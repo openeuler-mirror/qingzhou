@@ -22,7 +22,7 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
 @Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=", HttpHandler.HANDLE_NO_AUTH + "=true"})
+        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class OAuth2CallbackHandler implements HttpHandler {
     private static final String AUTHORIZE_PATH = "/oauth2/authorize";
     private static final String CALLBACK_PATH = "/oauth2/callback";

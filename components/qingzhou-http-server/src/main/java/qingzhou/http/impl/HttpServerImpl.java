@@ -157,15 +157,16 @@ public class HttpServerImpl implements HttpServer {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeHttpHandler")
     public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
-        String path = properties.get(HttpHandler.HANDLE_PATH);
+        String originPath = properties.get(HttpHandler.HANDLE_PATH);
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
         if (component == null) component = "@App";
-        if (path == null)
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be null");
-        path = path.trim();
+        if (originPath == null || originPath.trim().isEmpty()) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be empty");
+        }
 
+        String path = originPath.trim();
         if (!path.startsWith("/")) {
-            path = "/" + path;
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with /");
         }
         if (reference != null) {
             String prefix = reference.getBundle().getSymbolicName();
@@ -176,7 +177,7 @@ public class HttpServerImpl implements HttpServer {
 
         String conflict = conflict(path);
         if (conflict != null) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
         }
 
         handlerMap.put(path, httpHandler);
@@ -185,7 +186,7 @@ public class HttpServerImpl implements HttpServer {
             noAuthHandlerSet.add(httpHandler);
         }
 
-        String msg = "http handler registered: " + path + (isNoAuth ? " (no auth)" : "");
+        String msg = "http handler registered, component: " + component + ", path: " + originPath + (isNoAuth ? " (no auth)" : "");
         if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
             logger.info(msg);
         } else {
@@ -235,7 +236,7 @@ public class HttpServerImpl implements HttpServer {
      * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
      * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
      */
-    public void removeHttpHandler(HttpHandler httpHandler) {
+    public synchronized void removeHttpHandler(HttpHandler httpHandler) {
         String contextPath = null;
         for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
             if (Objects.equals(e.getValue(), httpHandler)) {

@@ -1,5 +1,6 @@
 package qingzhou.agent;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import qingzhou.crypto.Cipher;
@@ -32,8 +33,9 @@ class ProcessHandler {
         try {
             responseData = callback.doProcess(requestData);
         } catch (Throwable e) {
-            // e.getMessage() 内包含 illegal file path: xxx
-            httpResponse.status500Finish(e.getMessage() != null ? e.getMessage() : "business processing error");
+            // 业务异常可回显以便代理定位；NPE 的 Helpful 消息含内部类结构、IO 异常含服务器绝对路径，均不回显
+            String msg = e instanceof NullPointerException || e instanceof IOException ? null : e.getMessage();
+            httpResponse.status500Finish(msg != null ? msg : "business processing error");
             return;
         }
 
