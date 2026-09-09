@@ -9,6 +9,7 @@ public class InstanceInfo {
     private String id;
     private String host;
     private int port;
+    private boolean sslEnabled;
     private volatile String key;
     private String version;
     private final List<AppMeta> appMetas = new ArrayList<>();
@@ -35,6 +36,14 @@ public class InstanceInfo {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public boolean isSslEnabled() {
+        return sslEnabled;
+    }
+
+    public void setSslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
     }
 
     public String getKey() {

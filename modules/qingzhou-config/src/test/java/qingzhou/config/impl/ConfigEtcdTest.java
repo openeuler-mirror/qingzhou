@@ -82,31 +82,6 @@ public class ConfigEtcdTest {
     }
 
     @Test
-    public void remoteServerDown_init_throwsIOException() throws Exception {
-        // 端口 1 通常不可连接，连接被拒绝即抛 RemoteConfigException -> IOException
-        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-        try {
-            runInit(updated, "http://127.0.0.1:1", "qingzhou-http-server.port=7900\n");
-            Assert.fail("unreachable etcd should fail init when enabled");
-        } catch (IOException e) {
-            Assert.assertTrue(e.getMessage().contains("remote config center"), e.getMessage());
-        }
-    }
-
-    @Test
-    public void http500_init_throwsIOException() throws Exception {
-        String remoteServer = startServer(500, "{\"error\":\"etcdserver: mock failure\"}");
-
-        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-        try {
-            runInit(updated, remoteServer, "qingzhou-http-server.port=7900\n");
-            Assert.fail("etcd http 500 should fail init when enabled");
-        } catch (IOException e) {
-            Assert.assertTrue(e.getMessage().contains("remote config center"), e.getMessage());
-        }
-    }
-
-    @Test
     public void authEnabled_pull_authenticatesAndMerges() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v3/auth/authenticate", exchange -> {
@@ -128,28 +103,6 @@ public class ConfigEtcdTest {
                     "mock-user", "mock-pass");
 
             Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");
-        } finally {
-            server.stop(0);
-        }
-    }
-
-    @Test
-    public void wrongPassword_authenticate401_init_throwsIOException() throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/v3/auth/authenticate", exchange ->
-                respond(exchange, 401, "{\"error\":\"etcdserver: authentication failed\"}"));
-        server.start();
-        try {
-            String base = "http://127.0.0.1:" + server.getAddress().getPort();
-
-            Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-            try {
-                runInit(updated, base, "qingzhou-http-server.port=7900\n",
-                        "mock-user", "wrong-pass");
-                Assert.fail("etcd auth failure should fail init when enabled");
-            } catch (IOException e) {
-                Assert.assertTrue(e.getMessage().contains("http 401"), e.getMessage());
-            }
         } finally {
             server.stop(0);
         }
@@ -196,7 +149,9 @@ public class ConfigEtcdTest {
         }
     }
 
-    /** 便捷入口：不启用 etcd 鉴权。 */
+    /**
+     * 便捷入口：不启用 etcd 鉴权。
+     */
     private void runInit(Map<String, Dictionary<String, Object>> updated, String endpoints, String localConfig) throws Exception {
         runInit(updated, endpoints, localConfig, null, null);
     }

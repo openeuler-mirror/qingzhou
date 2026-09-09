@@ -23,7 +23,7 @@ import qingzhou.json.Json;
 
 @Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
-public class OAuth2CallbackHandler implements HttpHandler {
+public class OAuth2Handler implements HttpHandler {
     private static final String AUTHORIZE_PATH = "/oauth2/authorize";
     private static final String CALLBACK_PATH = "/oauth2/callback";
     static final String COOKIE_NAME = "oauth2_session";

@@ -156,6 +156,9 @@ public class Heartbeat {
         int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
         thisInstanceInfo.setPort(serverPort);
 
+        boolean sslEnabled = Boolean.parseBoolean(String.valueOf(httpServerConfig.get("ssl_enabled")));
+        thisInstanceInfo.setSslEnabled(sslEnabled);
+
         // 所有信息收集完成后，计算实例 ID，同一个实例多次重启的 ID 不应该变化
         String digestTemp = json.toJson(thisInstanceInfo);
         digestTemp += ips(); // 集群下的多实例，除了IP别的都是一样的，加入 IP 标识可区分集群中的不同实例

@@ -12,13 +12,13 @@ import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-public class LoginHandlerTest {
+public class AuthHandlerTest {
 
     @Test
     public void validCredentials_login_returnsToken() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
         StubTokenService tokenService = new StubTokenService();
-        LoginHandler handler = buildHandler("secret", 5, 300, tokenService);
+        AuthHandler handler = buildHandler("secret", 5, 300, tokenService);
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 200);
@@ -29,7 +29,7 @@ public class LoginHandlerTest {
     @Test
     public void invalidPassword_login_returns401() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        AuthHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), response);
 
         Assert.assertEquals(response.status, 401);
@@ -39,7 +39,7 @@ public class LoginHandlerTest {
     @Test
     public void getMethod_login_returns405() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        AuthHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
         handler.handle(request("/auth/login", "GET", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 405);
@@ -49,7 +49,7 @@ public class LoginHandlerTest {
     @Test
     public void unknownPath_request_returns400() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        AuthHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
         handler.handle(request("/auth/other", "POST", "127.0.0.1", "admin", "secret"), response);
 
         Assert.assertEquals(response.status, 400);
@@ -58,7 +58,7 @@ public class LoginHandlerTest {
     @Test
     public void logoutPath_request_returns200() throws Exception {
         StubHttpResponse response = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
+        AuthHandler handler = buildHandler("secret", 5, 300, new StubTokenService());
         handler.handle(request("/auth/logout", "POST", "127.0.0.1", null, null), response);
 
         Assert.assertEquals(response.status, 200);
@@ -70,7 +70,7 @@ public class LoginHandlerTest {
         CryptoImpl crypto = new CryptoImpl();
         String digest = crypto.getMessageDigest().digest("secret", "SHA-256", 16, 2);
         StubHttpResponse response = new StubHttpResponse();
-        LoginHandler handler = new LoginHandler();
+        AuthHandler handler = new AuthHandler();
         setField(handler, "crypto", crypto);
         setField(handler, "tokenService", new StubTokenService());
         Map<String, String> config = new HashMap<>();
@@ -89,7 +89,7 @@ public class LoginHandlerTest {
         StubHttpResponse first = new StubHttpResponse();
         StubHttpResponse second = new StubHttpResponse();
         StubHttpResponse third = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 2, 300, new StubTokenService()); // 失败 2 次后锁定
+        AuthHandler handler = buildHandler("secret", 2, 300, new StubTokenService()); // 失败 2 次后锁定
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), first);
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), second);
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "secret"), third);
@@ -105,7 +105,7 @@ public class LoginHandlerTest {
         StubHttpResponse firstFailure = new StubHttpResponse();
         StubHttpResponse locked = new StubHttpResponse();
         StubHttpResponse unlocked = new StubHttpResponse();
-        LoginHandler handler = buildHandler("secret", 1, 1, new StubTokenService()); // 失败 1 次即锁定，1 秒后解锁
+        AuthHandler handler = buildHandler("secret", 1, 1, new StubTokenService()); // 失败 1 次即锁定，1 秒后解锁
         handler.handle(request("/auth/login", "POST", "127.0.0.1", "admin", "wrong"), firstFailure);
         Assert.assertEquals(firstFailure.status, 401); // 第 1 次失败仅 401
 
@@ -120,8 +120,8 @@ public class LoginHandlerTest {
 
     // ---------- 辅助 ----------
 
-    private LoginHandler buildHandler(String plainPassword, int maxFailures, int lockSeconds, TokenService tokenService) throws Exception {
-        LoginHandler handler = new LoginHandler();
+    private AuthHandler buildHandler(String plainPassword, int maxFailures, int lockSeconds, TokenService tokenService) throws Exception {
+        AuthHandler handler = new AuthHandler();
         CryptoImpl crypto = new CryptoImpl();
         setField(handler, "crypto", crypto);
         setField(handler, "tokenService", tokenService);

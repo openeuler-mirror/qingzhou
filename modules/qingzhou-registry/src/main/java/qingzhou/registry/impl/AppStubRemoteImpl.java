@@ -29,6 +29,7 @@ class AppStubRemoteImpl implements AppStubRemote {
     private final HttpClient httpClient;
     private final Crypto crypto;
     private final Logger logger;
+    private final String agentBaseUrl;
 
     AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto, Logger logger) {
         this.instanceInfo = instanceInfo;
@@ -37,6 +38,9 @@ class AppStubRemoteImpl implements AppStubRemote {
         this.httpClient = httpClient;
         this.crypto = crypto;
         this.logger = logger;
+
+        String protocol = instanceInfo.isSslEnabled() ? "https" : "http";
+        agentBaseUrl = protocol + "://" + instanceInfo.getHost() + ":" + instanceInfo.getPort() + "/agent";
     }
 
     @Override
@@ -63,9 +67,10 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = cipher.encrypt(data);
-            String agentUrl = String.format("http://%s:%s/agent" + Constants.AGENT_INVOKE_URI, instanceInfo.getHost(), instanceInfo.getPort());
 
-            response = httpClient.send(httpClient.newRequest(agentUrl).body(encrypted));
+            String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
+
+            response = httpClient.send(httpClient.newRequest(invokeUrl).body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
@@ -74,7 +79,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                     request.setResponse(result);
                 }
             } else {
-                String errorMsg = "agent request failed [" + response.getStatus() + "]: " + agentUrl;
+                String errorMsg = "agent request failed [" + response.getStatus() + "]: " + invokeUrl;
                 logger.error(errorMsg);
                 byte[] body = response.getBody();
                 if (body != null && body.length > 0) {
@@ -125,7 +130,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                 byte[] encrypt = cipher.encrypt(buffer, 0, bytesRead);
 
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
-                String uploadUrl = String.format("http://%s:%s/agent" + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey, instanceInfo.getHost(), instanceInfo.getPort());
+                String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey;
 
                 Response uploadResult = httpClient.send(httpClient.newRequest(uploadUrl).body(encrypt));
                 if (uploadResult.getStatus() != 200) {

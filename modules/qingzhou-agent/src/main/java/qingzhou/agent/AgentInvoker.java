@@ -19,7 +19,7 @@ import qingzhou.json.Json;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_INVOKE_URI)
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_INVOKE_URI, HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class AgentInvoker implements HttpHandler {
     @Reference
     private Json json;
