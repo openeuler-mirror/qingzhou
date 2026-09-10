@@ -120,7 +120,6 @@ public class JvmMonitor extends qingzhou.api.ModelBase implements Monitor {
             name = {"运行时间", "en:Uptime"},
             info = {"JVM运行时长", "en:JVM uptime"},
             field_type = FieldType.monitor,
-            numeric = true,
             chart_type = ChartType.stat)
     public String uptime;
 

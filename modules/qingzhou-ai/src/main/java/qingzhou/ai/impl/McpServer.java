@@ -1,4 +1,4 @@
-package qingzhou.mcp;
+package qingzhou.ai.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -18,7 +18,7 @@ import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=")
+@Component(property = HttpHandler.HANDLE_PATH + "=/mcp")
 public class McpServer implements HttpHandler {
     private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 

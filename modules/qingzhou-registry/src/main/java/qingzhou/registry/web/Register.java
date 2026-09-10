@@ -17,7 +17,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/register",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
 

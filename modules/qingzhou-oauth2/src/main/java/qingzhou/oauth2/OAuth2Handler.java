@@ -22,11 +22,10 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
 @Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = HttpHandler.HANDLE_PATH + "=")
-public class OAuth2CallbackHandler implements HttpHandler {
+        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
+public class OAuth2Handler implements HttpHandler {
     private static final String AUTHORIZE_PATH = "/oauth2/authorize";
     private static final String CALLBACK_PATH = "/oauth2/callback";
-    static final String[] EXCLUDED_PATHS = {AUTHORIZE_PATH, CALLBACK_PATH};
     static final String COOKIE_NAME = "oauth2_session";
 
     @Reference
@@ -66,10 +65,11 @@ public class OAuth2CallbackHandler implements HttpHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
         String path = request.getPath();
-        if (path.endsWith(AUTHORIZE_PATH)) {
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
+        if (path.equals(AUTHORIZE_PATH)) {
             String authorizationUrl = buildAuthorizationUrl();
             response.redirect(authorizationUrl);
-        } else if (path.endsWith(CALLBACK_PATH)) {
+        } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
             response.status400Finish();

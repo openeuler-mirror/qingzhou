@@ -9,7 +9,7 @@ import qingzhou.http.server.AuthResult;
 public class TokenAuthenticatorTest {
     @Test
     public void validToken_authenticate_returnsPass() throws Exception {
-        LoginHandlerTest.StubHttpRequest request = new LoginHandlerTest.StubHttpRequest();
+        AuthHandlerTest.StubHttpRequest request = new AuthHandlerTest.StubHttpRequest();
         request.header = "Bearer some-token";
         TokenAuthenticator authenticator = buildAuthenticator(token -> "admin");
 
@@ -21,7 +21,7 @@ public class TokenAuthenticatorTest {
 
     @Test
     public void invalidToken_authenticate_returnsReject() throws Exception {
-        LoginHandlerTest.StubHttpRequest request = new LoginHandlerTest.StubHttpRequest();
+        AuthHandlerTest.StubHttpRequest request = new AuthHandlerTest.StubHttpRequest();
         request.header = "Bearer bad-token";
         TokenAuthenticator authenticator = buildAuthenticator(token -> null);
 
@@ -29,13 +29,6 @@ public class TokenAuthenticatorTest {
 
         Assert.assertSame(result.status(), AuthResult.Status.REJECT);
         Assert.assertEquals(result.getReason(), "invalid token");
-    }
-
-    @Test
-    public void anyRequest_excludedPaths_returnsLoginEndpoints() throws Exception {
-        TokenAuthenticator authenticator = buildAuthenticator(token -> null);
-
-        Assert.assertEquals(authenticator.excludedPaths(), LoginHandler.EXCLUDED_PATHS);
     }
 
     private TokenAuthenticator buildAuthenticator(VerifyStub verifyStub) throws Exception {

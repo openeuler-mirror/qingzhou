@@ -19,7 +19,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.config.remote.RemoteConfigException;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
 import qingzhou.config.remote.RemoteOptions;
@@ -68,59 +67,63 @@ public class Config {
     @Activate
     public void init() throws IOException {
         Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
-        Properties qzConfig = parseConfig(configFile);
+        Properties qingzhouProperties = parseConfig(configFile);
 
-        Map<String, Map<String, String>> configMap = aggregate(qzConfig);
+        Map<String, Map<String, String>> configMap = converToOsgiConfig();
 
-        RemoteOptions remoteOptions = RemoteOptions.from(qzConfig);
+        RemoteOptions remoteOptions = RemoteOptions.from(qingzhouProperties);
         if (remoteOptions.enabled) { // 开启外部配置中心：远程覆盖本地，缺失保留
             try {
                 RemoteConfigSource source = RemoteConfigSourceFactory.create(remoteOptions);
                 merge(configMap, source.pull(remoteOptions.buildNamespace()));
-            } catch (RemoteConfigException e) {
-                throw new IOException("failed to load config from remote config center: " + e.getMessage(), e);
+            } catch (Exception e) {
+                System.err.println("failed to load config from remote config center: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
-        distribute(configMap);
-    }
-
-    /** 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。 */
-    static Map<String, Map<String, String>> aggregate(Properties qzConfig) {
-        Map<String, Map<String, String>> configMap = new HashMap<>();
-        for (String configKey : qzConfig.stringPropertyNames()) {
-            if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) {
-                continue;
-            }
-            String configVal = qzConfig.getProperty(configKey);
-
-            int pidIndex = configKey.indexOf(".");
-            String configurationPid = configKey.substring(0, pidIndex); // OSGI cm configurationPid
-            String moduleInternalKey = configKey.substring(pidIndex + 1);
-
-            configMap.computeIfAbsent(configurationPid, s -> new HashMap<>()).put(moduleInternalKey, configVal);
-        }
-        return configMap;
+        distributeOsgiConfig(configMap);
     }
 
     /**
      * 远程配置覆盖合并：以本地为底、远程为补丁，逐 key 覆盖；远程缺失的本地 key 保留。
      * 远程配置不得改写 qingzhou-config 自举参数（remote.*）。
      */
-    static void merge(Map<String, Map<String, String>> configMap, Map<String, Map<String, String>> remoteConfig) {
+    private void merge(Map<String, Map<String, String>> targetConfigMap, Map<String, Map<String, String>> remoteConfig) {
         for (Map.Entry<String, Map<String, String>> entry : remoteConfig.entrySet()) {
             String configurationPid = entry.getKey();
             if (configurationPid.equals("qingzhou-config")) {
                 continue;
             }
-            Map<String, String> moduleMap = configMap.computeIfAbsent(configurationPid, s -> new HashMap<>());
-            for (Map.Entry<String, String> kv : entry.getValue().entrySet()) {
-                moduleMap.put(kv.getKey(), kv.getValue());
-            }
+            Map<String, String> moduleMap = targetConfigMap.computeIfAbsent(configurationPid, s -> new HashMap<>());
+            moduleMap.putAll(entry.getValue());
         }
     }
 
-    private void distribute(Map<String, Map<String, String>> configMap) throws IOException {
+    /**
+     * 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。
+     */
+    private Map<String, Map<String, String>> converToOsgiConfig() throws IOException {
+        Map<String, Map<String, String>> configMap = new HashMap<>();
+        Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
+        Properties qzConfig = parseConfig(configFile);
+        for (String configKey : qzConfig.stringPropertyNames()) {
+            if (configKey.startsWith("qingzhou-")
+                    || configKey.startsWith("app~")) {
+                String configVal = qzConfig.getProperty(configKey);
+
+                int pidIndex = configKey.indexOf(".");
+                String configurationPid = configKey.substring(0, pidIndex); // OSGI cm configurationPid
+                String moduleInternalKey = configKey.substring(pidIndex + 1);
+
+                Map<String, String> moduleMap = configMap.computeIfAbsent(configurationPid, s -> new HashMap<>());
+                moduleMap.put(moduleInternalKey, configVal);
+            }
+        }
+        return configMap;
+    }
+
+    private void distributeOsgiConfig(Map<String, Map<String, String>> configMap) throws IOException {
         for (Map.Entry<String, Map<String, String>> entry : configMap.entrySet()) {
             String configurationPid = entry.getKey();
             Map<String, String> moduleMap = entry.getValue();

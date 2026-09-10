@@ -21,9 +21,4 @@ public class TokenAuthenticator implements Authenticator {
         String user = tokenService.verifyToken(header.substring(BEARER.length()).trim());
         return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid token");
     }
-
-    @Override
-    public String[] excludedPaths() {
-        return LoginHandler.EXCLUDED_PATHS;
-    }
 }

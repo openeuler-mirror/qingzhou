@@ -74,7 +74,7 @@ public class RemoteOptionsTest {
         try {
             RemoteConfigSourceFactory.create(RemoteOptions.from(props));
             Assert.fail("unsupported type should throw");
-        } catch (IllegalArgumentException e) {
+        } catch (UnsupportedOperationException e) {
             Assert.assertTrue(e.getMessage().contains("unsupported remote config center type"), e.getMessage());
         }
     }

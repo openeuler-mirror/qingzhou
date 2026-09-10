@@ -13,21 +13,16 @@ public class OAuth2Authenticator implements Authenticator {
         if (cookie == null) {
             return AuthResult.reject("token missing");
         }
-        String user = OAuth2CallbackHandler.verifyToken(cookie);
+        String user = OAuth2Handler.verifyToken(cookie);
         return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid session");
-    }
-
-    @Override
-    public String[] excludedPaths() {
-        return OAuth2CallbackHandler.EXCLUDED_PATHS;
     }
 
     private String getCookie(String cookieHeader) {
         if (cookieHeader == null) return null;
         for (String cookie : cookieHeader.split(";")) {
             String trimmed = cookie.trim();
-            if (trimmed.startsWith(OAuth2CallbackHandler.COOKIE_NAME + "="))
-                return trimmed.substring(OAuth2CallbackHandler.COOKIE_NAME.length() + 1);
+            if (trimmed.startsWith(OAuth2Handler.COOKIE_NAME + "="))
+                return trimmed.substring(OAuth2Handler.COOKIE_NAME.length() + 1);
         }
         return null;
     }

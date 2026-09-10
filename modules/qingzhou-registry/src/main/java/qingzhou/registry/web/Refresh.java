@@ -17,7 +17,7 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/refresh",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/refresh", HttpHandler.HANDLE_NO_AUTH + "=true"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Refresh implements HttpHandler {
     public static final Object REFRESH_KEY_LOCK = new Object();
@@ -48,6 +48,7 @@ public class Refresh implements HttpHandler {
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");
+        if (split.length < 2) return;
         String instanceId = split[0];
         String newKey = split[1];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);

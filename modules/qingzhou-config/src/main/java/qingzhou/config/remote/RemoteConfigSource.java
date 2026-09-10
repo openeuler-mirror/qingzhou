@@ -10,9 +10,8 @@ public interface RemoteConfigSource {
     /**
      * 拉取指定命名空间下的全部模块配置文档。
      *
-     * @param namespace 数据隔离命名空间，如 qingzhou/qingzhou/default/tenant/instance
+     * @param namespace 数据隔离命名空间，如 qingzhou/default/tenant/instance
      * @return pid -> (pid 内部 key -> value)
-     * @throws RemoteConfigException 网络、鉴权或协议错误
      */
-    Map<String, Map<String, String>> pull(String namespace) throws RemoteConfigException;
+    Map<String, Map<String, String>> pull(String namespace) throws Exception;
 }

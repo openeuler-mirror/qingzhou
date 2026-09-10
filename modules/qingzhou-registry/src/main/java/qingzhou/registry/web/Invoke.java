@@ -24,6 +24,8 @@ import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/invoke")
 public class Invoke implements HttpHandler {
+    private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
+
     @Reference
     private Registry registry;
     @Reference
@@ -86,10 +88,11 @@ public class Invoke implements HttpHandler {
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {
         String requestPath = httpRequest.getPath();
-        int i = requestPath.indexOf("/", 1);
-        i = requestPath.indexOf("/", i + 1);
-        String restPath = requestPath.substring(i + 1);
-        String[] rest = restPath.split("/");
+        if (!requestPath.startsWith(PATH_PREFIX)) return null;
+
+        // 过滤空段：形如 // 的双斜杠不应产生空的 instance/app 段
+        String[] rest = Arrays.stream(requestPath.substring(PATH_PREFIX.length()).split("/"))
+                .filter(segment -> !segment.isEmpty()).toArray(String[]::new);
 
         int restMinDepth = 4; // instance/app/model/action/[id]
         if (rest.length < restMinDepth)

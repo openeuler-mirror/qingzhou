@@ -8,7 +8,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
-import qingzhou.api.Constants;
+import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;

@@ -1,21 +1,11 @@
 package qingzhou.config.remote.etcd;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
-import qingzhou.config.remote.RemoteConfigException;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteOptions;
 
@@ -61,20 +51,23 @@ public class EtcdConfigSource implements RemoteConfigSource {
     }
 
     @Override
-    public Map<String, Map<String, String>> pull(String namespace) throws RemoteConfigException {
-        RemoteConfigException last = null;
+    public Map<String, Map<String, String>> pull(String namespace) throws Exception {
+        Exception last = null;
         String prefix = namespace + "/";
         for (String endpoint : endpoints) {
             try {
                 return range(endpoint, prefix);
-            } catch (RemoteConfigException e) {
+            } catch (Exception e) {
                 last = e;
             }
         }
-        throw last;
+        if (last != null) {
+            throw last;
+        }
+        return Collections.emptyMap();
     }
 
-    private Map<String, Map<String, String>> range(String endpoint, String prefix) throws RemoteConfigException {
+    private Map<String, Map<String, String>> range(String endpoint, String prefix) throws Exception {
         String auth = token(endpoint);
         byte[] key = prefix.getBytes(StandardCharsets.UTF_8);
         byte[] rangeEnd = key.clone();
@@ -85,11 +78,11 @@ public class EtcdConfigSource implements RemoteConfigSource {
         return parseRange(response, prefix);
     }
 
-    private Map<String, Map<String, String>> parseRange(String response, String prefix) throws RemoteConfigException {
+    private Map<String, Map<String, String>> parseRange(String response, String prefix) throws IOException {
         Map<String, Map<String, String>> result = new HashMap<>();
         Object root = parseJson(response, "range");
         if (!(root instanceof Map)) {
-            throw new RemoteConfigException("etcd range response is not an object");
+            throw new IllegalStateException("etcd range response is not an object");
         }
         Object kvs = ((Map<?, ?>) root).get("kvs");
         if (!(kvs instanceof List)) {
@@ -97,7 +90,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
         }
         for (Object item : (List<?>) kvs) {
             if (!(item instanceof Map)) {
-                throw new RemoteConfigException("etcd range response has an invalid kv item");
+                throw new IllegalStateException("etcd range response has an invalid kv item");
             }
             Map<?, ?> kv = (Map<?, ?>) item;
             String key = decodeBase64(asText(kv.get("key"), "range"));
@@ -114,7 +107,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
         return result;
     }
 
-    private Map<String, String> parseDocument(String pid, String value) throws RemoteConfigException {
+    private Map<String, String> parseDocument(String pid, String value) throws IOException {
         Map<String, String> map = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new StringReader(value))) {
             StringBuilder pending = new StringBuilder();
@@ -136,30 +129,28 @@ public class EtcdConfigSource implements RemoteConfigSource {
                     map.put(target, "");
                 }
             }
-        } catch (Exception e) {
-            throw new RemoteConfigException("invalid remote config document, pid: " + pid, e);
         }
         return map;
     }
 
-    private String token(String endpoint) throws RemoteConfigException {
+    private String token(String endpoint) throws Exception {
         if (username.isEmpty()) return null;
         if (token != null) return token;
 
         String body = "{\"name\":\"" + escape(username) + "\",\"password\":\"" + escape(password) + "\"}";
         Object root = parseJson(httpPost(endpoint, "/auth/authenticate", body, null), "authenticate");
         if (!(root instanceof Map)) {
-            throw new RemoteConfigException("etcd authenticate response is not an object");
+            throw new IllegalStateException("etcd authenticate response is not an object");
         }
         Object t = ((Map<?, ?>) root).get("token");
         if (!(t instanceof String) || ((String) t).isEmpty()) {
-            throw new RemoteConfigException("etcd authenticate response has no token");
+            throw new IllegalStateException("etcd authenticate response has no token");
         }
         token = (String) t;
         return token;
     }
 
-    private String httpPost(String endpoint, String path, String json, String auth) throws RemoteConfigException {
+    private String httpPost(String endpoint, String path, String json, String auth) throws Exception {
         String url = endpoint + "/v3" + path;
         HttpURLConnection conn = null;
         try {
@@ -184,13 +175,9 @@ public class EtcdConfigSource implements RemoteConfigSource {
             boolean success = code >= 200 && code < 300;
             String response = readAll(success ? conn.getInputStream() : conn.getErrorStream());
             if (!success) {
-                throw new RemoteConfigException("etcd request failed: http " + code + ", url: " + url + ", reason: " + errorMessage(response));
+                throw new IllegalStateException("etcd request failed: http " + code + ", url: " + url + ", reason: " + errorMessage(response));
             }
             return response;
-        } catch (RemoteConfigException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RemoteConfigException("etcd request error, url: " + url + ", cause: " + e.getClass().getSimpleName(), e);
         } finally {
             if (conn != null) conn.disconnect();
         }
@@ -226,26 +213,26 @@ public class EtcdConfigSource implements RemoteConfigSource {
         return sb.toString();
     }
 
-    private Object parseJson(String text, String action) throws RemoteConfigException {
+    private Object parseJson(String text, String action) {
         try {
             return Json.parse(text);
         } catch (RuntimeException e) {
-            throw new RemoteConfigException("invalid etcd " + action + " response", e);
+            throw new IllegalStateException("invalid etcd " + action + " response", e);
         }
     }
 
-    private static String asText(Object value, String action) throws RemoteConfigException {
+    private static String asText(Object value, String action) {
         if (!(value instanceof String)) {
-            throw new RemoteConfigException("etcd " + action + " response misses a string field");
+            throw new IllegalStateException("etcd " + action + " response misses a string field");
         }
         return (String) value;
     }
 
-    private static String decodeBase64(String text) throws RemoteConfigException {
+    private static String decodeBase64(String text) {
         try {
             return new String(Base64.getDecoder().decode(text), StandardCharsets.UTF_8);
         } catch (RuntimeException e) {
-            throw new RemoteConfigException("invalid base64 content in etcd response", e);
+            throw new IllegalStateException("invalid base64 content in etcd response", e);
         }
     }
 

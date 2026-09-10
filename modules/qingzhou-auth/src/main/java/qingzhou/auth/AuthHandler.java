@@ -16,11 +16,10 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = HttpHandler.HANDLE_PATH + "=")
-public class LoginHandler implements HttpHandler {
+        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
+public class AuthHandler implements HttpHandler {
     private static final String LOGIN_PATH = "/auth/login";
     private static final String LOGOUT_PATH = "/auth/logout";
-    static final String[] EXCLUDED_PATHS = {LOGIN_PATH, LOGOUT_PATH};
 
     @Reference
     private Crypto crypto;
@@ -59,13 +58,14 @@ public class LoginHandler implements HttpHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response) {
         String path = request.getPath();
-        if (path.endsWith(LOGIN_PATH)) {
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
+        if (path.equals(LOGIN_PATH)) {
             if (!"POST".equals(request.getMethod())) { // 防密码经 GET 进入 URL/访问日志
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
             login(request, response);
-        } else if (path.endsWith(LOGOUT_PATH)) {
+        } else if (path.equals(LOGOUT_PATH)) {
             logout(response);
         } else {
             response.status400Finish();

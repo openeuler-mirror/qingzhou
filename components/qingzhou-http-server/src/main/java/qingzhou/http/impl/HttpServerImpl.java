@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.security.KeyStore;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.KeyManagerFactory;
 
 import io.netty.channel.ChannelOption;
@@ -28,14 +29,16 @@ public class HttpServerImpl implements HttpServer {
     @Reference
     private Logger logger;
 
-    final Map<String, HttpHandler> handlerMap = new HashMap<>();
-    final Set<HttpHandler> noAuthHandlerSet = new HashSet<>();
+    // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
+    final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
+    final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
 
     private final List<Authenticator> authenticators = new ArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
     boolean isAuthDisabled;
+    boolean isSslEnabled;
 
     @Activate
     public synchronized void start(Map<String, String> config) {
@@ -47,8 +50,8 @@ public class HttpServerImpl implements HttpServer {
         int port = Integer.parseInt(config.get("port"));
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
-        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
-        SslContext sslContext = sslEnabled ? buildSslContext(config) : null;
+        isSslEnabled = getConfig(config, "ssl_enabled", true);
+        SslContext sslContext = isSslEnabled ? buildSslContext(config) : null;
 
         isAuthDisabled = getConfig(config, "auth_disabled", false);
         if (isAuthDisabled) logger.warn("http server authentication is disabled");
@@ -84,7 +87,7 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     /**
@@ -92,7 +95,7 @@ public class HttpServerImpl implements HttpServer {
      * 任何配置缺失或错误（未配置路径、文件不存在、口令错误、类型非法）都会在此抛出异常，
      * 使服务在绑定端口前启动失败，绝不回退为明文监听。
      */
-    private static SslContext buildSslContext(Map<String, String> config) {
+    private SslContext buildSslContext(Map<String, String> config) {
         String keystorePath = config.get("ssl_keystore_path");
         if (keystorePath == null || keystorePath.trim().isEmpty()) {
             throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
@@ -154,26 +157,27 @@ public class HttpServerImpl implements HttpServer {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeHttpHandler")
     public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
-        String path = properties.get(HttpHandler.HANDLE_PATH);
+        String originPath = properties.get(HttpHandler.HANDLE_PATH);
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
         if (component == null) component = "@App";
-        if (path == null)
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be null");
-        path = path.trim();
+        if (originPath == null || originPath.trim().isEmpty()) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be empty");
+        }
 
+        String path = originPath.trim();
+        if (!path.startsWith("/")) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with /");
+        }
         if (reference != null) {
             String prefix = reference.getBundle().getSymbolicName();
             prefix = prefix.replace("qingzhou-", "");
             path = "/" + prefix + path;
         }
+        path = withTrailingSlash(path); // 统一以尾斜杠存储，匹配时无需逐个 key 再做转换
 
-        if (handlerMap.containsKey(path)) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] already exists: " + path + " of [" + handlerMap.get(path).getClass().getName() + "]");
-        } else {
-            String matches = matches(path);
-            if (matches != null && !matches.equals("/")) {
-                throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + path + ") of [" + component + "] matches: " + matches + " of [" + handlerMap.get(matches).getClass().getName() + "]");
-            }
+        String conflict = conflict(path);
+        if (conflict != null) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
         }
 
         handlerMap.put(path, httpHandler);
@@ -182,7 +186,7 @@ public class HttpServerImpl implements HttpServer {
             noAuthHandlerSet.add(httpHandler);
         }
 
-        String msg = "http handler registered: " + path + (isNoAuth ? " (no auth)" : "");
+        String msg = "http handler registered, component: " + component + ", path: " + originPath + (isNoAuth ? " (no auth)" : "");
         if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
             logger.info(msg);
         } else {
@@ -190,21 +194,39 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
-    String matches(String checkPath) {
-        // 排序：长路径优先匹配（避免短路径覆盖长路径）
-        List<String> existsPaths = new ArrayList<>(handlerMap.keySet());
-        existsPaths.sort((a, b) -> b.length() - a.length());
-
-        if (!checkPath.endsWith("/")) checkPath = checkPath + "/";
-        for (String existsPath : existsPaths) {
-            String tempPath = existsPath;
-            if (!tempPath.endsWith("/")) tempPath = tempPath + "/";
-            if (checkPath.startsWith(tempPath)
-                    || tempPath.startsWith(checkPath)) {
-                return existsPath;
+    /**
+     * 分发专用：只按「请求路径以已注册路径为前缀」匹配，并取最长者。
+     * 反向匹配（已注册路径以请求路径为前缀）会让后代 handler 服务祖先请求，
+     * 例如请求 / 命中 /ai/chat/config、请求 /ai/chat 命中 /ai/chat/stream，故不做。
+     * 直接返回 handler 而非路径：OSGi 可并发解绑 handler，先查路径再取 handler 会取到 null。
+     */
+    HttpHandler findHandler(String checkPath) {
+        String request = withTrailingSlash(checkPath);
+        HttpHandler matched = null;
+        int matchedLength = 0;
+        for (Map.Entry<String, HttpHandler> entry : handlerMap.entrySet()) {
+            String existsPath = entry.getKey();
+            if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
+                matched = entry.getValue();
+                matchedLength = existsPath.length();
             }
         }
+        return matched;
+    }
+
+    // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽
+    private String conflict(String checkPath) {
+        String request = withTrailingSlash(checkPath);
+        for (String existsPath : handlerMap.keySet()) {
+            if (existsPath.equals("/")) continue; // 根路径仅作兜底（它必然与所有路径重叠）
+            if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
+        }
         return null;
+    }
+
+    // 补尾部斜杠：使 /a 只匹配 /a/...，不会误匹配 /abc
+    private static String withTrailingSlash(String path) {
+        return path.endsWith("/") ? path : path + "/";
     }
 
     /**
@@ -214,7 +236,7 @@ public class HttpServerImpl implements HttpServer {
      * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
      * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
      */
-    public void removeHttpHandler(HttpHandler httpHandler) {
+    public synchronized void removeHttpHandler(HttpHandler httpHandler) {
         String contextPath = null;
         for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
             if (Objects.equals(e.getValue(), httpHandler)) {
@@ -247,22 +269,12 @@ public class HttpServerImpl implements HttpServer {
     }
 
     /**
-     * 安全认证：配置 auth_disabled=true 时全局关闭；命中认证器声明的豁免路径放行；多认证器按 pass > reject > challenge > missing 组合——
+     * 安全认证：配置 auth_disabled=true 时全局关闭；多认证器按 pass > reject > challenge > missing 组合——
      * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
      * 全部无凭据时才用重定向引导登录。
      */
     AuthResult authenticate(HttpRequest request) {
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
-
-        String path = request.getPath();
-        for (Authenticator authenticator : authenticators) {
-            String[] excludedPaths = authenticator.excludedPaths();
-            if (excludedPaths != null) {
-                for (String exclude : excludedPaths) {
-                    if (path.startsWith(exclude)) return AuthResult.pass(null);
-                }
-            }
-        }
 
         AuthResult reject = null;
         for (Authenticator authenticator : authenticators) {
@@ -270,7 +282,9 @@ public class HttpServerImpl implements HttpServer {
             try {
                 r = authenticator.authenticate(request);
             } catch (Exception e) {
-                logger.error("authentication error: " + authenticator.getClass().getName(), e);
+                if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
+                    logger.error("authentication error: " + authenticator.getClass().getName(), e);
+                }
                 r = AuthResult.reject("authentication error");
             }
             if (r.status() == Status.PASS) return r;
