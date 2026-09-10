@@ -6,9 +6,7 @@ import qingzhou.config.remote.etcd.EtcdConfigSource;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 
-/**
- * 读取 qingzhou-config.remote.* 自举参数并创建远程配置源；未启用时返回 null，不支持的类型直接报错。
- */
+/** 读取 qingzhou-config.remote.* 自举参数并创建远程配置源；未启用返回 null，类型不支持直接报错。 */
 public final class RemoteConfigSourceFactory {
     public static final String KEY_PREFIX = "qingzhou-config.remote.";
 
@@ -22,6 +20,9 @@ public final class RemoteConfigSourceFactory {
         if (type == null || type.trim().isEmpty()) type = "etcd";
         if (!"etcd".equalsIgnoreCase(type.trim())) {
             throw new UnsupportedOperationException("unsupported remote config center type: " + type);
+        }
+        if (httpClient == null || json == null) {
+            throw new IllegalStateException("HttpClient/Json service is required when remote config center is enabled");
         }
         return new EtcdConfigSource(get(config, "endpoints"), get(config, "namespace"),
                 get(config, "username"), get(config, "password"),

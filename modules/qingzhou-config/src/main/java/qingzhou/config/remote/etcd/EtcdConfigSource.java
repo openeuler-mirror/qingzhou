@@ -14,10 +14,7 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 
-/**
- * etcd v3 JSON Gateway（HTTP REST）实现：命名空间前缀下每个 key 对应一个 pid，value 为该 pid 的文档。
- * HTTP 与 JSON 均复用框架组件（qingzhou-http-client / qingzhou-json），不引入第三方库。
- */
+/** etcd v3 JSON Gateway（HTTP REST）实现：HTTP 与 JSON 均复用框架组件，不引入第三方库。 */
 public class EtcdConfigSource implements RemoteConfigSource {
     private final String endpoint;
     private final String prefix;
@@ -31,8 +28,11 @@ public class EtcdConfigSource implements RemoteConfigSource {
 
     public EtcdConfigSource(String endpoint, String namespace, String username, String password,
                             int connectTimeout, int readTimeout, HttpClient http, Json json) {
-        this.endpoint = endpoint;
-        this.prefix = (namespace == null ? "" : namespace) + "/";
+        this.endpoint = endpoint == null ? "" : endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
+        if (namespace == null || namespace.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-config.remote.namespace must not be empty");
+        }
+        this.prefix = namespace.trim() + "/";
         this.username = username;
         this.password = password == null ? "" : password;
         this.connectTimeout = connectTimeout;

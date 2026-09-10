@@ -15,6 +15,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 import qingzhou.config.remote.ConfigText;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
@@ -25,9 +26,10 @@ import qingzhou.json.Json;
 public class Config {
     @Reference
     private ConfigurationAdmin configAdmin;
-    @Reference
+    // 默认关闭外部配置中心时无需这两个服务，故按可选引用，避免给启动期增加硬依赖
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private HttpClient httpClient;
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     private Json json;
 
     // 被 qingzhou.command.cmd.StartArg.parseConfig 反射使用
@@ -75,16 +77,11 @@ public class Config {
 
     private void distributeOsgiConfig(Map<String, Map<String, String>> configMap) throws IOException {
         for (Map.Entry<String, Map<String, String>> entry : configMap.entrySet()) {
-            String configurationPid = entry.getKey();
-            int i = configurationPid.indexOf("~");
-
-            Configuration configuration;
-            if (i != -1) { // 工厂配置
-                configuration = configAdmin.getFactoryConfiguration(
-                        configurationPid.substring(0, i), configurationPid.substring(i + 1), null);
-            } else {
-                configuration = configAdmin.getConfiguration(configurationPid, null);
-            }
+            String pid = entry.getKey();
+            int i = pid.indexOf("~");// 含 ~ 为工厂配置
+            Configuration configuration = i == -1
+                    ? configAdmin.getConfiguration(pid, null)
+                    : configAdmin.getFactoryConfiguration(pid.substring(0, i), pid.substring(i + 1), null);
             configuration.update(new Hashtable<>(entry.getValue()));
         }
     }

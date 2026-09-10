@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.testng.Assert;
@@ -18,8 +19,6 @@ import qingzhou.json.Json;
 /** 端到端验证：开启 etcd 后 Config.init 拉取远程配置并写入 CM；HttpClient / Json 以桩注入。 */
 public class ConfigEtcdTest {
     private static final String NS = "q/config-test";
-    private static final String AUTH = "qingzhou-config.remote.username=mock-user\n"
-            + "qingzhou-config.remote.password=mock-pass\n";
 
     @Test
     public void remoteHasKey_init_remoteOverridesLocalAndKeepsMissing() throws Exception {
@@ -45,8 +44,9 @@ public class ConfigEtcdTest {
 
     @Test
     public void authConfigured_init_authenticatesThenPulls() throws Exception {
-        Map<String, Dictionary<String, Object>> updated = runInit(200, AUTH, "qingzhou-http-server.port=7900\n",
-                kv(NS + "/qingzhou-http-server", "port=9911\n"));
+        Map<String, Dictionary<String, Object>> updated = runInit(200,
+                "qingzhou-config.remote.username=mock-user\nqingzhou-config.remote.password=mock-pass\n",
+                "qingzhou-http-server.port=7900\n", kv(NS + "/qingzhou-http-server", "port=9911\n"));
 
         Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 先鉴权再拉取
     }
@@ -58,6 +58,26 @@ public class ConfigEtcdTest {
             Assert.fail("远程返回 http 错误时应抛出异常");
         } catch (Exception e) {
             Assert.assertTrue(e.getMessage().contains("500"), "异常信息应包含状态码: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void endpointWithV3Suffix_pull_requestsNormalizedPath() throws Exception {
+        List<String> urls = new ArrayList<>();
+        EtcdConfigSource source = new EtcdConfigSource("http://127.0.0.1:2379/v3/", NS,
+                null, null, 1, 1, http(200, urls), json(new EtcdConfigSource.Range()));
+        source.pull();
+
+        Assert.assertEquals(urls.get(0), "http://127.0.0.1:2379/v3/kv/range");// 尾斜杠与 /v3 后缀已归一化
+    }
+
+    @Test
+    public void emptyNamespace_construct_throwsException() {
+        try {
+            new EtcdConfigSource("http://127.0.0.1:2379", "", null, null, 1, 1, null, null);
+            Assert.fail("命名空间为空时应抛出异常");
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("namespace"));
         }
     }
 
@@ -76,7 +96,7 @@ public class ConfigEtcdTest {
         Map<String, Dictionary<String, Object>> updated = new HashMap<>();
         Config config = new Config();
         TestSupport.inject(config, "configAdmin", TestSupport.admin(updated));
-        TestSupport.inject(config, "httpClient", http(status));
+        TestSupport.inject(config, "httpClient", http(status, null));
         TestSupport.inject(config, "json", json(range));
         config.init();
         return updated;
@@ -93,13 +113,16 @@ public class ConfigEtcdTest {
         return Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8));
     }
 
-    /** 桩 HttpClient：newRequest 返回可链式调用的空对象，send 返回给定状态码与空响应体。 */
-    private static HttpClient http(int status) {
+    /** 桩 HttpClient：newRequest 返回可链式调用的空对象（可记录 URL），send 返回给定状态码与空响应体。 */
+    private static HttpClient http(int status, List<String> urls) {
         Request request = TestSupport.proxy(Request.class, (proxy, method, args) -> proxy);
         Response response = TestSupport.proxy(Response.class,
                 (proxy, method, args) -> "getStatus".equals(method.getName()) ? status : new byte[0]);
-        return TestSupport.proxy(HttpClient.class, (proxy, method, args) ->
-                "newRequest".equals(method.getName()) ? request : response);
+        return TestSupport.proxy(HttpClient.class, (proxy, method, args) -> {
+            if (!"newRequest".equals(method.getName())) return response;
+            if (urls != null) urls.add((String) args[0]);
+            return request;
+        });
     }
 
     /** 桩 Json：鉴权请求返回固定 token，其余请求返回预置的 range 数据。 */

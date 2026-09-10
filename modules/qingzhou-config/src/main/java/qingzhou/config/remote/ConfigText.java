@@ -6,10 +6,7 @@ import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * qingzhou.properties 文本解析：只去左侧空白、# 为注释、单独反斜杠视为换行、行尾反斜杠折行。
- * 本地配置解析与远程 pid 文档解析共用，避免两份实现漂移。
- */
+/** qingzhou.properties 文本解析（只去左侧空白、# 注释、反斜杠折行），本地与远程 pid 文档共用。 */
 public final class ConfigText {
     private ConfigText() {
     }
