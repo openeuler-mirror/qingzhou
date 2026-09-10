@@ -1,14 +1,10 @@
 package qingzhou.config.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -19,106 +15,60 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.config.remote.ConfigText;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
-import qingzhou.config.remote.RemoteOptions;
+import qingzhou.http.client.HttpClient;
+import qingzhou.json.Json;
 
 @Component
 public class Config {
+    @Reference
+    private ConfigurationAdmin configAdmin;
+    @Reference
+    private HttpClient httpClient;
+    @Reference
+    private Json json;
+
     // 被 qingzhou.command.cmd.StartArg.parseConfig 反射使用
     public static Properties parseConfig(Path configFile) throws IOException {
         Properties properties = new Properties();
-        try (InputStream inputStream = Files.newInputStream(configFile, StandardOpenOption.READ)) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            StringBuilder tempLine = new StringBuilder();
-            for (String line; (line = reader.readLine()) != null; ) {
-                line = line.replaceAll("^[\\s　]+", "");// 只 trim 左侧空白符，保留右侧，右侧的可能是业务需要的值得
-
-                if (line.isEmpty()) continue;
-                if (line.startsWith("#")) continue;
-                if (line.equals("\\")) continue; // 只有一个换行符
-
-                if (line.endsWith("\\")) { // 折行
-                    tempLine.append(line, 0, line.length() - 1);
-                    continue;
-                } else {
-                    tempLine.append(line);
-                }
-
-                String targetLine = tempLine.toString();
-                tempLine.setLength(0); // 清空 折行 缓存
-                int i = targetLine.indexOf("=");
-                if (i > 0) {
-                    String key = targetLine.substring(0, i).trim();
-                    String val = targetLine.substring(i + 1).trim();
-                    if (key.isEmpty()) continue;
-                    properties.setProperty(key, val);
-                } else {
-                    properties.setProperty(targetLine, "");
-                }
-            }
-        }
+        properties.putAll(ConfigText.parse(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8)));
         return properties;
     }
 
-    @Reference
-    private ConfigurationAdmin configAdmin;
-
     @Activate
-    public void init() throws IOException {
-        Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
-        Properties qingzhouProperties = parseConfig(configFile);
+    public void init() throws Exception {
+        Properties qzConfig = parseConfig(
+                Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties"));
 
-        Map<String, Map<String, String>> configMap = converToOsgiConfig();
+        Map<String, Map<String, String>> configMap = converToOsgiConfig(qzConfig);
 
-        RemoteOptions remoteOptions = RemoteOptions.from(qingzhouProperties);
-        if (remoteOptions.enabled) { // 开启外部配置中心：远程覆盖本地，缺失保留
-            try {
-                RemoteConfigSource source = RemoteConfigSourceFactory.create(remoteOptions);
-                merge(configMap, source.pull(remoteOptions.buildNamespace()));
-            } catch (Exception e) {
-                System.err.println("failed to load config from remote config center: " + e.getMessage());
-                e.printStackTrace();
-            }
+        RemoteConfigSource remote = RemoteConfigSourceFactory.create(qzConfig, httpClient, json);
+        if (remote != null) { // 开启外部配置中心：远程覆盖本地，缺失保留
+            merge(configMap, remote.pull());
         }
 
         distributeOsgiConfig(configMap);
     }
 
-    /**
-     * 远程配置覆盖合并：以本地为底、远程为补丁，逐 key 覆盖；远程缺失的本地 key 保留。
-     * 远程配置不得改写 qingzhou-config 自举参数（remote.*）。
-     */
-    private void merge(Map<String, Map<String, String>> targetConfigMap, Map<String, Map<String, String>> remoteConfig) {
+    /** 远程配置以本地为底、逐 key 覆盖；远程缺失的本地 key 保留，且不得改写 qingzhou-config 自举参数。 */
+    private void merge(Map<String, Map<String, String>> configMap, Map<String, Map<String, String>> remoteConfig) {
         for (Map.Entry<String, Map<String, String>> entry : remoteConfig.entrySet()) {
-            String configurationPid = entry.getKey();
-            if (configurationPid.equals("qingzhou-config")) {
-                continue;
-            }
-            Map<String, String> moduleMap = targetConfigMap.computeIfAbsent(configurationPid, s -> new HashMap<>());
-            moduleMap.putAll(entry.getValue());
+            if ("qingzhou-config".equals(entry.getKey())) continue;
+            configMap.computeIfAbsent(entry.getKey(), pid -> new HashMap<>()).putAll(entry.getValue());
         }
     }
 
-    /**
-     * 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。
-     */
-    private Map<String, Map<String, String>> converToOsgiConfig() throws IOException {
+    /** 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。 */
+    private Map<String, Map<String, String>> converToOsgiConfig(Properties qzConfig) {
         Map<String, Map<String, String>> configMap = new HashMap<>();
-        Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
-        Properties qzConfig = parseConfig(configFile);
         for (String configKey : qzConfig.stringPropertyNames()) {
-            if (configKey.startsWith("qingzhou-")
-                    || configKey.startsWith("app~")) {
-                String configVal = qzConfig.getProperty(configKey);
+            if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) continue;
 
-                int pidIndex = configKey.indexOf(".");
-                String configurationPid = configKey.substring(0, pidIndex); // OSGI cm configurationPid
-                String moduleInternalKey = configKey.substring(pidIndex + 1);
-
-                Map<String, String> moduleMap = configMap.computeIfAbsent(configurationPid, s -> new HashMap<>());
-                moduleMap.put(moduleInternalKey, configVal);
-            }
+            int pidIndex = configKey.indexOf(".");
+            configMap.computeIfAbsent(configKey.substring(0, pidIndex), pid -> new HashMap<>())
+                    .put(configKey.substring(pidIndex + 1), qzConfig.getProperty(configKey));
         }
         return configMap;
     }
@@ -126,19 +76,16 @@ public class Config {
     private void distributeOsgiConfig(Map<String, Map<String, String>> configMap) throws IOException {
         for (Map.Entry<String, Map<String, String>> entry : configMap.entrySet()) {
             String configurationPid = entry.getKey();
-            Map<String, String> moduleMap = entry.getValue();
+            int i = configurationPid.indexOf("~");
 
             Configuration configuration;
-            int i = configurationPid.indexOf("~");
             if (i != -1) { // 工厂配置
-                String factoryPid = configurationPid.substring(0, i);
-                String name = configurationPid.substring(i + 1);
-                configuration = configAdmin.getFactoryConfiguration(factoryPid, name, null);
+                configuration = configAdmin.getFactoryConfiguration(
+                        configurationPid.substring(0, i), configurationPid.substring(i + 1), null);
             } else {
                 configuration = configAdmin.getConfiguration(configurationPid, null);
             }
-
-            configuration.update(new Hashtable<>(moduleMap));
+            configuration.update(new Hashtable<>(entry.getValue()));
         }
     }
 }

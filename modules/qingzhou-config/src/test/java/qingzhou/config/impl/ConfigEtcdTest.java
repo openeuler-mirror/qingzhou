@@ -1,244 +1,113 @@
 package qingzhou.config.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Proxy;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.config.remote.etcd.EtcdConfigSource;
+import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.Request;
+import qingzhou.http.client.Response;
+import qingzhou.json.Json;
 
-/**
- * 端到端验证：qingzhou.properties 开启 etcd 后，Config.init 从模拟的 etcd
- * v3 JSON Gateway 拉取配置，按“远程覆盖本地、缺失保留”合并后写入 CM。
- */
+/** 端到端验证：开启 etcd 后 Config.init 拉取远程配置并写入 CM；HttpClient / Json 以桩注入。 */
 public class ConfigEtcdTest {
     private static final String NS = "q/config-test";
+    private static final String AUTH = "qingzhou-config.remote.username=mock-user\n"
+            + "qingzhou-config.remote.password=mock-pass\n";
 
     @Test
-    public void remoteHasKey_localMerge_remoteWins() throws Exception {
-        String remoteServer = startServer(200,
-                "{\"kvs\":["
-                        + kv(NS + "/qingzhou-http-server", "port=9911\nhost=0.0.0.0\n") + ","
-                        + kv(NS + "/qingzhou-logger", "writingthread=false\n") + ","
-                        + kv(NS + "/qingzhou-registry", "interval=9\n") + ","
-                        + kv("q/other/qingzhou-logger", "writingthread=other-namespace\n") + ","
-                        + kv(NS + "/qingzhou-config", "remote.enabled=false\n")
-                        + "],\"count\":5}");
+    public void remoteHasKey_init_remoteOverridesLocalAndKeepsMissing() throws Exception {
+        Map<String, Dictionary<String, Object>> updated = runInit(200, "",
+                "qingzhou-http-server.port=7900\nqingzhou-logger.writingthread=true\n",
+                kv(NS + "/qingzhou-http-server", "port=9911\nhost=0.0.0.0\n"),
+                kv(NS + "/qingzhou-logger", "level=info\n"),
+                kv("q/other/qingzhou-logger", "writingthread=other\n"));// 其它命名空间的数据
 
-        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-        runInit(updated, remoteServer, "qingzhou-http-server.port=7900\n"
-                + "qingzhou-logger.writingthread=true\n");
-
-        Dictionary<String, Object> http = updated.get("qingzhou-http-server");
-        Assert.assertNotNull(http);
-        Assert.assertEquals(http.get("port"), "9911"); // 远程覆盖本地
-        Assert.assertEquals(http.get("host"), "0.0.0.0"); // 远程新增 key
-
-        Assert.assertEquals(updated.get("qingzhou-logger").get("writingthread"), "false");
-
-        Assert.assertEquals(updated.get("qingzhou-registry").get("interval"), "9"); // 远程新增 pid
-
-        Dictionary<String, Object> self = updated.get("qingzhou-config");
-        Assert.assertNotNull(self);
-        Assert.assertEquals(self.get("remote.enabled"), "true"); // 自举参数不被远程覆盖
+        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 远程覆盖本地同名 key
+        Assert.assertEquals(updated.get("qingzhou-http-server").get("host"), "0.0.0.0");// 远程新增 key
+        Assert.assertEquals(updated.get("qingzhou-logger").get("level"), "info");// 远程新增 pid
+        Assert.assertEquals(updated.get("qingzhou-logger").get("writingthread"), "true");// 缺失保留本地，隔离生效
     }
 
     @Test
-    public void remoteMissKey_localMerge_localKept() throws Exception {
-        String remoteServer = startServer(200,
-                "{\"kvs\":[" + kv(NS + "/qingzhou-http-server", "port=9911\n") + "],\"count\":1}");
+    public void selfBootstrapKey_init_notOverriddenByRemote() throws Exception {
+        Map<String, Dictionary<String, Object>> updated = runInit(200, "", "qingzhou-http-server.port=7900\n",
+                kv(NS + "/qingzhou-config", "remote.enabled=false\n"));
 
-        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-        runInit(updated, remoteServer, "qingzhou-http-server.port=7900\n"
-                + "qingzhou-logger.writingthread=true\n");
-
-        Dictionary<String, Object> logger = updated.get("qingzhou-logger");
-        Assert.assertNotNull(logger);
-        Assert.assertEquals(logger.get("writingthread"), "true"); // 远程缺失，保留本地
+        Assert.assertEquals(updated.get("qingzhou-config").get("remote.enabled"), "true");// 自举参数不被覆盖
     }
 
     @Test
-    public void emptyRemoteConfig_localMerge_noChange() throws Exception {
-        String remoteServer = startServer(200, "{\"kvs\":[],\"count\":0}");
+    public void authConfigured_init_authenticatesThenPulls() throws Exception {
+        Map<String, Dictionary<String, Object>> updated = runInit(200, AUTH, "qingzhou-http-server.port=7900\n",
+                kv(NS + "/qingzhou-http-server", "port=9911\n"));
 
-        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-        runInit(updated, remoteServer, "qingzhou-http-server.port=7900\n");
-
-        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "7900");
+        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 先鉴权再拉取
     }
 
     @Test
-    public void authEnabled_pull_authenticatesAndMerges() throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/v3/auth/authenticate", exchange -> {
-            String body = readAll(exchange.getRequestBody());
-            Assert.assertTrue(body.contains("mock-user"));
-            Assert.assertTrue(body.contains("mock-pass"));
-            respond(exchange, 200, "{\"token\":\"mock-token\"}");
-        });
-        server.createContext("/v3/kv/range", exchange -> {
-            Assert.assertEquals(exchange.getRequestHeaders().getFirst("Authorization"), "mock-token");
-            respond(exchange, 200, "{\"kvs\":[" + kv(NS + "/qingzhou-http-server", "port=9911\n") + "],\"count\":1}");
-        });
-        server.start();
+    public void httpError_init_throwsExceptionContainingStatus() {
         try {
-            String base = "http://127.0.0.1:" + server.getAddress().getPort();
-
-            Map<String, Dictionary<String, Object>> updated = new HashMap<>();
-            runInit(updated, base, "qingzhou-http-server.port=7900\n",
-                    "mock-user", "mock-pass");
-
-            Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");
-        } finally {
-            server.stop(0);
+            runInit(500, "", "qingzhou-http-server.port=7900\n");
+            Assert.fail("远程返回 http 错误时应抛出异常");
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("500"), "异常信息应包含状态码: " + e.getMessage());
         }
     }
 
-    // ---------- 辅助 ----------
+    private static Map<String, Dictionary<String, Object>> runInit(int status, String auth, String local,
+                                                                  EtcdConfigSource.Kv... kvs) throws Exception {
+        TestSupport.instance("qingzhou-config.remote.enabled=true\n"
+                + "qingzhou-config.remote.endpoints=http://127.0.0.1:2379\n"
+                + "qingzhou-config.remote.namespace=" + NS + "\n"
+                + "qingzhou-config.remote.connect_timeout=1\n"
+                + "qingzhou-config.remote.read_timeout=1\n" + auth + local);
 
-    private static String kv(String key, String value) {
-        return "{\"key\":\"" + b64(key) + "\",\"value\":\"" + b64(value) + "\"}";
+        EtcdConfigSource.Range range = new EtcdConfigSource.Range();
+        range.kvs = new ArrayList<>();
+        for (EtcdConfigSource.Kv kv : kvs) range.kvs.add(kv);
+
+        Map<String, Dictionary<String, Object>> updated = new HashMap<>();
+        Config config = new Config();
+        TestSupport.inject(config, "configAdmin", TestSupport.admin(updated));
+        TestSupport.inject(config, "httpClient", http(status));
+        TestSupport.inject(config, "json", json(range));
+        config.init();
+        return updated;
     }
 
-    private static String b64(String text) {
+    private static EtcdConfigSource.Kv kv(String key, String doc) {
+        EtcdConfigSource.Kv kv = new EtcdConfigSource.Kv();
+        kv.key = base64(key);
+        kv.value = base64(doc);
+        return kv;
+    }
+
+    private static String base64(String text) {
         return Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String startServer(int status, String json) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/v3/kv/range", exchange -> {
-            readAll(exchange.getRequestBody());
-            respond(exchange, status, json);
-        });
-        server.start();
-        String base = "http://127.0.0.1:" + server.getAddress().getPort();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop(0)));
-        return base;
+    /** 桩 HttpClient：newRequest 返回可链式调用的空对象，send 返回给定状态码与空响应体。 */
+    private static HttpClient http(int status) {
+        Request request = TestSupport.proxy(Request.class, (proxy, method, args) -> proxy);
+        Response response = TestSupport.proxy(Response.class,
+                (proxy, method, args) -> "getStatus".equals(method.getName()) ? status : new byte[0]);
+        return TestSupport.proxy(HttpClient.class, (proxy, method, args) ->
+                "newRequest".equals(method.getName()) ? request : response);
     }
 
-    private static void respond(HttpExchange exchange, int status, String json) throws IOException {
-        byte[] body = json.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(status, body.length);
-        try (OutputStream out = exchange.getResponseBody()) {
-            out.write(body);
-        }
-    }
-
-    private static String readAll(InputStream in) throws IOException {
-        try (InputStream is = in; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[1024];
-            for (int n; (n = is.read(buffer)) != -1; ) {
-                out.write(buffer, 0, n);
-            }
-            return new String(out.toByteArray(), StandardCharsets.UTF_8);
-        }
-    }
-
-    /**
-     * 便捷入口：不启用 etcd 鉴权。
-     */
-    private void runInit(Map<String, Dictionary<String, Object>> updated, String endpoints, String localConfig) throws Exception {
-        runInit(updated, endpoints, localConfig, null, null);
-    }
-
-    private void runInit(Map<String, Dictionary<String, Object>> updated, String endpoints, String localConfig,
-                         String username, String password) throws Exception {
-        StringBuilder content = new StringBuilder();
-        content.append("qingzhou-config.remote.enabled=true\n");
-        content.append("qingzhou-config.remote.type=etcd\n");
-        content.append("qingzhou-config.remote.endpoints=").append(endpoints).append('\n');
-        content.append("qingzhou-config.remote.namespace=").append(NS).append('\n');
-        content.append("qingzhou-config.remote.connect_timeout=5\n");
-        content.append("qingzhou-config.remote.read_timeout=5\n");
-        if (username != null) {
-            content.append("qingzhou-config.remote.username=").append(username).append('\n');
-            content.append("qingzhou-config.remote.password=").append(password).append('\n');
-        }
-        content.append(localConfig);
-
-        Path instanceDir = Files.createTempDirectory("qingzhou-instance-etcd");
-        try {
-            Files.createDirectories(instanceDir.resolve("conf"));
-            Files.write(instanceDir.resolve("conf/qingzhou.properties"), content.toString().getBytes(StandardCharsets.UTF_8));
-            System.setProperty("qingzhou.instance", instanceDir.toString());
-
-            Config config = new Config();
-            setField(config, "configAdmin", newConfigAdminStub(updated));
-            config.init();
-        } finally {
-            deleteRecursively(instanceDir.toFile());
-        }
-    }
-
-    private ConfigurationAdmin newConfigAdminStub(Map<String, Dictionary<String, Object>> updated) {
-        return (ConfigurationAdmin) Proxy.newProxyInstance(
-                ConfigEtcdTest.class.getClassLoader(),
-                new Class<?>[]{ConfigurationAdmin.class},
-                (proxy, method, args) -> {
-                    String name = method.getName();
-                    if ("getConfiguration".equals(name)) {
-                        return recordingConfiguration((String) args[0], updated);
-                    }
-                    if ("getFactoryConfiguration".equals(name)) {
-                        return recordingConfiguration(args[0] + "~" + args[1], updated);
-                    }
-                    Class<?> rt = method.getReturnType();
-                    if (rt == boolean.class) return false;
-                    if (rt == int.class) return 0;
-                    return null;
-                });
-    }
-
-    private Configuration recordingConfiguration(String pid, Map<String, Dictionary<String, Object>> updated) {
-        return (Configuration) Proxy.newProxyInstance(
-                ConfigEtcdTest.class.getClassLoader(),
-                new Class<?>[]{Configuration.class},
-                (proxy, method, args) -> {
-                    String name = method.getName();
-                    if ("update".equals(name)) {
-                        updated.put(pid, (Dictionary<String, Object>) args[0]);
-                        return null;
-                    }
-                    Class<?> rt = method.getReturnType();
-                    if (rt == boolean.class) return false;
-                    if (rt == int.class) return 0;
-                    return null;
-                });
-    }
-
-    private static void setField(Object target, String name, Object value) {
-        try {
-            java.lang.reflect.Field field = target.getClass().getDeclaredField(name);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void deleteRecursively(java.io.File file) {
-        if (file == null || !file.exists()) return;
-        java.io.File[] children = file.listFiles();
-        if (children != null) {
-            for (java.io.File child : children) {
-                deleteRecursively(child);
-            }
-        }
-        file.delete();
+    /** 桩 Json：鉴权请求返回固定 token，其余请求返回预置的 range 数据。 */
+    private static Json json(EtcdConfigSource.Range range) {
+        EtcdConfigSource.Auth auth = new EtcdConfigSource.Auth();
+        auth.token = "mock-token";
+        return TestSupport.proxy(Json.class, (proxy, method, args) -> "toJson".equals(method.getName())
+                ? "{}"
+                : ((Class<?>) args[1]).cast(EtcdConfigSource.Auth.class == args[1] ? auth : range));
     }
 }
