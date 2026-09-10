@@ -18,7 +18,6 @@ public class TokenAuthenticator implements Authenticator {
         if (header == null || !header.startsWith(BEARER)) {
             return AuthResult.reject("token missing");
         }
-        String user = tokenService.verifyToken(header.substring(BEARER.length()).trim());
-        return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid token");
+        return tokenService.authenticate(header.substring(BEARER.length()).trim());
     }
 }
