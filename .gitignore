@@ -40,3 +40,4 @@ build/
 .claude
 
 .agents/
+/.codebuddy/

@@ -40,9 +40,13 @@ class CipherImpl implements Cipher {
     public String decrypt(String s) throws Exception {
         if (s == null) return null;
 
-        byte[] bytes = base64Coder.decode(s);
-        byte[] decrypt = decrypt(bytes);
-        return new String(decrypt, StandardCharsets.UTF_8);
+        try {
+            byte[] bytes = base64Coder.decode(s);
+            byte[] decrypt = decrypt(bytes);
+            return new String(decrypt, StandardCharsets.UTF_8);
+        }catch (Exception e){
+            return s;
+        }
     }
 
     /**
