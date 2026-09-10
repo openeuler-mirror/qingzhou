@@ -72,6 +72,14 @@ public class ConfigEtcdTest {
     }
 
     @Test
+    public void etcdResponseDtos_fields_matchEtcdProtocol() throws Exception {
+        Assert.assertEquals(EtcdConfigSource.Range.class.getField("kvs").getType(), List.class);
+        Assert.assertEquals(EtcdConfigSource.Kv.class.getField("key").getType(), String.class);
+        Assert.assertEquals(EtcdConfigSource.Kv.class.getField("value").getType(), String.class);
+        Assert.assertEquals(EtcdConfigSource.Auth.class.getField("token").getType(), String.class);// 字段名即协议字段名
+    }
+
+    @Test
     public void emptyNamespace_construct_throwsException() {
         try {
             new EtcdConfigSource("http://127.0.0.1:2379", "", null, null, 1, 1, null, null);
@@ -104,13 +112,9 @@ public class ConfigEtcdTest {
 
     private static EtcdConfigSource.Kv kv(String key, String doc) {
         EtcdConfigSource.Kv kv = new EtcdConfigSource.Kv();
-        kv.key = base64(key);
-        kv.value = base64(doc);
+        kv.key = Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8));
+        kv.value = Base64.getEncoder().encodeToString(doc.getBytes(StandardCharsets.UTF_8));
         return kv;
-    }
-
-    private static String base64(String text) {
-        return Base64.getEncoder().encodeToString(text.getBytes(StandardCharsets.UTF_8));
     }
 
     /** 桩 HttpClient：newRequest 返回可链式调用的空对象（可记录 URL），send 返回给定状态码与空响应体。 */

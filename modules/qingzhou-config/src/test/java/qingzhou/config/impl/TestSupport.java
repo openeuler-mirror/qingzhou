@@ -52,10 +52,8 @@ final class TestSupport {
         }
     }
 
-    private static Object defaultValue(Class<?> returnType) {
-        if (returnType == boolean.class) return false;
-        if (returnType == int.class) return 0;
-        return null;
+    private static Object defaultValue(Class<?> type) {
+        return type == boolean.class ? false : type == int.class ? 0 : null;
     }
 
     @SuppressWarnings("unchecked")

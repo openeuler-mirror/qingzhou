@@ -13,18 +13,19 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class ConfigTest {
+    /** 依次覆盖：空行、注释、左侧空白（含全角）、值两侧空白、无等号、等号在行首、折行、单独反斜杠。 */
     @DataProvider
     public Object[][] configText() {
         return new Object[][]{
                 {"a=1\nb=2\n", 2, "a", "1"},
-                {"a=1\n\n\nb=2\n", 2, "b", "2"},// 空行忽略
-                {"# comment\na=1\n#another\nb=2\n", 2, "b", "2"},// 注释忽略
-                {"   a=1\n\u3000\u3000b=2\n", 2, "b", "2"},// 左侧普通空格与全角空格去除
-                {"a=  1  \nb=2  \n", 2, "a", "1"},// 值两侧空白去除
-                {"no-equals-line\n", 1, "no-equals-line", ""},// 无等号：整行作为 key
-                {"=abc\n", 1, "=abc", ""},// 等号在行首：整行作为 key
-                {"a=hello\\\nworld\n", 1, "a", "helloworld"},// 行尾反斜杠折行
-                {"a=1\n\\\nb=2\n", 2, "a", "1"}// 单独反斜杠视为换行
+                {"a=1\n\n\nb=2\n", 2, "b", "2"},
+                {"# comment\na=1\n#another\nb=2\n", 2, "b", "2"},
+                {"   a=1\n\u3000\u3000b=2\n", 2, "b", "2"},
+                {"a=  1  \nb=2  \n", 2, "a", "1"},
+                {"no-equals-line\n", 1, "no-equals-line", ""},
+                {"=abc\n", 1, "=abc", ""},
+                {"a=hello\\\nworld\n", 1, "a", "helloworld"},
+                {"a=1\n\\\nb=2\n", 2, "a", "1"}
         };
     }
 

@@ -16,6 +16,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.config.remote.ConfigText;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
@@ -26,11 +27,11 @@ import qingzhou.json.Json;
 public class Config {
     @Reference
     private ConfigurationAdmin configAdmin;
-    // 默认关闭外部配置中心时无需这两个服务，故按可选引用，避免给启动期增加硬依赖
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
-    private HttpClient httpClient;
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
-    private Json json;
+    // 默认关闭外部配置中心时无需这两个服务：可选 + 动态引用，既不阻塞本组件激活，也支持服务晚到后绑定
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile HttpClient httpClient;
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+    private volatile Json json;
 
     // 被 qingzhou.command.cmd.StartArg.parseConfig 反射使用
     public static Properties parseConfig(Path configFile) throws IOException {
@@ -46,9 +47,9 @@ public class Config {
 
         Map<String, Map<String, String>> configMap = converToOsgiConfig(qzConfig);
 
-        RemoteConfigSource remote = RemoteConfigSourceFactory.create(qzConfig, httpClient, json);
-        if (remote != null) { // 开启外部配置中心：远程覆盖本地，缺失保留
-            merge(configMap, remote.pull());
+        String enabled = qzConfig.getProperty(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
+        if ("true".equalsIgnoreCase(enabled == null ? "" : enabled.trim())) { // 开启外部配置中心：远程覆盖本地，缺失保留
+            merge(configMap, RemoteConfigSourceFactory.create(qzConfig, httpClient, json).pull());
         }
 
         distributeOsgiConfig(configMap);

@@ -6,7 +6,7 @@ import qingzhou.config.remote.etcd.EtcdConfigSource;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 
-/** 读取 qingzhou-config.remote.* 自举参数并创建远程配置源；未启用返回 null，类型不支持直接报错。 */
+/** 按 qingzhou-config.remote.* 自举参数创建远程配置源；是否启用由调用方先判断。 */
 public final class RemoteConfigSourceFactory {
     public static final String KEY_PREFIX = "qingzhou-config.remote.";
 
@@ -14,8 +14,6 @@ public final class RemoteConfigSourceFactory {
     }
 
     public static RemoteConfigSource create(Properties config, HttpClient httpClient, Json json) {
-        if (!"true".equalsIgnoreCase(get(config, "enabled"))) return null;
-
         String type = get(config, "type");
         if (type == null || type.trim().isEmpty()) type = "etcd";
         if (!"etcd".equalsIgnoreCase(type.trim())) {
