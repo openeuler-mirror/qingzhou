@@ -3,8 +3,10 @@ package qingzhou.llm.impl;
 import java.util.Collection;
 import java.util.List;
 
+import qingzhou.llm.ChatMemory;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.HistoryMessage;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
@@ -15,8 +17,16 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
 
     public String systemPrompt;
     public List<String> docs;
+    public List<HistoryMessage> history;
     public Collection<Tool> tools;
     public Collection<Skill> skills;
+
+    // 记忆挂载（memory(...) 设置）：历史加载/消息落库由 ChatModel 自动完成
+    public ChatMemory memory;
+    public String memoryUserId;
+    public String memoryConversationId;
+    public String memoryMessageId;
+    public int maxHistoryMessages = 20;
 
     public int maxToolResultChars = 2000;
     public int maxPerRefChars = 6000;
@@ -50,6 +60,32 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase docs(List<String> docs) {
         checkSealed();
         this.docs = docs;
+        return this;
+    }
+
+    @Override
+    public ChatModelBuilderBase history(List<HistoryMessage> history) {
+        checkSealed();
+        this.history = history;
+        return this;
+    }
+
+    @Override
+    public ChatModelBuilderBase memory(ChatMemory memory, String userId, String conversationId, String messageId) {
+        checkSealed();
+        this.memory = memory;
+        this.memoryUserId = userId;
+        this.memoryConversationId = conversationId;
+        this.memoryMessageId = messageId;
+        return this;
+    }
+
+    @Override
+    public ChatModelBuilderBase maxHistoryMessages(int maxHistoryMessages) {
+        checkSealed();
+        if (maxHistoryMessages > 0) {
+            this.maxHistoryMessages = maxHistoryMessages;
+        }
         return this;
     }
 

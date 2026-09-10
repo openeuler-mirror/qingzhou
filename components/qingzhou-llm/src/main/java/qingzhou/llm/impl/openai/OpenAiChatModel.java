@@ -40,6 +40,11 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
+            // 记忆挂载：自动加载历史（不含本轮）并落库本轮用户消息，随后与 history() 走同一拼接路径
+            if (builder.memory != null) {
+                builder.history = builder.memory.recentHistory(builder.memoryUserId, builder.memoryConversationId, builder.maxHistoryMessages);
+                builder.memory.appendUserMessage(builder.memoryUserId, builder.memoryConversationId, message);
+            }
             if (builder.skills != null && !builder.skills.isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
@@ -53,9 +58,20 @@ class OpenAiChatModel implements ChatModel {
 
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
+            // 多轮对话历史：拼接在 system 与本次 user 消息之间，条数/长度由调用方截断
+            if (builder.history != null) {
+                for (HistoryMessage item : builder.history) {
+                    if (item == null || item.content == null || item.content.isEmpty()) continue;
+                    Map<String, Object> historyMessage = new HashMap<>();
+                    historyMessage.put("role", item.role);
+                    historyMessage.put("content", item.content);
+                    messages.add(historyMessage);
+                }
+            }
             messages.add(userMessage);
             // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
-            doChat(messages, toolDefinitions, chatListener, activeTools, 0);
+            Listener wrapped = builder.memory != null ? new MemoryListener(chatListener) : chatListener;
+            doChat(messages, toolDefinitions, wrapped, activeTools, 0);
         } catch (Throwable t) {
             chatListener.onError(Utils.errorMessage(t));
         }
@@ -238,6 +254,79 @@ class OpenAiChatModel implements ChatModel {
                 return;
             }
             chatListener.onError(Utils.errorMessage(t));
+        }
+    }
+
+    /**
+     * 记忆落库包装器（builder.memory 挂载时启用）：跨工具调用轮聚合正文与用量，
+     * 正常完成时把 AI 回复写入记忆存储；出错/中止不落库，即失败轮次不进入后续历史。
+     * 落库失败仅记日志，不影响对话收尾（与记忆实现自身的故障降级约定一致）。
+     */
+    private class MemoryListener implements Listener {
+        private final Listener delegate;
+        private final StringBuilder content = new StringBuilder(); // 思考内容不落库，仅聚合正文
+        private int promptTokens;
+        private int completionTokens;
+        private int totalTokens;
+
+        MemoryListener(Listener delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void onReasoning(String content) {
+            delegate.onReasoning(content);
+        }
+
+        @Override
+        public void onReasoningPause() {
+            delegate.onReasoningPause();
+        }
+
+        @Override
+        public void onToolCall(String toolName) {
+            delegate.onToolCall(toolName);
+        }
+
+        @Override
+        public void onSkillMatching() {
+            delegate.onSkillMatching();
+        }
+
+        @Override
+        public void onStillActive() {
+            delegate.onStillActive();
+        }
+
+        @Override
+        public void onMessage(String content) {
+            if (content != null) this.content.append(content);
+            delegate.onMessage(content);
+        }
+
+        @Override
+        public void onUsage(int promptTokens, int completionTokens, int totalTokens) {
+            // 工具调用多轮时每轮各报一次，落库口径：累加
+            this.promptTokens += promptTokens;
+            this.completionTokens += completionTokens;
+            this.totalTokens += totalTokens;
+            delegate.onUsage(promptTokens, completionTokens, totalTokens);
+        }
+
+        @Override
+        public void onComplete() {
+            delegate.onComplete(); // 收尾事件（RUN_FINISHED）先行发出，落库随后进行
+            try {
+                builder.memory.appendAssistantMessage(builder.memoryUserId, builder.memoryConversationId,
+                        builder.memoryMessageId, content.toString(), promptTokens, completionTokens, totalTokens);
+            } catch (Throwable t) {
+                Utils.println("append assistant memory failed: " + Utils.errorMessage(t));
+            }
+        }
+
+        @Override
+        public void onError(String error) {
+            delegate.onError(error);
         }
     }
 }

@@ -209,6 +209,9 @@ class MultipartStreamParser {
             }
         }
         uploadFileMap.clear();
+        // 同步清空字段名集合，防止 onComplete 阶段残留字段名与空 uploadFileMap 不一致，
+        // 导致 Invoke.cleanupTempFiles 收集到 null 路径
+        uploadFileFields.clear();
         state = State.DONE;
     }
 

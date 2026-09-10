@@ -238,7 +238,13 @@ public class Invoke implements HttpHandler {
             try {
                 parser.feed(new byte[0], true);
                 applyParserResults(parser, request);
-                request.getUploadFileFields().forEach(f -> originalFilePaths.add(request.getParameter(f)));
+                request.getUploadFileFields().forEach(f -> {
+                    // 字段可能因解析中断（abort 后残留）而无参数值，getParameter 返回 null，不可加入清理集合
+                    String paths = request.getParameter(f);
+                    if (paths != null && !paths.isEmpty()) {
+                        originalFilePaths.add(paths);
+                    }
+                });
                 app.invokeApp(request);
             } catch (Throwable e) {
                 if (parser != null) {
@@ -300,13 +306,20 @@ public class Invoke implements HttpHandler {
 
         void cleanupTempFiles(Set<String> originalFilePaths) {
             for (String paths : originalFilePaths) {
+                if (paths == null || paths.isEmpty()) continue;
                 for (String path : paths.split(",")) {
-                    File tempFile = new File(path.trim());
-                    File parentDir = tempFile.getParentFile();
-                    File tempBase = parentDir.getParentFile();
-                    if (tempBase.equals(uploadBase)) {
-                        tempFile.delete();
-                        parentDir.delete();
+                    try {
+                        if (path == null || path.trim().isEmpty()) continue;
+                        File tempFile = new File(path.trim());
+                        File parentDir = tempFile.getParentFile();
+                        File tempBase = parentDir == null ? null : parentDir.getParentFile();
+                        if (tempBase != null && tempBase.equals(uploadBase)) {
+                            tempFile.delete();
+                            parentDir.delete();
+                        }
+                    } catch (Throwable e) {
+                        // 清理临时文件失败仅记日志，绝不向 onComplete 传播——否则响应无法返回，前端将永久挂起
+                        logger.warn("cleanupTempFiles failed: " + e.getMessage());
                     }
                 }
             }

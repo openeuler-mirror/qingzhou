@@ -3,23 +3,37 @@ package qingzhou.ai.impl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
+import qingzhou.llm.ChatMemory;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
 public class AiChat implements HttpHandler {
+    /** 每用户滑动窗口限流：窗口内请求数达到上限返回 429 + {"code":"RATE_LIMITED"} */
+    private static final int RATE_WINDOW_MS = 60_000;
+    private static final int RATE_LIMIT_REQUESTS = 20;
+    private static final int RATE_WINDOW_CLEANUP_THRESHOLD = 1024;
+
+    /** 记忆模式下注入上下文的最大历史条数，单条长度由记忆实现截断 */
+    private static final int HISTORY_MAX_MESSAGES = 20;
+
     private static final String SYSTEM_PROMPT = "\n" +
             "# 你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
             "\n" +
@@ -78,6 +92,15 @@ public class AiChat implements HttpHandler {
     @Reference
     private Json json;
 
+    /**
+     * 对话记忆：实现由 qingzhou-ai-memory 等独立模块提供，未部署时为 null，退化为单轮无记忆。
+     * 动态引用：实现模块热插拔不影响已受理请求（快照值在 handle 内获取）。
+     */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    private volatile ChatMemory memory;
+
+    private final Map<String, ArrayDeque<Long>> rateWindows = new ConcurrentHashMap<>();
+
     @Deactivate
     public void deactivate() {
         SseListener.WATCHDOG_EXECUTOR.shutdownNow();
@@ -101,6 +124,14 @@ public class AiChat implements HttpHandler {
         if (params == null || question == null || question.trim().isEmpty()) return;
         question = question.trim();
 
+        // userId 由服务端鉴权层从 token 解析，不接受前端传参；显式关闭鉴权时退化为匿名
+        String username = resolveUsername(httpRequest);
+
+        if (!tryAcquire(username)) {
+            sendRateLimited(httpResponse);
+            return;
+        }
+
         List<String> refDocs = null;
         Attachment[] images = null;
         for (SkillService.AttachmentType attachmentType : SkillService.AttachmentType.values()) {
@@ -117,11 +148,17 @@ public class AiChat implements HttpHandler {
             }
         }
 
-        // 放在最后
         String app = (String) params.get("app");
         if (app != null && !app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
+
+        // 会话标识采信/生成后经 RUN_STARTED 下发（前端以其为权威值）；无记忆实现时仅作透传标识
+        ChatMemory memory = this.memory;
+        String conversationId = memory != null
+                ? memory.resolveConversationId(username, strOrNull(params.get("conversationId")))
+                : conversationIdFallback(strOrNull(params.get("conversationId")));
+        String messageId = UUID.randomUUID().toString();
 
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
@@ -129,16 +166,20 @@ public class AiChat implements HttpHandler {
                 .header("cache-control", "no-cache")
                 .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
 
-        // 先告知“已受理”：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
+        // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
         SseListener sseListener = new SseListener(httpResponse, logger, json);
         try {
-            sseListener.setStarted();
-            ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
+            sseListener.setStarted(conversationId, messageId);
+            ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
                     .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
-                    .enableThinking(true)
-                    .build();
+                    .enableThinking(true);
+            if (memory != null) {
+                builder.memory(memory, username, conversationId, messageId)
+                        .maxHistoryMessages(HISTORY_MAX_MESSAGES);
+            }
+            ChatModel chatModel = builder.build();
             chatModel.chat(question, sseListener, images);
         } catch (Throwable t) {
             // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
@@ -147,6 +188,63 @@ public class AiChat implements HttpHandler {
             logger.error("ai chat request failed: " + msg, t);
             sseListener.onError(msg);
         }
+    }
+
+    private String resolveUsername(HttpRequest httpRequest) {
+        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_USERNAME_ATTRIBUTE);
+        String username = principal instanceof String ? (String) principal : null;
+        return username != null && !username.isEmpty() ? username : "anonymous";
+    }
+
+    private boolean tryAcquire(String userId) {
+        // 惰性清理已过期的窗口对象，防止用户量增长导致 map 无界膨胀
+        if (rateWindows.size() > RATE_WINDOW_CLEANUP_THRESHOLD) {
+            long now = System.currentTimeMillis();
+            rateWindows.values().removeIf(window -> {
+                synchronized (window) {
+                    purgeExpired(window, now);
+                    return window.isEmpty();
+                }
+            });
+        }
+        long now = System.currentTimeMillis();
+        ArrayDeque<Long> window = rateWindows.computeIfAbsent(userId, k -> new ArrayDeque<>());
+        synchronized (window) {
+            purgeExpired(window, now);
+            if (window.size() >= RATE_LIMIT_REQUESTS) return false;
+            window.addLast(now);
+            return true;
+        }
+    }
+
+    private void purgeExpired(ArrayDeque<Long> window, long now) {
+        while (!window.isEmpty() && now - window.peekFirst() > RATE_WINDOW_MS) {
+            window.pollFirst();
+        }
+    }
+
+    private void sendRateLimited(HttpResponse httpResponse) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", "RATE_LIMITED");
+        body.put("message", "Too many requests, please try again later");
+        try {
+            httpResponse.status(429).contentTypeJsonUtf8().sendFinish(json.toJson(body));
+        } catch (Exception e) {
+            logger.warn("failed to send rate limit response: " + e.getMessage());
+        }
+    }
+
+    private String strOrNull(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    /** 无记忆实现时的会话标识兜底：仅做格式校验采信，否则新生成（不做归属校验——无存储可查） */
+    private String conversationIdFallback(String requestedId) {
+        if (requestedId != null && requestedId.length() >= 8 && requestedId.length() <= 64
+                && requestedId.matches("[A-Za-z0-9_-]+")) {
+            return requestedId;
+        }
+        return UUID.randomUUID().toString();
     }
 
     private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {

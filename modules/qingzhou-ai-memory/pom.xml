@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>modules</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <packaging>bundle</packaging>
+    <artifactId>qingzhou-ai-memory</artifactId>
+
+    <dependencies>
+        <dependency>
+            <artifactId>qingzhou-llm</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-json</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-logger</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <!-- 纯实现模块：只注册 OSGi 服务，不导出包；消费方仅依赖 qingzhou-llm 的 ChatMemory 接口 -->
+                        <Export-Package/>
+                        <Import-Package>qingzhou.llm,qingzhou.json,qingzhou.logger</Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
