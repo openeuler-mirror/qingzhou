@@ -16,7 +16,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI,
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true"},
         service = {FileUpload.class, HttpHandler.class})
 public class FileUpload implements HttpHandler {
     @Reference
