@@ -44,7 +44,7 @@ class CipherImpl implements Cipher {
             if (configName == null) {
                 configName = "?password";
             }
-            System.err.println("Decryption failed. Please use the correct key to encrypt the '" + configName + "'. use bin/g");
+            System.err.println(" >>> Decryption failed. Please use bin/gen-cipher-password.sh to encrypt the '" + configName);
             return s;
         }
     }

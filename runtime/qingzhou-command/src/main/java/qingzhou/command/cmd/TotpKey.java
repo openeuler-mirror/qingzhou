@@ -27,7 +27,7 @@ public class TotpKey extends Processor {
             Method getTotpCipher = aClass.getMethod("getTotpCipher");
             Object totpCipher = getTotpCipher.invoke(instance);
 
-            Class<?> totpCipherClass = loader.loadClass("qingzhou.crypto.impl.TotpCipherImpl");
+            Class<?> totpCipherClass = loader.loadClass("qingzhou.crypto.TotpCipher");
             Method generateKey = totpCipherClass.getMethod("generateKey");
             generateKey.setAccessible(true);
             String totpKey = (String) generateKey.invoke(totpCipher);
