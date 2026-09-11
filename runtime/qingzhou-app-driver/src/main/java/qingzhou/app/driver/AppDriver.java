@@ -70,8 +70,9 @@ public class AppDriver implements BundleActivator {
             ServiceReference<?> serviceReference = null;
             if (name != null) {
                 try {
+                    // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
                     Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
-                            "(" + Constants.SERVICE_PID + "=" + name + ")");
+                            "(|(" + Constants.SERVICE_PID + "=" + name + ")(" + Constants.SERVICE_PID + "=*~" + name + "))");
                     if (!serviceReferences.isEmpty()) {
                         serviceReference = serviceReferences.iterator().next();
                     }
