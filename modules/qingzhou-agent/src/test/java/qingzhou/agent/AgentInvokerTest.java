@@ -396,6 +396,52 @@ public class AgentInvokerTest {
         }
     }
 
+    @Test
+    public void forwardedRequest_mixedExistingAndNewFiles_existingKept() throws Exception {
+        File uploadBase = Files.createTempDirectory("agent-upload-").toFile();
+        TestServer testServer = startServer();
+        try {
+            CryptoImpl crypto = new CryptoImpl();
+            String key = crypto.generateKey();
+            Heartbeat.thisInstanceInfo = buildInstanceInfo(key);
+
+            // 模拟先前经 /upload 上传的临时文件
+            Files.write(new File(uploadBase, "tmpkey").toPath(), "file-bytes".getBytes(StandardCharsets.UTF_8));
+
+            StubRegistry registry = new StubRegistry();
+            StubAppStub appStub = new StubAppStub();
+            registry.apps.put("demo", appStub);
+            testServer.server.registerHttpHandlerNoAuth(buildAgentInvoker(uploadBase, registry), "/agent");
+
+            // 模拟远程更新场景：字段值 = 业务已有文件名 + 本次上传项（tempKey=fileName）
+            RequestImpl request = new RequestImpl();
+            request.setApp("demo");
+            request.getParameters().put("upload", "existing.txt,tmpkey=newfile.txt");
+            request.getUploadFileFields().add("upload");
+            JsonImpl json = new JsonImpl();
+            json.init();
+            byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
+
+            HttpClient client = new HttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
+                    .method(HttpMethod.POST)
+                    .body(body));
+
+            Assert.assertEquals(result.getStatus(), 200);
+            // 已有文件名原样保留，新上传项已改名为本地绝对路径
+            Assert.assertEquals(appStub.invoked.get().getParameter("upload"),
+                    "existing.txt," + new File(uploadBase, "newfile.txt").getAbsolutePath());
+            // 处理完成后上传中间产物被清理
+            File[] files = uploadBase.listFiles();
+            Assert.assertNotNull(files);
+            Assert.assertEquals(files.length, 0);
+        } finally {
+            Heartbeat.thisInstanceInfo = null;
+            testServer.server.stop();
+            deleteRecursively(uploadBase);
+        }
+    }
+
     // ---------- 辅助方法 ----------
 
     private FileUpload buildFileUpload(File uploadBase) throws Exception {

@@ -27,6 +27,12 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 治理 REST 端点（ConversationApi）在本模块内同包引用 ChatMemoryAdmin，需 http-server 契约 -->
+        <dependency>
+            <artifactId>qingzhou-http-server</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -36,9 +42,9 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <!-- 纯实现模块：只注册 OSGi 服务，不导出包；消费方仅依赖 qingzhou-llm 的 ChatMemory 接口 -->
+                        <!-- 实现模块：注册 OSGi 服务与治理 REST 端点，不导出包；对话消费方仅依赖 qingzhou-llm 的 ChatMemory 接口 -->
                         <Export-Package/>
-                        <Import-Package>qingzhou.llm,qingzhou.json,qingzhou.logger</Import-Package>
+                        <Import-Package>org.osgi.framework,org.osgi.service.component,qingzhou.http.server,qingzhou.llm,qingzhou.json,qingzhou.logger</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
