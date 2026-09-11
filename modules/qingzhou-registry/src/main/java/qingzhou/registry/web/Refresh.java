@@ -48,11 +48,22 @@ public class Refresh implements HttpHandler {
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");
-        if (split.length < 2) return;
+        if (split.length < 3) {
+            logger.warn("malformed refresh request"); // 旧版 agent 只发两段，升级时需同步
+            return;
+        }
         String instanceId = split[0];
         String newKey = split[1];
+        String oldKey = split[2];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);
         if (instanceInfo == null) return;
+
+        // 必须证明持有当前共享密钥：registry 公钥会被分发给所有 agent，不是秘密，
+        // 仅凭「能用公钥加密」不足以授权改密钥
+        if (!instanceInfo.getKey().equals(oldKey)) {
+            logger.warn("refresh request rejected: key proof mismatch, instance: " + instanceId);
+            return;
+        }
 
         String instanceKey = instanceInfo.getKey();
         byte[] encrypt;

@@ -43,6 +43,9 @@ public class AuthHandler implements HttpHandler {
     public void start(Map<String, String> config) {
         username = config.get("username");
         passwordDigest = config.get("password");
+        if (passwordDigest == null || passwordDigest.isEmpty()) { // 未配置时直接启动失败，避免静默变成「谁都登不进」
+            throw new IllegalArgumentException("qingzhou-auth.password must be configured, otherwise no one can login");
+        }
         maxFailures = parseInt(config.get("max_failures"), 5);
         lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
 
@@ -146,7 +149,7 @@ public class AuthHandler implements HttpHandler {
         response.sendFinish("ok");
     }
 
-    private static int parseInt(String val, int defaultValue) {
+    private int parseInt(String val, int defaultValue) {
         try {
             return Integer.parseInt(val);
         } catch (NumberFormatException e) {

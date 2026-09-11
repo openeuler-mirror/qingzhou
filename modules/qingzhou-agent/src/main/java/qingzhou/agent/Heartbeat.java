@@ -68,7 +68,8 @@ public class Heartbeat {
                     }
 
                     String newKey = crypto.generateKey(); // 更新共享的对称密钥，以保障前向安全！
-                    String refreshInfos = thisInstanceInfo.getId() + "," + newKey;
+                    // 带上当前密钥作为持有证明：registry 公钥不保密，仅凭它不足以授权改密钥
+                    String refreshInfos = thisInstanceInfo.getId() + "," + newKey + "," + thisInstanceInfo.getKey();
                     String refreshed = send(refreshUrl, refreshInfos.getBytes(StandardCharsets.UTF_8));
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         thisInstanceInfo.setKey(newKey);

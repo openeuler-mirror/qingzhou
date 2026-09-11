@@ -61,7 +61,7 @@ public class PairCipherImplTest {
     @Test
     public void longBytes_encryptWithPublicKey_supportSegmentedEncryption() throws Exception {
         PairCipher pairCipher = newPairCipher();
-        // 超过单段明文块（117 字节）以触发分段加密
+        // 超过单段明文块以触发分段加密（块大小随密钥长度与填充方式变化）
         byte[] input = new byte[300];
         for (int i = 0; i < input.length; i++) {
             input[i] = (byte) i;

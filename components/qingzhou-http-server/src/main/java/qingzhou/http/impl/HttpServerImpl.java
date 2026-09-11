@@ -92,7 +92,7 @@ public class HttpServerImpl implements HttpServer {
 
     /**
      * 加载 SSL 密钥库并构建服务端 SslContext。
-     * 任何配置缺失或错误（未配置路径、文件不存在、口令错误、类型非法）都会在此抛出异常，
+     * 任何配置缺失或错误（未配置路径、文件不存在、口令缺失、类型非法）都会在此抛出异常，
      * 使服务在绑定端口前启动失败，绝不回退为明文监听。
      */
     private SslContext buildSslContext(Map<String, String> config) {
@@ -103,7 +103,8 @@ public class HttpServerImpl implements HttpServer {
 
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
-            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile);
+            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile
+                    + ", generate it with bin/gen-keystore.sh");
         }
 
         String type = config.get("ssl_keystore_type");
@@ -113,7 +114,11 @@ public class HttpServerImpl implements HttpServer {
         }
 
         String password = config.get("ssl_keystore_password");
-        char[] keyPassword = password == null ? new char[0] : password.toCharArray();
+        if (password == null || password.isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
+            throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
+                    + ", generate it with bin/gen-keystore.sh");
+        }
+        char[] keyPassword = password.toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
@@ -124,6 +129,8 @@ public class HttpServerImpl implements HttpServer {
             return SslContextBuilder.forServer(keyManagerFactory).build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
+        } finally {
+            Arrays.fill(keyPassword, '\0');
         }
     }
 

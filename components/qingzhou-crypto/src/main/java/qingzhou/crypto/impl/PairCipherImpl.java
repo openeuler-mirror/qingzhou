@@ -7,19 +7,27 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.interfaces.RSAKey;
+import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.PairCipher;
 
 class PairCipherImpl implements PairCipher {
     static final String ALG = "RSA";
-    private static final int ENCRYPT_BLOCK = 117;
-    private static final int DECRYPT_BLOCK = 128;
+    // 不用默认的 RSA/ECB/PKCS1Padding：PKCS#1 v1.5 在「解密失败可被外部观察」的场景下构成填充预言机
+    private static final String TRANSFORM = "RSA/ECB/OAEPPadding";
+    private static final OAEPParameterSpec OAEP_SPEC = new OAEPParameterSpec(
+            "SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
+    private static final int OAEP_OVERHEAD = 2 * 32 + 2; // OAEP(SHA-256) 固定开销，加密分块须扣除
+
     private final Base64Coder base64Coder;
     private PublicKey publicKey;
     private PrivateKey privateKey;
@@ -80,10 +88,7 @@ class PairCipherImpl implements PairCipher {
     }
 
     private byte[] encryptWithKey(Key key, byte[] encryptBytes) throws Exception {
-        Cipher cipher = Cipher.getInstance(ALG);
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        //分段加密
-        return cipherBytes(encryptBytes, cipher, ENCRYPT_BLOCK);
+        return cipherBytes(encryptBytes, cipher(key, Cipher.ENCRYPT_MODE), modulusBytes(key) - OAEP_OVERHEAD);
     }
 
     private String decryptWithKey(Key key, String input) throws Exception {
@@ -95,10 +100,18 @@ class PairCipherImpl implements PairCipher {
     }
 
     private byte[] decryptWithKey(Key key, byte[] decryptBytes) throws Exception {
-        Cipher cipher = Cipher.getInstance(ALG);
-        cipher.init(Cipher.DECRYPT_MODE, key);
+        return cipherBytes(decryptBytes, cipher(key, Cipher.DECRYPT_MODE), modulusBytes(key));
+    }
 
-        return cipherBytes(decryptBytes, cipher, DECRYPT_BLOCK);
+    private Cipher cipher(Key key, int mode) throws Exception {
+        Cipher cipher = Cipher.getInstance(TRANSFORM);
+        cipher.init(mode, key, OAEP_SPEC);
+        return cipher;
+    }
+
+    // RSA 是非分组密码，Cipher.getBlockSize() 返回 0，故由模长推导分块大小
+    private int modulusBytes(Key key) {
+        return (((RSAKey) key).getModulus().bitLength() + 7) / 8;
     }
 
     private byte[] cipherBytes(byte[] decryptBytes, Cipher cipher, int decryptBlock) throws IllegalBlockSizeException, BadPaddingException, IOException {
