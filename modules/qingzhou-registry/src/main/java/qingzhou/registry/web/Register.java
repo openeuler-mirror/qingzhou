@@ -50,7 +50,13 @@ public class Register implements HttpHandler {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        pairCipher = crypto.getPairCipher(null, config.get("private_key"));
+        String privateKey = config.get("private_key");
+        if (privateKey == null || privateKey.trim().isEmpty()) {
+            logger.warn("'private_key' is not configured, remote instance registration feature is unavailable.");
+            return;
+        }
+        privateKey = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
+        pairCipher = crypto.getPairCipher(null, privateKey);
 
         long interval = 1000 * Long.parseLong(config.get("interval"));
         long timeout = 1000 * Long.parseLong(config.get("timeout"));
@@ -84,6 +90,9 @@ public class Register implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        if (pairCipher == null) {
+            httpResponse.status500Finish("Service Unavailable");
+        }
         synchronized (Refresh.REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
         }

@@ -33,11 +33,19 @@ public class Refresh implements HttpHandler {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        pairCipher = crypto.getPairCipher(null, config.get("private_key"));
+        String privateKey = config.get("private_key");
+        if (privateKey == null || privateKey.trim().isEmpty()) {
+            return;
+        }
+        String decrypt = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
+        pairCipher = crypto.getPairCipher(null, decrypt);
     }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        if (pairCipher == null) {
+            httpResponse.status500Finish("Service Unavailable");
+        }
         synchronized (REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
         }

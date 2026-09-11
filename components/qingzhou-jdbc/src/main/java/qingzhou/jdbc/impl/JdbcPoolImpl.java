@@ -17,23 +17,39 @@ import javax.sql.CommonDataSource;
 import javax.sql.XAConnection;
 
 import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.*;
+import qingzhou.crypto.Crypto;
 import qingzhou.jdbc.JdbcPool;
 
 @Component(configurationPid = "qingzhou-jdbc", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JdbcPoolImpl implements JdbcPool {
+    @Reference
+    private Crypto crypto;
+
     private org.apache.tomcat.jdbc.pool.DataSource dataSource;
     private URLClassLoader urlClassLoader;
 
     @Activate
     public void open(Map<String, String> config) throws Exception {
-        PoolProperties poolProperties = new PoolProperties();
+        String passwordKey = "password";
+        String password = config.get(passwordKey);
+        if (password != null && !password.trim().isEmpty()) {
+            String decrypt = crypto.getGlobalCipher().tryDecrypt(password.trim(), "password");
+            config.put(passwordKey, decrypt);
+        }
 
-        setConfig(poolProperties, config);
+        PoolProperties poolConfig = new PoolProperties();
+        try {
+            setConfig(poolConfig, config);
+            createPool(poolConfig, config);
+        } finally {
+            // 从内存中移除密码敏感数据
+            config.remove(passwordKey);
+            poolConfig.setPassword(null);
+        }
+    }
 
+    private void createPool(PoolProperties poolProperties, Map<String, String> config) throws Exception {
         if (config.get("dataSourceClassName") != null) {
             File lib = new File(System.getProperty("qingzhou.instance"), "lib");
             if (lib.isDirectory()) {

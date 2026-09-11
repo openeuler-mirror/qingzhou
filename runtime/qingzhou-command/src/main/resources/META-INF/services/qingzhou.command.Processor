@@ -2,3 +2,4 @@ qingzhou.command.cmd.StartArg
 qingzhou.command.cmd.CipherKey
 qingzhou.command.cmd.PairKey
 qingzhou.command.cmd.AuthPassword
+qingzhou.command.cmd.TotpKey

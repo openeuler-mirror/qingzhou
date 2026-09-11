@@ -21,6 +21,7 @@ public class CryptoImpl implements Crypto {
 
     // MD5 / SHA-1 / SHA-256 等哈希值：当你在下载文件时看到的 MD5 校验码（比如 d41d8cd98f00b204e9800998ecf8427e），本质上就是 Base16（十六进制）编码。
     private final MessageDigest messageDigest = new MessageDigestImpl(base16Coder);
+    private final TotpCipher totpCipher = new TotpCipherImpl(base16Coder, base32Coder);
 
     private volatile Cipher globalCipher;
 
@@ -34,7 +35,7 @@ public class CryptoImpl implements Crypto {
     @Override
     public Cipher getCipher(String key) throws InvalidKeyException {
         if (key == null || key.trim().length() != 24) {
-            throw new InvalidKeyException();
+            throw new InvalidKeyException("key length must be 24");
         }
         return new CipherImpl(key.trim(), base64Coder);
     }
@@ -76,15 +77,14 @@ public class CryptoImpl implements Crypto {
     @Override
     public PairCipher getPairCipher(String publicKey, String privateKey) throws InvalidKeyException {
         if ((publicKey == null || publicKey.isEmpty()) && (privateKey == null || privateKey.isEmpty())) {
-            throw new InvalidKeyException("public_key or private_key is required"
-                    + ", generate a pair with bin/gen-pair-key.sh");
+            throw new InvalidKeyException("public_key or private_key is required, generate a pair with bin/gen-pair-key.sh");
         }
         return new PairCipherImpl(publicKey, privateKey, base64Coder);
     }
 
     @Override
     public TotpCipher getTotpCipher() {
-        return new TotpCipherImpl(base16Coder, base32Coder);
+        return totpCipher;
     }
 
     @Override
@@ -104,6 +104,11 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public Base16Coder getBase16Coder() {
+        return base16Coder;
+    }
+
+    @Override
+    public Base16Coder getHexCoder() {
         return base16Coder;
     }
 

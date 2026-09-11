@@ -126,6 +126,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("client_id", clientId);
         params.put("client_secret", clientSecretCipher.decrypt(clientSecret));
         params.put("redirect_uri", redirectUri); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
+        params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "client_secret"));
 
         Response tokenResponse = httpClient.send(
                 httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));

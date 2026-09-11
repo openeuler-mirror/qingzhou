@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
@@ -138,6 +139,10 @@ public class HttpServerImplTest {
 
     static HttpServerImpl start(Map<String, String> config) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
+        Field cryptoField = HttpServerImpl.class.getDeclaredField("crypto");
+        cryptoField.setAccessible(true);
+        cryptoField.set(httpServer, new CryptoImpl());
+
         Field loggerField = HttpServerImpl.class.getDeclaredField("logger");
         loggerField.setAccessible(true);
         loggerField.set(httpServer, new LoggerImpl());

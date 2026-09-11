@@ -132,7 +132,7 @@ public class QingzhouMain {
                     bundle.stop();
                 }
             } catch (Throwable e) {
-                e.printStackTrace(); // 捕获并打印，保证任务不被取消
+                e.printStackTrace(System.err); // 捕获并打印，保证任务不被取消
             }
         }, 0, 5, TimeUnit.SECONDS);
     }

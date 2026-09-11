@@ -15,6 +15,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
+import qingzhou.crypto.Crypto;
 import qingzhou.http.server.*;
 import qingzhou.http.server.AuthResult.Status;
 import qingzhou.logger.Logger;
@@ -24,7 +25,10 @@ import reactor.netty.resources.LoopResources;
 
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
-    private final List<String> tempMsg = new ArrayList<>();
+    private List<String> tempMsg = new ArrayList<>();
+
+    @Reference
+    private Crypto crypto;
 
     @Reference
     private Logger logger;
@@ -41,7 +45,7 @@ public class HttpServerImpl implements HttpServer {
     boolean isSslEnabled;
 
     @Activate
-    public synchronized void start(Map<String, String> config) {
+    public synchronized void start(Map<String, String> config) throws Exception {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
         int idleTimeout = getConfig(config, "idle_timeout", 60);
@@ -87,6 +91,8 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
+        tempMsg.clear();
+
         logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
@@ -118,7 +124,7 @@ public class HttpServerImpl implements HttpServer {
             throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
                     + ", generate it with bin/gen-keystore.sh");
         }
-        char[] keyPassword = password.toCharArray();
+        char[] keyPassword = crypto.getGlobalCipher().tryDecrypt(password, "ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
@@ -193,8 +199,9 @@ public class HttpServerImpl implements HttpServer {
             noAuthHandlerSet.add(httpHandler);
         }
 
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
         String msg = "http handler registered, component: " + component + ", path: " + originPath + (isNoAuth ? " (no auth)" : "");
-        if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
+        if (logger != null) {
             logger.info(msg);
         } else {
             tempMsg.add(msg);
@@ -256,9 +263,7 @@ public class HttpServerImpl implements HttpServer {
         handlerMap.remove(contextPath);
         noAuthHandlerSet.remove(httpHandler);
 
-        if (logger != null) { // osgi ds 尚未规范：解绑可能早于 logger 注入
-            logger.info("http handler unregistered: " + contextPath);
-        }
+        logger.info("http handler unregistered: " + contextPath);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
@@ -266,8 +271,12 @@ public class HttpServerImpl implements HttpServer {
     public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
-        if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
-            logger.info("http authenticator registered: " + authenticator.getClass().getName());
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
+        String msg = "http authenticator registered: " + authenticator.getClass().getName();
+        if (logger != null) {
+            logger.info(msg);
+        } else {
+            tempMsg.add(msg);
         }
     }
 
@@ -289,9 +298,7 @@ public class HttpServerImpl implements HttpServer {
             try {
                 r = authenticator.authenticate(request);
             } catch (Exception e) {
-                if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
-                    logger.error("authentication error: " + authenticator.getClass().getName(), e);
-                }
+                logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error");
             }
             if (r.status() == Status.PASS) return r;

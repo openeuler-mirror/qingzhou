@@ -36,6 +36,12 @@
         </dependency>
 
         <dependency>
+            <artifactId>qingzhou-crypto</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.2.224</version>
@@ -51,8 +57,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.jdbc</Export-Package>
-                        <!-- org.osgi.framework：注册 JdbcPool 服务（系统 bundle 必然提供，无额外解析风险） -->
-                        <Import-Package>javax.sql,javax.management,org.osgi.framework</Import-Package>
+                        <Import-Package>qingzhou.crypto,javax.sql,javax.management</Import-Package>
                         <Embed-Dependency>tomcat-jdbc,tomcat-juli</Embed-Dependency>
                     </instructions>
                 </configuration>

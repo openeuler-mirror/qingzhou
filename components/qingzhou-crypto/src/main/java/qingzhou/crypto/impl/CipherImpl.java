@@ -37,6 +37,19 @@ class CipherImpl implements Cipher {
     }
 
     @Override
+    public String tryDecrypt(String s, String configName) {
+        try {
+            return decrypt(s);
+        } catch (Exception e) {
+            if (configName == null) {
+                configName = "?password";
+            }
+            System.err.println("Decryption failed. Please use the correct key to encrypt the '" + configName + "'. use bin/g");
+            return s;
+        }
+    }
+
+    @Override
     public String decrypt(String s) throws Exception {
         if (s == null) return null;
 
