@@ -14,6 +14,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.netty.ByteBufFlux;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
@@ -102,11 +103,16 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     );
             return response.sendByteArray(streamResponse.asFlux()).then();
         } else {
-            String contentLength = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
-            if (contentLength != null && Long.parseLong(contentLength) > MAX_BODY_BYTES) {
+            if (bodyTooLarge(request)) {
                 return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
             }
-            return request.receive()
+            AtomicLong receivedBytes = new AtomicLong();
+            return ByteBufFlux.fromInbound(request.receive()
+                            .doOnNext(byteBuf -> { // chunked 请求无 Content-Length，聚合前按实际字节数二次限制
+                                if (receivedBytes.addAndGet(byteBuf.readableBytes()) > MAX_BODY_BYTES) {
+                                    throw new IllegalStateException("request body too large");
+                                }
+                            }))
                     .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
                     .defaultIfEmpty(NULL_BYTES)
                     .flatMap(bytes -> {
@@ -140,6 +146,17 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         }
         if (path.endsWith("/") && normalized.length() > 0) normalized.append('/');
         return normalized.length() == 0 ? "/" : normalized.toString();
+    }
+
+    // Content-Length 预检给出干净的 413；非法头交给字节计数兜底
+    private static boolean bodyTooLarge(HttpServerRequest request) {
+        String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
+        if (value == null) return false;
+        try {
+            return Long.parseLong(value) > MAX_BODY_BYTES;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private void addSecurityHeaders(HttpServerResponse response) {

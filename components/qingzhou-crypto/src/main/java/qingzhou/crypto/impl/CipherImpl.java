@@ -39,8 +39,10 @@ class CipherImpl implements Cipher {
     @Override
     public String tryDecrypt(String s, String configName) {
         if (s == null) return null;
-        if (s.startsWith(Cipher.PLAIN_PREFIX_MARKER))
+        if (s.startsWith(Cipher.PLAIN_PREFIX_MARKER)) {
+            System.err.println(" >>> Plain Text: " + configName + ", use bin/gen-cipher-password.sh to encrypt it");
             return s.substring(Cipher.PLAIN_PREFIX_MARKER.length()); // 显式声明的明文配置
+        }
 
         try {
             return decrypt(s);

@@ -37,12 +37,12 @@ keytool -genkeypair -alias qingzhou -keyalg RSA -keysize 3072 -sigalg SHA256with
 chmod 600 "${keystore}"
 
 # 回写口令：存在则替换，不存在则追加
-sed "s|^qingzhou-http-server.ssl_keystore_password=.*|qingzhou-http-server.ssl_keystore_password=${password}|" "${props}" > "${props}.tmp"
+sed "s|^qingzhou-http-server.ssl_keystore_password=.*|qingzhou-http-server.ssl_keystore_password=plain:${password}|" "${props}" > "${props}.tmp"
 if grep -q '^qingzhou-http-server.ssl_keystore_password=' "${props}"; then
     mv "${props}.tmp" "${props}"
 else
     rm -f "${props}.tmp"
-    echo "qingzhou-http-server.ssl_keystore_password=${password}" >> "${props}"
+    echo "qingzhou-http-server.ssl_keystore_password=plain:${password}" >> "${props}"
 fi
 
 echo "keystore generated: ${keystore}"
