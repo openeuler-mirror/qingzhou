@@ -128,10 +128,10 @@ public class ConversationMemoryTest {
         index.register("u1", "c1");
         Thread.sleep(5);
         index.register("u1", "c2");
-        assertEquals(index.list("u1").get(0).id, "c2"); // 新会话在前
+        assertEquals(index.list("u1").get(0).conversationId, "c2"); // 新会话在前
         Thread.sleep(5);
         index.touch("u1", "c1");
-        assertEquals(index.list("u1").get(0).id, "c1"); // 活跃会话靠前
+        assertEquals(index.list("u1").get(0).conversationId, "c1"); // 活跃会话靠前
     }
 
     @Test
