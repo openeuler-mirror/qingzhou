@@ -7,6 +7,7 @@ import java.security.KeyStore;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.net.ssl.KeyManagerFactory;
 
 import io.netty.channel.ChannelOption;
@@ -37,7 +38,8 @@ public class HttpServerImpl implements HttpServer {
     final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
     final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
 
-    private final List<Authenticator> authenticators = new ArrayList<>();
+    // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
+    private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;

@@ -92,6 +92,7 @@ public class Register implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (pairCipher == null) {
             httpResponse.status500Finish("Service Unavailable");
+            return;
         }
         synchronized (Refresh.REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);

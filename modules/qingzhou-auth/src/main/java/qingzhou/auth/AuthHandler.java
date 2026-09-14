@@ -65,6 +65,11 @@ public class AuthHandler implements HttpHandler {
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
+            if (request.getFullPath().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
+                response.status400Finish();
+                return;
+            }
+
             login(request, response);
         } else if (path.equals(LOGOUT_PATH)) {
             logout(response);
@@ -103,7 +108,9 @@ public class AuthHandler implements HttpHandler {
         }
 
         failures.remove(ip);
-        response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + tokenService.createToken(reqUser) + "\"}");
+        response.header("Cache-Control", "no-store") // token 响应不得被缓存
+                .contentTypeJsonUtf8()
+                .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser) + "\"}");
     }
 
     private boolean verifyCode(String code, HttpResponse response) {

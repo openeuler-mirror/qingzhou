@@ -1,6 +1,8 @@
 package qingzhou.crypto;
 
 public interface Cipher {
+    String PLAIN_PREFIX_MARKER = "plain:";
+
     String encrypt(String s) throws Exception;
 
     // 尝试解密，如果失败则返回原值

@@ -38,14 +38,16 @@ class CipherImpl implements Cipher {
 
     @Override
     public String tryDecrypt(String s, String configName) {
+        if (s == null) return null;
+        if (s.startsWith(Cipher.PLAIN_PREFIX_MARKER))
+            return s.substring(Cipher.PLAIN_PREFIX_MARKER.length()); // 显式声明的明文配置
+
         try {
             return decrypt(s);
         } catch (Exception e) {
-            if (configName == null) {
-                configName = "?password";
-            }
-            System.err.println(" >>> Decryption failed. Please use bin/gen-cipher-password.sh to encrypt the '" + configName);
-            return s;
+            // 解密失败须立即失败而非回退为明文，防止篡改的配置被当作字面口令静默生效
+            throw new IllegalStateException("failed to decrypt '" + configName
+                    + "', encrypt it with bin/gen-cipher-password.sh, or prefix the plaintext value with '" + PLAIN_PREFIX_MARKER + "'", e);
         }
     }
 

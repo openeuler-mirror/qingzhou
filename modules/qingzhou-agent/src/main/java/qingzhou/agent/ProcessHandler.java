@@ -22,9 +22,14 @@ class ProcessHandler {
         InstanceInfo thisInstanceInfo = Heartbeat.thisInstanceInfo;
         if (thisInstanceInfo == null) return; // Agent 尚未注册
 
+        if (requestBody.length <= IV_SIZE) { // 长度校验须先于 IV 提取，防止数组越界
+            httpResponse.status500Finish("key auth error"); // 与解密失败同文案，避免成为判别信号
+            return;
+        }
+
         // AES-GCM 每次加密都生成新的随机 IV，重放的密文 IV 必然重复，据此在解密前就丢弃
         String iv = ivOf(crypto, requestBody);
-        if (requestBody.length <= IV_SIZE || SEEN_IV.containsKey(iv)) {
+        if (SEEN_IV.containsKey(iv)) {
             httpResponse.status500Finish("key auth error"); // 与解密失败同文案，避免成为判别信号
             return;
         }

@@ -2,11 +2,10 @@ package qingzhou.http.impl;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
@@ -20,6 +19,8 @@ import reactor.netty.http.server.HttpServerResponse;
 
 class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
     private static final byte[] NULL_BYTES = new byte[0];
+    private static final int MAX_BODY_BYTES = 50 * 1024 * 1024; // 聚合进内存的请求体上限，防内存耗尽
+    private static final long MAX_STREAM_BYTES = 1024L * 1024 * 1024; // 流式上传总量上限，防磁盘写满
     private final HttpServerImpl httpServer;
     private final Logger logger;
 
@@ -78,7 +79,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
 
         if (streamRequired) {
             streamHandler.onBegin(httpRequest, httpResponse);
+            AtomicLong receivedBytes = new AtomicLong();
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
+                    .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
+                        if (receivedBytes.addAndGet(byteBuf.readableBytes()) > MAX_STREAM_BYTES) {
+                            throw new IllegalStateException("request body too large");
+                        }
+                    })
                     .subscribe(byteBuf -> {
                                 byte[] bytes = new byte[byteBuf.readableBytes()];
                                 byteBuf.readBytes(bytes);
@@ -95,6 +102,10 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     );
             return response.sendByteArray(streamResponse.asFlux()).then();
         } else {
+            String contentLength = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
+            if (contentLength != null && Long.parseLong(contentLength) > MAX_BODY_BYTES) {
+                return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
+            }
             return request.receive()
                     .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
                     .defaultIfEmpty(NULL_BYTES)

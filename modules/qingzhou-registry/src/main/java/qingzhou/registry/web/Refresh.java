@@ -1,6 +1,7 @@
 package qingzhou.registry.web;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
@@ -45,6 +46,7 @@ public class Refresh implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (pairCipher == null) {
             httpResponse.status500Finish("Service Unavailable");
+            return;
         }
         synchronized (REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
@@ -68,7 +70,8 @@ public class Refresh implements HttpHandler {
 
         // 必须证明持有当前共享密钥：registry 公钥会被分发给所有 agent，不是秘密，
         // 仅凭「能用公钥加密」不足以授权改密钥
-        if (!instanceInfo.getKey().equals(oldKey)) {
+        if (!MessageDigest.isEqual(instanceInfo.getKey().getBytes(StandardCharsets.UTF_8),
+                oldKey.getBytes(StandardCharsets.UTF_8))) { // 常量时间比较，防时序侧信道
             logger.warn("refresh request rejected: key proof mismatch, instance: " + instanceId);
             return;
         }
