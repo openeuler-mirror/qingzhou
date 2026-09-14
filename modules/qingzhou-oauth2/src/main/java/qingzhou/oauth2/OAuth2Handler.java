@@ -74,7 +74,8 @@ public class OAuth2Handler implements HttpHandler {
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
         if (path.equals(AUTHORIZE_PATH)) {
             String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
-            response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state + "; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax")
+            response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
+                            + "; Path=/; Max-Age=600; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
                     .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
@@ -124,19 +125,18 @@ public class OAuth2Handler implements HttpHandler {
         params.put("grant_type", "authorization_code");
         params.put("code", code);
         params.put("client_id", clientId);
-        params.put("client_secret", clientSecretCipher.decrypt(clientSecret));
         params.put("redirect_uri", redirectUri); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
         params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "client_secret"));
 
         Response tokenResponse = httpClient.send(
                 httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
         String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
-        if (tokenResponse.getStatus() != 200 || json.fromJson(tokenBodyText, Map.class).get("error") != null) {
+        Map tokenBody = json.fromJson(tokenBodyText, Map.class);
+        if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
             // 此授权服务器的错误响应以 HTTP 200 返回（如 invalid_client），仅凭状态码判断会误报为 "failed to get user info"
             response.status500Finish("token exchange failed: " + tokenBodyText);
             return;
         }
-        Map<String, Object> tokenBody = json.fromJson(tokenBodyText, Map.class);
         String user = extractUser(tokenBody);
         if (user == null) {
             response.status500Finish("failed to get user info");
@@ -144,9 +144,7 @@ public class OAuth2Handler implements HttpHandler {
         }
 
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user)
-                        + "; Path=/; HttpOnly; Secure; SameSite=Lax")
-        response.header("Set-Cookie", COOKIE_NAME + "=" + createToken(user)
-                        + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : "")) // Secure 与否取决于浏览器访问协议，与 redirect_uri 的 scheme 一致：HTTP 部署浏览器会丢弃带 Secure 的 cookie，HTTPS 部署则须防明文传输
+                        + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")
                 .redirect("/"); // 未用 state 暂存回跳路径，故一律重定向到根路径
     }
@@ -156,19 +154,17 @@ public class OAuth2Handler implements HttpHandler {
      * 不接受未验签的 id_token——其 payload 可任意伪造，据此登录等同于身份可被直接接管。
      */
     private String extractUser(Map<String, Object> tokenBody) throws Exception {
+        // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
         String accessToken = (String) tokenBody.get("access_token");
-        if (accessToken == null || userinfoEndpoint == null || userinfoEndpoint.isEmpty()) {
-            return null;
+        if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
+            Response resp = httpClient.send(httpClient.newRequest(userinfoEndpoint)
+                    .header("Authorization", "Bearer " + accessToken));
+            if (resp.getStatus() == 200) {
+                Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
+                return pickUsername(info);
+            }
         }
-
-        Response resp = httpClient.send(httpClient.newRequest(userinfoEndpoint)
-                .header("Authorization", "Bearer " + accessToken));
-        if (resp.getStatus() != 200) {
-            return null;
-        }
-
-        Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-        return (String) info.get("sub");
+        return null;
     }
 
     String getCookie(HttpRequest request, String name) {
@@ -179,26 +175,9 @@ public class OAuth2Handler implements HttpHandler {
             String trimmed = cookie.trim();
             if (trimmed.startsWith(name + "=")) {
                 return trimmed.substring(name.length() + 1);
-        if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
-            Response resp = httpClient.send(httpClient.newRequest(userinfoEndpoint)
-                    .header("Authorization", "Bearer " + accessToken));
-            if (resp.getStatus() == 200) {
-                Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-                String user = pickUsername(info);
-                if (user != null) return user;
             }
         }
-        // 回退：从 id_token 的 JWT payload 提取（未验签，仅作提示性解析）
-        String idToken = (String) tokenBody.get("id_token");
-        if (idToken != null) {
-            String[] parts = idToken.split("\\.");
-            if (parts.length >= 2) {
-                Map<String, Object> claims = json.fromJson(
-                        new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8), Map.class);
-                String user = pickUsername(claims);
-                if (user != null) return user;
-            }
-        }
+
         return null;
     }
 
@@ -209,6 +188,7 @@ public class OAuth2Handler implements HttpHandler {
                 "sub" // OIDC scope=openid 标准属性，一个id字符串
         };
         for (String field : tryUserNames) {
+            if (field == null || field.isEmpty()) continue;
             String val = str(map.get(field));
             if (val != null) return val;
         }

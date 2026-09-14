@@ -40,7 +40,9 @@ class CipherImpl implements Cipher {
     public String tryDecrypt(String s, String configName) {
         if (s == null) return null;
         if (s.startsWith(Cipher.PLAIN_PREFIX_MARKER)) {
-            System.err.println(" >>> Plain Text: " + configName + ", use bin/gen-cipher-password.sh to encrypt it");
+            System.err.println("WARNING: >>> ");
+            System.err.println("WARNING: >>> Plain Text: " + configName + ", use bin/gen-cipher-password.sh to encrypt it");
+            System.err.println("WARNING: >>> ");
             return s.substring(Cipher.PLAIN_PREFIX_MARKER.length()); // 显式声明的明文配置
         }
 
@@ -57,13 +59,9 @@ class CipherImpl implements Cipher {
     public String decrypt(String s) throws Exception {
         if (s == null) return null;
 
-        try {
-            byte[] bytes = base64Coder.decode(s);
-            byte[] decrypt = decrypt(bytes);
-            return new String(decrypt, StandardCharsets.UTF_8);
-        }catch (Exception e){
-            return s;
-        }
+        byte[] bytes = base64Coder.decode(s);
+        byte[] decrypt = decrypt(bytes);
+        return new String(decrypt, StandardCharsets.UTF_8);
     }
 
     /**
