@@ -153,7 +153,10 @@ public class AiChat implements HttpHandler {
                     refDocs = attachments;
                     break;
                 case image:
-                    images = attachments.stream().map(s -> chatModelFactory.newImageAttachment(s, null)).toArray(Attachment[]::new);
+                    images = attachments.stream()
+                            .map(this::parseImage)
+                            .map(image -> chatModelFactory.newImageAttachment(image.base64, image.mimeType))
+                            .toArray(Attachment[]::new);
                     break;
                 default:
                     logger.warn("unsupported type: " + attachmentType);
@@ -302,5 +305,25 @@ public class AiChat implements HttpHandler {
             }
         }
         return found;
+    }
+
+    // 归一化图片附件：兼容完整 data URI 与纯 base64 两种前端格式
+    private ParsedImage parseImage(String content) {
+        if (content.startsWith("data:")) {
+            int comma = content.indexOf(',');
+            String meta = content.substring("data:".length(), comma);
+            return new ParsedImage(content.substring(comma + 1), meta.substring(0, meta.indexOf(';')));
+        }
+        return new ParsedImage(content, null);
+    }
+
+    private static class ParsedImage {
+        final String base64;
+        final String mimeType;
+
+        ParsedImage(String base64, String mimeType) {
+            this.base64 = base64;
+            this.mimeType = mimeType;
+        }
     }
 }
