@@ -51,7 +51,8 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.jdbc</Export-Package>
-                        <Import-Package>javax.sql,javax.management</Import-Package>
+                        <!-- org.osgi.framework：注册 JdbcPool 服务（系统 bundle 必然提供，无额外解析风险） -->
+                        <Import-Package>javax.sql,javax.management,org.osgi.framework</Import-Package>
                         <Embed-Dependency>tomcat-jdbc,tomcat-juli</Embed-Dependency>
                     </instructions>
                 </configuration>
