@@ -210,7 +210,6 @@ public class SseListener implements Listener {
                 // 客户端已断开连接，无法发送结束事件，忽略
             }
         }
-        // 回复落库由 LLM 层的记忆包装监听器负责（跨轮聚合正文/用量后写入 ChatMemory）
     }
 
     private String toSseText(SseEvent event) {

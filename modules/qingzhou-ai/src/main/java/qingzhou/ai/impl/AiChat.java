@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -13,15 +14,18 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.memory.AggregateListener;
+import qingzhou.ai.memory.ConversationIndex;
+import qingzhou.ai.memory.ConversationStore;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
-import qingzhou.llm.ChatMemory;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.Listener;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
@@ -31,8 +35,11 @@ public class AiChat implements HttpHandler {
     private static final int RATE_LIMIT_REQUESTS = 20;
     private static final int RATE_WINDOW_CLEANUP_THRESHOLD = 1024;
 
-    /** 记忆模式下注入上下文的最大历史条数，单条长度由记忆实现截断 */
+    /** 记忆模式下注入上下文的最大历史条数（应用侧算好窗口，llm 照单拼装） */
     private static final int HISTORY_MAX_MESSAGES = 20;
+
+    /** 会话 id 合法格式（记忆模式下拒绝路径危险字符与越权 id 探测） */
+    private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,128}");
 
     private static final String SYSTEM_PROMPT = "\n" +
             "# 你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
@@ -93,11 +100,16 @@ public class AiChat implements HttpHandler {
     private Json json;
 
     /**
-     * 对话记忆：实现由 qingzhou-ai-memory 等独立模块提供，未部署时为 null，退化为单轮无记忆。
-     * 动态引用：实现模块热插拔不影响已受理请求（快照值在 handle 内获取）。
+     * 会话记忆编排组件（qingzhou.ai.memory 包提供，按 qingzhou-ai.memory.type 配置启用）：
+     * 未配置/类型非法/kvstore 未部署时为 null，退化为单轮无记忆。
+     * 动态引用：热插拔不影响已受理请求（快照值在 handle 内获取）。
      */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-    private volatile ChatMemory memory;
+    private volatile ConversationStore store;
+
+    /** 与 store 同生共死（随其装配注册），负责归属判定/列表/标题；仅启用记忆时可达 */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    private volatile ConversationIndex index;
 
     private final Map<String, ArrayDeque<Long>> rateWindows = new ConcurrentHashMap<>();
 
@@ -153,11 +165,13 @@ public class AiChat implements HttpHandler {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
 
-        // 会话标识采信/生成后经 RUN_STARTED 下发（前端以其为权威值）；无记忆实现时仅作透传标识
-        ChatMemory memory = this.memory;
-        String conversationId = memory != null
-                ? memory.resolveConversationId(username, strOrNull(params.get("conversationId")))
-                : conversationIdFallback(strOrNull(params.get("conversationId")));
+        // 会话标识采信/生成后经 RUN_STARTED 下发（前端以其为权威值）；记忆未启用时仅作透传标识
+        ConversationStore store = this.store;
+        ConversationIndex index = this.index;
+        String requestedId = strOrNull(params.get("conversationId"));
+        String conversationId = store != null
+                ? resolveConversation(username, requestedId, store, index)
+                : conversationIdFallback(requestedId);
         String messageId = UUID.randomUUID().toString();
 
         // 发出响应
@@ -175,12 +189,14 @@ public class AiChat implements HttpHandler {
                     .docs(refDocs)
                     .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
                     .enableThinking(true);
-            if (memory != null) {
-                builder.memory(memory, username, conversationId, messageId)
-                        .maxHistoryMessages(HISTORY_MAX_MESSAGES);
+            Listener chatListener = sseListener;
+            if (store != null) {
+                builder.history(store.recentHistory(conversationId, HISTORY_MAX_MESSAGES)); // 应用算好窗口，llm 照单拼装
+                store.appendUser(conversationId, question); // 受理即落库本轮用户消息（原时序：流式调用前）
+                chatListener = new AggregateListener(sseListener, store, index, username, conversationId, messageId);
             }
             ChatModel chatModel = builder.build();
-            chatModel.chat(question, sseListener, images);
+            chatModel.chat(question, chatListener, images);
         } catch (Throwable t) {
             // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
             // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”
@@ -238,13 +254,36 @@ public class AiChat implements HttpHandler {
         return value == null ? null : String.valueOf(value);
     }
 
-    /** 无记忆实现时的会话标识兜底：仅做格式校验采信，否则新生成（不做归属校验——无存储可查） */
+    /** 记忆未启用时的会话标识兜底：仅做格式校验采信，否则新生成（不做归属校验——无存储可查） */
     private String conversationIdFallback(String requestedId) {
         if (requestedId != null && requestedId.length() >= 8 && requestedId.length() <= 64
                 && requestedId.matches("[A-Za-z0-9_-]+")) {
             return requestedId;
         }
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * 记忆模式下会话标识采信/生成（原 ChatMemory.resolveConversationId 语义上移）：
+     * 合法且归属本人 → 采信；合法且无记录（全新）→ 采信并注册索引；
+     * 越权占用（他人索引外但有记录）/非法/索引故障 → 新会话。
+     */
+    private String resolveConversation(String username, String requestedId, ConversationStore store, ConversationIndex index) {
+        if (requestedId != null) {
+            String id = requestedId.trim();
+            if (VALID_ID.matcher(id).matches()) {
+                if (index.contains(username, id)) return id; // 归属本人
+                if (!store.exists(id)) return registerNew(username, id, store, index); // 全新 id → 采信
+            }
+        }
+        return registerNew(username, UUID.randomUUID().toString(), store, index);
+    }
+
+    private String registerNew(String username, String conversationId, ConversationStore store, ConversationIndex index) {
+        for (String evicted : index.register(username, conversationId)) {
+            store.delete(evicted); // per-user 配额挤出联动删除会话数据
+        }
+        return conversationId;
     }
 
     private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {

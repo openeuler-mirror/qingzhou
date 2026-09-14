@@ -20,20 +20,8 @@ public interface ChatModelFactory {
         /**
          * 多轮对话历史（按时间正序），将拼接在 system 与本次 user 消息之间；
          * 历史条数与单条长度由调用方截断，实现层原样拼接。
-         * 与 {@link #memory} 互斥使用：挂载记忆后由 ChatModel 自动加载历史，无需再手动传入。
          */
         ChatModelBuilder history(List<HistoryMessage> history);
-
-        /**
-         * 挂载对话记忆（客户端实现传入，如内存/文件/Redis 实现模块）。设置后 ChatModel
-         * 在每次对话时自动：加载历史注入上下文 → 落库用户消息 → 正常完成后落库回复（含用量）；
-         * 出错/中止不落库回复。conversationId 须由调用方先行 resolve（供 RUN_STARTED 事件下发），
-         * messageId 为本轮回复的稳定标识（前端依赖同一 id 对齐）。
-         */
-        ChatModelBuilder memory(ChatMemory memory, String userId, String conversationId, String messageId);
-
-        /** 记忆模式下注入上下文的最大历史消息条数，默认 20（实现侧另有单条长度与总量配额） */
-        ChatModelBuilder maxHistoryMessages(int maxHistoryMessages);
 
         ChatModelBuilder tools(Collection<Tool> tools);
 

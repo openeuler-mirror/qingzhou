@@ -11,7 +11,6 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
-import qingzhou.llm.ChatMemory;
 import qingzhou.llm.HistoryMessage;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
@@ -31,11 +30,6 @@ class SyncSender {
 
     String chat(Map<String, Tool> baseTools, String message, Attachment... attachment) {
         try {
-            // 记忆挂载：自动加载历史（不含本轮）并落库本轮用户消息，与流式路径保持一致
-            if (builder.memory != null) {
-                builder.history = builder.memory.recentHistory(builder.memoryUserId, builder.memoryConversationId, builder.maxHistoryMessages);
-                builder.memory.appendUserMessage(builder.memoryUserId, builder.memoryConversationId, message);
-            }
             List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
@@ -62,7 +56,7 @@ class SyncSender {
                 List<ToolCallInfo> toolCalls = parseToolCalls((List<Map<String, Object>>) msg.get("tool_calls"));
                 if (toolCalls.isEmpty()) {
                     String content = builder.extractText(msg.get("content"));
-                    return finishMemory(content != null ? content : "");
+                    return content != null ? content : "";
                 }
                 messages.add(msg);
                 for (ToolCallInfo toolCall : toolCalls) {
@@ -75,27 +69,11 @@ class SyncSender {
             Map<String, Object> msg = getResponseMessage(response);
             if (msg == null) return "";
             String content = builder.extractText(msg.get("content"));
-            return finishMemory(content != null ? content : "");
+            return content != null ? content : "";
         } catch (Throwable t) {
             Utils.println("Chat failed: " + Utils.errorMessage(t));
             return null;
         }
-    }
-
-    /**
-     * 同步路径的记忆落库出口：仅在拿到最终回复时调用（异常/无响应不落库，失败轮次不进历史）。
-     * 同步响应不解析 usage，token 用量记 0。
-     */
-    private String finishMemory(String content) {
-        ChatMemory memory = builder.memory;
-        if (memory == null) return content;
-        try {
-            memory.appendAssistantMessage(builder.memoryUserId, builder.memoryConversationId,
-                    builder.memoryMessageId, content, 0, 0, 0);
-        } catch (Throwable t) {
-            Utils.println("append assistant memory failed: " + Utils.errorMessage(t));
-        }
-        return content;
     }
 
     private Response sendSync(List<Object> messages, List<Object> toolDefs, int attempt) throws Exception {
