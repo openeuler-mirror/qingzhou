@@ -162,7 +162,7 @@ public class DispatcherHandlerTest {
     }
 
     @Test
-    public void multipartWithoutStreamHandler_request_returns413() throws Exception {
+    public void multipartWithoutStreamHandler_request_returns415() throws Exception {
         File tempFile = File.createTempFile("dispatcher-upload-", ".txt");
         try {
             Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
@@ -177,7 +177,7 @@ public class DispatcherHandlerTest {
                         .method(HttpMethod.POST)
                         .files(files));
 
-                Assert.assertEquals(result.getStatus(), 413);
+                Assert.assertEquals(result.getStatus(), 415);
             } finally {
                 testServer.server.stop();
             }

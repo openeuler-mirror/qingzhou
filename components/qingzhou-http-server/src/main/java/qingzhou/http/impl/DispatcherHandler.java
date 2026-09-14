@@ -32,7 +32,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
 
     @Override
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
-        addSecurityHeaders(response); // 须在首个 return 之前：400/401/404/413 等分支同样需要安全头
+        addSecurityHeaders(response); // 须在首个 return 之前：400/401/404/415 等分支同样需要安全头
         String requestPath = request.uri().split("\\?")[0];
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
@@ -71,8 +71,8 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         // 开始处理业务...
         HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
         boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
-        if (streamRequired && streamHandler == null) {
-            return response.status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE).send();
+        if (streamRequired && streamHandler == null) { // handler 不支持 multipart，与体积无关，故 415 而非 413
+            return response.status(HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE).send();
         }
 
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast().onBackpressureBuffer();

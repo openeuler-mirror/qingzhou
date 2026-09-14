@@ -11,6 +11,7 @@ import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.CommonDataSource;
@@ -30,7 +31,8 @@ public class JdbcPoolImpl implements JdbcPool {
     private URLClassLoader urlClassLoader;
 
     @Activate
-    public void open(Map<String, String> config) throws Exception {
+    public void open(Map<String, String> osgiConfig) throws Exception {
+        Map<String, String> config = new HashMap<>(osgiConfig);
         String passwordKey = "password";
         String password = config.get(passwordKey);
         if (password != null && !password.trim().isEmpty()) {
@@ -44,8 +46,8 @@ public class JdbcPoolImpl implements JdbcPool {
             createPool(poolConfig, config);
         } finally {
             // 从内存中移除密码敏感数据
-            config.remove(passwordKey);
             poolConfig.setPassword(null);
+            config.remove(passwordKey);
         }
     }
 
