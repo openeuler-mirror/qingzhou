@@ -2,6 +2,9 @@ package qingzhou.http.impl;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -56,8 +59,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         .sendString(Mono.just("Unauthorized"));
             }
             if (authResult.getPrincipal() != null) {
-                httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_USERNAME_ATTRIBUTE, authResult.getPrincipal());
+                httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE, authResult.getPrincipal());
             }
+            Set<String> roles = authResult.getRoles();
+            httpRequest.setAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE, roles == null ? Collections.emptySet()
+                    : Collections.unmodifiableSet(new HashSet<>(roles)));
         }
 
         // 开始处理业务...
