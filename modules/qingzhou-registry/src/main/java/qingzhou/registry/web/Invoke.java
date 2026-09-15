@@ -1,10 +1,10 @@
 package qingzhou.registry.web;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -12,11 +12,9 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.AuthResult;
+import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -303,7 +301,12 @@ public class Invoke implements HttpHandler {
                 parser.abort();
             }
             if (httpResponse != null) {
-                httpResponse.status500Finish(t.getMessage());
+                if (t instanceof BodyTooLargeException) {
+                    httpResponse.status(413)
+                            .sendFinish(t.getMessage()); // 上传超限是客户端问题，不是服务器故障
+                } else {
+                    httpResponse.status500Finish(t.getMessage());
+                }
             }
             logger.error(t.getMessage(), t);
         }

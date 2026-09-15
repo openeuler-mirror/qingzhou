@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.AuthResult;
+import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
@@ -105,7 +106,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
                         if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxStreamBytes) {
-                            throw new IllegalStateException("request body too large");
+                            throw new BodyTooLargeException();
                         }
                     })
                     .subscribe(byteBuf -> {
@@ -119,8 +120,12 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                                 //重复释放（Double Release）：框架后续尝试释放已被手动释放的 ByteBuf，触发 IllegalReferenceCountException；
                                 // byteBuf.release();
                             },
-                            err -> streamHandler.onError(err),
-                            () -> streamHandler.onComplete() // 完成信号
+                            err -> {
+                                streamHandler.onError(err);
+                                // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
+                                if (!httpResponse.isUsed()) httpResponse.status500Finish(err.getMessage());
+                            },
+                            streamHandler::onComplete // 完成信号
                     );
             return response.sendByteArray(streamResponse.asFlux()).then();
         } else {
@@ -131,7 +136,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             return ByteBufFlux.fromInbound(request.receive()
                             .doOnNext(byteBuf -> { // chunked 请求无 Content-Length，聚合前按实际字节数二次限制
                                 if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxBodyBytes) {
-                                    throw new IllegalStateException("request body too large");
+                                    throw new BodyTooLargeException();
                                 }
                             }))
                     .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
@@ -151,7 +156,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         }
                         return response.sendByteArray(streamResponse.asFlux()).then();
                     })
-                    .onErrorResume(e -> close(response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE));
+                    .onErrorResume(e -> close(response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
         }
     }
 
@@ -165,11 +170,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         return request.receive()
                 .doOnNext(byteBuf -> {
                     if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxBodyBytes) {
-                        throw new IllegalStateException("request body too large");
+                        throw new BodyTooLargeException();
                     }
                 })
                 .then(errorResponse)
-                .onErrorResume(e -> close(response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE));
+                .onErrorResume(e -> close(response, statusOf(e)));
     }
 
     // 请求体未读完，连接无法复用：关闭它，避免残留字节污染后续请求
@@ -210,6 +215,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    // 异常可能被 Reactor 包装，取最内层 cause 判断
+    private HttpResponseStatus statusOf(Throwable e) {
+        return getCause(e) instanceof BodyTooLargeException
+                ? HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE
+                : HttpResponseStatus.INTERNAL_SERVER_ERROR;
     }
 
     private void addSecurityHeaders(HttpServerResponse response) {
