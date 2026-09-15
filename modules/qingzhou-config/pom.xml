@@ -11,6 +11,21 @@
     <packaging>bundle</packaging>
     <artifactId>qingzhou-config</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-json</artifactId>
+            <version>${revision}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-http-client</artifactId>
+            <version>${revision}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -19,7 +34,8 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>org.osgi.service.cm</Import-Package>
+                        <!-- 外部配置中心相关的两个 API 包按可选导入：未启用远程配置时即使发行版未包含这两个组件也能正常启动 -->
+                        <Import-Package>org.osgi.service.cm,qingzhou.json;resolution:=optional,qingzhou.http.client;resolution:=optional</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
