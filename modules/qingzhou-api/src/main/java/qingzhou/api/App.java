@@ -11,6 +11,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface App {
+    String roles() default "";
+
     String code() default "";
 
     String icon() default "";

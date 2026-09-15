@@ -216,7 +216,7 @@ class MultipartStreamParser {
     }
 
     private void deleteUploadedFile(File tempFile) {
-        if (tempFile == null || !tempFile.exists()) return;
+        if (tempFile == null) return;
         File parentDir = tempFile.getParentFile();
         if (parentDir != null && parentDir.getParentFile() != null
                 && parentDir.getParentFile().equals(uploadBase)) {

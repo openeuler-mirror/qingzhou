@@ -1,10 +1,10 @@
 package qingzhou.registry.web;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -12,8 +12,11 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
+import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
+import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -74,6 +77,8 @@ public class Invoke implements HttpHandler {
             return;
         }
 
+        if (!checkPermission(httpRequest, httpResponse, app, request)) return;
+
         try {
             parseBodyParameters(httpRequest, request);
             app.invokeApp(request);
@@ -84,6 +89,40 @@ public class Invoke implements HttpHandler {
         }
 
         sendResponse(request, httpResponse);
+    }
+
+    private boolean checkPermission(HttpRequest httpRequest, HttpResponse httpResponse, AppStub app, RequestImpl request) {
+        try {
+            if (isAllowed(httpRequest, app, request)) return true;
+            httpResponse.status(403).sendFinish("Forbidden");
+        } catch (RuntimeException e) {
+            httpResponse.status500Finish("Permission service error");
+            logger.error(e.getMessage(), e);
+        }
+        return false;
+    }
+
+    private boolean isAllowed(HttpRequest httpRequest, AppStub app, RequestImpl request) {
+        Object attribute = httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
+        Set<?> roles = attribute instanceof Set ? (Set<?>) attribute : Collections.emptySet();
+        App metadata = app.getAppMeta().getApp();
+        if (!matchesRoles(roles, metadata.roles)) return false;
+        for (Model model : metadata.models) {
+            if (!model.code.equals(request.getModel())) continue;
+            for (ModelAction action : model.actions) {
+                if (action.code.equals(request.getAction())) return matchesRoles(roles, action.roles);
+            }
+            break;
+        }
+        return true; // 目标不存在时，沿用原有分派及错误响应。
+    }
+
+    private boolean matchesRoles(Set<?> actual, String declaration) {
+        if (declaration == null || declaration.trim().isEmpty()) return true;
+        Set<String> required = Arrays.stream(declaration.split(","))
+                .map(String::trim).filter(role -> !role.isEmpty()).collect(Collectors.toSet());
+        if (required.isEmpty()) throw new IllegalArgumentException("Non-empty role declaration contains no roles");
+        return !Collections.disjoint(required, actual);
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {
@@ -187,9 +226,11 @@ public class Invoke implements HttpHandler {
         AppStub app;
 
         MultipartStreamParser parser;
+        boolean terminated;
 
         @Override
         public void onBegin(HttpRequest httpRequest, HttpResponse httpResponse) {
+            if (terminated) return;
             this.httpRequest = httpRequest;
             this.httpResponse = httpResponse;
 
@@ -198,6 +239,9 @@ public class Invoke implements HttpHandler {
 
             app = registry.getAppStub(request.getInstance(), request.getApp());
             if (app == null) return;
+
+            terminated = !checkPermission(httpRequest, httpResponse, app, request);
+            if (terminated) return;
 
             String boundary = null;
             String contentType = httpRequest.getContentType();
@@ -219,42 +263,33 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onNext(byte[] data) {
-            if (parser == null) return;
+            if (terminated || parser == null) return;
             try {
                 parser.feed(data, false);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 onError(e);
             }
         }
 
         @Override
         public void onComplete() {
+            if (terminated) return;
+            terminated = true;
             if (parser == null) {
                 httpResponse.status400Finish();
                 return;
             }
 
-            Set<String> originalFilePaths = new HashSet<>();
             try {
                 parser.feed(new byte[0], true);
                 applyParserResults(parser, request);
-                request.getUploadFileFields().forEach(f -> {
-                    // 字段可能因解析中断（abort 后残留）而无参数值，getParameter 返回 null，不可加入清理集合
-                    String paths = request.getParameter(f);
-                    if (paths != null && !paths.isEmpty()) {
-                        originalFilePaths.add(paths);
-                    }
-                });
                 app.invokeApp(request);
             } catch (Throwable e) {
-                if (parser != null) {
-                    parser.abort();
-                }
                 httpResponse.status500Finish(e.getMessage());
                 logger.error(e.getMessage(), e);
                 return;
             } finally {
-                cleanupTempFiles(originalFilePaths);
+                parser.abort();
             }
 
             sendResponse(request, httpResponse);
@@ -262,6 +297,8 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onError(Throwable t) {
+            if (terminated) return;
+            terminated = true;
             if (parser != null) {
                 parser.abort();
             }
@@ -302,27 +339,6 @@ public class Invoke implements HttpHandler {
                 request.getParameters().put(fieldName, combined.toString());
             }
             request.getUploadFileFields().addAll(parser.getUploadFileFields());
-        }
-
-        void cleanupTempFiles(Set<String> originalFilePaths) {
-            for (String paths : originalFilePaths) {
-                if (paths == null || paths.isEmpty()) continue;
-                for (String path : paths.split(",")) {
-                    try {
-                        if (path == null || path.trim().isEmpty()) continue;
-                        File tempFile = new File(path.trim());
-                        File parentDir = tempFile.getParentFile();
-                        File tempBase = parentDir == null ? null : parentDir.getParentFile();
-                        if (tempBase != null && tempBase.equals(uploadBase)) {
-                            tempFile.delete();
-                            parentDir.delete();
-                        }
-                    } catch (Throwable e) {
-                        // 清理临时文件失败仅记日志，绝不向 onComplete 传播——否则响应无法返回，前端将永久挂起
-                        logger.warn("cleanupTempFiles failed: " + e.getMessage());
-                    }
-                }
-            }
         }
     }
 }
