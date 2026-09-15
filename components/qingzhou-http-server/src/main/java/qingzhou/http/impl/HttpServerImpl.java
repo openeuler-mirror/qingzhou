@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
@@ -26,7 +28,7 @@ import reactor.netty.resources.LoopResources;
 
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
-    private List<String> tempMsg = new ArrayList<>();
+    private final List<String> tempMsg = new ArrayList<>();
 
     @Reference
     private Crypto crypto;
@@ -45,12 +47,21 @@ public class HttpServerImpl implements HttpServer {
     private DisposableServer disposableServer;
     boolean isAuthDisabled;
     boolean isSslEnabled;
+    int maxConcurrentRequests;
+    int maxBodyBytes; // 单个请求体聚合进内存的上限
+    long maxStreamBytes; // 流式上传总量上限
+    String csp;
 
     @Activate
     public synchronized void start(Map<String, String> config) throws Exception {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
+        // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
         int idleTimeout = getConfig(config, "idle_timeout", 60);
+        maxConcurrentRequests = getConfig(config, "max_concurrent_requests", 1000);
+        maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
+        maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
+        csp = getConfig(config, "csp", "none");
 
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
@@ -134,12 +145,25 @@ public class HttpServerImpl implements HttpServer {
 
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keyPassword);
-            return SslContextBuilder.forServer(keyManagerFactory).build();
+            // 显式收敛协议：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1
+            return SslContextBuilder.forServer(keyManagerFactory).protocols(tlsProtocols()).build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
         } finally {
             Arrays.fill(keyPassword, '\0');
         }
+    }
+
+    // TLSv1.3 需要 JDK 11+，不可用时退到 TLSv1.2
+    private static String[] tlsProtocols() {
+        try {
+            for (String protocol : SSLContext.getDefault().getSupportedSSLParameters().getProtocols()) {
+                if ("TLSv1.3".equals(protocol)) return new String[]{"TLSv1.3", "TLSv1.2"};
+            }
+        } catch (NoSuchAlgorithmException e) {
+            // 取不到支持列表时按最保守的 TLSv1.2 处理
+        }
+        return new String[]{"TLSv1.2"};
     }
 
     private <T> T getConfig(Map<String, String> config, String key, T defaultValue) {

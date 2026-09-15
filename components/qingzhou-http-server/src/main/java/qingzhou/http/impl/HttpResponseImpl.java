@@ -3,6 +3,7 @@ package qingzhou.http.impl;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpResponse;
 import reactor.core.publisher.Sinks;
@@ -48,21 +49,21 @@ public class HttpResponseImpl implements HttpResponse {
 
     @Override
     public HttpResponse header(String name, String value) {
-        response.responseHeaders().set(name, value);
+        response.header(name, value);
         return thisInstance();
     }
 
     @Override
     public void redirect(String url) {
         response.status(HttpResponseStatus.FOUND)
-                .responseHeaders().set("Location", url)
-                .set(HttpHeaderNames.CONTENT_LENGTH, "0");
+                .header(HttpHeaderNames.LOCATION, url)
+                .header(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
         finish();
     }
 
     @Override
     public HttpResponse contentType(String value) {
-        response.responseHeaders().set(HttpHeaderNames.CONTENT_TYPE, value);
+        response.header(HttpHeaderNames.CONTENT_TYPE, value);
         return thisInstance();
     }
 
