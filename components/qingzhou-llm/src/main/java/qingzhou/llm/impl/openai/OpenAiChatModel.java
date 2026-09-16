@@ -3,6 +3,7 @@ package qingzhou.llm.impl.openai;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
@@ -16,24 +17,27 @@ class OpenAiChatModel implements ChatModel {
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
+    private final Crypto crypto;
     private final Map<String, Tool> baseTools = new HashMap<>();
 
-    private final SyncSender syncSender;
+    private SyncSender syncSender;
 
-    OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
+    OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json, Crypto crypto) {
         this.builder = builder;
         this.httpClient = httpClient;
         this.json = json;
+        this.crypto = crypto;
 
         if (builder.tools != null) {
             builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
         }
-
-        syncSender = new SyncSender(builder, httpClient, json);
     }
 
     @Override
     public String chat(String message, Attachment... attachment) {
+        if (syncSender == null) {
+            syncSender = new SyncSender(builder, httpClient, json, crypto);
+        }
         return syncSender.chat(baseTools, message, attachment);
     }
 
@@ -44,7 +48,7 @@ class OpenAiChatModel implements ChatModel {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
             }
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json, crypto));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
@@ -72,24 +76,24 @@ class OpenAiChatModel implements ChatModel {
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
         HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, tools, toolIteration);
-        sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, 0);
+        sendWithRetry(messages, toolDefs, chatListener, httpListener, 0);
     }
 
     /**
      * 发送请求并对瞬时故障（HTTP 429/5xx、连接失败/超时等网络异常）做指数退避重试。
      * 200 时立即返回，流式读取交给 httpListener 在后台线程进行。
      */
-    private void sendWithRetry(List<Object> messages, List<Object> toolDefs, Listener chatListener, int toolIteration,
+    private void sendWithRetry(List<Object> messages, List<Object> toolDefs, Listener chatListener,
                                HttpListener httpListener, int attempt) {
         try {
-            Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json);
+            Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json, crypto);
             Response response = httpClient.send(request, httpListener);
             if (response.getStatus() == 200) return;
 
             response.cancel();
             if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.maxRetries) {
                 Utils.sleepBackoff(attempt);
-                sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, attempt + 1);
+                sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
             }
             chatListener.onError("API error " + response.getStatus() + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
@@ -97,7 +101,7 @@ class OpenAiChatModel implements ChatModel {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.maxRetries) {
                 Utils.sleepBackoff(attempt);
-                sendWithRetry(messages, toolDefs, chatListener, toolIteration, httpListener, attempt + 1);
+                sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
             }
             chatListener.onError(Utils.errorMessage(e));
@@ -234,7 +238,7 @@ class OpenAiChatModel implements ChatModel {
             if (!streamRetried && content.length() == 0 && toolCalls.isEmpty()) {
                 streamRetried = true;
                 Utils.sleepBackoff(0);
-                sendWithRetry(messages, toolDefs, chatListener, toolIteration, this, 0);
+                sendWithRetry(messages, toolDefs, chatListener, this, 0);
                 return;
             }
             chatListener.onError(Utils.errorMessage(t));

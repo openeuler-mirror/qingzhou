@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
@@ -19,6 +20,7 @@ import qingzhou.llm.openai.ResponseFormat;
 public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements OpenAiDialect {
     private final HttpClient httpClient;
     private final Json json;
+    private final Crypto crypto;
 
     public ReasoningEffort effort;
     public ImageDetail imageDetail;
@@ -26,16 +28,17 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     private String reasoningField;
 
-    public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json) {
+    public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json, Crypto crypto) {
         super(baseUrl, apiKey, model);
 
         this.httpClient = httpClient;
         this.json = json;
+        this.crypto = crypto;
     }
 
     @Override
     protected ChatModel buildInternal() {
-        return new OpenAiChatModel(this, httpClient, json);
+        return new OpenAiChatModel(this, httpClient, json, crypto);
     }
 
     @Override

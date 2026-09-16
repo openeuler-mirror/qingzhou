@@ -4,6 +4,8 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -31,7 +33,7 @@ public class StartArg extends Processor {
         if (instanceDir == null) return;
 
         Path configFile = Paths.get(instanceDir.getAbsolutePath(), "conf", "qingzhou.properties");
-        Properties properties = parseConfig(configFile);
+        Map<String, String> properties = parseConfig(configFile);
         List<String> jvmConfig = getJvmArgs(properties);
 
         // prepare javaCmd
@@ -46,10 +48,10 @@ public class StartArg extends Processor {
         System.out.print(startCmd);
     }
 
-    private List<String> getJvmArgs(Properties properties) {
+    private List<String> getJvmArgs(Map<String, String> properties) {
         List<String> commands = new ArrayList<>();
 
-        String arg = properties.getProperty("jvm.arg");
+        String arg = properties.get("jvm.arg");
         if (arg != null) {
             String[] args = arg.trim().split("\\s+");
             for (String s : args) {
@@ -75,12 +77,13 @@ public class StartArg extends Processor {
         return "\"" + str + "\"";
     }
 
-    private Properties parseConfig(Path configFile) throws Exception {
+    private Map<String, String> parseConfig(Path configFile) throws Exception {
         URL configJar = Paths.get(getLibDir().getAbsolutePath(), "modules", "qingzhou-config.jar").toUri().toURL();
         try (URLClassLoader loader = new URLClassLoader(new URL[]{configJar})) {
             Class<?> configClass = loader.loadClass("qingzhou.config.impl.Config");
-            Method parseConfig = configClass.getMethod("parseConfig", Path.class);
-            return (Properties) parseConfig.invoke(null, configFile);
+            Method parseConfig = configClass.getMethod("parse", String.class);
+            String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
+            return (Map<String, String>) parseConfig.invoke(null, configText);
         }
     }
 }

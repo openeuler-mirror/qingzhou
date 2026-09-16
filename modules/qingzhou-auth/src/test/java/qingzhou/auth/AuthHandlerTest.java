@@ -155,13 +155,13 @@ public class AuthHandlerTest {
         String user;
 
         @Override
-        public String createToken(String user) {
+        public String createToken(String user, String[] roles) {
             this.user = user;
             return "stub-token";
         }
 
         @Override
-        public String verifyToken(String token) {
+        public Object[] verifyToken(String token) {
             return null;
         }
     }

@@ -1,19 +1,17 @@
 package qingzhou.config.impl;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class ConfigTest {
-    /** 依次覆盖：空行、注释、左侧空白（含全角）、值两侧空白、无等号、等号在行首、折行、单独反斜杠。 */
+    /**
+     * 依次覆盖：空行、注释、左侧空白（含全角）、值两侧空白、无等号、等号在行首、折行、单独反斜杠。
+     */
     @DataProvider
     public Object[][] configText() {
         return new Object[][]{
@@ -31,10 +29,10 @@ public class ConfigTest {
 
     @Test(dataProvider = "configText")
     public void configText_parseConfig_producesExpectedEntry(String content, int size, String key, String value) throws Exception {
-        Properties props = parse(content);
+        Map<String, String> props = Config.parse(content);
 
         Assert.assertEquals(props.size(), size);
-        Assert.assertEquals(props.getProperty(key), value);
+        Assert.assertEquals(props.get(key), value);
     }
 
     @Test
@@ -76,15 +74,5 @@ public class ConfigTest {
         TestSupport.inject(config, "configAdmin", TestSupport.admin(updated));
         config.init();
         return updated;
-    }
-
-    private Properties parse(String content) throws Exception {
-        Path file = Files.createTempFile("config-test", ".properties");
-        try {
-            Files.write(file, content.getBytes(StandardCharsets.UTF_8));
-            return Config.parseConfig(file);
-        } finally {
-            Files.deleteIfExists(file);
-        }
     }
 }

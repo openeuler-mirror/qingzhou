@@ -1,29 +1,24 @@
 package qingzhou.oauth2;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.Authenticator;
 import qingzhou.http.server.HttpRequest;
 
 @Component
 public class OAuth2Authenticator implements Authenticator {
+    @Reference
+    private OAuth2Handler oAuth2Handler;
+
     @Override
     public AuthResult authenticate(HttpRequest request) {
-        String cookie = getCookie(request.getHeader("Cookie"));
-        if (cookie == null) {
+        String token = oAuth2Handler.getCookie(request, OAuth2Handler.TOKEN_COOKIE_NAME);
+        if (token == null) {
             return AuthResult.reject("token missing");
         }
-        String user = OAuth2Handler.verifyToken(cookie);
-        return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid session");
-    }
-
-    private String getCookie(String cookieHeader) {
-        if (cookieHeader == null) return null;
-        for (String cookie : cookieHeader.split(";")) {
-            String trimmed = cookie.trim();
-            if (trimmed.startsWith(OAuth2Handler.COOKIE_NAME + "="))
-                return trimmed.substring(OAuth2Handler.COOKIE_NAME.length() + 1);
-        }
-        return null;
+        Object[] userRoles = oAuth2Handler.verifyToken(token);
+        if (userRoles == null) return AuthResult.reject("invalid token");
+        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1]);
     }
 }

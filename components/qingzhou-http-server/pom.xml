@@ -151,8 +151,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-
+        
+        <dependency>
+            <artifactId>qingzhou-crypto</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <artifactId>qingzhou-logger</artifactId>
             <groupId>${project.groupId}</groupId>
@@ -176,6 +180,7 @@
                     <instructions>
                         <Export-Package>qingzhou.http.server</Export-Package>
                         <Import-Package>
+                            qingzhou.crypto,
                             qingzhou.logger,
                             org.osgi.framework,
                             javax.net.ssl,javax.security.cert

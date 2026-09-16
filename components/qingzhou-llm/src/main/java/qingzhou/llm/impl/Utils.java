@@ -3,6 +3,7 @@ package qingzhou.llm.impl;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.json.Json;
@@ -101,10 +102,10 @@ public class Utils {
         }
     }
 
-    public static Request newLlmRequest(Map<String, Object> llmRequest, boolean stream, ChatModelBuilderBase builder, HttpClient httpClient, Json json) throws Exception {
+    public static Request newLlmRequest(Map<String, Object> llmRequest, boolean stream, ChatModelBuilderBase builder, HttpClient httpClient, Json json, Crypto crypto) throws Exception {
         Request request = httpClient.newRequest(builder.baseUrl)
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + builder.apiKey)
+                .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.apiKey, "apiKey"))
                 .header("Accept", stream ? "text/event-stream" : "application/json");
         request.body(json.toJson(llmRequest).getBytes(StandardCharsets.UTF_8));
         request.connectTimeout(builder.connectTimeout);

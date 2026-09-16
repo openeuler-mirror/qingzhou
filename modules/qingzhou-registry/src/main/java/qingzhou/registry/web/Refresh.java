@@ -1,6 +1,7 @@
 package qingzhou.registry.web;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
@@ -33,11 +34,20 @@ public class Refresh implements HttpHandler {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        pairCipher = crypto.getPairCipher(null, config.get("private_key"));
+        String privateKey = config.get("private_key");
+        if (privateKey == null || privateKey.trim().isEmpty()) {
+            return;
+        }
+        String decrypt = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
+        pairCipher = crypto.getPairCipher(null, decrypt);
     }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        if (pairCipher == null) {
+            httpResponse.status500Finish("Service Unavailable");
+            return;
+        }
         synchronized (REFRESH_KEY_LOCK) {
             handle0(httpRequest, httpResponse);
         }
@@ -48,11 +58,23 @@ public class Refresh implements HttpHandler {
         if (decryptedRequest == null) return;
 
         String[] split = decryptedRequest.split(",");
-        if (split.length < 2) return;
+        if (split.length < 3) {
+            logger.warn("malformed refresh request"); // 旧版 agent 只发两段，升级时需同步
+            return;
+        }
         String instanceId = split[0];
         String newKey = split[1];
+        String oldKey = split[2];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);
         if (instanceInfo == null) return;
+
+        // 必须证明持有当前共享密钥：registry 公钥会被分发给所有 agent，不是秘密，
+        // 仅凭「能用公钥加密」不足以授权改密钥
+        if (!MessageDigest.isEqual(instanceInfo.getKey().getBytes(StandardCharsets.UTF_8),
+                oldKey.getBytes(StandardCharsets.UTF_8))) { // 常量时间比较，防时序侧信道
+            logger.warn("refresh request rejected: key proof mismatch, instance: " + instanceId);
+            return;
+        }
 
         String instanceKey = instanceInfo.getKey();
         byte[] encrypt;

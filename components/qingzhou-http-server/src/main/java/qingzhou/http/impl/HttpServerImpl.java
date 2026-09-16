@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
@@ -15,6 +18,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
+import qingzhou.crypto.Crypto;
 import qingzhou.http.server.*;
 import qingzhou.http.server.AuthResult.Status;
 import qingzhou.logger.Logger;
@@ -27,24 +31,37 @@ public class HttpServerImpl implements HttpServer {
     private final List<String> tempMsg = new ArrayList<>();
 
     @Reference
+    private Crypto crypto;
+
+    @Reference
     private Logger logger;
 
     // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
     final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
     final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
 
-    private final List<Authenticator> authenticators = new ArrayList<>();
+    // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
+    private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
     boolean isAuthDisabled;
     boolean isSslEnabled;
+    int maxConcurrentRequests;
+    int maxBodyBytes; // 单个请求体聚合进内存的上限
+    long maxStreamBytes; // 流式上传总量上限
+    String csp;
 
     @Activate
-    public synchronized void start(Map<String, String> config) {
+    public synchronized void start(Map<String, String> config) throws Exception {
         int selectorThreads = getConfig(config, "selector", 1);
         int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
+        // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
         int idleTimeout = getConfig(config, "idle_timeout", 60);
+        maxConcurrentRequests = getConfig(config, "max_concurrent_requests", 1000);
+        maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
+        maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
+        csp = getConfig(config, "csp", "none");
 
         String host = getConfig(config, "host", "0.0.0.0");
         int port = Integer.parseInt(config.get("port"));
@@ -87,12 +104,14 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         tempMsg.forEach(s -> logger.info(s));
+        tempMsg.clear();
+
         logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     /**
      * 加载 SSL 密钥库并构建服务端 SslContext。
-     * 任何配置缺失或错误（未配置路径、文件不存在、口令错误、类型非法）都会在此抛出异常，
+     * 任何配置缺失或错误（未配置路径、文件不存在、口令缺失、类型非法）都会在此抛出异常，
      * 使服务在绑定端口前启动失败，绝不回退为明文监听。
      */
     private SslContext buildSslContext(Map<String, String> config) {
@@ -103,7 +122,8 @@ public class HttpServerImpl implements HttpServer {
 
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
-            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile);
+            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile
+                    + ", generate it with bin/gen-keystore.sh");
         }
 
         String type = config.get("ssl_keystore_type");
@@ -113,7 +133,11 @@ public class HttpServerImpl implements HttpServer {
         }
 
         String password = config.get("ssl_keystore_password");
-        char[] keyPassword = password == null ? new char[0] : password.toCharArray();
+        if (password == null || password.isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
+            throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
+                    + ", generate it with bin/gen-keystore.sh");
+        }
+        char[] keyPassword = crypto.getGlobalCipher().tryDecrypt(password, "ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
@@ -121,10 +145,25 @@ public class HttpServerImpl implements HttpServer {
 
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keyPassword);
-            return SslContextBuilder.forServer(keyManagerFactory).build();
+            // 显式收敛协议：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1
+            return SslContextBuilder.forServer(keyManagerFactory).protocols(tlsProtocols()).build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
+        } finally {
+            Arrays.fill(keyPassword, '\0');
         }
+    }
+
+    // TLSv1.3 需要 JDK 11+，不可用时退到 TLSv1.2
+    private static String[] tlsProtocols() {
+        try {
+            for (String protocol : SSLContext.getDefault().getSupportedSSLParameters().getProtocols()) {
+                if ("TLSv1.3".equals(protocol)) return new String[]{"TLSv1.3", "TLSv1.2"};
+            }
+        } catch (NoSuchAlgorithmException e) {
+            // 取不到支持列表时按最保守的 TLSv1.2 处理
+        }
+        return new String[]{"TLSv1.2"};
     }
 
     private <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
@@ -186,8 +225,9 @@ public class HttpServerImpl implements HttpServer {
             noAuthHandlerSet.add(httpHandler);
         }
 
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
         String msg = "http handler registered, component: " + component + ", path: " + originPath + (isNoAuth ? " (no auth)" : "");
-        if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
+        if (logger != null) {
             logger.info(msg);
         } else {
             tempMsg.add(msg);
@@ -249,9 +289,7 @@ public class HttpServerImpl implements HttpServer {
         handlerMap.remove(contextPath);
         noAuthHandlerSet.remove(httpHandler);
 
-        if (logger != null) { // osgi ds 尚未规范：解绑可能早于 logger 注入
-            logger.info("http handler unregistered: " + contextPath);
-        }
+        logger.info("http handler unregistered: " + contextPath);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
@@ -259,8 +297,12 @@ public class HttpServerImpl implements HttpServer {
     public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
-        if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
-            logger.info("http authenticator registered: " + authenticator.getClass().getName());
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
+        String msg = "http authenticator registered: " + authenticator.getClass().getName();
+        if (logger != null) {
+            logger.info(msg);
+        } else {
+            tempMsg.add(msg);
         }
     }
 
@@ -282,9 +324,7 @@ public class HttpServerImpl implements HttpServer {
             try {
                 r = authenticator.authenticate(request);
             } catch (Exception e) {
-                if (logger != null) { // osgi ds 尚未规范：认证器可能早于 logger 注入
-                    logger.error("authentication error: " + authenticator.getClass().getName(), e);
-                }
+                logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error");
             }
             if (r.status() == Status.PASS) return r;
