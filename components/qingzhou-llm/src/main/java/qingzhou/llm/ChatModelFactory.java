@@ -15,13 +15,9 @@ public interface ChatModelFactory {
     interface ChatModelBuilder {
         ChatModelBuilder systemPrompt(String systemPrompt);
 
-        ChatModelBuilder docs(List<String> docs);
+        ChatModelBuilder chatMemory(ChatMemory chatMemory);
 
-        /**
-         * 多轮对话历史（按时间正序），将拼接在 system 与本次 user 消息之间；
-         * 历史条数与单条长度由调用方截断，实现层原样拼接。
-         */
-        ChatModelBuilder history(List<HistoryMessage> history);
+        ChatModelBuilder docs(List<String> docs);
 
         ChatModelBuilder tools(Collection<Tool> tools);
 

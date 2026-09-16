@@ -2,7 +2,6 @@ package qingzhou.llm.impl.openai;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
-import qingzhou.llm.HistoryMessage;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 import qingzhou.llm.impl.ToolCallInfo;
@@ -39,15 +37,7 @@ class SyncSender {
             List<Object> messages = new ArrayList<>();
             messages.add(builder.buildSystemMessage(activeSkills));
             // 多轮对话历史：与流式路径保持一致
-            if (builder.history != null) {
-                for (HistoryMessage item : builder.history) {
-                    if (item == null || item.content == null || item.content.isEmpty()) continue;
-                    Map<String, Object> historyMessage = new HashMap<>();
-                    historyMessage.put("role", item.role);
-                    historyMessage.put("content", item.content);
-                    messages.add(historyMessage);
-                }
-            }
+            builder.addChatMemory(messages);
             messages.add(builder.buildUserMessage(message, attachment));
             List<Object> toolDefs = builder.buildToolDefinitions(activeTools.values());
 

@@ -77,6 +77,27 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return this;
     }
 
+    void addChatMemory(List<Object> messages) {
+        if (chatMemory == null) return;
+        List<ChatMemory.Message> messageList = chatMemory.getMessageList();
+        if (messageList == null) return;
+
+        messageList.forEach(msg -> {
+            String role = null;
+            if (msg instanceof ChatMemory.UserMessage) {
+                role = "user";
+            } else if (msg instanceof ChatMemory.AssistantMessage) {
+                role = "assistant";
+            }
+            if (role == null) return;
+
+            Map<String, Object> historyMessage = new HashMap<>();
+            historyMessage.put("role", role);
+            historyMessage.put("content", msg.content());
+            messages.add(historyMessage);
+        });
+    }
+
     Map<String, Object> buildLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
         req.put("model", model);
@@ -173,15 +194,17 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      */
     Map<String, Object> buildAssistantMessage(String content, String reasoning, Collection<ToolCallInfo> toolCalls) {
         List<Map<String, Object>> calls = new ArrayList<>();
-        for (ToolCallInfo tc : toolCalls) {
-            Map<String, Object> call = new HashMap<>();
-            call.put("id", tc.id);
-            call.put("type", "function");
-            Map<String, Object> fn = new HashMap<>();
-            fn.put("name", tc.name);
-            fn.put("arguments", tc.arguments != null && !tc.arguments.isEmpty() ? tc.arguments : "{}");
-            call.put("function", fn);
-            calls.add(call);
+        if (toolCalls != null) {
+            for (ToolCallInfo tc : toolCalls) {
+                Map<String, Object> call = new HashMap<>();
+                call.put("id", tc.id);
+                call.put("type", "function");
+                Map<String, Object> fn = new HashMap<>();
+                fn.put("name", tc.name);
+                fn.put("arguments", tc.arguments != null && !tc.arguments.isEmpty() ? tc.arguments : "{}");
+                call.put("function", fn);
+                calls.add(call);
+            }
         }
 
         Map<String, Object> msg = new HashMap<>();
