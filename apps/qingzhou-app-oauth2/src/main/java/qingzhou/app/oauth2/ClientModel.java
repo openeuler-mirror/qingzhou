@@ -34,7 +34,6 @@ public class ClientModel extends ModelBase implements Page, Show, Add, Update, D
     @ModelField(
             name = {"客户端密钥", "en:Client Secret"},
             info = {"授权服务器的 client_secret", "en:client_secret of authorization server"},
-            list = true,
             required = true)
     public String client_secret;
 
@@ -94,7 +93,9 @@ public class ClientModel extends ModelBase implements Page, Show, Add, Update, D
 
     @Override
     public Map<String, String> show(String id) throws Exception {
-        return store.show(Store.CLIENT_TABLE, id);
+        Map<String, String> client = store.show(Store.CLIENT_TABLE, id);
+        if (client != null) client.remove("client_secret"); // 不回传密钥（摘要），留空即保留原值
+        return client;
     }
 
     @Override
@@ -104,6 +105,9 @@ public class ClientModel extends ModelBase implements Page, Show, Add, Update, D
 
     @Override
     public void update(String id, Map<String, String> data) throws Exception {
+        if (Security.isEmpty(data.get("client_secret"))) {
+            data.remove("client_secret"); // 未修改密钥时保留原值
+        }
         store.update(Store.CLIENT_TABLE, id, data);
     }
 

@@ -37,9 +37,10 @@ public class OAuth2App implements QingzhouApp {
         boolean implicitEnabled = Boolean.parseBoolean(
                 appContext.getProperties().getProperty("implicit_enabled", "false"));
         Json json = appContext.getService(Json.class);
+        Throttle throttle = new Throttle();
         endpoints = new HttpHandler[]{
-                new Authorize(store, json, implicitEnabled),
-                new Token(store, json),
+                new Authorize(store, json, throttle, implicitEnabled),
+                new Token(store, json, throttle),
                 new Userinfo(store, json),
                 new Introspect(store, json),
                 new Revoke(store, json)

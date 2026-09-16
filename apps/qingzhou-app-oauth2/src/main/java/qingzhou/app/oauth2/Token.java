@@ -13,34 +13,51 @@ import qingzhou.json.Json;
 public class Token implements HttpHandler {
     private final Store store;
     private final Json json;
+    private final Throttle throttle;
 
-    public Token(Store store, Json json) {
+    public Token(Store store, Json json, Throttle throttle) {
         this.store = store;
         this.json = json;
+        this.throttle = throttle;
     }
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
-        String clientId = request.getParameter("client_id");
-        Map<String, String> client = store.findClient(clientId);
-        if (client == null || !client.get("client_secret").equals(request.getParameter("client_secret"))) {
+        if (!"POST".equals(request.getMethod())) { // 凭据不得经 GET 进入 URL 与访问日志
+            Reply.methodNotAllowed(response);
+            return;
+        }
+
+        Map<String, String> client = store.authenticateClient(
+                request.getParameter("client_id"), request.getParameter("client_secret"));
+        if (client == null) {
             Reply.sendError(response, json, "invalid_client", "客户端验证失败");
             return;
         }
 
+        String grantType = request.getParameter("grant_type");
+        if (Security.isEmpty(grantType)) {
+            Reply.sendError(response, json, "invalid_request", "缺少 grant_type");
+            return;
+        }
+        if (!Security.grantAllowed(client, grantType)) {
+            Reply.sendError(response, json, "unauthorized_client", "客户端未登记该 grant_type");
+            return;
+        }
+
         Map<String, Object> result;
-        switch (String.valueOf(request.getParameter("grant_type"))) {
+        switch (grantType) {
             case "authorization_code":
-                result = byAuthCode(request, clientId);
+                result = byAuthCode(request, client.get("client_id"));
                 break;
             case "password":
-                result = byPassword(request, clientId);
+                result = byPassword(request, client);
                 break;
             case "client_credentials":
-                result = store.issueToken(clientId, null, request.getParameter("scope"));
+                result = issue(request, client, null);
                 break;
             case "refresh_token":
-                result = byRefreshToken(request, clientId);
+                result = byRefreshToken(request, client.get("client_id"));
                 break;
             default:
                 result = Reply.error("unsupported_grant_type", "不支持的 grant_type");
@@ -61,23 +78,40 @@ public class Token implements HttpHandler {
             return Reply.error("invalid_grant", "redirect_uri 不匹配");
         }
 
-        store.consumeAuthCode(authCode.get("id"));
+        if (!store.consumeAuthCode(authCode.get("id"))) { // 原子核销，重复提交同一授权码只有一次生效
+            return Reply.error("invalid_grant", "授权码无效或已过期");
+        }
         return store.issueToken(clientId, authCode.get("username"), authCode.get("scope"));
     }
 
-    private Map<String, Object> byPassword(HttpRequest request, String clientId) throws Exception {
+    private Map<String, Object> byPassword(HttpRequest request, Map<String, String> client) throws Exception {
         String userName = request.getParameter("userName");
+        String key = request.getRemoteHost() + '|' + userName;
+        if (throttle.isLocked(key)) return Reply.error("invalid_grant", "失败次数过多，请稍后再试");
+
         if (!store.verifyPassword(userName, request.getParameter("password"))) {
+            throttle.recordFailure(key);
             return Reply.error("invalid_grant", "用户名或密码错误");
         }
-        return store.issueToken(clientId, userName, request.getParameter("scope"));
+        throttle.clear(key);
+        return issue(request, client, userName);
     }
 
     private Map<String, Object> byRefreshToken(HttpRequest request, String clientId) throws Exception {
         Map<String, String> token = store.findValidRefreshToken(request.getParameter("refresh_token"), clientId);
         if (token == null) return Reply.error("invalid_grant", "refresh_token 无效或已过期");
 
-        store.deleteToken(token.get("id")); // 刷新即轮换，旧令牌立即失效
+        if (!store.deleteToken(token.get("id"))) { // 刷新即轮换：旧令牌立即失效，并发刷新只有一次生效
+            return Reply.error("invalid_grant", "refresh_token 无效或已过期");
+        }
         return store.issueToken(clientId, token.get("username"), token.get("scope"));
+    }
+
+    private Map<String, Object> issue(HttpRequest request, Map<String, String> client, String userName) throws Exception {
+        String scope = request.getParameter("scope");
+        String invalid = Security.validateScope(scope, client.get("scope"));
+        if (invalid != null) return Reply.error("invalid_scope", invalid);
+
+        return store.issueToken(client.get("client_id"), userName, scope);
     }
 }

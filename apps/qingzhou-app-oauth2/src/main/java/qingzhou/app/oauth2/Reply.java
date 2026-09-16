@@ -14,7 +14,8 @@ final class Reply {
     }
 
     static void send(HttpResponse response, Json json, Map<String, Object> body) throws Exception {
-        response.contentTypeJsonUtf8().sendFinish(json.toJson(body));
+        response.header("Cache-Control", "no-store") // 令牌等信息禁止被浏览器或代理缓存
+                .contentTypeJsonUtf8().sendFinish(json.toJson(body));
     }
 
     static void sendError(HttpResponse response, Json json, String code, String description) throws Exception {
@@ -25,6 +26,10 @@ final class Reply {
     static void sendUnauthorized(HttpResponse response, Json json, String code, String description) throws Exception {
         response.status(401);
         send(response, json, error(code, description));
+    }
+
+    static void methodNotAllowed(HttpResponse response) {
+        response.status(405).header("Allow", "POST").sendFinish("method not allowed");
     }
 
     static void redirect(HttpResponse response, String location) {

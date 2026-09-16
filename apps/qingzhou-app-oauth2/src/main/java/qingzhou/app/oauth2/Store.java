@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.*;
 
 import qingzhou.api.AppContext;
+import qingzhou.crypto.Crypto;
+import qingzhou.crypto.MessageDigest;
 import qingzhou.jdbc.JdbcPool;
 
 /**
@@ -19,6 +21,11 @@ public final class Store {
     private static final String DEFAULT_SCOPE = "read";
     private static final String TOKEN_TYPE = "bearer";
 
+    private static final String SECRET_ALGORITHM = "SHA-256";
+    private static final int SECRET_SALT_LENGTH = 16;
+    private static final int SECRET_ITERATIONS = 1000;
+    private static final String[] SECRET_COLUMNS = {"client_secret", "password"};
+
     private static final String[] SCHEMA = {
             "CREATE TABLE IF NOT EXISTS oauth_client (id IDENTITY PRIMARY KEY, client_id VARCHAR(64) NOT NULL UNIQUE, client_secret VARCHAR(128) NOT NULL, client_name VARCHAR(128) NOT NULL, redirect_uri VARCHAR(256), grant_types VARCHAR(256) DEFAULT 'authorization_code,password,client_credentials,refresh_token', scope VARCHAR(256) DEFAULT 'read write', create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
             "CREATE TABLE IF NOT EXISTS oauth_user (id IDENTITY PRIMARY KEY, userName VARCHAR(64) NOT NULL UNIQUE, password VARCHAR(128) NOT NULL, nickname VARCHAR(128), roleName VARCHAR(128), create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
@@ -29,18 +36,20 @@ public final class Store {
     private static volatile Store instance;
 
     private final JdbcPool jdbcPool;
+    private final MessageDigest messageDigest;
 
-    private Store(JdbcPool jdbcPool) {
+    private Store(JdbcPool jdbcPool, MessageDigest messageDigest) {
         this.jdbcPool = jdbcPool;
+        this.messageDigest = messageDigest;
     }
 
     /**
-     * 首次访问时建表并写入种子数据。应用与模型均由 AppContext 共享同一实例。
+     * 首次访问时建表，应用与模型共享同一实例。
      * <p>
      * 数据源按名取自平台 JdbcPool 服务，名字即 qingzhou.properties 中
      * {@code qingzhou-jdbc~<name>.*} 里 {@code ~} 之后的名字，可用
-     * {@code app~qingzhou-app-oauth2.jdbc_name} 指定（默认 h2），
-     * 因此具体使用 h2、oracle 还是其它实现由平台配置决定，应用只依赖 JdbcPool API。
+     * {@code app~qingzhou-app-oauth2.jdbc_name} 指定（默认 h2）；
+     * {@code seed_demo=true} 时额外写入演示用客户端与用户，仅供试用。
      */
     public static Store get(AppContext appContext) throws SQLException {
         if (instance == null) {
@@ -51,8 +60,13 @@ public final class Store {
                     if (jdbcPool == null) {
                         return null;
                     }
-                    Store store = new Store(jdbcPool);
-                    store.init();
+                    Crypto crypto = appContext.getService(Crypto.class);
+                    if (crypto == null) {
+                        throw new IllegalStateException("Crypto 不可用，无法校验客户端密钥与用户口令");
+                    }
+
+                    Store store = new Store(jdbcPool, crypto.getMessageDigest());
+                    store.init(Boolean.parseBoolean(appContext.getProperties().getProperty("seed_demo", "false")));
                     instance = store;
                 }
             }
@@ -60,16 +74,17 @@ public final class Store {
         return instance;
     }
 
-    private void init() throws SQLException {
+    private void init(boolean seedDemo) throws SQLException {
         try (Connection connection = jdbcPool.getConnection();
              Statement statement = connection.createStatement()) {
             for (String ddl : SCHEMA) {
                 statement.execute(ddl);
             }
         }
-        seed();
+        if (seedDemo) seed();
     }
 
+    // 演示数据含公开的固定口令，仅在显式开启 seed_demo 时写入
     private void seed() throws SQLException {
         if (findClient("test_client") != null) return;
 
@@ -89,9 +104,28 @@ public final class Store {
         return queryOne("SELECT * FROM oauth_user WHERE userName = ?", userName);
     }
 
+    /**
+     * @return 密钥校验通过的客户端，不存在或校验失败时返回 null
+     */
+    Map<String, String> authenticateClient(String clientId, String clientSecret) throws SQLException {
+        Map<String, String> client = findClient(clientId);
+        return client != null && verifySecret(clientSecret, client.get("client_secret")) ? client : null;
+    }
+
     boolean verifyPassword(String userName, String password) throws SQLException {
         Map<String, String> user = findUser(userName);
-        return user != null && user.get("password") != null && user.get("password").equals(password);
+        return user != null && verifySecret(password, user.get("password"));
+    }
+
+    // 凭据只落库摘要：摘要为空（如历史明文数据）一律判为校验失败，避免退化为明文比对
+    private boolean verifySecret(String provided, String stored) {
+        if (Security.isEmpty(provided) || Security.isEmpty(stored)) return false;
+
+        try {
+            return messageDigest.matches(provided, stored);
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     void saveAuthCode(String code, String clientId, String userName, String redirectUri, String scope) throws SQLException {
@@ -110,8 +144,13 @@ public final class Store {
         return authCode;
     }
 
-    void consumeAuthCode(String id) throws SQLException {
-        execute("UPDATE oauth_auth_code SET used = 1 WHERE id = ?", id);
+    /**
+     * 核销授权码：授权码一次性使用，并发重复提交时只有一次成功。
+     *
+     * @return 本次调用是否核销成功
+     */
+    boolean consumeAuthCode(String id) throws SQLException {
+        return execute("UPDATE oauth_auth_code SET used = 1 WHERE id = ? AND used = 0", id) == 1;
     }
 
     /**
@@ -160,8 +199,13 @@ public final class Store {
         return queryOne("SELECT * FROM oauth_token WHERE access_token = ? OR refresh_token = ?", token, token);
     }
 
-    void deleteToken(String id) throws SQLException {
-        execute("DELETE FROM oauth_token WHERE id = ?", id);
+    /**
+     * 删除令牌：刷新即轮换，并发刷新时只有一次成功。
+     *
+     * @return 本次调用是否删除成功
+     */
+    boolean deleteToken(String id) throws SQLException {
+        return execute("DELETE FROM oauth_token WHERE id = ?", id) == 1;
     }
 
     // ==================== 控制台管理用 ====================
@@ -210,7 +254,7 @@ public final class Store {
             }
             columns.append(entry.getKey());
             placeholders.append('?');
-            values.add(entry.getValue());
+            values.add(storedValue(entry.getKey(), entry.getValue()));
         }
         execute("INSERT INTO " + table + " (" + columns + ") VALUES (" + placeholders + ")", values.toArray());
     }
@@ -221,7 +265,7 @@ public final class Store {
         for (Map.Entry<String, String> entry : data.entrySet()) {
             if (assignments.length() > 0) assignments.append(',');
             assignments.append(entry.getKey()).append("=?");
-            values.add(entry.getValue());
+            values.add(storedValue(entry.getKey(), entry.getValue()));
         }
         values.add(id);
         execute("UPDATE " + table + " SET " + assignments + " WHERE id = ?", values.toArray());
@@ -237,6 +281,16 @@ public final class Store {
             row.put(keyValues[i], keyValues[i + 1]);
         }
         return row;
+    }
+
+    // 客户端密钥与用户口令只落库摘要，避免数据库泄露即被直接冒用
+    private Object storedValue(String column, String value) {
+        for (String secretColumn : SECRET_COLUMNS) {
+            if (secretColumn.equals(column)) {
+                return Security.isEmpty(value) ? value : messageDigest.digest(value, SECRET_ALGORITHM, SECRET_SALT_LENGTH, SECRET_ITERATIONS);
+            }
+        }
+        return value;
     }
 
     private static Object[] params(String like, int pageSize, int offset) {
@@ -284,11 +338,11 @@ public final class Store {
         }
     }
 
-    private void execute(String sql, Object... params) throws SQLException {
+    private int execute(String sql, Object... params) throws SQLException {
         try (Connection connection = jdbcPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             bind(statement, params);
-            statement.executeUpdate();
+            return statement.executeUpdate();
         }
     }
 

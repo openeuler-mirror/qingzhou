@@ -107,7 +107,7 @@ public class UserModel extends ModelBase implements Page, Show, Add, Update, Del
 
     @Override
     public void update(String id, Map<String, String> data) throws Exception {
-        if (data.containsKey("password") && (data.get("password") == null || data.get("password").isEmpty())) {
+        if (Security.isEmpty(data.get("password"))) {
             data.remove("password"); // 未修改密码时保留原值
         }
         store.update(Store.USER_TABLE, id, data);

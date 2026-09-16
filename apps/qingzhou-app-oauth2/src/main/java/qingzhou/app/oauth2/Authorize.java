@@ -46,24 +46,18 @@ public class Authorize implements HttpHandler {
 
     private final Store store;
     private final Json json;
+    private final Throttle throttle;
     private final boolean implicitEnabled;
 
-    public Authorize(Store store, Json json, boolean implicitEnabled) {
+    public Authorize(Store store, Json json, Throttle throttle, boolean implicitEnabled) {
         this.store = store;
         this.json = json;
+        this.throttle = throttle;
         this.implicitEnabled = implicitEnabled;
     }
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
-        if ("POST".equals(request.getMethod())) {
-            submit(request, response);
-        } else {
-            renderPage(request, response, "");
-        }
-    }
-
-    private void submit(HttpRequest request, HttpResponse response) throws Exception {
         String responseType = request.getParameter("response_type");
         if (!"code".equals(responseType) && !validImplicit(responseType)) {
             Reply.sendError(response, json, "unsupported_response_type", "response_type 仅支持 code 与 token");
@@ -76,27 +70,43 @@ public class Authorize implements HttpHandler {
             return;
         }
 
-        String redirectUri = redirectUri(request, client);
-        String invalid = Security.validateRedirectUri(redirectUri);
+        String invalid = validateRequest(request, client, responseType);
         if (invalid != null) {
             Reply.sendError(response, json, "invalid_request", invalid);
             return;
         }
 
+        if ("POST".equals(request.getMethod())) {
+            submit(request, response, client, responseType);
+        } else {
+            renderPage(request, response, client, responseType, "");
+        }
+    }
+
+    private void submit(HttpRequest request, HttpResponse response, Map<String, String> client, String responseType) throws Exception {
+        String redirectUri = client.get("redirect_uri");
         String state = request.getParameter("state");
         if ("deny".equals(request.getParameter("action"))) {
             Reply.redirect(response, location(redirectUri, "error=access_denied", state));
             return;
         }
 
-        String userName = request.getParameter("userName");
-        if (!store.verifyPassword(userName, request.getParameter("password"))) {
-            renderPage(request, response, "用户名或密码错误");
+        String key = request.getRemoteHost();
+        if (throttle.isLocked(key)) {
+            renderPage(request, response, client, responseType, "失败次数过多，请稍后再试");
             return;
         }
 
+        String userName = request.getParameter("userName");
+        if (!store.verifyPassword(userName, request.getParameter("password"))) {
+            throttle.recordFailure(key);
+            renderPage(request, response, client, responseType, "用户名或密码错误");
+            return;
+        }
+        throttle.clear(key);
+
         if ("token".equals(responseType)) {
-            implicit(request, response, redirectUri, userName, state);
+            implicit(request, response, client, userName);
             return;
         }
 
@@ -105,51 +115,40 @@ public class Authorize implements HttpHandler {
         Reply.redirect(response, location(redirectUri, "code=" + encode(code), state));
     }
 
-    private void implicit(HttpRequest request, HttpResponse response, String redirectUri, String userName, String state) throws Exception {
-        Map<String, Object> token = store.issueToken(request.getParameter("client_id"), userName, request.getParameter("scope"));
+    private void implicit(HttpRequest request, HttpResponse response, Map<String, String> client, String userName) throws Exception {
+        Map<String, Object> token = store.issueToken(client.get("client_id"), userName, request.getParameter("scope"));
         StringBuilder fragment = new StringBuilder()
                 .append("access_token=").append(encode(token.get("access_token")))
                 .append("&token_type=").append(encode(token.get("token_type")))
                 .append("&expires_in=").append(token.get("expires_in"))
                 .append("&scope=").append(encode(token.get("scope")));
-        if (!Security.isEmpty(state)) {
-            fragment.append("&state=").append(encode(state));
+        if (!Security.isEmpty(request.getParameter("state"))) {
+            fragment.append("&state=").append(encode(request.getParameter("state")));
         }
-        Reply.redirect(response, redirectUri + "#" + fragment);
+        Reply.redirect(response, client.get("redirect_uri") + "#" + fragment);
     }
 
-    private void renderPage(HttpRequest request, HttpResponse response, String error) throws Exception {
-        String responseType = request.getParameter("response_type");
-        if (!"code".equals(responseType) && !validImplicit(responseType)) {
-            Reply.sendError(response, json, "unsupported_response_type", "response_type 仅支持 code 与 token");
-            return;
-        }
+    private void renderPage(HttpRequest request, HttpResponse response, Map<String, String> client, String responseType, String error) {
+        response.contentType("text/html; charset=utf-8")
+                .header("Cache-Control", "no-store")
+                .header("X-Frame-Options", "DENY") // 授权页不允许被嵌套，防止点击劫持
+                .sendFinish(page(responseType, client.get("client_name"), client.get("client_id"), client.get("redirect_uri"),
+                        request.getParameter("scope"), request.getParameter("state"), error));
+    }
 
-        Map<String, String> client = store.findClient(request.getParameter("client_id"));
-        if (client == null) {
-            Reply.sendError(response, json, "invalid_client", "客户端不存在");
-            return;
-        }
+    /**
+     * @return null 表示校验通过，否则为错误描述
+     */
+    private String validateRequest(HttpRequest request, Map<String, String> client, String responseType) {
+        String grantType = "token".equals(responseType) ? "implicit" : "authorization_code";
+        if (!Security.grantAllowed(client, grantType)) return "客户端未登记该 response_type";
 
-        String redirectUri = redirectUri(request, client);
-        String invalid = Security.validateRedirectUri(redirectUri);
-        if (invalid != null) {
-            Reply.sendError(response, json, "invalid_request", invalid);
-            return;
-        }
-
-        response.contentType("text/html; charset=utf-8").sendFinish(page(
-                responseType, client.get("client_name"), client.get("client_id"), redirectUri,
-                request.getParameter("scope"), request.getParameter("state"), error));
+        String invalid = Security.validateRedirectUri(request.getParameter("redirect_uri"), client.get("redirect_uri"));
+        return invalid != null ? invalid : Security.validateScope(request.getParameter("scope"), client.get("scope"));
     }
 
     private boolean validImplicit(String responseType) {
         return "token".equals(responseType) && implicitEnabled;
-    }
-
-    private static String redirectUri(HttpRequest request, Map<String, String> client) {
-        String redirectUri = request.getParameter("redirect_uri");
-        return Security.isEmpty(redirectUri) ? client.get("redirect_uri") : redirectUri;
     }
 
     private static String location(String redirectUri, String params, String state) {
