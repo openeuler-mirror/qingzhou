@@ -21,5 +21,6 @@
         <module>qingzhou-agent</module>
         <module>qingzhou-web</module>
         <module>qingzhou-ai</module>
+        <module>qingzhou-kvstore</module>
     </modules>
 </project>

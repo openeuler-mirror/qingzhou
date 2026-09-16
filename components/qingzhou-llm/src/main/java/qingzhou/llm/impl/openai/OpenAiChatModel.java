@@ -57,6 +57,16 @@ class OpenAiChatModel implements ChatModel {
 
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
+            // 多轮对话历史：拼接在 system 与本次 user 消息之间，条数/长度由调用方截断
+            if (builder.history != null) {
+                for (HistoryMessage item : builder.history) {
+                    if (item == null || item.content == null || item.content.isEmpty()) continue;
+                    Map<String, Object> historyMessage = new HashMap<>();
+                    historyMessage.put("role", item.role);
+                    historyMessage.put("content", item.content);
+                    messages.add(historyMessage);
+                }
+            }
             messages.add(userMessage);
             // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
             doChat(messages, toolDefinitions, chatListener, activeTools, 0);

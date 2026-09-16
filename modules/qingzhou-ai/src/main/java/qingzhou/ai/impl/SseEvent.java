@@ -57,6 +57,23 @@ class SseEvent {
     }
 
     /**
+     * 本轮会话标识（B-1）：前端首轮本地生成的 id 经此确认，或由后端重新生成后返回，
+     * 前端须对齐该值作为后续轮次的 conversationId
+     */
+    SseEvent conversationId(String value) {
+        this.data.put("conversationId", value);
+        return this;
+    }
+
+    /**
+     * 本轮 AI 回复的稳定消息 id（B-1）：随 RUN_STARTED 下发，反馈/续写/重试对齐使用
+     */
+    SseEvent messageId(String value) {
+        this.data.put("messageId", value);
+        return this;
+    }
+
+    /**
      * 本轮请求的 token 用量，工具调用多轮时前端累加
      */
     SseEvent usage(int promptTokens, int completionTokens, int totalTokens) {

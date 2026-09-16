@@ -88,7 +88,9 @@ class AppStubRemoteImpl implements AppStubRemote {
                 responseError(request, errorMsg);
             }
         } catch (Exception e) {
-            responseError(request, "remote processing error");
+            String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            logger.error("remote processing error: " + reason, e);
+            responseError(request, "remote processing error: " + reason);
         } finally {
             request.setInstance(originTargetName);
         }
@@ -102,14 +104,24 @@ class AppStubRemoteImpl implements AppStubRemote {
     }
 
     /**
-     * 处理文件上传：将本地文件上传到远程 agent
+     * 处理文件上传：将本地临时文件上传到远程 agent。
+     * 字段值为逗号分隔列表，混合了业务已有文件名（原样传递）与本次上传的本地临时文件（上传后替换为远程键值）
      */
     private void doFileUploads(RequestImpl request, Cipher cipher) throws Exception {
-        for (String field : request.getUploadFileFields()) {
+        for (String field : new ArrayList<>(request.getUploadFileFields())) {
+            String value = request.getParameter(field);
+            if (value == null || value.isEmpty()) { // 解析中断残留的空字段
+                request.getUploadFileFields().remove(field);
+                continue;
+            }
             List<String> remotePaths = new ArrayList<>();
-            String[] filePaths = request.getParameter(field).split(","); // 来自客户端：多文件字段（逗号分隔的路径）, TODO：应引用 ModelField.separator()
-            for (String path : filePaths) {
+            for (String item : value.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP)) { // TODO：应引用 ModelField.separator()
+                String path = item.trim();
                 File file = new File(path);
+                if (!file.isFile()) {
+                    remotePaths.add(path);
+                    continue;
+                }
                 String remoteFileTempKey = uploadFileToRemoteAgent(file, cipher);
                 remotePaths.add(remoteFileTempKey + Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP + file.getName());
             }

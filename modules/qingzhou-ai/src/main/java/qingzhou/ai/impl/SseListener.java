@@ -72,8 +72,8 @@ public class SseListener implements Listener {
     /**
      * 请求已受理。由 AiChat 在技能匹配等耗时前置工作开始前调用，让客户端立即进入“正在思考”
      */
-    public void setStarted() {
-        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED));
+    public void setStarted(String conversationId, String messageId) {
+        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED).conversationId(conversationId).messageId(messageId));
 
         startTime = System.currentTimeMillis();
         watchdogTask = WATCHDOG_EXECUTOR.scheduleWithFixedDelay(
@@ -184,7 +184,8 @@ public class SseListener implements Listener {
             isReasoning = false;
             sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_START));
         }
-        sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT).content(content));
+        if (content != null) sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT).content(content));
+        else sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT));
     }
 
     @Override

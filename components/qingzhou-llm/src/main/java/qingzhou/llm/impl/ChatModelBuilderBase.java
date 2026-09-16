@@ -5,6 +5,7 @@ import java.util.List;
 
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.HistoryMessage;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
@@ -15,6 +16,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
 
     public String systemPrompt;
     public List<String> docs;
+    public List<HistoryMessage> history;
     public Collection<Tool> tools;
     public Collection<Skill> skills;
 
@@ -50,6 +52,13 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public ChatModelBuilderBase docs(List<String> docs) {
         checkSealed();
         this.docs = docs;
+        return this;
+    }
+
+    @Override
+    public ChatModelBuilderBase history(List<HistoryMessage> history) {
+        checkSealed();
+        this.history = history;
         return this;
     }
 

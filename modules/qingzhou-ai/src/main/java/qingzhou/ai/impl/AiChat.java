@@ -3,12 +3,21 @@ package qingzhou.ai.impl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.memory.AggregateListener;
+import qingzhou.ai.memory.ConversationIndex;
+import qingzhou.ai.memory.ConversationStore;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -16,10 +25,22 @@ import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.Listener;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
 public class AiChat implements HttpHandler {
+    /** 每用户滑动窗口限流：窗口内请求数达到上限返回 429 + {"code":"RATE_LIMITED"} */
+    private static final int RATE_WINDOW_MS = 60_000;
+    private static final int RATE_LIMIT_REQUESTS = 20;
+    private static final int RATE_WINDOW_CLEANUP_THRESHOLD = 1024;
+
+    /** 记忆模式下注入上下文的最大历史条数（应用侧算好窗口，llm 照单拼装） */
+    private static final int HISTORY_MAX_MESSAGES = 20;
+
+    /** 会话 id 合法格式（记忆模式下拒绝路径危险字符与越权 id 探测） */
+    private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,128}");
+
     private static final String SYSTEM_PROMPT = "\n" +
             "# 你是一个专业的 Qingzhou（轻舟）平台智能助手，你的职责是帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n" +
             "\n" +
@@ -78,6 +99,20 @@ public class AiChat implements HttpHandler {
     @Reference
     private Json json;
 
+    /**
+     * 会话记忆编排组件（qingzhou.ai.memory 包提供，按 qingzhou-ai.memory.type 配置启用）：
+     * 未配置/类型非法/kvstore 未部署时为 null，退化为单轮无记忆。
+     * 动态引用：热插拔不影响已受理请求（快照值在 handle 内获取）。
+     */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    private volatile ConversationStore store;
+
+    /** 与 store 同生共死（随其装配注册），负责归属判定/列表/标题；仅启用记忆时可达 */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    private volatile ConversationIndex index;
+
+    private final Map<String, ArrayDeque<Long>> rateWindows = new ConcurrentHashMap<>();
+
     @Deactivate
     public void deactivate() {
         SseListener.WATCHDOG_EXECUTOR.shutdownNow();
@@ -101,6 +136,14 @@ public class AiChat implements HttpHandler {
         if (params == null || question == null || question.trim().isEmpty()) return;
         question = question.trim();
 
+        // userId 由服务端鉴权层从 token 解析，不接受前端传参；显式关闭鉴权时退化为匿名
+        String username = resolveUsername(httpRequest);
+
+        if (!tryAcquire(username)) {
+            sendRateLimited(httpResponse);
+            return;
+        }
+
         List<String> refDocs = null;
         Attachment[] images = null;
         for (SkillService.AttachmentType attachmentType : SkillService.AttachmentType.values()) {
@@ -120,11 +163,19 @@ public class AiChat implements HttpHandler {
             }
         }
 
-        // 放在最后
         String app = (String) params.get("app");
         if (app != null && !app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
+
+        // 会话标识采信/生成后经 RUN_STARTED 下发（前端以其为权威值）；记忆未启用时仅作透传标识
+        ConversationStore store = this.store;
+        ConversationIndex index = this.index;
+        String requestedId = strOrNull(params.get("conversationId"));
+        String conversationId = store != null
+                ? resolveConversation(username, requestedId, store, index)
+                : conversationIdFallback(requestedId);
+        String messageId = UUID.randomUUID().toString();
 
         // 发出响应
         httpResponse.contentType("text/event-stream; charset=utf-8")
@@ -132,17 +183,23 @@ public class AiChat implements HttpHandler {
                 .header("cache-control", "no-cache")
                 .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
 
-        // 先告知“已受理”：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
+        // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
         SseListener sseListener = new SseListener(httpResponse, logger, json);
         try {
-            sseListener.setStarted();
-            ChatModel chatModel = chatModelFactory.newChatModelBuilder() // 缓存 ChatModel 以增加“会话记忆”
+            sseListener.setStarted(conversationId, messageId);
+            ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
                     .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
-                    .enableThinking(true)
-                    .build();
-            chatModel.chat(question, sseListener, images);
+                    .enableThinking(true);
+            Listener chatListener = sseListener;
+            if (store != null) {
+                builder.history(store.recentHistory(conversationId, HISTORY_MAX_MESSAGES)); // 应用算好窗口，llm 照单拼装
+                store.appendUser(conversationId, question); // 受理即落库本轮用户消息（原时序：流式调用前）
+                chatListener = new AggregateListener(sseListener, store, index, username, conversationId, messageId);
+            }
+            ChatModel chatModel = builder.build();
+            chatModel.chat(question, chatListener, images);
         } catch (Throwable t) {
             // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
             // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”
@@ -150,6 +207,86 @@ public class AiChat implements HttpHandler {
             logger.error("ai chat request failed: " + msg, t);
             sseListener.onError(msg);
         }
+    }
+
+    private String resolveUsername(HttpRequest httpRequest) {
+        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
+        String username = principal instanceof String ? (String) principal : null;
+        return username != null && !username.isEmpty() ? username : "anonymous";
+    }
+
+    private boolean tryAcquire(String userId) {
+        // 惰性清理已过期的窗口对象，防止用户量增长导致 map 无界膨胀
+        if (rateWindows.size() > RATE_WINDOW_CLEANUP_THRESHOLD) {
+            long now = System.currentTimeMillis();
+            rateWindows.values().removeIf(window -> {
+                synchronized (window) {
+                    purgeExpired(window, now);
+                    return window.isEmpty();
+                }
+            });
+        }
+        long now = System.currentTimeMillis();
+        ArrayDeque<Long> window = rateWindows.computeIfAbsent(userId, k -> new ArrayDeque<>());
+        synchronized (window) {
+            purgeExpired(window, now);
+            if (window.size() >= RATE_LIMIT_REQUESTS) return false;
+            window.addLast(now);
+            return true;
+        }
+    }
+
+    private void purgeExpired(ArrayDeque<Long> window, long now) {
+        while (!window.isEmpty() && now - window.peekFirst() > RATE_WINDOW_MS) {
+            window.pollFirst();
+        }
+    }
+
+    private void sendRateLimited(HttpResponse httpResponse) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", "RATE_LIMITED");
+        body.put("message", "Too many requests, please try again later");
+        try {
+            httpResponse.status(429).contentTypeJsonUtf8().sendFinish(json.toJson(body));
+        } catch (Exception e) {
+            logger.warn("failed to send rate limit response: " + e.getMessage());
+        }
+    }
+
+    private String strOrNull(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    /** 记忆未启用时的会话标识兜底：仅做格式校验采信，否则新生成（不做归属校验——无存储可查） */
+    private String conversationIdFallback(String requestedId) {
+        if (requestedId != null && requestedId.length() >= 8 && requestedId.length() <= 64
+                && requestedId.matches("[A-Za-z0-9_-]+")) {
+            return requestedId;
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * 记忆模式下会话标识采信/生成（原 ChatMemory.resolveConversationId 语义上移）：
+     * 合法且归属本人 → 采信；合法且无记录（全新）→ 采信并注册索引；
+     * 越权占用（他人索引外但有记录）/非法/索引故障 → 新会话。
+     */
+    private String resolveConversation(String username, String requestedId, ConversationStore store, ConversationIndex index) {
+        if (requestedId != null) {
+            String id = requestedId.trim();
+            if (VALID_ID.matcher(id).matches()) {
+                if (index.contains(username, id)) return id; // 归属本人
+                if (!store.exists(id)) return registerNew(username, id, store, index); // 全新 id → 采信
+            }
+        }
+        return registerNew(username, UUID.randomUUID().toString(), store, index);
+    }
+
+    private String registerNew(String username, String conversationId, ConversationStore store, ConversationIndex index) {
+        for (String evicted : index.register(username, conversationId)) {
+            store.delete(evicted); // per-user 配额挤出联动删除会话数据
+        }
+        return conversationId;
     }
 
     private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {

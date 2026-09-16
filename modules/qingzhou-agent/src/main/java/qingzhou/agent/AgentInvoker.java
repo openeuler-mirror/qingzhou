@@ -2,10 +2,10 @@ package qingzhou.agent;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,17 +46,20 @@ public class AgentInvoker implements HttpHandler {
         try {
             request.getUploadFileFields().forEach(field -> {
                 String[] keyNames = request.getParameter(field).split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP);
+                List<String> paths = new ArrayList<>();
                 for (String keyName : keyNames) {
-                    rawTempFiles.add(resolveInUploadBase(keyName.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP)[0]));
-                }
-                String newPaths = Arrays.stream(keyNames).map(s -> {
-                    String[] keyName = s.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP);
-                    if (keyName.length < 2) throw new IllegalArgumentException("illegal file name: " + s);
-                    File tempFile = resolveInUploadBase(keyName[0]);
-                    File localFile = resolveInUploadBase(keyName[1]);
+                    String[] pair = keyName.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP);
+                    if (pair.length < 2) { // 业务已有文件名（非本次上传项），原样保留交由应用处理
+                        paths.add(keyName);
+                        continue;
+                    }
+                    File tempFile = resolveInUploadBase(pair[0]);
+                    rawTempFiles.add(tempFile);
+                    File localFile = resolveInUploadBase(pair[1]);
                     tempFile.renameTo(localFile);
-                    return localFile.getAbsolutePath();
-                }).collect(Collectors.joining(fileSp));
+                    paths.add(localFile.getAbsolutePath());
+                }
+                String newPaths = String.join(fileSp, paths);
                 request.getParameters().put(field, newPaths);
                 originalFilePaths.add(newPaths);
             });

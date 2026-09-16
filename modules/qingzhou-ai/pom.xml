@@ -37,6 +37,11 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-kvstore</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -48,9 +53,11 @@
                     <instructions>
                         <Export-Package>qingzhou.ai</Export-Package>
                         <Import-Package>
+                            org.osgi.framework,org.osgi.service.component,
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,
                             qingzhou.http.server,
+                            qingzhou.kv,
                             qingzhou.logger,
                             qingzhou.json,
                             qingzhou.llm,qingzhou.llm.openai
