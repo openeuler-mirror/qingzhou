@@ -8,9 +8,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
 public @interface ModelAction {
-    String roles() default "";
-
     String code() default "";
+
+    String roles() default "";
 
     String icon() default "";
 

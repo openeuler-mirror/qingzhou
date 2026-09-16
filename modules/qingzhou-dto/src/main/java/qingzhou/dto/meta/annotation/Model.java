@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Model extends Base {
+    public String roles;
+
     public String className;
 
     public String icon;

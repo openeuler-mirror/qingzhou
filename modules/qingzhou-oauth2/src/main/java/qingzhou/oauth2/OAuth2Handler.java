@@ -32,6 +32,9 @@ public class OAuth2Handler implements HttpHandler {
     private final String CSRF_COOKIE_NAME = "oauth2_csrf";
     static final String TOKEN_COOKIE_NAME = "oauth2_session";
 
+    private static final String USER_SP = "@";
+    private static final String ROLES_SP = ",";
+
     @Reference
     private HttpClient httpClient;
     @Reference
@@ -143,7 +146,7 @@ public class OAuth2Handler implements HttpHandler {
             return;
         }
 
-        response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user)
+        response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
                         + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")
                 .redirect("/"); // 未用 state 暂存回跳路径，故一律重定向到根路径
@@ -201,20 +204,29 @@ public class OAuth2Handler implements HttpHandler {
         return s.isEmpty() ? null : s;
     }
 
-    private String createToken(String user) {
+    private String createToken(String user, String[] roles) {
         try {
-            return tokenCipher.encrypt(user + "|" + (System.currentTimeMillis() + tokenExpireMillis));
+            StringBuilder roleStr = new StringBuilder();
+            if (roles != null) {
+                for (String role : roles) {
+                    if (roleStr.length() > 0) {
+                        roleStr.append(ROLES_SP);
+                    }
+                    roleStr.append(role);
+                }
+            }
+            return tokenCipher.encrypt(user + USER_SP + roleStr + USER_SP + (System.currentTimeMillis() + tokenExpireMillis));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
-    String verifyToken(String token) {
+    Object[] verifyToken(String token) {
         try {
             String payload = tokenCipher.decrypt(token);
-            int sep = payload.lastIndexOf('|');
-            return System.currentTimeMillis() < Long.parseLong(payload.substring(sep + 1))
-                    ? payload.substring(0, sep) : null;
+            String[] sep = payload.split(USER_SP);
+            return System.currentTimeMillis() < Long.parseLong(sep[2])
+                    ? new Object[]{sep[0], sep[1].split(ROLES_SP)} : null;
         } catch (Exception e) {
             return null;
         }

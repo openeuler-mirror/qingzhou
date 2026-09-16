@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -34,6 +37,7 @@ public class Invoke implements HttpHandler {
     @Reference
     private Logger logger;
 
+    private final PermissionChecker permissionChecker = new PermissionChecker();
     private File uploadBase;
 
     @Activate
@@ -75,7 +79,7 @@ public class Invoke implements HttpHandler {
             return;
         }
 
-        if (!checkPermission(httpRequest, httpResponse, app, request)) return;
+        if (!permissionChecker.checkPermission(httpRequest, httpResponse, app, request)) return;
 
         try {
             parseBodyParameters(httpRequest, request);
@@ -87,40 +91,6 @@ public class Invoke implements HttpHandler {
         }
 
         sendResponse(request, httpResponse);
-    }
-
-    private boolean checkPermission(HttpRequest httpRequest, HttpResponse httpResponse, AppStub app, RequestImpl request) {
-        try {
-            if (isAllowed(httpRequest, app, request)) return true;
-            httpResponse.status(403).sendFinish("Forbidden");
-        } catch (RuntimeException e) {
-            httpResponse.status500Finish("Permission service error");
-            logger.error(e.getMessage(), e);
-        }
-        return false;
-    }
-
-    private boolean isAllowed(HttpRequest httpRequest, AppStub app, RequestImpl request) {
-        Object attribute = httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
-        Set<?> roles = attribute instanceof Set ? (Set<?>) attribute : Collections.emptySet();
-        App metadata = app.getAppMeta().getApp();
-        if (!matchesRoles(roles, metadata.roles)) return false;
-        for (Model model : metadata.models) {
-            if (!model.code.equals(request.getModel())) continue;
-            for (ModelAction action : model.actions) {
-                if (action.code.equals(request.getAction())) return matchesRoles(roles, action.roles);
-            }
-            break;
-        }
-        return true; // 目标不存在时，沿用原有分派及错误响应。
-    }
-
-    private boolean matchesRoles(Set<?> actual, String declaration) {
-        if (declaration == null || declaration.trim().isEmpty()) return true;
-        Set<String> required = Arrays.stream(declaration.split(","))
-                .map(String::trim).filter(role -> !role.isEmpty()).collect(Collectors.toSet());
-        if (required.isEmpty()) throw new IllegalArgumentException("Non-empty role declaration contains no roles");
-        return !Collections.disjoint(required, actual);
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {
@@ -224,11 +194,9 @@ public class Invoke implements HttpHandler {
         AppStub app;
 
         MultipartStreamParser parser;
-        boolean terminated;
 
         @Override
         public void onBegin(HttpRequest httpRequest, HttpResponse httpResponse) {
-            if (terminated) return;
             this.httpRequest = httpRequest;
             this.httpResponse = httpResponse;
 
@@ -238,8 +206,7 @@ public class Invoke implements HttpHandler {
             app = registry.getAppStub(request.getInstance(), request.getApp());
             if (app == null) return;
 
-            terminated = !checkPermission(httpRequest, httpResponse, app, request);
-            if (terminated) return;
+            if (!permissionChecker.checkPermission(httpRequest, httpResponse, app, request)) return;
 
             String boundary = null;
             String contentType = httpRequest.getContentType();
@@ -261,18 +228,17 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onNext(byte[] data) {
-            if (terminated || parser == null) return;
+            if (parser == null) return;
+
             try {
                 parser.feed(data, false);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 onError(e);
             }
         }
 
         @Override
         public void onComplete() {
-            if (terminated) return;
-            terminated = true;
             if (parser == null) {
                 httpResponse.status400Finish();
                 return;
@@ -295,11 +261,11 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onError(Throwable t) {
-            if (terminated) return;
-            terminated = true;
-            if (parser != null) {
-                parser.abort();
-            }
+            logger.error(t.getMessage(), t);
+
+            if (parser == null) return;
+            else parser.abort();
+
             if (httpResponse != null) {
                 if (t instanceof BodyTooLargeException) {
                     httpResponse.status(413)
@@ -308,7 +274,6 @@ public class Invoke implements HttpHandler {
                     httpResponse.status500Finish(t.getMessage());
                 }
             }
-            logger.error(t.getMessage(), t);
         }
 
         boolean isUploadField(RequestImpl request, String fieldName) {

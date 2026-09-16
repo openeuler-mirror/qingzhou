@@ -17,7 +17,8 @@ public class OAuth2Authenticator implements Authenticator {
         if (token == null) {
             return AuthResult.reject("token missing");
         }
-        String user = oAuth2Handler.verifyToken(token);
-        return user != null ? AuthResult.pass(user) : AuthResult.reject("invalid session");
+        Object[] userRoles = oAuth2Handler.verifyToken(token);
+        if (userRoles == null) return AuthResult.reject("invalid token");
+        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1]);
     }
 }

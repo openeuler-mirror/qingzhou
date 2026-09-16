@@ -18,10 +18,13 @@ public class TokenServiceTest {
         try {
             TokenService service = buildService(instanceDir, "60"); // 无 secret 文件 → 随机密钥
 
-            String token = service.createToken("admin");
+            String token = service.createToken("admin", null);
 
             Assert.assertNotNull(token);
-            Assert.assertEquals(service.verifyToken(token), "admin");
+            Object[] objects = service.verifyToken(token);
+            Assert.assertNotNull(objects);
+            Assert.assertSame(objects.length, 2);
+            Assert.assertEquals(objects[0], "admin");
         } finally {
             deleteRecursively(instanceDir);
         }
@@ -33,7 +36,7 @@ public class TokenServiceTest {
         try {
             TokenService service = buildService(instanceDir, "0"); // 过期时间为 0，签发即过期
 
-            String token = service.createToken("admin");
+            String token = service.createToken("admin", new String[]{"admin"});
 
             Assert.assertEquals(service.verifyToken(token), null);
         } finally {

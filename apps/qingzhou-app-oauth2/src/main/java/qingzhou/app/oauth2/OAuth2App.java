@@ -28,6 +28,7 @@ public class OAuth2App implements QingzhouApp {
         Store store;
         try {
             store = Store.get(appContext);
+            if (store == null) return;
         } catch (Throwable e) { // 数据源不可用时不应拖垮整个应用（含 JdbcPool 类缺失的 LinkageError），管控台的模型仍要可用
             logger.error("oauth2 数据源不可用", e);
             return;

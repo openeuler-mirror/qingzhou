@@ -1,6 +1,8 @@
 package qingzhou.auth;
 
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,7 @@ public class AuthHandler implements HttpHandler {
 
     private String username;
     private String passwordDigest;
+    private String[] roles;
     private int maxFailures;
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
@@ -39,11 +42,22 @@ public class AuthHandler implements HttpHandler {
 
     @Activate
     public void start(Map<String, String> config) throws InvalidKeyException {
-        username = config.get("username");
         passwordDigest = config.get("password");
         if (passwordDigest == null || passwordDigest.isEmpty()) { // 未配置时直接启动失败，避免静默变成「谁都登不进」
             throw new IllegalArgumentException("qingzhou-auth.password must be configured, use bin/gen-auth-password.sh.");
         }
+        username = config.get("username");
+        String rolesStr = config.get("roles");
+        if (rolesStr != null) {
+            List<String> roleList = new ArrayList<>();
+            for (String s : rolesStr.split(",")) {
+                if (!s.trim().isEmpty()) {
+                    roleList.add(s.trim());
+                }
+            }
+            roles = roleList.toArray(new String[0]);
+        }
+
         maxFailures = parseInt(config.get("max_failures"), 5);
         lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
 
@@ -110,7 +124,7 @@ public class AuthHandler implements HttpHandler {
         failures.remove(ip);
         response.header("Cache-Control", "no-store") // token 响应不得被缓存
                 .contentTypeJsonUtf8()
-                .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser) + "\"}");
+                .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}");
     }
 
     private boolean verifyCode(String code, HttpResponse response) {

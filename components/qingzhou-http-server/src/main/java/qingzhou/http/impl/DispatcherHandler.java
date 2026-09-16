@@ -81,9 +81,9 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             if (authResult.getPrincipal() != null) {
                 httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE, authResult.getPrincipal());
             }
-            Set<String> roles = authResult.getRoles();
-            httpRequest.setAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE, roles == null ? Collections.emptySet()
-                    : Collections.unmodifiableSet(new HashSet<>(roles)));
+            if (authResult.getRoles() != null) {
+                httpRequest.setAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE, authResult.getRoles());
+            }
         }
 
         // 开始处理业务...
