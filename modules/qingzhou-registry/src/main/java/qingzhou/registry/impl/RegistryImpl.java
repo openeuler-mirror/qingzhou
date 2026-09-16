@@ -53,6 +53,7 @@ public class RegistryImpl implements Registry {
         qzVersion = new File(qzVersion).getName().substring("version".length());
 
         tempMsg.forEach(s -> logger.info(s));
+        tempMsg.clear();
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -66,8 +67,9 @@ public class RegistryImpl implements Registry {
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);
 
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
         String msg = String.format("app registered: %s", appCode);
-        if (logger != null) { // osgi ds 尚未规范：AppStubLocal 的注入 可能早于 logger
+        if (logger != null) {
             logger.info(msg);
         } else {
             tempMsg.add(msg);

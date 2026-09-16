@@ -14,6 +14,8 @@ import java.lang.annotation.Target;
 public @interface Model {
     String code() default "";
 
+    String roles() default "";
+
     String icon() default "";
 
     String menu() default "";

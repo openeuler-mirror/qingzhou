@@ -2,14 +2,12 @@ package qingzhou.crypto.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.*;
 import java.util.Properties;
-import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
 import qingzhou.crypto.*;
@@ -23,6 +21,7 @@ public class CryptoImpl implements Crypto {
 
     // MD5 / SHA-1 / SHA-256 等哈希值：当你在下载文件时看到的 MD5 校验码（比如 d41d8cd98f00b204e9800998ecf8427e），本质上就是 Base16（十六进制）编码。
     private final MessageDigest messageDigest = new MessageDigestImpl(base16Coder);
+    private final TotpCipher totpCipher = new TotpCipherImpl(base16Coder, base32Coder);
 
     private volatile Cipher globalCipher;
 
@@ -36,7 +35,7 @@ public class CryptoImpl implements Crypto {
     @Override
     public Cipher getCipher(String key) throws InvalidKeyException {
         if (key == null || key.trim().length() != 24) {
-            throw new InvalidKeyException();
+            throw new InvalidKeyException("key length must be 24");
         }
         return new CipherImpl(key.trim(), base64Coder);
     }
@@ -62,8 +61,7 @@ public class CryptoImpl implements Crypto {
     public String[] generatePairKey() {
         KeyPair keyPair;
         try {
-            String seedKey = UUID.randomUUID().toString().replace("-", "");
-            keyPair = genKeyPair(seedKey);
+            keyPair = genKeyPair();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -78,15 +76,15 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public PairCipher getPairCipher(String publicKey, String privateKey) throws InvalidKeyException {
-        if (publicKey == null && privateKey == null) {
-            throw new InvalidKeyException();
+        if ((publicKey == null || publicKey.isEmpty()) && (privateKey == null || privateKey.isEmpty())) {
+            throw new InvalidKeyException("public_key or private_key is required, generate a pair with bin/gen-pair-key.sh");
         }
         return new PairCipherImpl(publicKey, privateKey, base64Coder);
     }
 
     @Override
     public TotpCipher getTotpCipher() {
-        return new TotpCipherImpl(base16Coder, base32Coder);
+        return totpCipher;
     }
 
     @Override
@@ -109,15 +107,14 @@ public class CryptoImpl implements Crypto {
         return base16Coder;
     }
 
-    private KeyPair genKeyPair(String seedKey) throws Exception {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(PairCipherImpl.ALG);//KeyPairGenerator.getInstance(ALGORITHM, pro);
-        // windows和linux下SecureRandom的行为不一致
-        // 如果使用new SecureRandom(seedKey.getBytes())，在windows会生成相同密钥，在linux会生成不同密钥
-        // 因此使用如下方法，确保在相同seedKey下，windows和linux都能生成相同密钥
-        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
-        secureRandom.setSeed(seedKey.getBytes(StandardCharsets.UTF_8));
+    @Override
+    public Base16Coder getHexCoder() {
+        return base16Coder;
+    }
 
-        kpg.initialize(1024, secureRandom);// 2048 不支持
+    private KeyPair genKeyPair() throws Exception {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(PairCipherImpl.ALG);
+        kpg.initialize(2048, new SecureRandom()); // 1024 位已低于安全基线，且 OAEP 分块后载荷过小
         return kpg.generateKeyPair();
     }
 

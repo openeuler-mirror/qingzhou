@@ -1,24 +1,22 @@
 package qingzhou.config.impl;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.config.remote.ConfigText;
-import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
@@ -27,35 +25,68 @@ import qingzhou.json.Json;
 public class Config {
     @Reference
     private ConfigurationAdmin configAdmin;
-    // 默认关闭外部配置中心时无需这两个服务：可选 + 动态引用，既不阻塞本组件激活，也支持服务晚到后绑定
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+
+    @Reference
     private volatile HttpClient httpClient;
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+
+    @Reference
     private volatile Json json;
 
-    // 被 qingzhou.command.cmd.StartArg.parseConfig 反射使用
-    public static Properties parseConfig(Path configFile) throws IOException {
-        Properties properties = new Properties();
-        properties.putAll(ConfigText.parse(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8)));
-        return properties;
+    // 在 qingzhou.command.cmd.StartArg 中反射引用
+    public static Map<String, String> parse(String text) {
+        Map<String, String> result = new LinkedHashMap<>();
+        StringBuilder folded = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                line = line.replaceAll("^[\\s\u3000]+", ""); // 只 trim 左侧空白符，保留右侧，右侧的可能是业务需要的值
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith("\\")) continue;
+
+                if (line.endsWith("\\")) {// 折行
+                    folded.append(line, 0, line.length() - 1);
+                    continue;
+                }
+                String target = folded.append(line).toString();
+                folded.setLength(0);
+
+                int i = target.indexOf('=');
+                String key = (i > 0 ? target.substring(0, i) : target).trim();
+                if (!key.isEmpty()) result.put(key, i > 0 ? target.substring(i + 1).trim() : "");
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return result;
     }
 
     @Activate
     public void init() throws Exception {
-        Properties qzConfig = parseConfig(
-                Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties"));
+        Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
+        String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
+        Map<String, String> qzConfig = parse(configText);
 
-        Map<String, Map<String, String>> configMap = converToOsgiConfig(qzConfig);
-
-        String enabled = qzConfig.getProperty(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
-        if ("true".equalsIgnoreCase(enabled == null ? "" : enabled.trim())) { // 开启外部配置中心：远程覆盖本地，缺失保留
-            merge(configMap, RemoteConfigSourceFactory.create(qzConfig, httpClient, json).pull());
+        String enabled = qzConfig.get(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
+        if (Boolean.parseBoolean(enabled)) { // 开启外部配置中心：远程覆盖本地，缺失保留
+            Map<String, String> remoteRequestArgs = new HashMap<>();
+            qzConfig.forEach((key, value) -> {
+                if (key.startsWith(RemoteConfigSourceFactory.KEY_PREFIX)) {
+                    remoteRequestArgs.put(key, value);
+                }
+            });
+            Map<String, String> remoteConfig = RemoteConfigSourceFactory.create(remoteRequestArgs, httpClient, json).pull();
+            if (remoteConfig != null) {
+                remoteConfig.entrySet().stream()
+                        .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
+                        .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
+            }
         }
 
-        distributeOsgiConfig(configMap);
+        Map<String, Map<String, String>> osgiConfig = converToOsgiConfig(qzConfig);
+        distributeOsgiConfig(osgiConfig);
     }
 
-    /** 远程配置以本地为底、逐 key 覆盖；远程缺失的本地 key 保留，且不得改写 qingzhou-config 自举参数。 */
+    /**
+     * 远程配置以本地为底、逐 key 覆盖；远程缺失的本地 key 保留，且不得改写 qingzhou-config 自举参数。
+     */
     private void merge(Map<String, Map<String, String>> configMap, Map<String, Map<String, String>> remoteConfig) {
         for (Map.Entry<String, Map<String, String>> entry : remoteConfig.entrySet()) {
             if ("qingzhou-config".equals(entry.getKey())) continue;
@@ -63,15 +94,17 @@ public class Config {
         }
     }
 
-    /** 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。 */
-    private Map<String, Map<String, String>> converToOsgiConfig(Properties qzConfig) {
+    /**
+     * 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。
+     */
+    private Map<String, Map<String, String>> converToOsgiConfig(Map<String, String> qzConfig) {
         Map<String, Map<String, String>> configMap = new HashMap<>();
-        for (String configKey : qzConfig.stringPropertyNames()) {
+        for (String configKey : qzConfig.keySet()) {
             if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) continue;
 
             int pidIndex = configKey.indexOf(".");
             configMap.computeIfAbsent(configKey.substring(0, pidIndex), pid -> new HashMap<>())
-                    .put(configKey.substring(pidIndex + 1), qzConfig.getProperty(configKey));
+                    .put(configKey.substring(pidIndex + 1), qzConfig.get(configKey));
         }
         return configMap;
     }

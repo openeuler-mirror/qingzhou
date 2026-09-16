@@ -18,6 +18,8 @@ public class TokenAuthenticator implements Authenticator {
         if (header == null || !header.startsWith(BEARER)) {
             return AuthResult.reject("token missing");
         }
-        return tokenService.authenticate(header.substring(BEARER.length()).trim());
+        Object[] userRoles = tokenService.verifyToken(header.substring(BEARER.length()).trim());
+        if (userRoles == null) return AuthResult.reject("invalid token");
+        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1]);
     }
 }

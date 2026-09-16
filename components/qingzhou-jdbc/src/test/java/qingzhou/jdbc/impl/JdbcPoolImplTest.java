@@ -66,7 +66,7 @@ public class JdbcPoolImplTest {
             Assert.assertEquals(properties.getDriverClassName(), "org.h2.Driver");
             Assert.assertTrue(properties.getUrl().startsWith("jdbc:h2:mem:"));
             Assert.assertEquals(properties.getUsername(), "sa");
-            Assert.assertEquals(properties.getPassword(), "");
+            Assert.assertNull(properties.getPassword());
             Assert.assertEquals(properties.getInitialSize(), 2);
             Assert.assertEquals(properties.getMinIdle(), 2);
             Assert.assertEquals(properties.getMaxActive(), 5);

@@ -7,11 +7,7 @@ import java.util.Map;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.action.Add;
-import qingzhou.api.action.Delete;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
-import qingzhou.api.action.Update;
+import qingzhou.api.action.*;
 
 @Model(code = "client", order = 1,
         name = {"接入客户端", "en:Client"},

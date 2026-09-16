@@ -11,7 +11,7 @@ public class TokenAuthenticatorTest {
     public void validToken_authenticate_returnsPass() throws Exception {
         AuthHandlerTest.StubHttpRequest request = new AuthHandlerTest.StubHttpRequest();
         request.header = "Bearer some-token";
-        TokenAuthenticator authenticator = buildAuthenticator(token -> "admin");
+        TokenAuthenticator authenticator = buildAuthenticator(token -> new Object[]{"admin", new String[]{"admin"}});
 
         AuthResult result = authenticator.authenticate(request);
 
@@ -37,12 +37,12 @@ public class TokenAuthenticatorTest {
         field.setAccessible(true);
         field.set(authenticator, new TokenService() {
             @Override
-            public String createToken(String user) {
+            public String createToken(String user, String[] roles) {
                 return null;
             }
 
             @Override
-            public String verifyToken(String token) {
+            public Object[] verifyToken(String token) {
                 return verifyStub.verify(token);
             }
         });
@@ -50,6 +50,6 @@ public class TokenAuthenticatorTest {
     }
 
     private interface VerifyStub {
-        String verify(String token);
+        Object[] verify(String token);
     }
 }

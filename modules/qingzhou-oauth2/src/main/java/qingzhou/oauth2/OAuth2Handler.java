@@ -1,5 +1,13 @@
 package qingzhou.oauth2;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -14,19 +22,18 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-
 @Component(configurationPid = "qingzhou-oauth2", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
+        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"},
+        service = {OAuth2Handler.class, HttpHandler.class})
 public class OAuth2Handler implements HttpHandler {
     private static final String AUTHORIZE_PATH = "/oauth2/authorize";
     private static final String CALLBACK_PATH = "/oauth2/callback";
-    static final String COOKIE_NAME = "oauth2_session";
+
+    private final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    static final String TOKEN_COOKIE_NAME = "oauth2_session";
+
+    private static final String USER_SP = "@";
+    private static final String ROLES_SP = ",";
 
     @Reference
     private HttpClient httpClient;
@@ -45,8 +52,8 @@ public class OAuth2Handler implements HttpHandler {
     private String usernameField;
 
     private long tokenExpireMillis;
-    private static Cipher tokenCipher;
-    private static Cipher clientSecretCipher;
+    private Cipher tokenCipher;
+    private Cipher clientSecretCipher;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -69,8 +76,10 @@ public class OAuth2Handler implements HttpHandler {
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
         if (path.equals(AUTHORIZE_PATH)) {
-            String authorizationUrl = buildAuthorizationUrl();
-            response.redirect(authorizationUrl);
+            String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
+            response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
+                            + "; Path=/; Max-Age=600; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
+                    .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
@@ -78,43 +87,13 @@ public class OAuth2Handler implements HttpHandler {
         }
     }
 
-    private void callback(HttpRequest request, HttpResponse response) throws Exception {
-        String code = request.getParameter("code");
-        if (code == null) {
-            response.status400Finish();
-            return;
-        }
-
-        Map<String, String> params = new HashMap<>();
-        params.put("grant_type", "authorization_code");
-        params.put("code", code);
-        params.put("client_id", clientId);
-        params.put("client_secret", clientSecretCipher.decrypt(clientSecret));
-        params.put("redirect_uri", redirectUri); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
-
-        Response tokenResponse = httpClient.send(
-                httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
-        String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
-        if (tokenResponse.getStatus() != 200 || json.fromJson(tokenBodyText, Map.class).get("error") != null) {
-            // 此授权服务器的错误响应以 HTTP 200 返回（如 invalid_client），仅凭状态码判断会误报为 "failed to get user info"
-            response.status500Finish("token exchange failed: " + tokenBodyText);
-            return;
-        }
-        Map<String, Object> tokenBody = json.fromJson(tokenBodyText, Map.class);
-        String user = extractUser(tokenBody);
-        if (user == null) {
-            response.status500Finish("failed to get user info");
-            return;
-        }
-
-        response.header("Set-Cookie", COOKIE_NAME + "=" + createToken(user)
-                        + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : "")) // Secure 与否取决于浏览器访问协议，与 redirect_uri 的 scheme 一致：HTTP 部署浏览器会丢弃带 Secure 的 cookie，HTTPS 部署则须防明文传输
-                .header("Cache-Control", "no-store")
-                .redirect("/"); // 因当前无状态设计，未使用 state 暂存路径等状态，故一律重定向到根路径
+    private String newState() {
+        byte[] bytes = new byte[16];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    private String buildAuthorizationUrl() {
-        String state = "0"; // 无状态设计，不可在单机上随机生成
+    private String buildAuthorizationUrl(String state) {
         StringBuilder url = new StringBuilder(authorizationEndpoint)
                 .append("?response_type=code")
                 .append("&client_id=").append(encode(clientId))
@@ -132,6 +111,51 @@ public class OAuth2Handler implements HttpHandler {
         }
     }
 
+    private void callback(HttpRequest request, HttpResponse response) throws Exception {
+        String csrfToken = request.getParameter("state"); // OAUTH2 协议要求 state 必须传递
+        if (csrfToken == null || !csrfToken.equals(getCookie(request, CSRF_COOKIE_NAME))) {
+            response.status400Finish();
+            return;
+        }
+
+        String code = request.getParameter("code");
+        if (code == null) {
+            response.status400Finish();
+            return;
+        }
+
+        Map<String, String> params = new HashMap<>();
+        params.put("grant_type", "authorization_code");
+        params.put("code", code);
+        params.put("client_id", clientId);
+        params.put("redirect_uri", redirectUri); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
+        params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "client_secret"));
+
+        Response tokenResponse = httpClient.send(
+                httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
+        String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
+        Map tokenBody = json.fromJson(tokenBodyText, Map.class);
+        if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
+            // 此授权服务器的错误响应以 HTTP 200 返回（如 invalid_client），仅凭状态码判断会误报为 "failed to get user info"
+            response.status500Finish("token exchange failed: " + tokenBodyText);
+            return;
+        }
+        String user = extractUser(tokenBody);
+        if (user == null) {
+            response.status500Finish("failed to get user info");
+            return;
+        }
+
+        response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
+                        + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
+                .header("Cache-Control", "no-store")
+                .redirect("/"); // 未用 state 暂存回跳路径，故一律重定向到根路径
+    }
+
+    /**
+     * 身份必须由授权服务器校验：只接受 userinfo endpoint 返回的 sub。
+     * 不接受未验签的 id_token——其 payload 可任意伪造，据此登录等同于身份可被直接接管。
+     */
     private String extractUser(Map<String, Object> tokenBody) throws Exception {
         // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
         String accessToken = (String) tokenBody.get("access_token");
@@ -140,21 +164,23 @@ public class OAuth2Handler implements HttpHandler {
                     .header("Authorization", "Bearer " + accessToken));
             if (resp.getStatus() == 200) {
                 Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-                String user = pickUsername(info);
-                if (user != null) return user;
+                return pickUsername(info);
             }
         }
-        // 回退：从 id_token 的 JWT payload 提取（未验签，仅作提示性解析）
-        String idToken = (String) tokenBody.get("id_token");
-        if (idToken != null) {
-            String[] parts = idToken.split("\\.");
-            if (parts.length >= 2) {
-                Map<String, Object> claims = json.fromJson(
-                        new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8), Map.class);
-                String user = pickUsername(claims);
-                if (user != null) return user;
+        return null;
+    }
+
+    String getCookie(HttpRequest request, String name) {
+        String cookieHeader = request.getHeader("Cookie");
+        if (cookieHeader == null) return null;
+
+        for (String cookie : cookieHeader.split(";")) {
+            String trimmed = cookie.trim();
+            if (trimmed.startsWith(name + "=")) {
+                return trimmed.substring(name.length() + 1);
             }
         }
+
         return null;
     }
 
@@ -165,6 +191,7 @@ public class OAuth2Handler implements HttpHandler {
                 "sub" // OIDC scope=openid 标准属性，一个id字符串
         };
         for (String field : tryUserNames) {
+            if (field == null || field.isEmpty()) continue;
             String val = str(map.get(field));
             if (val != null) return val;
         }
@@ -177,20 +204,29 @@ public class OAuth2Handler implements HttpHandler {
         return s.isEmpty() ? null : s;
     }
 
-    private String createToken(String user) {
+    private String createToken(String user, String[] roles) {
         try {
-            return tokenCipher.encrypt(user + "|" + (System.currentTimeMillis() + tokenExpireMillis));
+            StringBuilder roleStr = new StringBuilder();
+            if (roles != null) {
+                for (String role : roles) {
+                    if (roleStr.length() > 0) {
+                        roleStr.append(ROLES_SP);
+                    }
+                    roleStr.append(role);
+                }
+            }
+            return tokenCipher.encrypt(user + USER_SP + roleStr + USER_SP + (System.currentTimeMillis() + tokenExpireMillis));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
-    static String verifyToken(String token) {
+    Object[] verifyToken(String token) {
         try {
             String payload = tokenCipher.decrypt(token);
-            int sep = payload.lastIndexOf('|');
-            return System.currentTimeMillis() < Long.parseLong(payload.substring(sep + 1))
-                    ? payload.substring(0, sep) : null;
+            String[] sep = payload.split(USER_SP);
+            return System.currentTimeMillis() < Long.parseLong(sep[2])
+                    ? new Object[]{sep[0], sep[1].split(ROLES_SP)} : null;
         } catch (Exception e) {
             return null;
         }

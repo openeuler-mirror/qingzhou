@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class App extends Base {
-    public String roles = "";
+    public String roles;
     public String className;
     public String[] name;
     public String[] info;

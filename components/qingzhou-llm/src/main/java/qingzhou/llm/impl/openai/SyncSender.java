@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
@@ -21,16 +22,18 @@ class SyncSender {
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
+    private final Crypto crypto;
 
-    SyncSender(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json) {
+    SyncSender(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json, Crypto crypto) {
         this.builder = builder;
         this.httpClient = httpClient;
         this.json = json;
+        this.crypto = crypto;
     }
 
     String chat(Map<String, Tool> baseTools, String message, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json, crypto));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             List<Object> messages = new ArrayList<>();
@@ -79,7 +82,7 @@ class SyncSender {
     private Response sendSync(List<Object> messages, List<Object> toolDefs, int attempt) throws Exception {
         Response response;
         try {
-            Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, false), false, builder, httpClient, json);
+            Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, false), false, builder, httpClient, json, crypto);
             response = httpClient.send(request);
         } catch (Exception e) {
             if (attempt < builder.maxRetries) {

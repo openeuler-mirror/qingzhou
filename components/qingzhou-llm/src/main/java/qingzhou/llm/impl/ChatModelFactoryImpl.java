@@ -7,6 +7,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
@@ -20,6 +21,9 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
 
     @Reference
     private HttpClient httpClient;
+
+    @Reference
+    private Crypto crypto;
 
     private String baseUrl;
     private String apiKey;
@@ -37,7 +41,7 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
 
     @Override
     public ChatModelBuilder newChatModelBuilder() {
-        return new qingzhou.llm.impl.openai.OpenAiChatModelBuilder(baseUrl, apiKey, model, httpClient, json);
+        return new qingzhou.llm.impl.openai.OpenAiChatModelBuilder(baseUrl, apiKey, model, httpClient, json, crypto);
     }
 
     @Override

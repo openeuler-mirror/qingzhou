@@ -122,7 +122,7 @@ public class PathDetector {
                     .findFirst()
                     .orElse(null);
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             return null;
         } finally {
             if (process != null) {

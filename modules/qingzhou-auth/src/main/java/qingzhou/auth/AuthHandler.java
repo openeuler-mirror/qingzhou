@@ -1,5 +1,8 @@
 package qingzhou.auth;
 
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,11 +12,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Crypto;
-import qingzhou.crypto.MessageDigest;
-import qingzhou.crypto.TotpCipher;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
@@ -23,35 +25,48 @@ public class AuthHandler implements HttpHandler {
 
     @Reference
     private Crypto crypto;
-
     @Reference
     private TokenService tokenService;
+    @Reference
+    private Logger logger;
 
     private String username;
     private String passwordDigest;
+    private String[] roles;
     private int maxFailures;
     private long lockMillis;
     private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
-    private MessageDigest messageDigest;
-
     private boolean totpEnabled;
     private String totpSecret;
-    private TotpCipher totpCipher;
 
     @Activate
-    public void start(Map<String, String> config) {
-        username = config.get("username");
+    public void start(Map<String, String> config) throws InvalidKeyException {
         passwordDigest = config.get("password");
+        if (passwordDigest == null || passwordDigest.isEmpty()) { // 未配置时直接启动失败，避免静默变成「谁都登不进」
+            throw new IllegalArgumentException("qingzhou-auth.password must be configured, use bin/gen-auth-password.sh.");
+        }
+        username = config.get("username");
+        String rolesStr = config.get("roles");
+        if (rolesStr != null) {
+            List<String> roleList = new ArrayList<>();
+            for (String s : rolesStr.split(",")) {
+                if (!s.trim().isEmpty()) {
+                    roleList.add(s.trim());
+                }
+            }
+            roles = roleList.toArray(new String[0]);
+        }
+
         maxFailures = parseInt(config.get("max_failures"), 5);
         lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
-
-        messageDigest = crypto.getMessageDigest();
 
         totpEnabled = Boolean.parseBoolean(config.get("totp_enabled"));
         if (totpEnabled) {
             totpSecret = config.get("totp_secret"); // 安全考虑：此处不要解密
-            totpCipher = crypto.getTotpCipher();
+            if (totpSecret == null || totpSecret.trim().isEmpty()) {
+                throw new InvalidKeyException("'totp_secret' must be configured, use bin/gen-totp-key.sh");
+            }
         }
     }
 
@@ -64,6 +79,11 @@ public class AuthHandler implements HttpHandler {
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
+            if (request.getFullPath().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
+                response.status400Finish();
+                return;
+            }
+
             login(request, response);
         } else if (path.equals(LOGOUT_PATH)) {
             logout(response);
@@ -82,7 +102,7 @@ public class AuthHandler implements HttpHandler {
         String reqUser = request.getParameter("username");
         String password = request.getParameter("password");
         boolean verified = Objects.equals(reqUser, username)
-                && messageDigest.matches(password, passwordDigest);
+                && crypto.getMessageDigest().matches(password, passwordDigest);
         if (!verified) {
             recordFailure(ip);
             response.status(401).sendFinish("invalid username or password");
@@ -102,15 +122,17 @@ public class AuthHandler implements HttpHandler {
         }
 
         failures.remove(ip);
-        response.contentTypeJsonUtf8().sendFinish("{\"token\":\"" + tokenService.createToken(reqUser) + "\"}");
+        response.header("Cache-Control", "no-store") // token 响应不得被缓存
+                .contentTypeJsonUtf8()
+                .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}");
     }
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (totpCipher.verifyCode(crypto.getGlobalCipher().decrypt(totpSecret), code))
+            if (crypto.getTotpCipher().verifyCode(crypto.getGlobalCipher().tryDecrypt(totpSecret, "totp_secret"), code))
                 return true;
         } catch (Exception e) {
-            // 密钥非法或算法异常一律判为校验失败，避免异常穿透为 500
+            logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");
         }
         response.status(401).sendFinish("invalid totp code");
         return false;
@@ -146,7 +168,7 @@ public class AuthHandler implements HttpHandler {
         response.sendFinish("ok");
     }
 
-    private static int parseInt(String val, int defaultValue) {
+    private int parseInt(String val, int defaultValue) {
         try {
             return Integer.parseInt(val);
         } catch (NumberFormatException e) {

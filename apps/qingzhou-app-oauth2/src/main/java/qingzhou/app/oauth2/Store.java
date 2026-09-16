@@ -1,17 +1,7 @@
 package qingzhou.app.oauth2;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 
 import qingzhou.api.AppContext;
 import qingzhou.jdbc.JdbcPool;
@@ -59,7 +49,7 @@ public final class Store {
                     String name = appContext.getProperties().getProperty("jdbc_name", "h2");
                     JdbcPool jdbcPool = appContext.getService(JdbcPool.class, name);
                     if (jdbcPool == null) {
-                        throw new IllegalStateException("JdbcPool[" + name + "] 不可用，请配置 qingzhou-jdbc~" + name + ".*");
+                        return null;
                     }
                     Store store = new Store(jdbcPool);
                     store.init();

@@ -1,16 +1,8 @@
 package qingzhou.http.server;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 public interface AuthResult {
+    String AUTH_PRINCIPAL_ATTRIBUTE = "auth.principal";
     String AUTH_ROLES_ATTRIBUTE = "auth.roles";
-    String AUTH_PRINCIPAL_ATTRIBUTE = "auth.principal.username";
-    @Deprecated
-    String AUTH_PRINCIPAL_USERNAME_ATTRIBUTE = AUTH_PRINCIPAL_ATTRIBUTE;
-
-    default Set<String> getRoles() { return Collections.emptySet(); }
 
     enum Status {PASS, REJECT}
 
@@ -26,13 +18,12 @@ public interface AuthResult {
         return null;
     }
 
-    static AuthResult pass(String user) {
-        return pass(user, Collections.emptySet());
+    // 认证角色
+    default String[] getRoles() {
+        return null;
     }
 
-    static AuthResult pass(String user, Set<String> roles) {
-        Set<String> copy = roles == null || roles.isEmpty() ? Collections.emptySet()
-                : Collections.unmodifiableSet(new HashSet<>(roles));
+    static AuthResult pass(String user, String[] roles) {
         return new AuthResult() {
             @Override
             public Status status() {
@@ -45,7 +36,9 @@ public interface AuthResult {
             }
 
             @Override
-            public Set<String> getRoles() { return copy; }
+            public String[] getRoles() {
+                return roles;
+            }
         };
     }
 

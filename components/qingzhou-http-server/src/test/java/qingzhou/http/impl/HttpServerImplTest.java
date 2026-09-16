@@ -11,6 +11,8 @@ import java.util.Map;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
@@ -113,7 +115,7 @@ public class HttpServerImplTest {
     @Test
     public void sslKeystoreWrongPassword_start_throwsException() throws Exception {
         Map<String, String> config = sslConfig(0);
-        config.put("ssl_keystore_password", "wrong-password");
+        config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + "wrong-password");
         try {
             start(config);
             Assert.fail("start should throw when ssl keystore password is wrong");
@@ -138,6 +140,10 @@ public class HttpServerImplTest {
 
     static HttpServerImpl start(Map<String, String> config) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
+        Field cryptoField = HttpServerImpl.class.getDeclaredField("crypto");
+        cryptoField.setAccessible(true);
+        cryptoField.set(httpServer, new CryptoImpl());
+
         Field loggerField = HttpServerImpl.class.getDeclaredField("logger");
         loggerField.setAccessible(true);
         loggerField.set(httpServer, new LoggerImpl());
@@ -151,7 +157,7 @@ public class HttpServerImplTest {
         config.put("port", port + "");
         config.put("ssl_enabled", "true");
         config.put("ssl_keystore_path", keystoreFile().getAbsolutePath());
-        config.put("ssl_keystore_password", KEYSTORE_PASSWORD);
+        config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + KEYSTORE_PASSWORD);
         config.put("ssl_keystore_type", "PKCS12");
         return config;
     }
