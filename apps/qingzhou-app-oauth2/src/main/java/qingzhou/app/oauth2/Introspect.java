@@ -22,6 +22,18 @@ public class Introspect implements HttpHandler {
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
+        if (!"POST".equals(request.getMethod())) { // 令牌与凭据不得经 GET 进入 URL 与访问日志
+            Reply.methodNotAllowed(response);
+            return;
+        }
+
+        Map<String, String> client = store.authenticateClient(
+                request.getParameter("client_id"), request.getParameter("client_secret"));
+        if (client == null) {
+            Reply.sendError(response, json, "invalid_client", "客户端验证失败");
+            return;
+        }
+
         String accessToken = request.getParameter("token");
         if (Security.isEmpty(accessToken)) {
             Reply.sendError(response, json, "invalid_request", "缺少 token");
@@ -30,7 +42,7 @@ public class Introspect implements HttpHandler {
 
         Map<String, String> token = store.findValidAccessToken(accessToken);
         Map<String, Object> body = new LinkedHashMap<>();
-        if (token == null) {
+        if (token == null || !client.get("client_id").equals(token.get("client_id"))) { // 只能校验自己的令牌
             body.put("active", false);
         } else {
             body.put("active", true);
