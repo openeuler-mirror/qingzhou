@@ -115,10 +115,10 @@ class AppStubRemoteImpl implements AppStubRemote {
                 continue;
             }
             List<String> remotePaths = new ArrayList<>();
-            for (String item : value.split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP)) { // TODO：应引用 ModelField.separator()
+            for (String item : value.split(",")) { // TODO：应引用 ModelField.separator()
                 String path = item.trim();
                 File file = new File(path);
-                if (!file.isFile()) {
+                if (!file.isFile()) { // 如多文件上传，更新之前的部分值？
                     remotePaths.add(path);
                     continue;
                 }

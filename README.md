@@ -1,4 +1,4 @@
-# Qingzhou（轻舟）轻量级智能管理平台
+# Qingzhou（轻舟）轻量级智能管理开发平台
 
 ## 概述
 
@@ -110,18 +110,6 @@ Qingzhou（轻舟）还通过自动发现、插件化扩展、统一API规范、
     - version* 目录: 在启动时根据 version*.zip 自动解压生成的目录，此目录下的 *.jar 文件会加载到内存。
     - 重点说明：启动时，如果 version* 目录已存在，则会与 version*.zip 比对，不一致，则删除重新生成，若要禁止此行为，可将
       version*.zip 移出此目录，或修改其名字不要以 version 开头。
-
-### 服务接口
-
-轻舟服务打开的接口（HTTP 协议）如下：
-
-| 接口URI               | 接口说明          |
-|---------------------|---------------|
-| /registry/invoke    | 执行指定应用的模块操作   |
-| /registry/instance  | 获取已注册的实例列表    |
-| /registry/app/list  | 获取已注册的应用列表    |
-| /registry/app/info  | 获取特定应用的详细信息   |
-| /registry/app/model | 获取特定应用的模块信息   |
 
 ### 前后端分离
 

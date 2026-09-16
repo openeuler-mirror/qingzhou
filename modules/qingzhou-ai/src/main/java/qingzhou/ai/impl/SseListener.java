@@ -63,6 +63,8 @@ public class SseListener implements Listener {
     private ScheduledFuture<?> watchdogTask;
     private final Object sendLock = new Object();
 
+    final StringBuilder allContent = new StringBuilder();
+
     public SseListener(HttpResponse httpResponse, Logger logger, Json json) {
         this.httpResponse = httpResponse;
         this.logger = logger;
@@ -72,13 +74,13 @@ public class SseListener implements Listener {
     /**
      * 请求已受理。由 AiChat 在技能匹配等耗时前置工作开始前调用，让客户端立即进入“正在思考”
      */
-    public void setStarted(String conversationId, String messageId) {
-        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED).conversationId(conversationId).messageId(messageId));
-
+    public void setStarted(String conversationId) {
         startTime = System.currentTimeMillis();
         watchdogTask = WATCHDOG_EXECUTOR.scheduleWithFixedDelay(
                 this::watchdogTick,
                 HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+
+        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED).conversationId(conversationId));
     }
 
     private void watchdogTick() {
@@ -184,8 +186,12 @@ public class SseListener implements Listener {
             isReasoning = false;
             sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_START));
         }
-        if (content != null) sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT).content(content));
-        else sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT));
+        if (content != null) {
+            sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT).content(content));
+            allContent.append(content);
+        } else {
+            sendEvent(SseEvent.of(SseEvent.Type.TEXT_MESSAGE_CONTENT));
+        }
     }
 
     @Override

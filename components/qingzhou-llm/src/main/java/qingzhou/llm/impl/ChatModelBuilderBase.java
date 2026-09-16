@@ -3,11 +3,7 @@ package qingzhou.llm.impl;
 import java.util.Collection;
 import java.util.List;
 
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.ChatModelFactory;
-import qingzhou.llm.HistoryMessage;
-import qingzhou.llm.Skill;
-import qingzhou.llm.Tool;
+import qingzhou.llm.*;
 
 public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModelBuilder {
     public final String baseUrl;
@@ -16,7 +12,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
 
     public String systemPrompt;
     public List<String> docs;
-    public List<HistoryMessage> history;
+    public ChatMemory chatMemory;
     public Collection<Tool> tools;
     public Collection<Skill> skills;
 
@@ -56,9 +52,9 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     }
 
     @Override
-    public ChatModelBuilderBase history(List<HistoryMessage> history) {
+    public ChatModelFactory.ChatModelBuilder chatMemory(ChatMemory chatMemory) {
         checkSealed();
-        this.history = history;
+        this.chatMemory = chatMemory;
         return this;
     }
 

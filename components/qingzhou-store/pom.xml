@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
-        <artifactId>modules</artifactId>
+        <artifactId>components</artifactId>
         <version>${revision}</version>
     </parent>
 
     <packaging>bundle</packaging>
-    <artifactId>qingzhou-kvstore</artifactId>
+    <artifactId>qingzhou-store</artifactId>
 
-    <!-- 零依赖纯库：契约与实现同 bundle，仅导出 qingzhou.kv 契约包，实现类 bundle 内私有 -->
     <build>
         <plugins>
             <plugin>
@@ -19,10 +18,12 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.kv</Export-Package>
+                        <Export-Package>qingzhou.store</Export-Package>
+                        <Import-Package/>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>
