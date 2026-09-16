@@ -210,7 +210,7 @@ public class AiChat implements HttpHandler {
     }
 
     private String resolveUsername(HttpRequest httpRequest) {
-        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_USERNAME_ATTRIBUTE);
+        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
         String username = principal instanceof String ? (String) principal : null;
         return username != null && !username.isEmpty() ? username : "anonymous";
     }

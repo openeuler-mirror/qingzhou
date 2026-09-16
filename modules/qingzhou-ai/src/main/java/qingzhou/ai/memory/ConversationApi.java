@@ -179,7 +179,7 @@ public class ConversationApi implements HttpHandler {
 
     /** 与 AiChat 对话链路同源：userId 由鉴权层从 token 解析，显式关闭鉴权时退化为匿名 */
     private String resolveUsername(HttpRequest httpRequest) {
-        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_USERNAME_ATTRIBUTE);
+        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
         String username = principal instanceof String ? (String) principal : null;
         return username != null && !username.isEmpty() ? username : "anonymous";
     }
