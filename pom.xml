@@ -173,7 +173,6 @@
                                 Build-Jdk,
                                 Created-By,
                                 Built-By,
-                                Bundle-ManifestVersion,
                                 Bundle-Name,
                                 Provide-Capability,
                                 Require-Capability,
