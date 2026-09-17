@@ -26,8 +26,9 @@ import qingzhou.json.Json;
         property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"},
         service = {OAuth2Handler.class, HttpHandler.class})
 public class OAuth2Handler implements HttpHandler {
-    private static final String AUTHORIZE_PATH = "/oauth2/authorize";
-    private static final String CALLBACK_PATH = "/oauth2/callback";
+    private static final String ROOT_PATH = "/oauth2";
+    private static final String AUTHORIZE_PATH = ROOT_PATH + "/authorize";
+    private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
 
     private final String CSRF_COOKIE_NAME = "oauth2_csrf";
     static final String TOKEN_COOKIE_NAME = "oauth2_session";
@@ -48,7 +49,8 @@ public class OAuth2Handler implements HttpHandler {
     private String tokenEndpoint;
     private String userinfoEndpoint;
     private String scope;
-    private String redirectUri;
+    private String thisServerUrl;
+    private String callbackUrl;
     private String usernameField;
 
     private long tokenExpireMillis;
@@ -64,7 +66,8 @@ public class OAuth2Handler implements HttpHandler {
         userinfoEndpoint = config.get("userinfo_endpoint");
         usernameField = config.get("userinfo_username_field");
         scope = config.get("scope");
-        redirectUri = config.get("redirect_uri") + CALLBACK_PATH;
+        thisServerUrl = config.get("this_server");
+        callbackUrl = thisServerUrl + CALLBACK_PATH;
 
         tokenExpireMillis = Integer.parseInt(config.getOrDefault("token_expire_seconds", "" + 30 * 60)) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
@@ -78,7 +81,7 @@ public class OAuth2Handler implements HttpHandler {
         if (path.equals(AUTHORIZE_PATH)) {
             String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
             response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
-                            + "; Path=/; Max-Age=600; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
+                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Lax" + (callbackUrl.startsWith("https") ? "; Secure" : ""))
                     .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
@@ -97,7 +100,7 @@ public class OAuth2Handler implements HttpHandler {
         StringBuilder url = new StringBuilder(authorizationEndpoint)
                 .append("?response_type=code")
                 .append("&client_id=").append(encode(clientId))
-                .append("&redirect_uri=").append(encode(redirectUri))
+                .append("&redirect_uri=").append(encode(callbackUrl))
                 .append("&state=").append(encode(state));
         if (scope != null) url.append("&scope=").append(encode(scope));
         return url.toString();
@@ -128,7 +131,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("grant_type", "authorization_code");
         params.put("code", code);
         params.put("client_id", clientId);
-        params.put("redirect_uri", redirectUri); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
+        params.put("redirect_uri", callbackUrl); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
         params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "client_secret"));
 
         Response tokenResponse = httpClient.send(
@@ -146,8 +149,9 @@ public class OAuth2Handler implements HttpHandler {
             return;
         }
 
+        String consoleHomeUri = "/web";
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
-                        + "; Path=/; HttpOnly; SameSite=Lax" + (redirectUri.startsWith("https") ? "; Secure" : ""))
+                        + "; Path=" + consoleHomeUri + "; HttpOnly; SameSite=Lax" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")
                 .redirect("/"); // 未用 state 暂存回跳路径，故一律重定向到根路径
     }
