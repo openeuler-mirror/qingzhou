@@ -1,5 +1,6 @@
 package qingzhou.http.client.impl;
 
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ class RequestImpl implements Request {
     Map<String, String> params;
     byte[] body;
     Map<String, String> files;
+    X509Certificate[] trustedCertificates;
     int connectTimeout = 60 * 1000;
     int readTimeout = 10 * 60 * 1000;
 
@@ -74,6 +76,12 @@ class RequestImpl implements Request {
         }
 
         this.readTimeout = readTimeout;
+        return this;
+    }
+
+    @Override
+    public Request trustedCertificates(X509Certificate... certificates) {
+        this.trustedCertificates = certificates;
         return this;
     }
 }

@@ -1,5 +1,6 @@
 package qingzhou.http.client;
 
+import java.security.cert.X509Certificate;
 import java.util.Map;
 
 public interface Request {
@@ -30,4 +31,10 @@ public interface Request {
      * A timeout of zero is interpreted as an infinite timeout.
      */
     Request readTimeout(int readTimeout);
+
+    /**
+     * 指定本次请求信任的服务端证书，用于自签证书场景。
+     * 未指定时信任所有证书且不校验主机名；指定后以所给证书为信任锚校验服务端证书，并校验主机名。
+     */
+    Request trustedCertificates(X509Certificate... certificates);
 }
