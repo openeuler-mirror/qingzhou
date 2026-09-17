@@ -1,11 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem 本脚本位于 bin\win 下，实例目录与 bin 同级，故回退两级得到 qingzhou 根目录
 if "%qingzhou_home%"=="" (
-    set qingzhou_home=%~dp0
-    set qingzhou_home=!qingzhou_home:~0,-1!
-    for %%a in ("!qingzhou_home!") do set qingzhou_home=%%~dpa
-    set qingzhou_home=!qingzhou_home:~0,-1!
+    for %%a in ("%~dp0..\..") do set qingzhou_home=%%~fa
 )
 
 rem 设定要启动的 instance
