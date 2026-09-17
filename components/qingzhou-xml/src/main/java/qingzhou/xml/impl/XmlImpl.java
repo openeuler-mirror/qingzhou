@@ -13,7 +13,7 @@ import qingzhou.xml.Xml;
 
 @Component
 public class XmlImpl implements Xml {
-    private static DocumentBuilder builder;
+    private DocumentBuilderFactory factory;
 
     @Activate
     public void init() throws Exception {
@@ -28,7 +28,7 @@ public class XmlImpl implements Xml {
         dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
         dbf.setXIncludeAware(false);
         dbf.setExpandEntityReferences(false);
-        builder = dbf.newDocumentBuilder();
+        factory = dbf;
     }
 
     @Override
@@ -36,12 +36,19 @@ public class XmlImpl implements Xml {
         if (file == null) throw new IllegalArgumentException("File cannot be null");
         if (!file.isFile()) throw new IllegalArgumentException("Must be a file");
 
-        return new DocImpl(builder.parse(file));
+        return new DocImpl(newBuilder().parse(file));
     }
 
     @Override
     public Doc parse(InputStream is) throws Exception {
         if (is == null) throw new IllegalArgumentException("InputStream cannot be null");
-        return new DocImpl(builder.parse(is));
+        return new DocImpl(newBuilder().parse(is));
+    }
+
+    /**
+     * DocumentBuilder 非线程安全，每次解析新建；加解密等安全特性由 init 配置的 factory 统一保证。
+     */
+    private DocumentBuilder newBuilder() throws Exception {
+        return factory.newDocumentBuilder();
     }
 }

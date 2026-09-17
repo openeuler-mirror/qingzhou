@@ -21,13 +21,9 @@ import org.w3c.dom.NodeList;
 import qingzhou.xml.Doc;
 
 class DocImpl implements Doc {
-    private static final XPath xPathInstance;
     private static TransformerFactory transformerFactory;
 
     static {
-        XPathFactory factory = XPathFactory.newInstance();
-        xPathInstance = factory.newXPath();
-
         try {
             transformerFactory = TransformerFactory.newInstance();
         } catch (Throwable e) {
@@ -110,7 +106,7 @@ class DocImpl implements Doc {
         if (xPath == null || xPath.trim().isEmpty())
             throw new XPathExpressionException("xPath cannot be null or empty");
 
-        Node obj = (Node) xPathInstance.evaluate(xPath, dom, XPathConstants.NODE);
+        Node obj = (Node) newXPath().evaluate(xPath, dom, XPathConstants.NODE);
         if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
 
         return obj;
@@ -120,10 +116,17 @@ class DocImpl implements Doc {
         if (xPath == null || xPath.trim().isEmpty())
             throw new XPathExpressionException("xPath cannot be null or empty");
 
-        NodeList obj = (NodeList) xPathInstance.evaluate(xPath, dom, XPathConstants.NODESET);
+        NodeList obj = (NodeList) newXPath().evaluate(xPath, dom, XPathConstants.NODESET);
         if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
 
         return obj;
+    }
+
+    /**
+     * XPath 非线程安全，每次求值新建实例。
+     */
+    private static XPath newXPath() {
+        return XPathFactory.newInstance().newXPath();
     }
 
     private Properties getPropertiesFromNode(Node node) {

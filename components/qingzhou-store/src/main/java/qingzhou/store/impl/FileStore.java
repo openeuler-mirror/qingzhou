@@ -19,11 +19,16 @@ public class FileStore implements Store {
         }
     }
 
+    private Path path(String key) {
+        Path path = dir.resolve(key).normalize();
+        if (!path.startsWith(dir)) throw new IllegalArgumentException("illegal store key: " + key);
+        return path;
+    }
+
     @Override
     public void put(String key, String value) {
-        Path path = dir.resolve(key);
         try {
-            Files.write(path, value.getBytes(StandardCharsets.UTF_8));
+            Files.write(path(key), value.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -31,7 +36,7 @@ public class FileStore implements Store {
 
     @Override
     public String get(String key) {
-        Path path = dir.resolve(key);
+        Path path = path(key);
         if (!Files.exists(path)) return null;
         try {
             return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
@@ -42,9 +47,8 @@ public class FileStore implements Store {
 
     @Override
     public void delete(String key) {
-        Path path = dir.resolve(key);
         try {
-            Files.deleteIfExists(path);
+            Files.deleteIfExists(path(key));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +56,6 @@ public class FileStore implements Store {
 
     @Override
     public boolean contains(String key) {
-        Path path = dir.resolve(key);
-        return Files.exists(path);
+        return Files.exists(path(key));
     }
 }
