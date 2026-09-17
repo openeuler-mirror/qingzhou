@@ -8,7 +8,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -169,8 +171,8 @@ public class DispatcherHandlerTest {
             TestServer testServer = startServer();
             try {
                 testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/upload");
-                Map<String, String> files = new HashMap<>();
-                files.put("upload", tempFile.getAbsolutePath());
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
                 HttpClient client = new HttpClientImpl();
                 Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/upload")
@@ -232,8 +234,8 @@ public class DispatcherHandlerTest {
                     }
                 }, path);
 
-                Map<String, String> files = new HashMap<>();
-                files.put("upload", tempFile.getAbsolutePath());
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
                 HttpClient client = new HttpClientImpl();
                 Response result = client.send(client.newRequest("http://localhost:" + testServer.port + path)

@@ -82,7 +82,7 @@ class PairCipherImpl implements PairCipher {
     }
 
     private String encryptWithKey(Key key, String input) throws Exception {
-        if (input == null) return null; // 与 decryptWithKey(String) 的 null 契约保持对称
+        if (input == null) return null;
 
         byte[] bytesContent = input.getBytes(StandardCharsets.UTF_8);
         byte[] enContent = encryptWithKey(key, bytesContent);
@@ -90,6 +90,7 @@ class PairCipherImpl implements PairCipher {
     }
 
     private byte[] encryptWithKey(Key key, byte[] input) throws Exception {
+        if (input == null) return null;
         return cipherBytes(input, cipher(key, Cipher.ENCRYPT_MODE), modulusBytes(key) - OAEP_OVERHEAD);
     }
 
@@ -102,6 +103,7 @@ class PairCipherImpl implements PairCipher {
     }
 
     private byte[] decryptWithKey(Key key, byte[] input) throws Exception {
+        if (input == null) return null;
         return cipherBytes(input, cipher(key, Cipher.DECRYPT_MODE), modulusBytes(key));
     }
 

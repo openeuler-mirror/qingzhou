@@ -21,7 +21,7 @@ public class AuthManager {
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     @Activate
-    public void start() {
+    public synchronized void start() { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
     }
@@ -46,9 +46,8 @@ public class AuthManager {
 
 
     /**
-     * 安全认证：配置 auth_disabled=true 时全局关闭；多认证器按 pass > reject > challenge > missing 组合——
-     * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
-     * 全部无凭据时才用重定向引导登录。
+     * 安全认证：多认证器聚合——任一 PASS 即放行；首个显式 REJECT 优先拒绝（客户端已出示凭据，须明确告知 401）；
+     * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。全局开关 auth_disabled 由分发层判断。
      */
     AuthResult authenticate(HttpRequest request) {
         if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");

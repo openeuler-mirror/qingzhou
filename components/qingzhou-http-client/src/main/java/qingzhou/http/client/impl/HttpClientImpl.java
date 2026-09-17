@@ -2,9 +2,10 @@ package qingzhou.http.client.impl;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URLEncoder;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,7 +31,7 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
-        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout, req.trustedCertificates);
+        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout, req.trustedCertificates, req.trustAll);
 
         if (req.method != null) {
             conn.setRequestMethod(req.method.name());
@@ -46,18 +47,10 @@ public class HttpClientImpl implements HttpClient {
         if (req.body != null) {
             body = req.body;
         } else if (req.params != null && req.files == null) {
-            StringBuilder bodyStr = new StringBuilder();
-            boolean isFirst = true;
-            for (Map.Entry<String, String> entry : req.params.entrySet()) {
-                String value = entry.getValue();
-                if (value == null) continue;
-                if (!isFirst) bodyStr.append('&');
-                isFirst = false;
-
-                bodyStr.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=');
-                bodyStr.append(URLEncoder.encode(value, "UTF-8"));
+            body = encodeForm(req.params);
+            if (conn.getRequestProperty("Content-Type") == null) {
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             }
-            body = bodyStr.length() > 0 ? bodyStr.toString().getBytes(StandardCharsets.UTF_8) : null;
         }
 
         boolean doDisconnect = true;
@@ -68,23 +61,12 @@ public class HttpClientImpl implements HttpClient {
                     out.flush();
                 }
             } else if (req.files != null) {
-                for (Map.Entry<String, String> entry : req.files.entrySet()) {
-                    String fieldName = entry.getKey();
-                    String values = entry.getValue();
-                    if (fieldName == null || fieldName.isEmpty() || values == null || values.isEmpty()) {
-                        throw new IllegalArgumentException(fieldName + "=" + values);
-                    }
-                    for (String f : values.split(",")) {
-                        if (f.isEmpty() || !new File(f).isFile())
-                            throw new FileNotFoundException(f);
-                    }
-                }
-                sendFileStream(req, conn);
+                writeMultipart(req, conn);
             } else {
                 conn.connect();
             }
 
-            ResponseImpl response = new ResponseImpl(conn, listener);
+            ResponseImpl response = new ResponseImpl(conn, listener, req.maxBodySize);
             doDisconnect = false; // 连接交由 ResponseImpl 管理：正常读完可复用，取消时强制断开
             return response;
         } finally {
@@ -99,60 +81,72 @@ public class HttpClientImpl implements HttpClient {
         return new RequestImpl(url);
     }
 
-    private void sendFileStream(RequestImpl req, HttpURLConnection conn) throws IOException {
+    private static byte[] encodeForm(Map<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder body = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String value = entry.getValue();
+            if (value == null) continue;
+            if (body.length() > 0) body.append('&');
+            body.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
+                    .append(URLEncoder.encode(value, "UTF-8"));
+        }
+        return body.length() > 0 ? body.toString().getBytes(StandardCharsets.UTF_8) : null;
+    }
+
+    private void writeMultipart(RequestImpl req, HttpURLConnection conn) throws IOException {
         String boundary = "----WebKitFormBoundary" + UUID.randomUUID();
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        try (OutputStream output = conn.getOutputStream();
-             PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8), true)) {
-
-            // 1. 写入文本字段
+        try (OutputStream output = conn.getOutputStream()) {
             if (req.params != null) {
                 for (Map.Entry<String, String> entry : req.params.entrySet()) {
-                    writer.append("--").append(boundary).append("\r\n");
-                    writer.append("Content-Disposition: form-data; name=\"").append(entry.getKey()).append("\"\r\n");
-                    writer.append("\r\n");
-                    writer.append(entry.getValue()).append("\r\n");
-                    writer.flush();
+                    writeTextPart(output, boundary, entry.getKey(), entry.getValue());
                 }
             }
-
-            // 2. 写入文件字段
-            for (Map.Entry<String, String> entry : req.files.entrySet()) {
-                String fieldName = entry.getKey();
-                String values = entry.getValue();
-                for (String f : values.split(",")) {
-                    File file = new File(f);
-                    // 写入文件部分的头部
-                    writer.append("--").append(boundary).append("\r\n");
-                    writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
-                            .append("\"; filename=\"").append(file.getName().replace("\"", "")).append("\"\r\n");
-                    // 根据文件扩展名猜测 Content-Type，默认 application/octet-stream
-                    String contentType = guessContentType(file.getName());
-                    writer.append("Content-Type: ").append(contentType).append("\r\n");
-                    writer.append("\r\n");
-                    writer.flush();
-
-                    // 写入文件的二进制内容
-                    try (FileInputStream fileInput = new FileInputStream(file)) {
-                        byte[] buffer = new byte[1024 * 8];
-                        int bytesRead;
-                        while ((bytesRead = fileInput.read(buffer)) != -1) {
-                            output.write(buffer, 0, bytesRead);
-                        }
-                        output.flush();
-                    }
-
-                    // 文件内容结束后需要额外换行
-                    writer.append("\r\n");
-                    writer.flush();
+            for (Map.Entry<String, List<String>> entry : req.files.entrySet()) {
+                for (String path : entry.getValue()) {
+                    writeFilePart(output, boundary, entry.getKey(), path);
                 }
             }
-
-            // 3. 结束边界
-            writer.append("--").append(boundary).append("--\r\n");
-            writer.flush();
+            write(output, "--" + boundary + "--\r\n");
+            output.flush();
         }
+    }
+
+    private static void writeTextPart(OutputStream output, String boundary, String name, String value) throws IOException {
+        write(output, "--" + boundary + "\r\n");
+        write(output, "Content-Disposition: form-data; name=\"" + safeToken(name) + "\"\r\n\r\n");
+        write(output, value == null ? "" : value);
+        write(output, "\r\n");
+    }
+
+    private static void writeFilePart(OutputStream output, String boundary, String name, String path) throws IOException {
+        File file = new File(path);
+        if (!file.isFile()) throw new FileNotFoundException(path);
+        String fileName = safeToken(file.getName());
+
+        write(output, "--" + boundary + "\r\n");
+        write(output, "Content-Disposition: form-data; name=\"" + safeToken(name) + "\"; filename=\"" + fileName + "\"\r\n");
+        write(output, "Content-Type: " + guessContentType(fileName) + "\r\n\r\n");
+
+        try (FileInputStream input = new FileInputStream(file)) {
+            byte[] buffer = new byte[1024 * 8];
+            for (int len; (len = input.read(buffer)) != -1; ) {
+                output.write(buffer, 0, len);
+            }
+        }
+        write(output, "\r\n");
+    }
+
+    private static String safeToken(String value) {
+        if (value == null || value.isEmpty() || value.matches(".*[\r\n\"].*")) {
+            throw new IllegalArgumentException("illegal multipart field: " + value);
+        }
+        return value;
+    }
+
+    private static void write(OutputStream output, String text) throws IOException {
+        output.write(text.getBytes(StandardCharsets.UTF_8));
     }
 
     private static String guessContentType(String fileName) {

@@ -13,13 +13,16 @@ import qingzhou.http.client.ResponseListener;
 
 class ResponseImpl implements Response {
     private static volatile ExecutorService executor;
+    private static volatile boolean terminated;
 
     private static ExecutorService executor() {
+        if (terminated) throw new IllegalStateException("HttpClient is shut down");
+
         ExecutorService e = executor;
-        if (e == null || e.isShutdown()) {
+        if (e == null) {
             synchronized (ResponseImpl.class) {
                 e = executor;
-                if (e == null || e.isShutdown()) {
+                if (e == null) {
                     e = Executors.newCachedThreadPool(new ThreadFactory() {
                         private final AtomicInteger seq = new AtomicInteger();
 
@@ -38,6 +41,7 @@ class ResponseImpl implements Response {
     }
 
     static void shutdown() {
+        terminated = true;
         ExecutorService e = executor;
         executor = null;
         if (e != null) {
@@ -46,14 +50,16 @@ class ResponseImpl implements Response {
     }
 
     private final int code;
+    private final int maxBodySize;
     private final HttpURLConnection conn;
     private final boolean streaming;
 
     private volatile byte[] result;
     private volatile boolean cancelled;
 
-    ResponseImpl(HttpURLConnection conn, ResponseListener listener) throws IOException {
+    ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize) throws IOException {
         this.conn = conn;
+        this.maxBodySize = maxBodySize;
         this.code = conn.getResponseCode();
 
         if (listener != null && code >= 200 && code < 300) {
@@ -61,9 +67,12 @@ class ResponseImpl implements Response {
             streaming = true;
             executor().execute(() -> readStreaming(listener));
         } else {
-            // 同步模式或非 2xx：一次性读完整响应体，交由调用方根据 getStatus() 处理
+            // 同步模式或非 2xx：一次性读完整响应体，交由调用方根据 getStatus() 处理；传入 listener 时回调 onError
             streaming = false;
             result = read(responseStream(code));
+            if (listener != null) {
+                listener.onError(new IOException("HTTP " + code));
+            }
         }
     }
 
@@ -116,6 +125,9 @@ class ResponseImpl implements Response {
             int len;
             byte[] bytes = new byte[1024 * 8];
             while ((len = in.read(bytes)) != -1) {
+                if (maxBodySize > 0 && os.size() + len > maxBodySize) {
+                    throw new IOException("Response body exceeds maxBodySize: " + maxBodySize);
+                }
                 os.write(bytes, 0, len);
             }
             return os.toByteArray();

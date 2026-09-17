@@ -1,7 +1,9 @@
 package qingzhou.http.client.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.testng.Assert;
@@ -86,8 +88,8 @@ public class RequestImplTest {
     @Test
     public void filesMap_files_filesFieldStored() {
         RequestImpl request = new RequestImpl("http://localhost:7900");
-        Map<String, String> files = new HashMap<>();
-        files.put("upload", "/tmp/upload.txt");
+        Map<String, List<String>> files = new HashMap<>();
+        files.put("upload", Collections.singletonList("/tmp/upload.txt"));
 
         request.files(files);
 
@@ -113,11 +115,23 @@ public class RequestImplTest {
     }
 
     @Test
+    public void negativeValue_maxBodySize_throwsException() {
+        RequestImpl request = new RequestImpl("http://localhost:7900");
+
+        try {
+            request.maxBodySize(-1);
+            Assert.fail("maxBodySize 为负数应抛出 IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(e.getMessage(), "maxBodySize can not be negative");
+        }
+    }
+
+    @Test
     public void chainedCalls_setters_returnSameInstance() {
         RequestImpl request = new RequestImpl("http://localhost:7900");
         Map<String, String> headers = new HashMap<>();
         Map<String, String> params = new HashMap<>();
-        Map<String, String> files = new HashMap<>();
+        Map<String, List<String>> files = new HashMap<>();
 
         Assert.assertSame(request.method(HttpMethod.GET), request);
         Assert.assertSame(request.header("X-Request-Id", "request-123"), request);
@@ -125,6 +139,9 @@ public class RequestImplTest {
         Assert.assertSame(request.params(params), request);
         Assert.assertSame(request.body(new byte[0]), request);
         Assert.assertSame(request.files(files), request);
+        Assert.assertSame(request.trustedCertificates(), request);
+        Assert.assertSame(request.trustAllCertificates(), request);
+        Assert.assertSame(request.maxBodySize(1024), request);
         Assert.assertSame(request.connectTimeout(3000), request);
         Assert.assertSame(request.readTimeout(6000), request);
 
@@ -134,6 +151,8 @@ public class RequestImplTest {
                 .params(params)
                 .body(new byte[0])
                 .files(files)
+                .trustAllCertificates()
+                .maxBodySize(1024)
                 .connectTimeout(3000)
                 .readTimeout(6000), request);
     }

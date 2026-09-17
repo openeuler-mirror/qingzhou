@@ -6,10 +6,6 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.*;
 
 class ConnectionFactory {
@@ -19,28 +15,21 @@ class ConnectionFactory {
         return instance;
     }
 
-    // 未指定受信证书时使用：信任所有证书且不校验主机名，保持既有行为
+    // 未显式调用 trustAllCertificates 时使用：信任所有证书且不校验主机名
     private volatile SSLSocketFactory trustAllFactory;
 
-    // 受信证书对应的 SSL 通信按证书集合缓存，避免相同信任策略重复构建、影响 TLS 会话复用
-    private final Map<List<X509Certificate>, SSLSocketFactory> trustFactoryCache = new ConcurrentHashMap<>();
-
-    HttpURLConnection getConnection(String url, int connectTimeout, int readTimeout, X509Certificate[] trustedCertificates) throws Exception {
+    HttpURLConnection getConnection(String url, int connectTimeout, int readTimeout, X509Certificate[] trustedCertificates, boolean trustAll) throws Exception {
         if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is missing");
 
-        HttpURLConnection conn;
         URL http = new URL(url);
-        if (url.startsWith("https:")) {
-            HttpsURLConnection httpsConn = (HttpsURLConnection) http.openConnection();
-            if (trustedCertificates == null || trustedCertificates.length == 0) {
-                httpsConn.setSSLSocketFactory(getTrustAllFactory());
-                httpsConn.setHostnameVerifier((hostname, session) -> true);
-            } else {
-                httpsConn.setSSLSocketFactory(getTrustFactory(trustedCertificates));
-            }
-            conn = httpsConn;
-        } else {
-            conn = (HttpURLConnection) http.openConnection();
+        String protocol = http.getProtocol();
+        if (!protocol.equals("http") && !protocol.equals("https")) {
+            throw new IllegalArgumentException("unsupported protocol: " + protocol);
+        }
+
+        HttpURLConnection conn = (HttpURLConnection) http.openConnection();
+        if (protocol.equals("https")) {
+            configSsl((HttpsURLConnection) conn, trustedCertificates, trustAll);
         }
 
         setDefaultConfig(conn);
@@ -48,6 +37,17 @@ class ConnectionFactory {
         conn.setReadTimeout(readTimeout);
 
         return conn;
+    }
+
+    private void configSsl(HttpsURLConnection httpsConn, X509Certificate[] trustedCertificates, boolean trustAll) throws Exception {
+        if (trustAll) {
+            // 信任所有证书且不校验主机名，存在中间人攻击风险
+            httpsConn.setSSLSocketFactory(getTrustAllFactory());
+            httpsConn.setHostnameVerifier((hostname, session) -> true);
+        } else if (trustedCertificates != null && trustedCertificates.length > 0) {
+            httpsConn.setSSLSocketFactory(getTrustFactory(trustedCertificates));
+        }
+        // 其余情况使用 JVM 默认 CA 信任库校验
     }
 
     private SSLSocketFactory getTrustAllFactory() throws Exception {
@@ -76,12 +76,6 @@ class ConnectionFactory {
     }
 
     private SSLSocketFactory getTrustFactory(X509Certificate[] trustedCertificates) throws Exception {
-        List<X509Certificate> cacheKey = Arrays.asList(trustedCertificates.clone()); // 防御拷贝：缓存键不应随调用方持有的数组变动
-        SSLSocketFactory factory = trustFactoryCache.get(cacheKey);
-        if (factory != null) {
-            return factory;
-        }
-
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
         for (int i = 0; i < trustedCertificates.length; i++) {
@@ -90,12 +84,10 @@ class ConnectionFactory {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustManagerFactory.init(keyStore);
 
-        factory = newSocketFactory(trustManagerFactory.getTrustManagers());
-        trustFactoryCache.put(cacheKey, factory);
-        return factory;
+        return newSocketFactory(trustManagerFactory.getTrustManagers());
     }
 
-    private static SSLSocketFactory newSocketFactory(TrustManager... trustManagers) throws Exception {
+    private SSLSocketFactory newSocketFactory(TrustManager... trustManagers) throws Exception {
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, trustManagers, new SecureRandom());
         return sslContext.getSocketFactory();
@@ -106,7 +98,6 @@ class ConnectionFactory {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         conn.setUseCaches(false);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setRequestProperty("accept", "*/*");
         conn.setInstanceFollowRedirects(false);
         // 不强制 Connection: close，交由 JDK 默认 keep-alive 复用连接
