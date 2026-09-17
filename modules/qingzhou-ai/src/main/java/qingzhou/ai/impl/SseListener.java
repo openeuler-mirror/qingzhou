@@ -65,10 +65,17 @@ public class SseListener implements Listener {
 
     final StringBuilder allContent = new StringBuilder();
 
+    /** 流正常结束后的动作（AiChat 落库回答全文：chat() 异步，全文须等 onComplete 才完整） */
+    private Runnable completeAction;
+
     public SseListener(HttpResponse httpResponse, Logger logger, Json json) {
         this.httpResponse = httpResponse;
         this.logger = logger;
         this.json = json;
+    }
+
+    public void onCompleteAction(Runnable action) {
+        this.completeAction = action;
     }
 
     /**
@@ -214,6 +221,14 @@ public class SseListener implements Listener {
                 httpResponse.sendFinish(toSseText(SseEvent.of(SseEvent.Type.RUN_FINISHED)));
             } catch (Exception e) {
                 // 客户端已断开连接，无法发送结束事件，忽略
+            }
+        }
+        if (completeAction != null) {
+            try {
+                completeAction.run();
+            } catch (Throwable t) {
+                // 落库失败仅记日志，不影响流已正常结束
+                logger.warn("failed to persist assistant message: " + t.getMessage());
             }
         }
     }

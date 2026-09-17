@@ -2,9 +2,15 @@ package qingzhou.store.impl;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import qingzhou.store.Store;
 
@@ -28,10 +34,24 @@ public class FileStore implements Store {
 
     @Override
     public void put(String key, String value) {
+        // 先写临时文件再原子替换：全程不触碰目标，进程崩溃/断电后目标始终是完整的旧值或新值，
+        // 不会留下半截内容。临时文件与目标同目录，保证同一文件系统上可做原子移动
+        Path path = path(key);
+        Path temp = dir.resolve(".tmp-" + UUID.randomUUID());
         try {
-            Files.write(path(key), value.getBytes(StandardCharsets.UTF_8));
+            Files.write(temp, value.getBytes(StandardCharsets.UTF_8));
+            try {
+                Files.move(temp, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING); // 文件系统不支持原子替换时退化为普通移动
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try { // move 已成功则此文件不存在；写失败或 move 失败时清理残留
+                Files.deleteIfExists(temp);
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -58,5 +78,17 @@ public class FileStore implements Store {
     @Override
     public boolean contains(String key) {
         return Files.exists(path(key));
+    }
+
+    @Override
+    public Set<String> keys() {
+        try (Stream<Path> files = Files.list(dir)) {
+            // .tmp- 开头的是 put 的写中临时文件（崩溃时可能残留），不属于存储的 key
+            return files.map(path -> path.getFileName().toString())
+                    .filter(name -> !name.startsWith(".tmp-"))
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
