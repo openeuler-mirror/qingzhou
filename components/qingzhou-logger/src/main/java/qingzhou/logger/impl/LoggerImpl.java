@@ -15,12 +15,11 @@ public class LoggerImpl implements Logger {
 
     @Activate
     public void init(Map<String, Object> config) {
-        Map<String, String> loggerConfig = new HashMap<String, String>() {{
-            put("autoshutdown", "false"); // 必要的默认配置
-        }};
+        Map<String, String> loggerConfig = new HashMap<>();
+        loggerConfig.put("autoshutdown", "false"); // 必要的默认配置
 
         config.entrySet().stream().filter(e -> e.getValue() instanceof String)
-                .forEach(e -> loggerConfig.put(e.getKey(), String.valueOf(e.getValue())));
+                .forEach(e -> loggerConfig.put(e.getKey(), (String) e.getValue()));
 
         org.tinylog.configuration.Configuration.replace(loggerConfig);
 
@@ -34,7 +33,8 @@ public class LoggerImpl implements Logger {
 
         try {
             org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // 恢复中断标志，不吞中断信号
         }
     }
 

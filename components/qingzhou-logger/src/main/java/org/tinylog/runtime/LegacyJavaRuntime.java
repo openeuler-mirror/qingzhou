@@ -73,11 +73,9 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
 
     @Override
     public String getCallerClassName(final int depth) {
-        if (hasSunReflection) {
-            return getCallerClass(depth + 1).getName();
-        } else {
-            return getCallerStackTraceElement(depth + 1).getClassName();
-        }
+        Class<?> caller = getCallerClass(depth + 1);
+        // getCallerClass 在 JDK9+ 回退路径找不到类时返回 null，此时退回栈帧解析
+        return caller != null ? caller.getName() : getCallerStackTraceElement(depth + 1).getClassName();
     }
 
     /**
