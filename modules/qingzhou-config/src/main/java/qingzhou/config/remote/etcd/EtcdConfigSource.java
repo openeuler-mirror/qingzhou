@@ -1,18 +1,17 @@
 package qingzhou.config.remote.etcd;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import qingzhou.config.impl.Config;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * etcd v3 JSON Gateway（HTTP REST）实现：HTTP 与 JSON 均复用框架组件，不引入第三方库。
@@ -59,11 +58,20 @@ public class EtcdConfigSource implements RemoteConfigSource {
             if (!pidKey.startsWith(prefix)) continue;// 命名空间隔离：其它命名空间的数据不可见
             String pid = pidKey.substring(prefix.length());
             if (!pid.isEmpty()) {
-                Map<String, String> parsed = Config.parse(decode(kv.value));
-                parsed.forEach((key1, value) -> result.put(pid + "." + key1, value));
+                String k = normalizeKey(pid);
+                result.put(k, decode(kv.value));
             }
         }
         return result;
+    }
+
+    /**
+     * key 归一化：'/' -> '.'，并合并连续的点
+     */
+    private static String normalizeKey(String rawKey) {
+        return rawKey.trim()
+                .replace('/', '.')
+                .replaceAll("\\.{2,}", ".");
     }
 
     private <T> T call(String body) throws Exception {
