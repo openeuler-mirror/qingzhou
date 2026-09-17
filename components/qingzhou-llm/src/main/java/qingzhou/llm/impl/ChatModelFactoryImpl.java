@@ -63,8 +63,6 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
             if ("http".equalsIgnoreCase(scheme) && !isLoopback(host)) {
                 Utils.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
             }
-        } catch (IllegalArgumentException e) {
-            throw e;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid LLM baseUrl: " + baseUrl, e);
         }

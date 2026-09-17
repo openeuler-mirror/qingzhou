@@ -16,7 +16,7 @@ public class CryptoImplTest {
             String key = new CryptoImpl().generateKey();
             Assert.assertNotNull(key);
             Assert.assertFalse(key.matches(".*\\s.*"));
-            Assert.assertSame(key.length(), 24);
+            Assert.assertEquals(key.length(), 24);
         }
     }
 

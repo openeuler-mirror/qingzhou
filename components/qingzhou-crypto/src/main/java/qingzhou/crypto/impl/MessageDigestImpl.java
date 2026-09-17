@@ -13,7 +13,7 @@ class MessageDigestImpl implements MessageDigest {
     private final Base16Coder base16Coder;
     private final Random random = ThreadLocalRandom.current();
 
-    private final String SP = "$";
+    private static final String SALT_SEPARATOR = "$";
 
     MessageDigestImpl(Base16Coder base16Coder) {
         this.base16Coder = base16Coder;
@@ -35,7 +35,7 @@ class MessageDigestImpl implements MessageDigest {
             return false;
         }
 
-        String[] splitPwd = msgDigest.split("\\" + SP);
+        String[] splitPwd = msgDigest.split("\\" + SALT_SEPARATOR);
 
         String algorithm = splitPwd[0];
         byte[] salt = decode(splitPwd[1]);
@@ -73,7 +73,7 @@ class MessageDigestImpl implements MessageDigest {
         byte[] digest = digest(algorithm, iterations, salt,
                 data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
         String pwd = encode(digest);
-        return algorithm + SP + encode(salt) + SP + iterations + SP + pwd;
+        return algorithm + SALT_SEPARATOR + encode(salt) + SALT_SEPARATOR + iterations + SALT_SEPARATOR + pwd;
     }
 
     private byte[] decode(String encode) {

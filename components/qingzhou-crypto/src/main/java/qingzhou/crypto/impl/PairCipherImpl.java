@@ -87,8 +87,8 @@ class PairCipherImpl implements PairCipher {
         return base64Coder.encode(enContent);
     }
 
-    private byte[] encryptWithKey(Key key, byte[] encryptBytes) throws Exception {
-        return cipherBytes(encryptBytes, cipher(key, Cipher.ENCRYPT_MODE), modulusBytes(key) - OAEP_OVERHEAD);
+    private byte[] encryptWithKey(Key key, byte[] input) throws Exception {
+        return cipherBytes(input, cipher(key, Cipher.ENCRYPT_MODE), modulusBytes(key) - OAEP_OVERHEAD);
     }
 
     private String decryptWithKey(Key key, String input) throws Exception {
@@ -99,8 +99,8 @@ class PairCipherImpl implements PairCipher {
         return new String(decryptedWithKey, StandardCharsets.UTF_8);
     }
 
-    private byte[] decryptWithKey(Key key, byte[] decryptBytes) throws Exception {
-        return cipherBytes(decryptBytes, cipher(key, Cipher.DECRYPT_MODE), modulusBytes(key));
+    private byte[] decryptWithKey(Key key, byte[] input) throws Exception {
+        return cipherBytes(input, cipher(key, Cipher.DECRYPT_MODE), modulusBytes(key));
     }
 
     private Cipher cipher(Key key, int mode) throws Exception {
@@ -114,23 +114,15 @@ class PairCipherImpl implements PairCipher {
         return (((RSAKey) key).getModulus().bitLength() + 7) / 8;
     }
 
-    private byte[] cipherBytes(byte[] decryptBytes, Cipher cipher, int decryptBlock) throws IllegalBlockSizeException, BadPaddingException, IOException {
-        int decryptLen = decryptBytes.length;
-        int offLen = 0;
-        int i = 0;
+    private byte[] cipherBytes(byte[] input, Cipher cipher, int blockSize) throws IllegalBlockSizeException, BadPaddingException, IOException {
+        int inputLen = input.length;
+        int offset = 0;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while (offLen < decryptLen) {
-            byte[] cache;
-            if (decryptLen - offLen > decryptBlock) {
-                cache = cipher.doFinal(decryptBytes, offLen, decryptBlock);
-            } else {
-                cache = cipher.doFinal(decryptBytes, offLen, decryptLen - offLen);
-            }
-            bos.write(cache);
-            i++;
-            offLen = decryptBlock * i;
+        while (offset < inputLen) {
+            int len = Math.min(blockSize, inputLen - offset);
+            bos.write(cipher.doFinal(input, offset, len));
+            offset += len;
         }
-
         return bos.toByteArray();
     }
 }

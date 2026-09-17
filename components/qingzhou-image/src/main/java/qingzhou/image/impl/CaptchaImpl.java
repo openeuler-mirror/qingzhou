@@ -13,11 +13,11 @@ import qingzhou.image.Captcha;
 
 @Component
 public class CaptchaImpl implements Captcha {
-    private final int WIDTH = 108;
-    private final int HEIGHT = 40;
-    private final char[] CHAR_ARRAY = "3456789ABCDEFGHJKMNPQRSTUVWXY".toCharArray();
+    private final int width = 108;
+    private final int height = 40;
+    private final char[] charArray = "3456789ABCDEFGHJKMNPQRSTUVWXY".toCharArray();
     // 验证码字体
-    private final Font[] RANDOM_FONT = new Font[]{
+    private final Font[] randomFont = new Font[]{
             new Font(Font.DIALOG, Font.BOLD, 33),
             new Font(Font.DIALOG_INPUT, Font.BOLD, 34),
             new Font(Font.SERIF, Font.BOLD, 33),
@@ -29,17 +29,16 @@ public class CaptchaImpl implements Captcha {
 
     @Override
     public String genCode() {
-        Random random = new Random(System.nanoTime());
         char[] randomChars = new char[4];
         for (int i = 0; i < randomChars.length; i++) {
-            randomChars[i] = CHAR_ARRAY[random.nextInt(CHAR_ARRAY.length)];
+            randomChars[i] = charArray[random.nextInt(charArray.length)];
         }
         return String.valueOf(randomChars);
     }
 
     @Override
     public byte[] genImage(String code) throws IOException {
-        BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         drawGraphic(code, image);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ImageIO.write(image, "jpg", bos);
@@ -58,20 +57,19 @@ public class CaptchaImpl implements Captcha {
 
         // 设定背景色
         g.setColor(getRandColor(210, 250));
-        g.fillRect(0, 0, WIDTH, HEIGHT);
+        g.fillRect(0, 0, width, height);
 
         //绘制小字符背景
         Color color = null;
         for (int i = 0; i < 20; i++) {
             color = getRandColor(120, 200);
             g.setColor(color);
-            String rand = String.valueOf(CHAR_ARRAY[random.nextInt(CHAR_ARRAY.length)]);
-            g.drawString(rand, random.nextInt(WIDTH), random.nextInt(HEIGHT));
-            color = null;
+            String rand = String.valueOf(charArray[random.nextInt(charArray.length)]);
+            g.drawString(rand, random.nextInt(width), random.nextInt(height));
         }
 
         //设定字体
-        g.setFont(RANDOM_FONT[random.nextInt(RANDOM_FONT.length)]);
+        g.setFont(randomFont[random.nextInt(randomFont.length)]);
         // 绘制验证码
         for (int i = 0; i < randomString.length(); i++) {
             //旋转度数 最好小于45度
@@ -97,7 +95,7 @@ public class CaptchaImpl implements Captcha {
         BasicStroke bs = new BasicStroke(3);
         g.setStroke(bs);
         //画出曲线
-        QuadCurve2D.Double curve = new QuadCurve2D.Double(0d, random.nextInt(HEIGHT - 8) + 4, (double) WIDTH / 2, (double) HEIGHT / 2, WIDTH, random.nextInt(HEIGHT - 8) + 4);
+        QuadCurve2D.Double curve = new QuadCurve2D.Double(0d, random.nextInt(height - 8) + 4, (double) width / 2, (double) height / 2, width, random.nextInt(height - 8) + 4);
         g.draw(curve);
         // 销毁图像
         g.dispose();
@@ -107,16 +105,15 @@ public class CaptchaImpl implements Captcha {
      * 给定范围获得随机颜色
      */
     private Color getRandColor(int fc, int bc) {
-        Random rand = new Random();
         if (fc > 255) {
             fc = 255;
         }
         if (bc > 255) {
             bc = 255;
         }
-        int r = fc + rand.nextInt(bc - fc);
-        int g = fc + rand.nextInt(bc - fc);
-        int b = fc + rand.nextInt(bc - fc);
+        int r = fc + random.nextInt(bc - fc);
+        int g = fc + random.nextInt(bc - fc);
+        int b = fc + random.nextInt(bc - fc);
         return new Color(r, g, b);
     }
 }

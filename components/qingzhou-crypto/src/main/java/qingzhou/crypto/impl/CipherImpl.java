@@ -33,7 +33,7 @@ class CipherImpl implements Cipher {
         s = s.trim();
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         byte[] encrypt = encrypt(bytes);
-        return base64Coder.encode(encrypt);// 不要用base64，不利于http传输，转义会错误
+        return base64Coder.encode(encrypt);
     }
 
     @Override
@@ -111,11 +111,7 @@ class CipherImpl implements Cipher {
         return cipher.doFinal(encrypted);
     }
 
-    private javax.crypto.Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        try {
-            return javax.crypto.Cipher.getInstance(ALG_MODE, "SunJCE");
-        } catch (Exception e) {
-            return javax.crypto.Cipher.getInstance(ALG_MODE);
-        }
+    private javax.crypto.Cipher getCipher() throws NoSuchAlgorithmException, NoSuchPaddingException {
+        return javax.crypto.Cipher.getInstance(ALG_MODE);
     }
 }

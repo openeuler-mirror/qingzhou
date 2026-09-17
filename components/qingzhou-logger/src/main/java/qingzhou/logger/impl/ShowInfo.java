@@ -48,18 +48,15 @@ class ShowInfo {
     private static String calculateTimeDifference(long startTimeMillis, long endTimeMillis) {
         Date startDate = new Date();
         startDate.setTime(startTimeMillis);
-        Date ednDate = new Date();
-        ednDate.setTime(endTimeMillis);
-        return calculateTimeDifference(startDate, ednDate);
+        Date endDate = new Date();
+        endDate.setTime(endTimeMillis);
+        return calculateTimeDifference(startDate, endDate);
     }
 
     /**
      * 计算两个时间差（年，月，星期，日，时，分，秒）
      */
     private static String calculateTimeDifference(Date startDate, Date endDate) {
-        if (null == startDate || null == endDate) {
-            return "";
-        }
         ZoneId zoneId = ZoneId.systemDefault();
         LocalDateTime fromDateTime = LocalDateTime.ofInstant(startDate.toInstant(), zoneId);
         LocalDateTime toDateTime = LocalDateTime.ofInstant(endDate.toInstant(), zoneId);
