@@ -1,6 +1,8 @@
 package qingzhou.store.impl;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import qingzhou.store.Store;
@@ -26,5 +28,10 @@ public class MemoryStore implements Store {
     @Override
     public boolean contains(String key) {
         return data.containsKey(key);
+    }
+
+    @Override
+    public Set<String> keys() {
+        return new HashSet<>(data.keySet());
     }
 }

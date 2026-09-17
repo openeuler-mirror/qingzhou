@@ -91,48 +91,42 @@ public class ConversationApi implements HttpHandler {
     }
 
     private void listConversations(HttpResponse httpResponse, String userId) throws Exception {
-//        List<ConversationSummary> conversations = index.list(userId);
-//        Map<String, Object> body = new HashMap<>();
-//        body.put("conversations", conversations);
-//        sendJson(httpResponse, 200, body);
+        Map<String, Object> body = new HashMap<>();
+        body.put("conversations", store.listConversations(userId));
+        sendJson(httpResponse, 200, body);
     }
 
     private void listMessages(HttpResponse httpResponse, String userId, String conversationId) throws Exception {
-        // 会话不存在或归属不符时接口契约返回空列表，前端据此以空会话呈现
-//        List<HistoryMessage> messages = index.contains(userId, conversationId)
-//                ? store.listMessages(conversationId) : Collections.emptyList();
-//        Map<String, Object> body = new HashMap<>();
-//        body.put("conversationId", conversationId);
-//        body.put("messages", messages);
-//        sendJson(httpResponse, 200, body);
+        Map<String, Object> body = new HashMap<>();
+        body.put("conversationId", conversationId);
+        body.put("messages", store.listMessages(userId, conversationId));
+        sendJson(httpResponse, 200, body);
     }
 
     private void renameConversation(HttpRequest httpRequest, HttpResponse httpResponse, String userId,
                                     String conversationId) throws Exception {
-//        Map<String, Object> params = parseBody(httpRequest);
-//        if (params == null) {
-//            sendError(httpResponse, 400, "BAD_REQUEST");
-//            return;
-//        }
-//        Object title = params.get("title");
-//        // 空串/非字符串统一归一为 null（未命名），与索引层"null 表示未命名"的语义对齐
-//        String titleStr = title instanceof String && !((String) title).trim().isEmpty()
-//                ? ((String) title).trim() : null;
-//        if (!index.rename(userId, conversationId, titleStr)) {
-//            sendError(httpResponse, 404, "NOT_FOUND");
-//            return;
-//        }
-//        sendJson(httpResponse, 200, OK_BODY);
+        Map<String, Object> params = parseBody(httpRequest);
+        if (params == null) {
+            sendError(httpResponse, 400, "BAD_REQUEST");
+            return;
+        }
+        Object title = params.get("title");
+        // 空串/非字符串归一为 null（未命名）
+        String titleStr = title instanceof String && !((String) title).trim().isEmpty()
+                ? ((String) title).trim() : null;
+        if (!store.rename(userId, conversationId, titleStr)) {
+            sendError(httpResponse, 404, "NOT_FOUND");
+            return;
+        }
+        sendJson(httpResponse, 200, OK_BODY);
     }
 
     private void deleteConversation(HttpResponse httpResponse, String userId, String conversationId) throws Exception {
-        // 先删索引（未命中即 404，且不删除数据），命中后联动删除会话记录
-//        if (!index.remove(userId, conversationId)) {
-//            sendError(httpResponse, 404, "NOT_FOUND");
-//            return;
-//        }
-//        store.delete(conversationId);
-//        sendJson(httpResponse, 200, OK_BODY);
+        if (!store.remove(userId, conversationId)) {
+            sendError(httpResponse, 404, "NOT_FOUND");
+            return;
+        }
+        sendJson(httpResponse, 200, OK_BODY);
     }
 
     private Map<String, Object> parseBody(HttpRequest httpRequest) {
@@ -147,9 +141,7 @@ public class ConversationApi implements HttpHandler {
         }
     }
 
-    /**
-     * 注册前缀（/ai/conversations）之后的剩余路径；前缀定位失败（防御）返回 null
-     */
+    /** 注册前缀之后的剩余路径，定位失败返回 null */
     private String restPath(HttpRequest httpRequest) {
         String path = httpRequest.getPath();
         if (path == null) return null;
@@ -157,9 +149,7 @@ public class ConversationApi implements HttpHandler {
         return idx < 0 ? null : path.substring(idx + API_PREFIX.length());
     }
 
-    /**
-     * 与 AiChat 对话链路同源：userId 由鉴权层从 token 解析，显式关闭鉴权时退化为匿名
-     */
+    /** userId 由鉴权层从 token 解析；未开鉴权时为匿名 */
     private String resolveUsername(HttpRequest httpRequest) {
         Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
         String username = principal instanceof String ? (String) principal : null;
