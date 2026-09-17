@@ -3,8 +3,10 @@ package qingzhou.http.client.impl;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -52,7 +54,7 @@ public class HttpClientImpl implements HttpClient {
                 if (!isFirst) bodyStr.append('&');
                 isFirst = false;
 
-                bodyStr.append(entry.getKey()).append('=');
+                bodyStr.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=');
                 bodyStr.append(URLEncoder.encode(value, "UTF-8"));
             }
             body = bodyStr.length() > 0 ? bodyStr.toString().getBytes(StandardCharsets.UTF_8) : null;
@@ -61,7 +63,6 @@ public class HttpClientImpl implements HttpClient {
         boolean doDisconnect = true;
         try {
             if (body != null) {
-                conn.setRequestProperty("Content-Length", String.valueOf(body.length));
                 try (OutputStream out = conn.getOutputStream()) {
                     out.write(body, 0, body.length);
                     out.flush();
@@ -99,7 +100,7 @@ public class HttpClientImpl implements HttpClient {
     }
 
     private void sendFileStream(RequestImpl req, HttpURLConnection conn) throws IOException {
-        String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
+        String boundary = "----WebKitFormBoundary" + UUID.randomUUID();
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
         try (OutputStream output = conn.getOutputStream();
@@ -125,7 +126,7 @@ public class HttpClientImpl implements HttpClient {
                     // 写入文件部分的头部
                     writer.append("--").append(boundary).append("\r\n");
                     writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
-                            .append("\"; filename=\"").append(file.getName()).append("\"\r\n");
+                            .append("\"; filename=\"").append(file.getName().replace("\"", "")).append("\"\r\n");
                     // 根据文件扩展名猜测 Content-Type，默认 application/octet-stream
                     String contentType = guessContentType(file.getName());
                     writer.append("Content-Type: ").append(contentType).append("\r\n");
@@ -155,14 +156,7 @@ public class HttpClientImpl implements HttpClient {
     }
 
     private static String guessContentType(String fileName) {
-        String lower = fileName.toLowerCase();
-        if (lower.endsWith(".txt")) return "text/plain";
-        if (lower.endsWith(".html") || lower.endsWith(".htm")) return "text/html";
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-        if (lower.endsWith(".png")) return "image/png";
-        if (lower.endsWith(".gif")) return "image/gif";
-        if (lower.endsWith(".pdf")) return "application/pdf";
-        if (lower.endsWith(".zip")) return "application/zip";
-        return "application/octet-stream";
+        String type = URLConnection.guessContentTypeFromName(fileName);
+        return type != null ? type : "application/octet-stream";
     }
 }

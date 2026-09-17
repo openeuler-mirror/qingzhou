@@ -34,6 +34,7 @@ class MessageDigestImpl implements MessageDigest {
         }
 
         String[] splitPwd = msgDigest.split("\\" + SALT_SEPARATOR);
+        if (splitPwd.length != 4) return false; // 格式非法的摘要直接判定不匹配
 
         String algorithm = splitPwd[0];
         byte[] salt = decode(splitPwd[1]);

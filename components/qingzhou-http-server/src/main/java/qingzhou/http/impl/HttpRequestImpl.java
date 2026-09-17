@@ -1,5 +1,6 @@
 package qingzhou.http.impl;
 
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -33,9 +34,8 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public String getRemoteHost() {
-        return request.remoteAddress() != null ?
-                Objects.requireNonNull(request.remoteAddress()).getHostString() :
-                "unknown";
+        InetSocketAddress address = request.remoteAddress();
+        return address != null ? address.getHostString() : "unknown";
     }
 
     @Override

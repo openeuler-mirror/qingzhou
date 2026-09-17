@@ -82,6 +82,8 @@ class PairCipherImpl implements PairCipher {
     }
 
     private String encryptWithKey(Key key, String input) throws Exception {
+        if (input == null) return null; // 与 decryptWithKey(String) 的 null 契约保持对称
+
         byte[] bytesContent = input.getBytes(StandardCharsets.UTF_8);
         byte[] enContent = encryptWithKey(key, bytesContent);
         return base64Coder.encode(enContent);

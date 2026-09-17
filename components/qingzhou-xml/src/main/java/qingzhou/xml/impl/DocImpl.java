@@ -21,17 +21,7 @@ import org.w3c.dom.NodeList;
 import qingzhou.xml.Doc;
 
 class DocImpl implements Doc {
-    private static TransformerFactory transformerFactory;
-
-    static {
-        try {
-            transformerFactory = TransformerFactory.newInstance();
-        } catch (Throwable e) {
-            transformerFactory = TransformerFactory.newInstance(
-                    "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl",
-                    DocImpl.class.getClassLoader());
-        }
-    }
+    private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     private final org.w3c.dom.Document dom;
 

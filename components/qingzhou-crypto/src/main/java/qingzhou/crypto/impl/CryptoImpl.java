@@ -15,6 +15,8 @@ import qingzhou.crypto.MessageDigest;
 
 @Component
 public class CryptoImpl implements Crypto {
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final Base64Coder base64Coder = new Base64CoderImpl();
     private final Base32Coder base32Coder = new Base32CoderImpl();
     private final Base16Coder base16Coder = new Base16CoderImpl();
@@ -28,7 +30,7 @@ public class CryptoImpl implements Crypto {
     @Override
     public String generateKey() {
         byte[] key = new byte[16];
-        new SecureRandom().nextBytes(key);
+        RANDOM.nextBytes(key);
         return base64Coder.encode(key);
     }
 
@@ -107,14 +109,9 @@ public class CryptoImpl implements Crypto {
         return base16Coder;
     }
 
-    @Override
-    public Base16Coder getHexCoder() {
-        return base16Coder;
-    }
-
     private KeyPair genKeyPair() throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(PairCipherImpl.ALG);
-        kpg.initialize(2048, new SecureRandom()); // 1024 位已低于安全基线，且 OAEP 分块后载荷过小
+        kpg.initialize(2048, RANDOM); // 1024 位已低于安全基线，且 OAEP 分块后载荷过小
         return kpg.generateKeyPair();
     }
 

@@ -9,11 +9,11 @@ import qingzhou.http.server.HttpResponse;
 import reactor.core.publisher.Sinks;
 import reactor.netty.http.server.HttpServerResponse;
 
-public class HttpResponseImpl implements HttpResponse {
+class HttpResponseImpl implements HttpResponse {
     private final HttpServerResponse response;
     private final Sinks.Many<byte[]> streamResponse;
 
-    public HttpResponseImpl(HttpServerResponse response, Sinks.Many<byte[]> streamResponse) {
+    HttpResponseImpl(HttpServerResponse response, Sinks.Many<byte[]> streamResponse) {
         this.response = response;
         this.streamResponse = streamResponse;
     }

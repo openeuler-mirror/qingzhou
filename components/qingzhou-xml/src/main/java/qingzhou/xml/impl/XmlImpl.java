@@ -17,12 +17,8 @@ public class XmlImpl implements Xml {
 
     @Activate
     public void init() throws Exception {
-        DocumentBuilderFactory dbf;
-        try {
-            dbf = DocumentBuilderFactory.newInstance("com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", null);
-        } catch (Exception e) {
-            dbf = DocumentBuilderFactory.newInstance();
-        }
+        // 不指定实现类名：跨 JDK/非 OpenJDK 发行版可用，默认查找机制本身已带回退
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);

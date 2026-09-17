@@ -18,6 +18,8 @@ class CipherImpl implements Cipher {
     private static final int IV_SIZE = 12;
     private static final int TAG_SIZE = 16;
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final Base64Coder base64Coder;
 
     private final SecretKeySpec key;
@@ -79,7 +81,7 @@ class CipherImpl implements Cipher {
 
         // 生成随机IV
         byte[] iv = new byte[IV_SIZE];
-        new SecureRandom().nextBytes(iv);
+        RANDOM.nextBytes(iv);
 
         // 执行加密，结果包含：密文+认证标签
         javax.crypto.Cipher cipher = getCipher();

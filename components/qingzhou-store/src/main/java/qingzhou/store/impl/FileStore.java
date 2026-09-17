@@ -3,6 +3,7 @@ package qingzhou.store.impl;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import qingzhou.store.Store;
@@ -36,10 +37,10 @@ public class FileStore implements Store {
 
     @Override
     public String get(String key) {
-        Path path = path(key);
-        if (!Files.exists(path)) return null;
         try {
-            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(path(key)), StandardCharsets.UTF_8);
+        } catch (NoSuchFileException e) {
+            return null; // 并发删除时读不到即为不存在，且消除 exists-then-read 竞态
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

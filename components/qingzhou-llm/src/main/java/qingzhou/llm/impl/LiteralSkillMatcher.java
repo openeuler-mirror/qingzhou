@@ -24,6 +24,7 @@ public class LiteralSkillMatcher implements SkillMatcher {
     @Override
     public Collection<Skill> match(Collection<Skill> candidates, String message) {
         List<Skill> matched = new ArrayList<>();
+        if (message == null || message.isEmpty()) return matched;
         String question = message.length() > MAX_SCAN_LENGTH ? message.substring(0, MAX_SCAN_LENGTH) : message;
         for (Skill skill : candidates) {
             if (isStronglyRelated(skill, question)) {

@@ -68,7 +68,7 @@ public class JdbcPoolImpl implements JdbcPool {
 
             ClassLoader loader = urlClassLoader != null ? urlClassLoader : this.getClass().getClassLoader();
             Class<?> dsClass = loader.loadClass(config.get("dataSourceClassName"));
-            CommonDataSource dataSource = (CommonDataSource) dsClass.newInstance();
+            CommonDataSource dataSource = (CommonDataSource) dsClass.getDeclaredConstructor().newInstance();
             poolProperties.setDataSource(dataSource);
 
             if (config.get("url") != null) {
@@ -96,7 +96,7 @@ public class JdbcPoolImpl implements JdbcPool {
 
     @Deactivate
     public void close() {
-        dataSource.close(true);
+        if (dataSource != null) dataSource.close(true); // open 失败时 OSGi 仍会回调 deactivate，避免 NPE
 
         if (urlClassLoader != null) {
             try {
@@ -124,24 +124,21 @@ public class JdbcPoolImpl implements JdbcPool {
                 if (pd.getName().equals(entry.getKey())) {
                     Method writeMethod = pd.getWriteMethod();
                     if (writeMethod != null) {
-                        try {
-                            writeMethod.invoke(object, entry.getValue());
-                        } catch (java.lang.IllegalArgumentException e1) {
-                            try {
-                                writeMethod.invoke(object, Integer.parseInt(entry.getValue()));
-                            } catch (java.lang.IllegalArgumentException e2) {
-                                try {
-                                    writeMethod.invoke(object, Long.parseLong(entry.getValue()));
-                                } catch (java.lang.IllegalArgumentException e3) {
-                                    writeMethod.invoke(object, Boolean.parseBoolean(entry.getValue()));
-                                }
-                            }
-                        }
+                        Object value = convert(entry.getValue(), writeMethod.getParameterTypes()[0]);
+                        writeMethod.invoke(object, value);
                     }
 
                     break;
                 }
             }
         }
+    }
+
+    // 按写入方法的参数类型做一次显式转换，替代嵌套 try-catch 试探；数值非法时抛 NumberFormatException 暴露配置笔误
+    private Object convert(String value, Class<?> type) {
+        if (type == int.class || type == Integer.class) return Integer.valueOf(value);
+        if (type == long.class || type == Long.class) return Long.valueOf(value);
+        if (type == boolean.class || type == Boolean.class) return Boolean.valueOf(value);
+        return value;
     }
 }

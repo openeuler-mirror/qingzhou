@@ -49,7 +49,9 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     }
 
     private Publisher<Void> dispatch(HttpServerRequest request, HttpServerResponse response) {
-        String requestPath = request.uri().split("\\?")[0];
+        String uri = request.uri();
+        int queryIndex = uri.indexOf('?');
+        String requestPath = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
         } catch (Exception e) {
