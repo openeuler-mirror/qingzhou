@@ -53,7 +53,7 @@ class Base32CoderImpl implements Base32Coder {
 
         for (char c : data.toCharArray()) {
             int value = CHARS.indexOf(c);
-            if (value < 0) continue;
+            if (value < 0) throw new IllegalArgumentException("illegal Base32 character: " + c);
 
             buffer = (buffer << 5) | value;
             bits += 5;

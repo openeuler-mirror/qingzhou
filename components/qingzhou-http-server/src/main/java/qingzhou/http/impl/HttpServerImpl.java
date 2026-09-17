@@ -294,7 +294,7 @@ public class HttpServerImpl implements HttpServer {
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeAuthenticator")
-    public void addAuthenticator(Authenticator authenticator) {
+    public synchronized void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
         // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
@@ -306,7 +306,7 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
-    public void removeAuthenticator(Authenticator authenticator) {
+    public synchronized void removeAuthenticator(Authenticator authenticator) {
         authenticators.remove(authenticator);
     }
 

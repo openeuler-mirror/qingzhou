@@ -5,7 +5,7 @@ import java.awt.geom.QuadCurve2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Random;
+import java.security.SecureRandom;
 import javax.imageio.ImageIO;
 
 import org.osgi.service.component.annotations.Component;
@@ -25,7 +25,7 @@ public class CaptchaImpl implements Captcha {
             new Font(Font.MONOSPACED, Font.BOLD, 34)
     };
 
-    private final Random random = new Random(System.nanoTime());
+    private final SecureRandom random = new SecureRandom();
 
     @Override
     public String genCode() {

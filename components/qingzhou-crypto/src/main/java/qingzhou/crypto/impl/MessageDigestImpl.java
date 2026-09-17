@@ -2,18 +2,16 @@ package qingzhou.crypto.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import java.security.SecureRandom;
 
 import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.MessageDigest;
 
 class MessageDigestImpl implements MessageDigest {
-    private final Base16Coder base16Coder;
-    private final Random random = ThreadLocalRandom.current();
-
+    private static final SecureRandom random = new SecureRandom();
     private static final String SALT_SEPARATOR = "$";
+
+    private final Base16Coder base16Coder;
 
     MessageDigestImpl(Base16Coder base16Coder) {
         this.base16Coder = base16Coder;
@@ -41,7 +39,9 @@ class MessageDigestImpl implements MessageDigest {
         byte[] salt = decode(splitPwd[1]);
         int iterations = Integer.parseInt(splitPwd[2]);
         String digest = mutate(text, algorithm, salt, iterations);
-        return Objects.equals(digest, msgDigest);
+        // 常量时间比较，防止时序侧信道推算摘要
+        return java.security.MessageDigest.isEqual(digest.getBytes(StandardCharsets.UTF_8),
+                msgDigest.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

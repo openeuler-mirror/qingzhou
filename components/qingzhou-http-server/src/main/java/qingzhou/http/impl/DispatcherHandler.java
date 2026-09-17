@@ -119,7 +119,12 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                             err -> {
                                 streamHandler.onError(err);
                                 // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
-                                if (!httpResponse.isUsed()) httpResponse.status500Finish(err.getMessage());
+                                if (!httpResponse.isUsed()) {
+                                    logger.error("http stream handler error", err);
+                                    // 超限回 413、其余回 500，与聚合分支语义一致；响应体不回显内部异常细节
+                                    HttpResponseStatus status = statusOf(err);
+                                    httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                                }
                             },
                             streamHandler::onComplete // 完成信号
                     );
