@@ -80,7 +80,7 @@ public class Config {
                             .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
                 }
             } catch (Throwable t) {
-                System.err.println("[qingzhou-config] failed to pull remote config, fallback to local config: " + t);
+                System.err.println("[qingzhou-config] failed to pull remote config" + t);
                 System.exit(1);
             }
         }
