@@ -24,9 +24,10 @@ public class ConfigEtcdTest {
     public void remoteHasKey_init_remoteOverridesLocalAndKeepsMissing() throws Exception {
         Map<String, Dictionary<String, Object>> updated = runInit(200, "",
                 "qingzhou-http-server.port=7900\nqingzhou-logger.writingthread=true\n",
-                kv(NS + "/qingzhou-http-server", "port=9911\nhost=0.0.0.0\n"),
-                kv(NS + "/qingzhou-logger", "level=info\n"),
-                kv("q/other/qingzhou-logger", "writingthread=other\n"));// 其它命名空间的数据
+                kv(NS + "/qingzhou-http-server/port", "9911"),
+                kv(NS + "/qingzhou-http-server/host", "0.0.0.0"),
+                kv(NS + "/qingzhou-logger/level", "info"),
+                kv("q/other/qingzhou-logger/writingthread", "other"));// 其它命名空间的数据
 
         Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 远程覆盖本地同名 key
         Assert.assertEquals(updated.get("qingzhou-http-server").get("host"), "0.0.0.0");// 远程新增 key
@@ -37,8 +38,10 @@ public class ConfigEtcdTest {
     @Test
     public void selfBootstrapKey_init_notOverriddenByRemote() throws Exception {
         Map<String, Dictionary<String, Object>> updated = runInit(200, "", "qingzhou-http-server.port=7900\n",
-                kv(NS + "/qingzhou-config", "remote.enabled=false\n"));
+                kv(NS + "/qingzhou-http-server/port", "9911"),// 远端非自举键，用于排除空拉取
+                kv(NS + "/qingzhou-config/remote.enabled", "false"));
 
+        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 远端数据确实已生效
         Assert.assertEquals(updated.get("qingzhou-config").get("remote.enabled"), "true");// 自举参数不被覆盖
     }
 
@@ -46,15 +49,17 @@ public class ConfigEtcdTest {
     public void authConfigured_init_authenticatesThenPulls() throws Exception {
         Map<String, Dictionary<String, Object>> updated = runInit(200,
                 "qingzhou-config.remote.username=mock-user\nqingzhou-config.remote.password=mock-pass\n",
-                "qingzhou-http-server.port=7900\n", kv(NS + "/qingzhou-http-server", "port=9911\n"));
+                "qingzhou-http-server.port=7900\n", kv(NS + "/qingzhou-http-server/port", "9911"));
 
         Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 先鉴权再拉取
     }
 
     @Test
-    public void httpError_init_throwsExceptionContainingStatus() {
+    public void httpError_pull_throwsExceptionContainingStatus() {
+        EtcdConfigSource source = new EtcdConfigSource("http://127.0.0.1:2379", NS, null, null, 1, 1,
+                http(500, null), json(new EtcdConfigSource.Range()));
         try {
-            runInit(500, "", "qingzhou-http-server.port=7900\n");
+            source.pull();
             Assert.fail("远程返回 http 错误时应抛出异常");
         } catch (Exception e) {
             Assert.assertTrue(e.getMessage().contains("500"), "异常信息应包含状态码: " + e.getMessage());
@@ -110,10 +115,11 @@ public class ConfigEtcdTest {
         return updated;
     }
 
-    private static EtcdConfigSource.Kv kv(String key, String doc) {
+    /** etcd 键布局为 namespace/pid/配置项，值为该配置项的原始值；归一化后即 pid.配置项。 */
+    private static EtcdConfigSource.Kv kv(String key, String value) {
         EtcdConfigSource.Kv kv = new EtcdConfigSource.Kv();
         kv.key = Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8));
-        kv.value = Base64.getEncoder().encodeToString(doc.getBytes(StandardCharsets.UTF_8));
+        kv.value = Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
         return kv;
     }
 

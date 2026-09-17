@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * etcd v3 JSON Gateway（HTTP REST）实现：HTTP 与 JSON 均复用框架组件，不引入第三方库。
  */
-public class EtcdConfigSource implements RemoteConfigSource {
+public final class EtcdConfigSource implements RemoteConfigSource {
     private final String endpoint;
     private final String prefix;
     private final String username;
@@ -29,7 +29,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
 
     public EtcdConfigSource(String endpoint, String namespace, String username, String password,
                             int connectTimeout, int readTimeout, HttpClient http, Json json) {
-        this.endpoint = endpoint == null ? "" : endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
+        this.endpoint = endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
         if (namespace == null || namespace.trim().isEmpty()) {
             throw new IllegalArgumentException("qingzhou-config.remote.namespace must not be empty");
         }
