@@ -1,13 +1,6 @@
 package qingzhou.http.client.impl;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -19,6 +12,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
@@ -40,6 +36,7 @@ public class HttpClientImplTest {
             Assert.fail("期望 IllegalArgumentException，实际：" + e);
         }
     }
+
     @Test
     public void getRequest_send_responseReturned() throws Exception {
         AtomicReference<String> receivedMethod = new AtomicReference<>();

@@ -9,8 +9,8 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.memory.ConversationApi;
 import qingzhou.ai.memory.ConversationStore;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -98,6 +98,7 @@ public class AiChat implements HttpHandler {
         if (app != null && !app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
+        String finalQuestion = question;
 
         List<String> refDocs = null;
         Attachment[] images = null;
@@ -121,7 +122,7 @@ public class AiChat implements HttpHandler {
         // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）
         String conversationId = (String) params.get("conversationId");
         // userId 由鉴权层从 token 解析，不接受前端传参
-        String username = resolveUsername(httpRequest);
+        String userId = ConversationApi.resolveUserId(httpRequest);
 
         // 发出响应前的准备
         httpResponse.contentType("text/event-stream; charset=utf-8")
@@ -131,8 +132,7 @@ public class AiChat implements HttpHandler {
         // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
         SseListener sseListener = new SseListener(httpResponse, logger, json);
         // chat() 异步返回，回答全文须等流结束才完整，落库挂 onComplete
-        sseListener.onCompleteAction(() ->
-                conversationStore.storeAssistantMessage(conversationId, username, sseListener.allContent.toString()));
+        sseListener.onCompleteAction(() -> conversationStore.storeAssistantMessage(conversationId, userId, sseListener.allContent.toString()));
         try {
             sseListener.setStarted(conversationId);
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
@@ -140,10 +140,11 @@ public class AiChat implements HttpHandler {
                     .docs(refDocs)
                     .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills))
                     .enableThinking(true)
-                    .chatMemory(() -> conversationStore.getMessageList(username, conversationId));
+                    .chatMemory(() -> conversationStore.getMessageList(userId, conversationId));
             ChatModel chatModel = builder.build();
-            chatModel.chat(question, sseListener, images);
-            conversationStore.storeUserMessage(conversationId, username, question);
+            chatModel.chat(finalQuestion, sseListener, images);
+            // chat() 异步返回，立即落库，保证消息时间戳正确
+            conversationStore.storeUserMessage(conversationId, userId, finalQuestion);
         } catch (Throwable t) {
             // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
             // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”
@@ -151,12 +152,6 @@ public class AiChat implements HttpHandler {
             logger.error("ai chat request failed: " + msg, t);
             sseListener.onError(msg);
         }
-    }
-
-    private String resolveUsername(HttpRequest httpRequest) {
-        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
-        String username = principal instanceof String ? (String) principal : null;
-        return username != null && !username.isEmpty() ? username : "anonymous";
     }
 
     private Map<String, Object> params(HttpRequest httpRequest) {

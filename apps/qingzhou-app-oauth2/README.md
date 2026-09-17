@@ -16,16 +16,6 @@
 
 ### 1.1 启用 qingzhou-jdbc 特性
 
-平台默认禁用了 `qingzhou-jdbc`，需要把它从禁用列表移除：
-
-```properties
-# 修改前
--Dqingzhou.features.disabled=qingzhou-agent,qingzhou-jdbc \
-
-# 修改后
--Dqingzhou.features.disabled=qingzhou-agent \
-```
-
 > 说明：`qingzhou-jdbc` 是本应用连接数据库所必需的组件，禁用时应用取不到 `JdbcPool`，只会记录
 > 一条“数据源不可用”日志并跳过 `/oauth2/*` 端点注册（不会影响平台与其他应用启动）。
 

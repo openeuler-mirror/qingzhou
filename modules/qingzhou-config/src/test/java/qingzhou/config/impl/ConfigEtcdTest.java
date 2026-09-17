@@ -1,14 +1,11 @@
 package qingzhou.config.impl;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import qingzhou.config.remote.etcd.EtcdConfigSource;
 import qingzhou.http.client.HttpClient;
@@ -16,9 +13,17 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 
-/** 端到端验证：开启 etcd 后 Config.init 拉取远程配置并写入 CM；HttpClient / Json 以桩注入。 */
+/**
+ * 端到端验证：开启 etcd 后 Config.init 拉取远程配置并写入 CM；HttpClient / Json 以桩注入。
+ */
 public class ConfigEtcdTest {
     private static final String NS = "q/config-test";
+
+    @BeforeClass
+    public void init() {
+        System.setProperty("qingzhou.instance", new File("/tmp").getAbsolutePath());
+        System.setProperty("qingzhou.version", "1.0");
+    }
 
     @Test
     public void remoteHasKey_init_remoteOverridesLocalAndKeepsMissing() throws Exception {
@@ -95,7 +100,7 @@ public class ConfigEtcdTest {
     }
 
     private static Map<String, Dictionary<String, Object>> runInit(int status, String auth, String local,
-                                                                  EtcdConfigSource.Kv... kvs) throws Exception {
+                                                                   EtcdConfigSource.Kv... kvs) throws Exception {
         TestSupport.instance("qingzhou-config.remote.enabled=true\n"
                 + "qingzhou-config.remote.endpoints=http://127.0.0.1:2379\n"
                 + "qingzhou-config.remote.namespace=" + NS + "\n"
@@ -115,7 +120,9 @@ public class ConfigEtcdTest {
         return updated;
     }
 
-    /** etcd 键布局为 namespace/pid/配置项，值为该配置项的原始值；归一化后即 pid.配置项。 */
+    /**
+     * etcd 键布局为 namespace/pid/配置项，值为该配置项的原始值；归一化后即 pid.配置项。
+     */
     private static EtcdConfigSource.Kv kv(String key, String value) {
         EtcdConfigSource.Kv kv = new EtcdConfigSource.Kv();
         kv.key = Base64.getEncoder().encodeToString(key.getBytes(StandardCharsets.UTF_8));
@@ -123,7 +130,9 @@ public class ConfigEtcdTest {
         return kv;
     }
 
-    /** 桩 HttpClient：newRequest 返回可链式调用的空对象（可记录 URL），send 返回给定状态码与空响应体。 */
+    /**
+     * 桩 HttpClient：newRequest 返回可链式调用的空对象（可记录 URL），send 返回给定状态码与空响应体。
+     */
     private static HttpClient http(int status, List<String> urls) {
         Request request = TestSupport.proxy(Request.class, (proxy, method, args) -> proxy);
         Response response = TestSupport.proxy(Response.class,
@@ -135,7 +144,9 @@ public class ConfigEtcdTest {
         });
     }
 
-    /** 桩 Json：鉴权请求返回固定 token，其余请求返回预置的 range 数据。 */
+    /**
+     * 桩 Json：鉴权请求返回固定 token，其余请求返回预置的 range 数据。
+     */
     private static Json json(EtcdConfigSource.Range range) {
         EtcdConfigSource.Auth auth = new EtcdConfigSource.Auth();
         auth.token = "mock-token";

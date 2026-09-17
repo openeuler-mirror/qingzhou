@@ -32,6 +32,9 @@ public class Config {
     @Reference
     private volatile Json json;
 
+    private final String qzInstance = System.getProperty("qingzhou.instance");
+    private final String qzVersion = System.getProperty("qingzhou.version");
+
     // 在 qingzhou.command.cmd.StartArg 中反射引用
     public static Map<String, String> parse(String text) {
         Map<String, String> result = new LinkedHashMap<>();
@@ -60,7 +63,7 @@ public class Config {
 
     @Activate
     public void init() throws Exception {
-        Path configFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "qingzhou.properties");
+        Path configFile = Paths.get(qzInstance, "conf", "qingzhou.properties");
         String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
         Map<String, String> qzConfig = parse(configText);
 
@@ -103,7 +106,11 @@ public class Config {
             Configuration configuration = i == -1
                     ? configAdmin.getConfiguration(pid, null)
                     : configAdmin.getFactoryConfiguration(pid.substring(0, i), pid.substring(i + 1), null);
-            configuration.update(new Hashtable<>(entry.getValue()));
+
+            Hashtable<String, String> config = new Hashtable<>(entry.getValue());
+            config.put("qingzhou.instance", qzInstance);
+            config.put("qingzhou.version", qzVersion);
+            configuration.update(config);
         }
     }
 }

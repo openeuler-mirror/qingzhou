@@ -108,7 +108,7 @@ public class HttpServerImpl implements HttpServer {
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
 
-        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port);
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     /**

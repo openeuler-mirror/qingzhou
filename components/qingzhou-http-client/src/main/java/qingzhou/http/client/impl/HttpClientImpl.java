@@ -139,7 +139,7 @@ public class HttpClientImpl implements HttpClient {
     }
 
     private static String safeToken(String value) {
-        if (value == null || value.isEmpty() || value.matches(".*[\r\n\"].*")) {
+        if (value == null || value.isEmpty() || !value.matches("[^\\r\\n\"]*")) {
             throw new IllegalArgumentException("illegal multipart field: " + value);
         }
         return value;

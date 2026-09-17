@@ -2,11 +2,7 @@ package qingzhou.store.impl;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -15,6 +11,7 @@ import java.util.stream.Stream;
 import qingzhou.store.Store;
 
 public class FileStore implements Store {
+    private static final String TMP_FILE_PREFIX = ".tmp-";
     private final Path dir;
 
     public FileStore(File baseDir) {
@@ -37,7 +34,7 @@ public class FileStore implements Store {
         // 先写临时文件再原子替换：全程不触碰目标，进程崩溃/断电后目标始终是完整的旧值或新值，
         // 不会留下半截内容。临时文件与目标同目录，保证同一文件系统上可做原子移动
         Path path = path(key);
-        Path temp = dir.resolve(".tmp-" + UUID.randomUUID());
+        Path temp = dir.resolve(TMP_FILE_PREFIX + UUID.randomUUID());
         try {
             Files.write(temp, value.getBytes(StandardCharsets.UTF_8));
             try {
@@ -83,9 +80,9 @@ public class FileStore implements Store {
     @Override
     public Set<String> keys() {
         try (Stream<Path> files = Files.list(dir)) {
-            // .tmp- 开头的是 put 的写中临时文件（崩溃时可能残留），不属于存储的 key
+            // 跳过 put 的写中临时文件（崩溃时可能残留），不属于存储的 key
             return files.map(path -> path.getFileName().toString())
-                    .filter(name -> !name.startsWith(".tmp-"))
+                    .filter(name -> !name.startsWith(TMP_FILE_PREFIX))
                     .collect(Collectors.toSet());
         } catch (Exception e) {
             throw new RuntimeException(e);
