@@ -8,7 +8,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
@@ -19,8 +18,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.server.*;
-import qingzhou.http.server.AuthResult.Status;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpServer;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -32,16 +31,14 @@ public class HttpServerImpl implements HttpServer {
 
     @Reference
     private Crypto crypto;
-
     @Reference
     private Logger logger;
+    @Reference
+    AuthManager authManager;
 
     // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
     final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
     final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
-
-    // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
-    private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
@@ -281,52 +278,6 @@ public class HttpServerImpl implements HttpServer {
         noAuthHandlerSet.remove(httpHandler);
 
         logger.info("http handler unregistered: " + contextPath);
-    }
-
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            unbind = "removeAuthenticator")
-    public synchronized void addAuthenticator(Authenticator authenticator) {
-        authenticators.add(authenticator);
-
-        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "http authenticator registered: " + authenticator.getClass().getName();
-        if (logger != null) {
-            logger.info(msg);
-        } else {
-            tempMsg.add(msg);
-        }
-    }
-
-    public synchronized void removeAuthenticator(Authenticator authenticator) {
-        authenticators.remove(authenticator);
-    }
-
-    /**
-     * 安全认证：配置 auth_disabled=true 时全局关闭；多认证器按 pass > reject > challenge > missing 组合——
-     * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
-     * 全部无凭据时才用重定向引导登录。
-     */
-    AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
-
-        AuthResult reject = null;
-        for (Authenticator authenticator : authenticators) {
-            AuthResult r;
-            try {
-                r = authenticator.authenticate(request);
-            } catch (Exception e) {
-                logger.error("authentication error: " + authenticator.getClass().getName(), e);
-                r = AuthResult.reject("authentication error");
-            }
-            if (r.status() == Status.PASS) return r;
-
-            if (r.status() == Status.REJECT && reject == null) {
-                reject = r;
-            }
-        }
-        if (reject != null) return reject;
-
-        return AuthResult.reject("no credential provided");
     }
 
     @Deactivate

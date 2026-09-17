@@ -74,7 +74,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         // 安全认证
         boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
         if (needAuth) {
-            AuthResult authResult = httpServer.authenticate(httpRequest);
+            AuthResult authResult = httpServer.authManager.authenticate(httpRequest);
             if (authResult.status() != AuthResult.Status.PASS) {
                 return reject(request, response
                                 .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
