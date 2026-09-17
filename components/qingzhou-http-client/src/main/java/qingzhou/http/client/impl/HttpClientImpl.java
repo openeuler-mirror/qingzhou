@@ -28,7 +28,7 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
-        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout);
+        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout, req.trustedCertificates);
 
         if (req.method != null) {
             conn.setRequestMethod(req.method.name());
