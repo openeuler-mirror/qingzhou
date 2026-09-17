@@ -12,7 +12,8 @@ class Base16CoderImpl implements Base16Coder {
 
     @Override
     public String encode(byte[] data) {
-        if (data == null || data.length == 0) return "";
+        if (data == null) return null;
+        if (data.length == 0) return "";
 
         int l = data.length;
         char[] out = new char[l << 1];
@@ -27,6 +28,7 @@ class Base16CoderImpl implements Base16Coder {
 
     @Override
     public byte[] decode(String data) {
+        if (data == null) return null;
         return decodeHex(data.toCharArray());
     }
 
