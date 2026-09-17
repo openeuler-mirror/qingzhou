@@ -26,10 +26,9 @@ public class HttpServerImplTest {
 
     @Test
     public void normal_start_listenHttpService() throws Exception {
-        int port = 7788;
-        HttpServerImpl httpServer = build(port);
+        HttpServerImpl httpServer = build(0);
         HttpClientImpl httpClient = new HttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源
@@ -37,8 +36,8 @@ public class HttpServerImplTest {
 
     @Test
     public void normal_stop_requestGetConnectException() throws Exception {
-        int port = 7788;
-        HttpServerImpl httpServer = build(port);
+        HttpServerImpl httpServer = build(0);
+        int port = actualPort(httpServer);
         httpServer.stop();
         try {
             HttpClientImpl httpClient = new HttpClientImpl();
@@ -51,31 +50,29 @@ public class HttpServerImplTest {
 
     @Test
     public void normalPath_registerHttpHandler_usePathHttpService() throws Exception {
-        int port = 7788;
-        HttpServerImpl httpServer = build(port);
+        HttpServerImpl httpServer = build(0);
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
 
         HttpClient httpClient = new HttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 200);
-        Assert.assertTrue(new String(result.getBody()).contains(path));
+        Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
 
         httpServer.stop(); // 清理资源
     }
 
     @Test
     public void normalPath_unregisterHttpHandler_noPathHttpService() throws Exception {
-        int port = 7788;
-        HttpServerImpl httpServer = build(port);
+        HttpServerImpl httpServer = build(0);
 
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = new HttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + port + path).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源

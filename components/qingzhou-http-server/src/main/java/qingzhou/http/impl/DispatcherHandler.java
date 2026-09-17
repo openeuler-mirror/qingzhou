@@ -42,14 +42,16 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         addSecurityHeaders(response); // 须在任何 return 之前：400/401/404/413/503 等分支同样需要安全头
         if (!concurrentSemaphore.tryAcquire()) { // 请求体按上限聚合进内存，不限在途请求数则内存仍会耗尽
-            return close(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
+            return respondAndClose(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
         }
         // 延迟执行：分发逻辑同步抛异常时也能走到 doFinally，不至于泄漏许可
         return Flux.defer(() -> dispatch(request, response)).doFinally(signal -> concurrentSemaphore.release());
     }
 
     private Publisher<Void> dispatch(HttpServerRequest request, HttpServerResponse response) {
-        String requestPath = request.uri().split("\\?")[0];
+        String uri = request.uri();
+        int queryIndex = uri.indexOf('?');
+        String requestPath = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
         try {
             requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
         } catch (Exception e) {
@@ -72,7 +74,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         // 安全认证
         boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
         if (needAuth) {
-            AuthResult authResult = httpServer.authenticate(httpRequest);
+            AuthResult authResult = httpServer.authManager.authenticate(httpRequest);
             if (authResult.status() != AuthResult.Status.PASS) {
                 return reject(request, response
                                 .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
@@ -114,16 +116,17 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                                 byteBuf.readBytes(bytes);
                                 streamHandler.onNext(bytes);
 
-                                // Reactor Netty 对 ByteBuf 的生命周期管理遵循「发布者负责释放，订阅者负责引用计数」的原则：
-                                //request.receive() 产生的 ByteBuf 由 Reactor Netty 框架管理，框架会在数据处理完成后自动释放；
-                                //手动调用 byteBuf.release() 会导致 ByteBuf 的引用计数被提前耗尽，可能引发两种严重问题：
-                                //重复释放（Double Release）：框架后续尝试释放已被手动释放的 ByteBuf，触发 IllegalReferenceCountException；
-                                // byteBuf.release();
+                                // ByteBuf 由 Reactor Netty 框架负责释放，此处不得手动 release，否则引用计数提前耗尽
                             },
                             err -> {
                                 streamHandler.onError(err);
                                 // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
-                                if (!httpResponse.isUsed()) httpResponse.status500Finish(err.getMessage());
+                                if (!httpResponse.isUsed()) {
+                                    logger.error("http stream handler error", err);
+                                    // 超限回 413、其余回 500，与聚合分支语义一致；响应体不回显内部异常细节
+                                    HttpResponseStatus status = statusOf(err);
+                                    httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                                }
                             },
                             streamHandler::onComplete // 完成信号
                     );
@@ -156,7 +159,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                         }
                         return response.sendByteArray(streamResponse.asFlux()).then();
                     })
-                    .onErrorResume(e -> close(response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
+                    .onErrorResume(e -> respondAndClose(response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
         }
     }
 
@@ -174,11 +177,11 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     }
                 })
                 .then(errorResponse)
-                .onErrorResume(e -> close(response, statusOf(e)));
+                .onErrorResume(e -> respondAndClose(response, statusOf(e)));
     }
 
-    // 请求体未读完，连接无法复用：关闭它，避免残留字节污染后续请求
-    private static Mono<Void> close(HttpServerResponse response, HttpResponseStatus status) {
+    // 请求体未读完，连接无法复用：发送响应并关闭连接，避免残留字节污染后续请求
+    private static Mono<Void> respondAndClose(HttpServerResponse response, HttpResponseStatus status) {
         return response
                 .status(status)
                 .header(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)

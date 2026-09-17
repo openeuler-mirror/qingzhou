@@ -13,16 +13,9 @@ public class Base64CoderImplTest {
 
     // ===================== encode(byte[]) 编码测试 =====================
     @Test
-    public void dataNull_encode_returnEmptyString() {
+    public void dataNull_encode_returnNull() {
         Base64CoderImpl coder = new Base64CoderImpl();
-        String result;
-        try {
-            result = coder.encode((byte[]) null);
-        } catch (NullPointerException e) {
-            // 原实现null会空指针，捕获后视为空字符串
-            result = "";
-        }
-        Assert.assertEquals(result, "");
+        Assert.assertNull(coder.encode(null));
     }
 
     @Test
@@ -86,16 +79,9 @@ public class Base64CoderImplTest {
 
     // ===================== decode(String) 解码测试 =====================
     @Test
-    public void dataNull_decode_returnEmptyByteArray() {
+    public void dataNull_decode_returnNull() {
         Base64CoderImpl coder = new Base64CoderImpl();
-        byte[] result;
-        try {
-            result = coder.decode((String) null);
-        } catch (NullPointerException e) {
-            // 原实现null会空指针，捕获后视为空字节数组
-            result = new byte[0];
-        }
-        Assert.assertEquals(result.length, 0);
+        Assert.assertNull(coder.decode((String) null));
     }
 
     @Test
@@ -143,15 +129,13 @@ public class Base64CoderImplTest {
     }
 
     @Test
-    public void dataPaddingOnlyStr_decode_returnEmptyByteArray() {
+    public void dataPaddingOnlyStr_decode_throwIllegalArgument() {
         Base64CoderImpl coder = new Base64CoderImpl();
-        byte[] result;
         try {
-            result = coder.decode("====");
-        } catch (IllegalArgumentException e) {
-            // 纯填充字符串不是有效Base64，Java解码器会抛出异常，视为空字节数组
-            result = new byte[0];
+            coder.decode("====");
+            Assert.fail("纯填充不是有效 Base64，应显式失败");
+        } catch (IllegalArgumentException expected) {
+            // 非法输入拒绝而非静默返回空
         }
-        Assert.assertEquals(result.length, 0);
     }
 }

@@ -62,19 +62,8 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
 
     @Override
     public long getProcessId() {
-        // by wangpl: It runs very slowly on some macOS.
+        // ManagementFactory 获取进程 ID 在部分 macOS 上运行极慢，直接返回不可用值
         return -1;
-
-//        String name = ManagementFactory.getRuntimeMXBean().getName();
-//        try {
-//            return Long.parseLong(name.substring(0, name.indexOf('@')));
-//        } catch (NumberFormatException ex) {
-//            InternalLogger.log(Level.ERROR, "Illegal process ID: " + name.substring(0, name.indexOf('@')));
-//            return -1;
-//        } catch (IndexOutOfBoundsException ex) {
-//            InternalLogger.log(Level.ERROR, "Name of virtual machine does not contain a process ID: " + name);
-//            return -1;
-//        }
     }
 
     @Override

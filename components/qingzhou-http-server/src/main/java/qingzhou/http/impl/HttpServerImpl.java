@@ -8,7 +8,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
@@ -19,8 +18,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.server.*;
-import qingzhou.http.server.AuthResult.Status;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpServer;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -32,16 +31,14 @@ public class HttpServerImpl implements HttpServer {
 
     @Reference
     private Crypto crypto;
-
     @Reference
     private Logger logger;
+    @Reference
+    AuthManager authManager;
 
     // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
     final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
     final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
-
-    // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
-    private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     private LoopResources loopResources;
     private DisposableServer disposableServer;
@@ -59,12 +56,17 @@ public class HttpServerImpl implements HttpServer {
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
         int idleTimeout = getConfig(config, "idle_timeout", 60);
         maxConcurrentRequests = getConfig(config, "max_concurrent_requests", 1000);
+        if (maxConcurrentRequests <= 0) throw new IllegalArgumentException("max_concurrent_requests must be positive");
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
         maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
         csp = getConfig(config, "csp", "none");
 
         String host = getConfig(config, "host", "0.0.0.0");
-        int port = Integer.parseInt(config.get("port"));
+        String portValue = config.get("port");
+        if (portValue == null || portValue.trim().isEmpty()) {
+            throw new IllegalArgumentException("port is required");
+        }
+        int port = Integer.parseInt(portValue.trim());
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         isSslEnabled = getConfig(config, "ssl_enabled", true);
@@ -106,7 +108,7 @@ public class HttpServerImpl implements HttpServer {
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
 
-        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port);
     }
 
     /**
@@ -171,24 +173,10 @@ public class HttpServerImpl implements HttpServer {
         if (val == null || val.isEmpty()) return defaultValue;
 
         if (defaultValue instanceof String) return (T) val;
-
-        if (defaultValue instanceof Integer) {
-            try {
-                return (T) Integer.valueOf(val);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
-        if (defaultValue instanceof Long) {
-            try {
-                return (T) Long.valueOf(val);
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
-        }
-        if (defaultValue instanceof Boolean) {
-            return (T) Boolean.valueOf(val);
-        }
+        // 数值解析失败直接抛出，暴露配置笔误而非静默回退默认值
+        if (defaultValue instanceof Integer) return (T) Integer.valueOf(val);
+        if (defaultValue instanceof Long) return (T) Long.valueOf(val);
+        if (defaultValue instanceof Boolean) return (T) Boolean.valueOf(val);
 
         return defaultValue;
     }
@@ -292,52 +280,6 @@ public class HttpServerImpl implements HttpServer {
         logger.info("http handler unregistered: " + contextPath);
     }
 
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            unbind = "removeAuthenticator")
-    public void addAuthenticator(Authenticator authenticator) {
-        authenticators.add(authenticator);
-
-        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "http authenticator registered: " + authenticator.getClass().getName();
-        if (logger != null) {
-            logger.info(msg);
-        } else {
-            tempMsg.add(msg);
-        }
-    }
-
-    public void removeAuthenticator(Authenticator authenticator) {
-        authenticators.remove(authenticator);
-    }
-
-    /**
-     * 安全认证：配置 auth_disabled=true 时全局关闭；多认证器按 pass > reject > challenge > missing 组合——
-     * 任一通过即放行；凭据无效优先拒绝（客户端已出示凭据，须明确告知 401 而非重定向）；
-     * 全部无凭据时才用重定向引导登录。
-     */
-    AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
-
-        AuthResult reject = null;
-        for (Authenticator authenticator : authenticators) {
-            AuthResult r;
-            try {
-                r = authenticator.authenticate(request);
-            } catch (Exception e) {
-                logger.error("authentication error: " + authenticator.getClass().getName(), e);
-                r = AuthResult.reject("authentication error");
-            }
-            if (r.status() == Status.PASS) return r;
-
-            if (r.status() == Status.REJECT && reject == null) {
-                reject = r;
-            }
-        }
-        if (reject != null) return reject;
-
-        return AuthResult.reject("no credential provided");
-    }
-
     @Deactivate
     public void stop() {
         if (disposableServer == null) return;
@@ -359,17 +301,20 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
-        addHttpHandler(httpHandler, new HashMap<String, String>() {{
-            put(HttpHandler.HANDLE_PATH, handlePath);
-        }}, null);
+        register(httpHandler, handlePath, false);
     }
 
     @Override
     public void registerHttpHandlerNoAuth(HttpHandler httpHandler, String handlePath) {
-        addHttpHandler(httpHandler, new HashMap<String, String>() {{
-            put(HttpHandler.HANDLE_PATH, handlePath);
-            put(HttpHandler.HANDLE_NO_AUTH, "true");
-        }}, null);
+        register(httpHandler, handlePath, true);
+    }
+
+    // 两个注册 API 仅差一个 no-auth 属性，收敛到同一构建逻辑
+    private void register(HttpHandler httpHandler, String handlePath, boolean noAuth) {
+        Map<String, String> properties = new HashMap<>();
+        properties.put(HttpHandler.HANDLE_PATH, handlePath);
+        if (noAuth) properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        addHttpHandler(httpHandler, properties, null);
     }
 
     @Override

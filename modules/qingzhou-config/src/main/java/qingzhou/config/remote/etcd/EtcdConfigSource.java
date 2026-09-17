@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * etcd v3 JSON Gateway（HTTP REST）实现：HTTP 与 JSON 均复用框架组件，不引入第三方库。
  */
-public class EtcdConfigSource implements RemoteConfigSource {
+public final class EtcdConfigSource implements RemoteConfigSource {
     private final String endpoint;
     private final String prefix;
     private final String username;
@@ -29,7 +29,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
 
     public EtcdConfigSource(String endpoint, String namespace, String username, String password,
                             int connectTimeout, int readTimeout, HttpClient http, Json json) {
-        this.endpoint = endpoint == null ? "" : endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
+        this.endpoint = endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
         if (namespace == null || namespace.trim().isEmpty()) {
             throw new IllegalArgumentException("qingzhou-config.remote.namespace must not be empty");
         }
@@ -47,7 +47,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
         byte[] key = prefix.getBytes(StandardCharsets.UTF_8);
         byte[] rangeEnd = key.clone();
         rangeEnd[rangeEnd.length - 1]++;// 前缀扫描上界
-        String body = "{\"key\":\"" + base64(key) + "\",\"range_end\":\"" + base64(rangeEnd) + "\"}";
+        String body = "{\"key\":\"" + encode(key) + "\",\"range_end\":\"" + encode(rangeEnd) + "\"}";
 
         Range range = call(body);
         Map<String, String> result = new HashMap<>();
@@ -56,11 +56,8 @@ public class EtcdConfigSource implements RemoteConfigSource {
         for (Kv kv : range.kvs) {
             String pidKey = decode(kv.key);
             if (!pidKey.startsWith(prefix)) continue;// 命名空间隔离：其它命名空间的数据不可见
-            String pid = pidKey.substring(prefix.length());
-            if (!pid.isEmpty()) {
-                String k = normalizeKey(pid);
-                result.put(k, decode(kv.value));
-            }
+            String pid = pidKey.substring(prefix.length()).trim();
+            if (!pid.isEmpty()) result.put(normalizeKey(pid), decode(kv.value));
         }
         return result;
     }
@@ -74,7 +71,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
                 .replaceAll("\\.{2,}", ".");
     }
 
-    private <T> T call(String body) throws Exception {
+    private Range call(String body) throws Exception {
         if (token == null && username != null && !username.isEmpty()) {
             AuthRequest auth = new AuthRequest();
             auth.name = username;
@@ -82,7 +79,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
             // 交由 Json 服务序列化，避免口令中的引号、反斜杠破坏请求体
             token = json.fromJson(post("/auth/authenticate", json.toJson(auth)), Auth.class).token;
         }
-        return json.fromJson(post("/kv/range", body), (Class<T>) Range.class);
+        return json.fromJson(post("/kv/range", body), Range.class);
     }
 
     private String post(String path, String body) throws Exception {
@@ -102,7 +99,7 @@ public class EtcdConfigSource implements RemoteConfigSource {
         return text;
     }
 
-    private static String base64(byte[] bytes) {
+    private static String encode(byte[] bytes) {
         return Base64.getEncoder().encodeToString(bytes);
     }
 

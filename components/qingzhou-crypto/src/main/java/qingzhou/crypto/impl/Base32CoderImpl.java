@@ -8,7 +8,7 @@ class Base32CoderImpl implements Base32Coder {
 
     @Override
     public String encode(byte[] data) {
-        if (data == null) return "";
+        if (data == null) return null;
 
         StringBuilder result = new StringBuilder();
         int buffer = 0;
@@ -41,6 +41,7 @@ class Base32CoderImpl implements Base32Coder {
 
     @Override
     public byte[] decode(String data) {
+        if (data == null) return null;
         data = data.replace("=", "").toUpperCase();
         if (data.isEmpty()) return new byte[0];
 
@@ -53,7 +54,7 @@ class Base32CoderImpl implements Base32Coder {
 
         for (char c : data.toCharArray()) {
             int value = CHARS.indexOf(c);
-            if (value < 0) continue;
+            if (value < 0) throw new IllegalArgumentException("illegal Base32 character: " + c);
 
             buffer = (buffer << 5) | value;
             bits += 5;

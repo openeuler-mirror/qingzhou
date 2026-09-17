@@ -17,10 +17,9 @@ public class Base32CoderImplTest {
 
     // ===================== encode(byte[]) 编码测试 =====================
     @Test
-    public void dataNull_encode_returnEmptyString() {
+    public void dataNull_encode_returnNull() {
         Base32CoderImpl coder = new Base32CoderImpl();
-        String result = coder.encode((byte[]) null);
-        Assert.assertEquals(result, "");
+        Assert.assertNull(coder.encode(null));
     }
 
     @Test
@@ -70,16 +69,9 @@ public class Base32CoderImplTest {
 
     // ===================== decode(String) 解码测试 =====================
     @Test
-    public void dataNull_decode_returnEmptyByteArray() {
+    public void dataNull_decode_returnNull() {
         Base32CoderImpl coder = new Base32CoderImpl();
-        byte[] result;
-        try {
-            result = coder.decode((String) null);
-        } catch (NullPointerException e) {
-            // 原实现null会空指针，捕获后视为空字节数组
-            result = new byte[0];
-        }
-        Assert.assertEquals(result.length, 0);
+        Assert.assertNull(coder.decode((String) null));
     }
 
     @Test
@@ -134,16 +126,13 @@ public class Base32CoderImplTest {
     }
 
     @Test
-    public void dataMixedIllegalCharStr_decode_skipIllegalRestoreText() {
+    public void dataMixedIllegalCharStr_decode_throwIllegalArgument() {
         Base32CoderImpl coder = new Base32CoderImpl();
-        byte[] decodeBytes = coder.decode(TEST_BASE32_DIRTY);
-        byte[] expectedBytes = "test".getBytes(StandardCharsets.UTF_8);
-        // 当前实现 byteLen 基于原始脏字符串长度计算（11→6），而非有效Base32字符数（7→4），
-        // 导致结果数组包含尾随零字节。此处断言实际长度以捕获未来实现变更后的回归。
-        Assert.assertEquals(decodeBytes.length, 6,
-                "当前实现基于原始字符串长度分配数组，有效解码为4字节但数组长度为6");
-        for (int i = 0; i < expectedBytes.length; i++) {
-            Assert.assertEquals(decodeBytes[i], expectedBytes[i]);
+        try {
+            coder.decode(TEST_BASE32_DIRTY);
+            Assert.fail("非法字符必须显式失败，而非静默跳过导致数据失真");
+        } catch (IllegalArgumentException expected) {
+            // 解码拒绝非法字符
         }
     }
 

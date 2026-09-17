@@ -32,6 +32,4 @@ public interface Crypto {
     Base32Coder getBase32Coder();
 
     Base16Coder getBase16Coder();
-
-    Base16Coder getHexCoder();
 }

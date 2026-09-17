@@ -3,6 +3,7 @@ package qingzhou.store.impl;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
 import qingzhou.store.Store;
@@ -19,11 +20,16 @@ public class FileStore implements Store {
         }
     }
 
+    private Path path(String key) {
+        Path path = dir.resolve(key).normalize();
+        if (!path.startsWith(dir)) throw new IllegalArgumentException("illegal store key: " + key);
+        return path;
+    }
+
     @Override
     public void put(String key, String value) {
-        Path path = dir.resolve(key);
         try {
-            Files.write(path, value.getBytes(StandardCharsets.UTF_8));
+            Files.write(path(key), value.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -31,10 +37,10 @@ public class FileStore implements Store {
 
     @Override
     public String get(String key) {
-        Path path = dir.resolve(key);
-        if (!Files.exists(path)) return null;
         try {
-            return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(path(key)), StandardCharsets.UTF_8);
+        } catch (NoSuchFileException e) {
+            return null; // 并发删除时读不到即为不存在，且消除 exists-then-read 竞态
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -42,9 +48,8 @@ public class FileStore implements Store {
 
     @Override
     public void delete(String key) {
-        Path path = dir.resolve(key);
         try {
-            Files.deleteIfExists(path);
+            Files.deleteIfExists(path(key));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -52,7 +57,6 @@ public class FileStore implements Store {
 
     @Override
     public boolean contains(String key) {
-        Path path = dir.resolve(key);
-        return Files.exists(path);
+        return Files.exists(path(key));
     }
 }

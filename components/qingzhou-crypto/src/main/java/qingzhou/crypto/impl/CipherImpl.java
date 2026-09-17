@@ -18,6 +18,8 @@ class CipherImpl implements Cipher {
     private static final int IV_SIZE = 12;
     private static final int TAG_SIZE = 16;
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final Base64Coder base64Coder;
 
     private final SecretKeySpec key;
@@ -33,7 +35,7 @@ class CipherImpl implements Cipher {
         s = s.trim();
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         byte[] encrypt = encrypt(bytes);
-        return base64Coder.encode(encrypt);// 不要用base64，不利于http传输，转义会错误
+        return base64Coder.encode(encrypt);
     }
 
     @Override
@@ -79,7 +81,7 @@ class CipherImpl implements Cipher {
 
         // 生成随机IV
         byte[] iv = new byte[IV_SIZE];
-        new SecureRandom().nextBytes(iv);
+        RANDOM.nextBytes(iv);
 
         // 执行加密，结果包含：密文+认证标签
         javax.crypto.Cipher cipher = getCipher();
@@ -111,11 +113,7 @@ class CipherImpl implements Cipher {
         return cipher.doFinal(encrypted);
     }
 
-    private javax.crypto.Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        try {
-            return javax.crypto.Cipher.getInstance(ALG_MODE, "SunJCE");
-        } catch (Exception e) {
-            return javax.crypto.Cipher.getInstance(ALG_MODE);
-        }
+    private javax.crypto.Cipher getCipher() throws NoSuchAlgorithmException, NoSuchPaddingException {
+        return javax.crypto.Cipher.getInstance(ALG_MODE);
     }
 }

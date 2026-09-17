@@ -67,42 +67,24 @@ public class Config {
         String enabled = qzConfig.get(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
         if (Boolean.parseBoolean(enabled)) { // 开启外部配置中心：远程覆盖本地，缺失保留
             try {
-                Map<String, String> remoteRequestArgs = new HashMap<>();
-                qzConfig.forEach((key, value) -> {
-                    if (key.startsWith(RemoteConfigSourceFactory.KEY_PREFIX)) {
-                        remoteRequestArgs.put(key, value);
-                    }
-                });
-                Map<String, String> remoteConfig = RemoteConfigSourceFactory.create(remoteRequestArgs, httpClient, json).pull();
-                if (remoteConfig != null) {
-                    remoteConfig.entrySet().stream()
-                            .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
-                            .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
-                }
+                RemoteConfigSourceFactory.create(qzConfig, httpClient, json).pull().entrySet().stream()
+                        .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
+                        .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
             } catch (Throwable t) {
-                System.err.println("[qingzhou-config] failed to pull remote config" + t);
+                System.err.println("!!! Failed to pull remote configuration. Startup terminated !!! ");
+                t.printStackTrace(System.err);
                 System.exit(1);
             }
         }
 
-        Map<String, Map<String, String>> osgiConfig = converToOsgiConfig(qzConfig);
+        Map<String, Map<String, String>> osgiConfig = convertToOsgiConfig(qzConfig);
         distributeOsgiConfig(osgiConfig);
-    }
-
-    /**
-     * 远程配置以本地为底、逐 key 覆盖；远程缺失的本地 key 保留，且不得改写 qingzhou-config 自举参数。
-     */
-    private void merge(Map<String, Map<String, String>> configMap, Map<String, Map<String, String>> remoteConfig) {
-        for (Map.Entry<String, Map<String, String>> entry : remoteConfig.entrySet()) {
-            if ("qingzhou-config".equals(entry.getKey())) continue;
-            configMap.computeIfAbsent(entry.getKey(), pid -> new HashMap<>()).putAll(entry.getValue());
-        }
     }
 
     /**
      * 把 qingzhou.properties 中的键按 OSGi configurationPid 聚合。
      */
-    private Map<String, Map<String, String>> converToOsgiConfig(Map<String, String> qzConfig) {
+    private Map<String, Map<String, String>> convertToOsgiConfig(Map<String, String> qzConfig) {
         Map<String, Map<String, String>> configMap = new HashMap<>();
         for (String configKey : qzConfig.keySet()) {
             if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) continue;

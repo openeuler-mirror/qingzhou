@@ -1,5 +1,6 @@
 package qingzhou.crypto.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -14,11 +15,13 @@ class TotpCipherImpl implements TotpCipher {
     // RFC 6238 默认步长 30 秒，主流验证器 App 亦固定此值，不可调整
     private static final long STEP_MILLIS = 30_000L;
 
-    private final Base16Coder base16Coder;
-    private final Base32Coder base32Coder;
-    private final int[] DIGITS_POWER
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+
+    private final Base16Coder base16Coder;
+    private final Base32Coder base32Coder;
 
     TotpCipherImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
         this.base16Coder = base16Coder;
@@ -28,7 +31,7 @@ class TotpCipherImpl implements TotpCipher {
     @Override
     public String generateKey() {
         byte[] salt = new byte[8];
-        new SecureRandom().nextBytes(salt);
+        RANDOM.nextBytes(salt);
         return base32Coder.encode(salt);
     }
 
@@ -48,9 +51,15 @@ class TotpCipherImpl implements TotpCipher {
     public boolean verifyCode(String key, String code) throws Exception {
         if (key == null || key.isEmpty() || code == null || code.isEmpty()) return false;
         long step = System.currentTimeMillis() / STEP_MILLIS; // 基准只取一次，否则校验途中跨窗会漏检真正的当前窗口
-        return code.equals(getCode(key, step))
-                || code.equals(getCode(key, step - 1)) // 提交延迟只会把口令推向前序窗口
-                || code.equals(getCode(key, step + 1)); // 覆盖服务端时钟偏慢的情况
+        return isEqual(code, getCode(key, step))
+                || isEqual(code, getCode(key, step - 1)) // 提交延迟只会把口令推向前序窗口
+                || isEqual(code, getCode(key, step + 1)); // 覆盖服务端时钟偏慢的情况
+    }
+
+    // 常量时间比较，防止时序侧信道推算口令
+    private static boolean isEqual(String expected, String actual) {
+        return java.security.MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
+                actual.getBytes(StandardCharsets.UTF_8));
     }
 
     /**

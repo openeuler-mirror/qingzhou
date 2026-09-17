@@ -16,7 +16,7 @@ public class LiteralSkillMatcher implements SkillMatcher {
     /**
      * 问题的扫描范围：词面预筛只检查开头片段即可覆盖绝大多数场景
      */
-    private final int MAX_SCAN_LENGTH = 64;
+    private static final int MAX_SCAN_LENGTH = 64;
 
     private LiteralSkillMatcher() {
     }
@@ -24,6 +24,7 @@ public class LiteralSkillMatcher implements SkillMatcher {
     @Override
     public Collection<Skill> match(Collection<Skill> candidates, String message) {
         List<Skill> matched = new ArrayList<>();
+        if (message == null || message.isEmpty()) return matched;
         String question = message.length() > MAX_SCAN_LENGTH ? message.substring(0, MAX_SCAN_LENGTH) : message;
         for (Skill skill : candidates) {
             if (isStronglyRelated(skill, question)) {

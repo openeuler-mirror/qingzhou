@@ -14,10 +14,9 @@ public class Base16CoderImplTest {
     // ===================== encode(byte[]) 编码测试 =====================
 
     @Test
-    public void dataNull_encode_returnEmptyString() {
+    public void dataNull_encode_returnNull() {
         Base16CoderImpl coder = new Base16CoderImpl();
-        String result = coder.encode((byte[]) null);
-        Assert.assertEquals(result, "");
+        Assert.assertNull(coder.encode(null));
     }
 
     @Test
@@ -82,16 +81,9 @@ public class Base16CoderImplTest {
     // ===================== decode(String) 解码测试 =====================
 
     @Test
-    public void dataNull_decode_returnEmptyByteArray() {
+    public void dataNull_decode_returnNull() {
         Base16CoderImpl coder = new Base16CoderImpl();
-        byte[] result;
-        try {
-            result = coder.decode((String) null);
-        } catch (NullPointerException e) {
-            //原实现null会空指针，捕获后视为空字符串
-            result = new byte[0];
-        }
-        Assert.assertEquals(result.length, 0);
+        Assert.assertNull(coder.decode((String) null));
     }
     @Test
     public void dataEmptyString_decode_returnEmptyByteArray() {
