@@ -3,52 +3,13 @@ package qingzhou.http.client.impl;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Executor;
 
 import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 
 class ResponseImpl implements Response {
-    private static volatile ExecutorService executor;
-    private static volatile boolean terminated;
-
-    private static ExecutorService executor() {
-        if (terminated) throw new IllegalStateException("HttpClient is shut down");
-
-        ExecutorService e = executor;
-        if (e == null) {
-            synchronized (ResponseImpl.class) {
-                e = executor;
-                if (e == null) {
-                    e = Executors.newCachedThreadPool(new ThreadFactory() {
-                        private final AtomicInteger seq = new AtomicInteger();
-
-                        @Override
-                        public Thread newThread(Runnable r) {
-                            Thread thread = new Thread(r, "qz-http-client-" + seq.incrementAndGet());
-                            thread.setDaemon(true);
-                            return thread;
-                        }
-                    });
-                    executor = e;
-                }
-            }
-        }
-        return e;
-    }
-
-    static void shutdown() {
-        terminated = true;
-        ExecutorService e = executor;
-        executor = null;
-        if (e != null) {
-            e.shutdownNow();
-        }
-    }
-
+    private final Executor executor;
     private final int code;
     private final int maxBodySize;
     private final HttpURLConnection conn;
@@ -57,15 +18,16 @@ class ResponseImpl implements Response {
     private volatile byte[] result;
     private volatile boolean cancelled;
 
-    ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize) throws IOException {
+    ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
         this.conn = conn;
         this.maxBodySize = maxBodySize;
+        this.executor = executor;
         this.code = conn.getResponseCode();
 
         if (listener != null && code >= 200 && code < 300) {
             // 2xx + 流式：后台线程逐行回调，实现打字机效果
             streaming = true;
-            executor().execute(() -> readStreaming(listener));
+            executor.execute(() -> readStreaming(listener));
         } else {
             // 同步模式或非 2xx：一次性读完整响应体，交由调用方根据 getStatus() 处理；传入 listener 时回调 onError
             streaming = false;

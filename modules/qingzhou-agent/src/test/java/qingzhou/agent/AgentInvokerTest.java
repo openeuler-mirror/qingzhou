@@ -22,6 +22,9 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
+import qingzhou.http.impl.AuthManager;
+import qingzhou.http.impl.DispatcherHandler;
+import qingzhou.http.impl.HandlerManager;
 import qingzhou.http.impl.HttpServerImpl;
 import qingzhou.json.impl.JsonImpl;
 import qingzhou.logger.impl.LoggerImpl;
@@ -467,12 +470,6 @@ public class AgentInvokerTest {
         return json;
     }
 
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
-
     private InstanceInfo buildInstanceInfo(String key) {
         InstanceInfo instanceInfo = new InstanceInfo();
         instanceInfo.setKey(key);
@@ -481,17 +478,48 @@ public class AgentInvokerTest {
     }
 
     private TestServer startServer() throws Exception {
-        HttpServerImpl httpServer = new HttpServerImpl();
-        setField(httpServer, "logger", new LoggerImpl());
         Map<String, String> config = new HashMap<>();
         config.put("port", "0"); // 由操作系统分配空闲端口
         config.put("ssl_enabled", "false"); // 由操作系统分配空闲端口
+        HttpServerImpl httpServer = buildHttpServer(config);
         httpServer.start(config);
         Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
         field.setAccessible(true);
         DisposableServer disposableServer = (DisposableServer) field.get(httpServer);
         java.net.InetSocketAddress address = (java.net.InetSocketAddress) disposableServer.address();
         return new TestServer(httpServer, address.getPort());
+    }
+
+    static HttpServerImpl buildHttpServer(Map<String, String> config) throws Exception {
+        HttpServerImpl httpServer = new HttpServerImpl();
+        LoggerImpl logger = new LoggerImpl();
+        CryptoImpl crypto = new CryptoImpl();
+        HandlerManager handlerManager = new HandlerManager();
+        DispatcherHandler dispatcherHandler = new DispatcherHandler();
+        AuthManager authManager = new AuthManager();
+
+        setField(httpServer, "crypto", crypto);
+        setField(httpServer, "logger", logger);
+        setField(httpServer, "handlerManager", handlerManager);
+        setField(httpServer, "dispatcherHandler", dispatcherHandler);
+
+        setField(handlerManager, "logger", logger);
+
+        setField(dispatcherHandler, "logger", logger);
+        setField(dispatcherHandler, "authManager", authManager);
+        setField(dispatcherHandler, "handlerManager", handlerManager);
+
+        setField(authManager, "logger", logger);
+
+        dispatcherHandler.init(config);
+
+        return httpServer;
+    }
+
+    static void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private void deleteRecursively(File file) {

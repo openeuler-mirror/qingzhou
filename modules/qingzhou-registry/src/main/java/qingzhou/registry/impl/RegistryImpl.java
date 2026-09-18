@@ -1,6 +1,5 @@
 package qingzhou.registry.impl;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -24,8 +23,6 @@ import qingzhou.registry.Registry;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegistryImpl implements Registry {
-    private final List<String> tempMsg = new ArrayList<>();
-
     @Reference
     private ConfigurationAdmin configAdmin;
     @Reference
@@ -37,6 +34,7 @@ public class RegistryImpl implements Registry {
     @Reference
     private Crypto crypto;
 
+    private final List<String> tempMsg = new ArrayList<>();
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
     private long registryDataVersion = System.currentTimeMillis();
@@ -50,19 +48,18 @@ public class RegistryImpl implements Registry {
     @Activate
     public synchronized void start(Map<String, String> config) {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
-        qzVersion = new File(qzVersion).getName().substring("version".length());
 
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindApp(AppStubLocal appStub) {
+    public synchronized void bindApp(AppStubLocal appStub) {
         bindApp0(appStub);
         registryDataVersion = System.currentTimeMillis();
     }
 
-    private synchronized void bindApp0(AppStubLocal appStub) {
+    private void bindApp0(AppStubLocal appStub) {
         AppMeta appMeta = appStub.getAppMeta();
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);

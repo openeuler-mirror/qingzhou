@@ -28,7 +28,7 @@ public class AppContextImpl implements AppContext {
     final Map<String, Method> actionMethods = new HashMap<>();
 
     private final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
-    private final String qzVersion = new File(System.getProperty("qingzhou.version")).getName().substring("version".length()); // 缓存，防止系统参数被应用覆盖
+    private final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
     // 应用启动过程中，可能被调用
     final List<ActionFilter> actionFilters = new ArrayList<>();

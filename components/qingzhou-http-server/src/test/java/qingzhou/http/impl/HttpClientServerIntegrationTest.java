@@ -1,8 +1,6 @@
 package qingzhou.http.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -17,10 +15,7 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
-import reactor.netty.DisposableServer;
+import qingzhou.http.impl.TestServerSupport.TestServer;
 
 /**
  * 端到端集成测试：验证 HttpClientImpl 发送的请求头和文件能被 HttpServerImpl 正确接收。
@@ -99,42 +94,7 @@ public class HttpClientServerIntegrationTest {
             try {
                 String path = "/filesTest";
                 AtomicReference<byte[]> receivedBody = new AtomicReference<>();
-                httpServer.registerHttpHandlerNoAuth(new HttpHandler() {
-                    @Override
-                    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-                        httpResponse.status400Finish(); // multipart 请求不会进入此方法
-                    }
-
-                    @Override
-                    public StreamHandler buildStreamHandler() {
-                        return new StreamHandler() {
-                            private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                            private HttpResponse httpResponse;
-
-                            @Override
-                            public void onBegin(HttpRequest request, HttpResponse response) {
-                                this.httpResponse = response;
-                            }
-
-                            @Override
-                            public void onNext(byte[] data) {
-                                buffer.write(data, 0, data.length); // ByteArrayOutputStream.write 不抛出 IOException
-                            }
-
-                            @Override
-                            public void onError(Throwable t) {
-                                httpResponse.status500Finish(t.getMessage());
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                byte[] body = buffer.toByteArray();
-                                receivedBody.set(body);
-                                httpResponse.sendFinish(body); // 原样回写收到的 multipart 字节，供客户端断言
-                            }
-                        };
-                    }
-                }, path);
+                httpServer.registerHttpHandlerNoAuth(TestServerSupport.bufferingEchoHandler(receivedBody), path);
 
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Arrays.asList(file1.getAbsolutePath(), file2.getAbsolutePath()));
@@ -173,25 +133,9 @@ public class HttpClientServerIntegrationTest {
     }
 
     /**
-     * 以端口 0 启动服务端，由操作系统分配空闲端口，再从 disposableServer 读取实际端口。
-     * 避免固定端口在重复运行或并行执行时冲突导致的偶发失败。
+     * 以端口 0 启动服务端，由操作系统分配空闲端口，避免固定端口冲突导致的偶发失败。
      */
     private TestServer startServer() throws Exception {
-        HttpServerImpl httpServer = HttpServerImplTest.build(0);
-        Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
-        field.setAccessible(true);
-        DisposableServer disposableServer = (DisposableServer) field.get(httpServer);
-        java.net.InetSocketAddress address = (java.net.InetSocketAddress) disposableServer.address();
-        return new TestServer(httpServer, address.getPort());
-    }
-
-    private static class TestServer {
-        final HttpServerImpl server;
-        final int port;
-
-        TestServer(HttpServerImpl server, int port) {
-            this.server = server;
-            this.port = port;
-        }
+        return TestServerSupport.startServer();
     }
 }
