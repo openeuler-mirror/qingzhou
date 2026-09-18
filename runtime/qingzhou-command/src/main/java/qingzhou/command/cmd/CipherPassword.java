@@ -20,7 +20,8 @@ public class CipherPassword extends Processor {
 
     @Override
     public void doCommandLine(String[] args) throws Exception {
-        if (args.length < 1 || args[0].isEmpty()) {
+        String password = readPassword(args);
+        if (password == null) {
             logSimple("usage: cipher-password <plainPassword>");
             return;
         }
@@ -32,7 +33,7 @@ public class CipherPassword extends Processor {
 
             Class<?> cipherClass = loader.loadClass("qingzhou.crypto.Cipher");
             Method encrypt = cipherClass.getMethod("encrypt", String.class);
-            String invoke = (String) encrypt.invoke(globalCipher, args[0]);
+            String invoke = (String) encrypt.invoke(globalCipher, password);
 
             logSimple("------------------------- Password  --------------------------");
             logSimple(invoke);

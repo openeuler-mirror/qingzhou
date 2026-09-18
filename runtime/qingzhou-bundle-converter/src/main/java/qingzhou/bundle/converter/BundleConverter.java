@@ -28,19 +28,11 @@ public class BundleConverter {
     private final Map<String, qingzhou.dto.meta.annotation.ModelAction> defaultActionMetaCache = new HashMap<>();
     private String appDynamicPackages;
 
-    private File targetJar;
-    private String libDir;
-
-    private File qzAppTmp;
-
     public void build(File sourceJar, File targetJar, String libDir) throws Exception {
-        this.targetJar = targetJar;
-        this.libDir = libDir;
-
         // 待处理的原应用的 jar
-        qzAppTmp = new File(targetJar.getParentFile(), targetJar.getName() + UUID.randomUUID());
-        qzAppTmp.mkdirs();
-        unZipToDir(sourceJar, qzAppTmp);
+        File appTmpDir = new File(targetJar.getParentFile(), targetJar.getName() + UUID.randomUUID());
+        appTmpDir.mkdirs();
+        unZipToDir(sourceJar, appTmpDir);
 
         // 生成注解文件
         if (classPool == null) {
@@ -48,30 +40,30 @@ public class BundleConverter {
             classPool = ClassPool.getDefault();
             classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
         }
-        ClassPath appendedClassPath = classPool.appendClassPath(qzAppTmp.getAbsolutePath());
-        addAnnotationFile();
+        ClassPath appendedClassPath = classPool.appendClassPath(appTmpDir.getAbsolutePath());
+        addAnnotationFile(appTmpDir, targetJar);
         classPool.removeClassPath(appendedClassPath);
 
         // 放入 OSGI 驱动类
-        addDriverClass();
+        addDriverClasses(appTmpDir, libDir);
 
         // 添加 MANIFEST.MF 中 OSGI 声明
-        addManifest();
+        addManifest(appTmpDir, targetJar);
 
         // 构建为 bundle jar
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(targetJar.toPath()))) {
-            for (File file : qzAppTmp.listFiles()) {
+            for (File file : appTmpDir.listFiles()) {
                 zipFiles(zos, file, file.getName());
             }
         }
 
         // 清理
-        FileUtil.forceDeleteQuietly(qzAppTmp);
+        FileUtil.forceDeleteQuietly(appTmpDir);
     }
 
-    private void addManifest() throws Exception {
+    private void addManifest(File appTmpDir, File targetJar) throws Exception {
         Manifest manifest;
-        Path manifestPath = Paths.get(qzAppTmp.getAbsolutePath(), "META-INF", "MANIFEST.MF");
+        Path manifestPath = Paths.get(appTmpDir.getAbsolutePath(), "META-INF", "MANIFEST.MF");
         File manifestFile = manifestPath.toFile();
         if (manifestFile.exists()) {
             manifest = new Manifest(new ByteArrayInputStream(Files.readAllBytes(manifestPath)));
@@ -121,33 +113,38 @@ public class BundleConverter {
         }
     }
 
-    private void addDriverClass() throws Exception {
+    private void addDriverClasses(File appTmpDir, String libDir) throws Exception {
         File[] driverJarFiles = Paths.get(libDir, "runtime", "app-driver").toFile().listFiles();
         for (File driverJarFile : driverJarFiles) {
-            unZipToDir(driverJarFile, qzAppTmp);
+            unZipToDir(driverJarFile, appTmpDir);
         }
     }
 
-    private void addAnnotationFile() throws Exception {
+    private void addAnnotationFile(File appTmpDir, File targetJar) throws Exception {
         Set<String> allClassNames;
-        try (Stream<Path> paths = Files.walk(qzAppTmp.toPath())) {
+        try (Stream<Path> paths = Files.walk(appTmpDir.toPath())) {
             String classSuffix = ".class";
             allClassNames = paths.filter(p -> p.toString().endsWith(classSuffix))
                     .map(path -> {
                         String fullPath = path.toFile().getAbsolutePath();
                         String classFile = fullPath.substring(
-                                qzAppTmp.getAbsolutePath().length() + File.separator.length(),
+                                appTmpDir.getAbsolutePath().length() + File.separator.length(),
                                 fullPath.length() - classSuffix.length());
                         return classFile.replace(File.separator, ".");
                     })
                     .collect(Collectors.toSet());
         }
 
+        String jarNameDefaultCode = targetJar.getName();
+        if (jarNameDefaultCode.endsWith(".jar")) {
+            jarNameDefaultCode = jarNameDefaultCode.substring(0, jarNameDefaultCode.length() - ".jar".length());
+        }
+
         qingzhou.dto.meta.annotation.App app = new qingzhou.dto.meta.annotation.App();
         for (String cls : allClassNames) {
             CtClass ctClass = classPool.get(cls);
             try {
-                parseAnnotations(ctClass, app);
+                parseAnnotations(ctClass, app, jarNameDefaultCode);
             } finally {
                 ctClass.detach();
             }
@@ -156,7 +153,7 @@ public class BundleConverter {
             throw new IllegalStateException("Missing @App:");
         }
 
-        Path jsonPath = Paths.get(qzAppTmp.getAbsolutePath(), "QZ-INF", "annotation.json");
+        Path jsonPath = Paths.get(appTmpDir.getAbsolutePath(), "QZ-INF", "annotation.json");
         jsonPath.toFile().getParentFile().mkdirs();
         JsonImpl jsonImpl = new JsonImpl();
         jsonImpl.init();
@@ -164,7 +161,7 @@ public class BundleConverter {
         Files.write(jsonPath, json.getBytes(StandardCharsets.UTF_8));
     }
 
-    private void parseAnnotations(CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
+    private void parseAnnotations(CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp, String defaultCode) throws Exception {
         App app = (App) ctClass.getAnnotation(App.class);
         if (app != null) {
             if (metaApp.className != null) {
@@ -176,11 +173,7 @@ public class BundleConverter {
             metaApp.className = ctClass.getName();
             setObjAnnotation(metaApp, app);
             if (metaApp.code == null || metaApp.code.isEmpty()) {
-                String name = targetJar.getName();
-                if (name.endsWith(".jar")) {
-                    name = name.substring(0, name.length() - 4);
-                }
-                metaApp.code = name;
+                metaApp.code = defaultCode;
             }
         }
 

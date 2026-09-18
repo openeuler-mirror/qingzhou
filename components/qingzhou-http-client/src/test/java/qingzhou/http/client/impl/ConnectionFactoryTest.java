@@ -30,7 +30,7 @@ public class ConnectionFactoryTest {
     @Test
     public void noTrustedCertificates_selfSignedServer_handshakeFails() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
                 client.send(client.newRequest(url(MATCH_HOST, port)).method(HttpMethod.GET));
                 Assert.fail("未指定受信证书时应按 JVM 默认 CA 校验，自签名服务端请求应当失败");
@@ -43,7 +43,7 @@ public class ConnectionFactoryTest {
     @Test
     public void trustAllCertificates_selfSignedServerWithMismatchedHost_requestSucceeds() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             Response response = client.send(client.newRequest(url(mismatchHost, port))
                     .method(HttpMethod.GET)
                     .trustAllCertificates());
@@ -56,7 +56,7 @@ public class ConnectionFactoryTest {
     @Test
     public void matchedTrustedCertificate_selfSignedServer_requestSucceeds() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             Response response = client.send(client.newRequest(url(MATCH_HOST, port))
                     .method(HttpMethod.GET)
                     .trustedCertificates(certificate(SERVER_KEYSTORE)));
@@ -69,7 +69,7 @@ public class ConnectionFactoryTest {
     @Test
     public void unmatchedTrustedCertificate_selfSignedServer_handshakeFails() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
                 client.send(client.newRequest(url(MATCH_HOST, port))
                         .method(HttpMethod.GET)
@@ -84,7 +84,7 @@ public class ConnectionFactoryTest {
     @Test
     public void trustedCertificateHostnameMismatch_selfSignedServer_handshakeFails() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
                 client.send(client.newRequest(url(mismatchHost, port))
                         .method(HttpMethod.GET)
@@ -99,7 +99,7 @@ public class ConnectionFactoryTest {
     @Test
     public void trustedAndTrustAllRequests_sameClient_eachRequestIsolated() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientImplTest.buildHttpClientImpl();
 
             Response trusted = client.send(client.newRequest(url(MATCH_HOST, port))
                     .method(HttpMethod.GET)

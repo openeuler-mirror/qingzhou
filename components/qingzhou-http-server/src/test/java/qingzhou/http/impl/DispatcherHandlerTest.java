@@ -37,7 +37,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/test");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/other")
                     .method(HttpMethod.GET));
 
@@ -54,7 +54,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("hello-" + request.getMethod()), "/test");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test")
                     .method(HttpMethod.GET));
 
@@ -73,7 +73,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth(handler, "/temp");
             testServer.server.unregisterHttpHandler(handler);
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/temp")
                     .method(HttpMethod.GET));
 
@@ -95,7 +95,7 @@ public class DispatcherHandlerTest {
                 response.sendFinish("M=" + method + ",P=" + path + ",B=" + bodyStr);
             }, "/infoTest");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/infoTest")
                     .method(HttpMethod.POST)
                     .body("hello-body".getBytes(StandardCharsets.UTF_8)));
@@ -148,7 +148,7 @@ public class DispatcherHandlerTest {
 
             Map<String, String> params = new HashMap<>();
             params.put("name", "qingzhou");
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/postTest")
                     .method(HttpMethod.POST)
                     .params(params));
@@ -171,7 +171,7 @@ public class DispatcherHandlerTest {
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
-                HttpClient client = new HttpClientImpl();
+                HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
                 Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/upload")
                         .method(HttpMethod.POST)
                         .files(files));
@@ -199,7 +199,7 @@ public class DispatcherHandlerTest {
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
-                HttpClient client = new HttpClientImpl();
+                HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
                 Response result = client.send(client.newRequest("http://localhost:" + testServer.port + path)
                         .method(HttpMethod.POST)
                         .files(files));
@@ -225,7 +225,7 @@ public class DispatcherHandlerTest {
                 throw new IllegalStateException("boom");
             }, "/boom");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             try {
                 Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/boom")
                         .method(HttpMethod.GET));
@@ -247,7 +247,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("prefix"), "/a");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/a/b/c")
                     .method(HttpMethod.GET));
 
@@ -282,7 +282,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("deep"), "/a/b");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/")
                     .method(HttpMethod.GET));
 
@@ -299,7 +299,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("stream"), "/ai/chat/stream");
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("config"), "/ai/chat/config");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/ai/chat")
                     .method(HttpMethod.GET));
 
@@ -315,7 +315,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("foo"), "/foo");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/foobar")
                     .method(HttpMethod.GET));
 
@@ -332,7 +332,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("root"), "/");
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("child"), "/child");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response child = client.send(client.newRequest("http://localhost:" + testServer.port + "/child/deep")
                     .method(HttpMethod.GET));
             Assert.assertEquals(child.getStatus(), 200);
@@ -353,7 +353,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test/../../etc/passwd")
                     .method(HttpMethod.GET));
 
@@ -369,7 +369,7 @@ public class DispatcherHandlerTest {
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "//test//a")
                     .method(HttpMethod.GET));
 
@@ -387,7 +387,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("decoded-" + request.getPath()), "/hello world");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/hello%20world")
                     .method(HttpMethod.GET));
 

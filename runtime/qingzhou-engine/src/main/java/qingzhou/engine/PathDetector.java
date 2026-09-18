@@ -2,6 +2,7 @@ package qingzhou.engine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PathDetector {
     private final String featureFiles;
@@ -86,6 +88,7 @@ public class PathDetector {
     // 通过扫描系统进程，反向推断软件的安装目录
     private String detectByProcess() {
         Process process = null;
+        BufferedReader reader = null;
         try {
             // 1. 构造全平台兼容的极简原生命令
             String[] cmd;
@@ -99,7 +102,7 @@ public class PathDetector {
             }
 
             process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             // 2. 数据探查
             return reader.lines()
@@ -125,8 +128,19 @@ public class PathDetector {
             e.printStackTrace(System.err);
             return null;
         } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
             if (process != null) {
                 process.destroyForcibly();
+                try {
+                    process.waitFor(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
