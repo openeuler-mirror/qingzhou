@@ -359,6 +359,9 @@ public class BundleConverter {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
                 File targetFile = new File(unZipDir, entry.getName());
+                if (!targetFile.getCanonicalPath().startsWith(unZipDir.getCanonicalPath() + File.separator)) {
+                    throw new IOException("Entry is outside of target dir: " + entry.getName());
+                }
                 if (entry.isDirectory()) {
                     targetFile.mkdirs();
                 } else {

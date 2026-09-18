@@ -47,8 +47,11 @@ class AppDeployer {
             }
         }
 
-        QingzhouMain.startDirAndJars(appCacheDir);
-        tempClassLoader.close();
+        try {
+            QingzhouMain.startDirAndJars(appCacheDir);
+        } finally {
+            if (tempClassLoader != null) tempClassLoader.close();
+        }
     }
 
     private void convertBundleJar(File sourceJar, File targetJar, String libDir) throws Exception {
@@ -103,6 +106,9 @@ class AppDeployer {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
                 File targetFile = new File(unZipDir, entry.getName());
+                if (!targetFile.getCanonicalPath().startsWith(unZipDir.getCanonicalPath() + File.separator)) {
+                    throw new IOException("Entry is outside of target dir: " + entry.getName());
+                }
                 if (entry.isDirectory()) {
                     targetFile.mkdirs();
                 } else {

@@ -288,7 +288,7 @@ public class DefaultAction {
         try {
             String basePath = base.getCanonicalPath();
             String filePath = file.getCanonicalPath();
-            return filePath.startsWith(basePath);
+            return filePath.equals(basePath) || filePath.startsWith(basePath + File.separator);
         } catch (IOException e) {
             return false;
         }

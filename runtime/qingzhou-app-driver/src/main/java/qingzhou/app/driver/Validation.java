@@ -14,8 +14,8 @@ import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
 
 class Validation implements ActionFilter {
-    private final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
-    private final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
+    private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
+    private static final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
 
     private final I18nService i18nService;
     private final Map<Filter, Validator> validators = new LinkedHashMap<Filter, Validator>() {{

@@ -87,9 +87,10 @@ public class FileUtil {
             deleteDirectory(file);
         } else {
             if (file.exists() && !file.delete()) {
-                try { // for #ITAIT-4164
+                try { // Windows 下文件句柄释放有延迟，等待后重试
                     Thread.sleep(2000);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
                 }
                 if (!file.delete()) {
                     throw new IOException("Unable to delete file: " + file);
@@ -170,23 +171,14 @@ public class FileUtil {
                 mkdirs(to.getParentFile());
             }
 
-            //            try (FileOutputStream fos = new FileOutputStream(to)) {
-            //                try (InputStream read = new BufferedInputStream(new FileInputStream(from), 32768)) {
-            //                    copyStream(read, fos);
-            //                }
-            //            }
-
-            // 注释了上面的旧方式，使用新方式：
             try {
                 // Files.copy 使用注意 当第二个参数to.toPath() 对应的文件正在读或写会抛出FileSystemException 另一个程序正在使用此文件，进程无法访问。
                 Files.copy(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 if (e instanceof FileSystemException) {
-                    if (e.getMessage().contains("正在使用")) {
-                        try (FileOutputStream fos = new FileOutputStream(to)) {
-                            try (InputStream read = new BufferedInputStream(Files.newInputStream(from.toPath()), 32768)) {
-                                copyStream(read, fos);
-                            }
+                    try (FileOutputStream fos = new FileOutputStream(to)) {
+                        try (InputStream read = new BufferedInputStream(Files.newInputStream(from.toPath()), 32768)) {
+                            copyStream(read, fos);
                         }
                     }
                 }

@@ -69,7 +69,7 @@ public class Launcher {
 
             // 在极少的情况下，可能出现解压后的文件有丢失，导致启动失败，手动解压 或 删除解压后的目录以触发重新解压 可解决问题。
             int fileCountExpected = getZipEntrySize(verFile);
-            if (failedDocsCount > 0) { //PDMP-5252
+            if (failedDocsCount > 0) {
                 fileCountExpected = fileCountExpected - failedDocsCount;
             }
 
@@ -79,7 +79,8 @@ public class Launcher {
                 System.err.println(msg);
                 try {
                     Thread.sleep(2000);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
                 }
                 // 实际解压出的文件数少于期望的解压文件数量，则重新尝试一次
                 unZipToDir(verFile, libDir);
@@ -147,7 +148,7 @@ public class Launcher {
                     try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
                         copyLargeStream(zip.getInputStream(entry), out);
                     } catch (Throwable ex) {
-                        if (parentFile.getName().equals("docs")) { // PDMP-5252 某些环境下，docs文档的中文名称会导致启动解压失败
+                        if (parentFile.getName().equals("docs")) { // 某些环境下，docs 文档的中文名称会导致启动解压失败
                             failedDocsCount++; // 忽略掉这个手册文件，别影响启动流程
                         } else {
                             throw ex;
@@ -181,7 +182,7 @@ public class Launcher {
 
     private static File newFile(File destDir, ZipEntry entry) throws IOException {
         File destFile = new File(destDir, entry.getName());
-        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
+        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath() + File.separator)) {
             throw new IOException("Entry is outside of target dir:" + entry.getName()); // 防止压缩包解压目录穿越风险
         }
         return destFile;
