@@ -10,23 +10,17 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
-import qingzhou.http.server.AuthResult;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
 
 /**
- * 应用动作的角色权限判定。
- * 判定逻辑与 HTTP 解耦，供 HTTP 入口、AI / MCP 工具通道与 AppStub 执行入口共用，避免规则漂移。
+ * 应用动作的角色权限判定：由应用动作的统一执行入口调用，
+ * 供 HTTP 入口与 AI / MCP 工具通道共用，避免规则漂移。
  */
 public class PermissionChecker {
-    /**
-     * HTTP 入口使用：判定不通过时写入 403 响应
-     */
-    public boolean checkPermission(HttpRequest httpRequest, HttpResponse httpResponse, AppStub appStub, RequestImpl request) {
-        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
-        if (isAllowed(roles, appStub.getAppMeta(), request.getModel(), request.getAction())) return true;
+    // 判定并回写结果：无权限时不执行动作，结果与 HTTP 入口原有的 403 语义一致
+    public boolean checkPermission(String[] roles, AppMeta appMeta, RequestImpl request) {
+        if (isAllowed(roles, appMeta, request.getModel(), request.getAction())) return true;
 
-        httpResponse.status(403).sendFinish("Forbidden");
+        request.getResponse().status(403).error("Forbidden");
         return false;
     }
 

@@ -19,16 +19,11 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
-import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.Registry;
 import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
 public class AppActionTools {
-    private static final String PERMISSION_DENIED = "无权限：当前用户不具备执行该操作所需的角色。";
-
-    private final PermissionChecker permissionChecker = new PermissionChecker();
-
     @Reference
     private Registry registry;
     @Reference
@@ -98,22 +93,18 @@ public class AppActionTools {
         AppStub appStub = registry.getAppStub(instanceId, appCode);
         if (appStub == null) return null;
 
-        // 与 HTTP 入口使用同一套判定：无权限时明确拒绝，且不得触达应用动作
-        if (!permissionChecker.isAllowed(roles, appStub.getAppMeta(), modelCode, actionCode)) {
-            return PERMISSION_DENIED;
-        }
-
         RequestImpl request = new RequestImpl();
         request.setInstance(instanceId);
         request.setApp(appCode);
         request.setModel(modelCode);
         request.setAction(actionCode);
+        request.setRoles(roles); // 身份随请求进入应用动作的统一授权点
         String dataId = (String) toolArgs.get(WebUtil.DATA_ID);
         if (dataId != null) {
             request.setId(dataId);
         }
         try {
-            appStub.invokeApp(request, roles);
+            appStub.invokeApp(request);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
         }

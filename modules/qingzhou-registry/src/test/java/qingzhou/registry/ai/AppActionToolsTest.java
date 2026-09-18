@@ -17,9 +17,6 @@ import qingzhou.ai.ToolService;
 import qingzhou.api.AppContext;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.annotation.App;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
@@ -27,7 +24,6 @@ import qingzhou.registry.Registry;
 import qingzhou.registry.web.WebUtil;
 
 public class AppActionToolsTest {
-    private static final String PERMISSION_DENIED = "无权限：当前用户不具备执行该操作所需的角色。";
     private static final String APP_CODE = "demo";
     private static final String MODEL_CODE = "jvm";
     private static final String PAGE_TOOL = "app_action_page";
@@ -47,63 +43,20 @@ public class AppActionToolsTest {
     }
 
     @Test
-    public void actionRoleNotMatched_toolCall_deniedWithoutInvokingApp() throws Exception {
-        stubApp.appMeta = appMeta(null, null, "action-admin");
+    public void rolesProvided_toolCall_rolesCarriedByRequest() throws Exception {
+        registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"reader"});
 
-        String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"reader"});
-
-        Assert.assertEquals(result, PERMISSION_DENIED);
-        Assert.assertNull(stubApp.invokedRequest);
-    }
-
-    @Test
-    public void rolesAbsent_toolCall_deniedWithoutInvokingApp() throws Exception {
-        stubApp.appMeta = appMeta("admin", "model-admin", "action-admin");
-
-        String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), null);
-
-        Assert.assertEquals(result, PERMISSION_DENIED);
-        Assert.assertNull(stubApp.invokedRequest);
-    }
-
-    @Test
-    public void modelRoleNotMatched_toolCall_deniedWithoutInvokingApp() throws Exception {
-        stubApp.appMeta = appMeta(null, "model-admin", "action-admin");
-
-        String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"action-admin"});
-
-        Assert.assertEquals(result, PERMISSION_DENIED);
-        Assert.assertNull(stubApp.invokedRequest);
-    }
-
-    @Test
-    public void actionRoleMatched_toolCall_invokesApp() throws Exception {
-        stubApp.appMeta = appMeta(null, null, "action-admin");
-
-        String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"action-admin"});
-
-        Assert.assertEquals(result, "{}");
         Assert.assertNotNull(stubApp.invokedRequest);
+        Assert.assertEquals(stubApp.invokedRequest.getRoles().length, 1);
+        Assert.assertEquals(stubApp.invokedRequest.getRoles()[0], "reader");
     }
 
     @Test
-    public void allLevelRolesMatched_toolCall_invokesApp() throws Exception {
-        stubApp.appMeta = appMeta("app-admin", "model-admin", "action-admin");
-
-        String result = registeredTools.get(PAGE_TOOL).invoke(
-                toolArgs(), new String[]{"app-admin", "model-admin", "action-admin"});
-
-        Assert.assertEquals(result, "{}");
-        Assert.assertNotNull(stubApp.invokedRequest);
-    }
-
-    @Test
-    public void rolesNotDeclared_toolCall_invokesApp() throws Exception {
-        stubApp.appMeta = appMeta(null, null, null);
-
+    public void rolesAbsent_toolCall_requestCarriesNullRoles() throws Exception {
         registeredTools.get(PAGE_TOOL).invoke(toolArgs(), null);
 
         Assert.assertNotNull(stubApp.invokedRequest);
+        Assert.assertNull(stubApp.invokedRequest.getRoles());
     }
 
     private static Map<String, Object> toolArgs() {
@@ -112,26 +65,6 @@ public class AppActionToolsTest {
         toolArgs.put(WebUtil.APP_CODE, APP_CODE);
         toolArgs.put(WebUtil.MODEL_CODE, MODEL_CODE);
         return toolArgs;
-    }
-
-    private static AppMeta appMeta(String appRoles, String modelRoles, String actionRoles) {
-        ModelAction action = new ModelAction();
-        action.code = "page";
-        action.roles = actionRoles;
-
-        Model model = new Model();
-        model.code = MODEL_CODE;
-        model.roles = modelRoles;
-        model.actions.add(action);
-
-        App app = new App();
-        app.code = APP_CODE;
-        app.roles = appRoles;
-        app.models.add(model);
-
-        AppMeta appMeta = new AppMeta();
-        appMeta.setApp(app);
-        return appMeta;
     }
 
     private Registry registry() {
@@ -192,7 +125,7 @@ public class AppActionToolsTest {
     }
 
     private static final class StubApp implements AppStubLocal {
-        private AppMeta appMeta;
+        private final AppMeta appMeta = new AppMeta();
         private RequestImpl invokedRequest;
 
         @Override

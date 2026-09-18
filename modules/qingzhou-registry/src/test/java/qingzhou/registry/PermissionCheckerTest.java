@@ -2,6 +2,7 @@ package qingzhou.registry;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
@@ -58,6 +59,31 @@ public class PermissionCheckerTest {
         AppMeta appMeta = appMeta(null, "model-admin", "action-admin");
 
         Assert.assertTrue(checker.isAllowed(null, appMeta, "unregistered-model", ACTION_CODE));
+    }
+
+    @Test
+    public void rolesNotMatched_checkPermission_writesForbiddenResult() {
+        RequestImpl request = request();
+
+        Assert.assertFalse(checker.checkPermission(new String[]{"reader"}, appMeta("admin", null, null), request));
+        Assert.assertEquals(request.getResponse().getStatus(), 403);
+        Assert.assertFalse(request.getResponse().isSuccess());
+    }
+
+    @Test
+    public void rolesMatched_checkPermission_leavesResponseUntouched() {
+        RequestImpl request = request();
+
+        Assert.assertTrue(checker.checkPermission(new String[]{"admin"}, appMeta("admin", null, null), request));
+        Assert.assertEquals(request.getResponse().getStatus(), 0);
+        Assert.assertTrue(request.getResponse().isSuccess());
+    }
+
+    private static RequestImpl request() {
+        RequestImpl request = new RequestImpl();
+        request.setModel(MODEL_CODE);
+        request.setAction(ACTION_CODE);
+        return request;
     }
 
     private AppMeta appMeta(String appRoles, String modelRoles, String actionRoles) {

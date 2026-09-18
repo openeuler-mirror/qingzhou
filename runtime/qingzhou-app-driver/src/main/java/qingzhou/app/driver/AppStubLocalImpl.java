@@ -52,17 +52,10 @@ class AppStubLocalImpl implements AppStubLocal {
     }
 
     @Override
-    public void invokeApp(RequestImpl request, String[] roles) throws Throwable {
-        // 框架级收口：凡携带终端用户身份的调用，都必须先通过应用、模块、动作三级角色判定，
-        // 避免新增执行通道时漏挂校验。
-        if (!permissionChecker.isAllowed(roles, appContext.appMeta, request.getModel(), request.getAction())) {
-            throw new IllegalAccessException("Forbidden");
-        }
-        invokeApp(request);
-    }
-
-    @Override
     public void invokeApp(RequestImpl request) throws Throwable {
+        // 应用动作的统一授权点：HTTP 入口与 AI / MCP 工具通道均经此进入，无权限时不执行动作
+        if (!permissionChecker.checkPermission(request.getRoles(), appContext.appMeta, request)) return;
+
         if (Constants.SYSTEM_MODEL_CODE.equals(request.getModel())) {
             systemCall(request);
             return;
