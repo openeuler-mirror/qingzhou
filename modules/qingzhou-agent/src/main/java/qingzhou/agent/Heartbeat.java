@@ -11,6 +11,7 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
@@ -77,7 +78,7 @@ public class Heartbeat {
                         thisInstanceInfo.setKey(newKey);
                     } else {
                         // 注册报文：registerToken\ninstanceInfoJson，令牌授权新实例注册与重复注册
-                        String registerData = String.join("\n",
+                        String registerData = String.join(Constants.AGENT_REGISTER_TOKEN_SP,
                                 registerToken == null ? "" : registerToken,
                                 json.toJson(thisInstanceInfo));
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));

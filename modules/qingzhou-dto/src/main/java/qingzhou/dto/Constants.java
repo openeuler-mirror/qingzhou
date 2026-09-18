@@ -10,4 +10,5 @@ public interface Constants {
     String AGENT_UPLOAD_KEY = "key";
     String AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP = ",";
     String AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP = "=";
+    String AGENT_REGISTER_TOKEN_SP = "\n";
 }

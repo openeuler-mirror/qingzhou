@@ -8,6 +8,7 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -112,8 +113,8 @@ public class Register implements HttpHandler {
         String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 
-        // 报文：registerToken\ninstanceInfoJson
-        String[] parts = decryptedRequest.split("\n", 2);
+        // 报文：registerToken + InstanceInfoJson
+        String[] parts = decryptedRequest.split(Constants.AGENT_REGISTER_TOKEN_SP, 2);
         if (parts.length < 2) {
             httpResponse.sendFinish("data format error");
             return;
@@ -122,8 +123,8 @@ public class Register implements HttpHandler {
         // 注册授权：注册令牌为预共享秘密，须先于任何写入校验；registry 公钥分发给所有 agent、不是秘密，
         // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
         if (!isAuthorized(registerToken, parts[0])) {
-            logger.warn("registration rejected: unauthorized");
-            httpResponse.sendFinish("key auth error");
+            logger.warn("registration rejected: register_token error");
+            httpResponse.sendFinish("register_token error");
             return;
         }
 
@@ -163,7 +164,7 @@ public class Register implements HttpHandler {
         httpResponse.sendFinish(encrypt);
     }
 
-    static boolean isAuthorized(byte[] registerToken, String presentedToken) {
+    private boolean isAuthorized(byte[] registerToken, String presentedToken) {
         return registerToken != null && MessageDigest.isEqual(registerToken, presentedToken.getBytes(StandardCharsets.UTF_8));
     }
 }
