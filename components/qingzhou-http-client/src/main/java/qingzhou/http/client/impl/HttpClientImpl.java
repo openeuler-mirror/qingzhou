@@ -8,7 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import qingzhou.http.client.HttpClient;
@@ -18,9 +23,25 @@ import qingzhou.http.client.ResponseListener;
 
 @Component
 public class HttpClientImpl implements HttpClient {
+    private ExecutorService executor;
+
+    @Activate
+    public void activate() {
+        executor = Executors.newCachedThreadPool(new ThreadFactory() {
+            private final AtomicInteger seq = new AtomicInteger();
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r, "qz-http-client-" + seq.incrementAndGet());
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
+
     @Deactivate
     public void deactivate() {
-        ResponseImpl.shutdown();
+        executor.shutdownNow();
     }
 
     @Override
@@ -66,7 +87,7 @@ public class HttpClientImpl implements HttpClient {
                 conn.connect();
             }
 
-            ResponseImpl response = new ResponseImpl(conn, listener, req.maxBodySize);
+            ResponseImpl response = new ResponseImpl(conn, listener, req.maxBodySize, executor);
             doDisconnect = false; // 连接交由 ResponseImpl 管理：正常读完可复用，取消时强制断开
             return response;
         } finally {

@@ -1,5 +1,6 @@
 package qingzhou.ai.skill;
 
+import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,8 +35,10 @@ public class SystemSkill extends SkillServiceBase implements SkillService {
     @Activate
     public void init(Map<String, String> config) {
         List<String> docs = new ArrayList<>();
+        String instance = config.get("qingzhou.instance");
+        String version = config.get("qingzhou.version");
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(
-                Paths.get(config.get("qingzhou.version"), "docs"),
+                Paths.get(new File(instance).getParentFile().getParent(), "lib", "version" + version, "docs"),
                 "*.md")) {
             for (Path md : stream) {
                 List<String> contents = Files.readAllLines(md);

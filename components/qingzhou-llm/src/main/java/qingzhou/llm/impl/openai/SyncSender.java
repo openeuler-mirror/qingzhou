@@ -43,8 +43,7 @@ class SyncSender {
 
             for (int i = 0; i < builder.maxToolIterations; i++) {
                 Response response = sendSync(messages, toolDefs, 0);
-                Map<String, Object> msg = getResponseMessage(response);
-                if (msg == null) return "";
+                Map<String, Object> msg = requireResponseMessage(response);
 
                 List<ToolCallInfo> toolCalls = parseToolCalls((List<Map<String, Object>>) msg.get("tool_calls"));
                 if (toolCalls.isEmpty()) {
@@ -59,8 +58,7 @@ class SyncSender {
             Utils.println("Tool iterations have reached the limit: " + builder.maxToolIterations);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             Response response = sendSync(messages, null, 0); // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
-            Map<String, Object> msg = getResponseMessage(response);
-            if (msg == null) return "";
+            Map<String, Object> msg = requireResponseMessage(response);
             String content = builder.extractText(msg.get("content"));
             return content != null ? content : "";
         } catch (Throwable t) {
@@ -111,10 +109,14 @@ class SyncSender {
         return result;
     }
 
-    private Map<String, Object> getResponseMessage(Response response) throws Exception {
+    private Map<String, Object> requireResponseMessage(Response response) throws Exception {
         Map<String, Object> data = json.fromJson(new String(response.getBody(), StandardCharsets.UTF_8), Map.class);
         List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
-        if (choices == null || choices.isEmpty()) return null;
+        if (choices == null || choices.isEmpty()) {
+            // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
+            throw new IllegalStateException("API returned no choices: "
+                    + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 500));
+        }
         return (Map<String, Object>) choices.get(0).get("message");
     }
 }

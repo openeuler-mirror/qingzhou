@@ -135,12 +135,14 @@ public class AiChat implements HttpHandler {
         String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
 
         SseListener sseListener = new SseListener(httpResponse, logger, json);
+
         // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
         String assistantMessageId = UUID.randomUUID().toString();
         // chat() 异步返回，回答全文须等流结束才完整，落库挂 onComplete
         sseListener.onCompleteAction(() -> conversationStore.storeAssistantMessage(conversationId, userId, sseListener.allContent.toString(), assistantMessageId));
+
         try {
-            sseListener.setStarted(conversationId, assistantMessageId);
+            sseListener.setStarted(conversationId, assistantMessageId); // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
@@ -149,9 +151,11 @@ public class AiChat implements HttpHandler {
                     .chatMemory(() -> conversationStore.getMessageList(userId, conversationId));
             ChatModel chatModel = builder.build();
             chatModel.chat(finalQuestion, sseListener, images);
+
             // chat() 异步返回，立即落库（在 chatMemory 读取历史之后，避免本轮提问混入上下文重复），
+            String storedUserMessageId = conversationStore.storeUserMessage(conversationId, userId, finalQuestion);
             // 保证消息时间戳正确；消息 id 随 USER_MESSAGE 下发，供前端问答成对删除
-            sseListener.sendUserMessage(conversationStore.storeUserMessage(conversationId, userId, finalQuestion));
+            sseListener.sendUserMessage(storedUserMessageId);
         } catch (Throwable t) {
             // 受理后的任何前置异常（模型未配置、技能配置解析失败等）都必须以事件告知客户端，
             // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”

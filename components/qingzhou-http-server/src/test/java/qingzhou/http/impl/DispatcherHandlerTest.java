@@ -3,7 +3,6 @@ package qingzhou.http.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -20,10 +19,8 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
+import qingzhou.http.impl.TestServerSupport.TestServer;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
-import reactor.netty.DisposableServer;
 
 /**
  * DispatcherHandler 自动化测试集。
@@ -36,7 +33,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void unregisteredPath_request_returns404() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/test");
 
@@ -52,7 +49,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void registeredPath_getRequest_handlerInvokedWithResponse() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("hello-" + request.getMethod()), "/test");
@@ -70,7 +67,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void unregisteredHandler_request_returns404() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             HttpHandler handler = (request, response) -> response.sendFinish("ok");
             testServer.server.registerHttpHandlerNoAuth(handler, "/temp");
@@ -88,7 +85,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void requestInfo_readViaHttpRequestApi_handlerReceivesMethodPathBody() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> {
                 String method = request.getMethod();
@@ -113,7 +110,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void responseWrite_httpResponseApi_clientReceivesStatusHeaderBody() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.status(201)
@@ -144,7 +141,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void postParams_postRequest_handlerReceivesAggregatedBody() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish(new String(request.getBody(), StandardCharsets.UTF_8)), "/postTest");
@@ -168,7 +165,7 @@ public class DispatcherHandlerTest {
         File tempFile = File.createTempFile("dispatcher-upload-", ".txt");
         try {
             Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
-            TestServer testServer = startServer();
+            TestServer testServer = TestServerSupport.startServer();
             try {
                 testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/upload");
                 Map<String, List<String>> files = new HashMap<>();
@@ -193,46 +190,11 @@ public class DispatcherHandlerTest {
         File tempFile = File.createTempFile("dispatcher-stream-", ".txt");
         try {
             Files.write(tempFile.toPath(), "stream-file-content".getBytes(StandardCharsets.UTF_8));
-            TestServer testServer = startServer();
+            TestServer testServer = TestServerSupport.startServer();
             try {
                 String path = "/streamUpload";
                 AtomicReference<byte[]> received = new AtomicReference<>();
-                testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
-                    @Override
-                    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-                        httpResponse.status400Finish(); // multipart 请求不会进入此方法
-                    }
-
-                    @Override
-                    public StreamHandler buildStreamHandler() {
-                        return new StreamHandler() {
-                            private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                            private HttpResponse httpResponse;
-
-                            @Override
-                            public void onBegin(HttpRequest request, HttpResponse response) {
-                                this.httpResponse = response;
-                            }
-
-                            @Override
-                            public void onNext(byte[] data) {
-                                buffer.write(data, 0, data.length);
-                            }
-
-                            @Override
-                            public void onError(Throwable t) {
-                                httpResponse.status500Finish(t.getMessage());
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                byte[] body = buffer.toByteArray();
-                                received.set(body);
-                                httpResponse.sendFinish(body);
-                            }
-                        };
-                    }
-                }, path);
+                testServer.server.registerHttpHandlerNoAuth(TestServerSupport.bufferingEchoHandler(received), path);
 
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
@@ -257,7 +219,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void handlerThrowsException_request_returns500() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> {
                 throw new IllegalStateException("boom");
@@ -281,7 +243,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void prefixPathRegistered_request_routesByPrefix() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("prefix"), "/a");
 
@@ -298,7 +260,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void overlappingPathRegister_registerHttpHandler_throwsException() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("a"), "/a");
 
@@ -316,7 +278,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void deepPathRegistered_requestRoot_returns404() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("deep"), "/a/b");
 
@@ -332,7 +294,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void childPathRegistered_requestParent_returns404() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("stream"), "/ai/chat/stream");
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("config"), "/ai/chat/config");
@@ -349,7 +311,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void siblingPrefixPath_requestSibling_returns404() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("foo"), "/foo");
 
@@ -365,7 +327,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void rootAndChildRegistered_requestChild_routesToLongest() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("root"), "/");
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("child"), "/child");
@@ -387,7 +349,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void traversalPath_request_returns400() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
 
@@ -403,7 +365,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void redundantSlashPath_request_normalized() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
 
@@ -420,7 +382,7 @@ public class DispatcherHandlerTest {
 
     @Test
     public void urlEncodedPath_request_decodedAndRouted() throws Exception {
-        TestServer testServer = startServer();
+        TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("decoded-" + request.getPath()), "/hello world");
@@ -436,22 +398,4 @@ public class DispatcherHandlerTest {
         }
     }
 
-    private TestServer startServer() throws Exception {
-        HttpServerImpl httpServer = HttpServerImplTest.build(0); // 端口 0：由操作系统分配空闲端口
-        Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
-        field.setAccessible(true);
-        DisposableServer disposableServer = (DisposableServer) field.get(httpServer);
-        java.net.InetSocketAddress address = (java.net.InetSocketAddress) disposableServer.address();
-        return new TestServer(httpServer, address.getPort());
-    }
-
-    private static class TestServer {
-        final HttpServerImpl server;
-        final int port;
-
-        TestServer(HttpServerImpl server, int port) {
-            this.server = server;
-            this.port = port;
-        }
-    }
 }

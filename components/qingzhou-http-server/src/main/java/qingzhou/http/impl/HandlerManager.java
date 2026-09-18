@@ -1,0 +1,127 @@
+package qingzhou.http.impl;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
+import org.osgi.service.component.annotations.*;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.logger.Logger;
+
+@Component(service = HandlerManager.class)
+public class HandlerManager {
+    @Reference
+    private Logger logger;
+
+    private final List<String> tempMsg = new ArrayList<>();
+
+    // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
+    private final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
+    final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
+
+    @Activate
+    public synchronized void init() {
+        tempMsg.forEach(s -> logger.info(s));
+        tempMsg.clear();
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
+            unbind = "removeHttpHandler")
+    public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
+        String originPath = properties.get(HttpHandler.HANDLE_PATH);
+        String component = properties.get(ComponentConstants.COMPONENT_NAME);
+        if (component == null) component = "@App";
+        if (originPath == null || originPath.trim().isEmpty()) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be empty");
+        }
+
+        String path = originPath.trim();
+        if (!path.startsWith("/")) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with /");
+        }
+        if (reference != null) {
+            String prefix = reference.getBundle().getSymbolicName();
+            prefix = prefix.replace("qingzhou-", "");
+            path = "/" + prefix + path;
+        }
+        path = withTrailingSlash(path); // 统一以尾斜杠存储，匹配时无需逐个 key 再做转换
+
+        String conflict = conflict(path);
+        if (conflict != null) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
+        }
+
+        handlerMap.put(path, httpHandler);
+        boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
+        if (isNoAuth) {
+            noAuthHandlerSet.add(httpHandler);
+        }
+
+        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
+        String msg = "http handler registered, component: " + component + ", path: " + originPath + (isNoAuth ? " (no auth)" : "");
+        if (logger != null) {
+            logger.info(msg);
+        } else {
+            tempMsg.add(msg);
+        }
+    }
+
+    // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽
+    private String conflict(String checkPath) {
+        String request = withTrailingSlash(checkPath);
+        for (String existsPath : handlerMap.keySet()) {
+            if (existsPath.equals("/")) continue; // 根路径仅作兜底（它必然与所有路径重叠）
+            if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
+        }
+        return null;
+    }
+
+    // 补尾部斜杠：使 /a 只匹配 /a/...，不会误匹配 /abc
+    private String withTrailingSlash(String path) {
+        return path.endsWith("/") ? path : path + "/";
+    }
+
+    /**
+     * 解绑方法的名称由被注解方法的名称生成。
+     * 如果被注解方法的名称以bind、set或add开头，则会分别将这些前缀替换为unbind、unset或remove，以此生成解绑方法的候选名称；
+     * 若被注解方法的名称不以这些前缀开头，则会在方法名前添加前缀un，生成解绑方法的候选名称。
+     * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
+     * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
+     */
+    public void removeHttpHandler(HttpHandler httpHandler) {
+        String contextPath = null;
+        for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
+            if (Objects.equals(e.getValue(), httpHandler)) {
+                contextPath = e.getKey();
+                break;
+            }
+        }
+        if (contextPath == null) return;
+
+        handlerMap.remove(contextPath);
+        noAuthHandlerSet.remove(httpHandler);
+
+        logger.info("http handler unregistered: " + contextPath);
+    }
+
+    /**
+     * 分发专用：只按「请求路径以已注册路径为前缀」匹配，并取最长者。
+     * 反向匹配（已注册路径以请求路径为前缀）会让后代 handler 服务祖先请求，
+     * 例如请求 / 命中 /ai/chat/config、请求 /ai/chat 命中 /ai/chat/stream，故不做。
+     * 直接返回 handler 而非路径：OSGi 可并发解绑 handler，先查路径再取 handler 会取到 null。
+     */
+    HttpHandler findHandler(String checkPath) {
+        String request = withTrailingSlash(checkPath);
+        HttpHandler matched = null;
+        int matchedLength = 0;
+        for (Map.Entry<String, HttpHandler> entry : handlerMap.entrySet()) {
+            String existsPath = entry.getKey();
+            if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
+                matched = entry.getValue();
+                matchedLength = existsPath.length();
+            }
+        }
+        return matched;
+    }
+}

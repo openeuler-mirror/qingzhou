@@ -17,7 +17,7 @@ import qingzhou.logger.Logger;
 import qingzhou.store.Store;
 import qingzhou.store.StoreFactory;
 
-@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.OPTIONAL,
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = ConversationStore.class)
 public class ConversationStore {
     @Reference
