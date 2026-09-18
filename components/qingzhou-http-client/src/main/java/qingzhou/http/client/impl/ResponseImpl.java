@@ -9,7 +9,6 @@ import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 
 class ResponseImpl implements Response {
-    private final Executor executor;
     private final int code;
     private final int maxBodySize;
     private final HttpURLConnection conn;
@@ -21,7 +20,6 @@ class ResponseImpl implements Response {
     ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
         this.conn = conn;
         this.maxBodySize = maxBodySize;
-        this.executor = executor;
         this.code = conn.getResponseCode();
 
         if (listener != null && code >= 200 && code < 300) {

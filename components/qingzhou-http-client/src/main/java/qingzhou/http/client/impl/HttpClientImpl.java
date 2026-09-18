@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import qingzhou.http.client.HttpClient;
@@ -22,17 +23,21 @@ import qingzhou.http.client.ResponseListener;
 
 @Component
 public class HttpClientImpl implements HttpClient {
-    // 回调线程池归属组件实例：随实例启停，多实例互不干扰
-    private final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger seq = new AtomicInteger();
+    private ExecutorService executor;
 
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread thread = new Thread(r, "qz-http-client-" + seq.incrementAndGet());
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
+    @Activate
+    public void activate() {
+        executor = Executors.newCachedThreadPool(new ThreadFactory() {
+            private final AtomicInteger seq = new AtomicInteger();
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r, "qz-http-client-" + seq.incrementAndGet());
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
 
     @Deactivate
     public void deactivate() {

@@ -1,21 +1,11 @@
 package qingzhou.http.impl;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
@@ -75,7 +65,7 @@ public class HttpServerImpl implements HttpServer {
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
         if (isSslEnabled) {
-            SslContext sslContext = buildSslContext(config);
+            SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher());
             httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
         }
 
@@ -83,63 +73,6 @@ public class HttpServerImpl implements HttpServer {
         disposableServer = httpServer.bindNow();
 
         logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
-    }
-
-    /**
-     * 加载 SSL 密钥库并构建服务端 SslContext。
-     * 任何配置缺失或错误（未配置路径、文件不存在、口令缺失、类型非法）都会在此抛出异常，
-     * 使服务在绑定端口前启动失败，绝不回退为明文监听。
-     */
-    private SslContext buildSslContext(Map<String, String> config) {
-        String keystorePath = config.get("ssl_keystore_path");
-        if (keystorePath == null || keystorePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
-        }
-
-        File keystoreFile = new File(keystorePath.trim());
-        if (!keystoreFile.isFile()) {
-            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile
-                    + ", generate it with bin/gen-keystore.sh");
-        }
-
-        String type = config.get("ssl_keystore_type");
-        type = (type == null || type.trim().isEmpty()) ? "PKCS12" : type.trim().toUpperCase(Locale.ROOT);
-        if (!"PKCS12".equals(type) && !"JKS".equals(type)) {
-            throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
-        }
-
-        String password = config.get("ssl_keystore_password");
-        if (password == null || password.isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
-            throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
-                    + ", generate it with bin/gen-keystore.sh");
-        }
-        char[] keyPassword = crypto.getGlobalCipher().tryDecrypt(password, "ssl_keystore_password").toCharArray();
-
-        try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
-            KeyStore keyStore = KeyStore.getInstance(type);
-            keyStore.load(in, keyPassword);
-
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keyStore, keyPassword);
-            // 显式收敛协议：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1
-            return SslContextBuilder.forServer(keyManagerFactory).protocols(tlsProtocols()).build();
-        } catch (Exception e) {
-            throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
-        } finally {
-            Arrays.fill(keyPassword, '\0');
-        }
-    }
-
-    // TLSv1.3 需要 JDK 11+，不可用时退到 TLSv1.2
-    private String[] tlsProtocols() {
-        try {
-            for (String protocol : SSLContext.getDefault().getSupportedSSLParameters().getProtocols()) {
-                if ("TLSv1.3".equals(protocol)) return new String[]{"TLSv1.3", "TLSv1.2"};
-            }
-        } catch (NoSuchAlgorithmException e) {
-            // 取不到支持列表时按最保守的 TLSv1.2 处理
-        }
-        return new String[]{"TLSv1.2"};
     }
 
     @Deactivate
