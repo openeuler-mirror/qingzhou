@@ -103,10 +103,11 @@ class AppDeployer {
 
     private void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
+            String baseDir = unZipDir.getCanonicalPath() + File.separator;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
                 File targetFile = new File(unZipDir, entry.getName());
-                if (!targetFile.getCanonicalPath().startsWith(unZipDir.getCanonicalPath() + File.separator)) {
+                if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
                     throw new IOException("Entry is outside of target dir: " + entry.getName());
                 }
                 if (entry.isDirectory()) {

@@ -20,6 +20,7 @@ import javassist.*;
 import org.osgi.framework.Constants;
 import qingzhou.api.*;
 import qingzhou.app.driver.DefaultAction;
+import qingzhou.app.driver.FileUtil;
 import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
@@ -65,21 +66,7 @@ public class BundleConverter {
         }
 
         // 清理
-        deleteFile(qzAppTmp);
-    }
-
-    private static void deleteFile(File file) {
-        if (!file.exists()) return;
-
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteFile(child);
-                }
-            }
-        }
-        file.delete();
+        FileUtil.forceDeleteQuietly(qzAppTmp);
     }
 
     private void addManifest() throws Exception {
@@ -356,10 +343,11 @@ public class BundleConverter {
 
     private void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
+            String baseDir = unZipDir.getCanonicalPath() + File.separator;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
                 File targetFile = new File(unZipDir, entry.getName());
-                if (!targetFile.getCanonicalPath().startsWith(unZipDir.getCanonicalPath() + File.separator)) {
+                if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
                     throw new IOException("Entry is outside of target dir: " + entry.getName());
                 }
                 if (entry.isDirectory()) {
@@ -369,7 +357,7 @@ public class BundleConverter {
                     if (!Files.exists(targetFilePath)) { // 不要让 app-driver 里面的 META-INF.MANIFEST.MF 覆盖了 应用 jar 里面的 META-INF.MANIFEST.MF
                         targetFile.getParentFile().mkdirs();
                         try (OutputStream out = Files.newOutputStream(targetFilePath)) {
-                            copyStream(zip.getInputStream(entry), out);
+                            FileUtil.copyStream(zip.getInputStream(entry), out);
                         }
                     }
                 }
@@ -390,17 +378,8 @@ public class BundleConverter {
             ZipEntry zipEntry = new ZipEntry(toZipName);
             zos.putNextEntry(zipEntry);
             try (InputStream in = Files.newInputStream(srcFile.toPath())) {
-                copyStream(in, zos);
+                FileUtil.copyStream(in, zos);
             }
         }
-    }
-
-    private void copyStream(InputStream input, OutputStream output) throws IOException {
-        byte[] buffer = new byte[1024 * 4];
-        int n;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-        }
-        output.flush();
     }
 }
