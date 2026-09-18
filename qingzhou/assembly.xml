@@ -123,6 +123,7 @@
                 <include>${project.groupId}:qingzhou-auth</include>
                 <include>${project.groupId}:qingzhou-oauth2</include>
                 <include>${project.groupId}:qingzhou-ai</include>
+                <include>${project.groupId}:qingzhou-monitor</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
