@@ -7,7 +7,7 @@ class SseEvent {
     // 枚举名即 SSE 协议事件名，修改需同步前端
     // 段（思考 / 正文）的结束不单独发事件，由下一个段开始事件或 RUN_FINISHED / RUN_ERROR 推导
     enum Type {
-        RUN_STARTED, STATUS, RUN_FINISHED, RUN_ERROR,
+        RUN_STARTED, USER_MESSAGE, STATUS, RUN_FINISHED, RUN_ERROR,
         REASONING_START, REASONING_CONTENT, REASONING_PAUSE,
         TEXT_MESSAGE_START, TEXT_MESSAGE_CONTENT,
         TOOL_CALL,
@@ -70,6 +70,14 @@ class SseEvent {
      */
     SseEvent messageId(String value) {
         this.data.put("messageId", value);
+        return this;
+    }
+
+    /**
+     * 本轮用户提问的稳定消息 id（B-1）：随 USER_MESSAGE 下发，前端问答成对删除对齐使用
+     */
+    SseEvent userMessageId(String value) {
+        this.data.put("userMessageId", value);
         return this;
     }
 

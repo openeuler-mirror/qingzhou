@@ -102,6 +102,16 @@ public class ConversationApi implements HttpHandler {
             return;
         }
 
+        // DELETE /conversations/{id}/messages/{messageId} → 删除单条消息（如单次回答）
+        if (segments.length == 3 && "messages".equals(segments[1])) {
+            if (!"DELETE".equals(httpRequest.getMethod())) {
+                sendError(httpResponse, 405, "METHOD_NOT_ALLOWED");
+                return;
+            }
+            deleteMessage(httpResponse, userId, conversationId, segments[2]);
+            return;
+        }
+
         sendError(httpResponse, 404, "NOT_FOUND");
     }
 
@@ -148,6 +158,15 @@ public class ConversationApi implements HttpHandler {
 
     private void deleteConversation(HttpResponse httpResponse, String userId, String conversationId) throws Exception {
         if (!store.remove(userId, conversationId)) {
+            sendError(httpResponse, 404, "NOT_FOUND");
+            return;
+        }
+        sendJson(httpResponse, 200, OK_BODY);
+    }
+
+    private void deleteMessage(HttpResponse httpResponse, String userId, String conversationId,
+                               String messageId) throws Exception {
+        if (!store.removeMessage(userId, conversationId, messageId)) {
             sendError(httpResponse, 404, "NOT_FOUND");
             return;
         }

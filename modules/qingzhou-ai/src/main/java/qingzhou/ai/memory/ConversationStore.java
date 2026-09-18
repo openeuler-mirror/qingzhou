@@ -93,18 +93,22 @@ public class ConversationStore {
         if (record != null && record.userId != null && record.userId.equals(userId) && record.messages != null) {
             for (StoredMessage msg : record.messages) {
                 if (msg.content == null || msg.content.isEmpty()) continue;
-                messages.add(new HistoryMessage(msg.role, msg.content));
+                messages.add(new HistoryMessage(msg.id, msg.role, msg.content));
             }
         }
         return messages;
     }
 
-    public void storeUserMessage(String conversationId, String userId, String content) {
-        append(conversationId, userId, message("user", content));
+    public String storeUserMessage(String conversationId, String userId, String content) {
+        StoredMessage msg = message("user", content);
+        append(conversationId, userId, msg);
+        return msg.id;
     }
 
-    public void storeAssistantMessage(String conversationId, String userId, String content) {
-        append(conversationId, userId, message("assistant", content));
+    public void storeAssistantMessage(String conversationId, String userId, String content, String messageId) {
+        StoredMessage msg = message("assistant", content);
+        msg.id = messageId;
+        append(conversationId, userId, msg);
     }
 
     /**
@@ -141,6 +145,31 @@ public class ConversationStore {
         if (record == null || record.userId == null || !record.userId.equals(userId)) return false;
         kvStore.delete(conversationId);
         return true;
+    }
+
+    /**
+     * 删除本人会话内的单条消息：命中返回 true；会话不存在、归属不符或消息不存在返回 false（调用方 404）。
+     * 删除不更新 updatedAt（删除不该把会话顶到列表最前）；消息删空后连会话一起删，避免零消息空壳
+     */
+    public synchronized boolean removeMessage(String userId, String conversationId, String messageId) {
+        if (messageId == null || !VALID_ID.matcher(messageId).matches()) return false;
+        ConversationRecord record = load(conversationId);
+        if (record == null || record.userId == null || !record.userId.equals(userId) || record.messages == null) {
+            return false;
+        }
+        boolean removed = record.messages.removeIf(msg -> msg.id != null && msg.id.equals(messageId));
+        if (!removed) return false;
+        try {
+            if (record.messages.isEmpty()) {
+                kvStore.delete(conversationId);
+            } else {
+                kvStore.put(conversationId, json.toJson(record));
+            }
+            return true;
+        } catch (Throwable t) {
+            logger.warn("failed to remove message: " + t.getMessage());
+            return false;
+        }
     }
 
     private StoredMessage message(String role, String content) {
@@ -222,10 +251,12 @@ public class ConversationStore {
     }
 
     private static class HistoryMessage {
+        public final String id;
         public final String role;
         public final String content;
 
-        public HistoryMessage(String role, String content) {
+        public HistoryMessage(String id, String role, String content) {
+            this.id = id;
             this.role = role;
             this.content = content;
         }
