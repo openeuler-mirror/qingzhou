@@ -66,10 +66,31 @@ public class AppActionToolsTest {
     }
 
     @Test
+    public void modelRoleNotMatched_toolCall_deniedWithoutInvokingApp() throws Exception {
+        stubApp.appMeta = appMeta(null, "model-admin", "action-admin");
+
+        String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"action-admin"});
+
+        Assert.assertEquals(result, PERMISSION_DENIED);
+        Assert.assertNull(stubApp.invokedRequest);
+    }
+
+    @Test
     public void actionRoleMatched_toolCall_invokesApp() throws Exception {
         stubApp.appMeta = appMeta(null, null, "action-admin");
 
         String result = registeredTools.get(PAGE_TOOL).invoke(toolArgs(), new String[]{"action-admin"});
+
+        Assert.assertEquals(result, "{}");
+        Assert.assertNotNull(stubApp.invokedRequest);
+    }
+
+    @Test
+    public void allLevelRolesMatched_toolCall_invokesApp() throws Exception {
+        stubApp.appMeta = appMeta("app-admin", "model-admin", "action-admin");
+
+        String result = registeredTools.get(PAGE_TOOL).invoke(
+                toolArgs(), new String[]{"app-admin", "model-admin", "action-admin"});
 
         Assert.assertEquals(result, "{}");
         Assert.assertNotNull(stubApp.invokedRequest);
