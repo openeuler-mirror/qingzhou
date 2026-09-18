@@ -1,6 +1,7 @@
 package qingzhou.registry.web;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
 
 import org.osgi.service.component.annotations.*;
@@ -46,6 +47,7 @@ public class Register implements HttpHandler {
     private Json json;
 
     private PairCipher pairCipher;
+    private byte[] registerToken;
     private Timer timer;
 
     @Activate
@@ -57,6 +59,13 @@ public class Register implements HttpHandler {
         }
         privateKey = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
         pairCipher = crypto.getPairCipher(null, privateKey);
+
+        String registerTokenConfig = config.get("register_token");
+        if (registerTokenConfig == null || registerTokenConfig.trim().isEmpty()) {
+            logger.warn("'register_token' is not configured, remote instance registration is unavailable.");
+        } else {
+            registerToken = registerTokenConfig.trim().getBytes(StandardCharsets.UTF_8);
+        }
 
         long interval = 1000 * Long.parseLong(config.get("interval"));
         long timeout = 1000 * Long.parseLong(config.get("timeout"));
@@ -103,9 +112,24 @@ public class Register implements HttpHandler {
         String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 
+        // 报文：registerToken\ninstanceInfoJson
+        String[] parts = decryptedRequest.split("\n", 2);
+        if (parts.length < 2) {
+            httpResponse.sendFinish("data format error");
+            return;
+        }
+
+        // 注册授权：注册令牌为预共享秘密，须先于任何写入校验；registry 公钥分发给所有 agent、不是秘密，
+        // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
+        if (!isAuthorized(registerToken, parts[0])) {
+            logger.warn("registration rejected: unauthorized");
+            httpResponse.sendFinish("key auth error");
+            return;
+        }
+
         InstanceInfo instanceInfo;
         try {
-            instanceInfo = json.fromJson(decryptedRequest, InstanceInfo.class);
+            instanceInfo = json.fromJson(parts[1], InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
             httpResponse.sendFinish("data format error");
@@ -137,5 +161,9 @@ public class Register implements HttpHandler {
             return;
         }
         httpResponse.sendFinish(encrypt);
+    }
+
+    static boolean isAuthorized(byte[] registerToken, String presentedToken) {
+        return registerToken != null && MessageDigest.isEqual(registerToken, presentedToken.getBytes(StandardCharsets.UTF_8));
     }
 }
