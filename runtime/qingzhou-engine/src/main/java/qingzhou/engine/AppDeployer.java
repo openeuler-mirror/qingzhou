@@ -13,7 +13,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -73,10 +72,14 @@ class AppDeployer {
             urls.add(jsonBundlePath.toUri().toURL());
             unZipToDir(jsonBundlePath.toFile(), appCacheDir); // 添加 bundle-converter 依赖的三方库
             File[] listFiles = appCacheDir.listFiles();
-            for (File temp : Objects.requireNonNull(listFiles)) {
+            if (listFiles == null) throw new IOException("Failed to list: " + appCacheDir);
+
+            for (File temp : listFiles) {
                 if (temp.getName().equals("OSGI-INF")) {
                     File[] embeddedJars = Paths.get(appCacheDir.getAbsolutePath(), "OSGI-INF", "lib").toFile().listFiles();
-                    for (File embeddedJar : Objects.requireNonNull(embeddedJars)) {
+                    if (embeddedJars == null) throw new IOException("Failed to list OSGI-INF/lib of: " + appCacheDir);
+
+                    for (File embeddedJar : embeddedJars) {
                         urls.add(embeddedJar.toURI().toURL());
                     }
                 } else {
@@ -87,7 +90,7 @@ class AppDeployer {
             tempClassLoader = new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
             Class<?> loadedClass = tempClassLoader.loadClass("qingzhou.bundle.converter.BundleConverter");
             bundleConverterMethod = loadedClass.getMethod("build", File.class, File.class, String.class);
-            bundleConverterInstance = loadedClass.newInstance();
+            bundleConverterInstance = loadedClass.getDeclaredConstructor().newInstance();
         }
         bundleConverterMethod.invoke(bundleConverterInstance, sourceJar, targetJar, libDir);
     }

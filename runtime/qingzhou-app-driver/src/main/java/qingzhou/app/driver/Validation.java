@@ -16,25 +16,37 @@ import qingzhou.dto.meta.annotation.ModelField;
 class Validation implements ActionFilter {
     private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
     private static final String[] MSG_REQUIRED = {"该字段是必填项", "en:This field is required"};
+    private static final String[] MSG_RANGE_BETWEEN = {"数值须在 %d 到 %d 之间", "en:Value must be between %d and %d"};
+    private static final String[] MSG_RANGE_MIN = {"数值不能小于 %d", "en:Value cannot be less than %d"};
+    private static final String[] MSG_RANGE_MAX = {"数值不能大于 %d", "en:Value cannot be greater than %d"};
+    private static final String[] MSG_NOT_NUMBER = {"须是有效的数字", "en:Must be a valid number"};
+    private static final String[] MSG_LENGTH_BETWEEN = {"长度须在 %d 到 %d 个字符之间", "en:Length must be between %d and %d characters"};
+    private static final String[] MSG_LENGTH_MIN = {"长度须至少 %d 个字符", "en:Length must be at least %d characters"};
+    private static final String[] MSG_LENGTH_MAX = {"长度不能超过 %d 个字符", "en:Length cannot exceed %d characters"};
+    private static final String[] MSG_HOST_INVALID = {"须是合法的主机名或 IP 地址", "en:Must be a valid hostname or IP address"};
+    private static final String[] MSG_PORT_INTEGER = {"端口号须是有效的整数", "en:Port number must be a valid integer"};
+    private static final String[] MSG_PORT_RANGE = {"端口号须在 1 到 65535 之间", "en:Port number must be between 1 and 65535"};
+    private static final String[] MSG_PATTERN_INVALID = {"格式不正确，须匹配规则：%s", "en:Incorrect format, must match pattern: %s"};
+
+    private final Rule[] rules = {
+            new Rule(context -> context.field.id, new PatternValidator("^[a-zA-Z0-9_-]{1,20}$",
+                    new String[]{"ID只能包含字母、数字、下划线和中划线，长度1-20位", "en:ID can only contain letters, numbers, underscores and hyphens, 1-20 characters"})),
+            new Rule(context -> context.field.input_type == InputType.number, new PatternValidator("^(0|[1-9]\\d*)$",
+                    new String[]{"只能包含数字，且不能以0开头", "en:Can only contain digits and cannot start with 0"})),
+            new Rule(context -> context.field.input_type == InputType.decimal, new PatternValidator("^\\d+(\\.\\d+)?$",
+                    new String[]{"须是正整数或小数", "en:Must be a positive integer or decimal"})),
+            new Rule(context -> context.field.input_type == InputType.bool, new PatternValidator("^(true|false)$",
+                    new String[]{"只能是 true 或 false", "en:Must be either true or false"})),
+            new Rule(context -> context.field.min_value != Long.MIN_VALUE || context.field.max_value != Long.MAX_VALUE, new Range()),
+            new Rule(context -> context.field.min_length != -1 || context.field.max_length != Integer.MAX_VALUE, new Length()),
+            new Rule(context -> context.field.email, new PatternValidator("^[a-zA-Z0-9_+.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
+                    new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"})),
+            new Rule(context -> context.field.host, new Host()),
+            new Rule(context -> context.field.port, new Port()),
+            new Rule(context -> context.field.pattern != null && !context.field.pattern.isEmpty(), new CustomPattern())
+    };
 
     private final I18nService i18nService;
-    private final Map<Filter, Validator> validators = new LinkedHashMap<Filter, Validator>() {{
-        put(context -> context.field.id, new PatternValidator("^[a-zA-Z0-9_-]{1,20}$",
-                new String[]{"ID只能包含字母、数字、下划线和中划线，长度1-20位", "en:ID can only contain letters, numbers, underscores and hyphens, 1-20 characters"}));
-        put(context -> context.field.input_type == InputType.number, new PatternValidator("^\\d+$",
-                new String[]{"只能包含数字，且不能以0开头", "en:Can only contain digits and cannot start with 0"}));
-        put(context -> context.field.input_type == InputType.decimal, new PatternValidator("^\\d+(\\.\\d+)?$",
-                new String[]{"须是正整数或小数", "en:Must be a positive integer or decimal"}));
-        put(context -> context.field.input_type == InputType.bool, new PatternValidator("^(true|false)$",
-                new String[]{"只能是 true 或 false", "en:Must be either true or false"}));
-        put(context -> context.field.min_value != Long.MIN_VALUE || context.field.max_value != Long.MAX_VALUE, new Range());
-        put(context -> context.field.min_length != -1 || context.field.max_length != Integer.MAX_VALUE, new Length());
-        put(context -> context.field.email, new PatternValidator("^[a-zA-Z0-9_+.-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
-                new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"}));
-        put(context -> context.field.host, new Host());
-        put(context -> context.field.port, new Port());
-        put(context -> context.field.pattern != null && !context.field.pattern.isEmpty(), new CustomPattern());
-    }};
 
     Validation(I18nService i18nService) {
         this.i18nService = i18nService;
@@ -70,11 +82,9 @@ class Validation implements ActionFilter {
                 }
             } else {
                 ValidationContext context = new ValidationContext(field, parameter, request, langParameter);
-                for (Map.Entry<Filter, Validator> entry : validators.entrySet()) {
-                    Filter filter = entry.getKey();
-                    Validator validator = entry.getValue();
-                    if (filter.filter(context)) {
-                        String error = validator.validate(context);
+                for (Rule rule : rules) {
+                    if (rule.filter.filter(context)) {
+                        String error = rule.validator.validate(context);
                         if (error != null) errors.add(error);
                     }
                 }
@@ -111,6 +121,16 @@ class Validation implements ActionFilter {
         String validate(ValidationContext context);
     }
 
+    private static final class Rule {
+        final Filter filter;
+        final Validator validator;
+
+        Rule(Filter filter, Validator validator) {
+            this.filter = filter;
+            this.validator = validator;
+        }
+    }
+
     static class ValidationContext {
         final ModelField field;
         final String parameter;
@@ -142,11 +162,6 @@ class Validation implements ActionFilter {
     }
 
     class Range implements Validator {
-        final String[] MSG_RANGE_BETWEEN = {"数值须在 %d 到 %d 之间", "en:Value must be between %d and %d"};
-        final String[] MSG_RANGE_MIN = {"数值不能小于 %d", "en:Value cannot be less than %d"};
-        final String[] MSG_RANGE_MAX = {"数值不能大于 %d", "en:Value cannot be greater than %d"};
-        final String[] MSG_NOT_NUMBER = {"须是有效的数字", "en:Must be a valid number"};
-
         @Override
         public String validate(ValidationContext context) {
             try {
@@ -172,10 +187,6 @@ class Validation implements ActionFilter {
     }
 
     class Length implements Validator {
-        final String[] MSG_LENGTH_BETWEEN = {"长度须在 %d 到 %d 个字符之间", "en:Length must be between %d and %d characters"};
-        final String[] MSG_LENGTH_MIN = {"长度须至少 %d 个字符", "en:Length must be at least %d characters"};
-        final String[] MSG_LENGTH_MAX = {"长度不能超过 %d 个字符", "en:Length cannot exceed %d characters"};
-
         @Override
         public String validate(ValidationContext context) {
             int length = context.parameter.length();
@@ -201,8 +212,6 @@ class Validation implements ActionFilter {
         final Pattern hostnamePattern = Pattern.compile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$");
         final Pattern ipv4Pattern = Pattern.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
 
-        final String[] MSG_HOST_INVALID = {"须是合法的主机名或 IP 地址", "en:Must be a valid hostname or IP address"};
-
         @Override
         public String validate(ValidationContext context) {
             boolean valid = hostnamePattern.matcher(context.parameter).matches()
@@ -212,9 +221,6 @@ class Validation implements ActionFilter {
     }
 
     class Port implements Validator {
-        final String[] MSG_PORT_INTEGER = {"端口号须是有效的整数", "en:Port number must be a valid integer"};
-        final String[] MSG_PORT_RANGE = new String[]{"端口号须在 1 到 65535 之间", "en:Port number must be between 1 and 65535"};
-
         @Override
         public String validate(ValidationContext context) {
             try {
@@ -230,8 +236,6 @@ class Validation implements ActionFilter {
     }
 
     class CustomPattern implements Validator {
-        final String[] MSG_PATTERN_INVALID = {"格式不正确，须匹配规则：%s", "en:Incorrect format, must match pattern: %s"};
-
         @Override
         public String validate(ValidationContext context) {
             String pattern = context.field.pattern;

@@ -52,7 +52,7 @@ public class AppDriver implements BundleActivator {
         appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path");
 
         // 初始化对象
-        appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).newInstance();
+        appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).getDeclaredConstructor().newInstance();
         initAppModels();
 
         appContext.start();
@@ -71,8 +71,10 @@ public class AppDriver implements BundleActivator {
             if (name != null) {
                 try {
                     // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
+                    // 其中 *~ 是有意的通配前缀，只转义 name 本身
+                    String escapedName = escapeFilterValue(name);
                     Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
-                            "(|(" + Constants.SERVICE_PID + "=" + name + ")(" + Constants.SERVICE_PID + "=*~" + name + "))");
+                            "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
                     if (!serviceReferences.isEmpty()) {
                         serviceReference = serviceReferences.iterator().next();
                     }
@@ -96,8 +98,24 @@ public class AppDriver implements BundleActivator {
         return (T) found;
     }
 
+    // OSGi filter 为 LDAP 语法，值中的 \ * ( ) 必须转义：否则会破坏语法，
+    // 或让 name 为 * 时匹配到任意服务，导致应用拿到错误的服务实例
+    static String escapeFilterValue(String value) {
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\\' || c == '*' || c == '(' || c == ')') {
+                escaped.append('\\');
+            }
+            escaped.append(c);
+        }
+        return escaped.toString();
+    }
+
     private App parseAnnotations() throws Exception {
         URL annotationFile = context.getBundle().getResource("/QZ-INF/annotation.json");
+        if (annotationFile == null) throw new IllegalStateException("Missing /QZ-INF/annotation.json in bundle: " + context.getBundle().getSymbolicName());
+
         try (InputStream inputStream = annotationFile.openStream()) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024 * 4];
@@ -126,8 +144,10 @@ public class AppDriver implements BundleActivator {
                         continue;
                     if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
                         continue;
-                    String value = (String) properties.get(key);
-                    appProperties.setProperty(key, value);
+                    Object value = properties.get(key);
+                    if (value != null) { // 配置值不保证是 String，且 Hashtable 不接受 null 值
+                        appProperties.setProperty(key, String.valueOf(value));
+                    }
                 }
             }
         } finally {
@@ -141,7 +161,7 @@ public class AppDriver implements BundleActivator {
             try {
                 // 初始化模块实例
                 Class<?> modelClass = Class.forName(model.className);
-                ModelBase modelBase = (ModelBase) modelClass.newInstance();
+                ModelBase modelBase = (ModelBase) modelClass.getDeclaredConstructor().newInstance();
                 modelBase.setAppContext(appContext);
                 appContext.modelInstances.put(model, modelBase);
 

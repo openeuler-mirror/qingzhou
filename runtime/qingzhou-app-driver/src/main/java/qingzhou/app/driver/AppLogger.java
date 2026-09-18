@@ -11,43 +11,47 @@ class AppLogger extends LoggerDecorator {
         this.app = app;
     }
 
+    private String wrap(String msg) {
+        return "[" + app + "] " + msg;
+    }
+
     @Override
     public void debug(String msg) {
-        delegate.debug("[" + app + "] " + msg);
+        delegate.debug(wrap(msg));
     }
 
     @Override
     public void debug(String msg, Throwable t) {
-        delegate.debug("[" + app + "] " + msg, t);
+        delegate.debug(wrap(msg), t);
     }
 
     @Override
     public void info(String msg) {
-        delegate.info("[" + app + "] " + msg);
+        delegate.info(wrap(msg));
     }
 
     @Override
     public void info(String msg, Throwable t) {
-        delegate.info("[" + app + "] " + msg, t);
+        delegate.info(wrap(msg), t);
     }
 
     @Override
     public void warn(String msg) {
-        delegate.warn("[" + app + "] " + msg);
+        delegate.warn(wrap(msg));
     }
 
     @Override
     public void warn(String msg, Throwable t) {
-        delegate.warn("[" + app + "] " + msg, t);
+        delegate.warn(wrap(msg), t);
     }
 
     @Override
     public void error(String msg) {
-        delegate.error("[" + app + "] " + msg);
+        delegate.error(wrap(msg));
     }
 
     @Override
     public void error(String msg, Throwable t) {
-        delegate.error("[" + app + "] " + msg, t);
+        delegate.error(wrap(msg), t);
     }
 }

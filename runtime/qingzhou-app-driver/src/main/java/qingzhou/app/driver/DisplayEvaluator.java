@@ -1,11 +1,13 @@
 package qingzhou.app.driver;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public final class DisplayEvaluator {
+    private static final Pattern AND_SEPARATOR = Pattern.compile("\\s*&{1,2}\\s*");
+    private static final Pattern OR_SEPARATOR = Pattern.compile("\\s*\\|{1,2}\\s*");
 
     public static boolean evaluateDisplay(String display, Map<String, String> data) {
         if (display == null) {
@@ -36,14 +38,14 @@ public final class DisplayEvaluator {
 
     private static List<List<String>> parseDisplay(String display) {
         List<List<String>> andGroups = new ArrayList<>();
-        String[] andParts = display.split("\\s*&{1,2}\\s*");
+        String[] andParts = AND_SEPARATOR.split(display);
         for (String andPart : andParts) {
             String trimmedAndPart = andPart.trim();
             if (trimmedAndPart.isEmpty()) {
                 continue;
             }
 
-            String[] orParts = trimmedAndPart.split("\\s*\\|{1,2}\\s*");
+            String[] orParts = OR_SEPARATOR.split(trimmedAndPart);
             List<String> orGroup = new ArrayList<>();
             for (String orPart : orParts) {
                 String trimmedOrPart = orPart.trim();
@@ -114,26 +116,9 @@ public final class DisplayEvaluator {
         return value;
     }
 
-    private static boolean isTruthy(Object value) {
-        if (value == null) {
-            return false;
-        }
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue() != 0;
-        }
-        if (value instanceof String) {
-            return !((String) value).isEmpty();
-        }
-        if (value instanceof Collection<?>) {
-            return !((Collection<?>) value).isEmpty();
-        }
-        if (value.getClass().isArray()) {
-            return java.lang.reflect.Array.getLength(value) > 0;
-        }
-        return true;
+    // 数据源恒为 Map<String, String>，故只需判断字符串非空
+    private static boolean isTruthy(String value) {
+        return value != null && !value.isEmpty();
     }
 
     private static final class AtomicCondition {

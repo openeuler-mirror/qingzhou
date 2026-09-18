@@ -141,7 +141,7 @@ public class Launcher {
                         }
                     }
                     try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        copyLargeStream(zip.getInputStream(entry), out);
+                        copyStream(zip.getInputStream(entry), out);
                     } catch (Throwable ex) {
                         if (parentFile.getName().equals("docs")) { // 某些环境下，docs 文档的中文名称会导致启动解压失败
                             failedDocsCount++; // 忽略掉这个手册文件，别影响启动流程
@@ -183,7 +183,7 @@ public class Launcher {
         return destFile;
     }
 
-    private static void copyLargeStream(InputStream input, OutputStream output) throws IOException {
+    private static void copyStream(InputStream input, OutputStream output) throws IOException {
 
         byte[] buffer = new byte[1024 * 4];
         int n;
