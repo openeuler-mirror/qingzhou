@@ -145,17 +145,41 @@ public class HttpServerImplTest {
     }
 
     static HttpServerImpl start(Map<String, String> config) throws Exception {
-        HttpServerImpl httpServer = new HttpServerImpl();
-        Field cryptoField = HttpServerImpl.class.getDeclaredField("crypto");
-        cryptoField.setAccessible(true);
-        cryptoField.set(httpServer, new CryptoImpl());
-
-        Field loggerField = HttpServerImpl.class.getDeclaredField("logger");
-        loggerField.setAccessible(true);
-        loggerField.set(httpServer, new LoggerImpl());
-
+        HttpServerImpl httpServer = buildHttpServer(config);
         httpServer.start(config);
         return httpServer;
+    }
+
+    static HttpServerImpl buildHttpServer(Map<String, String> config) throws Exception {
+        HttpServerImpl httpServer = new HttpServerImpl();
+        LoggerImpl logger = new LoggerImpl();
+        CryptoImpl crypto = new CryptoImpl();
+        HandlerManager handlerManager = new HandlerManager();
+        DispatcherHandler dispatcherHandler = new DispatcherHandler();
+        AuthManager authManager = new AuthManager();
+
+        setField(httpServer, "crypto", crypto);
+        setField(httpServer, "logger", logger);
+        setField(httpServer, "handlerManager", handlerManager);
+        setField(httpServer, "dispatcherHandler", dispatcherHandler);
+
+        setField(handlerManager, "logger", logger);
+
+        setField(dispatcherHandler, "logger", logger);
+        setField(dispatcherHandler, "authManager", authManager);
+        setField(dispatcherHandler, "handlerManager", handlerManager);
+
+        setField(authManager, "logger", logger);
+
+        dispatcherHandler.init(config);
+
+        return httpServer;
+    }
+
+    static void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     private static Map<String, String> sslConfig(int port) {

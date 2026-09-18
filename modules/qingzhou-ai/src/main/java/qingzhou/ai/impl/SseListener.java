@@ -65,7 +65,9 @@ public class SseListener implements Listener {
 
     final StringBuilder allContent = new StringBuilder();
 
-    /** 流正常结束后的动作（AiChat 落库回答全文：chat() 异步，全文须等 onComplete 才完整） */
+    /**
+     * 流正常结束后的动作（AiChat 落库回答全文：chat() 异步，全文须等 onComplete 才完整）
+     */
     private Runnable completeAction;
 
     public SseListener(HttpResponse httpResponse, Logger logger, Json json) {

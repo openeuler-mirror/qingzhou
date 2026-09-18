@@ -3,6 +3,7 @@ package qingzhou.http.impl;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
@@ -11,6 +12,10 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.BodyTooLargeException;
@@ -24,18 +29,39 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.util.concurrent.Queues;
 
-class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
-    private static final byte[] NULL_BYTES = new byte[0];
-    private static final int STREAM_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
+import static qingzhou.http.impl.HttpServerImpl.getConfig;
 
-    private final HttpServerImpl httpServer;
-    private final Logger logger;
-    private final Semaphore concurrentSemaphore;
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        service = DispatcherHandler.class)
+public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerResponse, Publisher<Void>> {
+    @Reference
+    private Logger logger;
+    @Reference
+    private AuthManager authManager;
+    @Reference
+    private HandlerManager handlerManager;
 
-    DispatcherHandler(HttpServerImpl httpServer, Logger logger) {
-        this.httpServer = httpServer;
-        this.logger = logger;
-        this.concurrentSemaphore = new Semaphore(httpServer.maxConcurrentRequests);
+    private final byte[] NULL_BYTES = new byte[0];
+    private Semaphore concurrentSemaphore;
+    private boolean isSslEnabled;
+    private boolean isAuthDisabled;
+    private long maxStreamBytes; // 流式上传总量上限
+    private int maxBodyBytes; // 单个请求体聚合进内存的上限
+    private String csp;
+
+    @Activate
+    public void init(Map<String, String> config) {
+        int maxConcurrentRequests = getConfig(config, "max_concurrent_requests", 1000);
+        if (maxConcurrentRequests <= 0) throw new IllegalArgumentException("max_concurrent_requests must be positive");
+        this.concurrentSemaphore = new Semaphore(maxConcurrentRequests);
+
+        isSslEnabled = getConfig(config, "ssl_enabled", true);
+        isAuthDisabled = getConfig(config, "auth_disabled", false);
+        if (isAuthDisabled) logger.warn("http server authentication is disabled");
+
+        maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
+        maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
+        csp = getConfig(config, "csp", "none");
     }
 
     @Override
@@ -66,15 +92,15 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         }
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
 
-        HttpHandler httpHandler = httpServer.findHandler(requestPath);
+        HttpHandler httpHandler = handlerManager.findHandler(requestPath);
         if (httpHandler == null) {
             return reject(request, response, HttpResponseStatus.NOT_FOUND);
         }
 
         // 安全认证
-        boolean needAuth = !httpServer.isAuthDisabled && !httpServer.noAuthHandlerSet.contains(httpHandler);
+        boolean needAuth = !isAuthDisabled && !handlerManager.noAuthHandlerSet.contains(httpHandler);
         if (needAuth) {
-            AuthResult authResult = httpServer.authManager.authenticate(httpRequest);
+            AuthResult authResult = authManager.authenticate(httpRequest);
             if (authResult.status() != AuthResult.Status.PASS) {
                 return reject(request, response
                                 .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
@@ -95,19 +121,20 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
             return reject(request, response, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
+        int STREAM_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
                 .onBackpressureBuffer(Queues.<byte[]>get(STREAM_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
         HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
 
         if (streamRequired) {
-            if (bodyTooLarge(request, httpServer.maxStreamBytes)) { // 预检：超限直接拒，不必先落临时文件
+            if (bodyTooLarge(request, maxStreamBytes)) { // 预检：超限直接拒，不必先落临时文件
                 return reject(request, response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
             }
             streamHandler.onBegin(httpRequest, httpResponse);
             AtomicLong receivedBytes = new AtomicLong();
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
-                        if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxStreamBytes) {
+                        if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxStreamBytes) {
                             throw new BodyTooLargeException();
                         }
                     })
@@ -132,13 +159,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
                     );
             return response.sendByteArray(streamResponse.asFlux()).then();
         } else {
-            if (bodyTooLarge(request, httpServer.maxBodyBytes)) {
+            if (bodyTooLarge(request, maxBodyBytes)) {
                 return reject(request, response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
             }
             AtomicLong receivedBytes = new AtomicLong();
             return ByteBufFlux.fromInbound(request.receive()
                             .doOnNext(byteBuf -> { // chunked 请求无 Content-Length，聚合前按实际字节数二次限制
-                                if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxBodyBytes) {
+                                if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxBodyBytes) {
                                     throw new BodyTooLargeException();
                                 }
                             }))
@@ -172,7 +199,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         AtomicLong receivedBytes = new AtomicLong();
         return request.receive()
                 .doOnNext(byteBuf -> {
-                    if (receivedBytes.addAndGet(byteBuf.readableBytes()) > httpServer.maxBodyBytes) {
+                    if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxBodyBytes) {
                         throw new BodyTooLargeException();
                     }
                 })
@@ -181,7 +208,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     }
 
     // 请求体未读完，连接无法复用：发送响应并关闭连接，避免残留字节污染后续请求
-    private static Mono<Void> respondAndClose(HttpServerResponse response, HttpResponseStatus status) {
+    private Mono<Void> respondAndClose(HttpServerResponse response, HttpResponseStatus status) {
         return response
                 .status(status)
                 .header(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
@@ -192,7 +219,7 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
      * 路径规范化：折叠重复斜杠与 "." 段；发现 ".." 段返回 null（拒绝请求）。
      * 各 handler 自行解析路径，防护难以统一，故在分发入口一次性拦截穿越。
      */
-    private static String normalize(String path) {
+    private String normalize(String path) {
         StringBuilder normalized = new StringBuilder(path.length());
         for (String segment : path.split("/")) {
             if (segment.isEmpty() || segment.equals(".")) continue;
@@ -204,13 +231,13 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
     }
 
     // 一次解码后仍保留编码形态，说明原始路径被二次编码（如 %252e%252e），各 handler 的穿越防护未必覆盖得住
-    private static boolean isDoubleEncoded(String path) {
+    private boolean isDoubleEncoded(String path) {
         String upper = path.toUpperCase(Locale.ROOT);
         return upper.contains("%2E") || upper.contains("%25");
     }
 
     // Content-Length 预检给出干净的 413；非法头交给字节计数兜底
-    private static boolean bodyTooLarge(HttpServerRequest request, long limit) {
+    private boolean bodyTooLarge(HttpServerRequest request, long limit) {
         String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
         if (value == null) return false;
         try {
@@ -231,10 +258,10 @@ class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServerRespo
         response.header("X-Content-Type-Options", "nosniff")
                 .header("X-Frame-Options", "SAMEORIGIN")
                 .header("Referrer-Policy", "no-referrer");
-        if (httpServer.csp != null && !httpServer.csp.isEmpty() && !httpServer.csp.equals("none")) {
-            response.header("Content-Security-Policy", httpServer.csp);
+        if (csp != null && !csp.isEmpty() && !csp.equals("none")) {
+            response.header("Content-Security-Policy", csp);
         }
-        if (httpServer.isSslEnabled) {
+        if (isSslEnabled) {
             response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         }
     }

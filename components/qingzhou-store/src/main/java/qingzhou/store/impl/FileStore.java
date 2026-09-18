@@ -59,7 +59,7 @@ public class FileStore implements Store {
         } catch (NoSuchFileException e) {
             return null; // 并发删除时读不到即为不存在，且消除 exists-then-read 竞态
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 

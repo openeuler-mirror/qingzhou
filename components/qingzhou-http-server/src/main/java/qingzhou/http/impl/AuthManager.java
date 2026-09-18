@@ -21,7 +21,7 @@ public class AuthManager {
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     @Activate
-    public synchronized void start() { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
+    public synchronized void init() { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
     }
@@ -40,7 +40,7 @@ public class AuthManager {
         }
     }
 
-    public synchronized void removeAuthenticator(Authenticator authenticator) {
+    public void removeAuthenticator(Authenticator authenticator) {
         authenticators.remove(authenticator);
     }
 
