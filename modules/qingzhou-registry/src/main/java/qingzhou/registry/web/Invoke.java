@@ -18,6 +18,7 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -25,6 +26,7 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
+import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/invoke",
@@ -81,11 +83,12 @@ public class Invoke implements HttpHandler {
             return;
         }
 
+        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
         if (!permissionChecker.checkPermission(httpRequest, httpResponse, app, request)) return;
 
         try {
             parseBodyParameters(httpRequest, request);
-            app.invokeApp(request);
+            app.invokeApp(request, roles);
         } catch (Throwable e) {
             httpResponse.status500Finish(e.getMessage());
             logger.error(e.getMessage(), e);
@@ -194,6 +197,7 @@ public class Invoke implements HttpHandler {
 
         RequestImpl request;
         AppStub app;
+        String[] roles;
 
         MultipartStreamParser parser;
 
@@ -208,6 +212,7 @@ public class Invoke implements HttpHandler {
             app = registry.getAppStub(request.getInstance(), request.getApp());
             if (app == null) return;
 
+            roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
             if (!permissionChecker.checkPermission(httpRequest, httpResponse, app, request)) return;
 
             String boundary = null;
@@ -249,7 +254,7 @@ public class Invoke implements HttpHandler {
             try {
                 parser.feed(new byte[0], true);
                 applyParserResults(parser, request);
-                app.invokeApp(request);
+                app.invokeApp(request, roles);
             } catch (Throwable e) {
                 httpResponse.status500Finish(e.getMessage());
                 logger.error(e.getMessage(), e);

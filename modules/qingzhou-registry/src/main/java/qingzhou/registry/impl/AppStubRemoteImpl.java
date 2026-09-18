@@ -20,9 +20,11 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
+import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.web.Refresh;
 
 class AppStubRemoteImpl implements AppStubRemote {
+    private final PermissionChecker permissionChecker = new PermissionChecker();
     private final InstanceInfo instanceInfo;
     private final AppMeta appMeta;
     private final Json json;
@@ -53,6 +55,15 @@ class AppStubRemoteImpl implements AppStubRemote {
         synchronized (Refresh.REFRESH_KEY_LOCK) {
             invokeApp0(request);
         }
+    }
+
+    @Override
+    public void invokeApp(RequestImpl request, String[] roles) throws Throwable {
+        // 远程实例的判定必须在转发之前完成：转发到 agent 后已无终端用户身份，无法再判定
+        if (!permissionChecker.isAllowed(roles, appMeta, request.getModel(), request.getAction())) {
+            throw new IllegalAccessException("Forbidden");
+        }
+        invokeApp(request);
     }
 
     private void invokeApp0(RequestImpl request) throws Throwable {

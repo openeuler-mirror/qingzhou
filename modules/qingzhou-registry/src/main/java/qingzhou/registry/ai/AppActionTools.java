@@ -19,11 +19,16 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
+import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.Registry;
 import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
 public class AppActionTools {
+    private static final String PERMISSION_DENIED = "无权限：当前用户不具备执行该操作所需的角色。";
+
+    private final PermissionChecker permissionChecker = new PermissionChecker();
+
     @Reference
     private Registry registry;
     @Reference
@@ -63,7 +68,17 @@ public class AppActionTools {
             properties.put(ToolService.TOOL_NAME, "app_action_" + invokedActionCode);
             properties.put(SkillService.SKILL_NAME, SkillService.SYSTEM_SKILL);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> AppActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
+            ToolService systemToolService = new ToolService() {
+                @Override
+                public String invoke(Map<String, Object> toolArgs) {
+                    return invokeActionTool(invokedActionCode, toolArgs, null);
+                }
+
+                @Override
+                public String invoke(Map<String, Object> toolArgs, String[] roles) {
+                    return invokeActionTool(invokedActionCode, toolArgs, roles);
+                }
+            };
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
         });
     }
@@ -73,7 +88,7 @@ public class AppActionTools {
         registrations.forEach(ServiceRegistration::unregister);
     }
 
-    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs) {
+    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs, String[] roles) {
         if (toolArgs == null) return null;
         String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
         String appCode = (String) toolArgs.get(WebUtil.APP_CODE);
@@ -82,6 +97,11 @@ public class AppActionTools {
 
         AppStub appStub = registry.getAppStub(instanceId, appCode);
         if (appStub == null) return null;
+
+        // 与 HTTP 入口使用同一套判定：无权限时明确拒绝，且不得触达应用动作
+        if (!permissionChecker.isAllowed(roles, appStub.getAppMeta(), modelCode, actionCode)) {
+            return PERMISSION_DENIED;
+        }
 
         RequestImpl request = new RequestImpl();
         request.setInstance(instanceId);
@@ -93,7 +113,7 @@ public class AppActionTools {
             request.setId(dataId);
         }
         try {
-            appStub.invokeApp(request);
+            appStub.invokeApp(request, roles);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
         }

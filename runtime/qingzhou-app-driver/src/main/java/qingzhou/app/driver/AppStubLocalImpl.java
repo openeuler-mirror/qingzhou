@@ -17,8 +17,10 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.PermissionChecker;
 
 class AppStubLocalImpl implements AppStubLocal {
+    private final PermissionChecker permissionChecker = new PermissionChecker();
     private final AppContextImpl appContext;
     private final List<ActionFilter> filters;
 
@@ -47,6 +49,16 @@ class AppStubLocalImpl implements AppStubLocal {
     @Override
     public AppContext getAppContext() {
         return appContext;
+    }
+
+    @Override
+    public void invokeApp(RequestImpl request, String[] roles) throws Throwable {
+        // 框架级收口：凡携带终端用户身份的调用，都必须先通过应用、模块、动作三级角色判定，
+        // 避免新增执行通道时漏挂校验。
+        if (!permissionChecker.isAllowed(roles, appContext.appMeta, request.getModel(), request.getAction())) {
+            throw new IllegalAccessException("Forbidden");
+        }
+        invokeApp(request);
     }
 
     @Override
