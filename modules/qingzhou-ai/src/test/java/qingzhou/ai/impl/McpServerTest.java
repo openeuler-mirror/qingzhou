@@ -23,11 +23,12 @@ import qingzhou.logger.Logger;
 public class McpServerTest {
     private static final String TOOL_NAME = "app_action_page";
 
-    private final StubToolService toolService = new StubToolService();
+    private StubToolService toolService;
     private McpServer mcpServer;
 
     @BeforeMethod
     public void setUp() throws Exception {
+        toolService = new StubToolService();
         mcpServer = new McpServer();
         setField(mcpServer, "json", new StubJson());
         setField(mcpServer, "logger", stub(Logger.class));

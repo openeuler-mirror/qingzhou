@@ -38,6 +38,7 @@ public class AppActionToolsTest {
     @BeforeMethod
     public void setUp() throws Exception {
         stubApp = new StubApp();
+        registeredTools.clear();
         AppActionTools appActionTools = new AppActionTools();
         setField(appActionTools, "registry", registry());
         setField(appActionTools, "logger", stub(Logger.class));

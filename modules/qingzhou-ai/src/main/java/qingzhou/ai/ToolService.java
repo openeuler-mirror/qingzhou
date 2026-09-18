@@ -12,10 +12,7 @@ public interface ToolService {
 
     String invoke(Map<String, Object> toolArgs) throws Exception;
 
-    /**
-     * 携带调用者角色的调用入口：默认忽略角色，实现方可覆写以执行权限判定。
-     * 角色必须由服务端鉴权结果提供，不得取自工具参数。
-     */
+    // 携带调用者角色的调用入口：默认不判定，角色须来自服务端鉴权结果
     default String invoke(Map<String, Object> toolArgs, String[] roles) throws Exception {
         return invoke(toolArgs);
     }
