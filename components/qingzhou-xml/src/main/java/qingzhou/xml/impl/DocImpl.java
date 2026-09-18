@@ -55,6 +55,9 @@ class DocImpl implements Doc {
     @Override
     public void updateNode(String xPath, Properties newProperties) throws XPathExpressionException {
         Node node = findNode(xPath);
+        if (!(node instanceof org.w3c.dom.Element)) {
+            throw new XPathExpressionException("xPath [" + xPath + "] does not match an element node");
+        }
 
         for (String key : newProperties.stringPropertyNames()) {
             String value = newProperties.getProperty(key);
@@ -77,7 +80,11 @@ class DocImpl implements Doc {
     @Override
     public void deleteNode(String xPath) throws XPathExpressionException {
         Node node = findNode(xPath);
-        node.getParentNode().removeChild(node);
+        Node parent = node.getParentNode();
+        if (parent == null) {
+            throw new XPathExpressionException("xPath [" + xPath + "] has no parent node to remove from");
+        }
+        parent.removeChild(node);
     }
 
     @Override

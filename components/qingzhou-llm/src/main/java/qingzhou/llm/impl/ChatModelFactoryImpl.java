@@ -53,18 +53,21 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
         if (baseUrl == null || baseUrl.trim().isEmpty()) {
             throw new IllegalArgumentException("LLM baseUrl is missing");
         }
+
+        URL url;
         try {
-            URL url = new URL(baseUrl);
-            String scheme = url.getProtocol();
-            String host = url.getHost();
-            if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
-                throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
-            }
-            if ("http".equalsIgnoreCase(scheme) && !isLoopback(host)) {
-                Utils.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
-            }
+            url = new URL(baseUrl);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid LLM baseUrl: " + baseUrl, e);
+        }
+
+        // 协议校验在解析成功之后单独抛出，保留精确错误信息而不被笼统的包装吞掉
+        String scheme = url.getProtocol();
+        if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
+            throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
+        }
+        if ("http".equalsIgnoreCase(scheme) && !isLoopback(url.getHost())) {
+            Utils.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
         }
     }
 

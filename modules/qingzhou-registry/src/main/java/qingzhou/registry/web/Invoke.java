@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
 import qingzhou.dto.RequestImpl;
@@ -26,7 +27,8 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/invoke")
+@Component(property = HttpHandler.HANDLE_PATH + "=/invoke",
+        configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Invoke implements HttpHandler {
     private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
 
@@ -41,8 +43,8 @@ public class Invoke implements HttpHandler {
     private File uploadBase;
 
     @Activate
-    public void init() {
-        uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
+    public void init(Map<String, String> config) {
+        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
         cleanLegacyUploads();
     }
 

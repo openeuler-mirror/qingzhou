@@ -190,8 +190,8 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      * 将流式累积的 ToolCall 转为标准 OpenAI assistant 消息的 tool_calls 结构：
      * [{"id":"...","type":"function","function":{"name":"...","arguments":"..."}}]
      * <p>
-     * 注意：不能直接把 ToolCall 对象交给 JSON 序列化——其 package-private 字段会被
-     * Jackson 默认忽略（序列化为空对象），导致服务端校验报"工具类型不能为空"。
+     * 注意：不能直接把 ToolCall 对象交给 JSON 序列化——OpenAI 要求
+     * {"id","type","function":{"name","arguments"}} 的嵌套包装结构，需手工组装。
      * <p>
      * reasoningField 本轮服务端实际使用的思考字段名（reasoning / reasoning_content）。
      * 思考内容需按原字段名回传，否则部分服务端（如 deepseek）会校验失败。

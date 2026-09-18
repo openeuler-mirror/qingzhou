@@ -19,14 +19,14 @@ class OpenAiChatModel implements ChatModel {
     private final Json json;
     private final Crypto crypto;
     private final Map<String, Tool> baseTools = new HashMap<>();
-
-    private SyncSender syncSender;
+    private final SyncSender syncSender;
 
     OpenAiChatModel(OpenAiChatModelBuilder builder, HttpClient httpClient, Json json, Crypto crypto) {
         this.builder = builder;
         this.httpClient = httpClient;
         this.json = json;
         this.crypto = crypto;
+        this.syncSender = new SyncSender(builder, httpClient, json, crypto);
 
         if (builder.tools != null) {
             builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
@@ -35,9 +35,6 @@ class OpenAiChatModel implements ChatModel {
 
     @Override
     public String chat(String message, Attachment... attachment) {
-        if (syncSender == null) {
-            syncSender = new SyncSender(builder, httpClient, json, crypto);
-        }
         return syncSender.chat(baseTools, message, attachment);
     }
 

@@ -3,6 +3,7 @@ package qingzhou.registry.impl;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -257,9 +258,10 @@ public class RegistryImplTest {
     @Test
     public void start_validVersion_propertyParsed() throws Exception {
         RegistryImpl registry = newRegistry();
-        System.setProperty(VERSION_PROPERTY, "version1.2.3");
         try {
-            registry.start();
+            registry.start(new HashMap<String, String>() {{
+                put(VERSION_PROPERTY, "version1.2.3");
+            }});
         } finally {
             System.clearProperty(VERSION_PROPERTY);
         }
@@ -272,12 +274,12 @@ public class RegistryImplTest {
         RegistryImpl registry = newRegistry();
 
         try {
-            registry.start();
+            registry.start(new HashMap<>());
             Assert.fail("缺失 qingzhou.version 系统属性应抛出异常");
         } catch (Throwable e) {
             Assert.assertNotNull(e);
             try {
-                registry.start();
+                registry.start(new HashMap<>());
                 Assert.fail("缺失 qingzhou.version 系统属性应抛出异常");
             } catch (NullPointerException expected) {
                 // 预期：System.getProperty 返回 null 后，new File(null) 构造触发 NPE

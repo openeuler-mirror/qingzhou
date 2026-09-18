@@ -1,14 +1,5 @@
 package qingzhou.ai.memory;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import qingzhou.json.Json;
-import qingzhou.llm.ChatMemory;
-import qingzhou.logger.Logger;
-import qingzhou.store.Store;
-import qingzhou.store.StoreFactory;
-
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +7,19 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/**
- * 会话存储：记录整体序列化进 KV，qingzhou-ai.memory_store=file 时落盘持久化，默认 memory 重启清空。
- * 所有方法不抛异常（失败记日志返回空值/false），记忆故障不影响对话主流程。
- */
-@Component(configurationPid = "qingzhou-ai", service = ConversationStore.class)
-public class ConversationStore {
-    private static final int MAX_MESSAGES_PER_CONVERSATION = 200; // 单会话消息条数上限
-    private static final int MAX_CONTENT_CHARS = 8000; // 单条消息内容上限
-    private static final int HISTORY_MAX_MESSAGES = 20; // 记忆注入上下文的最大历史条数
-    private static final int HISTORY_MAX_CHARS = 8000; // 记忆注入上下文的总字符预算
-    private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,64}"); // 防路径遍历
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.json.Json;
+import qingzhou.llm.ChatMemory;
+import qingzhou.logger.Logger;
+import qingzhou.store.Store;
+import qingzhou.store.StoreFactory;
 
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.OPTIONAL,
+        service = ConversationStore.class)
+public class ConversationStore {
     @Reference
     private Json json;
     @Reference
@@ -35,6 +27,7 @@ public class ConversationStore {
     @Reference
     private StoreFactory storeFactory;
 
+    private final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,64}"); // 防路径遍历
     private Store kvStore;
 
     @Activate
@@ -42,19 +35,21 @@ public class ConversationStore {
         if (config != null && "file".equalsIgnoreCase(config.get("memory_store"))) {
             String dir = config.get("memory_store_dir");
             if (dir == null || dir.isEmpty()) dir = "data/ai-conversations";
-            kvStore = storeFactory.buildFileStore(Paths.get(System.getProperty("qingzhou.instance"), dir).toFile());
+            kvStore = storeFactory.buildFileStore(Paths.get(config.get("qingzhou.instance"), dir).toFile());
         } else {
             kvStore = storeFactory.buildMemoryStore();
         }
     }
 
     /**
-     * 记忆注入上下文的消息列表（时间正序，最近 {@link #HISTORY_MAX_MESSAGES} 条且总长不超 {@link #HISTORY_MAX_CHARS}）
+     * 记忆注入上下文的消息列表
      */
     public List<ChatMemory.Message> getMessageList(String userId, String conversationId) {
         List<HistoryMessage> messages = listMessages(userId, conversationId);
         int from = messages.size();
         int chars = 0;
+        int HISTORY_MAX_MESSAGES = 20; // 记忆注入上下文的最大历史条数
+        int HISTORY_MAX_CHARS = 8000; // 记忆注入上下文的总字符预算
         while (from > 0 && from > messages.size() - HISTORY_MAX_MESSAGES) {
             String content = messages.get(from - 1).content;
             if (chars + content.length() > HISTORY_MAX_CHARS) break;
@@ -178,6 +173,7 @@ public class ConversationStore {
             }
             if (record.messages == null) record.messages = new ArrayList<>();
             record.messages.add(msg);
+            int MAX_MESSAGES_PER_CONVERSATION = 200; // 单会话消息条数上限
             while (record.messages.size() > MAX_MESSAGES_PER_CONVERSATION) {
                 record.messages.remove(0);
             }
@@ -202,13 +198,14 @@ public class ConversationStore {
 
     private String truncate(String text) {
         if (text == null) return null;
+        int MAX_CONTENT_CHARS = 8000; // 单条消息内容上限
         return text.length() <= MAX_CONTENT_CHARS ? text : text.substring(0, MAX_CONTENT_CHARS);
     }
 
     /**
      * KV 内会话记录结构，title 为 null 表示未命名
      */
-    public static class ConversationRecord {
+    private static class ConversationRecord {
         public String id;
         public String userId;
         public String title;
@@ -217,10 +214,32 @@ public class ConversationStore {
         public List<StoredMessage> messages;
     }
 
-    public static class StoredMessage {
+    private static class StoredMessage {
         public String id;
         public String role;
         public String content;
         public long createdAt;
+    }
+
+    private static class HistoryMessage {
+        public final String role;
+        public final String content;
+
+        public HistoryMessage(String role, String content) {
+            this.role = role;
+            this.content = content;
+        }
+    }
+
+    private static class ConversationSummary {
+        public final String conversationId;
+        public final String title;
+        public final long updatedAt;
+
+        public ConversationSummary(String conversationId, String title, long updatedAt) {
+            this.conversationId = conversationId;
+            this.title = title;
+            this.updatedAt = updatedAt;
+        }
     }
 }

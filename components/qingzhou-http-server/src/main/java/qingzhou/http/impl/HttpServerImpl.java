@@ -108,7 +108,7 @@ public class HttpServerImpl implements HttpServer {
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
 
-        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port);
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     /**
@@ -281,7 +281,7 @@ public class HttpServerImpl implements HttpServer {
     }
 
     @Deactivate
-    public void stop() {
+    public synchronized void stop() { // 与 start() 同锁，避免 SCR 重配置交错时误关新实例
         if (disposableServer == null) return;
 
         // 优雅关闭HTTP服务（超时30秒）

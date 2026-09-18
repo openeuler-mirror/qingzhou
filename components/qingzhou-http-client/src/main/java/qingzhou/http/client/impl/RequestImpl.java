@@ -2,6 +2,7 @@ package qingzhou.http.client.impl;
 
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import qingzhou.http.client.HttpMethod;
@@ -13,12 +14,14 @@ class RequestImpl implements Request {
     Map<String, String> headers;
     Map<String, String> params;
     byte[] body;
-    Map<String, String> files;
+    Map<String, List<String>> files;
     X509Certificate[] trustedCertificates;
+    boolean trustAll;
     int connectTimeout = 60 * 1000;
     int readTimeout = 10 * 60 * 1000;
+    int maxBodySize = 64 * 1024 * 1024;
 
-    public RequestImpl(String url) {
+    RequestImpl(String url) {
         this.url = url;
     }
 
@@ -54,7 +57,7 @@ class RequestImpl implements Request {
     }
 
     @Override
-    public Request files(Map<String, String> files) {
+    public Request files(Map<String, List<String>> files) {
         this.files = files;
         return this;
     }
@@ -82,6 +85,22 @@ class RequestImpl implements Request {
     @Override
     public Request trustedCertificates(X509Certificate... certificates) {
         this.trustedCertificates = certificates;
+        return this;
+    }
+
+    @Override
+    public Request trustAllCertificates() {
+        this.trustAll = true;
+        return this;
+    }
+
+    @Override
+    public Request maxBodySize(int maxBodySize) {
+        if (maxBodySize < 0) {
+            throw new IllegalArgumentException("maxBodySize can not be negative");
+        }
+
+        this.maxBodySize = maxBodySize;
         return this;
     }
 }

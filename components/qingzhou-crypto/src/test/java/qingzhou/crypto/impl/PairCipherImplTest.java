@@ -37,15 +37,10 @@ public class PairCipherImplTest {
     }
 
     @Test
-    public void nullBytes_encryptWithPublicKey_throwException() throws Exception {
+    public void nullBytes_encryptWithPublicKey_returnNull() throws Exception {
         PairCipher pairCipher = newPairCipher();
 
-        try {
-            pairCipher.encryptWithPublicKey((byte[]) null);
-            Assert.fail("null 输入应抛出异常");
-        } catch (Throwable e) {
-            Assert.assertNotNull(e);
-        }
+        Assert.assertNull(pairCipher.encryptWithPublicKey((byte[]) null));
     }
 
     @Test
@@ -96,15 +91,11 @@ public class PairCipherImplTest {
     }
 
     @Test
-    public void nullString_encryptWithPublicKey_throwException() throws Exception {
+    public void nullString_encryptWithPublicKey_returnNull() throws Exception {
         PairCipher pairCipher = newPairCipher();
 
-        try {
-            pairCipher.encryptWithPublicKey((String) null);
-            Assert.fail("null 输入应抛出异常");
-        } catch (Throwable e) {
-            Assert.assertNotNull(e);
-        }
+        // 契约：null 透传（保真处理），区分「未提供数据」与「空数据」
+        Assert.assertNull(pairCipher.encryptWithPublicKey((String) null));
     }
 
     @Test
@@ -141,15 +132,10 @@ public class PairCipherImplTest {
     }
 
     @Test
-    public void nullBytes_decryptWithPrivateKey_throwException() throws Exception {
+    public void nullBytes_decryptWithPrivateKey_returnNull() throws Exception {
         PairCipher pairCipher = newPairCipher();
 
-        try {
-            pairCipher.decryptWithPrivateKey((byte[]) null);
-            Assert.fail("null 输入应抛出异常");
-        } catch (Throwable e) {
-            Assert.assertNotNull(e);
-        }
+        Assert.assertNull(pairCipher.decryptWithPrivateKey((byte[]) null));
     }
 
     @Test
@@ -208,10 +194,10 @@ public class PairCipherImplTest {
 
         try {
             pairCipher.decryptWithPrivateKey(encrypted);
-            Assert.fail("缺少私钥时解密应抛出异常");
-        } catch (Throwable e) {
-            Assert.assertNotNull(e);
+        } catch (Exception e) {
+            return; // 缺少私钥时解密快速失败
         }
+        Assert.fail("缺少私钥时解密应抛出异常");
     }
 
     @Test

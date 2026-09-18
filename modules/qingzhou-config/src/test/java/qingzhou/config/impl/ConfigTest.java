@@ -1,14 +1,22 @@
 package qingzhou.config.impl;
 
+import java.io.File;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class ConfigTest {
+    @BeforeClass
+    public void init() {
+        System.setProperty("qingzhou.instance", new File("/tmp").getAbsolutePath());
+        System.setProperty("qingzhou.version", "1.0");
+    }
+
     /**
      * 依次覆盖：空行、注释、左侧空白（含全角）、值两侧空白、无等号、等号在行首、折行、单独反斜杠。
      */

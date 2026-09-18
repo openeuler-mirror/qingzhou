@@ -22,8 +22,9 @@ public class Utils {
     }
 
     public static void sleepBackoff(int attempt) {
+        int capped = Math.min(attempt, 5); // 移位封顶，防止大 attempt 休眠天文数字时长
         try {
-            Thread.sleep(1000L << attempt); // 指数退避：1s / 2s / 4s
+            Thread.sleep(1000L << capped); // 指数退避：1s / 2s / 4s / 8s 封顶
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

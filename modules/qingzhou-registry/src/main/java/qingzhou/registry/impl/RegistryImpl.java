@@ -22,7 +22,7 @@ import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.AppStubRemote;
 import qingzhou.registry.Registry;
 
-@Component
+@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegistryImpl implements Registry {
     private final List<String> tempMsg = new ArrayList<>();
 
@@ -48,8 +48,8 @@ public class RegistryImpl implements Registry {
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
     @Activate
-    public synchronized void start() {
-        qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+    public synchronized void start(Map<String, String> config) {
+        qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
         qzVersion = new File(qzVersion).getName().substring("version".length());
 
         tempMsg.forEach(s -> logger.info(s));

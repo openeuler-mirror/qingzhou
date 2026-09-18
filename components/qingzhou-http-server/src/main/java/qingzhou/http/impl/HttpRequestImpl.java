@@ -79,7 +79,12 @@ class HttpRequestImpl implements HttpRequest {
     @Override
     public Map<String, List<String>> getParameters() {
         if (parameters == null) {
-            parameters = new HashMap<>(new QueryStringDecoder(request.uri()).parameters());
+            parameters = new HashMap<>();
+            try {
+                parameters.putAll(new QueryStringDecoder(request.uri()).parameters());
+            } catch (IllegalArgumentException e) {
+                // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
+            }
             if (requestBody != null && requestBody.length > 0 && isFormUrlencoded()) {
                 try {
                     // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）

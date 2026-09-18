@@ -5,7 +5,9 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -134,8 +136,8 @@ public class HttpClientServerIntegrationTest {
                     }
                 }, path);
 
-                Map<String, String> files = new HashMap<>();
-                files.put("upload", file1.getAbsolutePath() + "," + file2.getAbsolutePath());
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("upload", Arrays.asList(file1.getAbsolutePath(), file2.getAbsolutePath()));
                 Map<String, String> params = new HashMap<>();
                 params.put("desc", "unit-test");
 

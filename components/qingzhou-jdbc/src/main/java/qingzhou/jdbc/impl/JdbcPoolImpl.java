@@ -11,7 +11,6 @@ import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.CommonDataSource;
@@ -31,8 +30,7 @@ public class JdbcPoolImpl implements JdbcPool {
     private URLClassLoader urlClassLoader;
 
     @Activate
-    public void open(Map<String, String> osgiConfig) throws Exception {
-        Map<String, String> config = new HashMap<>(osgiConfig);
+    public void open(Map<String, String> config) throws Exception {
         String passwordKey = "password";
         String password = config.get(passwordKey);
         if (password != null && !password.trim().isEmpty()) {
@@ -41,19 +39,13 @@ public class JdbcPoolImpl implements JdbcPool {
         }
 
         PoolProperties poolConfig = new PoolProperties();
-        try {
-            setConfig(poolConfig, config);
-            createPool(poolConfig, config);
-        } finally {
-            // 从内存中移除密码敏感数据
-            poolConfig.setPassword(null);
-            config.remove(passwordKey);
-        }
+        setConfig(poolConfig, config);
+        createPool(poolConfig, config);
     }
 
     private void createPool(PoolProperties poolProperties, Map<String, String> config) throws Exception {
         if (config.get("dataSourceClassName") != null) {
-            File lib = new File(System.getProperty("qingzhou.instance"), "lib");
+            File lib = new File(config.get("qingzhou.instance"), "lib");
             if (lib.isDirectory()) {
                 List<URL> urls = new ArrayList<>();
                 urls.add(lib.toURI().toURL());

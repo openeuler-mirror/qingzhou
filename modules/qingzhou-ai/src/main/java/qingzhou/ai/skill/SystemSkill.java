@@ -13,9 +13,10 @@ import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 import qingzhou.logger.Logger;
 
-@Component(property = {
-        SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
-        SkillService.SKILL_REQUIRED + "=true"})
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {
+                SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
+                SkillService.SKILL_REQUIRED + "=true"})
 public class SystemSkill extends SkillServiceBase implements SkillService {
     @Reference
     private Logger logger;
@@ -31,10 +32,10 @@ public class SystemSkill extends SkillServiceBase implements SkillService {
     }
 
     @Activate
-    public void init() {
+    public void init(Map<String, String> config) {
         List<String> docs = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(
-                Paths.get(System.getProperty("qingzhou.version"), "docs"),
+                Paths.get(config.get("qingzhou.version"), "docs"),
                 "*.md")) {
             for (Path md : stream) {
                 List<String> contents = Files.readAllLines(md);

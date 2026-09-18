@@ -1,18 +1,20 @@
 package qingzhou.http.client.impl;
 
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
@@ -21,6 +23,20 @@ import qingzhou.http.client.Response;
 import qingzhou.http.client.ResponseListener;
 
 public class HttpClientImplTest {
+
+    @Test
+    public void unsupportedProtocol_send_throwsIllegalArgumentException() {
+        HttpClient client = new HttpClientImpl();
+        try {
+            client.send(client.newRequest("ftp://127.0.0.1/file"));
+            Assert.fail("不支持的协议应抛出 IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("unsupported protocol"), "实际异常：" + e);
+        } catch (Exception e) {
+            Assert.fail("期望 IllegalArgumentException，实际：" + e);
+        }
+    }
+
     @Test
     public void getRequest_send_responseReturned() throws Exception {
         AtomicReference<String> receivedMethod = new AtomicReference<>();
@@ -153,6 +169,127 @@ public class HttpClientImplTest {
             } finally {
                 responseBodyAllowed.countDown();
             }
+        });
+    }
+
+    @Test
+    public void errorResponse_sendWithListener_callsOnError() throws Exception {
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        withServer(exchange -> writeResponse(exchange, 500, "server-error"), url -> {
+            HttpClient client = new HttpClientImpl();
+            Response response = client.send(client.newRequest(url).method(HttpMethod.GET), new ResponseListener() {
+                @Override
+                public void onBody(String line) {
+                    Assert.fail("非 2xx 不应回调 onBody");
+                }
+
+                @Override
+                public void onComplete() {
+                    Assert.fail("非 2xx 不应回调 onComplete");
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    error.set(throwable);
+                }
+            });
+
+            Assert.assertEquals(response.getStatus(), 500);
+            Assert.assertNotNull(error.get());
+            Assert.assertEquals(new String(response.getBody(), StandardCharsets.UTF_8), "server-error");
+        });
+    }
+
+    @Test
+    public void oversizedBody_exceedingMaxBodySize_throwsIOException() throws Exception {
+        withServer(exchange -> writeResponse(exchange, 200, "0123456789abcdef"), url -> {
+            HttpClient client = new HttpClientImpl();
+            try {
+                client.send(client.newRequest(url).method(HttpMethod.GET).maxBodySize(8));
+                Assert.fail("响应体超过 maxBodySize 应抛出 IOException");
+            } catch (IOException e) {
+                Assert.assertTrue(e.getMessage().contains("maxBodySize"), "实际异常：" + e);
+            }
+        });
+    }
+
+    @Test
+    public void multipartFieldWithCrlf_send_throwsIllegalArgumentException() throws Exception {
+        withServer(exchange -> writeResponse(exchange, 200, "ok"), url -> {
+            HttpClient client = new HttpClientImpl();
+            File tempFile = File.createTempFile("multipart-inject-", ".txt");
+            try {
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("field\r\nX-Injected: 1", Collections.singletonList(tempFile.getAbsolutePath()));
+
+                client.send(client.newRequest(url).method(HttpMethod.POST).files(files));
+                Assert.fail("含 CRLF 的 multipart 字段名应抛出 IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                Assert.assertTrue(e.getMessage().contains("illegal multipart"), "实际异常：" + e);
+            } finally {
+                tempFile.delete();
+            }
+        });
+    }
+
+    @Test
+    public void paramsWithSpecialChars_send_serverReceivesEncodedBody() throws Exception {
+        AtomicReference<String> receivedBody = new AtomicReference<>();
+        AtomicReference<String> receivedContentType = new AtomicReference<>();
+        withServer(exchange -> {
+            receivedBody.set(readRequestBody(exchange));
+            receivedContentType.set(exchange.getRequestHeaders().getFirst("Content-Type"));
+            writeResponse(exchange, 200, "ok");
+        }, url -> {
+            HttpClient client = new HttpClientImpl();
+            Map<String, String> params = new HashMap<>();
+            params.put("q", "a b&c=d");
+
+            Response response = client.send(client.newRequest(url).method(HttpMethod.POST).params(params));
+
+            Assert.assertEquals(response.getStatus(), 200);
+            Assert.assertEquals(receivedBody.get(), "q=a+b%26c%3Dd");
+            Assert.assertEquals(receivedContentType.get(), "application/x-www-form-urlencoded");
+        });
+    }
+
+    @Test
+    public void streamingResponse_cancel_stopsCallbacksAndDisconnects() throws Exception {
+        CountDownLatch firstLine = new CountDownLatch(1);
+        AtomicBoolean completed = new AtomicBoolean(false);
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        withServer(exchange -> {
+            exchange.sendResponseHeaders(200, 0);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write("line-1\n".getBytes(StandardCharsets.UTF_8));
+                output.flush();
+                Thread.sleep(1000); // 挂住服务端，等待客户端取消
+            } catch (InterruptedException ignored) {
+            }
+        }, url -> {
+            HttpClient client = new HttpClientImpl();
+            Response response = client.send(client.newRequest(url).method(HttpMethod.GET), new ResponseListener() {
+                @Override
+                public void onBody(String line) {
+                    firstLine.countDown();
+                }
+
+                @Override
+                public void onComplete() {
+                    completed.set(true);
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    error.set(throwable);
+                }
+            });
+
+            Assert.assertTrue(firstLine.await(5, TimeUnit.SECONDS), "did not receive first line");
+            response.cancel();
+            Thread.sleep(500);
+            Assert.assertFalse(completed.get(), "取消后不应回调 onComplete");
+            Assert.assertNull(error.get(), "取消后不应回调 onError");
         });
     }
 

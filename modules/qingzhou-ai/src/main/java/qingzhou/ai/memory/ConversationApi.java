@@ -14,10 +14,19 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/conversations")
+@Component(property = HttpHandler.HANDLE_PATH + "=" + ConversationApi.API_PREFIX)
 public class ConversationApi implements HttpHandler {
-    private static final String API_PREFIX = "/conversations";
+    public static final String API_PREFIX = "/conversations";
     private static final Map<String, Boolean> OK_BODY = Collections.singletonMap("ok", true);
+
+    /**
+     * userId 由鉴权层从 token 解析；未开鉴权时为匿名
+     */
+    public static String resolveUserId(HttpRequest httpRequest) {
+        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
+        String s = principal instanceof String ? (String) principal : null;
+        return s != null && !s.isEmpty() ? s : "anonymous";
+    }
 
     @Reference
     private ConversationStore store;
@@ -31,7 +40,19 @@ public class ConversationApi implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         try {
-            dispatch(httpRequest, httpResponse);
+            String rest = null;
+            String path = httpRequest.getPath();
+            if (path != null) {
+                int idx = path.indexOf(API_PREFIX);
+                rest = idx < 0 ? null : path.substring(idx + API_PREFIX.length());
+            }
+
+            if (rest == null || (!rest.isEmpty() && !rest.startsWith("/"))) {
+                sendError(httpResponse, 400, "BAD_REQUEST");
+                return;
+            }
+
+            dispatch(httpRequest, httpResponse, rest);
         } catch (Throwable t) {
             // 统一兜底：任何未预期异常以 JSON 错误应答，不让连接静默断开
             logger.error("conversation api failed: " + t.getMessage(), t);
@@ -39,14 +60,8 @@ public class ConversationApi implements HttpHandler {
         }
     }
 
-    private void dispatch(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        String rest = restPath(httpRequest);
-        if (rest == null || (!rest.isEmpty() && !rest.startsWith("/"))) {
-            sendError(httpResponse, 400, "BAD_REQUEST");
-            return;
-        }
-
-        String userId = resolveUsername(httpRequest);
+    private void dispatch(HttpRequest httpRequest, HttpResponse httpResponse, String rest) throws Exception {
+        String userId = resolveUserId(httpRequest);
 
         // GET /conversations → 会话列表
         if (rest.isEmpty() || rest.equals("/")) {
@@ -105,11 +120,21 @@ public class ConversationApi implements HttpHandler {
 
     private void renameConversation(HttpRequest httpRequest, HttpResponse httpResponse, String userId,
                                     String conversationId) throws Exception {
-        Map<String, Object> params = parseBody(httpRequest);
+        Map<String, Object> params = null;
+        byte[] body = httpRequest.getBody();
+        if (body != null && body.length > 0) {
+            try {
+                params = json.fromJson(new String(body, StandardCharsets.UTF_8), HashMap.class);
+            } catch (Exception e) {
+                // 仅记录异常摘要，不输出请求体原文（可能含会话标题等用户内容）
+                logger.warn("failed to parse conversation api request body: " + e.getMessage());
+            }
+        }
         if (params == null) {
             sendError(httpResponse, 400, "BAD_REQUEST");
             return;
         }
+
         Object title = params.get("title");
         // 空串/非字符串归一为 null（未命名）
         String titleStr = title instanceof String && !((String) title).trim().isEmpty()
@@ -129,40 +154,13 @@ public class ConversationApi implements HttpHandler {
         sendJson(httpResponse, 200, OK_BODY);
     }
 
-    private Map<String, Object> parseBody(HttpRequest httpRequest) {
-        byte[] body = httpRequest.getBody();
-        if (body == null || body.length == 0) return null;
-        try {
-            return json.fromJson(new String(body, StandardCharsets.UTF_8), HashMap.class);
-        } catch (Exception e) {
-            // 仅记录异常摘要，不输出请求体原文（可能含会话标题等用户内容）
-            logger.warn("failed to parse conversation api request body: " + e.getMessage());
-            return null;
-        }
-    }
-
-    /** 注册前缀之后的剩余路径，定位失败返回 null */
-    private String restPath(HttpRequest httpRequest) {
-        String path = httpRequest.getPath();
-        if (path == null) return null;
-        int idx = path.indexOf(API_PREFIX);
-        return idx < 0 ? null : path.substring(idx + API_PREFIX.length());
-    }
-
-    /** userId 由鉴权层从 token 解析；未开鉴权时为匿名 */
-    private String resolveUsername(HttpRequest httpRequest) {
-        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
-        String username = principal instanceof String ? (String) principal : null;
-        return username != null && !username.isEmpty() ? username : "anonymous";
-    }
-
-    private void sendJson(HttpResponse httpResponse, int status, Object body) throws Exception {
-        httpResponse.status(status).contentTypeJsonUtf8().sendFinish(json.toJson(body));
-    }
-
     private void sendError(HttpResponse httpResponse, int status, String code) throws Exception {
         Map<String, Object> body = new HashMap<>();
         body.put("code", code);
         sendJson(httpResponse, status, body);
+    }
+
+    private void sendJson(HttpResponse httpResponse, int status, Object body) throws Exception {
+        httpResponse.status(status).contentTypeJsonUtf8().sendFinish(json.toJson(body));
     }
 }

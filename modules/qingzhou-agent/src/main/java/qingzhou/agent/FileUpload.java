@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.Constants;
@@ -16,7 +18,8 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true"},
+@Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true"},
         service = {FileUpload.class, HttpHandler.class})
 public class FileUpload implements HttpHandler {
     @Reference
@@ -25,8 +28,8 @@ public class FileUpload implements HttpHandler {
     private File uploadBase;
 
     @Activate
-    public void init() {
-        uploadBase = Paths.get(System.getProperty("qingzhou.instance"), "temp", "agent-upload").toFile();
+    public void init(Map<String, String> config) {
+        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
         uploadBase.mkdirs();
         cleanLegacyUploads();
     }

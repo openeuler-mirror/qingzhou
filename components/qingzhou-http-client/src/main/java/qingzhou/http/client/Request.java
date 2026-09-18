@@ -1,6 +1,7 @@
 package qingzhou.http.client;
 
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Map;
 
 public interface Request {
@@ -14,7 +15,7 @@ public interface Request {
 
     Request body(byte[] body);
 
-    Request files(Map<String, String> files);
+    Request files(Map<String, List<String>> files);
 
     /**
      * Sets a specified timeout value, in milliseconds,
@@ -33,8 +34,18 @@ public interface Request {
     Request readTimeout(int readTimeout);
 
     /**
-     * 指定本次请求信任的服务端证书，用于自签证书场景。
-     * 未指定时信任所有证书且不校验主机名；指定后以所给证书为信任锚校验服务端证书，并校验主机名。
+     * 指定本次请求信任的服务端证书。
+     * 指定后以所给证书为信任锚校验服务端证书，并校验主机名；未指定时使用 JVM 默认 CA 信任库。
      */
     Request trustedCertificates(X509Certificate... certificates);
+
+    /**
+     * 信任所有证书且不校验主机名。存在中间人攻击风险，仅限测试或自签名内网场景。
+     */
+    Request trustAllCertificates();
+
+    /**
+     * 非流式响应体大小上限（字节），超出时抛 IOException。0 表示不限制，默认 64MB。
+     */
+    Request maxBodySize(int maxBodySize);
 }
