@@ -79,15 +79,23 @@ public class SseListener implements Listener {
     }
 
     /**
-     * 请求已受理。由 AiChat 在技能匹配等耗时前置工作开始前调用，让客户端立即进入“正在思考”
+     * 请求已受理。由 AiChat 在技能匹配等耗时前置工作开始前调用，让客户端立即进入“正在思考”。
+     * assistantMessageId 为本轮 AI 回复预生成的落库 id，随 RUN_STARTED 下发供前端回填
      */
-    public void setStarted(String conversationId) {
+    public void setStarted(String conversationId, String assistantMessageId) {
         startTime = System.currentTimeMillis();
         watchdogTask = WATCHDOG_EXECUTOR.scheduleWithFixedDelay(
                 this::watchdogTick,
                 HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
-        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED).conversationId(conversationId));
+        sendEvent(SseEvent.of(SseEvent.Type.RUN_STARTED).conversationId(conversationId).messageId(assistantMessageId));
+    }
+
+    /**
+     * 用户提问落库后下发其消息 id（USER_MESSAGE）：前端问答成对删除的远程对齐依赖此 id
+     */
+    public void sendUserMessage(String userMessageId) {
+        sendEvent(SseEvent.of(SseEvent.Type.USER_MESSAGE).userMessageId(userMessageId));
     }
 
     private void watchdogTick() {
