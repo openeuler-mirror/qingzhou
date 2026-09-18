@@ -37,6 +37,7 @@ public class Heartbeat {
     private Logger logger;
 
     private PairCipher pairCipher;
+    private String registerToken;
     private String refreshUrl;
     private String registerUrl;
     private Timer timer;
@@ -50,6 +51,9 @@ public class Heartbeat {
         qzVersion = new File(qzVersion).getName().substring("version".length());
 
         pairCipher = crypto.getPairCipher(config.get("public_key"), null);
+
+        String registerTokenConfig = config.get("register_token");
+        registerToken = registerTokenConfig == null || registerTokenConfig.trim().isEmpty() ? null : registerTokenConfig.trim();
 
         String registryUrl = config.get("url");
         while (registryUrl.endsWith("/")) {
@@ -74,7 +78,10 @@ public class Heartbeat {
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         thisInstanceInfo.setKey(newKey);
                     } else {
-                        String registerData = json.toJson(thisInstanceInfo);
+                        // 注册报文：registerToken\ninstanceInfoJson，令牌授权新实例注册与重复注册
+                        String registerData = String.join("\n",
+                                registerToken == null ? "" : registerToken,
+                                json.toJson(thisInstanceInfo));
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));
                         logger.info("registration response: " + registration);
                     }
