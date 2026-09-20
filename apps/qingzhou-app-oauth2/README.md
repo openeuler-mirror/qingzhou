@@ -4,7 +4,7 @@
 并内置接入客户端、资源拥有者的管理界面。
 
 - 应用 code：`qingzhou-app-oauth2`
-- 端点前缀：`/oauth2`
+- 端点前缀：`/oauth2-server`
 - 依赖：平台 `qingzhou-jdbc` 组件提供的 `JdbcPool`、`qingzhou-crypto` 组件提供的凭据摘要能力
   （应用自身不含任何第三方依赖）
 
@@ -17,7 +17,7 @@
 ### 1.1 启用 qingzhou-jdbc 特性
 
 > 说明：`qingzhou-jdbc` 是本应用连接数据库所必需的组件，禁用时应用取不到 `JdbcPool`，只会记录
-> 一条“数据源不可用”日志并跳过 `/oauth2/*` 端点注册（不会影响平台与其他应用启动）。
+> 一条“数据源不可用”日志并跳过 `/oauth2-server/*` 端点注册（不会影响平台与其他应用启动）。
 
 ### 1.2 配置 JDBC 连接池
 
@@ -62,16 +62,22 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 
 ## 3. HTTP 端点
 
-端点由应用以“免登录”方式注册在 HTTP 服务上，默认地址形如 `https://<host>:7900/oauth2/...`
+端点由应用以“免登录”方式注册在 HTTP 服务上，默认地址形如 `https://<host>:7900/oauth2-server/...`
 （默认开启 SSL，自签证书场景可用 `curl -k`）。
+
+> 前缀取 `/oauth2-server` 而非 `/oauth2`：平台的单点登录客户端模块 `qingzhou-oauth2` 独占 `/oauth2/`
+> （`/oauth2/authorize` 与 `/oauth2/callback` 是该客户端自身的跳转入口与回调），路径重叠会让本应用的
+> 端点注册冲突、启动失败。若把本应用作为平台单点登录的授权服务器，把 `qingzhou-oauth2.authorize_endpoint`、
+> `token_endpoint`、`userinfo_endpoint` 指向 `.../oauth2-server/...` 即可；客户端的回调地址
+> （`redirect_uri` + `/oauth2/callback`）属于 `qingzhou-oauth2` 模块，保持原样。
 
 | 端点 | 方法 | 调用方身份 | 用途 |
 |---|---|---|---|
-| `/oauth2/authorize` | GET（展示授权页）/ POST（提交授权） | 资源拥有者登录 | 签发授权码或隐式令牌 |
-| `/oauth2/token` | POST | 客户端凭据（`client_id` + `client_secret`） | 换取、刷新令牌 |
-| `/oauth2/userinfo` | GET / POST | 访问令牌 | 返回资源拥有者信息 |
-| `/oauth2/introspect` | POST | 客户端凭据 | 查询访问令牌是否有效 |
-| `/oauth2/revoke` | POST | 客户端凭据 | 撤销访问令牌及其刷新令牌 |
+| `/oauth2-server/authorize` | GET（展示授权页）/ POST（提交授权） | 资源拥有者登录 | 签发授权码或隐式令牌 |
+| `/oauth2-server/token` | POST | 客户端凭据（`client_id` + `client_secret`） | 换取、刷新令牌 |
+| `/oauth2-server/userinfo` | GET / POST | 访问令牌 | 返回资源拥有者信息 |
+| `/oauth2-server/introspect` | POST | 客户端凭据 | 查询访问令牌是否有效 |
+| `/oauth2-server/revoke` | POST | 客户端凭据 | 撤销访问令牌及其刷新令牌 |
 
 成功响应为 JSON；协议错误统一返回 HTTP 400（`invalid_token` 为 401），正文形如：
 
@@ -79,7 +85,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 {"error": "invalid_client", "error_description": "客户端验证失败"}
 ```
 
-### 3.1 `/oauth2/authorize`
+### 3.1 `/oauth2-server/authorize`
 
 请求参数：
 
@@ -98,7 +104,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
     `redirect_uri#access_token=...&token_type=bearer&expires_in=...&scope=...&state=...`。
   - 拒绝：回跳 `redirect_uri?error=access_denied&state=<state>`。
 
-### 3.2 `/oauth2/token`
+### 3.2 `/oauth2-server/token`
 
 公共参数：`client_id`、`client_secret`（必填并校验）、`grant_type`（必须在该客户端登记的
 `grant_types` 内）。
@@ -124,7 +130,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 }
 ```
 
-### 3.3 `/oauth2/userinfo`
+### 3.3 `/oauth2-server/userinfo`
 
 访问令牌可通过请求头 `Authorization: Bearer <access_token>` 或参数 `access_token` 传递。
 
@@ -139,7 +145,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 }
 ```
 
-### 3.4 `/oauth2/introspect`
+### 3.4 `/oauth2-server/introspect`
 
 参数：`token`，另需 `client_id`、`client_secret`；只能校验该客户端自己签发的令牌。
 
@@ -149,7 +155,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 
 无效、已过期或不属于该客户端时返回 `{"active": false}`。
 
-### 3.5 `/oauth2/revoke`
+### 3.5 `/oauth2-server/revoke`
 
 参数：`token`（或 `access_token`），另需 `client_id`、`client_secret`；只能注销该客户端自己签发的令牌。
 撤销成功返回 `{"success": true}`。
@@ -160,7 +166,7 @@ JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包
 `test_client` / `test_secret`，用户 `admin` / `admin123`。
 
 ```bash
-BASE=https://localhost:7900/oauth2
+BASE=https://localhost:7900/oauth2-server
 CRED='client_id=test_client&client_secret=test_secret'
 
 # 1) 客户端凭证模式
@@ -191,7 +197,7 @@ curl -k -X POST "$BASE/revoke" -d "token=$ACCESS&$CRED"
 
 授权码模式：浏览器访问 `$BASE/authorize?response_type=code&client_id=test_client&scope=read&state=abc`
 （`redirect_uri` 省略时使用登记值 `https://localhost:7900/oauth2/callback`），
-登录并同意后回调地址会带上 `code`，再用该 `code` 调用 `/oauth2/token` 换取令牌。
+登录并同意后回调地址会带上 `code`，再用该 `code` 调用 `/oauth2-server/token` 换取令牌。
 
 ## 5. 管理控制台
 
@@ -220,12 +226,12 @@ curl -k -X POST "$BASE/revoke" -d "token=$ACCESS&$CRED"
 
 ## 6. 安全说明
 
-- 所有 `/oauth2/*` 端点对平台免登录，协议安全依赖客户端凭据与访问令牌本身。
+- 所有 `/oauth2-server/*` 端点对平台免登录，协议安全依赖客户端凭据与访问令牌本身。
 - `redirect_uri` 必须与客户端登记值完全一致，且仅允许 `http`/`https`、拦截 CRLF 注入，
   避免授权码或令牌被投递到攻击者地址。
 - `client_secret` 与用户口令以平台 `qingzhou-crypto` 的加盐迭代摘要
   （`SHA-256$salt$iterations$digest`）落库，校验时比对摘要而非明文，明文不入库、不写日志。
-- `/oauth2/token`、`/oauth2/introspect`、`/oauth2/revoke` 仅接受 POST（避免凭据进入 URL 与访问日志），
+- `/oauth2-server/token`、`/oauth2-server/introspect`、`/oauth2-server/revoke` 仅接受 POST（避免凭据进入 URL 与访问日志），
   且 `introspect`/`revoke` 必须出示客户端凭据并只能操作自己名下的令牌。
 - 授予方式与授权范围都受客户端登记值约束：`grant_type` 必须在 `grant_types` 内，
   `scope` 不得超出客户端 `scope`。
@@ -238,9 +244,10 @@ curl -k -X POST "$BASE/revoke" -d "token=$ACCESS&$CRED"
 
 | 现象 | 排查方向 |
 |---|---|
-| 日志出现“oauth2 数据源不可用”，`/oauth2/*` 未注册 | 确认已按第 1 节启用 `qingzhou-jdbc` 并放开 `qingzhou-jdbc~h2.*` |
+| 日志出现“oauth2 数据源不可用”，`/oauth2-server/*` 未注册 | 确认已按第 1 节启用 `qingzhou-jdbc` 并放开 `qingzhou-jdbc~h2.*` |
 | 报 `ClassNotFoundException: org.h2.jdbcx.JdbcDataSource` | 驱动不在 `instances/<实例>/lib/`，放入对应驱动 jar 后重启 |
 | 报 `JdbcPool[h2] 不可用` | 池实例名不匹配：`jdbc_name` 要与 `qingzhou-jdbc~<name>.*` 中 `~` 后的名字一致 |
 | 授权回调报 `invalid_client` / `invalid_request` | 检查 `client_id` 是否存在、`redirect_uri` 是否与登记值完全一致 |
 | 报 `invalid_scope` / `unauthorized_client` | 申请的 `scope` 或 `grant_type` 超出了客户端登记范围，在控制台补齐 |
 | 客户端或用户始终验证失败 | 凭据为升级前的明文记录，在控制台重新保存一次 |
+| 启动报 `HANDLE_PATH(...) of [@App] conflicts: /oauth2/` | 端点前缀与平台单点登录客户端模块重叠：本应用用 `/oauth2-server`，`qingzhou-oauth2` 用 `/oauth2/`，不要把 `qingzhou-oauth2.*_endpoint` 指回本应用以外的同名路径 |

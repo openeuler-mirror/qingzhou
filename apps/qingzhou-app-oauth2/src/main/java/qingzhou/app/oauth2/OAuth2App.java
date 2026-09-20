@@ -15,7 +15,8 @@ import qingzhou.logger.Logger;
                 "en:OAuth 2.0 authorization code, password, client credentials and refresh token grants."})
 @Menu(name = {"接入管理", "en:Access Management"}, code = "access", icon = "Grid", order = 1)
 public class OAuth2App implements QingzhouApp {
-    private static final String PATH_PREFIX = "/oauth2";
+    // 不能占用 /oauth2：平台单点登录客户端模块 qingzhou-oauth2 已注册该前缀（其 /oauth2/authorize、/oauth2/callback 是该客户端自身的入口与回调），两者重叠会因端点冲突导致本应用启动失败
+    private static final String PATH_PREFIX = "/oauth2-server";
     private static final String[] ENDPOINT_PATHS = {"/authorize", "/token", "/userinfo", "/introspect", "/revoke"};
 
     private HttpServer httpServer;
@@ -50,6 +51,10 @@ public class OAuth2App implements QingzhouApp {
             httpServer = appContext.getService(HttpServer.class);
         } catch (Exception e) { // HTTP 服务不可用时不应拖垮整个应用，管控台的模型仍要可用
             logger.error("HttpServer 不可用，oauth2 端点未注册", e);
+            return;
+        }
+        if (httpServer == null) { // 组件激活失败时 getService 返回 null，同样只跳过端点注册
+            logger.error("HttpServer 不可用，oauth2 端点未注册");
             return;
         }
 

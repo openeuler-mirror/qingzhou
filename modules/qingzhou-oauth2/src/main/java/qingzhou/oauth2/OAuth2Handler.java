@@ -29,8 +29,9 @@ public class OAuth2Handler implements HttpHandler {
     private static final String ROOT_PATH = "/oauth2";
     private static final String AUTHORIZE_PATH = ROOT_PATH + "/authorize";
     private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
+    private static final String CONSOLE_PATH = "/web"; // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
 
-    private final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    private static final String CSRF_COOKIE_NAME = "oauth2_csrf";
     static final String TOKEN_COOKIE_NAME = "oauth2_session";
 
     private static final String USER_SP = "@";
@@ -149,11 +150,11 @@ public class OAuth2Handler implements HttpHandler {
             return;
         }
 
-        String consoleHomeUri = "/web";
+         // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
-                        + "; Path=" + consoleHomeUri + "; HttpOnly; SameSite=Lax" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
+                        + "; Path=/; HttpOnly; SameSite=Lax" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")
-                .redirect("/"); // 未用 state 暂存回跳路径，故一律重定向到根路径
+                .redirect(CONSOLE_PATH); // 登录后回到管控台，前端在 /web 下按路由渲染首页
     }
 
     /**
