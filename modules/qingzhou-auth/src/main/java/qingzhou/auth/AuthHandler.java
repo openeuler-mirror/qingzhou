@@ -129,7 +129,7 @@ public class AuthHandler implements HttpHandler {
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (crypto.getTotpCipher().verifyCode(crypto.getGlobalCipher().tryDecrypt(totpSecret, "totp_secret"), code))
+            if (crypto.getTotpCipher().verifyCode(crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"), code))
                 return true;
         } catch (Exception e) {
             logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");

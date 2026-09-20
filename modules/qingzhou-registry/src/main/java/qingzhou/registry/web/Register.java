@@ -58,7 +58,7 @@ public class Register implements HttpHandler {
             logger.warn("'private_key' is not configured, remote instance registration feature is unavailable.");
             return;
         }
-        privateKey = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
+        privateKey = crypto.getGlobalCipher().tryDecrypt(privateKey, "qingzhou-registry.private_key");
         pairCipher = crypto.getPairCipher(null, privateKey);
 
         String registerTokenConfig = config.get("register_token");

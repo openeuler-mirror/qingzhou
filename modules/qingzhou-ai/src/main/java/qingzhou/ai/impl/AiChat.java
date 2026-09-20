@@ -11,7 +11,6 @@ import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.memory.ConversationApi;
 import qingzhou.ai.memory.ConversationStore;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -130,10 +129,6 @@ public class AiChat implements HttpHandler {
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache")
                 .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
-        // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
-        // 角色取自服务端鉴权结果，随工具一起绑定，供模型触发的工具调用执行权限判定
-        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
-
         SseListener sseListener = new SseListener(httpResponse, logger, json);
 
         // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
@@ -146,7 +141,7 @@ public class AiChat implements HttpHandler {
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
-                    .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills, roles))
+                    .skills(LlmConverter.convertSkills(chatConfig.llmSkills))
                     .enableThinking(true)
                     .chatMemory(() -> conversationStore.getMessageList(userId, conversationId));
             ChatModel chatModel = builder.build();

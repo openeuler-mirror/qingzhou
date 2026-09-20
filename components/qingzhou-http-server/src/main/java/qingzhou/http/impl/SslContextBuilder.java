@@ -39,7 +39,7 @@ public class SslContextBuilder {
             throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
                     + ", generate it with bin/gen-keystore.sh");
         }
-        char[] keyPassword = cipher.tryDecrypt(password, "ssl_keystore_password").toCharArray();
+        char[] keyPassword = cipher.tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);

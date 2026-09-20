@@ -17,7 +17,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
@@ -44,7 +43,6 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private final byte[] NULL_BYTES = new byte[0];
     private Semaphore concurrentSemaphore;
     private boolean isSslEnabled;
-    private boolean isAuthDisabled;
     private long maxStreamBytes; // 流式上传总量上限
     private int maxBodyBytes; // 单个请求体聚合进内存的上限
     private String csp;
@@ -56,8 +54,6 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         this.concurrentSemaphore = new Semaphore(maxConcurrentRequests);
 
         isSslEnabled = getConfig(config, "ssl_enabled", true);
-        isAuthDisabled = getConfig(config, "auth_disabled", false);
-        if (isAuthDisabled) logger.warn("http server authentication is disabled");
 
         maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
@@ -98,24 +94,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
 
         // 安全认证
-        boolean needAuth = !isAuthDisabled && !handlerManager.noAuthHandlerSet.contains(httpHandler);
-        if (needAuth) {
-            AuthResult authResult = authManager.authenticate(httpRequest);
-            if (authResult.status() != AuthResult.Status.PASS) {
-                return reject(request, response
-                                .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
-                        HttpResponseStatus.UNAUTHORIZED);
-            }
-            if (authResult.getPrincipal() != null) {
-                httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE, authResult.getPrincipal());
-            }
-            if (authResult.getRoles() != null) {
-                httpRequest.setAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE, authResult.getRoles());
-            }
+        boolean doneAuth = authManager.doAuth(httpRequest, httpHandler);
+        if (!doneAuth) {
+            return reject(request, response
+                            .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
+                    HttpResponseStatus.UNAUTHORIZED);
         }
 
         // 开始处理业务...
-        HttpHandler.StreamHandler streamHandler = httpHandler.buildStreamHandler();
+        HttpHandler.StreamHandler streamHandler = httpHandler.multipartStreamHandler();
         boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
         if (streamRequired && streamHandler == null) {
             return reject(request, response, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE);

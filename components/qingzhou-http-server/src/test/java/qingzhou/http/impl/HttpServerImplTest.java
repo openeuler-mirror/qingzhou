@@ -170,6 +170,7 @@ public class HttpServerImplTest {
         setField(dispatcherHandler, "handlerManager", handlerManager);
 
         setField(authManager, "logger", logger);
+        setField(authManager, "handlerManager", handlerManager);
 
         dispatcherHandler.init(config);
 

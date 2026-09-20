@@ -18,7 +18,6 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -40,6 +39,7 @@ public class Invoke implements HttpHandler {
     @Reference
     private Logger logger;
 
+    private final PermissionChecker permissionChecker = new PermissionChecker();
     private File uploadBase;
 
     @Activate
@@ -81,7 +81,7 @@ public class Invoke implements HttpHandler {
             return;
         }
 
-        request.setRoles((String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE));
+        if (permissionChecker.forbidReq(httpRequest, httpResponse, app, request)) return;
 
         try {
             parseBodyParameters(httpRequest, request);
@@ -184,7 +184,7 @@ public class Invoke implements HttpHandler {
     }
 
     @Override
-    public StreamHandler buildStreamHandler() {
+    public StreamHandler multipartStreamHandler() {
         return new StreamHandlerImpl();
     }
 
@@ -208,7 +208,7 @@ public class Invoke implements HttpHandler {
             app = registry.getAppStub(request.getInstance(), request.getApp());
             if (app == null) return;
 
-            request.setRoles((String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE));
+            if (permissionChecker.forbidReq(httpRequest, httpResponse, app, request)) return;
 
             String boundary = null;
             String contentType = httpRequest.getContentType();

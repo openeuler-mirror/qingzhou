@@ -20,11 +20,7 @@ import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Request;
-import qingzhou.http.client.Response;
-import qingzhou.http.client.ResponseListener;
+import qingzhou.http.client.*;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
@@ -451,6 +447,7 @@ public class PrometheusEndpointTest {
             return this;
         }
 
+        @Override
         public Request files(Map<String, List<String>> files) {
             return this;
         }
@@ -467,17 +464,17 @@ public class PrometheusEndpointTest {
 
         @Override
         public Request trustedCertificates(X509Certificate... certificates) {
-            return null;
+            return this;
         }
 
         @Override
         public Request trustAllCertificates() {
-            return null;
+            return this;
         }
 
         @Override
         public Request maxBodySize(int maxBodySize) {
-            return null;
+            return this;
         }
     }
 }

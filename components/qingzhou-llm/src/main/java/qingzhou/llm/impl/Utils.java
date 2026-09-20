@@ -106,7 +106,7 @@ public class Utils {
     public static Request newLlmRequest(Map<String, Object> llmRequest, boolean stream, ChatModelBuilderBase builder, HttpClient httpClient, Json json, Crypto crypto) throws Exception {
         Request request = httpClient.newRequest(builder.baseUrl)
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.apiKey, "apiKey"))
+                .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.apiKey, "qingzhou-llm.api_key"))
                 .header("Accept", stream ? "text/event-stream" : "application/json");
         request.body(json.toJson(llmRequest).getBytes(StandardCharsets.UTF_8));
         request.connectTimeout(builder.connectTimeout);

@@ -34,7 +34,7 @@ public class JdbcPoolImpl implements JdbcPool {
         String passwordKey = "password";
         String password = config.get(passwordKey);
         if (password != null && !password.trim().isEmpty()) {
-            String decrypt = crypto.getGlobalCipher().tryDecrypt(password.trim(), "password");
+            String decrypt = crypto.getGlobalCipher().tryDecrypt(password.trim(), "qingzhou-jdbc.password");
             config.put(passwordKey, decrypt);
         }
 

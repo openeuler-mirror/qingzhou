@@ -39,7 +39,7 @@ final class TestServerSupport {
             }
 
             @Override
-            public StreamHandler buildStreamHandler() {
+            public StreamHandler multipartStreamHandler() {
                 return new StreamHandler() {
                     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                     private HttpResponse httpResponse;
