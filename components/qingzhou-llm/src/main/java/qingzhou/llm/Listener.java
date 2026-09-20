@@ -7,7 +7,7 @@ public interface Listener {
     default void onReasoningPause() {
     }
 
-    default void onToolCall(String toolName) {
+    default void onToolCall(String toolCallId, String toolName, String args) {
     }
 
     void onMessage(String content);

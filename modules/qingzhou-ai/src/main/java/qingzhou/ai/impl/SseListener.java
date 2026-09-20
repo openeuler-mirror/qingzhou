@@ -191,7 +191,7 @@ public class SseListener implements Listener {
     }
 
     @Override
-    public void onToolCall(String toolName) {
+    public void onToolCall(String toolCallId, String toolName, String args) {
         sendEvent(SseEvent.of(SseEvent.Type.TOOL_CALL).toolName(toolName));
     }
 

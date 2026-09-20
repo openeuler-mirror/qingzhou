@@ -17,8 +17,10 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.PermissionChecker;
 
 class AppStubLocalImpl implements AppStubLocal {
+    private final PermissionChecker permissionChecker = new PermissionChecker();
     private final AppContextImpl appContext;
     private final List<ActionFilter> filters;
 
@@ -51,6 +53,9 @@ class AppStubLocalImpl implements AppStubLocal {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
+        // 应用动作的统一授权点：HTTP 入口与 AI / MCP 工具通道均经此进入，无权限时不执行动作
+        if (!permissionChecker.checkPermission(request.getRoles(), appContext.appMeta, request)) return;
+
         if (Constants.SYSTEM_MODEL_CODE.equals(request.getModel())) {
             systemCall(request);
             return;
