@@ -21,6 +21,8 @@ import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.impl.TestServerSupport.TestServer;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 
 /**
  * DispatcherHandler 自动化测试集。
@@ -226,18 +228,65 @@ public class DispatcherHandlerTest {
             }, "/boom");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            try {
-                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/boom")
-                        .method(HttpMethod.GET));
-                // 已知服务端行为：handler 异常时响应流以 error 终止，有时可读到 500 状态
-                Assert.assertEquals(result.getStatus(), 500);
-            } catch (java.io.IOException e) {
-                // 已知服务端行为边界：error 终止导致 chunked 连接提前切断，客户端读到 Premature EOF
-                Assert.assertTrue(e.getMessage() != null && e.getMessage().contains("Premature EOF"),
-                        "unexpected io error: " + e.getMessage());
-            }
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/boom")
+                    .method(HttpMethod.GET));
+
+            Assert.assertEquals(result.getStatus(), 500);
         } finally {
             testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void streamHandlerBeginThrows_request_returns500() throws Exception {
+        File tempFile = File.createTempFile("dispatcher-begin-", ".txt");
+        try {
+            Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
+            TestServer testServer = TestServerSupport.startServer();
+            try {
+                testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
+                    @Override
+                    public void handle(HttpRequest request, HttpResponse response) {
+                        response.status400Finish(); // multipart 请求不会进入此方法
+                    }
+
+                    @Override
+                    public StreamHandler multipartStreamHandler() {
+                        return new StreamHandler() {
+                            @Override
+                            public void onBegin(HttpRequest request, HttpResponse response) {
+                                throw new IllegalStateException("boom");
+                            }
+
+                            @Override
+                            public void onNext(byte[] data) {
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                            }
+
+                            @Override
+                            public void onComplete() {
+                            }
+                        };
+                    }
+                }, "/beginBoom");
+
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
+
+                HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/beginBoom")
+                        .method(HttpMethod.POST)
+                        .files(files));
+
+                Assert.assertEquals(result.getStatus(), 500);
+            } finally {
+                testServer.server.stop();
+            }
+        } finally {
+            tempFile.delete();
         }
     }
 

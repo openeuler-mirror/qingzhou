@@ -102,7 +102,12 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
 
         // 开始处理业务...
-        HttpHandler.StreamHandler streamHandler = httpHandler.multipartStreamHandler();
+        HttpHandler.StreamHandler streamHandler;
+        try {
+            streamHandler = httpHandler.multipartStreamHandler();
+        } catch (Throwable e) {
+            return rejectHandlerError(request, response, e);
+        }
         boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
         if (streamRequired && streamHandler == null) {
             return reject(request, response, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -117,7 +122,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             if (bodyTooLarge(request, maxStreamBytes)) { // 预检：超限直接拒，不必先落临时文件
                 return reject(request, response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
             }
-            streamHandler.onBegin(httpRequest, httpResponse);
+            try {
+                streamHandler.onBegin(httpRequest, httpResponse);
+            } catch (Throwable e) {
+                return rejectHandlerError(request, response, e);
+            }
             AtomicLong receivedBytes = new AtomicLong();
             request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                     .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
@@ -136,7 +145,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                                 streamHandler.onError(err);
                                 // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
                                 if (!httpResponse.isUsed()) {
-                                    logger.error("http stream handler error", err);
+                                    logger.error("http stream handler error", getCause(err));
                                     // 超限回 413、其余回 500，与聚合分支语义一致；响应体不回显内部异常细节
                                     HttpResponseStatus status = statusOf(err);
                                     httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
@@ -166,10 +175,13 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                                 streamResponse.tryEmitComplete(); // 避免请求无限等
                             }
                         } catch (Throwable e) {
-                            response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                            Throwable cause = getCause(e);
-                            logger.error("http handler error", cause);
-                            streamResponse.tryEmitError(cause);
+                            logger.error("http handler error", getCause(e));
+                            if (httpResponse.isUsed()) {
+                                streamResponse.tryEmitComplete(); // 已写过响应，状态码无法回退，只能干净收尾
+                            } else {
+                                HttpResponseStatus status = statusOf(e);
+                                httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                            }
                         }
                         return response.sendByteArray(streamResponse.asFlux()).then();
                     })
@@ -192,6 +204,12 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 })
                 .then(errorResponse)
                 .onErrorResume(e -> respondAndClose(response, statusOf(e)));
+    }
+
+    // handler 回调同步抛出时请求体还没读完，须先排空再回 500，否则残留字节会被当作下一个请求解析
+    private Publisher<Void> rejectHandlerError(HttpServerRequest request, HttpServerResponse response, Throwable e) {
+        logger.error("http handler error", getCause(e));
+        return reject(request, response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 请求体未读完，连接无法复用：发送响应并关闭连接，避免残留字节污染后续请求

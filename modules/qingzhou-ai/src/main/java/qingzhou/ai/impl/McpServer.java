@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.http.server.Authenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -56,6 +57,11 @@ public class McpServer implements HttpHandler {
     // OSGI 框架根据名称规则自动识别调用此方法
     public void unbindAiSkill(SkillService skill) {
         llmSkills.remove(skill);
+    }
+
+    @Override
+    public Authenticator customAuthenticator() {
+        return null;
     }
 
     @Override
