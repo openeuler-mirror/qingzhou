@@ -63,7 +63,17 @@ public class AppActionTools {
             properties.put(ToolService.TOOL_NAME, "app_action_" + invokedActionCode);
             properties.put(SkillService.SKILL_NAME, SkillService.SYSTEM_SKILL);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> AppActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
+            ToolService systemToolService = new ToolService() {
+                @Override
+                public String invoke(Map<String, Object> toolArgs) {
+                    return invokeActionTool(invokedActionCode, toolArgs, null);
+                }
+
+                @Override
+                public String invoke(Map<String, Object> toolArgs, String[] roles) {
+                    return invokeActionTool(invokedActionCode, toolArgs, roles);
+                }
+            };
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
         });
     }
@@ -73,7 +83,7 @@ public class AppActionTools {
         registrations.forEach(ServiceRegistration::unregister);
     }
 
-    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs) {
+    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs, String[] roles) {
         if (toolArgs == null) return null;
         String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
         String appCode = (String) toolArgs.get(WebUtil.APP_CODE);
@@ -88,6 +98,7 @@ public class AppActionTools {
         request.setApp(appCode);
         request.setModel(modelCode);
         request.setAction(actionCode);
+        request.setRoles(roles); // 身份随请求进入应用动作的统一授权点
         String dataId = (String) toolArgs.get(WebUtil.DATA_ID);
         if (dataId != null) {
             request.setId(dataId);

@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -78,13 +79,16 @@ public class McpServer implements HttpHandler {
         Map<String, Object> resultData = new HashMap<>();
         result.put("result", resultData);
 
+        // 角色取自服务端鉴权结果，工具参数不可影响
+        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
+
         String requestMethod = (String) requestMap.get("method");
         if ("initialize".equals(requestMethod)) {
             resultData.putAll(initializeData);
         } else if ("tools/list".equals(requestMethod)) {
-            resultData.put("tools", tools());
+            resultData.put("tools", tools(roles));
         } else if ("tools/call".equals(requestMethod)) {
-            resultData.putAll(call(requestMap.get("params")));
+            resultData.putAll(call(requestMap.get("params"), roles));
         }
 
         // 响应
@@ -97,14 +101,14 @@ public class McpServer implements HttpHandler {
         }
     }
 
-    private Collection<Tool> llmTools() {
-        return LlmConverter.convertAiSkill(llmSkills).stream().flatMap((Function<Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
+    private Collection<Tool> llmTools(String[] roles) {
+        return LlmConverter.convertAiSkill(llmSkills, roles).stream().flatMap((Function<Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
     }
 
-    private Object tools() {
+    private Object tools(String[] roles) {
         List<Map<String, Object>> tools = new ArrayList<>();
 
-        Collection<Tool> llmTools = llmTools();
+        Collection<Tool> llmTools = llmTools(roles);
         llmTools.forEach(tool -> {
             Map<String, Object> toolMap = new HashMap<>();
             toolMap.put("name", tool.name());
@@ -140,7 +144,7 @@ public class McpServer implements HttpHandler {
         return tools;
     }
 
-    private Map<String, Object> call(Object requestParams) {
+    private Map<String, Object> call(Object requestParams, String[] roles) {
         Map<String, Object> params = (Map<String, Object>) requestParams;
         String toolName = (String) params.get("name");
         Map<String, Object> arguments = (Map<String, Object>) params.get("arguments");
@@ -149,7 +153,7 @@ public class McpServer implements HttpHandler {
         String invokeResult = null;
         try {
             boolean found = false;
-            Collection<Tool> llmTools = llmTools();
+            Collection<Tool> llmTools = llmTools(roles);
             for (Tool tool : llmTools) {
                 if (tool.name().equals(toolName)) {
                     invokeResult = tool.invoke(arguments);
