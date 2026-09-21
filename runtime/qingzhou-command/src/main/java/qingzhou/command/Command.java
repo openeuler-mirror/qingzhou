@@ -11,7 +11,9 @@ public class Command { // 由 Launcher 来调用
     }
 
     public void doCommand(String[] args) throws Exception {
-        if (showHelp(args)) {
+        List<Processor> commands = listCommands();
+
+        if (showHelp(args, commands)) {
             return;
         }
 
@@ -21,7 +23,7 @@ public class Command { // 由 Launcher 来调用
         }
 
         List<Processor> found = new ArrayList<>();
-        for (Processor processor : listCommandsTemp()) {
+        for (Processor processor : commands) {
             AcceptStatus acceptStatus = accept(processor, args[0]);
             if (acceptStatus == AcceptStatus.none) {
                 continue;
@@ -49,7 +51,7 @@ public class Command { // 由 Launcher 来调用
         }
     }
 
-    private List<Processor> listCommandsTemp() {
+    private List<Processor> listCommands() {
         List<Processor> processors = new ArrayList<>();
         ServiceLoader.load(Processor.class, Processor.class.getClassLoader()).forEach(e -> {
             e.setLibDir(libDir);
@@ -59,7 +61,7 @@ public class Command { // 由 Launcher 来调用
         return processors;
     }
 
-    private boolean showHelp(String[] args) {
+    private boolean showHelp(String[] args, List<Processor> commands) {
         if (args == null || args.length == 0 || args.length == 1) {
             boolean found = (args == null || args.length == 0);
             if (!found) {
@@ -73,7 +75,7 @@ public class Command { // 由 Launcher 来调用
             }
             if (found) {
                 StringBuilder msg = new StringBuilder("Supported commands: ");
-                for (Processor processor : listCommandsTemp()) {
+                for (Processor processor : commands) {
                     msg.append(System.lineSeparator());
                     msg.append("\t").append("<").append(processor.name()).append(">");
                     String[] supportedArgs = processor.supportedArgs();

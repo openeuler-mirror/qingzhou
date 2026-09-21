@@ -12,7 +12,12 @@ public interface HttpHandler {
 
     void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 
-    default StreamHandler buildStreamHandler() {
+    // 优先级高于系统级 Authenticator
+    default Authenticator customAuthenticator() {
+        return null;
+    }
+
+    default StreamHandler multipartStreamHandler() {
         return null;
     }
 

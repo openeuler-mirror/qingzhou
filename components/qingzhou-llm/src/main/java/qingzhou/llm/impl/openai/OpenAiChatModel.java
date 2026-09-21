@@ -215,7 +215,7 @@ class OpenAiChatModel implements ChatModel {
                     chatListener.onReasoningPause();
                     for (ToolCallInfo toolCallInfo : toolCalls.values()) {
                         chatListener.onToolCall(toolCallInfo.id, toolCallInfo.name, toolCallInfo.arguments);
-                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json)));
+                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json, builder.interceptor)));
                     }
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);

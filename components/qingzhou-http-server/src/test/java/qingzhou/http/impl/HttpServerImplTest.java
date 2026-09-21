@@ -34,7 +34,7 @@ public class HttpServerImplTest {
     @Test
     public void normal_start_listenHttpService() throws Exception {
         HttpServerImpl httpServer = build(0);
-        HttpClientImpl httpClient = new HttpClientImpl();
+        HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
@@ -47,7 +47,7 @@ public class HttpServerImplTest {
         int port = actualPort(httpServer);
         httpServer.stop();
         try {
-            HttpClientImpl httpClient = new HttpClientImpl();
+            HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
             httpClient.send(httpClient.newRequest("http://localhost:" + port).method(HttpMethod.GET));
             Assert.fail();
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class HttpServerImplTest {
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
 
-        HttpClient httpClient = new HttpClientImpl();
+        HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 200);
         Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
@@ -78,7 +78,7 @@ public class HttpServerImplTest {
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
-        HttpClient httpClient = new HttpClientImpl();
+        HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
@@ -92,7 +92,7 @@ public class HttpServerImplTest {
             String path = "/sslTest";
             httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.sendFinish("ssl-ok"), path);
 
-            HttpClient httpClient = new HttpClientImpl();
+            HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = httpClient.send(httpClient.newRequest("https://localhost:" + actualPort(httpServer) + path)
                     .trustAllCertificates()
                     .method(HttpMethod.GET));
@@ -170,6 +170,7 @@ public class HttpServerImplTest {
         setField(dispatcherHandler, "handlerManager", handlerManager);
 
         setField(authManager, "logger", logger);
+        setField(authManager, "handlerManager", handlerManager);
 
         dispatcherHandler.init(config);
 

@@ -133,7 +133,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("code", code);
         params.put("client_id", clientId);
         params.put("redirect_uri", callbackUrl); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
-        params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "client_secret"));
+        params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "qingzhou-oauth2.client_secret"));
 
         Response tokenResponse = httpClient.send(
                 httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
@@ -150,7 +150,7 @@ public class OAuth2Handler implements HttpHandler {
             return;
         }
 
-         // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
+        // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
                         + "; Path=/; HttpOnly; SameSite=Lax" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")

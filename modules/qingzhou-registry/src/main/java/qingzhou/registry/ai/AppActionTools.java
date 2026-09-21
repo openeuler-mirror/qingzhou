@@ -10,16 +10,19 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
+import qingzhou.dto.meta.annotation.App;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
+import qingzhou.registry.web.PermissionChecker;
 import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
@@ -59,22 +62,26 @@ public class AppActionTools {
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
+            String actionToolName = "app_action_" + invokedActionCode;
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(ToolService.TOOL_NAME, "app_action_" + invokedActionCode);
+            properties.put(ToolService.TOOL_NAME, actionToolName);
             properties.put(SkillService.SKILL_NAME, SkillService.SYSTEM_SKILL);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = new ToolService() {
-                @Override
-                public String invoke(Map<String, Object> toolArgs) {
-                    return invokeActionTool(invokedActionCode, toolArgs, null);
-                }
-
-                @Override
-                public String invoke(Map<String, Object> toolArgs, String[] roles) {
-                    return invokeActionTool(invokedActionCode, toolArgs, roles);
-                }
-            };
+            ToolService systemToolService = toolArgs -> AppActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
+            registrations.add(bundleContext.registerService(ToolInterceptor.class, (toolName, toolArgs, c) -> {
+                if (toolName.equals(actionToolName)) {
+                    String[] roles = c.getRoles();
+                    AppStub appStub = retrieveAppStub(toolArgs);
+                    String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
+                    if (appStub == null || modelCode == null) return null;
+
+                    boolean allowed = PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, invokedActionCode, roles);
+                    if (allowed) return null;
+                    else return "操作执行失败：当前身份缺少对应工具执行权限，请检查权限配置后重试。";
+                }
+                return null;// 不拦截
+            }, null));
         });
     }
 
@@ -83,22 +90,29 @@ public class AppActionTools {
         registrations.forEach(ServiceRegistration::unregister);
     }
 
-    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs, String[] roles) {
+    private AppStub retrieveAppStub(Map<String, Object> toolArgs) {
         if (toolArgs == null) return null;
         String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
         String appCode = (String) toolArgs.get(WebUtil.APP_CODE);
         String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
         if (instanceId == null || appCode == null || modelCode == null) return null;
 
-        AppStub appStub = registry.getAppStub(instanceId, appCode);
+        return registry.getAppStub(instanceId, appCode);
+    }
+
+    private String invokeActionTool(String actionCode, Map<String, Object> toolArgs) {
+        AppStub appStub = retrieveAppStub(toolArgs);
         if (appStub == null) return null;
+
+        App app = appStub.getAppMeta().getApp();
+        String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
+        String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
 
         RequestImpl request = new RequestImpl();
         request.setInstance(instanceId);
-        request.setApp(appCode);
+        request.setApp(app.code);
         request.setModel(modelCode);
         request.setAction(actionCode);
-        request.setRoles(roles); // 身份随请求进入应用动作的统一授权点
         String dataId = (String) toolArgs.get(WebUtil.DATA_ID);
         if (dataId != null) {
             request.setId(dataId);

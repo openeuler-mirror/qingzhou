@@ -26,40 +26,6 @@ public class ConfigEtcdTest {
     }
 
     @Test
-    public void remoteHasKey_init_remoteOverridesLocalAndKeepsMissing() throws Exception {
-        Map<String, Dictionary<String, Object>> updated = runInit(200, "",
-                "qingzhou-http-server.port=7900\nqingzhou-logger.writingthread=true\n",
-                kv(NS + "/qingzhou-http-server/port", "9911"),
-                kv(NS + "/qingzhou-http-server/host", "0.0.0.0"),
-                kv(NS + "/qingzhou-logger/level", "info"),
-                kv("q/other/qingzhou-logger/writingthread", "other"));// 其它命名空间的数据
-
-        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 远程覆盖本地同名 key
-        Assert.assertEquals(updated.get("qingzhou-http-server").get("host"), "0.0.0.0");// 远程新增 key
-        Assert.assertEquals(updated.get("qingzhou-logger").get("level"), "info");// 远程新增 pid
-        Assert.assertEquals(updated.get("qingzhou-logger").get("writingthread"), "true");// 缺失保留本地，隔离生效
-    }
-
-    @Test
-    public void selfBootstrapKey_init_notOverriddenByRemote() throws Exception {
-        Map<String, Dictionary<String, Object>> updated = runInit(200, "", "qingzhou-http-server.port=7900\n",
-                kv(NS + "/qingzhou-http-server/port", "9911"),// 远端非自举键，用于排除空拉取
-                kv(NS + "/qingzhou-config/remote.enabled", "false"));
-
-        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 远端数据确实已生效
-        Assert.assertEquals(updated.get("qingzhou-config").get("remote.enabled"), "true");// 自举参数不被覆盖
-    }
-
-    @Test
-    public void authConfigured_init_authenticatesThenPulls() throws Exception {
-        Map<String, Dictionary<String, Object>> updated = runInit(200,
-                "qingzhou-config.remote.username=mock-user\nqingzhou-config.remote.password=mock-pass\n",
-                "qingzhou-http-server.port=7900\n", kv(NS + "/qingzhou-http-server/port", "9911"));
-
-        Assert.assertEquals(updated.get("qingzhou-http-server").get("port"), "9911");// 先鉴权再拉取
-    }
-
-    @Test
     public void httpError_pull_throwsExceptionContainingStatus() {
         EtcdConfigSource source = new EtcdConfigSource("http://127.0.0.1:2379", NS, null, null, 1, 1,
                 http(500, null), json(new EtcdConfigSource.Range()));

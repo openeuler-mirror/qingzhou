@@ -2,6 +2,7 @@ package qingzhou.engine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PathDetector {
     private final String featureFiles;
@@ -36,7 +38,7 @@ public class PathDetector {
     }
 
     private boolean matchesFeatureFile(String dir) {
-        if (dir == null || dir.isEmpty()) return false;
+        if (dir == null || dir.isEmpty() || featureFiles == null) return false;
         return Arrays.stream(featureFiles.split(",")).anyMatch(f -> !f.isEmpty() && Files.exists(Paths.get(dir, f)));
     }
 
@@ -85,21 +87,26 @@ public class PathDetector {
 
     // 通过扫描系统进程，反向推断软件的安装目录
     private String detectByProcess() {
+        if (processNames == null) return null; // 未配置进程名，不做进程探测
+
         Process process = null;
+        BufferedReader reader = null;
         try {
             // 1. 构造全平台兼容的极简原生命令
             String[] cmd;
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
-                // Windows: 使用 wmic 获取所有进程的可执行文件路径
-                cmd = new String[]{"cmd", "/c", "wmic process where \"ExecutablePath is not null\" get ExecutablePath /format:list"};
+                // Windows: 使用 PowerShell 获取所有进程的可执行文件路径（wmic 已在新版 Windows 中被移除）
+                // -ErrorAction SilentlyContinue：访问受保护进程的 Path 会被拒绝，避免这类错误混入输出
+                cmd = new String[]{"powershell", "-NoProfile", "-Command",
+                        "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
             } else {
                 // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）
                 cmd = new String[]{"sh", "-c", "ps -ww -e -o args="};
             }
 
             process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             // 2. 数据探查
             return reader.lines()
@@ -125,8 +132,19 @@ public class PathDetector {
             e.printStackTrace(System.err);
             return null;
         } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
             if (process != null) {
                 process.destroyForcibly();
+                try {
+                    process.waitFor(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }

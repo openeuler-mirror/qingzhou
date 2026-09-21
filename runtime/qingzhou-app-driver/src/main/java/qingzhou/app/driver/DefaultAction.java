@@ -123,6 +123,10 @@ public class DefaultAction {
         String ids = request.getParameter("ids");
         if (ids != null && !ids.isEmpty()) {
             String[] idArray = ids.split(",");
+            if (idArray.length > 1000) {
+                request.getResponse().error("too many ids");
+                return;
+            }
             for (String itemId : idArray) {
                 if (itemId != null && !itemId.isEmpty()) {
                     delete.delete(itemId);
@@ -227,7 +231,10 @@ public class DefaultAction {
         long offset = 0;
         String downloadOffsetParameter = request.getParameter(DownloadFile.REQUEST_PARAMETER_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.isEmpty()) {
-            offset = Long.parseLong(downloadOffsetParameter);
+            try {
+                offset = Long.parseLong(downloadOffsetParameter);
+            } catch (NumberFormatException ignored) { // 非法 offset 视为从头下载
+            }
         }
         if (offset < 0) return;
 
@@ -288,7 +295,7 @@ public class DefaultAction {
         try {
             String basePath = base.getCanonicalPath();
             String filePath = file.getCanonicalPath();
-            return filePath.startsWith(basePath);
+            return filePath.equals(basePath) || filePath.startsWith(basePath + File.separator);
         } catch (IOException e) {
             return false;
         }

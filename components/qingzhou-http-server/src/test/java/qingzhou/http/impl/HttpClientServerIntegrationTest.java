@@ -24,6 +24,11 @@ import qingzhou.http.impl.TestServerSupport.TestServer;
  * 若反向依赖则形成 Maven 循环依赖。
  */
 public class HttpClientServerIntegrationTest {
+    static HttpClientImpl buildHttpClientImpl() {
+        HttpClientImpl httpClient = new HttpClientImpl();
+        httpClient.activate();
+        return httpClient;
+    }
 
     @Test
     public void setHeader_send_serverReceivesHeader() throws Exception {
@@ -35,7 +40,7 @@ public class HttpClientServerIntegrationTest {
             httpServer.registerHttpHandlerNoAuth((request, response) ->
                     response.sendFinish("received: " + request.getHeader("X-Request-Id")), path);
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + port + path)
                     .method(HttpMethod.GET)
                     .header("X-Request-Id", "request-123"));
@@ -65,7 +70,7 @@ public class HttpClientServerIntegrationTest {
             newHeaders.put("Header-A", "value-a");
             newHeaders.put("Header-B", "value-b");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + port + path)
                     .method(HttpMethod.GET)
                     .header("Old-Header", "old-value")
@@ -101,7 +106,7 @@ public class HttpClientServerIntegrationTest {
                 Map<String, String> params = new HashMap<>();
                 params.put("desc", "unit-test");
 
-                HttpClient client = new HttpClientImpl();
+                HttpClient client = buildHttpClientImpl();
                 Response result = client.send(client.newRequest("http://localhost:" + port + path)
                         .method(HttpMethod.POST)
                         .files(files)

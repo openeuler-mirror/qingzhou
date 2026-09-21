@@ -39,6 +39,12 @@ import reactor.netty.DisposableServer;
  */
 public class AgentInvokerTest {
 
+    static HttpClientImpl buildHttpClientImpl() {
+        HttpClientImpl httpClient = new HttpClientImpl();
+        httpClient.activate();
+        return httpClient;
+    }
+
     @Test
     public void encryptedRequest_send_returnsEncryptedResponse() throws Exception {
         File uploadBase = Files.createTempDirectory("agent-upload-").toFile();
@@ -62,7 +68,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -94,7 +100,7 @@ public class AgentInvokerTest {
             byte[] body = crypto.getCipher(crypto.generateKey())
                     .encrypt("tampered".getBytes(StandardCharsets.UTF_8)); // 用另一把密钥加密
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -117,7 +123,7 @@ public class AgentInvokerTest {
 
             testServer.server.registerHttpHandlerNoAuth(buildAgentInvoker(uploadBase, new StubRegistry()), "/agent");
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.GET));
 
@@ -142,7 +148,7 @@ public class AgentInvokerTest {
             CryptoImpl crypto = new CryptoImpl();
             byte[] body = crypto.getCipher(crypto.generateKey())
                     .encrypt("whatever".getBytes(StandardCharsets.UTF_8));
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -173,7 +179,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -206,7 +212,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -233,7 +239,7 @@ public class AgentInvokerTest {
 
             byte[] plain = "hello-upload-data".getBytes(StandardCharsets.UTF_8);
             byte[] body = crypto.getCipher(key).encrypt(plain);
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent" + Constants.AGENT_UPLOAD_URI + "?key=mykey")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -263,7 +269,7 @@ public class AgentInvokerTest {
 
             byte[] plain = "no-key-data".getBytes(StandardCharsets.UTF_8);
             byte[] body = crypto.getCipher(key).encrypt(plain);
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent" + Constants.AGENT_UPLOAD_URI)
                     .method(HttpMethod.POST)
                     .body(body));
@@ -294,7 +300,7 @@ public class AgentInvokerTest {
 
             testServer.server.registerHttpHandlerNoAuth(buildFileUpload(uploadBase), "/agent" + Constants.AGENT_UPLOAD_URI);
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             String url = "http://localhost:" + testServer.port + "/agent" + Constants.AGENT_UPLOAD_URI + "?key=dup";
             Response first = client.send(client.newRequest(url)
                     .method(HttpMethod.POST)
@@ -339,7 +345,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -384,7 +390,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -425,7 +431,7 @@ public class AgentInvokerTest {
             json.init();
             byte[] body = crypto.getCipher(key).encrypt(json.toJson(request).getBytes(StandardCharsets.UTF_8));
 
-            HttpClient client = new HttpClientImpl();
+            HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/agent")
                     .method(HttpMethod.POST)
                     .body(body));
@@ -510,6 +516,7 @@ public class AgentInvokerTest {
         setField(dispatcherHandler, "handlerManager", handlerManager);
 
         setField(authManager, "logger", logger);
+        setField(authManager, "handlerManager", handlerManager);
 
         dispatcherHandler.init(config);
 
