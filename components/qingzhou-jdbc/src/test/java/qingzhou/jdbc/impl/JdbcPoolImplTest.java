@@ -63,7 +63,6 @@ public class JdbcPoolImplTest {
         try {
             DataSource dataSource = getDataSource(pool);
             PoolProperties properties = (PoolProperties) dataSource.getPoolProperties();
-            Assert.assertEquals(properties.getDriverClassName(), "org.h2.Driver");
             Assert.assertTrue(properties.getUrl().startsWith("jdbc:h2:mem:"));
             Assert.assertEquals(properties.getUsername(), "sa");
             Assert.assertNotNull(properties.getPassword()); // 后续重连等还需要密码
@@ -183,13 +182,13 @@ public class JdbcPoolImplTest {
 
     private JdbcPoolImpl createPool(Map<String, String> config) throws Exception {
         JdbcPoolImpl pool = new JdbcPoolImpl();
-        pool.open(config);
+        pool.setConfig(config);
+        pool.init(new org.h2.jdbcx.JdbcDataSource());
         return pool;
     }
 
     private Map<String, String> createConfig(int initialSize, int maxActive, int maxWait) {
         Map<String, String> config = new LinkedHashMap<>();
-        config.put("driverClassName", "org.h2.Driver");
         config.put("url", "jdbc:h2:mem:" + UUID.randomUUID().toString().replace("-", ""));
         config.put("username", "sa");
         config.put("password", "");
@@ -203,7 +202,7 @@ public class JdbcPoolImplTest {
     }
 
     private DataSource getDataSource(JdbcPoolImpl pool) throws Exception {
-        Field dataSourceField = JdbcPoolImpl.class.getDeclaredField("dataSource");
+        Field dataSourceField = JdbcPoolImpl.class.getDeclaredField("dsPool");
         dataSourceField.setAccessible(true);
         return (DataSource) dataSourceField.get(pool);
     }

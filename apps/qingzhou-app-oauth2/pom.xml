@@ -9,5 +9,12 @@
         <version>${revision}</version>
     </parent>
     <artifactId>qingzhou-app-oauth2</artifactId>
-    <!-- 应用只依赖平台提供的 JdbcPool API（qingzhou-jdbc 由 apps 父 pom 以 provided 引入），自身无第三方依赖 -->
+
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+    </dependencies>
 </project>
