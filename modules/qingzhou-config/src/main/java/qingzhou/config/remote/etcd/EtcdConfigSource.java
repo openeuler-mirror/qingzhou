@@ -1,5 +1,6 @@
 package qingzhou.config.remote.etcd;
 
+import qingzhou.config.impl.Config;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
@@ -57,19 +58,12 @@ public final class EtcdConfigSource implements RemoteConfigSource {
             String pidKey = decode(kv.key);
             if (!pidKey.startsWith(prefix)) continue;// 命名空间隔离：其它命名空间的数据不可见
             String pid = pidKey.substring(prefix.length()).trim();
-            if (!pid.isEmpty()) result.put(normalizeKey(pid), decode(kv.value));
+            if (!pid.isEmpty()) result.putAll(Config.parse(decode(kv.value)));
         }
         return result;
     }
 
-    /**
-     * key 归一化：'/' -> '.'，并合并连续的点
-     */
-    private static String normalizeKey(String rawKey) {
-        return rawKey.trim()
-                .replace('/', '.')
-                .replaceAll("\\.{2,}", ".");
-    }
+
 
     private Range call(String body) throws Exception {
         if (token == null && username != null && !username.isEmpty()) {
