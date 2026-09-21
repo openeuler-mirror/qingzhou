@@ -25,11 +25,10 @@ public class SystemSkill extends SkillServiceBase implements SkillService {
     private List<String> knowledgeDocs;
 
     public SystemSkill() {
-        super(new String[]{"平台咨询", "en:Platform Help"},
-                "当用户意图涉及理解和使用轻舟平台时激活此技能。具体激活场景包括但不限于：\n" +
-                        "- 平台的设计理念、整体架构、核心特点与功能、适用范围；\n" +
-                        "- 平台的目录结构、服务接口、前后端分离部署；\n" +
-                        "- 平台的API和轻舟应用开发规范；");
+        super("当用户意图涉及理解和使用轻舟平台时激活此技能。具体激活场景包括但不限于：\n" +
+                "- 平台的设计理念、整体架构、核心特点与功能、适用范围；\n" +
+                "- 平台的目录结构、服务接口、前后端分离部署；\n" +
+                "- 平台的API和轻舟应用开发规范；");
     }
 
     @Activate

@@ -6,7 +6,10 @@ public interface SkillService {
     String SKILL_NAME = "SKILL_NAME";
     String SKILL_REQUIRED = "SKILL_REQUIRED";
 
-    String[] nameI18n();
+    // 内置技能名称
+    String HEALTH_CHECK_SKILL = "HealthCheck";
+    String TROUBLESHOOTING_SKILL = "Troubleshooting";
+    String SYSTEM_SKILL = "SystemSkill";
 
     String description();
 
@@ -16,19 +19,7 @@ public interface SkillService {
     }
 
     // 技能的工具集：该技能需要挂载的功能工具
-    Map<ToolService, Map<String, Object>> tools();
-
-    // 返回附件类型和支持的后缀，客户端会回传此类型
-    default Map<AttachmentType, String[]> attachments() {
+    default Map<ToolService, Map<String, Object>> tools() {
         return null;
     }
-
-    enum AttachmentType {
-        document, image
-    }
-
-    // 内置技能
-    String HEALTH_CHECK_SKILL = "HealthCheck";
-    String TROUBLESHOOTING_SKILL = "Troubleshooting";
-    String SYSTEM_SKILL = "SystemSkill";
 }

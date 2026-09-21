@@ -7,19 +7,12 @@ import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 
 abstract class SkillServiceBase implements SkillService {
-    private final String[] displayNames;
     private final String description;
 
     protected final Map<ToolService, Map<String, Object>> aiTools = new ConcurrentHashMap<>();
 
-    protected SkillServiceBase(String[] displayNames, String description) {
-        this.displayNames = displayNames;
+    protected SkillServiceBase(String description) {
         this.description = description;
-    }
-
-    @Override
-    public String[] nameI18n() {
-        return displayNames;
     }
 
     @Override

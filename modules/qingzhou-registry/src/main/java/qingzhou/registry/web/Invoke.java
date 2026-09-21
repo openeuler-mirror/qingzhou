@@ -18,10 +18,7 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.BodyTooLargeException;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -39,7 +36,6 @@ public class Invoke implements HttpHandler {
     @Reference
     private Logger logger;
 
-    private final PermissionChecker permissionChecker = new PermissionChecker();
     private File uploadBase;
 
     @Activate
@@ -81,7 +77,7 @@ public class Invoke implements HttpHandler {
             return;
         }
 
-        if (permissionChecker.forbidReq(httpRequest, httpResponse, app, request)) return;
+        if (permissionForbidReq(httpRequest, httpResponse, app, request)) return;
 
         try {
             parseBodyParameters(httpRequest, request);
@@ -93,6 +89,16 @@ public class Invoke implements HttpHandler {
         }
 
         sendResponse(request, httpResponse);
+    }
+
+    private boolean permissionForbidReq(HttpRequest httpRequest, HttpResponse httpResponse, AppStub appStub, RequestImpl request) {
+        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
+        if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
+            return false;
+        } else {
+            httpResponse.status(403).sendFinish("Forbidden");
+            return true;
+        }
     }
 
     private RequestImpl buildRequest(HttpRequest httpRequest) {
@@ -208,7 +214,7 @@ public class Invoke implements HttpHandler {
             app = registry.getAppStub(request.getInstance(), request.getApp());
             if (app == null) return;
 
-            if (permissionChecker.forbidReq(httpRequest, httpResponse, app, request)) return;
+            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return;
 
             String boundary = null;
             String contentType = httpRequest.getContentType();

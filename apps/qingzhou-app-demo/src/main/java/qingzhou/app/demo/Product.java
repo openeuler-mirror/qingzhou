@@ -4,13 +4,14 @@ import java.util.*;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.logger.Logger;
 
 @Model(code = "product", order = 3,
         name = {"产品", "en:Product"},
         info = {"产品信息管理，演示Monitor和自定义Action", "en:Product management with Monitor"},
         icon = "Box",
         menu = "advanced")
-public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor {
+public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor, SwitchSpace {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -282,5 +283,18 @@ public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, 
     @Override
     public void delete(String id) throws Exception {
         db.remove(id);
+    }
+
+    private String currentSpace;
+
+    @Override
+    public void switchSpace(String id) throws Exception {
+        currentSpace = id;
+        getAppContext().getService(Logger.class).info("切换到：" + id);
+    }
+
+    @Override
+    public String currentSpace() {
+        return currentSpace;
     }
 }

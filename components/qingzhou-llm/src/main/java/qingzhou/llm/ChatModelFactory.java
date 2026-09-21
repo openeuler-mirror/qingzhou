@@ -15,27 +15,22 @@ public interface ChatModelFactory {
     interface ChatModelBuilder {
         ChatModelBuilder systemPrompt(String systemPrompt);
 
-        ChatModelBuilder chatMemory(ChatMemory chatMemory);
-
         ChatModelBuilder docs(List<String> docs);
-
-        ChatModelBuilder tools(Collection<Tool> tools);
 
         ChatModelBuilder skills(Collection<Skill> skills);
 
-        /**
-         * 工具执行结果最多回传给模型的字符数，超出截断（OpenAI 官方建议截断工具结果）
-         */
+        ChatModelBuilder tools(Collection<Tool> tools);
+
+        ChatModelBuilder maxToolIterations(int maxToolIterations);
+
         ChatModelBuilder maxToolResultChars(int maxToolResultChars);
 
         /**
-         * 单篇技能描述/参考文档最多注入系统提示的字符数，超出截断以控制输入 token 消耗
+         * 单篇 技能描述/参考文档，最多注入系统提示的字符数，超出截断
          */
-        ChatModelBuilder maxPerRefChars(int maxPerRefChars);
+        ChatModelBuilder maxDocChars(int maxDocChars);
 
         ChatModelBuilder maxRetries(int maxRetries);
-
-        ChatModelBuilder maxToolIterations(int maxToolIterations);
 
         /**
          * Sets a specified timeout value, in milliseconds,
@@ -53,9 +48,13 @@ public interface ChatModelFactory {
          */
         ChatModelBuilder readTimeout(int readTimeout);
 
+        LlmDialect getLlmDialect();
+
         ChatModelBuilder enableThinking(boolean enableThinking);
 
-        LlmDialect getLlmDialect();
+        ChatModelBuilder chatMemory(ChatMemory chatMemory);
+
+        ChatModelBuilder interceptor(Interceptor interceptor);
 
         ChatModel build();
     }

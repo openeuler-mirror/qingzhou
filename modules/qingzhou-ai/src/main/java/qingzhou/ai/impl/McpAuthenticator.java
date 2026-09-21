@@ -1,4 +1,4 @@
-package qingzhou.monitor;
+package qingzhou.ai.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -13,9 +13,9 @@ import qingzhou.crypto.Crypto;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpRequest;
 
-@Component(configurationPid = "qingzhou-monitor", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        service = CustomAuthenticator.class)
-public class CustomAuthenticator { // 不要 implements Authenticator，否则会被识别为系统级认证器
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        service = McpAuthenticator.class)
+public class McpAuthenticator { // 不要 implements Authenticator，否则会被识别为系统级认证器
     @Reference
     private Crypto crypto;
 
@@ -25,8 +25,8 @@ public class CustomAuthenticator { // 不要 implements Authenticator，否则�
 
     @Activate
     public void init(Map<String, String> config) {
-        authToken = config.getOrDefault("auth_token", "").trim();
-        authTokenParamName = config.getOrDefault("auth_token_param_name", "").trim();
+        authToken = config.getOrDefault("mcp_auth_token", "").trim();
+        authTokenParamName = config.getOrDefault("mcp_auth_token_param_name", "").trim();
 
         tokenCipher = crypto.getGlobalCipher();
     }
@@ -39,7 +39,7 @@ public class CustomAuthenticator { // 不要 implements Authenticator，否则�
             return AuthResult.reject("token missing");
         }
 
-        String decrypt = tokenCipher.tryDecrypt(authToken, "qingzhou-monitor.auth_token");
+        String decrypt = tokenCipher.tryDecrypt(authToken, "qingzhou-monitor.token");
         if (MessageDigest.isEqual(requestToken.getBytes(StandardCharsets.UTF_8), decrypt.getBytes(StandardCharsets.UTF_8))) {
             return AuthResult.pass(null, null);
         }

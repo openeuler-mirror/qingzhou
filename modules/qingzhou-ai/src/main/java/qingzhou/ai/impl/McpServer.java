@@ -25,6 +25,8 @@ public class McpServer implements HttpHandler {
     private Json json;
     @Reference
     private Logger logger;
+    @Reference
+    private McpAuthenticator mcpAuthenticator;
 
     private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 
@@ -61,7 +63,7 @@ public class McpServer implements HttpHandler {
 
     @Override
     public Authenticator customAuthenticator() {
-        return null;
+        return request -> mcpAuthenticator.authenticate(request);
     }
 
     @Override

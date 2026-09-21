@@ -8,6 +8,7 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatModel;
+import qingzhou.llm.Interceptor;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
@@ -58,7 +59,7 @@ public class Utils {
             }
 
             // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
-            ChatModel selectionChatModel = callback.getUsedChatModel()
+            ChatModel selectionChatModel = callback.newChatModelBuilder()
                     // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
                     .connectTimeout(15_000)
                     .readTimeout(60_000)
@@ -84,7 +85,7 @@ public class Utils {
         return tools;
     }
 
-    public static String invokeTool(ToolCallInfo toolCallInfo, Map<String, Tool> tools, Json json) {
+    public static String invokeTool(ToolCallInfo toolCallInfo, Map<String, Tool> tools, Json json, Interceptor interceptor) {
         Tool tool = tools.get(toolCallInfo.name);
         if (tool == null) return "Tool not found: " + toolCallInfo.name;
 
@@ -95,6 +96,12 @@ public class Utils {
             } catch (Exception ignored) {
             }
         }
+
+        if (interceptor != null) {
+            String msg = interceptor.interceptTool(tool.name(), args);
+            if (msg != null) return msg;
+        }
+
         try {
             return tool.invoke(args);
         } catch (Throwable t) {
@@ -115,6 +122,6 @@ public class Utils {
     }
 
     public interface ActiveSkillCallback {
-        ChatModelBuilderBase getUsedChatModel();
+        ChatModelBuilderBase newChatModelBuilder();
     }
 }

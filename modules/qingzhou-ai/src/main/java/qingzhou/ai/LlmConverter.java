@@ -1,9 +1,6 @@
 package qingzhou.ai;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +28,7 @@ public class LlmConverter {
     }
 
     private static Collection<Tool> convertTools(Map<ToolService, Map<String, Object>> aiTools) {
+        if (aiTools == null) return Collections.emptySet();
         return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
