@@ -2,6 +2,7 @@ package qingzhou.monitor;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -450,7 +451,7 @@ public class PrometheusEndpointTest {
             return this;
         }
 
-        public Request files(Map<String, String> files) {
+        public Request files(Map<String, List<String>> files) {
             return this;
         }
 
@@ -462,6 +463,21 @@ public class PrometheusEndpointTest {
         public Request readTimeout(int readTimeout) {
             this.readTimeout = readTimeout;
             return this;
+        }
+
+        @Override
+        public Request trustedCertificates(X509Certificate... certificates) {
+            return null;
+        }
+
+        @Override
+        public Request trustAllCertificates() {
+            return null;
+        }
+
+        @Override
+        public Request maxBodySize(int maxBodySize) {
+            return null;
         }
     }
 }
