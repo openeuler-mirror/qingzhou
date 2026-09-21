@@ -4,3 +4,4 @@ qingzhou.command.cmd.PairKey
 qingzhou.command.cmd.AuthPassword
 qingzhou.command.cmd.TotpKey
 qingzhou.command.cmd.CipherPassword
+qingzhou.command.cmd.InitInstance
