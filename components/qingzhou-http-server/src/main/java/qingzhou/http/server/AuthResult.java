@@ -4,7 +4,10 @@ public interface AuthResult {
     String AUTH_PRINCIPAL_ATTRIBUTE = "auth.principal";
     String AUTH_ROLES_ATTRIBUTE = "auth.roles";
 
-    enum Status {PASS, REJECT}
+    /**
+     * PASS 放行；REJECT 拒绝；ABSTAIN 弃权——本认证器不适用于该请求，交由后续认证器判定。
+     */
+    enum Status {PASS, REJECT, ABSTAIN}
 
     Status status();
 
@@ -54,5 +57,10 @@ public interface AuthResult {
                 return reason;
             }
         };
+    }
+
+    // 弃权：凭据类型不匹配等「本认证器说了不算」的场景，返回 null 与返回本值等价
+    static AuthResult abstain() {
+        return () -> Status.ABSTAIN;
     }
 }

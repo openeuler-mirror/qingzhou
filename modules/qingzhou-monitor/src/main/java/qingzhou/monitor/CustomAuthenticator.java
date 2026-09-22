@@ -20,21 +20,18 @@ public class CustomAuthenticator { // 不要 implements Authenticator，否则�
     private Crypto crypto;
 
     private String authToken;
-    private String authTokenParamName;
     private Cipher tokenCipher;
 
     @Activate
     public void init(Map<String, String> config) {
         authToken = config.getOrDefault("auth_token", "").trim();
-        authTokenParamName = config.getOrDefault("auth_token_param_name", "").trim();
-
         tokenCipher = crypto.getGlobalCipher();
     }
 
     AuthResult authenticate(HttpRequest request) {
-        if (authToken.isEmpty() || authTokenParamName.isEmpty()) return null; // null 会转交给系统级认证
+        if (authToken.isEmpty()) return AuthResult.abstain(); // 未配置令牌：转交系统级认证
 
-        String requestToken = request.getParameter(authTokenParamName);
+        String requestToken = bearer(request);
         if (requestToken == null) {
             return AuthResult.reject("token missing");
         }
@@ -45,5 +42,12 @@ public class CustomAuthenticator { // 不要 implements Authenticator，否则�
         }
 
         return AuthResult.reject("invalid token");
+    }
+
+    private static String bearer(HttpRequest request) {
+        String BEARER = "Bearer ";
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith(BEARER)) return null;
+        return header.substring(BEARER.length()).trim();
     }
 }

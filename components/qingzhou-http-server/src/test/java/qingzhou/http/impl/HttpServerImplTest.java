@@ -173,6 +173,7 @@ public class HttpServerImplTest {
         setField(authManager, "handlerManager", handlerManager);
 
         dispatcherHandler.init(config);
+        authManager.init(config); // 生产由 OSGi @Activate 触发，手动装配时须补齐
 
         return httpServer;
     }

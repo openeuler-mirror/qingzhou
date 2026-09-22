@@ -3,7 +3,9 @@ package qingzhou.http.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.AuthResult;
@@ -29,10 +31,17 @@ public class AuthManager {
 
     private boolean isAuthDisabled;
 
+    private int maxAuthFailures; // 窗口内允许的认证失败次数
+    private int authFailWindowMillis;
+    private final Map<String, AuthFailures> authFailures = new ConcurrentHashMap<>();
+
     @Activate
     public synchronized void init(Map<String, String> config) { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
         isAuthDisabled = getConfig(config, "auth_disabled", false);
         if (isAuthDisabled) logger.warn("http server authentication is disabled");
+
+        maxAuthFailures = getConfig(config, "auth_fail_max", 10);
+        authFailWindowMillis = getConfig(config, "auth_fail_window", 60) * 1000;
 
         tempMsg.forEach(s -> logger.info(s));
         tempMsg.clear();
@@ -62,18 +71,39 @@ public class AuthManager {
      * 免认证标记取自 handlerEntry（随注册路径），全局开关 auth_disabled 在此处判断。
      */
     boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
+        String host = httpRequest.getRemoteHost();
+        AuthFailures failures = authFailures.computeIfAbsent(host, k -> new AuthFailures());
+        int failuresCount = failures.getCount();
+        if (failuresCount > 0 && failuresCount >= maxAuthFailures) return false;
+
+        boolean doneAuth = doAuth0(httpRequest, handlerEntry);
+
+        if (doneAuth) {
+            authFailures.remove(host); // 认证成功后清空计数
+        } else {
+            failures.increment();
+            int MAX_TRACKED_HOSTS = 10000; // 认证失败节流：按来源记录失败次数，避免凭据被高速枚举；来源数量过大时整体清空，防止无界增长
+            if (authFailures.size() > MAX_TRACKED_HOSTS) authFailures.clear();
+        }
+
+        return doneAuth;
+    }
+
+    private boolean doAuth0(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
         HttpHandler httpHandler = handlerEntry.handler;
 
         AuthResult authResult = null;
         // 自定义 Authenticator，优先使用
         Authenticator customAuthenticator = httpHandler.customAuthenticator();
         if (customAuthenticator != null) {
+            AuthResult custom;
             try {
-                authResult = customAuthenticator.authenticate(httpRequest);
+                custom = customAuthenticator.authenticate(httpRequest);
             } catch (Exception e) { // 认证器出错一律拒绝：不放行，且留下可排障的日志而非静默断连
                 logger.error("custom authentication error: " + httpHandler.getClass().getName(), e);
                 return false;
             }
+            if (custom != null && custom.status() != AuthResult.Status.ABSTAIN) authResult = custom;
         }
         // 系统级 Authenticator
         if (authResult == null) {
@@ -111,14 +141,31 @@ public class AuthManager {
                 logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error");
             }
+            if (r == null || r.status() == AuthResult.Status.ABSTAIN) continue; // 弃权：转交后续认证器
             if (r.status() == AuthResult.Status.PASS) return r;
 
-            if (r.status() == AuthResult.Status.REJECT && reject == null) {
-                reject = r;
-            }
+            if (reject == null) reject = r;
         }
         if (reject != null) return reject;
 
         return AuthResult.reject("no credential provided");
+    }
+
+    class AuthFailures {
+        private volatile long windowStart = System.currentTimeMillis();
+        private final AtomicInteger count = new AtomicInteger();
+
+        void increment() {
+            count.incrementAndGet();
+        }
+
+        int getCount() {
+            long now = System.currentTimeMillis();
+            if (now - windowStart > authFailWindowMillis) {
+                windowStart = now;
+                count.set(0);
+            }
+            return count.get();
+        }
     }
 }

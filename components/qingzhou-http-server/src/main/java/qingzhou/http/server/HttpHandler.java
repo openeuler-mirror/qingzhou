@@ -12,7 +12,12 @@ public interface HttpHandler {
 
     void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 
-    // 优先级高于系统级 Authenticator
+    /**
+     * 优先级高于系统级 Authenticator。
+     * 返回 {@link AuthResult#abstain()} 或 null 表示弃权，转交系统级认证器；
+     * 返回 {@link AuthResult#reject} 会直接以 401 结束请求，系统级认证器不再有机会判定。
+     * 抛出的异常一律按拒绝处理。
+     */
     default Authenticator customAuthenticator() {
         return null;
     }

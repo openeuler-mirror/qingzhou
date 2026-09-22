@@ -26,24 +26,30 @@ public class McpAuthenticator { // 不要 implements Authenticator，否则会�
     @Activate
     public void init(Map<String, String> config) {
         authToken = config.getOrDefault("mcp_auth_token", "").trim();
-        authTokenParamName = config.getOrDefault("mcp_auth_token_param_name", "").trim();
 
         tokenCipher = crypto.getGlobalCipher();
     }
 
     AuthResult authenticate(HttpRequest request) {
-        if (authToken.isEmpty() || authTokenParamName.isEmpty()) return null; // null 会转交给系统级认证
+        if (authToken.isEmpty()) return AuthResult.abstain(); // 未配置令牌：转交系统级认证
 
-        String requestToken = request.getParameter(authTokenParamName);
+        String requestToken = bearer(request);
         if (requestToken == null) {
             return AuthResult.reject("token missing");
         }
 
-        String decrypt = tokenCipher.tryDecrypt(authToken, "qingzhou-monitor.token");
+        String decrypt = tokenCipher.tryDecrypt(authToken, "qingzhou-ai.mcp_auth_token");
         if (MessageDigest.isEqual(requestToken.getBytes(StandardCharsets.UTF_8), decrypt.getBytes(StandardCharsets.UTF_8))) {
             return AuthResult.pass(null, null);
         }
 
         return AuthResult.reject("invalid token");
+    }
+
+    private static String bearer(HttpRequest request) {
+        String BEARER = "Bearer ";
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith(BEARER)) return null;
+        return header.substring(BEARER.length()).trim();
     }
 }
