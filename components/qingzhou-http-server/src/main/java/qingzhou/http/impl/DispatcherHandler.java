@@ -88,13 +88,13 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
         HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
 
-        HttpHandler httpHandler = handlerManager.findHandler(requestPath);
-        if (httpHandler == null) {
+        HandlerManager.HandlerEntry handlerEntry = handlerManager.findHandler(requestPath);
+        if (handlerEntry == null) {
             return reject(request, response, HttpResponseStatus.NOT_FOUND);
         }
 
         // 安全认证
-        boolean doneAuth = authManager.doAuth(httpRequest, httpHandler);
+        boolean doneAuth = authManager.doAuth(httpRequest, handlerEntry);
         if (!doneAuth) {
             return reject(request, response
                             .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
@@ -102,6 +102,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
 
         // 开始处理业务...
+        HttpHandler httpHandler = handlerEntry.handler;
         HttpHandler.StreamHandler streamHandler;
         try {
             streamHandler = httpHandler.multipartStreamHandler();

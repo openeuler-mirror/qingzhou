@@ -58,18 +58,26 @@ public class AuthManager {
 
     /**
      * 安全认证：多认证器聚合——任一 PASS 即放行；首个显式 REJECT 优先拒绝（客户端已出示凭据，须明确告知 401）；
-     * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。全局开关 auth_disabled 由分发层判断。
+     * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。
+     * 免认证标记取自 handlerEntry（随注册路径），全局开关 auth_disabled 在此处判断。
      */
-    boolean doAuth(HttpRequestImpl httpRequest, HttpHandler httpHandler) {
+    boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
+        HttpHandler httpHandler = handlerEntry.handler;
+
         AuthResult authResult = null;
         // 自定义 Authenticator，优先使用
         Authenticator customAuthenticator = httpHandler.customAuthenticator();
         if (customAuthenticator != null) {
-            authResult = customAuthenticator.authenticate(httpRequest);
+            try {
+                authResult = customAuthenticator.authenticate(httpRequest);
+            } catch (Exception e) { // 认证器出错一律拒绝：不放行，且留下可排障的日志而非静默断连
+                logger.error("custom authentication error: " + httpHandler.getClass().getName(), e);
+                return false;
+            }
         }
         // 系统级 Authenticator
         if (authResult == null) {
-            boolean needAuth = !isAuthDisabled && !handlerManager.noAuthHandlerSet.contains(httpHandler);
+            boolean needAuth = !isAuthDisabled && !handlerEntry.noAuth;
             if (needAuth) {
                 authResult = authenticate(httpRequest);
             }
