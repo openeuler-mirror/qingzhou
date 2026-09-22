@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.apache.tomcat.jdbc.pool.ConnectionPool;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
+import org.apache.tomcat.jdbc.pool.XADataSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -65,7 +66,7 @@ public class JdbcPoolImplTest {
             PoolProperties properties = (PoolProperties) dataSource.getPoolProperties();
             Assert.assertTrue(properties.getUrl().startsWith("jdbc:h2:mem:"));
             Assert.assertEquals(properties.getUsername(), "sa");
-            Assert.assertNotNull(properties.getPassword()); // 后续重连等还需要密码
+            Assert.assertNotNull(properties.getPassword());
             Assert.assertEquals(properties.getInitialSize(), 2);
             Assert.assertEquals(properties.getMinIdle(), 2);
             Assert.assertEquals(properties.getMaxActive(), 5);
@@ -170,11 +171,38 @@ public class JdbcPoolImplTest {
     @Test
     public void closedPool_poolStatus_poolIsClosed() throws Exception {
         JdbcPoolImpl pool = createPool(createConfig(1, 2, 1000));
+        ConnectionPool connectionPool = getDataSource(pool).getPool();
+        pool.close();
+        Assert.assertTrue(connectionPool.isClosed());
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void invalidBoolean_activate_throwException() throws Exception {
+        Map<String, String> config = createConfig(1, 1, 1000);
+        config.put("testOnBorrow", "ture");
+        new JdbcPoolImpl().activate(config);
+    }
+
+    @Test(expectedExceptions = IllegalStateException.class)
+    public void uninitializedPool_getConnection_throwIllegalStateException() throws SQLException {
+        new JdbcPoolImpl().getConnection();
+    }
+
+    @Test
+    public void xaDataSource_init_createXAPool() throws Exception {
+        JdbcPoolImpl pool = createPool(createConfig(1, 1, 1000));
         try {
-            ConnectionPool connectionPool = getDataSource(pool).getPool();
-            pool.close();
-            pool = null;
-            Assert.assertTrue(connectionPool.isClosed());
+            Assert.assertTrue(getDataSource(pool) instanceof XADataSource);
+        } finally {
+            closePool(pool);
+        }
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void nullDataSource_init_throwException() throws Exception {
+        JdbcPoolImpl pool = createPool(createConfig(1, 1, 1000));
+        try {
+            pool.init(null);
         } finally {
             closePool(pool);
         }
@@ -182,7 +210,7 @@ public class JdbcPoolImplTest {
 
     private JdbcPoolImpl createPool(Map<String, String> config) throws Exception {
         JdbcPoolImpl pool = new JdbcPoolImpl();
-        pool.setConfig(config);
+        pool.activate(config);
         pool.init(new org.h2.jdbcx.JdbcDataSource());
         return pool;
     }
