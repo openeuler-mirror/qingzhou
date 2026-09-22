@@ -76,7 +76,7 @@ public class HttpServerImpl implements HttpServer {
     }
 
     @Deactivate
-    public void stop() { // 与 start() 同锁，避免 SCR 重配置交错时误关新实例
+    public void stop() {
         if (disposableServer == null) return;
 
         // 优雅关闭HTTP服务（超时30秒）

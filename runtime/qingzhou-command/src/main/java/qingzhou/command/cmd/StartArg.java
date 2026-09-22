@@ -8,7 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import qingzhou.command.Processor;
@@ -53,12 +56,14 @@ public class StartArg extends Processor {
 
         String arg = properties.get("jvm.arg");
         if (arg != null) {
-            String[] args = arg.trim().split("\\s+");
-            for (String s : args) {
+            for (String s : arg.trim().split("\\s+")) {
                 s = s.trim();
-                if (!s.isEmpty()) {
-                    commands.add(s);
+                if (s.isEmpty()) continue;
+                if (isForbiddenJvmArg(s) && !isAllowedJvmArg(s, properties.get("jvm.arg.allowed"))) {
+                    log("ignore forbidden jvm arg: " + s);
+                    continue;
                 }
+                commands.add(s);
             }
         }
 
@@ -67,14 +72,37 @@ public class StartArg extends Processor {
         commands.add(wrap("-Dqingzhou.version=" + getLibDir().getName().substring("version".length())));
 
         commands.add("-classpath");
-        commands.add(wrap(Arrays.stream(Objects.requireNonNull(new File(getLibDir(), "runtime").listFiles(f -> !f.isDirectory())))
+        File runtimeDir = new File(getLibDir(), "runtime");
+        File[] runtimeFiles = runtimeDir.listFiles(f -> !f.isDirectory());
+        if (runtimeFiles == null) throw new IllegalStateException("Runtime libs not found: " + runtimeDir);
+
+        commands.add(wrap(Arrays.stream(runtimeFiles)
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator))));
         commands.add("qingzhou.engine.QingzhouMain");
         return commands;
     }
 
     private String wrap(String str) { // 兼容启动参数中包含中文空格
+        // 启动命令由 sh 的 eval 与 bat 的 %startCmd% 直接执行，两种环境的引号转义规则不同，
+        // 无法用统一的转义保证安全，故直接拒绝含引号的值，避免静默破坏命令结构。
+        if (str.contains("\"")) throw new IllegalStateException("Illegal quote character in start arg: " + str);
         return "\"" + str + "\"";
+    }
+
+    private static boolean isForbiddenJvmArg(String arg) {
+        return arg.startsWith("-agentlib") || arg.startsWith("-javaagent")
+                || arg.startsWith("-agentpath") || arg.startsWith("-Xrun");
+    }
+
+    // 默认拒绝上述参数；确有需要（如接入 APM 探针）时，可用 jvm.arg.allowed 配置前缀显式放行
+    private static boolean isAllowedJvmArg(String arg, String allowedList) {
+        if (allowedList == null) return false;
+
+        for (String allowed : allowedList.split(",")) {
+            String prefix = allowed.trim();
+            if (!prefix.isEmpty() && arg.startsWith(prefix)) return true;
+        }
+        return false;
     }
 
     private Map<String, String> parseConfig(Path configFile) throws Exception {

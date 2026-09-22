@@ -31,8 +31,9 @@ public class QingzhouMain {
         instanceDir = System.getProperty("qingzhou.instance");
 
         // 获取 FrameworkFactory
-        FrameworkFactory factory = ServiceLoader.load(FrameworkFactory.class).iterator().next();
-        if (factory == null) throw new RuntimeException("No OSGi framework found");
+        Iterator<FrameworkFactory> factories = ServiceLoader.load(FrameworkFactory.class).iterator();
+        if (!factories.hasNext()) throw new IllegalStateException("No OSGi framework found");
+        FrameworkFactory factory = factories.next();
         osgiFramework = factory.newFramework(osgiConfig());
         osgiFramework.init();
         osgiFramework.start();

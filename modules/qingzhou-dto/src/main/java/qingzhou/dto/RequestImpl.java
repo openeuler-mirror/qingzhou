@@ -19,7 +19,6 @@ public class RequestImpl implements Request {
     private String model;
     private String action;
     private String id;
-    private String[] roles; // 调用者角色，由各执行通道从服务端鉴权结果写入，供应用动作的统一执行入口判定
     private final Map<String, String> parameters = new HashMap<>();
     private final Set<String> uploadFileFields = new HashSet<>();
 
@@ -90,14 +89,6 @@ public class RequestImpl implements Request {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String[] getRoles() {
-        return roles;
-    }
-
-    public void setRoles(String[] roles) {
-        this.roles = roles;
     }
 
     public Model getCurrentModel() {

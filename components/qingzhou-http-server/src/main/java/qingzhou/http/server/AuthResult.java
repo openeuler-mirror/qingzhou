@@ -8,13 +8,13 @@ public interface AuthResult {
 
     Status status();
 
-    // 认证主体
-    default Object getPrincipal() {
+    // 拒绝原因
+    default String getReason() {
         return null;
     }
 
-    // 拒绝原因
-    default String getReason() {
+    // 认证主体
+    default String getPrincipal() {
         return null;
     }
 
@@ -31,7 +31,7 @@ public interface AuthResult {
             }
 
             @Override
-            public Object getPrincipal() {
+            public String getPrincipal() {
                 return user;
             }
 

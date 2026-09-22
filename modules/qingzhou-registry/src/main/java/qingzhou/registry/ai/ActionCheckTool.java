@@ -51,8 +51,11 @@ public class ActionCheckTool implements ToolService {
         AppStub appStub = registry.getAppStub(instanceId, appCode);
         if (appStub == null) return null;
         for (Model model : appStub.getAppMeta().getApp().models) {
-            for (ModelAction action : model.actions) {
-                if (action.code.equals(actionCode)) return "true";
+            if (model.code.equals(modelCode)) {
+                for (ModelAction action : model.actions) {
+                    if (action.code.equals(actionCode)) return "true";
+                }
+                break;
             }
         }
         return "false";

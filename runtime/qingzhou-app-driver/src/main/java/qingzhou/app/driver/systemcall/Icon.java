@@ -42,6 +42,8 @@ public class Icon implements SystemCall {
 
     private String loadIcon() throws Exception {
         String iconPath = appContext.appMeta.getApp().icon;
+        if (iconPath == null) return null;
+
         try (InputStream resource = this.getClass().getResourceAsStream(iconPath)) {
             if (resource == null) return null;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

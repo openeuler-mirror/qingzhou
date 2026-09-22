@@ -3,12 +3,12 @@ package qingzhou.ai.impl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.memory.ConversationApi;
 import qingzhou.ai.memory.ConversationStore;
 import qingzhou.http.server.AuthResult;
@@ -19,6 +19,7 @@ import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
+import qingzhou.llm.Interceptor;
 import qingzhou.logger.Logger;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
@@ -70,19 +71,29 @@ public class AiChat implements HttpHandler {
             "\n";
 
     @Reference
-    private ChatModelFactory chatModelFactory;
-
-    @Reference
-    private ChatConfig chatConfig;
-
-    @Reference
     private Logger logger;
-
     @Reference
     private Json json;
-
+    @Reference
+    private ChatModelFactory chatModelFactory;
+    @Reference
+    private ChatConfig chatConfig;
     @Reference
     private ConversationStore conversationStore;
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    private final Set<ToolInterceptor> toolInterceptors = ConcurrentHashMap.newKeySet();
+
+    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
+
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
+    public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
+        llmSkills.put(skill, properties);
+    }
+
+    // OSGI 框架根据名称规则自动识别调用此方法
+    public void unbindAiSkill(SkillService skill) {
+        llmSkills.remove(skill);
+    }
 
     @Deactivate
     public void deactivate() {
@@ -101,39 +112,24 @@ public class AiChat implements HttpHandler {
         }
         String finalQuestion = question;
 
-        List<String> refDocs = null;
-        Attachment[] images = null;
-        for (SkillService.AttachmentType attachmentType : SkillService.AttachmentType.values()) {
-            List<String> attachments = findAttachments(params, attachmentType);
-            switch (attachmentType) {
-                case document:
-                    refDocs = attachments;
-                    break;
-                case image:
-                    images = attachments.stream()
-                            .map(this::parseImage)
-                            .map(image -> chatModelFactory.newImageAttachment(image.base64, image.mimeType))
-                            .toArray(Attachment[]::new);
-                    break;
-                default:
-                    logger.warn("unsupported type: " + attachmentType);
-            }
-        }
+        Map<String, List<String>> attachments = findAttachments(params);
+        List<String> refDocs = attachments.get("document");
+        Attachment[] images = attachments.getOrDefault("image", Collections.emptyList()).stream()
+                .map(this::parseImage)
+                .map(image -> chatModelFactory.newImageAttachment(image.base64, image.mimeType))
+                .toArray(Attachment[]::new);
 
         // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）
         String conversationId = (String) params.get("conversationId");
         // userId 由鉴权层从 token 解析，不接受前端传参
         String userId = ConversationApi.resolveUserId(httpRequest);
+        String[] userRoles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
 
         // 发出响应前的准备
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache")
                 .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
-        // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
-        // 角色取自服务端鉴权结果，随工具一起绑定，供模型触发的工具调用执行权限判定
-        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
-
         SseListener sseListener = new SseListener(httpResponse, logger, json);
 
         // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
@@ -146,8 +142,9 @@ public class AiChat implements HttpHandler {
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
-                    .skills(LlmConverter.convertAiSkill(chatConfig.llmSkills, roles))
+                    .skills(LlmConverter.convertSkills(llmSkills))
                     .enableThinking(true)
+                    .interceptor(convertInterceptor(userId, userRoles))
                     .chatMemory(() -> conversationStore.getMessageList(userId, conversationId));
             ChatModel chatModel = builder.build();
             chatModel.chat(finalQuestion, sseListener, images);
@@ -163,6 +160,27 @@ public class AiChat implements HttpHandler {
             logger.error("ai chat request failed: " + msg, t);
             sseListener.onError(msg);
         }
+    }
+
+    private Interceptor convertInterceptor(String userId, String[] userRoles) {
+        ToolInterceptor.InterceptorContext context = new ToolInterceptor.InterceptorContext() {
+            @Override
+            public String getPrincipal() {
+                return userId;
+            }
+
+            @Override
+            public String[] getRoles() {
+                return userRoles;
+            }
+        };
+        return (toolName, argsMap) -> {
+            for (ToolInterceptor interceptor : toolInterceptors) {
+                String result = interceptor.intercept(toolName, argsMap, context);
+                if (result != null) return result;
+            }
+            return null;
+        };
     }
 
     private Map<String, Object> params(HttpRequest httpRequest) {
@@ -183,8 +201,8 @@ public class AiChat implements HttpHandler {
         return null;
     }
 
-    private List<String> findAttachments(Map<String, Object> params, SkillService.AttachmentType expectedType) {
-        List<String> found = new ArrayList<>();
+    private Map<String, List<String>> findAttachments(Map<String, Object> params) {
+        Map<String, List<String>> found = new HashMap<>();
         Object attachments = params.get("attachments");
         if (attachments instanceof List) {
             for (Object item : (List<?>) attachments) {
@@ -193,9 +211,7 @@ public class AiChat implements HttpHandler {
                 String type = map.get("type") == null ? null : String.valueOf(map.get("type"));
                 String content = map.get("content") == null ? null : String.valueOf(map.get("content"));
                 if (content == null || content.isEmpty()) continue;
-                if (Objects.equals(type, expectedType.name())) {
-                    found.add(content);
-                }
+                found.computeIfAbsent(type, k -> new ArrayList<>()).add(content);
             }
         }
         return found;

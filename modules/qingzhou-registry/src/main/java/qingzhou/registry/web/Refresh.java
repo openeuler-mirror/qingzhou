@@ -38,7 +38,7 @@ public class Refresh implements HttpHandler {
         if (privateKey == null || privateKey.trim().isEmpty()) {
             return;
         }
-        String decrypt = crypto.getGlobalCipher().tryDecrypt(privateKey, "private_key");
+        String decrypt = crypto.getGlobalCipher().tryDecrypt(privateKey, "qingzhou-registry.private_key");
         pairCipher = crypto.getPairCipher(null, decrypt);
     }
 

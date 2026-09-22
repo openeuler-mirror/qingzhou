@@ -1,6 +1,7 @@
 package qingzhou.app.driver;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.*;
@@ -27,7 +28,7 @@ public class AppContextImpl implements AppContext {
     final Map<Model, ModelBase> modelInstances = new HashMap<>();
     final Map<String, Method> actionMethods = new HashMap<>();
 
-    private final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
+    private final File instanceFile = new File(Objects.requireNonNull(System.getProperty("qingzhou.instance"), "qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
     private final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
     // 应用启动过程中，可能被调用
@@ -96,8 +97,12 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public long getPid() {
-        String name = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
-        return Long.parseLong(name.split("@")[0]);
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        try {
+            return Long.parseLong(name.substring(0, name.indexOf('@')));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     @Override
@@ -148,7 +153,7 @@ public class AppContextImpl implements AppContext {
     public <T, R> SharedFunction<T, R> getSharedFunction(String functionName) {
         try {
             Collection<ServiceReference<SharedFunction>> serviceReferences = bundleContext.getServiceReferences(SharedFunction.class,
-                    "(" + Constants.SERVICE_PID + "=" + functionName + ")");
+                    "(" + Constants.SERVICE_PID + "=" + AppDriver.escapeFilterValue(functionName) + ")");
             if (!serviceReferences.isEmpty()) {
                 ServiceReference<SharedFunction> serviceReference = serviceReferences.iterator().next();
                 this.sharedFunctionServiceReferences.add(serviceReference);

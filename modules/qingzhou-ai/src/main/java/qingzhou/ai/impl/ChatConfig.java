@@ -8,10 +8,6 @@ import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.ai.SkillService;
-import qingzhou.ai.skill.SystemSkill;
 import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
@@ -31,8 +27,6 @@ public class ChatConfig implements HttpHandler {
     @Reference
     private I18nService i18nService;
 
-    final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
-
     private final List<String[]> promptSamples = new ArrayList<String[]>() {{
         add(new String[]{"请概述轻舟平台的价值和意义", "en:Please summarize the value and significance of the Qingzhou platform"});
         add(new String[]{"请帮我查询轻舟平台上部署了哪些应用", "en:Please check what applications are deployed on the Qingzhou platform"});
@@ -51,41 +45,13 @@ public class ChatConfig implements HttpHandler {
         List<String> prompts = promptSamples.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
         data.put("prompts", prompts);
 
-        List<Map<String, Object>> skills = new ArrayList<>();
-        for (Map.Entry<SkillService, Map<String, Object>> entry : llmSkills.entrySet()) {
-            SkillService skillService = entry.getKey();
-            Map<String, Object> skillProperties = entry.getValue();
-            Map<String, Object> map = new HashMap<>();
-            map.put("name", skillProperties.get(SkillService.SKILL_NAME));
-            map.put("text", i18nService.getI18n(skillService.nameI18n(), lang));
-            if (skillService.getClass() == SystemSkill.class) {
-                map.put("checked", true);
-            }
-            Map<SkillService.AttachmentType, String[]> types = skillService.attachments();
-            if (types != null && !types.isEmpty()) {
-                map.put("supportedAttachmentTypes", types);
-            }
-            skills.add(map);
-        }
-        data.put("skills", skills);
-
         Map<String, Object> attachments = new HashMap<>();
         attachments.put("maxFiles", 10);
-        attachments.put("maxFileSize", 1);
+        attachments.put("maxFileSize", 5);
         data.put("attachments", attachments);
 
         String jsonData = json.toJson(data);
         httpResponse.contentTypeJsonUtf8()
                 .sendFinish(jsonData);
-    }
-
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
-        llmSkills.put(skill, properties);
-    }
-
-    // OSGI 框架根据名称规则自动识别调用此方法
-    public void unbindAiSkill(SkillService skill) {
-        llmSkills.remove(skill);
     }
 }

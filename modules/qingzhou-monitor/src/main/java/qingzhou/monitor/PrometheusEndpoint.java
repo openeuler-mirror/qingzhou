@@ -18,21 +18,29 @@ import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Response;
+import qingzhou.http.server.Authenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus", HttpHandler.HANDLE_NO_AUTH + "=true"})
+@Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus"})
 public class PrometheusEndpoint implements HttpHandler {
     @Reference
     private Registry registry;
     @Reference
     private HttpClient httpClient;
+    @Reference
+    private CustomAuthenticator customAuthenticator;
 
     @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+    public Authenticator customAuthenticator() {
+        return request -> customAuthenticator.authenticate(request);
+    }
+
+    @Override
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         Map<String, MetricGroup> groups = new LinkedHashMap<>();
 
         for (String appCode : registry.getAllLocalApps()) {

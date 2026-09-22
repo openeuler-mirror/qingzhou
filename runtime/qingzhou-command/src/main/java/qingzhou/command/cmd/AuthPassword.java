@@ -20,7 +20,8 @@ public class AuthPassword extends Processor {
 
     @Override
     public void doCommandLine(String[] args) throws Exception {
-        if (args.length < 1 || args[0].isEmpty()) {
+        String password = readPassword(args);
+        if (password == null) {
             logSimple("usage: auth-password <plainPassword>");
             return;
         }
@@ -35,7 +36,7 @@ public class AuthPassword extends Processor {
             Method digest = messageDigestApi.getMethod("digest", String.class, String.class, int.class, int.class);
 
             logSimple("------------------------- Password Digest --------------------------");
-            logSimple((String) digest.invoke(messageDigest, args[0], "SHA-256", 16, 2));
+            logSimple((String) digest.invoke(messageDigest, password, "SHA-256", 16, 2));
             logSimple("------------------------- End -------------------------------------");
         }
     }

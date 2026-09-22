@@ -7,7 +7,6 @@ Qingzhou 管控台通过 `qingzhou-monitor` 模块暴露 Prometheus 标准抓取
 | 项 | 值 |
 |----|----|
 | 端点 | `/monitor/prometheus`（内部声明路径 `/prometheus`，按 bundle 前缀自动映射） |
-| 鉴权 | `NO_AUTH=true`，免认证 |
 | 协议 | OpenMetrics / Prometheus 文本格式（`Content-Type: text/plain; version=0.0.4; charset=utf-8`） |
 
 访问示例：

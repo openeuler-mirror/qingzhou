@@ -58,6 +58,7 @@
                             qingzhou.http.server,
                             qingzhou.logger,
                             qingzhou.json,
+                            qingzhou.crypto,
                             qingzhou.llm,qingzhou.llm.openai,
                             qingzhou.store
                         </Import-Package>

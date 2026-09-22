@@ -51,7 +51,7 @@ public final class Store {
      * {@code app~qingzhou-app-oauth2.jdbc_name} 指定（默认 h2）；
      * {@code seed_demo=true} 时额外写入演示用客户端与用户，仅供试用。
      */
-    public static Store get(AppContext appContext) throws SQLException {
+    public static Store get(AppContext appContext) throws Exception {
         if (instance == null) {
             synchronized (Store.class) {
                 if (instance == null) {
@@ -60,6 +60,7 @@ public final class Store {
                     if (jdbcPool == null) {
                         return null;
                     }
+                    jdbcPool.init(new org.h2.jdbcx.JdbcDataSource());
                     Crypto crypto = appContext.getService(Crypto.class);
                     if (crypto == null) {
                         throw new IllegalStateException("Crypto 不可用，无法校验客户端密钥与用户口令");

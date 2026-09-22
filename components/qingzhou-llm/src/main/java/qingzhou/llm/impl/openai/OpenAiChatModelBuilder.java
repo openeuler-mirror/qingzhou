@@ -169,8 +169,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     /**
      * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
      * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
-     * （见 https://docs.vllm.ai/en/latest/features/reasoning_outputs/），
-     * 而 DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
+     * DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
      */
     String extractReasoning(Map<String, Object> delta) {
         Object value = delta.get("reasoning");
@@ -226,11 +225,11 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return msg;
     }
 
-    Map<String, Object> buildToolMessage(String toolId, String result) {
+    Map<String, Object> buildToolMessage(String toolId, String toolResult) {
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", Utils.truncate(result, maxToolResultChars));
+        toolResultMsg.put("content", Utils.truncate(toolResult, maxToolResultChars));
         return toolResultMsg;
     }
 
@@ -243,7 +242,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                 if (sysMsg.length() > 0) {
                     sysMsg.append("\n\n");
                 }
-                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, maxPerRefChars));
+                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, maxDocChars));
             }
         }
 
@@ -253,7 +252,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, maxPerRefChars));
+                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, maxDocChars));
                 }
             }
         }

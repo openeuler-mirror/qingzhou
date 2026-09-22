@@ -1,9 +1,6 @@
 package qingzhou.ai;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,15 +10,11 @@ import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
 public class LlmConverter {
-    public static Collection<Tool> convertAiTool(Map<ToolService, Map<String, Object>> aiTools, String[] roles) {
-        return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue(), roles)).collect(Collectors.toSet());
+    public static Collection<Skill> convertSkills(Map<SkillService, Map<String, Object>> aiSkills) {
+        return aiSkills.entrySet().stream().map(entry -> convertSkill(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
-    public static Collection<Skill> convertAiSkill(Map<SkillService, Map<String, Object>> aiSkills, String[] roles) {
-        return aiSkills.entrySet().stream().map(entry -> convertSkill(entry.getKey(), entry.getValue(), roles)).collect(Collectors.toSet());
-    }
-
-    public static Skill convertSkill(SkillService skillService, Map<String, Object> skillProp, String[] roles) {
+    private static Skill convertSkill(SkillService skillService, Map<String, Object> skillProp) {
         String skillName = skillProp.get(SkillService.SKILL_NAME).toString();
         boolean required = false;
         Object requiredStr = skillProp.get(SkillService.SKILL_REQUIRED);
@@ -31,10 +24,15 @@ public class LlmConverter {
         return Skill.of(skillName,
                 skillService.description(),
                 skillService.instruction(),
-                LlmConverter.convertAiTool(skillService.tools(), roles), required);
+                convertTools(skillService.tools()), required);
     }
 
-    public static Tool convertTool(ToolService toolService, Map<String, Object> toolProp, String[] roles) {
+    private static Collection<Tool> convertTools(Map<ToolService, Map<String, Object>> aiTools) {
+        if (aiTools == null) return Collections.emptySet();
+        return aiTools.entrySet().stream().map(entry -> convertTool(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
+    }
+
+    private static Tool convertTool(ToolService toolService, Map<String, Object> toolProp) {
         String toolDescription = toolProp.get(ToolService.TOOL_DESCRIPTION).toString();
         String toolName;
         Object toolNameObj = toolProp.get(ToolService.TOOL_NAME);
@@ -52,7 +50,7 @@ public class LlmConverter {
 
         return Tool.of(toolName, toolDescription, parameters(toolProp), toolArgs -> {
             try {
-                return toolService.invoke(toolArgs, roles);
+                return toolService.invoke(toolArgs);
             } catch (Exception e) {
                 throw new RuntimeException(
                         toolArgs != null ? toolArgs.toString() : e.getMessage(),
