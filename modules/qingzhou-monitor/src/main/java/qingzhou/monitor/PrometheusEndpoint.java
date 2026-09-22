@@ -1,6 +1,5 @@
 package qingzhou.monitor;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,12 +11,10 @@ import qingzhou.api.FieldType;
 import qingzhou.api.action.Monitor;
 import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
-import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.Response;
 import qingzhou.http.server.Authenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -29,8 +26,6 @@ import qingzhou.registry.Registry;
 public class PrometheusEndpoint implements HttpHandler {
     @Reference
     private Registry registry;
-    @Reference
-    private HttpClient httpClient;
     @Reference
     private CustomAuthenticator customAuthenticator;
 
@@ -44,20 +39,24 @@ public class PrometheusEndpoint implements HttpHandler {
         Map<String, MetricGroup> groups = new LinkedHashMap<>();
 
         for (String appCode : registry.getAllLocalApps()) {
-            collect(groups, Constants.LOCAL_INSTANCE_ID, appCode, registry.getLocalApp(appCode));
+            AppStub stub = registry.getLocalApp(appCode);
+            if (stub == null) continue;
+            try {
+                collect(groups, Constants.LOCAL_INSTANCE_ID, appCode, stub);
+            } catch (Throwable ignored) {
+            }
         }
 
         for (String instanceId : registry.getAllRemoteInstances()) {
-            InstanceInfo info = registry.getRemoteInstance(instanceId);
-            if (info == null) continue;
-            String protocol = info.isSslEnabled() ? "https" : "http";
-            String url = protocol + "://" + info.getHost() + ":" + info.getPort() + "/agent/monitor";
-            try {
-                Response response = httpClient.send(httpClient.newRequest(url).connectTimeout(3000).readTimeout(3000));
-                if (response.getStatus() == 200 && response.getBody() != null) {
-                    merge(groups, new String(response.getBody(), StandardCharsets.UTF_8));
+            List<String> remoteApps = registry.getAllRemoteApps(instanceId);
+            if (remoteApps == null) continue;
+            for (String appCode : remoteApps) {
+                AppStub stub = registry.getRemoteApp(instanceId, appCode);
+                if (stub == null) continue;
+                try {
+                    collect(groups, instanceId, appCode, stub);
+                } catch (Throwable ignored) {
                 }
-            } catch (Exception ignored) {
             }
         }
 
@@ -73,38 +72,11 @@ public class PrometheusEndpoint implements HttpHandler {
         httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8").sendFinish(result.toString());
     }
 
-    private void merge(Map<String, MetricGroup> groups, String text) {
-        for (String line : text.split("\n")) {
-            if (line.startsWith("# HELP ")) {
-                String rest = line.substring(7).trim();
-                int space = rest.indexOf(' ');
-                String name = space >= 0 ? rest.substring(0, space) : rest;
-                MetricGroup group = groups.get(name);
-                if (group == null) {
-                    group = new MetricGroup();
-                    group.metricName = name;
-                    group.help = space >= 0 ? rest.substring(space + 1) : name;
-                    groups.put(name, group);
-                }
-            } else if (line.startsWith("#")) {
-                continue;
-            } else if (!line.isEmpty()) {
-                int brace = line.indexOf('{');
-                String name = brace >= 0 ? line.substring(0, brace) : line;
-                MetricGroup group = groups.get(name);
-                if (group == null) {
-                    group = new MetricGroup();
-                    group.metricName = name;
-                    group.help = name;
-                    groups.put(name, group);
-                }
-                group.lines.add(line);
-            }
-        }
-    }
-
     private void collect(Map<String, MetricGroup> groups, String instanceId, String appCode, AppStub stub) {
-        for (Model model : stub.getAppMeta().getApp().models) {
+        AppMeta appMeta = stub.getAppMeta();
+        if (appMeta == null || appMeta.getApp() == null || appMeta.getApp().models == null) return;
+
+        for (Model model : appMeta.getApp().models) {
             if (!hasMonitorAction(model)) continue;
 
             RequestImpl request = new RequestImpl();
