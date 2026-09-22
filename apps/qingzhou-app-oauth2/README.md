@@ -27,15 +27,13 @@
 qingzhou-jdbc~h2.url=jdbc:h2:mem:oauth2db;DATABASE_TO_LOWER=TRUE;IGNORECASE=TRUE
 qingzhou-jdbc~h2.username=sa
 qingzhou-jdbc~h2.password=
-qingzhou-jdbc~h2.dataSourceClassName=org.h2.jdbcx.JdbcDataSource
 qingzhou-jdbc~h2.maxActive=20
 qingzhou-jdbc~h2.testWhileIdle=true
 ```
 
 - `jdbc:h2:mem:oauth2db` 为内存库，连接池释放全部空闲连接后数据会丢失；需要持久化请改为文件库，
   例如 `jdbc:h2:file:./data/oauth2db;DATABASE_TO_LOWER=TRUE;IGNORECASE=TRUE`。
-- 使用其它数据库时同理：配置 `qingzhou-jdbc~<池名>.*`，把 `dataSourceClassName` 换成对应实现类
-  （如 `oracle.jdbc.pool.OracleDataSource`）。
+- 使用其它数据库时同理：配置 `qingzhou-jdbc~<池名>.*`。
 
 ### 1.3 驱动位置
 
