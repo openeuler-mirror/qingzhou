@@ -1,9 +1,8 @@
 package qingzhou.monitor;
 
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.client.*;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
@@ -88,50 +86,23 @@ public class PrometheusEndpointTest {
     }
 
     @Test
-    public void remoteInstance_handle_aggregatedWithTimeout() throws Exception {
+    public void remoteAppStub_handle_aggregatedViaRegistry() throws Exception {
         PrometheusEndpoint endpoint = new PrometheusEndpoint();
-        StubRequest request = new StubRequest();
-        setField(endpoint, "registry", remoteRegistry("inst-1"));
-        setField(endpoint, "httpClient", stubHttpClient(request, remoteText()));
+        AppStubRemote stub = remoteStub("remote-app", map("heapUsed", "63"), model("jvm", field("heapUsed", "堆内存使用(MB)")));
+        setField(endpoint, "registry", remoteRegistry("inst-1", "remote-app", stub));
         StubHttpResponse response = new StubHttpResponse();
         endpoint.handle(null, response);
 
         Assert.assertTrue(response.body.contains("# HELP qingzhou_heap_used 堆内存使用(MB)"));
-        Assert.assertTrue(response.body.contains("qingzhou_heap_used{instance=\"inst-1\",app=\"demo\",model=\"jvm\",field=\"heapUsed\"} 63.0"));
-        Assert.assertEquals(request.url, "http://host-1:7900/agent/monitor");
-        Assert.assertEquals(request.connectTimeout, 3000);
-        Assert.assertEquals(request.readTimeout, 3000);
+        Assert.assertTrue(response.body.contains("qingzhou_heap_used{instance=\"inst-1\",app=\"remote-app\",model=\"jvm\",field=\"heapUsed\"} 63.0"));
     }
 
     @Test
     public void remoteInstance_handle_deduplicatedHelpType() throws Exception {
-        final Map<String, String> data = map("heapUsed", "119");
-        final AppMeta appMeta = new AppMeta();
-        App app = new App();
-        app.code = "demo";
-        app.models.add(model("jvm", field("heapUsed", "堆内存使用(MB)")));
-        appMeta.setApp(app);
-        final AppStubLocal stub = new AppStubLocal() {
-            public AppMeta getAppMeta() {
-                return appMeta;
-            }
-
-            public AppContext getAppContext() {
-                return null;
-            }
-
-            public void invokeApp(RequestImpl request) {
-                request.getResponse().data(data);
-            }
-        };
-        final InstanceInfo info = new InstanceInfo();
-        info.setId("inst-1");
-        info.setHost("host-1");
-        info.setPort(7900);
-        info.setSslEnabled(false);
-
         PrometheusEndpoint endpoint = new PrometheusEndpoint();
-        StubRequest request = new StubRequest();
+        AppStubLocal localStub = (AppStubLocal) localStub("demo", map("heapUsed", "119"), model("jvm", field("heapUsed", "堆内存使用(MB)")));
+        AppStubRemote remoteStub = remoteStub("demo", map("heapUsed", "63"), model("jvm", field("heapUsed", "堆内存使用(MB)")));
+
         setField(endpoint, "registry", new Registry() {
             public long getRegistryDataVersion() {
                 return 0;
@@ -146,40 +117,214 @@ public class PrometheusEndpointTest {
             }
 
             public List<String> getAllLocalApps() {
-                List<String> list = new ArrayList<>();
-                list.add("demo");
-                return list;
+                return Collections.singletonList("demo");
             }
 
             public AppStubLocal getLocalApp(String appCode) {
-                return stub;
+                return localStub;
             }
 
             public List<String> getAllRemoteInstances() {
-                List<String> list = new ArrayList<>();
-                list.add("inst-1");
-                return list;
+                return Collections.singletonList("inst-1");
             }
 
             public InstanceInfo getRemoteInstance(String instanceId) {
-                return info;
+                return null;
             }
 
             public List<String> getAllRemoteApps(String instanceId) {
-                return null;
+                return Collections.singletonList("demo");
             }
 
             public AppStubRemote getRemoteApp(String instanceId, String appCode) {
-                return null;
+                return remoteStub;
             }
         });
-        setField(endpoint, "httpClient", stubHttpClient(request, remoteText()));
+
         StubHttpResponse response = new StubHttpResponse();
         endpoint.handle(null, response);
 
         Assert.assertEquals(count(response.body, "# HELP qingzhou_heap_used"), 1);
         Assert.assertEquals(count(response.body, "# TYPE qingzhou_heap_used"), 1);
         Assert.assertEquals(count(response.body, "qingzhou_heap_used{"), 2);
+    }
+
+    @Test
+    public void remoteException_handle_faultTolerantAndStatus200() throws Exception {
+        PrometheusEndpoint endpoint = new PrometheusEndpoint();
+        AppStubLocal localStub = (AppStubLocal) localStub("local-app", map("heapUsed", "119"), model("jvm", field("heapUsed", "堆内存使用(MB)")));
+        AppStubRemote faultyStub = new AppStubRemote() {
+            public AppMeta getAppMeta() {
+                return localStub.getAppMeta();
+            }
+
+            public void invokeApp(RequestImpl request) throws Throwable {
+                throw new java.net.SocketTimeoutException("connection timeout");
+            }
+        };
+
+        setField(endpoint, "registry", new Registry() {
+            public long getRegistryDataVersion() {
+                return 0;
+            }
+
+            public AppStub getAppStub(String instanceId, String appCode) {
+                return null;
+            }
+
+            public InstanceInfo getLocalInstance() {
+                return null;
+            }
+
+            public List<String> getAllLocalApps() {
+                return Collections.singletonList("local-app");
+            }
+
+            public AppStubLocal getLocalApp(String appCode) {
+                return localStub;
+            }
+
+            public List<String> getAllRemoteInstances() {
+                return Collections.singletonList("faulty-inst");
+            }
+
+            public InstanceInfo getRemoteInstance(String instanceId) {
+                return null;
+            }
+
+            public List<String> getAllRemoteApps(String instanceId) {
+                return Collections.singletonList("faulty-app");
+            }
+
+            public AppStubRemote getRemoteApp(String instanceId, String appCode) {
+                return faultyStub;
+            }
+        });
+
+        StubHttpResponse response = new StubHttpResponse();
+        endpoint.handle(null, response);
+
+        Assert.assertNotNull(response.body);
+        Assert.assertTrue(response.body.contains("qingzhou_heap_used{instance=\"-\",app=\"local-app\",model=\"jvm\",field=\"heapUsed\"} 119.0"));
+        Assert.assertFalse(response.body.contains("faulty-inst"));
+    }
+
+    @Test
+    public void remoteSecurityException_handle_faultTolerantAndStatus200() throws Exception {
+        PrometheusEndpoint endpoint = new PrometheusEndpoint();
+        AppStubRemote cryptoErrorStub = new AppStubRemote() {
+            public AppMeta getAppMeta() {
+                return buildAppMeta("demo", model("jvm", field("heapUsed", "内存")));
+            }
+
+            public void invokeApp(RequestImpl request) throws Throwable {
+                throw new SecurityException("key auth error");
+            }
+        };
+        setField(endpoint, "registry", remoteRegistry("sec-inst", "demo", cryptoErrorStub));
+        StubHttpResponse response = new StubHttpResponse();
+        endpoint.handle(null, response);
+        Assert.assertNotNull(response.body);
+        Assert.assertFalse(response.body.contains("sec-inst"));
+    }
+
+    @Test
+    public void nullAppMeta_handle_gracefullySkipped() throws Exception {
+        PrometheusEndpoint endpoint = new PrometheusEndpoint();
+        AppStubLocal nullMetaStub = new AppStubLocal() {
+            public AppMeta getAppMeta() {
+                return null;
+            }
+
+            public AppContext getAppContext() {
+                return null;
+            }
+
+            public void invokeApp(RequestImpl request) {
+            }
+        };
+        Map<String, AppStubLocal> apps = new HashMap<>();
+        apps.put("null-app", nullMetaStub);
+        setField(endpoint, "registry", new Registry() {
+            public long getRegistryDataVersion() { return 0; }
+            public AppStub getAppStub(String instanceId, String appCode) { return null; }
+            public InstanceInfo getLocalInstance() { return null; }
+            public List<String> getAllLocalApps() { return Collections.singletonList("null-app"); }
+            public AppStubLocal getLocalApp(String appCode) { return nullMetaStub; }
+            public List<String> getAllRemoteInstances() { return Collections.emptyList(); }
+            public InstanceInfo getRemoteInstance(String instanceId) { return null; }
+            public List<String> getAllRemoteApps(String instanceId) { return null; }
+            public AppStubRemote getRemoteApp(String instanceId, String appCode) { return null; }
+        });
+        StubHttpResponse response = new StubHttpResponse();
+        endpoint.handle(null, response);
+        Assert.assertEquals(response.body, "");
+    }
+
+    @Test
+    public void nullRemoteApps_handle_gracefullyHandled() throws Exception {
+        PrometheusEndpoint endpoint = new PrometheusEndpoint();
+        setField(endpoint, "registry", new Registry() {
+            public long getRegistryDataVersion() { return 0; }
+            public AppStub getAppStub(String instanceId, String appCode) { return null; }
+            public InstanceInfo getLocalInstance() { return null; }
+            public List<String> getAllLocalApps() { return Collections.emptyList(); }
+            public AppStubLocal getLocalApp(String appCode) { return null; }
+            public List<String> getAllRemoteInstances() { return Collections.singletonList("inst-empty"); }
+            public InstanceInfo getRemoteInstance(String instanceId) { return null; }
+            public List<String> getAllRemoteApps(String instanceId) { return null; }
+            public AppStubRemote getRemoteApp(String instanceId, String appCode) { return null; }
+        });
+        StubHttpResponse response = new StubHttpResponse();
+        endpoint.handle(null, response);
+        Assert.assertEquals(response.body, "");
+    }
+
+    @Test
+    public void multipleRemoteInstances_handle_isolatedLabels() throws Exception {
+        PrometheusEndpoint endpoint = new PrometheusEndpoint();
+        AppStubRemote stub1 = remoteStub("shared-app", map("cpu", "25"), model("os", field("cpu", "CPU使用率")));
+        AppStubRemote stub2 = remoteStub("shared-app", map("cpu", "75"), model("os", field("cpu", "CPU使用率")));
+
+        setField(endpoint, "registry", new Registry() {
+            public long getRegistryDataVersion() { return 0; }
+            public AppStub getAppStub(String instanceId, String appCode) { return null; }
+            public InstanceInfo getLocalInstance() { return null; }
+            public List<String> getAllLocalApps() { return Collections.emptyList(); }
+            public AppStubLocal getLocalApp(String appCode) { return null; }
+            public List<String> getAllRemoteInstances() {
+                List<String> list = new ArrayList<>();
+                list.add("node-1");
+                list.add("node-2");
+                return list;
+            }
+            public InstanceInfo getRemoteInstance(String instanceId) { return null; }
+            public List<String> getAllRemoteApps(String instanceId) { return Collections.singletonList("shared-app"); }
+            public AppStubRemote getRemoteApp(String instanceId, String appCode) {
+                return "node-1".equals(instanceId) ? stub1 : stub2;
+            }
+        });
+
+        StubHttpResponse response = new StubHttpResponse();
+        endpoint.handle(null, response);
+
+        Assert.assertEquals(count(response.body, "# HELP qingzhou_cpu"), 1);
+        Assert.assertEquals(count(response.body, "# TYPE qingzhou_cpu"), 1);
+        Assert.assertTrue(response.body.contains("qingzhou_cpu{instance=\"node-1\",app=\"shared-app\",model=\"os\",field=\"cpu\"} 25.0"));
+        Assert.assertTrue(response.body.contains("qingzhou_cpu{instance=\"node-2\",app=\"shared-app\",model=\"os\",field=\"cpu\"} 75.0"));
+    }
+
+    @Test
+    public void negativeAndZeroValues_handle_losslessOutput() throws Exception {
+        String out = invoke(map("temp", "-15.5", "idle", "0"), model("sensor", field("temp", "温度"), field("idle", "空闲")));
+        Assert.assertTrue(out.contains("qingzhou_temp{instance=\"-\",app=\"demo\",model=\"sensor\",field=\"temp\"} -15.5"));
+        Assert.assertTrue(out.contains("qingzhou_idle{instance=\"-\",app=\"demo\",model=\"sensor\",field=\"idle\"} 0.0"));
+    }
+
+    @Test
+    public void helpWithBackslash_handle_escaped() throws Exception {
+        String out = invoke(map("path", "1"), model("fs", field("path", "C:\\qingzhou\\path")));
+        Assert.assertTrue(out.contains("# HELP qingzhou_path C:\\\\qingzhou\\\\path\n"));
     }
 
     private String invoke(Map<String, String> monitorData, Model... models) throws Exception {
@@ -191,24 +336,7 @@ public class PrometheusEndpointTest {
     }
 
     private Registry localRegistry(final Map<String, String> monitorData, final Model... models) {
-        final AppMeta appMeta = new AppMeta();
-        App app = new App();
-        app.code = "demo";
-        for (Model model : models) app.models.add(model);
-        appMeta.setApp(app);
-        final AppStubLocal stub = new AppStubLocal() {
-            public AppMeta getAppMeta() {
-                return appMeta;
-            }
-
-            public AppContext getAppContext() {
-                return null;
-            }
-
-            public void invokeApp(RequestImpl request) {
-                request.getResponse().data(monitorData);
-            }
-        };
+        final AppStubLocal stub = (AppStubLocal) localStub("demo", monitorData, models);
         final Map<String, AppStubLocal> apps = new HashMap<>();
         apps.put("demo", stub);
         return new Registry() {
@@ -250,18 +378,13 @@ public class PrometheusEndpointTest {
         };
     }
 
-    private Registry remoteRegistry(final String instanceId) {
-        final InstanceInfo info = new InstanceInfo();
-        info.setId(instanceId);
-        info.setHost("host-1");
-        info.setPort(7900);
-        info.setSslEnabled(false);
+    private Registry remoteRegistry(final String instanceId, final String appCode, final AppStubRemote stub) {
         return new Registry() {
             public long getRegistryDataVersion() {
                 return 0;
             }
 
-            public AppStub getAppStub(String id, String appCode) {
+            public AppStub getAppStub(String id, String app) {
                 return null;
             }
 
@@ -273,28 +396,65 @@ public class PrometheusEndpointTest {
                 return new ArrayList<>();
             }
 
-            public AppStubLocal getLocalApp(String appCode) {
+            public AppStubLocal getLocalApp(String app) {
                 return null;
             }
 
             public List<String> getAllRemoteInstances() {
-                List<String> list = new ArrayList<>();
-                list.add(instanceId);
-                return list;
+                return Collections.singletonList(instanceId);
             }
 
             public InstanceInfo getRemoteInstance(String id) {
-                return info;
+                return null;
             }
 
             public List<String> getAllRemoteApps(String id) {
+                return Collections.singletonList(appCode);
+            }
+
+            public AppStubRemote getRemoteApp(String id, String app) {
+                return stub;
+            }
+        };
+    }
+
+    private AppStubLocal localStub(String appCode, Map<String, String> monitorData, Model... models) {
+        final AppMeta appMeta = buildAppMeta(appCode, models);
+        return new AppStubLocal() {
+            public AppMeta getAppMeta() {
+                return appMeta;
+            }
+
+            public AppContext getAppContext() {
                 return null;
             }
 
-            public AppStubRemote getRemoteApp(String id, String appCode) {
-                return null;
+            public void invokeApp(RequestImpl request) {
+                request.getResponse().data(monitorData);
             }
         };
+    }
+
+    private AppStubRemote remoteStub(String appCode, Map<String, String> monitorData, Model... models) {
+        final AppMeta appMeta = buildAppMeta(appCode, models);
+        return new AppStubRemote() {
+            public AppMeta getAppMeta() {
+                return appMeta;
+            }
+
+            public void invokeApp(RequestImpl request) {
+                request.getResponse().data(monitorData);
+            }
+        };
+    }
+
+    private AppMeta buildAppMeta(String appCode, Model... models) {
+        AppMeta appMeta = new AppMeta();
+        App app = new App();
+        app.code = appCode;
+        for (Model model : models) app.models.add(model);
+        appMeta.setApp(app);
+        return appMeta;
     }
 
     private Model model(String code, ModelField... fields) {
@@ -329,42 +489,6 @@ public class PrometheusEndpointTest {
             index += sub.length();
         }
         return count;
-    }
-
-    private Response clientResponse(final int status, final byte[] body) {
-        return new Response() {
-            public int getStatus() {
-                return status;
-            }
-
-            public byte[] getBody() {
-                return body;
-            }
-
-            public void cancel() {
-            }
-        };
-    }
-
-    private HttpClient stubHttpClient(final StubRequest request, final String body) {
-        return new HttpClient() {
-            public Response send(Request req) {
-                return clientResponse(200, body.getBytes(StandardCharsets.UTF_8));
-            }
-
-            public Response send(Request req, ResponseListener listener) {
-                return send(req);
-            }
-
-            public Request newRequest(String url) {
-                request.url = url;
-                return request;
-            }
-        };
-    }
-
-    private String remoteText() {
-        return "# HELP qingzhou_heap_used 堆内存使用(MB)\n# TYPE qingzhou_heap_used gauge\nqingzhou_heap_used{instance=\"inst-1\",app=\"demo\",model=\"jvm\",field=\"heapUsed\"} 63.0\n";
     }
 
     private void setField(Object target, String name, Object value) throws Exception {
@@ -419,62 +543,6 @@ public class PrometheusEndpointTest {
         }
 
         public void sendFinish(byte[] body) {
-        }
-    }
-
-    private static class StubRequest implements Request {
-        String url;
-        int connectTimeout = -1;
-        int readTimeout = -1;
-
-        public Request method(HttpMethod method) {
-            return this;
-        }
-
-        public Request header(String key, String val) {
-            return this;
-        }
-
-        public Request headers(Map<String, String> headers) {
-            return this;
-        }
-
-        public Request params(Map<String, String> params) {
-            return this;
-        }
-
-        public Request body(byte[] body) {
-            return this;
-        }
-
-        @Override
-        public Request files(Map<String, List<String>> files) {
-            return this;
-        }
-
-        public Request connectTimeout(int connectTimeout) {
-            this.connectTimeout = connectTimeout;
-            return this;
-        }
-
-        public Request readTimeout(int readTimeout) {
-            this.readTimeout = readTimeout;
-            return this;
-        }
-
-        @Override
-        public Request trustedCertificates(X509Certificate... certificates) {
-            return this;
-        }
-
-        @Override
-        public Request trustAllCertificates() {
-            return this;
-        }
-
-        @Override
-        public Request maxBodySize(int maxBodySize) {
-            return this;
         }
     }
 }
