@@ -86,6 +86,25 @@ public class DispatcherHandlerTest {
     }
 
     @Test
+    public void sameHandlerAtTwoPaths_unregisterHttpHandler_allPathsReturn404() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            HttpHandler handler = (request, response) -> response.sendFinish("ok");
+            testServer.server.registerHttpHandlerNoAuth(handler, "/pathOne");
+            testServer.server.registerHttpHandlerNoAuth(handler, "/pathTwo");
+            testServer.server.unregisterHttpHandler(handler); // 两条路径须一并移除，否则残留免认证条目继续对外服务
+
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Assert.assertEquals(client.send(client.newRequest("http://localhost:" + testServer.port + "/pathOne")
+                    .method(HttpMethod.GET)).getStatus(), 404);
+            Assert.assertEquals(client.send(client.newRequest("http://localhost:" + testServer.port + "/pathTwo")
+                    .method(HttpMethod.GET)).getStatus(), 404);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
     public void requestInfo_readViaHttpRequestApi_handlerReceivesMethodPathBody() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {

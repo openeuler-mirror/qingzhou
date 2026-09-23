@@ -64,34 +64,42 @@ public class HttpServerImpl implements HttpServer {
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
-        if (isSslEnabled) {
-            SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher());
-            httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
+        try {
+            if (isSslEnabled) {
+                SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher());
+                httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
+            }
+            disposableServer = httpServer.bindNow();
+        } catch (Exception e) {
+            disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
+            throw e;
         }
-
-        // 启动服务并持有 Disposable（关键：用于后续优雅停止）
-        disposableServer = httpServer.bindNow();
 
         logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
     }
 
     @Deactivate
     public void stop() {
-        if (disposableServer == null) return;
-
-        // 优雅关闭HTTP服务（超时30秒）
-        disposableServer.disposeNow(Duration.ofSeconds(30));
-
-        // 关闭 EventLoop 资源
-        loopResources.disposeLater()
-                .timeout(Duration.ofSeconds(10))
-                .onErrorResume(ex -> {
-                    logger.error("failed to close loop resources:", ex);
-                    return Mono.empty();
-                })
-                .subscribe(); // 非阻塞订阅
-
+        disposeResources();
         logger.info("http server stopped");
+    }
+
+    // 置空已释放的资源：使 stop 可重复调用，且 start 失败路径可安全复用
+    private void disposeResources() {
+        if (disposableServer != null) {
+            disposableServer.disposeNow(Duration.ofSeconds(30)); // 优雅关闭，超时 30 秒
+            disposableServer = null;
+        }
+        if (loopResources != null) {
+            loopResources.disposeLater()
+                    .timeout(Duration.ofSeconds(10))
+                    .onErrorResume(ex -> {
+                        logger.error("failed to close loop resources:", ex);
+                        return Mono.empty();
+                    })
+                    .subscribe(); // 非阻塞订阅
+            loopResources = null;
+        }
     }
 
     @Override

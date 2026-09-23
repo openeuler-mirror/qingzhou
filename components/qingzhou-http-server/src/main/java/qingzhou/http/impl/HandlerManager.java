@@ -95,26 +95,18 @@ public class HandlerManager {
         return path.endsWith("/") ? path : path + "/";
     }
 
-    /**
-     * 解绑方法的名称由被注解方法的名称生成。
-     * 如果被注解方法的名称以bind、set或add开头，则会分别将这些前缀替换为unbind、unset或remove，以此生成解绑方法的候选名称；
-     * 若被注解方法的名称不以这些前缀开头，则会在方法名前添加前缀un，生成解绑方法的候选名称。
-     * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
-     * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
-     */
+    // 方法名由 addHttpHandler 按 OSGi DS 规范推导（add -> remove），不可随意改名
     public void removeHttpHandler(HttpHandler httpHandler) {
-        String contextPath = null;
-        for (Map.Entry<String, HandlerEntry> e : handlerMap.entrySet()) {
-            if (Objects.equals(e.getValue().handler, httpHandler)) {
-                contextPath = e.getKey();
-                break;
-            }
-        }
-        if (contextPath == null) return;
+        // 同一实例可注册到多条路径，须全部移除：残留条目（尤其 noAuth）会继续对外服务
+        List<String> removedPaths = new ArrayList<>();
+        handlerMap.entrySet().removeIf(e -> {
+            if (!Objects.equals(e.getValue().handler, httpHandler)) return false;
+            removedPaths.add(e.getKey());
+            return true;
+        });
+        if (removedPaths.isEmpty()) return;
 
-        handlerMap.remove(contextPath);
-
-        logger.info("unregistered: " + contextPath);
+        if (logger != null) logger.info("unregistered: " + removedPaths);
     }
 
     /**
