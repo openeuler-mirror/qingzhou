@@ -6,7 +6,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.*;
-import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.memory.ConversationApi;
@@ -25,22 +24,19 @@ import qingzhou.logger.Logger;
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
+            "## 身份定义\n" +
+            "你是轻舟平台智能助手，帮助开发者、运维人员和管理员理解和使用轻舟平台\n" +
+            "当用户询问关于某系统、某资产或某插件时，统一理解为部署在轻舟平台上的应用\n" +
             "## 回答原则\n" +
-            "- 准确优先：不确定时明确说明，不编造事实\n" +
-            "- 简洁直接：先给结论，再给必要解释\n" +
-            "- 语言跟随：用户用什么语言就用什么语言回答\n" +
-            "- 专业、结构化，善用列表和代码块，优先给出可操作的步骤和路径\n" +
-            "\n" +
-            "## 禁止事项\n" +
-            "- 不编造不存在的 API、类名、配置项\n" +
-            "- 不泄露系统内部实现细节（文件路径、端口、密钥）\n" +
-            "- 禁止输出破解、绕过安全限制、非法运维相关代码方案\n" +
-            "\n" +
-            "## 输出要求\n" +
-            "正常使用 Markdown 回复。如果用户要求生成图表，请输出一个 Markdown 代码块，代码块类型固定为: echarts。\n" +
-            "代码块内部必须是一个完整的 ECharts Option 对象，只输出对象本身，不要生成 const/let/var/import/export/function/HTML/JavaScript/Markdown 包裹。\n" +
-            "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表。\n" +
-            "\n";
+            "准确优先：不确定时明确说明，不编造事实\n" +
+            "简洁直接：先给结论，再给必要解释\n" +
+            "语言跟随：用户用什么语言就用什么语言回答\n" +
+            "安全合规：禁止输出机制破解、绕过权限、非法运维等内容\n" +
+            "## 内容格式\n" +
+            "正常使用 Markdown 回复，善用列表和代码块\n" +
+            "如果要生成图表，则输出一个 Markdown 代码块，代码块类型固定为: echarts\n" +
+            "代码块内部须是一个完整的 ECharts Option 对象，只输出对象本身，不要生成 const/let/var/import/export/function/HTML/JavaScript/Markdown 包裹\n" +
+            "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表\n";
 
     @Reference
     private Logger logger;

@@ -2,6 +2,8 @@ package qingzhou.http.impl;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -40,12 +42,31 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     @Reference
     private HandlerManager handlerManager;
 
-    private final byte[] NULL_BYTES = new byte[0];
-    private Semaphore concurrentSemaphore;
-    private boolean isSslEnabled;
-    private long maxStreamBytes; // 流式上传总量上限
-    private int maxBodyBytes; // 单个请求体聚合进内存的上限
-    private String csp;
+    private static final byte[] EMPTY_BODY = new byte[0];
+
+    private final AtomicLong aggregatedBytes = new AtomicLong();
+    private final List<RequestGate> gates;
+
+    public DispatcherHandler() {
+        // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
+        gates = Arrays.asList(
+                this::denyDisallowedMethod, // 405
+                this::denyUnnormalizedPath, // 400：解码失败 / 二次编码 / 路径穿越
+                this::denyUnroutedPath,     // 404
+                this::denyUnauthenticated,  // 401
+                this::denyUnsupportedBody,  // 415
+                this::denyOversizedBody,    // 413
+                this::denyExhaustedMemory   // 503
+        );
+    }
+
+    // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性
+    private volatile Semaphore concurrentSemaphore;
+    private volatile boolean isSslEnabled;
+    private volatile long maxStreamBytes; // 流式上传总量上限
+    private volatile int maxBodyBytes; // 单个请求体聚合进内存的上限
+    private volatile long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
+    private volatile String csp;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -57,6 +78,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
         maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
+        maxAggregatedBytes = getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024);
         csp = getConfig(config, "csp", "none");
     }
 
@@ -66,128 +88,169 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         if (!concurrentSemaphore.tryAcquire()) { // 请求体按上限聚合进内存，不限在途请求数则内存仍会耗尽
             return respondAndClose(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
         }
+        RequestContext ctx = new RequestContext(request, response);
         // 延迟执行：分发逻辑同步抛异常时也能走到 doFinally，不至于泄漏许可
-        return Flux.defer(() -> dispatch(request, response)).doFinally(signal -> concurrentSemaphore.release());
+        return Flux.defer(() -> dispatch(ctx)).doFinally(signal -> release(ctx));
     }
 
-    private Publisher<Void> dispatch(HttpServerRequest request, HttpServerResponse response) {
-        String uri = request.uri();
+    // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
+    private void release(RequestContext ctx) {
+        concurrentSemaphore.release();
+        if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
+    }
+
+    private Publisher<Void> dispatch(RequestContext ctx) {
+        for (RequestGate gate : gates) { // 短路：首个拒绝即终止，其后 gate 不再执行
+            Publisher<Void> denial = gate.check(ctx);
+            if (denial != null) return denial;
+        }
+        return handleBody(ctx);
+    }
+
+    // 405：TRACE 等会落到兜底 handler（注册在 / 的页面），有跨站追踪风险
+    private Publisher<Void> denyDisallowedMethod(RequestContext ctx) {
+        return isMethodAllowed(ctx.request.method()) ? null
+                : reject(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // 400：解码失败、二次编码、含 ".." 段，三者在分发入口一并拦截；
+    // 各 handler 自行解析路径，防护难以统一，故不在此放行任何可疑形态
+    private Publisher<Void> denyUnnormalizedPath(RequestContext ctx) {
+        String uri = ctx.request.uri();
         int queryIndex = uri.indexOf('?');
-        String requestPath = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
+        String path = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
         try {
-            requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
+            path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
         } catch (Exception e) {
-            return reject(request, response, HttpResponseStatus.BAD_REQUEST);
+            return reject(ctx, HttpResponseStatus.BAD_REQUEST);
         }
-        if (isDoubleEncoded(requestPath)) { // %252e%252e 解码一次后仍是 %2e%2e，再解一次即变成 ".."，一律拒绝
-            return reject(request, response, HttpResponseStatus.BAD_REQUEST);
-        }
-        requestPath = normalize(requestPath);
-        if (requestPath == null) { // 含 ".." 段一律拒绝：handler 各自解析路径，无法保证都能防住穿越
-            return reject(request, response, HttpResponseStatus.BAD_REQUEST);
-        }
-        HttpRequestImpl httpRequest = new HttpRequestImpl(request, requestPath);
+        if (isDoubleEncoded(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        path = normalize(path);
+        if (path == null) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
 
-        HandlerManager.HandlerEntry handlerEntry = handlerManager.findHandler(requestPath);
-        if (handlerEntry == null) {
-            return reject(request, response, HttpResponseStatus.NOT_FOUND);
-        }
+        ctx.path = path;
+        ctx.httpRequest = new HttpRequestImpl(ctx.request, path);
+        return null;
+    }
 
-        // 安全认证
-        boolean doneAuth = authManager.doAuth(httpRequest, handlerEntry);
-        if (!doneAuth) {
-            return reject(request, response
-                            .header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
-                    HttpResponseStatus.UNAUTHORIZED);
-        }
+    private Publisher<Void> denyUnroutedPath(RequestContext ctx) {
+        ctx.entry = handlerManager.findHandler(ctx.path);
+        return ctx.entry == null ? reject(ctx, HttpResponseStatus.NOT_FOUND) : null;
+    }
 
-        // 开始处理业务...
-        HttpHandler httpHandler = handlerEntry.handler;
-        HttpHandler.StreamHandler streamHandler;
+    private Publisher<Void> denyUnauthenticated(RequestContext ctx) {
+        if (authManager.doAuth(ctx.httpRequest, ctx.entry)) return null;
+        return reject(ctx.request, ctx.response.header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
+                HttpResponseStatus.UNAUTHORIZED);
+    }
+
+    // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500
+    private Publisher<Void> denyUnsupportedBody(RequestContext ctx) {
+        ctx.streamRequired = ctx.request.method() == HttpMethod.POST && ctx.request.isMultipart();
         try {
-            streamHandler = httpHandler.multipartStreamHandler();
+            ctx.streamHandler = ctx.entry.handler.multipartStreamHandler();
         } catch (Throwable e) {
-            return rejectHandlerError(request, response, e);
+            logger.error("http handler error", getCause(e));
+            return reject(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
-        boolean streamRequired = request.method() == HttpMethod.POST && request.isMultipart();
-        if (streamRequired && streamHandler == null) {
-            return reject(request, response, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE);
-        }
+        return ctx.streamRequired && ctx.streamHandler == null
+                ? reject(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
+    }
 
-        int STREAM_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
+    // 413：Content-Length 预检，两条通道的上限不同
+    private Publisher<Void> denyOversizedBody(RequestContext ctx) {
+        long limit = ctx.streamRequired ? maxStreamBytes : maxBodyBytes;
+        return bodyTooLarge(ctx.request, limit)
+                ? reject(ctx, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE) : null;
+    }
+
+    // 503：仅聚合分支吃堆内存；流式由 handler 落临时文件，不占此预算
+    private Publisher<Void> denyExhaustedMemory(RequestContext ctx) {
+        ctx.reservedBytes = ctx.streamRequired ? 0 : reserveAggregation(ctx.request);
+        return ctx.reservedBytes < 0 ? reject(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE) : null;
+    }
+
+    private Publisher<Void> handleBody(RequestContext ctx) {
+        int queueSize = 1024; // 慢客户端时最多缓存的响应分片数
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
-                .onBackpressureBuffer(Queues.<byte[]>get(STREAM_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
-        HttpResponseImpl httpResponse = new HttpResponseImpl(response, streamResponse);
+                .onBackpressureBuffer(Queues.<byte[]>get(queueSize).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
+        HttpResponseImpl httpResponse = new HttpResponseImpl(ctx.response, streamResponse);
+        return ctx.streamRequired ? receiveStream(ctx, httpResponse, streamResponse)
+                : aggregate(ctx, httpResponse, streamResponse);
+    }
 
-        if (streamRequired) {
-            if (bodyTooLarge(request, maxStreamBytes)) { // 预检：超限直接拒，不必先落临时文件
-                return reject(request, response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
-            }
-            try {
-                streamHandler.onBegin(httpRequest, httpResponse);
-            } catch (Throwable e) {
-                return rejectHandlerError(request, response, e);
-            }
-            AtomicLong receivedBytes = new AtomicLong();
-            request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
-                    .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
-                        if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxStreamBytes) {
-                            throw new BodyTooLargeException();
-                        }
-                    })
-                    .subscribe(byteBuf -> {
-                                byte[] bytes = new byte[byteBuf.readableBytes()];
-                                byteBuf.readBytes(bytes);
-                                streamHandler.onNext(bytes);
+    private Publisher<Void> receiveStream(RequestContext ctx, HttpResponseImpl httpResponse,
+                                          Sinks.Many<byte[]> streamResponse) {
+        HttpHandler.StreamHandler streamHandler = ctx.streamHandler;
+        try {
+            streamHandler.onBegin(ctx.httpRequest, httpResponse);
+        } catch (Throwable e) {
+            return rejectHandlerError(ctx.request, ctx.response, e);
+        }
+        AtomicLong receivedBytes = new AtomicLong();
+        ctx.request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
+                .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
+                    if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxStreamBytes) {
+                        throw new BodyTooLargeException();
+                    }
+                })
+                .subscribe(byteBuf -> {
+                            byte[] bytes = new byte[byteBuf.readableBytes()];
+                            byteBuf.readBytes(bytes);
+                            streamHandler.onNext(bytes);
 
-                                // ByteBuf 由 Reactor Netty 框架负责释放，此处不得手动 release，否则引用计数提前耗尽
-                            },
-                            err -> {
-                                streamHandler.onError(err);
-                                // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
-                                if (!httpResponse.isUsed()) {
-                                    logger.error("http stream handler error", getCause(err));
-                                    // 超限回 413、其余回 500，与聚合分支语义一致；响应体不回显内部异常细节
-                                    HttpResponseStatus status = statusOf(err);
-                                    httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
-                                }
-                            },
-                            streamHandler::onComplete // 完成信号
-                    );
-            return response.sendByteArray(streamResponse.asFlux()).then();
-        } else {
-            if (bodyTooLarge(request, maxBodyBytes)) {
-                return reject(request, response, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
-            }
-            AtomicLong receivedBytes = new AtomicLong();
-            return ByteBufFlux.fromInbound(request.receive()
-                            .doOnNext(byteBuf -> { // chunked 请求无 Content-Length，聚合前按实际字节数二次限制
-                                if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxBodyBytes) {
-                                    throw new BodyTooLargeException();
-                                }
-                            }))
-                    .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
-                    .defaultIfEmpty(NULL_BYTES)
-                    .flatMap(bytes -> {
-                        try {
-                            httpRequest.setRequestBody(bytes);
-                            httpHandler.handle(httpRequest, httpResponse);
+                            // ByteBuf 由 Reactor Netty 框架负责释放，此处不得手动 release，否则引用计数提前耗尽
+                        },
+                        err -> {
+                            streamHandler.onError(err);
+                            // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
                             if (!httpResponse.isUsed()) {
-                                streamResponse.tryEmitComplete(); // 避免请求无限等
-                            }
-                        } catch (Throwable e) {
-                            logger.error("http handler error", getCause(e));
-                            if (httpResponse.isUsed()) {
-                                streamResponse.tryEmitComplete(); // 已写过响应，状态码无法回退，只能干净收尾
-                            } else {
-                                HttpResponseStatus status = statusOf(e);
+                                logger.error("http stream handler error", getCause(err));
+                                // 超限回 413、其余回 500，与聚合分支语义一致；响应体不回显内部异常细节
+                                HttpResponseStatus status = statusOf(err);
                                 httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
                             }
+                        },
+                        streamHandler::onComplete // 完成信号
+                );
+        return ctx.response.sendByteArray(streamResponse.asFlux()).then();
+    }
+
+    private Publisher<Void> aggregate(RequestContext ctx, HttpResponseImpl httpResponse,
+                                      Sinks.Many<byte[]> streamResponse) {
+        HttpHandler httpHandler = ctx.entry.handler;
+        AtomicLong receivedBytes = new AtomicLong();
+        return ByteBufFlux.fromInbound(ctx.request.receive()
+                        .doOnNext(byteBuf -> { // chunked 请求无 Content-Length，聚合前按实际字节数二次限制
+                            if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxBodyBytes) {
+                                throw new BodyTooLargeException();
+                            }
+                        }))
+                .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
+                .defaultIfEmpty(EMPTY_BODY)
+                .flatMap(bytes -> {
+                    try {
+                        ctx.httpRequest.setRequestBody(bytes);
+                        httpHandler.handle(ctx.httpRequest, httpResponse);
+                        if (!httpResponse.isUsed()) {
+                            streamResponse.tryEmitComplete(); // 避免请求无限等
                         }
-                        return response.sendByteArray(streamResponse.asFlux()).then();
-                    })
-                    .onErrorResume(e -> respondAndClose(response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
-        }
+                    } catch (Throwable e) {
+                        logger.error("http handler error", getCause(e));
+                        if (httpResponse.isUsed()) {
+                            streamResponse.tryEmitComplete(); // 已写过响应，状态码无法回退，只能干净收尾
+                        } else {
+                            HttpResponseStatus status = statusOf(e);
+                            httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                        }
+                    }
+                    return ctx.response.sendByteArray(streamResponse.asFlux()).then();
+                })
+                .onErrorResume(e -> respondAndClose(ctx.response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
+    }
+
+    private Publisher<Void> reject(RequestContext ctx, HttpResponseStatus status) {
+        return reject(ctx.request, ctx.response, status);
     }
 
     /**
@@ -244,13 +307,39 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     // Content-Length 预检给出干净的 413；非法头交给字节计数兜底
     private boolean bodyTooLarge(HttpServerRequest request, long limit) {
+        return declaredBodySize(request) > limit;
+    }
+
+    // 无请求体返回 0；chunked（长度未知）返回 -1；非法 Content-Length 返回 0，交由字节计数兜底
+    private long declaredBodySize(HttpServerRequest request) {
         String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
-        if (value == null) return false;
-        try {
-            return Long.parseLong(value) > limit;
-        } catch (NumberFormatException e) {
-            return false;
+        if (value != null) {
+            try {
+                return Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                return 0;
+            }
         }
+        return request.requestHeaders()
+                .contains(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED, true) ? -1 : 0;
+    }
+
+    // 返回预留的字节数；-1 表示在途聚合总量已达上限
+    private long reserveAggregation(HttpServerRequest request) {
+        long size = declaredBodySize(request);
+        if (size < 0) size = maxBodyBytes; // 仅 chunked 长度未知，按单体上限保守预留
+        while (true) {
+            long current = aggregatedBytes.get();
+            if (current + size > maxAggregatedBytes) return -1;
+            if (aggregatedBytes.compareAndSet(current, current + size)) return size;
+        }
+    }
+
+    // TRACE 等非业务方法不应进入任何 handler
+    private static boolean isMethodAllowed(HttpMethod method) {
+        return method == HttpMethod.GET || method == HttpMethod.POST || method == HttpMethod.PUT
+                || method == HttpMethod.DELETE || method == HttpMethod.PATCH || method == HttpMethod.HEAD
+                || method == HttpMethod.OPTIONS;
     }
 
     // 异常可能被 Reactor 包装，取最内层 cause 判断
@@ -282,5 +371,32 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
 
         return cause;
+    }
+
+    /**
+     * 闸门：返回 null 表示放行，非 null 则作为终止响应回给客户端。
+     * 仅适用于同步即可判定的检查；按字节累加的限额与成对的配额归还分别落在 reactor 操作符与 {@link #release}。
+     */
+    @FunctionalInterface
+    private interface RequestGate {
+        Publisher<Void> check(RequestContext ctx);
+    }
+
+    /** 一次请求在闸门链上传递的状态：每个 gate 只写自己负责的字段。 */
+    private static final class RequestContext {
+        final HttpServerRequest request;
+        final HttpServerResponse response;
+
+        String path; // 规范化后的路径
+        HandlerManager.HandlerEntry entry;
+        HttpRequestImpl httpRequest;
+        HttpHandler.StreamHandler streamHandler;
+        boolean streamRequired;
+        long reservedBytes; // 聚合分支已预留的内存配额
+
+        RequestContext(HttpServerRequest request, HttpServerResponse response) {
+            this.request = request;
+            this.response = response;
+        }
     }
 }

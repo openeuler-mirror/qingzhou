@@ -29,11 +29,12 @@ public class AuthManager {
     // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
-    private boolean isAuthDisabled;
+    // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性
+    private volatile boolean isAuthDisabled;
 
-    private int maxAuthFailures; // 窗口内允许的认证失败次数
-    private int authFailWindowMillis;
-    private final Map<String, AuthFailures> authFailures = new ConcurrentHashMap<>();
+    private volatile int maxAuthFailures; // 窗口内允许的认证失败次数
+    private volatile int authFailWindowMillis;
+    private final Map<String, AuthFailure> authFailures = new ConcurrentHashMap<>();
 
     @Activate
     public synchronized void init(Map<String, String> config) { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
@@ -72,18 +73,15 @@ public class AuthManager {
      */
     boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
         String host = httpRequest.getRemoteHost();
-        AuthFailures failures = authFailures.computeIfAbsent(host, k -> new AuthFailures());
-        int failuresCount = failures.getCount();
-        if (failuresCount > 0 && failuresCount >= maxAuthFailures) return false;
+        AuthFailure failures = authFailures.computeIfAbsent(host, k -> new AuthFailure());
+        if (failures.isLocked()) return false;
 
         boolean doneAuth = doAuth0(httpRequest, handlerEntry);
 
         if (doneAuth) {
-            authFailures.remove(host); // 认证成功后清空计数
+            failures.cleanFailure(host);
         } else {
-            failures.increment();
-            int MAX_TRACKED_HOSTS = 10000; // 认证失败节流：按来源记录失败次数，避免凭据被高速枚举；来源数量过大时整体清空，防止无界增长
-            if (authFailures.size() > MAX_TRACKED_HOSTS) authFailures.clear();
+            failures.recordFailure();
         }
 
         return doneAuth;
@@ -151,21 +149,36 @@ public class AuthManager {
         return AuthResult.reject("no credential provided");
     }
 
-    class AuthFailures {
-        private volatile long windowStart = System.currentTimeMillis();
+    final class AuthFailure {
         private final AtomicInteger count = new AtomicInteger();
+        private volatile long windowStart = System.currentTimeMillis();
 
-        void increment() {
-            count.incrementAndGet();
+        void cleanFailure(String host) {
+            authFailures.remove(host); // 认证成功后清空计数
         }
 
-        int getCount() {
-            long now = System.currentTimeMillis();
-            if (now - windowStart > authFailWindowMillis) {
-                windowStart = now;
+        void recordFailure() {
+            count.incrementAndGet();
+
+            // 只回收过期项：整体清空会让攻击者借大量来源重置全部锁定，也会误清正常用户的锁定
+            int MAX_TRACKED_HOSTS = 10000; // 来源数量上限：超限只回收过期项，不整体清空
+            if (authFailures.size() > MAX_TRACKED_HOSTS) {
+                authFailures.entrySet().removeIf(e -> e.getValue().isExpired());
+            }
+        }
+
+        // 窗口过期即重置
+        boolean isLocked() {
+            if (isExpired()) {
+                windowStart = System.currentTimeMillis();
                 count.set(0);
             }
-            return count.get();
+            int current = count.get();
+            return current > 0 && current >= maxAuthFailures;
+        }
+
+        private boolean isExpired() {
+            return System.currentTimeMillis() - windowStart > authFailWindowMillis;
         }
     }
 }

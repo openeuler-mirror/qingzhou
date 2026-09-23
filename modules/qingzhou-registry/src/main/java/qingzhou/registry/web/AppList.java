@@ -8,8 +8,6 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.SkillService;
-import qingzhou.ai.ToolService;
 import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.InstanceInfo;
@@ -19,20 +17,17 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/app/list",
-        SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
-        ToolService.TOOL_DESCRIPTION + "=该接口返回已注册的应用列表信息。每个应用包含唯一标识、名称、描述、所属实例等信息。"})
-public class AppList implements HttpHandler, ToolService {
+@Component(property = HttpHandler.HANDLE_PATH + "=/app/list",
+        service = {AppList.class, HttpHandler.class})
+public class AppList implements HttpHandler {
     @Reference
     private Registry registry;
-
     @Reference
     private I18nService i18nService;
-
     @Reference
     private Json json;
 
-    private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
+    public Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
         public Object apply(HandlingContext context) {
             String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
@@ -68,15 +63,5 @@ public class AppList implements HttpHandler, ToolService {
 
         // 执行
         WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
-    }
-
-    @Override
-    public String invoke(Map<String, Object> toolArgs) throws Exception {
-        HandlingContext context = name -> {
-            if (toolArgs == null) return null;
-            Object val = toolArgs.get(name);
-            return val != null ? String.valueOf(val) : null;
-        };
-        return json.toJson(function.apply(context));
     }
 }

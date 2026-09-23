@@ -1,4 +1,4 @@
-package qingzhou.ai.impl;
+package qingzhou.ai.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -7,15 +7,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.*;
-import qingzhou.ai.LlmConverter;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.impl.LlmConverter;
 import qingzhou.http.server.Authenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Parameter;
-import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
@@ -105,7 +104,7 @@ public class McpServer implements HttpHandler {
     }
 
     private Collection<Tool> llmTools() {
-        return LlmConverter.convertSkills(llmSkills).stream().flatMap((Function<Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
+        return LlmConverter.convertSkills(llmSkills).stream().flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
     }
 
     private Object tools() {

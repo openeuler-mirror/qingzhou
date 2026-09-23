@@ -1,28 +1,30 @@
-package qingzhou.ai;
+package qingzhou.ai.impl;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.ComponentConstants;
+import qingzhou.ai.SkillService;
+import qingzhou.ai.ToolService;
 import qingzhou.llm.Parameter;
 import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
-public class LlmConverter {
+public final class LlmConverter {
     public static Collection<Skill> convertSkills(Map<SkillService, Map<String, Object>> aiSkills) {
         return aiSkills.entrySet().stream().map(entry -> convertSkill(entry.getKey(), entry.getValue())).collect(Collectors.toSet());
     }
 
     private static Skill convertSkill(SkillService skillService, Map<String, Object> skillProp) {
-        String skillName = skillProp.get(SkillService.SKILL_NAME).toString();
         boolean required = false;
         Object requiredStr = skillProp.get(SkillService.SKILL_REQUIRED);
         if (requiredStr != null) {
             required = Boolean.parseBoolean(requiredStr.toString());
         }
-        return Skill.of(skillName,
-                skillService.description(),
+        return Skill.of(
+                skillProp.get(SkillService.SKILL_NAME).toString(),
+                skillProp.get(SkillService.SKILL_DESCRIPTION).toString(),
                 skillService.instruction(),
                 convertTools(skillService.tools()), required);
     }

@@ -72,7 +72,7 @@ public class HandlerManager {
         handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth));
 
         // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "registered: " + component + "=" + originPath + (isNoAuth ? " (no auth)" : "");
+        String msg = "registered: [" + path + "]" + (isNoAuth ? " (no auth)" : "");
         if (logger != null) {
             logger.info(msg);
         } else {

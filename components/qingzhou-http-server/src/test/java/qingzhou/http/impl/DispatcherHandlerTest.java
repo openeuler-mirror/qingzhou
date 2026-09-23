@@ -310,6 +310,22 @@ public class DispatcherHandlerTest {
     }
 
     @Test
+    public void traceMethod_request_returns405() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/traceTest");
+
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/traceTest")
+                    .method(HttpMethod.TRACE)); // 非业务方法不得进入 handler，否则可被用于跨站追踪
+
+            Assert.assertEquals(result.getStatus(), 405);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
     public void prefixPathRegistered_request_routesByPrefix() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
