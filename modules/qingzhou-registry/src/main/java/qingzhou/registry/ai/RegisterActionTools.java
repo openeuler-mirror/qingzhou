@@ -63,7 +63,7 @@ public class RegisterActionTools {
         tools.forEach((invokedActionCode, toolDescription) -> {
             String actionToolName = "app_model_action_" + invokedActionCode;
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(ToolService.PARENT_SKILL, Skill.ToolLabel);
+            properties.put(ToolService.PARENT_SKILL, Skill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, actionToolName);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
             ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(invokedActionCode, toolArgs);

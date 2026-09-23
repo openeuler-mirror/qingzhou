@@ -9,7 +9,7 @@ import qingzhou.json.Json;
 import qingzhou.registry.web.Instance;
 
 @Component(property = {
-        ToolService.PARENT_SKILL + "=" + Skill.ToolLabel,
+        ToolService.PARENT_SKILL + "=" + Skill.TOOL_LABEL,
         ToolService.TOOL_DESCRIPTION + "=该接口返回轻舟平台上注册的所有轻舟实例的列表信息，每个实例包含实例ID和所在服务器的IP地址等信息。"})
 public class InstanceTool implements ToolService {
     @Reference

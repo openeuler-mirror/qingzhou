@@ -15,12 +15,12 @@ import qingzhou.ai.ToolService;
         SkillService.SKILL_DESCRIPTION + "=该技能可查询轻舟平台实例、注册应用、应用详情、应用模块详情；支持获取应用模块业务资源列表、资源详情，可读取模块及业务资源实时状态，用于查看资源用量、系统健康检查、安全告警阈值校验。",
         SkillService.SKILL_REQUIRED + "=true"})
 public class Skill implements SkillService {
-    public static final String ToolLabel = "AppModelActionSkill";
+    public static final String TOOL_LABEL = "AppModelActionSkill";
 
     private final Map<ToolService, Map<String, Object>> aiTools = new ConcurrentHashMap<>();
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
-            target = "(" + ToolService.PARENT_SKILL + "=" + ToolLabel + ")", // 按服务属性过滤
+            target = "(" + ToolService.PARENT_SKILL + "=" + TOOL_LABEL + ")", // 按服务属性过滤
             unbind = "unbindAiTool")
     public void bindAiTool(ToolService tool, Map<String, Object> properties) {
         aiTools.put(tool, properties);
