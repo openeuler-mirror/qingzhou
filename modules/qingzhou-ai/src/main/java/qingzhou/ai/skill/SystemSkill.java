@@ -15,9 +15,7 @@ import qingzhou.ai.ToolService;
 import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {
-                SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL,
-                SkillService.SKILL_REQUIRED + "=true"})
+        property = SkillService.SKILL_NAME + "=" + SkillService.SYSTEM_SKILL)
 public class SystemSkill extends SkillServiceBase implements SkillService {
     @Reference
     private Logger logger;
@@ -55,7 +53,16 @@ public class SystemSkill extends SkillServiceBase implements SkillService {
 
     @Override
     public String instruction() {
-        return String.join("\n\n[参考附件]\n", knowledgeDocs);
+        StringBuilder sb = new StringBuilder();
+        sb.append("你是 Qingzhou（轻舟）平台智能助手，帮助开发者、运维人员和管理员理解和使用 Qingzhou 平台。\n");
+        sb.append("精通 Qingzhou 的整体架构、核心特性和设计理念，精通 Java 生态、低代码开发、声明式开发、RESTful API 设计、动态渲染。\n");
+        sb.append("当用户询问\"AI管控如何使用\"时，说明自然语言交互通过大模型理解意图并执行管控逻辑。\n");
+        sb.append("当用户询问关于\"某某系统、某某资产、某某插件\"时，统一理解为某某应用，因为应用是平台上管理的唯一资源。\n");
+        if (knowledgeDocs != null && !knowledgeDocs.isEmpty()) {
+            sb.append("\n[参考附件]\n");
+            sb.append(String.join("\n\n[参考附件]\n", knowledgeDocs));
+        }
+        return sb.toString();
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
