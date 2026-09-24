@@ -42,9 +42,23 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     @Reference
     private HandlerManager handlerManager;
 
-    private final byte[] EMPTY_BODY = new byte[0];
+    private static final byte[] EMPTY_BODY = new byte[0];
+    private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
+    private static final long UNKNOWN_BODY_SIZE = -1; // chunked：长度未知
+    private static final long INVALID_BODY_SIZE = -2; // 非法 Content-Length 或与 Transfer-Encoding 并存
+
+    // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
+    private final List<RequestGate> gates = Arrays.asList(
+            this::denyDisallowedMethod, // 405
+            this::denyUnnormalizedPath, // 400：解码失败 / 二次编码 / 路径穿越
+            this::denyUnroutedPath,     // 404
+            this::denyUnauthenticated,  // 401
+            this::denyUnsupportedBody,  // 415
+            this::denyOversizedBody,    // 400 / 413
+            this::denyExhaustedMemory   // 503
+    );
+
     private final AtomicLong aggregatedBytes = new AtomicLong();
-    private List<RequestGate> gates;
 
     // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性
     private volatile Semaphore concurrentSemaphore;
@@ -69,17 +83,6 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             throw new IllegalArgumentException("max_body_bytes must not exceed max_aggregated_bytes");
         }
         csp = getConfig(config, "csp", "none");
-
-        // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
-        gates = Arrays.asList(
-                this::denyDisallowedMethod, // 405
-                this::denyUnnormalizedPath, // 400：解码失败 / 二次编码 / 路径穿越
-                this::denyUnroutedPath,     // 404
-                this::denyUnauthenticated,  // 401
-                this::denyUnsupportedBody,  // 415
-                this::denyOversizedBody,    // 413
-                this::denyExhaustedMemory   // 503
-        );
     }
 
     @Override
@@ -117,9 +120,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     }
 
     private Publisher<Void> dispatch(RequestContext ctx) {
-        int queueSize = 1024; // 慢客户端时最多缓存的响应分片数
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
-                .onBackpressureBuffer(Queues.<byte[]>get(queueSize).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
+                .onBackpressureBuffer(Queues.<byte[]>get(RESPONSE_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
         HttpResponseImpl httpResponse = new HttpResponseImpl(ctx.response, streamResponse);
         return ctx.streamRequired ? receiveStream(ctx, httpResponse, streamResponse)
                 : aggregate(ctx, httpResponse, streamResponse);
@@ -153,10 +155,10 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                         },
                         err -> {
                             Throwable cause = getCause(err);
-                            logger.error("http stream handler error", cause);
                             streamHandler.onError(cause);
                             // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
                             if (!httpResponse.isUsed()) {
+                                logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
                                 HttpResponseStatus status = statusOf(cause);
                                 httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
                             }
@@ -196,18 +198,20 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                     }
                     return ctx.response.sendByteArray(streamResponse.asFlux()).then();
                 })
-                .onErrorResume(e -> respondAndClose(ctx.response, statusOf(e))); // 连接中断等也应回响应，且不能一律报 413
+                .onErrorResume(e -> respondAndClose(ctx.response, statusOf(getCause(e)))); // 连接中断等也应回响应，且不能一律报 413
     }
 
     // 405：TRACE 等会落到兜底 handler（注册在 / 的页面），有跨站追踪风险
     private Publisher<Void> denyDisallowedMethod(RequestContext ctx) {
-        // TRACE 等非业务方法不应进入任何 handler
-        HttpMethod method = ctx.request.method();
-        boolean isMethodAllowed = method == HttpMethod.GET || method == HttpMethod.POST || method == HttpMethod.PUT
+        return isMethodAllowed(ctx.request.method()) ? null
+                : reject(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // TRACE 等非业务方法不应进入任何 handler；PATCH 为 qingzhou-ai 会话接口所需
+    private static boolean isMethodAllowed(HttpMethod method) {
+        return method == HttpMethod.GET || method == HttpMethod.POST || method == HttpMethod.PUT
                 || method == HttpMethod.DELETE || method == HttpMethod.PATCH || method == HttpMethod.HEAD
                 || method == HttpMethod.OPTIONS;
-        return isMethodAllowed ? null
-                : reject(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
     // 400：解码失败、二次编码、含 ".." 段，三者在分发入口一并拦截；
@@ -235,6 +239,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
      * 各 handler 自行解析路径，防护难以统一，故在分发入口一次性拦截穿越。
      */
     private String normalize(String path) {
+        if (path.indexOf('\0') >= 0) return null; // NUL 会被下游文件 API 截断，可能绕过路径校验
         StringBuilder normalized = new StringBuilder(path.length());
         for (String segment : path.split("/")) {
             if (segment.isEmpty() || segment.equals(".")) continue;
@@ -269,11 +274,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 ? reject(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
     }
 
-    // 413：Content-Length 预检，Content-Length 预检给出干净的 413；非法头交给字节计数兜底
+    // 400：Content-Length 非法或与 Transfer-Encoding 并存；413：声明长度超限。
+    // 非法头不能按"长度未知"预留配额，否则少量并发即可耗尽聚合预算
     private Publisher<Void> denyOversizedBody(RequestContext ctx) {
-        long limit = ctx.streamRequired ? maxStreamBytes : maxBodyBytes;
-        boolean isBodyTooLarge = declaredBodySize(ctx.request) > limit;
-        return isBodyTooLarge ? reject(ctx, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE) : null;
+        long size = declaredBodySize(ctx.request);
+        if (size == INVALID_BODY_SIZE) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (size > (ctx.streamRequired ? maxStreamBytes : maxBodyBytes)) {
+            return reject(ctx, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
+        }
+        return null;
     }
 
     // 503：仅聚合分支吃堆内存；流式由 handler 落临时文件，不占此预算
@@ -285,7 +294,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private long reserveAggregation(HttpServerRequest request) {
         // 返回预留的字节数；-1 表示在途聚合总量已达上限
         long size = declaredBodySize(request);
-        if (size < 0) size = maxBodyBytes;
+        if (size == UNKNOWN_BODY_SIZE) size = maxBodyBytes; // 长度未知，按单体上限保守预留
+        else if (size < 0) size = 0; // 非法头已由 denyOversizedBody 拒绝，此处不再预留
         while (true) {
             long current = aggregatedBytes.get();
             if (current + size > maxAggregatedBytes) return -1;
@@ -299,18 +309,21 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         return upper.contains("%2E") || upper.contains("%25");
     }
 
-    // 无请求体返回 0；长度未知（chunked 或非法 Content-Length）返回 -1，交由字节计数兜底并按单体上限保守预留
+    // 无请求体返回 0；chunked 返回 UNKNOWN_BODY_SIZE；
+    // 非法 Content-Length 或与 Transfer-Encoding 并存返回 INVALID_BODY_SIZE（请求走私特征，调用方回 400）
     private long declaredBodySize(HttpServerRequest request) {
+        boolean chunked = request.requestHeaders()
+                .contains(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED, true);
         String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
         if (value != null) {
+            if (chunked) return INVALID_BODY_SIZE;
             try {
                 return Long.parseLong(value);
             } catch (NumberFormatException e) {
-                return -1;
+                return INVALID_BODY_SIZE;
             }
         }
-        return request.requestHeaders()
-                .contains(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED, true) ? -1 : 0;
+        return chunked ? UNKNOWN_BODY_SIZE : 0;
     }
 
     private Publisher<Void> reject(RequestContext ctx, HttpResponseStatus status) {
@@ -331,7 +344,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                     }
                 })
                 .then(errorResponse)
-                .onErrorResume(e -> respondAndClose(response, statusOf(e)));
+                .onErrorResume(e -> respondAndClose(response, statusOf(getCause(e))));
     }
 
     // 请求体未读完，连接无法复用：发送响应并关闭连接，避免残留字节污染后续请求
@@ -342,9 +355,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 .send();
     }
 
-    // 异常可能被 Reactor 包装，取最内层 cause 判断
-    private HttpResponseStatus statusOf(Throwable e) {
-        return getCause(e) instanceof BodyTooLargeException
+    // 入参须为最内层 cause：Reactor 会包装异常，调用方先用 getCause 展开再传入，避免重复遍历
+    private HttpResponseStatus statusOf(Throwable cause) {
+        return cause instanceof BodyTooLargeException
                 ? HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE
                 : HttpResponseStatus.INTERNAL_SERVER_ERROR;
     }
@@ -373,18 +386,25 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
     }
 
+    // 请求体超限的内部信号：仅用于在 Reactor 链上把 413 与 500 区分开，不对外暴露
+    private static final class BodyTooLargeException extends RuntimeException {
+        BodyTooLargeException() {
+            super("request body too large");
+        }
+    }
+
     /**
      * 闸门：返回 null 表示放行，非 null 则作为终止响应回给客户端。
      * 仅适用于同步即可判定的检查；按字节累加的限额与成对的配额归还分别落在 reactor 操作符与 release。
      */
-    interface RequestGate {
+    private interface RequestGate {
         Publisher<Void> check(RequestContext ctx);
     }
 
     /**
      * 一次请求在闸门链上传递的状态：每个 gate 只写自己负责的字段。
      */
-    static final class RequestContext {
+    private static final class RequestContext {
         final HttpServerRequest request;
         final HttpServerResponse response;
 

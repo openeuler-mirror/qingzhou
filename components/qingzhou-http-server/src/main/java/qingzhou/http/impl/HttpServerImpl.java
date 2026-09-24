@@ -59,8 +59,8 @@ public class HttpServerImpl implements HttpServer {
                 .childOption(ChannelOption.SO_KEEPALIVE, true) // tcp 层保活探测，避免对方意外断电等资源无效占用
                 .childOption(ChannelOption.TCP_NODELAY, true) // 现代带宽充足，路由器处理能力强，「小包风暴」的影响远小于实时性不足带来的业务问题
                 .idleTimeout(Duration.ofSeconds(idleTimeout)) // 一条连接，无任何读或写活动，则主动关闭连接释放资源，不设置则无限
-                // 业务路由（生产环境建议抽离到单独的 Handler 类，解耦业务逻辑）
-                .handle(dispatcherHandler);
+                .httpRequestDecoder(spec -> spec.maxInitialLineLength(4096).maxHeaderSize(8192)) // 显式收敛请求行/头，不依赖框架默认值（升级即行为漂移）
+                .handle(dispatcherHandler); // 业务路由
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
@@ -125,6 +125,7 @@ public class HttpServerImpl implements HttpServer {
         handlerManager.removeHttpHandler(httpHandler);
     }
 
+    @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
     static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
         String val = config.get(key);
         if (val == null || val.isEmpty()) return defaultValue;

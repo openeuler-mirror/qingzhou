@@ -84,7 +84,8 @@ public class HandlerManager {
     private String conflict(String checkPath) {
         String request = withTrailingSlash(checkPath);
         for (String existsPath : handlerMap.keySet()) {
-            if (existsPath.equals("/")) continue; // 根路径仅作兜底（它必然与所有路径重叠）
+            // 根路径仅作兜底（它必然与所有路径重叠），双向跳过以免注册顺序决定成败
+            if (existsPath.equals("/") || request.equals("/")) continue;
             if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
         }
         return null;

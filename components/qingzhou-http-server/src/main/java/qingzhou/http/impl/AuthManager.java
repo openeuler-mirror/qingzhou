@@ -16,6 +16,8 @@ import static qingzhou.http.impl.HttpServerImpl.getConfig;
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = AuthManager.class)
 public class AuthManager {
+    private static final int MAX_TRACKED_HOSTS = 10000; // 来源数量上限，超限时淘汰最久未失败者
+
     @Reference
     private Logger logger;
 
@@ -80,8 +82,7 @@ public class AuthManager {
 
     // 超限后按最久未失败淘汰：只回收过期项的话，窗口内的新来源永远删不掉，map 会无界增长
     private void evictOverflow() {
-        int maxTrackedHosts = 10000; // 来源数量上限，超限时淘汰最久未失败者
-        while (authFailures.size() > maxTrackedHosts) {
+        while (authFailures.size() > MAX_TRACKED_HOSTS) {
             String oldest = authFailures.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().lastFailureAt()))
                     .map(Map.Entry::getKey)

@@ -3,9 +3,9 @@ package qingzhou.http.impl;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -34,10 +34,11 @@ class HttpRequestImpl implements HttpRequest {
         this.parameters = null; // 请求体变化后需重新解析
     }
 
-    // 仅认证层调用：roles 在此处 clone，外部拿到的副本被改动不影响认证结果
+    // 仅认证层调用：roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
         this.authPrincipal = authResult.getPrincipal();
-        this.authRoles = authResult.getRoles();
+        String[] roles = authResult.getRoles();
+        this.authRoles = roles == null ? null : roles.clone();
     }
 
     @Override
@@ -92,7 +93,7 @@ class HttpRequestImpl implements HttpRequest {
     @Override
     public Map<String, List<String>> getParameters() {
         if (parameters == null) {
-            parameters = new HashMap<>();
+            parameters = new ConcurrentHashMap<>(); // 并发容器：handler 可能把请求交给业务线程，HashMap 并发 resize 会损坏
             try {
                 parameters.putAll(new QueryStringDecoder(request.uri()).parameters());
             } catch (IllegalArgumentException e) {

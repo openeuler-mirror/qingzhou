@@ -15,7 +15,10 @@ import javax.net.ssl.SSLContext;
 import io.netty.handler.ssl.SslContext;
 import qingzhou.crypto.Cipher;
 
-public class SslContextBuilder {
+final class SslContextBuilder { // 仅本包使用，不对外暴露
+    private SslContextBuilder() {
+    }
+
     static SslContext buildSslContext(Map<String, String> config, Cipher cipher) {
         String keystorePath = config.get("ssl_keystore_path");
         if (keystorePath == null || keystorePath.trim().isEmpty()) {

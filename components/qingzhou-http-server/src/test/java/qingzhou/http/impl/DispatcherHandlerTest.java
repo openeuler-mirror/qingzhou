@@ -1,9 +1,8 @@
 package qingzhou.http.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,7 +17,6 @@ import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
-import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.impl.TestServerSupport.TestServer;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -32,6 +30,7 @@ import qingzhou.http.server.HttpResponse;
  * HttpRequest 读取、HttpResponse 回写）通过真实请求端到端验证其分发行为。
  */
 public class DispatcherHandlerTest {
+    private static final int NO_STATUS_LINE = -1; // 服务端未返回状态行即关闭连接
 
     @Test
     public void unregisteredPath_request_returns404() throws Exception {
@@ -323,6 +322,50 @@ public class DispatcherHandlerTest {
         } finally {
             testServer.server.stop();
         }
+    }
+
+    @Test
+    public void invalidContentLength_request_rejected() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/clTest");
+
+            // 非法头不得按"长度未知"预留配额，否则少量并发即可耗尽聚合预算
+            assertRejected(testServer.port, "POST /clTest HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Content-Length: not-a-number\r\n"
+                    + "Connection: close\r\n\r\n");
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    /**
+     * 直连发送原始报文：HttpURLConnection 会自行改写 Content-Length，无法构造非法值或 CL+TE 并存。
+     * 设读超时避免用例静默挂死；读不到状态行时返回 {@link #NO_STATUS_LINE}。
+     */
+    private static int statusOfRawRequest(int port, String rawRequest) throws Exception {
+        try (Socket socket = new Socket("localhost", port)) {
+            socket.setSoTimeout(5000);
+            OutputStream out = socket.getOutputStream();
+            out.write(rawRequest.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            String statusLine = reader.readLine();
+            return statusLine == null ? NO_STATUS_LINE : Integer.parseInt(statusLine.split(" ")[1]);
+        }
+    }
+
+    /**
+     * 断言请求未被 handler 受理。非法报文可能在 Netty 解码层就被拒并关闭连接（无状态行），
+     * 因此 400 与无响应都算通过；若闸门失效，请求会被 handler 受理并返回 200，用例即失败。
+     */
+    private static void assertRejected(int port, String rawRequest) throws Exception {
+        int status = statusOfRawRequest(port, rawRequest);
+        Assert.assertTrue(status == 400 || status == NO_STATUS_LINE,
+                "request must be rejected, got status " + status);
     }
 
     @Test
