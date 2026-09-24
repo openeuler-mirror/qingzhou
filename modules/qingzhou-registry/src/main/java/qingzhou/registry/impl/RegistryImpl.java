@@ -34,7 +34,9 @@ public class RegistryImpl implements Registry {
     @Reference
     private Crypto crypto;
 
+    // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
     private final List<String> tempMsg = new ArrayList<>();
+
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
     private long registryDataVersion = System.currentTimeMillis();
@@ -46,15 +48,17 @@ public class RegistryImpl implements Registry {
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
     @Activate
-    public synchronized void start(Map<String, String> config) {
+    public void start(Map<String, String> config) {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
-        tempMsg.forEach(s -> logger.info(s));
-        tempMsg.clear();
+        synchronized (tempMsg) {
+            tempMsg.forEach(s -> logger.info(s));
+            tempMsg.clear();
+        }
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    public synchronized void bindApp(AppStubLocal appStub) {
+    public void bindApp(AppStubLocal appStub) {
         bindApp0(appStub);
         registryDataVersion = System.currentTimeMillis();
     }
@@ -64,12 +68,13 @@ public class RegistryImpl implements Registry {
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);
 
-        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = String.format("app registered: %s", appCode);
-        if (logger != null) {
-            logger.info(msg);
-        } else {
-            tempMsg.add(msg);
+        synchronized (tempMsg) {
+            String msg = String.format("app registered: %s", appCode);
+            if (logger != null) {
+                logger.info(msg);
+            } else {
+                tempMsg.add(msg);
+            }
         }
     }
 

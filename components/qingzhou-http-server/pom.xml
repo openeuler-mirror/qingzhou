@@ -183,7 +183,7 @@
                             qingzhou.crypto,
                             qingzhou.logger,
                             org.osgi.framework,
-                            javax.net.ssl,javax.security.cert
+                            javax.net.ssl
                         </Import-Package>
                         <Embed-Dependency>
                             reactor-netty-core,reactor-netty-http,

@@ -16,6 +16,7 @@ import javax.net.ssl.SSLContext;
 
 import io.netty.handler.ssl.SslContext;
 import qingzhou.crypto.Cipher;
+import qingzhou.logger.Logger;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露
     // 不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与 3DES 等弱套件，故显式收敛
@@ -30,7 +31,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
     private SslContextBuilder() {
     }
 
-    static SslContext buildSslContext(Map<String, String> config, Cipher cipher) {
+    static SslContext buildSslContext(Map<String, String> config, Cipher cipher, Logger logger) {
         String keystorePath = config.get("ssl_keystore_path");
         if (keystorePath == null || keystorePath.trim().isEmpty()) {
             throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
@@ -49,7 +50,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         }
 
         String password = config.get("ssl_keystore_password");
-        if (password == null || password.isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
+        if (password == null || password.trim().isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
             throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
                     + ", generate it with bin/gen-keystore.sh");
         }
@@ -64,7 +65,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             // 显式收敛协议与套件：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与弱套件
             return io.netty.handler.ssl.SslContextBuilder.forServer(keyManagerFactory)
                     .protocols(tlsProtocols())
-                    .ciphers(supportedCiphers())
+                    .ciphers(supportedCiphers(logger))
                     .build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
@@ -73,15 +74,19 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         }
     }
 
-    // 逐个比对 JDK 支持清单：EC 证书下 RSA 套件会被全过滤，空套件会导致握手失败，故全不匹配时回退默认
-    private static List<String> supportedCiphers() {
+    // 逐个比对 JDK 支持清单：EC 证书下 RSA 套件会被全过滤，空套件会导致握手失败，故全不匹配时回退默认并告警
+    private static List<String> supportedCiphers(Logger logger) {
         try {
             List<String> supported = Arrays.asList(SSLContext.getDefault().getSupportedSSLParameters().getCipherSuites());
             List<String> enabled = new ArrayList<>();
             for (String cipher : CIPHERS) {
                 if (supported.contains(cipher)) enabled.add(cipher);
             }
-            return enabled.isEmpty() ? supported : enabled;
+            if (enabled.isEmpty()) {
+                logger.warn("no strong cipher suite is supported by this JDK, falling back to JDK defaults");
+                return supported;
+            }
+            return enabled;
         } catch (NoSuchAlgorithmException e) {
             return Arrays.asList(CIPHERS); // 取不到支持列表时按声明值交给 Netty 过滤
         }

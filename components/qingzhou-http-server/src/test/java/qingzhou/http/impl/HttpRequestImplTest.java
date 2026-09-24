@@ -186,10 +186,10 @@ public class HttpRequestImplTest {
         byte[] second = "second".getBytes(StandardCharsets.UTF_8);
 
         request.setRequestBody(first);
-        Assert.assertSame(request.getBody(), first);
+        Assert.assertEquals(request.getBody(), first); // 返回副本：内容相同但非同一数组
 
         request.setRequestBody(second);
-        Assert.assertSame(request.getBody(), second);
+        Assert.assertEquals(request.getBody(), second);
     }
 
     // ---------- 11. 认证结果只读 ----------

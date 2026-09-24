@@ -1,6 +1,5 @@
 package qingzhou.http.impl;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class AuthManager {
     @Reference
     private Logger logger;
 
-    private final List<String> tempMsg = new ArrayList<>();
+    private final PendingLogs pendingLogs = new PendingLogs();
 
     // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
@@ -32,26 +31,19 @@ public class AuthManager {
     private final Map<String, AuthFailure> authFailures = new ConcurrentHashMap<>();
 
     @Activate
-    public synchronized void init(Map<String, String> config) { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
+    public void init(Map<String, String> config) { // 与 addAuthenticator 同锁：暂存日志的回放与动态绑定并发互斥
         maxAuthFailures = getConfig(config, "auth_fail_max", 10);
         authFailWindowMillis = getConfig(config, "auth_fail_window", 60) * 1000;
 
-        tempMsg.forEach(s -> logger.info(s));
-        tempMsg.clear();
+        pendingLogs.replay(logger);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeAuthenticator")
-    public synchronized void addAuthenticator(Authenticator authenticator) {
+    public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
-        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "http authenticator registered: " + authenticator.getClass().getName();
-        if (logger != null) {
-            logger.info(msg);
-        } else {
-            tempMsg.add(msg);
-        }
+        pendingLogs.log(logger, "http authenticator registered: " + authenticator.getClass().getName());
     }
 
     public void removeAuthenticator(Authenticator authenticator) {
@@ -68,7 +60,7 @@ public class AuthManager {
         AuthFailure failure = authFailures.computeIfAbsent(host, k -> new AuthFailure());
         if (failure.isLocked(maxAuthFailures, authFailWindowMillis)) return false;
 
-        boolean doneAuth = doAuth0(httpRequest, handlerEntry);
+        boolean doneAuth = authenticateWithHandler(httpRequest, handlerEntry);
 
         if (doneAuth) {
             authFailures.remove(host); // 认证成功后清空计数
@@ -96,7 +88,7 @@ public class AuthManager {
         }
     }
 
-    private boolean doAuth0(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
+    private boolean authenticateWithHandler(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
         HttpHandler httpHandler = handlerEntry.handler;
 
         AuthResult authResult = null;

@@ -543,4 +543,108 @@ public class DispatcherHandlerTest {
         }
     }
 
+    @Test
+    public void optionsPreflight_request_returns204() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+
+            // 预检不带凭据，须在认证之前终止；带 Access-Control-Request-Method 才算预检
+            int status = statusOfRawRequest(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: http://localhost\r\n"
+                    + "Access-Control-Request-Method: POST\r\n"
+                    + "Connection: close\r\n\r\n");
+
+            Assert.assertEquals(status, 204);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void negativeContentLength_request_rejected() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/neg");
+
+            // 负长度若按 0 预留配额，少量并发即可绕过全局聚合预算
+            assertRejected(testServer.port, "POST /neg HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Content-Length: -1\r\n"
+                    + "Connection: close\r\n\r\n");
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void multiLayerEncodedPath_request_returns400() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/enc");
+
+            // %252f 一次解码后仍残留编码形态，各 handler 的穿越防护未必覆盖得住
+            Assert.assertEquals(statusOfRawRequest(testServer.port, "GET /enc/%252f..%252fetc HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Connection: close\r\n\r\n"), 400);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void streamHandlerCompleteThrows_request_stillCompletes() throws Exception {
+        File tempFile = File.createTempFile("dispatcher-complete-", ".txt");
+        try {
+            Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
+            TestServer testServer = TestServerSupport.startServer();
+            try {
+                testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
+                    @Override
+                    public void handle(HttpRequest request, HttpResponse response) {
+                        response.status400Finish(); // multipart 请求不会进入此方法
+                    }
+
+                    @Override
+                    public StreamHandler multipartStreamHandler() {
+                        return new StreamHandler() {
+                            @Override
+                            public void onBegin(HttpRequest request, HttpResponse response) {
+                            }
+
+                            @Override
+                            public void onNext(byte[] data) {
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                throw new IllegalStateException("boom"); // 回调异常不得让 sink 永不结束
+                            }
+                        };
+                    }
+                }, "/completeBoom");
+
+                Map<String, List<String>> files = new HashMap<>();
+                files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
+
+                HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+                // 回调异常若无人兜底，此处会一直挂到 idle_timeout
+                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/completeBoom")
+                        .method(HttpMethod.POST)
+                        .files(files));
+
+                Assert.assertTrue(result.getStatus() >= 200, "response must complete, got " + result.getStatus());
+            } finally {
+                testServer.server.stop();
+            }
+        } finally {
+            tempFile.delete();
+        }
+    }
+
 }

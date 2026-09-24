@@ -1,20 +1,14 @@
 package qingzhou.http.impl;
 
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.*;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -48,14 +42,19 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
     private static final long UNKNOWN_BODY_SIZE = -1; // chunked：长度未知
     private static final long INVALID_BODY_SIZE = -2; // 非法 Content-Length 或与 Transfer-Encoding 并存
-    private static final String ALLOWED_METHODS = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS";
+    // 方法白名单与 Allow 头共用同一份数据：两处各自维护必然在增删方法时不同步
+    private static final HttpMethod[] ALLOWED_METHODS = {HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT,
+            HttpMethod.DELETE, HttpMethod.PATCH, HttpMethod.HEAD, HttpMethod.OPTIONS};
+    private static final String ALLOW_HEADER = Arrays.stream(ALLOWED_METHODS)
+            .map(HttpMethod::name)
+            .collect(Collectors.joining(", "));
 
     // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
     private final List<RequestGate> gates = Arrays.asList(
             this::denyDisallowedMethod, // 405
-            this::respondOptions,       // 204：预检不下放业务 handler
             this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越
             this::denyUnroutedPath,     // 404
+            this::denyPreflight,   // 204：预检免认证但须已路由，故排在认证之前
             this::denyUnauthenticated,  // 401
             this::denyUnsupportedBody,  // 415
             this::denyOversizedBody,    // 400 / 413
@@ -71,6 +70,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private volatile int maxBodyBytes; // 单个请求体聚合进内存的上限
     private volatile long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
     private volatile String csp;
+    private volatile String[] corsAllowedOrigins; // 允许的跨域来源；空表示不开放 CORS
 
     @Activate
     public void init(Map<String, String> config) {
@@ -87,13 +87,24 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             throw new IllegalArgumentException("max_body_bytes must not exceed max_aggregated_bytes");
         }
         csp = getConfig(config, "csp", "none");
+        corsAllowedOrigins = splitOrigins(getConfig(config, "cors_allowed_origins", ""));
+    }
+
+    private String[] splitOrigins(String value) {
+        if (value.isEmpty()) return new String[0];
+        List<String> origins = new ArrayList<>();
+        for (String origin : value.split(",")) {
+            String trimmed = origin.trim();
+            if (!trimmed.isEmpty()) origins.add(trimmed);
+        }
+        return origins.toArray(new String[0]);
     }
 
     @Override
     public Publisher<Void> apply(HttpServerRequest request, HttpServerResponse response) {
         addSecurityHeaders(response); // 须在任何 return 之前：400/401/404/413/503 等分支同样需要安全头
         if (!concurrentSemaphore.tryAcquire()) { // 请求体按上限聚合进内存，不限在途请求数则内存仍会耗尽
-            return respondAndClose(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
+            return respond(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
         }
         RequestContext ctx = new RequestContext(request, response);
         // 闸门判定同步执行：它有副作用（预留全局配额），放进 defer 会在重复订阅时被重复执行
@@ -139,7 +150,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             logger.error("http handler error", beginError);
             safeRun(() -> streamHandler.onError(beginError)); // onBegin 可能已建临时文件，须给 handler 清理机会
             // handler 回调同步抛出时请求体还没读完，须先排空再回 500，否则残留字节会被当作下一个请求解析
-            return reject(ctx.request, ctx.response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            return respond(ctx.response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         AtomicLong receivedBytes = new AtomicLong();
         Disposable receiveDisposable = ctx.request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
@@ -215,48 +226,74 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                         httpResponse.finish(); // 已提交只能补终止信号，否则 sink 不结束、许可无法归还
                         return Mono.empty();
                     }
-                    return respondAndClose(ctx.response, statusOf(getCause(e)));
+                    return respond(ctx.response, statusOf(getCause(e)));
                 });
     }
 
     // 405：TRACE 等会落到兜底 handler（注册在 / 的页面），有跨站追踪风险
     private Publisher<Void> denyDisallowedMethod(RequestContext ctx) {
         return isMethodAllowed(ctx.request.method()) ? null
-                : reject(ctx.request, ctx.response.header(HttpHeaderNames.ALLOW, ALLOWED_METHODS), HttpResponseStatus.METHOD_NOT_ALLOWED);
-    }
-
-    // 204：OPTIONS 多为 CORS 预检，下放业务 handler 会返回页面内容，语义错误
-    private Publisher<Void> respondOptions(RequestContext ctx) {
-        return ctx.request.method() == HttpMethod.OPTIONS
-                ? reject(ctx.request, ctx.response.header(HttpHeaderNames.ALLOW, ALLOWED_METHODS), HttpResponseStatus.NO_CONTENT)
-                : null;
+                : respond(ctx.response.header(HttpHeaderNames.ALLOW, ALLOW_HEADER), HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
     // TRACE 等非业务方法不应进入任何 handler；PATCH 为 qingzhou-ai 会话接口所需
     private static boolean isMethodAllowed(HttpMethod method) {
-        return method == HttpMethod.GET || method == HttpMethod.POST || method == HttpMethod.PUT
-                || method == HttpMethod.DELETE || method == HttpMethod.PATCH || method == HttpMethod.HEAD
-                || method == HttpMethod.OPTIONS;
+        for (HttpMethod allowed : ALLOWED_METHODS) {
+            if (allowed == method) return true;
+        }
+        return false;
     }
 
-    // 400：解码失败、二次编码、含 ".." 段，三者在分发入口一并拦截；
+    // 204：仅跨域预检（必带 Access-Control-Request-Method）在此终止，下放业务 handler 会返回页面内容；
+    // 预检不携带凭据，故必须免认证；跨域头仅在来源白名单内回显，默认不开放
+    private Publisher<Void> denyPreflight(RequestContext ctx) {
+        if (ctx.request.method() != HttpMethod.OPTIONS) return null;
+        HttpHeaders headers = ctx.request.requestHeaders();
+        if (headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD) == null) return null; // 普通探测仍走 handler
+
+        HttpServerResponse response = ctx.response.header(HttpHeaderNames.ALLOW, ALLOW_HEADER);
+        String origin = headers.get(HttpHeaderNames.ORIGIN);
+        if (origin != null && isOriginAllowed(origin)) {
+            String requestedHeaders = headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS);
+            response.header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin)
+                    .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, ALLOW_HEADER)
+                    // 回显客户端实际请求的头：固定值会让携带其它自定义头的跨域请求被浏览器拒绝
+                    .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS,
+                            requestedHeaders == null || requestedHeaders.isEmpty()
+                                    ? "Content-Type, Authorization" : requestedHeaders)
+                    .header(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "86400")
+                    .header(HttpHeaderNames.VARY, HttpHeaderNames.ORIGIN.toString());
+        }
+        return respond(response, HttpResponseStatus.NO_CONTENT); // 204 无体，不得带 Content-Length
+    }
+
+    // 白名单为空表示不开放跨域；"*" 表示放开全部来源
+    private boolean isOriginAllowed(String origin) {
+        for (String allowed : corsAllowedOrigins) {
+            if ("*".equals(allowed) || allowed.equals(origin)) return true;
+        }
+        return false;
+    }
+
+    // 400：非 origin-form、解码失败、多层编码、含 ".." 段，四者在分发入口一并拦截；
     // 各 handler 自行解析路径，防护难以统一，故不在此放行任何可疑形态
     private Publisher<Void> denyUnnormalizedPath(RequestContext ctx) {
         String uri = ctx.request.uri();
         int queryIndex = uri.indexOf('?');
         String rawPath = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
         // absolute-form（http://host/x）与 "*" 会被下游按 origin-form 解析出错误路径，直接拒绝
-        if (!rawPath.startsWith("/")) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (!rawPath.startsWith("/")) return respond(ctx, HttpResponseStatus.BAD_REQUEST);
 
         String path;
         try {
-            path = URLDecoder.decode(rawPath, StandardCharsets.UTF_8.name());
+            // 只解码 %XX：URLDecoder 会把路径中的 '+' 解成空格，改写请求语义
+            path = QueryStringDecoder.decodeComponent(rawPath, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+            return respond(ctx, HttpResponseStatus.BAD_REQUEST);
         }
-        if (hasDangerousEncoding(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (hasDangerousEncoding(path)) return respond(ctx, HttpResponseStatus.BAD_REQUEST);
         path = normalize(path);
-        if (path == null) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (path == null) return respond(ctx, HttpResponseStatus.BAD_REQUEST);
 
         ctx.path = path;
         ctx.httpRequest = new HttpRequestImpl(ctx.request, path);
@@ -269,6 +306,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
      */
     private String normalize(String path) {
         if (path.indexOf('\0') >= 0) return null; // NUL 会被下游文件 API 截断，可能绕过路径校验
+        // 反斜杠在 Windows 上等价分隔符，矩阵参数会被下游解析截断，二者都可能绕过基于路径的校验
+        if (path.indexOf('\\') >= 0 || path.indexOf(';') >= 0) return null;
         StringBuilder normalized = new StringBuilder(path.length());
         for (String segment : path.split("/")) {
             if (segment.isEmpty() || segment.equals(".")) continue;
@@ -281,12 +320,12 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     private Publisher<Void> denyUnroutedPath(RequestContext ctx) {
         ctx.entry = handlerManager.findHandler(ctx.path);
-        return ctx.entry == null ? reject(ctx, HttpResponseStatus.NOT_FOUND) : null;
+        return ctx.entry == null ? respond(ctx, HttpResponseStatus.NOT_FOUND) : null;
     }
 
     private Publisher<Void> denyUnauthenticated(RequestContext ctx) {
         if (authManager.doAuth(ctx.httpRequest, ctx.entry)) return null;
-        return reject(ctx.request, ctx.response.header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
+        return respond(ctx.response.header(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_STORE),
                 HttpResponseStatus.UNAUTHORIZED);
     }
 
@@ -298,18 +337,18 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             ctx.streamHandler = ctx.entry.handler.multipartStreamHandler();
         } catch (Throwable e) {
             logger.error("http handler error", getCause(e));
-            return reject(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            return respond(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
-        return ctx.streamHandler == null ? reject(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
+        return ctx.streamHandler == null ? respond(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
     }
 
     // 400：Content-Length 非法或与 Transfer-Encoding 并存；413：声明长度超限。
     // 非法头不能按"长度未知"预留配额，否则少量并发即可耗尽聚合预算
     private Publisher<Void> denyOversizedBody(RequestContext ctx) {
         long size = declaredBodySize(ctx.request);
-        if (size == INVALID_BODY_SIZE) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (size == INVALID_BODY_SIZE) return respond(ctx, HttpResponseStatus.BAD_REQUEST);
         if (size > (ctx.streamRequired ? maxStreamBytes : maxBodyBytes)) {
-            return reject(ctx, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
+            return respond(ctx, HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
         }
         return null;
     }
@@ -317,7 +356,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     // 503：仅聚合分支吃堆内存；流式由 handler 落临时文件，不占此预算
     private Publisher<Void> denyExhaustedMemory(RequestContext ctx) {
         ctx.reservedBytes = ctx.streamRequired ? 0 : reserveAggregation(ctx.request);
-        return ctx.reservedBytes < 0 ? reject(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE) : null;
+        return ctx.reservedBytes < 0 ? respond(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE) : null;
     }
 
     private long reserveAggregation(HttpServerRequest request) {
@@ -357,29 +396,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         return chunked ? UNKNOWN_BODY_SIZE : 0;
     }
 
-    private Publisher<Void> reject(RequestContext ctx, HttpResponseStatus status) {
-        return reject(ctx.request, ctx.response, status);
+    private Publisher<Void> respond(RequestContext ctx, HttpResponseStatus status) {
+        return respond(ctx.response, status);
     }
 
     /**
-     * 发错误响应前先读完请求体：保活连接上残留的请求体会被当作下一个请求解析（请求走私）。
-     * 读取体量同样受限，避免错误分支被当成免费上传通道。
+     * 终止响应一律不读请求体并关闭连接：
+     * 既避免错误分支被当成免费上传通道，也避免残留请求体在保活连接上被当作下一个请求解析（请求走私）。
      */
-    private Publisher<Void> reject(HttpServerRequest request, HttpServerResponse response, HttpResponseStatus status) {
-        Mono<Void> errorResponse = response.status(status).send();
-        AtomicLong receivedBytes = new AtomicLong();
-        return request.receive()
-                .doOnNext(byteBuf -> {
-                    if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxBodyBytes) {
-                        throw new BodyTooLargeException();
-                    }
-                })
-                .then(errorResponse)
-                .onErrorResume(e -> respondAndClose(response, statusOf(getCause(e))));
-    }
-
-    // 请求体未读完，连接无法复用：发送响应并关闭连接，避免残留字节污染后续请求
-    private Mono<Void> respondAndClose(HttpServerResponse response, HttpResponseStatus status) {
+    private Mono<Void> respond(HttpServerResponse response, HttpResponseStatus status) {
         return response
                 .status(status)
                 .header(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
@@ -395,10 +420,14 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     private void addSecurityHeaders(HttpServerResponse response) {
         response.header("X-Content-Type-Options", "nosniff")
-                .header("X-Frame-Options", "SAMEORIGIN")
-                .header("Referrer-Policy", "no-referrer");
+                .header("Referrer-Policy", "no-referrer")
+                .header("Cross-Origin-Opener-Policy", "same-origin")
+                .header("Cross-Origin-Resource-Policy", "same-origin")
+                .header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
         if (csp != null && !csp.isEmpty() && !csp.equals("none")) {
-            response.header("Content-Security-Policy", csp);
+            response.header("Content-Security-Policy", csp); // 嵌套控制交给 frame-ancestors，不再输出 X-Frame-Options
+        } else {
+            response.header("X-Frame-Options", "SAMEORIGIN");
         }
         if (isSslEnabled) {
             response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");

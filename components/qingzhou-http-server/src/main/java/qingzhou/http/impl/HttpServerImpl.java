@@ -31,9 +31,10 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        int selectorThreads = getConfig(config, "selector", 1);
-        int workerThreads = getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2);
-        int idleTimeout = getConfig(config, "idle_timeout", 60); // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
+        int selectorThreads = positive(getConfig(config, "selector", 1), "selector");
+        int workerThreads = positive(getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2), "worker");
+        // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
+        int idleTimeout = positive(getConfig(config, "idle_timeout", 60), "idle_timeout");
         String host = getConfig(config, "host", "0.0.0.0");
         String portStr = config.get("port");
         if (portStr == null || portStr.trim().isEmpty()) {
@@ -66,7 +67,7 @@ public class HttpServerImpl implements HttpServer {
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
         try {
             if (isSslEnabled) {
-                SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher());
+                SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);
                 httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
             }
             disposableServer = httpServer.bindNow();
@@ -84,6 +85,12 @@ public class HttpServerImpl implements HttpServer {
         logger.info("http server stopped");
     }
 
+    private static int positive(int value, String key) {
+        if (value <= 0)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
+        return value;
+    }
+
     // 置空已释放的资源：使 stop 可重复调用，且 start 失败路径可安全复用
     private void disposeResources() {
         if (disposableServer != null) {
@@ -97,7 +104,7 @@ public class HttpServerImpl implements HttpServer {
                         logger.error("failed to close loop resources:", ex);
                         return Mono.empty();
                     })
-                    .subscribe(); // 非阻塞订阅
+                    .block(Duration.ofSeconds(15)); // 同步等待：否则 stop 返回后线程仍在运行，重启时端口与线程残留
             loopResources = null;
         }
     }

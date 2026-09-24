@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import qingzhou.http.server.AuthResult;
@@ -18,7 +16,6 @@ import reactor.netty.http.server.HttpServerRequest;
 
 class HttpRequestImpl implements HttpRequest {
     private static final int MAX_FORM_PARAMS = 1000; // 表单参数个数上限：请求体可达 8MB，不限量会放大内存
-    private static final byte[] FORM_PREFIX = {'/', '?'}; // 表单体解码需要的前缀，否则首个参数会被当作路径丢弃
 
     private final HttpServerRequest request;
     private final String requestPath;
@@ -41,10 +38,14 @@ class HttpRequestImpl implements HttpRequest {
         this.parameters = null; // 请求体变化后需重新解析
     }
 
-    // 认证层写入口，由 AuthManager.doAuth0 在每请求内调用一次；不允许多次调用。
+    // 认证层写入口，由 AuthManager.authenticateWithHandler 在每请求内调用一次；不允许多次调用。
     // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
+        if (authPrincipal != null) throw new IllegalStateException("auth result already set"); // 每请求只允许确定一次
+
         this.authPrincipal = authResult.getPrincipal();
+        if (this.authPrincipal == null) return;
+
         String[] roles = authResult.getRoles();
         this.authRoles = roles == null ? null : roles.clone();
     }
@@ -105,18 +106,18 @@ class HttpRequestImpl implements HttpRequest {
             // 先在局部构建完成再整体发布：直接写字段会让并发读者拿到空表或半填充表
             Map<String, List<String>> parsed = new ConcurrentHashMap<>(); // 并发容器：handler 可能把请求交给业务线程，HashMap 并发 resize 会损坏
             try {
-                parsed.putAll(new QueryStringDecoder(request.uri()).parameters());
+                // 与表单体同阈值：query 侧不再依赖框架默认上限（升级即行为漂移）
+                parsed.putAll(new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters());
             } catch (IllegalArgumentException e) {
                 // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
             }
             byte[] body = requestBody;
             if (body != null && body.length > 0 && isFormUrlencoded()) {
-                // 组合缓冲而非拼接字符串：8MB 请求体经 new String 再拼 "/?" 会产生 2-3 倍内存峰值
-                ByteBuf formBuffer = Unpooled.wrappedBuffer(FORM_PREFIX, body);
                 try {
                     // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
                     // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
-                    new QueryStringDecoder(formBuffer, StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters()
+                    new QueryStringDecoder("/?" + new String(body, StandardCharsets.UTF_8),
+                            StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters()
                             .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
                                 List<String> merged = new ArrayList<>(oldValues);
                                 merged.addAll(newValues);
@@ -124,8 +125,6 @@ class HttpRequestImpl implements HttpRequest {
                             }));
                 } catch (IllegalArgumentException e) {
                     // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
-                } finally {
-                    formBuffer.release();
                 }
             }
             parameters = snapshot = parsed;
@@ -135,7 +134,7 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public byte[] getBody() {
-        return requestBody;
+        return requestBody == null ? null : requestBody.clone(); // 副本：与 getRoles 一致，handler 改动不影响参数解析
     }
 
     @Override

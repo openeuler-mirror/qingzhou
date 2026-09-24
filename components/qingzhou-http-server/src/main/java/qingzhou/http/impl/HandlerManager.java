@@ -17,10 +17,13 @@ public class HandlerManager {
     @Reference
     private Logger logger;
 
-    private final List<String> tempMsg = new ArrayList<>();
+    private final PendingLogs pendingLogs = new PendingLogs();
 
     // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
     private final Map<String, HandlerEntry> handlerMap = new ConcurrentHashMap<>();
+
+    // 按路径长度降序的分发索引：首个前缀命中即为最长匹配，免每请求全表扫描
+    private volatile Route[] routes = new Route[0];
 
     /**
      * 注册路径对应的 handler 与免认证标记。
@@ -36,15 +39,24 @@ public class HandlerManager {
         }
     }
 
+    private static final class Route {
+        final String path;
+        final HandlerEntry entry;
+
+        Route(String path, HandlerEntry entry) {
+            this.path = path;
+            this.entry = entry;
+        }
+    }
+
     @Activate
-    public synchronized void init() {
-        tempMsg.forEach(s -> logger.info(s));
-        tempMsg.clear();
+    public void init() {
+        pendingLogs.replay(logger);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeHttpHandler")
-    public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
+    public void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
         String originPath = properties.get(HttpHandler.HANDLE_PATH);
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
         if (component == null) component = "@App";
@@ -73,27 +85,33 @@ public class HandlerManager {
 
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
         handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth));
+        rebuildRoutes();
 
         // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
-        // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "registered: [" + path + "] by [" + source + "]" + (isNoAuth ? " (no auth)" : "");
-        if (logger != null) {
-            logger.info(msg);
-        } else {
-            tempMsg.add(msg);
+        pendingLogs.log(logger, "registered: [" + path + "] by [" + source + "]" + (isNoAuth ? " (no auth)" : ""));
+        if (isNoAuth) {
+            pendingLogs.warn(logger, "no-auth route: [" + path + "] is publicly reachable, declared by [" + source + "]");
         }
     }
 
     // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽
     private String conflict(String checkPath) {
         String request = withTrailingSlash(checkPath);
-        for (String existsPath : handlerMap.keySet()) {
+        for (Route route : routes) {
+            String existsPath = route.path;
             // 根路径仅作兜底（它必然与所有路径重叠），双向跳过以免注册顺序决定成败
             if (existsPath.equals("/") || request.equals("/")) continue;
             if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
         }
         return null;
+    }
+
+    private void rebuildRoutes() {
+        routes = handlerMap.entrySet().stream()
+                .map(entry -> new Route(entry.getKey(), entry.getValue()))
+                .sorted((a, b) -> b.path.length() - a.path.length())
+                .toArray(Route[]::new);
     }
 
     // 补尾部斜杠：使 /a 只匹配 /a/...，不会误匹配 /abc
@@ -111,6 +129,7 @@ public class HandlerManager {
             return true;
         });
         if (removedPaths.isEmpty()) return;
+        rebuildRoutes();
 
         if (logger != null) logger.info("unregistered: " + removedPaths);
     }
@@ -124,15 +143,9 @@ public class HandlerManager {
      */
     HandlerEntry findHandler(String checkPath) {
         String request = withTrailingSlash(checkPath);
-        HandlerEntry matched = null;
-        int matchedLength = 0;
-        for (Map.Entry<String, HandlerEntry> entry : handlerMap.entrySet()) {
-            String existsPath = entry.getKey();
-            if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
-                matched = entry.getValue();
-                matchedLength = existsPath.length();
-            }
+        for (Route route : routes) {
+            if (request.startsWith(route.path)) return route.entry;
         }
-        return matched;
+        return null;
     }
 }

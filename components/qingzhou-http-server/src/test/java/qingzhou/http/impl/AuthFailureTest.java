@@ -18,7 +18,7 @@ import reactor.netty.http.server.HttpServerRequest;
  * 认证失败节流的单元测试：不起服务，直接驱动 AuthManager.doAuth。
  * <p>
  * 认证失败与已被锁定都返回 false，无法从返回值区分，故统一以「认证器被调用的次数」判定：
- * 一旦锁定，doAuth0 不再执行，认证器也就不会被调用。
+ * 一旦锁定，authenticateWithHandler 不再执行，认证器也就不会被调用。
  */
 public class AuthFailureTest {
     private static final int MAX_TRACKED_HOSTS = 10000; // 与 AuthManager 保持一致
