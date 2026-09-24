@@ -10,7 +10,6 @@ import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.memory.ConversationApi;
 import qingzhou.ai.memory.ConversationStore;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -91,7 +90,7 @@ public class AiChat implements HttpHandler {
         String conversationId = (String) params.get("conversationId");
         // userId 由鉴权层从 token 解析，不接受前端传参
         String userId = ConversationApi.resolveUserId(httpRequest);
-        String[] userRoles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
+        String[] userRoles = httpRequest.getRoles();
 
         // 发出响应前的准备
         httpResponse.contentType("text/event-stream; charset=utf-8")

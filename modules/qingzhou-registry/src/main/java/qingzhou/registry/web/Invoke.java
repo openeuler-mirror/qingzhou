@@ -17,7 +17,6 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -94,7 +93,7 @@ public class Invoke implements HttpHandler {
     }
 
     private boolean permissionForbidReq(HttpRequest httpRequest, HttpResponse httpResponse, AppStub appStub, RequestImpl request) {
-        String[] roles = (String[]) httpRequest.getAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE);
+        String[] roles = httpRequest.getRoles();
         if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
             return false;
         } else {

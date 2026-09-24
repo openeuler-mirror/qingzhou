@@ -1,9 +1,6 @@
 package qingzhou.http.server;
 
 public interface AuthResult {
-    String AUTH_PRINCIPAL_ATTRIBUTE = "auth.principal";
-    String AUTH_ROLES_ATTRIBUTE = "auth.roles";
-
     /**
      * PASS 放行；REJECT 拒绝；ABSTAIN 弃权——本认证器不适用于该请求，交由后续认证器判定。
      */

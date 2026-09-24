@@ -171,6 +171,7 @@ public class AuthHandlerTest {
         String method;
         String remoteHost;
         String header;
+        String principal;
         final Map<String, String> params = new HashMap<>();
 
         @Override
@@ -224,11 +225,12 @@ public class AuthHandlerTest {
         }
 
         @Override
-        public void setAttribute(String name, Object value) {
+        public String getPrincipal() {
+            return principal;
         }
 
         @Override
-        public Object getAttribute(String name) {
+        public String[] getRoles() {
             return null;
         }
     }

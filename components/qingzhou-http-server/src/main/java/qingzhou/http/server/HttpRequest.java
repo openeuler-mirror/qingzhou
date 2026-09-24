@@ -24,7 +24,9 @@ public interface HttpRequest {
 
     byte[] getBody();
 
-    void setAttribute(String name, Object value);
+    // 认证主体：由认证层写入，handler 只读；未认证时为 null
+    String getPrincipal();
 
-    Object getAttribute(String name);
+    // 认证角色：返回副本，handler 只读；未认证时为 null
+    String[] getRoles();
 }

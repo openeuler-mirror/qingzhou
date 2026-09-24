@@ -21,6 +21,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -144,9 +145,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                             byte[] bytes = new byte[byteBuf.readableBytes()];
                             byteBuf.readBytes(bytes);
                             try {
-                                streamHandler.onNext(bytes);
+                                streamHandler.onNext(bytes); // 声明 throws Throwable，而 Consumer.accept 不得抛受检异常
                             } catch (Throwable e) {
-                                throw new RuntimeException(e);
+                                throw Exceptions.propagate(e); // 致命 Error 原样抛出，其余包装后交给下方 err 分支收尾
                             }
                             // ByteBuf 由 Reactor Netty 框架负责释放，无需手动 release，否则引用计数提前耗尽
                         },

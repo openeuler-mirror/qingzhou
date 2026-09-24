@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.*;
@@ -26,17 +25,12 @@ public class AuthManager {
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
     // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性
-    private volatile boolean isAuthDisabled;
-
     private volatile int maxAuthFailures; // 窗口内允许的认证失败次数
     private volatile int authFailWindowMillis;
     private final Map<String, AuthFailure> authFailures = new ConcurrentHashMap<>();
 
     @Activate
     public synchronized void init(Map<String, String> config) { // 与 addAuthenticator 同锁：tempMsg 的暂存-回放与动态绑定并发互斥
-        isAuthDisabled = getConfig(config, "auth_disabled", false);
-        if (isAuthDisabled) logger.warn("http server authentication is disabled");
-
         maxAuthFailures = getConfig(config, "auth_fail_max", 10);
         authFailWindowMillis = getConfig(config, "auth_fail_window", 60) * 1000;
 
@@ -65,7 +59,7 @@ public class AuthManager {
     /**
      * 安全认证：多认证器聚合——任一 PASS 即放行；首个显式 REJECT 优先拒绝（客户端已出示凭据，须明确告知 401）；
      * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。
-     * 免认证标记取自 handlerEntry（随注册路径），全局开关 auth_disabled 在此处判断。
+     * 免认证标记取自 handlerEntry（随注册路径）；不提供全局免认证开关，避免一处配置放通全站。
      */
     boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
         String host = httpRequest.getRemoteHost();
@@ -89,7 +83,7 @@ public class AuthManager {
         int maxTrackedHosts = 10000; // 来源数量上限，超限时淘汰最久未失败者
         while (authFailures.size() > maxTrackedHosts) {
             String oldest = authFailures.entrySet().stream()
-                    .min(Comparator.comparingLong(e -> e.getValue().lastFailureAt))
+                    .min(Comparator.comparingLong(e -> e.getValue().lastFailureAt()))
                     .map(Map.Entry::getKey)
                     .orElse(null);
             if (oldest == null) return;
@@ -116,7 +110,7 @@ public class AuthManager {
         }
         // 系统级 Authenticator
         if (authResult == null) {
-            boolean needAuth = !isAuthDisabled && !handlerEntry.noAuth;
+            boolean needAuth = !handlerEntry.noAuth; // 认证只能按路径由 noAuth 豁免，无全局开关
             if (needAuth) {
                 authResult = authenticate(httpRequest);
             }
@@ -128,13 +122,8 @@ public class AuthManager {
         // 校验未通过
         if (authResult.status() != AuthResult.Status.PASS) return false;
 
-        // 校验通过
-        if (authResult.getPrincipal() != null) {
-            httpRequest.setAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE, authResult.getPrincipal());
-        }
-        if (authResult.getRoles() != null) {
-            httpRequest.setAttribute(AuthResult.AUTH_ROLES_ATTRIBUTE, authResult.getRoles());
-        }
+        // 校验通过：写入受保护的认证字段而非通用 attribute，避免被 handler 覆写
+        httpRequest.setAuth(authResult);
         return true;
     }
 
@@ -160,25 +149,30 @@ public class AuthManager {
         return AuthResult.reject("no credential provided");
     }
 
+    // 用实例自身锁即可：本类实例不逃逸出 AuthManager，三个方法守的是同一组状态
     static final class AuthFailure {
-        private final AtomicInteger count = new AtomicInteger();
-        private volatile long windowStart = System.currentTimeMillis();
+        private int count;
+        private long windowStart = System.currentTimeMillis();
         private long lastFailureAt = windowStart;
 
-        void record() {
-            count.incrementAndGet();
+        synchronized void record() {
+            count++;
             lastFailureAt = System.currentTimeMillis();
         }
 
-        // count 与 windowStart 须在同一锁内读写：否则并行喷射时窗口重置会擦掉已累计的失败数，节流失效
-        boolean isLocked(int maxFailures, int windowMillis) {
+        // count 与 windowStart 须在同一锁内判定：否则并行喷射时窗口重置会擦掉已累计的失败数，节流失效
+        synchronized boolean isLocked(int maxFailures, int windowMillis) {
             long now = System.currentTimeMillis();
             if (now - windowStart > windowMillis) {
                 windowStart = now;
-                count.set(0);
+                count = 0;
             }
-            int failures = count.get();
-            return failures > 0 && failures >= maxFailures;
+            return count > 0 && count >= maxFailures;
+        }
+
+        // 非 volatile 的 long 不保证原子读（JLS 17.7），须在锁内读取
+        synchronized long lastFailureAt() {
+            return lastFailureAt;
         }
     }
 }
