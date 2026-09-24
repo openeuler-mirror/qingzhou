@@ -41,7 +41,7 @@ public class AuthManagerTest {
                 }
 
                 @Override
-                public Authenticator customAuthenticator() {
+                public HandlerAuthenticator customAuthenticator() {
                     return request -> {
                         throw new IllegalStateException("boom");
                     };
@@ -65,7 +65,7 @@ public class AuthManagerTest {
                 }
 
                 @Override
-                public Authenticator customAuthenticator() {
+                public HandlerAuthenticator customAuthenticator() {
                     return request -> AuthResult.pass("tester", new String[]{"admin"});
                 }
             }, "/customAuth");
@@ -87,7 +87,7 @@ public class AuthManagerTest {
                 }
 
                 @Override
-                public Authenticator customAuthenticator() {
+                public HandlerAuthenticator customAuthenticator() {
                     return request -> AuthResult.reject("invalid token");
                 }
             }, "/rejectingAuth");

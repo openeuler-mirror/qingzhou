@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.impl.LlmConverter;
-import qingzhou.http.server.Authenticator;
+import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -61,7 +61,7 @@ public class McpServer implements HttpHandler {
     }
 
     @Override
-    public Authenticator customAuthenticator() {
+    public HandlerAuthenticator customAuthenticator() {
         return request -> mcpAuthenticator.authenticate(request);
     }
 

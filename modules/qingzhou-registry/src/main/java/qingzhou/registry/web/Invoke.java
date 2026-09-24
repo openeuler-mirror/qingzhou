@@ -1,7 +1,6 @@
 package qingzhou.registry.web;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -18,7 +17,10 @@ import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.*;
+import qingzhou.http.server.AuthResult;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -235,13 +237,9 @@ public class Invoke implements HttpHandler {
         }
 
         @Override
-        public void onNext(byte[] data) {
-            if (parser == null) return;
-
-            try {
+        public void onNext(byte[] data) throws Throwable {
+            if (parser != null) {
                 parser.feed(data, false);
-            } catch (IOException e) {
-                onError(e);
             }
         }
 
@@ -269,18 +267,8 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onError(Throwable t) {
-            logger.error(t.getMessage(), t);
-
-            if (parser == null) return;
-            else parser.abort();
-
-            if (httpResponse != null) {
-                if (t instanceof BodyTooLargeException) {
-                    httpResponse.status(413)
-                            .sendFinish(t.getMessage()); // 上传超限是客户端问题，不是服务器故障
-                } else {
-                    httpResponse.status500Finish(t.getMessage());
-                }
+            if (parser != null) {
+                parser.abort();
             }
         }
 

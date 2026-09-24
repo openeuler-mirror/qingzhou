@@ -19,7 +19,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
-import qingzhou.http.server.BodyTooLargeException;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
@@ -144,7 +143,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 .subscribe(byteBuf -> {
                             byte[] bytes = new byte[byteBuf.readableBytes()];
                             byteBuf.readBytes(bytes);
-                            streamHandler.onNext(bytes);
+                            try {
+                                streamHandler.onNext(bytes);
+                            } catch (Throwable e) {
+                                throw new RuntimeException(e);
+                            }
                             // ByteBuf 由 Reactor Netty 框架负责释放，无需手动 release，否则引用计数提前耗尽
                         },
                         err -> {

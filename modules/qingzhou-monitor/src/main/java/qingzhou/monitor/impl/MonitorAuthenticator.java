@@ -1,4 +1,4 @@
-package qingzhou.ai.mcp;
+package qingzhou.monitor.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -13,9 +13,9 @@ import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpRequest;
 
-@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        service = McpAuthenticator.class)
-public class McpAuthenticator implements HandlerAuthenticator { // 系统级认证器是 Authenticator，两者刻意不同型
+@Component(configurationPid = "qingzhou-monitor", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        service = MonitorAuthenticator.class)
+public class MonitorAuthenticator implements HandlerAuthenticator { // 系统级认证器是 Authenticator，两者刻意不同型
     @Reference
     private Crypto crypto;
 
@@ -24,9 +24,9 @@ public class McpAuthenticator implements HandlerAuthenticator { // 系统级认�
 
     @Activate
     public void init(Map<String, String> config) {
-        String raw = config.getOrDefault("mcp_auth_token", "").trim();
+        String raw = config.getOrDefault("auth_token", "").trim();
         // 解密只在激活时做一次：每请求解密会在明文配置下反复打印告警并放大 I/O
-        authToken = raw.isEmpty() ? "" : crypto.getGlobalCipher().tryDecrypt(raw, "qingzhou-ai.mcp_auth_token");
+        authToken = raw.isEmpty() ? "" : crypto.getGlobalCipher().tryDecrypt(raw, "qingzhou-monitor.auth_token");
     }
 
     @Override
