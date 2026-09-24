@@ -3,6 +3,7 @@ package qingzhou.http.impl;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,15 +15,18 @@ import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
 
 class HttpRequestImpl implements HttpRequest {
+    private static final int MAX_FORM_PARAMS = 1000; // 表单参数个数上限：请求体可达 8MB，不限量会放大内存
+
     private final HttpServerRequest request;
     private final String requestPath;
 
-    private byte[] requestBody;
-    private Map<String, List<String>> parameters;
+    // 以下由框架/认证层在 EventLoop 写入，handler 可能在业务线程读取，须保证可见性
+    private volatile byte[] requestBody;
+    private volatile Map<String, List<String>> parameters;
 
     // 认证结果：由认证层写入，对外只暴露只读的强类型接口
-    private String authPrincipal;
-    private String[] authRoles;
+    private volatile String authPrincipal;
+    private volatile String[] authRoles;
 
     HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
@@ -34,7 +38,8 @@ class HttpRequestImpl implements HttpRequest {
         this.parameters = null; // 请求体变化后需重新解析
     }
 
-    // 仅认证层调用：roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
+    // 认证层写入口，由 AuthManager.doAuth0 在每请求内调用一次；不允许多次调用。
+    // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
         this.authPrincipal = authResult.getPrincipal();
         String[] roles = authResult.getRoles();
@@ -42,7 +47,7 @@ class HttpRequestImpl implements HttpRequest {
     }
 
     @Override
-    public String getFullPath() {
+    public String getRawUri() {
         return request.uri();
     }
 
@@ -102,7 +107,9 @@ class HttpRequestImpl implements HttpRequest {
             if (requestBody != null && requestBody.length > 0 && isFormUrlencoded()) {
                 try {
                     // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
-                    new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8)).parameters()
+                    // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
+                    new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8),
+                            StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters()
                             .forEach((key, values) -> parameters.merge(key, values, (oldValues, newValues) -> {
                                 List<String> merged = new ArrayList<>(oldValues);
                                 merged.addAll(newValues);
@@ -113,7 +120,7 @@ class HttpRequestImpl implements HttpRequest {
                 }
             }
         }
-        return parameters;
+        return Collections.unmodifiableMap(parameters); // 只读视图：防止调用方篡改已解析的参数
     }
 
     @Override

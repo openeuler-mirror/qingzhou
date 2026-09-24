@@ -136,7 +136,7 @@ public class HttpRequestImplTest {
 
         Assert.assertEquals(request.getMethod(), "DELETE");
         Assert.assertEquals(request.getPath(), "/api/user/1");
-        Assert.assertEquals(request.getFullPath(), "/api/user/1?debug=1&page=2");
+        Assert.assertEquals(request.getRawUri(), "/api/user/1?debug=1&page=2");
     }
 
     // ---------- 8. 请求头读取 ----------
@@ -221,6 +221,13 @@ public class HttpRequestImplTest {
 
         Assert.assertNull(request.getPrincipal());
         Assert.assertNull(request.getRoles());
+    }
+
+    @Test(expectedExceptions = UnsupportedOperationException.class)
+    public void parametersReady_getParameters_isUnmodifiable() {
+        HttpRequestImpl request = newRequest("/path?a=1", "/path", HttpMethod.GET, null, false);
+
+        request.getParameters().put("b", Arrays.asList("2"));
     }
 
     // ---------- 桩对象构造 ----------

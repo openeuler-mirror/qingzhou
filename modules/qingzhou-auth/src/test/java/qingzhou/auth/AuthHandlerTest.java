@@ -185,7 +185,7 @@ public class AuthHandlerTest {
         }
 
         @Override
-        public String getFullPath() {
+        public String getRawUri() {
             return path;
         }
 

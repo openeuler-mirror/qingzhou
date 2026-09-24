@@ -79,7 +79,7 @@ public class AuthHandler implements HttpHandler {
                 response.status(405).sendFinish("method not allowed");
                 return;
             }
-            if (request.getFullPath().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
+            if (request.getRawUri().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
                 response.status400Finish();
                 return;
             }

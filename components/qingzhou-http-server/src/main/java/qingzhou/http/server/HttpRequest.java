@@ -8,10 +8,21 @@ public interface HttpRequest {
 
     String getPath();
 
-    String getFullPath();
+    /**
+     * 原始未解码的请求 URI（含 query）。
+     * 仅可用于日志与展示：<b>禁止</b>用于路由或任何安全判断——它未做解码与规范化。
+     */
+    String getRawUri();
 
+    /**
+     * 取同名参数的第一个值。同名参数按「query 在前、表单体在后」合并，
+     * 故该方法返回的是 query 中的值；需要区分来源时应自行拆分处理。
+     */
     String getParameter(String name);
 
+    /**
+     * 全部参数（query 与表单体合并后的只读视图）。同名参数按「query 在前、表单体在后」排列。
+     */
     Map<String, List<String>> getParameters();
 
     String getHeader(String header);
@@ -22,6 +33,9 @@ public interface HttpRequest {
 
     boolean isFormUrlencoded();
 
+    /**
+     * 请求体。返回内部数组，<b>调用方不得修改</b>其内容。
+     */
     byte[] getBody();
 
     // 认证主体：由认证层写入，handler 只读；未认证时为 null
