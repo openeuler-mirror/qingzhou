@@ -80,8 +80,12 @@ public class AuthManager {
         return doneAuth;
     }
 
-    // 超限后按最久未失败淘汰：只回收过期项的话，窗口内的新来源永远删不掉，map 会无界增长
+    // 超限后先回收窗口过期项再按最久未失败淘汰：只淘汰不回收，窗口内的新来源会挤掉有效记录，防爆破失效
     private void evictOverflow() {
+        if (authFailures.size() <= MAX_TRACKED_HOSTS) return; // 容量未超，不做任何遍历
+        long expireBefore = System.currentTimeMillis() - authFailWindowMillis;
+        authFailures.entrySet().removeIf(e -> e.getValue().lastFailureAt() < expireBefore);
+
         while (authFailures.size() > MAX_TRACKED_HOSTS) {
             String oldest = authFailures.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().lastFailureAt()))

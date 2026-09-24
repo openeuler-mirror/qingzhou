@@ -97,20 +97,23 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public Map<String, List<String>> getParameters() {
-        if (parameters == null) {
-            parameters = new ConcurrentHashMap<>(); // 并发容器：handler 可能把请求交给业务线程，HashMap 并发 resize 会损坏
+        Map<String, List<String>> snapshot = parameters;
+        if (snapshot == null) {
+            // 先在局部构建完成再整体发布：直接写字段会让并发读者拿到空表或半填充表
+            Map<String, List<String>> parsed = new ConcurrentHashMap<>(); // 并发容器：handler 可能把请求交给业务线程，HashMap 并发 resize 会损坏
             try {
-                parameters.putAll(new QueryStringDecoder(request.uri()).parameters());
+                parsed.putAll(new QueryStringDecoder(request.uri()).parameters());
             } catch (IllegalArgumentException e) {
                 // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
             }
-            if (requestBody != null && requestBody.length > 0 && isFormUrlencoded()) {
+            byte[] body = requestBody;
+            if (body != null && body.length > 0 && isFormUrlencoded()) {
                 try {
                     // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
                     // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
-                    new QueryStringDecoder("/?" + new String(requestBody, StandardCharsets.UTF_8),
+                    new QueryStringDecoder("/?" + new String(body, StandardCharsets.UTF_8),
                             StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters()
-                            .forEach((key, values) -> parameters.merge(key, values, (oldValues, newValues) -> {
+                            .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
                                 List<String> merged = new ArrayList<>(oldValues);
                                 merged.addAll(newValues);
                                 return merged;
@@ -119,8 +122,9 @@ class HttpRequestImpl implements HttpRequest {
                     // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
                 }
             }
+            parameters = snapshot = parsed;
         }
-        return Collections.unmodifiableMap(parameters); // 只读视图：防止调用方篡改已解析的参数
+        return Collections.unmodifiableMap(snapshot); // 只读视图：防止调用方篡改已解析的参数
     }
 
     @Override

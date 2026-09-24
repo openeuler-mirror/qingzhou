@@ -128,13 +128,19 @@ public class HttpServerImpl implements HttpServer {
     @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
     static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
         String val = config.get(key);
-        if (val == null || val.isEmpty()) return defaultValue;
+        if (val == null) return defaultValue;
+        val = val.trim(); // 值允许带前后空白，但不得因此解析失败或静默降级
+        if (val.isEmpty()) return defaultValue;
 
         if (defaultValue instanceof String) return (T) val;
         // 数值解析失败直接抛出，暴露配置笔误而非静默回退默认值
         if (defaultValue instanceof Integer) return (T) Integer.valueOf(val);
         if (defaultValue instanceof Long) return (T) Long.valueOf(val);
-        if (defaultValue instanceof Boolean) return (T) Boolean.valueOf(val);
+        if (defaultValue instanceof Boolean) {
+            // 布尔不得静默降级：非 true/false 一律报错，否则 ssl_enabled=TRUE/1 会被解析为关闭
+            if ("true".equals(val) || "false".equals(val)) return (T) Boolean.valueOf(val);
+            throw new IllegalArgumentException(key + " must be true or false: " + val);
+        }
 
         return defaultValue;
     }

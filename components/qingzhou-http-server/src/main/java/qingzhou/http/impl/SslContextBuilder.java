@@ -16,6 +16,14 @@ import io.netty.handler.ssl.SslContext;
 import qingzhou.crypto.Cipher;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露
+    // 不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与 3DES 等弱套件，故显式收敛
+    private static final String[] CIPHERS = {
+            "TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+            "TLS_RSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA256"
+    };
+
     private SslContextBuilder() {
     }
 
@@ -50,8 +58,11 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
 
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keyPassword);
-            // 显式收敛协议：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1
-            return io.netty.handler.ssl.SslContextBuilder.forServer(keyManagerFactory).protocols(tlsProtocols()).build();
+            // 显式收敛协议与套件：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与弱套件
+            return io.netty.handler.ssl.SslContextBuilder.forServer(keyManagerFactory)
+                    .protocols(tlsProtocols())
+                    .ciphers(Arrays.asList(CIPHERS)) // JDK 不支持的套件由 Netty 过滤，不会导致空套件
+                    .build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
         } finally {

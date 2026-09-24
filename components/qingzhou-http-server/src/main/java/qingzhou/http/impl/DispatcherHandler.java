@@ -4,9 +4,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
@@ -46,6 +46,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
     private static final long UNKNOWN_BODY_SIZE = -1; // chunked：长度未知
     private static final long INVALID_BODY_SIZE = -2; // 非法 Content-Length 或与 Transfer-Encoding 并存
+    private static final String ALLOWED_METHODS = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS";
 
     // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
     private final List<RequestGate> gates = Arrays.asList(
@@ -106,6 +107,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
     private void release(RequestContext ctx) {
+        if (!ctx.released.compareAndSet(false, true)) return; // 归还次数须与 tryAcquire 一致，重复订阅不得超发许可
         concurrentSemaphore.release();
         if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
     }
@@ -201,13 +203,16 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                     }
                     return ctx.response.sendByteArray(streamResponse.asFlux()).then();
                 })
-                .onErrorResume(e -> respondAndClose(ctx.response, statusOf(getCause(e)))); // 连接中断等也应回响应，且不能一律报 413
+                // 连接中断等也应回响应，且不能一律报 413；已写出响应体时不得再发状态行，否则造成响应污染
+                .onErrorResume(e -> httpResponse.isCommitted()
+                        ? Mono.empty()
+                        : respondAndClose(ctx.response, statusOf(getCause(e))));
     }
 
     // 405：TRACE 等会落到兜底 handler（注册在 / 的页面），有跨站追踪风险
     private Publisher<Void> denyDisallowedMethod(RequestContext ctx) {
         return isMethodAllowed(ctx.request.method()) ? null
-                : reject(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED);
+                : reject(ctx.request, ctx.response.header(HttpHeaderNames.ALLOW, ALLOWED_METHODS), HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
     // TRACE 等非业务方法不应进入任何 handler；PATCH 为 qingzhou-ai 会话接口所需
@@ -222,13 +227,17 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private Publisher<Void> denyUnnormalizedPath(RequestContext ctx) {
         String uri = ctx.request.uri();
         int queryIndex = uri.indexOf('?');
-        String path = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
+        String rawPath = queryIndex < 0 ? uri : uri.substring(0, queryIndex);
+        // absolute-form（http://host/x）与 "*" 会被下游按 origin-form 解析出错误路径，直接拒绝
+        if (!rawPath.startsWith("/")) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+
+        String path;
         try {
-            path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+            path = URLDecoder.decode(rawPath, StandardCharsets.UTF_8.name());
         } catch (Exception e) {
             return reject(ctx, HttpResponseStatus.BAD_REQUEST);
         }
-        if (isDoubleEncoded(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (hasPercentEncoding(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
         path = normalize(path);
         if (path == null) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
 
@@ -306,10 +315,16 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
     }
 
-    // 一次解码后仍保留编码形态，说明原始路径被二次编码（如 %252e%252e），各 handler 的穿越防护未必覆盖得住
-    private boolean isDoubleEncoded(String path) {
-        String upper = path.toUpperCase(Locale.ROOT);
-        return upper.contains("%2E") || upper.contains("%25");
+    // 一次解码后仍形如 %XX，说明原始路径被多层编码（如 %252e%252e、%252f），各 handler 的穿越防护未必覆盖得住
+    private boolean hasPercentEncoding(String path) {
+        for (int i = path.indexOf('%'); i >= 0 && i + 2 < path.length(); i = path.indexOf('%', i + 1)) {
+            if (isHexDigit(path.charAt(i + 1)) && isHexDigit(path.charAt(i + 2))) return true;
+        }
+        return false;
+    }
+
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
     // 无请求体返回 0；chunked 返回 UNKNOWN_BODY_SIZE；
@@ -321,7 +336,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         if (value != null) {
             if (chunked) return INVALID_BODY_SIZE;
             try {
-                return Long.parseLong(value);
+                long size = Long.parseLong(value);
+                return size < 0 ? INVALID_BODY_SIZE : size; // 负长度会按 0 预留，绕过全局聚合预算
             } catch (NumberFormatException e) {
                 return INVALID_BODY_SIZE;
             }
@@ -424,6 +440,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private static final class RequestContext {
         final HttpServerRequest request;
         final HttpServerResponse response;
+        final AtomicBoolean released = new AtomicBoolean();
 
         String path; // 规范化后的路径
         HandlerManager.HandlerEntry entry;

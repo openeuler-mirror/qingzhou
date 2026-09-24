@@ -71,8 +71,10 @@ public class HandlerManager {
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
         handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth));
 
+        // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
+        String source = reference != null ? reference.getBundle().getSymbolicName() : component;
         // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "registered: [" + path + "]" + (isNoAuth ? " (no auth)" : "");
+        String msg = "registered: [" + path + "] by [" + source + "]" + (isNoAuth ? " (no auth)" : "");
         if (logger != null) {
             logger.info(msg);
         } else {
