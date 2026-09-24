@@ -4,6 +4,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,6 +22,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
+import reactor.core.Disposable;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,7 +53,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
     private final List<RequestGate> gates = Arrays.asList(
             this::denyDisallowedMethod, // 405
-            this::denyUnnormalizedPath, // 400：解码失败 / 二次编码 / 路径穿越
+            this::respondOptions,       // 204：预检不下放业务 handler
+            this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越
             this::denyUnroutedPath,     // 404
             this::denyUnauthenticated,  // 401
             this::denyUnsupportedBody,  // 415
@@ -139,7 +142,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             return reject(ctx.request, ctx.response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         AtomicLong receivedBytes = new AtomicLong();
-        ctx.request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
+        Disposable receiveDisposable = ctx.request.receive() // 下面开始 直接订阅原始数据流，不进行 聚合
                 .doOnNext(byteBuf -> { // 限制上传总量，超限触发 onError，由 handler 清理临时文件并回错误
                     if (receivedBytes.addAndGet(byteBuf.readableBytes()) > maxStreamBytes) {
                         throw new BodyTooLargeException();
@@ -171,7 +174,10 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                             httpResponse.finish();
                         }
                 );
-        return ctx.response.sendByteArray(streamResponse.asFlux()).then();
+        return ctx.response.sendByteArray(streamResponse.asFlux())
+                .then()
+                // 响应结束即停止读请求体：handler 在 onBegin 中就结束响应时，否则会继续读到 maxStreamBytes
+                .doFinally(signal -> receiveDisposable.dispose());
     }
 
     private Publisher<Void> aggregate(RequestContext ctx, HttpResponseImpl httpResponse, Sinks.Many<byte[]> streamResponse) {
@@ -204,15 +210,26 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                     return ctx.response.sendByteArray(streamResponse.asFlux()).then();
                 })
                 // 连接中断等也应回响应，且不能一律报 413；已写出响应体时不得再发状态行，否则造成响应污染
-                .onErrorResume(e -> httpResponse.isCommitted()
-                        ? Mono.empty()
-                        : respondAndClose(ctx.response, statusOf(getCause(e))));
+                .onErrorResume(e -> {
+                    if (httpResponse.isCommitted()) {
+                        httpResponse.finish(); // 已提交只能补终止信号，否则 sink 不结束、许可无法归还
+                        return Mono.empty();
+                    }
+                    return respondAndClose(ctx.response, statusOf(getCause(e)));
+                });
     }
 
     // 405：TRACE 等会落到兜底 handler（注册在 / 的页面），有跨站追踪风险
     private Publisher<Void> denyDisallowedMethod(RequestContext ctx) {
         return isMethodAllowed(ctx.request.method()) ? null
                 : reject(ctx.request, ctx.response.header(HttpHeaderNames.ALLOW, ALLOWED_METHODS), HttpResponseStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // 204：OPTIONS 多为 CORS 预检，下放业务 handler 会返回页面内容，语义错误
+    private Publisher<Void> respondOptions(RequestContext ctx) {
+        return ctx.request.method() == HttpMethod.OPTIONS
+                ? reject(ctx.request, ctx.response.header(HttpHeaderNames.ALLOW, ALLOWED_METHODS), HttpResponseStatus.NO_CONTENT)
+                : null;
     }
 
     // TRACE 等非业务方法不应进入任何 handler；PATCH 为 qingzhou-ai 会话接口所需
@@ -237,7 +254,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         } catch (Exception e) {
             return reject(ctx, HttpResponseStatus.BAD_REQUEST);
         }
-        if (hasPercentEncoding(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
+        if (hasDangerousEncoding(path)) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
         path = normalize(path);
         if (path == null) return reject(ctx, HttpResponseStatus.BAD_REQUEST);
 
@@ -275,15 +292,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500
     private Publisher<Void> denyUnsupportedBody(RequestContext ctx) {
-        ctx.streamRequired = ctx.request.method() == HttpMethod.POST && ctx.request.isMultipart();
+        if (ctx.request.method() != HttpMethod.POST || !ctx.request.isMultipart()) return null;
+        ctx.streamRequired = true;
         try {
             ctx.streamHandler = ctx.entry.handler.multipartStreamHandler();
         } catch (Throwable e) {
             logger.error("http handler error", getCause(e));
             return reject(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
-        return ctx.streamRequired && ctx.streamHandler == null
-                ? reject(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
+        return ctx.streamHandler == null ? reject(ctx, HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE) : null;
     }
 
     // 400：Content-Length 非法或与 Transfer-Encoding 并存；413：声明长度超限。
@@ -315,16 +332,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
     }
 
-    // 一次解码后仍形如 %XX，说明原始路径被多层编码（如 %252e%252e、%252f），各 handler 的穿越防护未必覆盖得住
-    private boolean hasPercentEncoding(String path) {
-        for (int i = path.indexOf('%'); i >= 0 && i + 2 < path.length(); i = path.indexOf('%', i + 1)) {
-            if (isHexDigit(path.charAt(i + 1)) && isHexDigit(path.charAt(i + 2))) return true;
-        }
-        return false;
-    }
-
-    private static boolean isHexDigit(char c) {
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    // 一次解码后仍残留 . / \ NUL 的编码形态，说明原始路径被多层编码（如 %252e%252e、%252f），
+    // 各 handler 的穿越防护未必覆盖得住；只拦危险编码，避免误拒文件名含 % 的合法路径
+    private boolean hasDangerousEncoding(String path) {
+        String upper = path.toUpperCase(Locale.ROOT);
+        return upper.contains("%2E") || upper.contains("%2F") || upper.contains("%5C") || upper.contains("%00");
     }
 
     // 无请求体返回 0；chunked 返回 UNKNOWN_BODY_SIZE；

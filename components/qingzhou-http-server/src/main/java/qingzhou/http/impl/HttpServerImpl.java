@@ -139,7 +139,7 @@ public class HttpServerImpl implements HttpServer {
         if (defaultValue instanceof Boolean) {
             // 布尔不得静默降级：非 true/false 一律报错，否则 ssl_enabled=TRUE/1 会被解析为关闭
             if ("true".equals(val) || "false".equals(val)) return (T) Boolean.valueOf(val);
-            throw new IllegalArgumentException(key + " must be true or false: " + val);
+            throw new IllegalArgumentException(key + " must be exactly 'true' or 'false' (case sensitive), got: " + val);
         }
 
         return defaultValue;

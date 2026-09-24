@@ -65,7 +65,10 @@ public class HandlerManager {
 
         String conflict = conflict(path);
         if (conflict != null) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).handler.getClass().getName() + "]");
+            // handler 可能已被并发解绑，取条目须判空，否则注册流程以 NPE 失败
+            HandlerEntry exists = handlerMap.get(conflict);
+            String owner = exists != null ? exists.handler.getClass().getName() : "unloaded bundle";
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + owner + "]");
         }
 
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));

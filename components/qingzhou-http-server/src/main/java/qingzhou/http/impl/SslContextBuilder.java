@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -19,8 +21,9 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
     // 不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与 3DES 等弱套件，故显式收敛
     private static final String[] CIPHERS = {
             "TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
             "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
             "TLS_RSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_128_CBC_SHA256"
     };
 
@@ -61,12 +64,26 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             // 显式收敛协议与套件：不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与弱套件
             return io.netty.handler.ssl.SslContextBuilder.forServer(keyManagerFactory)
                     .protocols(tlsProtocols())
-                    .ciphers(Arrays.asList(CIPHERS)) // JDK 不支持的套件由 Netty 过滤，不会导致空套件
+                    .ciphers(supportedCiphers())
                     .build();
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
         } finally {
             Arrays.fill(keyPassword, '\0');
+        }
+    }
+
+    // 逐个比对 JDK 支持清单：EC 证书下 RSA 套件会被全过滤，空套件会导致握手失败，故全不匹配时回退默认
+    private static List<String> supportedCiphers() {
+        try {
+            List<String> supported = Arrays.asList(SSLContext.getDefault().getSupportedSSLParameters().getCipherSuites());
+            List<String> enabled = new ArrayList<>();
+            for (String cipher : CIPHERS) {
+                if (supported.contains(cipher)) enabled.add(cipher);
+            }
+            return enabled.isEmpty() ? supported : enabled;
+        } catch (NoSuchAlgorithmException e) {
+            return Arrays.asList(CIPHERS); // 取不到支持列表时按声明值交给 Netty 过滤
         }
     }
 
