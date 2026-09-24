@@ -129,11 +129,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     private Publisher<Void> receiveStream(RequestContext ctx, HttpResponseImpl httpResponse, Sinks.Many<byte[]> streamResponse) {
         HttpHandler.StreamHandler streamHandler = ctx.streamHandler;
-        try {
-            streamHandler.onBegin(ctx.httpRequest, httpResponse);
-        } catch (Throwable e) {
+        Throwable beginError = safeRun(() -> streamHandler.onBegin(ctx.httpRequest, httpResponse));
+        if (beginError != null) {
+            logger.error("http handler error", beginError);
+            safeRun(() -> streamHandler.onError(beginError)); // onBegin 可能已建临时文件，须给 handler 清理机会
             // handler 回调同步抛出时请求体还没读完，须先排空再回 500，否则残留字节会被当作下一个请求解析
-            logger.error("http handler error", getCause(e));
             return reject(ctx.request, ctx.response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         AtomicLong receivedBytes = new AtomicLong();
@@ -155,7 +155,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                         },
                         err -> {
                             Throwable cause = getCause(err);
-                            streamHandler.onError(cause);
+                            safeRun(() -> streamHandler.onError(cause)); // 回调自身出错不得吞掉下方兜底
                             // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
                             if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
@@ -163,7 +163,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                                 httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
                             }
                         },
-                        streamHandler::onComplete // 完成信号
+                        () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还
+                            Throwable cause = safeRun(streamHandler::onComplete);
+                            if (cause != null) logger.error("http stream handler error", cause);
+                            httpResponse.finish();
+                        }
                 );
         return ctx.response.sendByteArray(streamResponse.asFlux()).then();
     }
@@ -361,7 +365,19 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 : HttpResponseStatus.INTERNAL_SERVER_ERROR;
     }
 
-    private Throwable getCause(Throwable e) {
+    private void addSecurityHeaders(HttpServerResponse response) {
+        response.header("X-Content-Type-Options", "nosniff")
+                .header("X-Frame-Options", "SAMEORIGIN")
+                .header("Referrer-Policy", "no-referrer");
+        if (csp != null && !csp.isEmpty() && !csp.equals("none")) {
+            response.header("Content-Security-Policy", csp);
+        }
+        if (isSslEnabled) {
+            response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        }
+    }
+
+    private static Throwable getCause(Throwable e) {
         Throwable cause = e;
 
         while (cause != null
@@ -373,16 +389,18 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         return cause;
     }
 
-    private void addSecurityHeaders(HttpServerResponse response) {
-        response.header("X-Content-Type-Options", "nosniff")
-                .header("X-Frame-Options", "SAMEORIGIN")
-                .header("Referrer-Policy", "no-referrer");
-        if (csp != null && !csp.isEmpty() && !csp.equals("none")) {
-            response.header("Content-Security-Policy", csp);
+    // 回调可抛 Throwable（含 OSGi 刷 bundle 时的 NoClassDefFoundError），一律收敛为返回值，避免中断收尾链
+    private static Throwable safeRun(Callback callback) {
+        try {
+            callback.run();
+            return null;
+        } catch (Throwable e) {
+            return getCause(e);
         }
-        if (isSslEnabled) {
-            response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-        }
+    }
+
+    private interface Callback {
+        void run() throws Throwable;
     }
 
     // 请求体超限的内部信号：仅用于在 Reactor 链上把 413 与 500 区分开，不对外暴露
