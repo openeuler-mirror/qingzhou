@@ -12,7 +12,10 @@ import org.testng.annotations.Test;
 import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.impl.LoggerImpl;
 import reactor.netty.http.server.HttpServerRequest;
+
+import static qingzhou.http.impl.HttpServerImplTest.setField;
 
 /**
  * 认证失败节流的单元测试：不起服务，直接驱动 AuthManager.doAuth。
@@ -70,11 +73,13 @@ public class AuthFailureTest {
                 "failure records must stay bounded, was " + tracked);
     }
 
-    private static AuthManager manager(int maxFailures, int windowSeconds) {
+    private static AuthManager manager(int maxFailures, int windowSeconds) throws Exception {
         AuthManager authManager = new AuthManager();
         Map<String, String> config = new HashMap<>();
         config.put("auth_fail_max", String.valueOf(maxFailures));
         config.put("auth_fail_window", String.valueOf(windowSeconds));
+        LoggerImpl logger = new LoggerImpl();
+        setField(authManager, "logger", logger);
         authManager.init(config);
         return authManager;
     }

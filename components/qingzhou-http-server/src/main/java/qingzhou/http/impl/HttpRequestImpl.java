@@ -114,10 +114,10 @@ class HttpRequestImpl implements HttpRequest {
             byte[] body = requestBody;
             if (body != null && body.length > 0 && isFormUrlencoded()) {
                 try {
-                    // 带路径前缀、默认解码（hasPath=true 时 "?x=y" 的 "?" 会被正确剥离）
+                    // hasPath=false：表单体整段即 query，无需拼 "/?" 前缀（省掉一次与请求体等长的字符串分配）
                     // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
-                    new QueryStringDecoder("/?" + new String(body, StandardCharsets.UTF_8),
-                            StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters()
+                    new QueryStringDecoder(new String(body, StandardCharsets.UTF_8),
+                            StandardCharsets.UTF_8, false, MAX_FORM_PARAMS).parameters()
                             .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
                                 List<String> merged = new ArrayList<>(oldValues);
                                 merged.addAll(newValues);

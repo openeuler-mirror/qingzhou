@@ -84,10 +84,11 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         isSslEnabled = getConfig(config, "ssl_enabled", true);
 
         maxStreamBytes = atLeast(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), 1L, "max_stream_bytes");
-        maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
-        maxAggregatedBytes = getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024);
-        if (maxBodyBytes > maxAggregatedBytes) { // 否则长度未知的请求恒被拒，服务不可用却无明确报错
-            throw new IllegalArgumentException("max_body_bytes must not exceed max_aggregated_bytes");
+        maxBodyBytes = atLeast(getConfig(config, "max_body_bytes", 8 * 1024 * 1024), 1, "max_body_bytes");
+        maxAggregatedBytes = atLeast(getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024), 1L, "max_aggregated_bytes");
+        // 否则长度未知的请求恒被拒，服务不可用却无明确报错
+        if (maxBodyBytes > maxAggregatedBytes) {
+            throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");
         }
         csp = getConfig(config, "csp", "none");
         permissionsPolicy = getConfig(config, "permissions_policy", "geolocation=(), microphone=(), camera=()");
