@@ -25,6 +25,7 @@ class HttpRequestImpl implements HttpRequest {
     private volatile Map<String, List<String>> parameters;
 
     // 认证结果：由认证层写入，对外只暴露只读的强类型接口
+    private volatile boolean authSet;
     private volatile String authPrincipal;
     private volatile String[] authRoles;
 
@@ -41,13 +42,15 @@ class HttpRequestImpl implements HttpRequest {
     // 认证层写入口，由 AuthManager.authenticateWithHandler 在每请求内调用一次；不允许多次调用。
     // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
-        if (authPrincipal != null) throw new IllegalStateException("auth result already set"); // 每请求只允许确定一次
+        // 判据独立于 principal：否则无主体的认证结果会让下面的防护永不触发
+        if (authSet) throw new IllegalStateException("auth result already set");
+        authSet = true;
 
-        this.authPrincipal = authResult.getPrincipal();
-        if (this.authPrincipal == null) return;
+        authPrincipal = authResult.getPrincipal();
+        if (authPrincipal == null) return; // 角色依附于身份：无主体则无角色
 
         String[] roles = authResult.getRoles();
-        this.authRoles = roles == null ? null : roles.clone();
+        authRoles = roles == null ? null : roles.clone();
     }
 
     @Override

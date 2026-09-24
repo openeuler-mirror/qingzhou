@@ -33,7 +33,7 @@ public class HttpServerImplTest {
 
     @Test
     public void normal_start_listenHttpService() throws Exception {
-        HttpServerImpl httpServer = build(0);
+        HttpServerImpl httpServer = build();
         HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
@@ -43,7 +43,7 @@ public class HttpServerImplTest {
 
     @Test
     public void normal_stop_requestGetConnectException() throws Exception {
-        HttpServerImpl httpServer = build(0);
+        HttpServerImpl httpServer = build();
         int port = actualPort(httpServer);
         httpServer.stop();
         try {
@@ -57,7 +57,7 @@ public class HttpServerImplTest {
 
     @Test
     public void normalPath_registerHttpHandler_usePathHttpService() throws Exception {
-        HttpServerImpl httpServer = build(0);
+        HttpServerImpl httpServer = build();
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
@@ -72,7 +72,7 @@ public class HttpServerImplTest {
 
     @Test
     public void normalPath_unregisterHttpHandler_noPathHttpService() throws Exception {
-        HttpServerImpl httpServer = build(0);
+        HttpServerImpl httpServer = build();
 
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
@@ -87,7 +87,7 @@ public class HttpServerImplTest {
 
     @Test
     public void sslEnabled_httpsRequest_returns200() throws Exception {
-        HttpServerImpl httpServer = start(sslConfig(0));
+        HttpServerImpl httpServer = start(sslConfig());
         try {
             String path = "/sslTest";
             httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.sendFinish("ssl-ok"), path);
@@ -105,14 +105,14 @@ public class HttpServerImplTest {
 
     @Test
     public void sslEnabledWithoutKeystorePath_start_throwsException() throws Exception {
-        Map<String, String> config = sslConfig(0);
+        Map<String, String> config = sslConfig();
         config.remove("ssl_keystore_path");
         assertStartFails(config, "ssl_keystore_path");
     }
 
     @Test
     public void sslKeystorePathNotExist_start_throwsException() throws Exception {
-        Map<String, String> config = sslConfig(0);
+        Map<String, String> config = sslConfig();
         config.put("ssl_keystore_path", new File(System.getProperty("java.io.tmpdir"),
                 "qingzhou-not-exists-" + System.nanoTime() + ".p12").getAbsolutePath());
         assertStartFails(config, "does not exist");
@@ -120,7 +120,7 @@ public class HttpServerImplTest {
 
     @Test
     public void sslKeystoreWrongPassword_start_throwsException() throws Exception {
-        Map<String, String> config = sslConfig(0);
+        Map<String, String> config = sslConfig();
         config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + "wrong-password");
         try {
             start(config);
@@ -132,7 +132,7 @@ public class HttpServerImplTest {
 
     @Test
     public void startFailed_wrongKeystorePassword_resourcesReleased() throws Exception {
-        Map<String, String> config = sslConfig(0);
+        Map<String, String> config = sslConfig();
         config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + "wrong-password");
         HttpServerImpl httpServer = buildHttpServer(config);
         try {
@@ -147,14 +147,14 @@ public class HttpServerImplTest {
 
     @Test
     public void sslInvalidKeystoreType_start_throwsException() throws Exception {
-        Map<String, String> config = sslConfig(0);
+        Map<String, String> config = sslConfig();
         config.put("ssl_keystore_type", "DSA");
         assertStartFails(config, "ssl_keystore_type");
     }
 
-    static HttpServerImpl build(int port) throws Exception {
+    static HttpServerImpl build() throws Exception {
         Map<String, String> config = new HashMap<>();
-        config.put("port", port + "");
+        config.put("port", "1111");
         config.put("ssl_enabled", "false");
         return start(config);
     }
@@ -198,9 +198,9 @@ public class HttpServerImplTest {
         field.set(target, value);
     }
 
-    private static Map<String, String> sslConfig(int port) {
+    private static Map<String, String> sslConfig() {
         Map<String, String> config = new HashMap<>();
-        config.put("port", port + "");
+        config.put("port", "1111");
         config.put("ssl_enabled", "true");
         config.put("ssl_keystore_path", keystoreFile().getAbsolutePath());
         config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + KEYSTORE_PASSWORD);

@@ -18,7 +18,7 @@ final class TestServerSupport {
     }
 
     static TestServer startServer() throws Exception {
-        HttpServerImpl httpServer = HttpServerImplTest.build(0); // 端口 0：由操作系统分配空闲端口
+        HttpServerImpl httpServer = HttpServerImplTest.build(); // 端口 0：由操作系统分配空闲端口
         try {
             Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
             field.setAccessible(true);

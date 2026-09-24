@@ -119,6 +119,9 @@ public class AuthManager {
         // 校验未通过
         if (authResult.status() != AuthResult.Status.PASS) return false;
 
+        // PASS 但无主体是模糊态：角色无从归属，handler 按角色鉴权只会拿到 null，故按未认证拒绝
+        if (authResult.getPrincipal() == null) return false;
+
         // 校验通过：写入受保护的认证字段而非通用 attribute，避免被 handler 覆写
         httpRequest.setAuth(authResult);
         return true;
