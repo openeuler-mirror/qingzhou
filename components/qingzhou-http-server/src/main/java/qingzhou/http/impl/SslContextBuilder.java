@@ -54,7 +54,11 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
                     + ", generate it with bin/gen-keystore.sh");
         }
-        char[] keyPassword = cipher.tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password").toCharArray();
+        String decrypted = cipher.tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password");
+        if (decrypted == null) { // 解密失败须明确报错，否则 NPE 无从定位
+            throw new IllegalArgumentException("failed to decrypt ssl_keystore_password");
+        }
+        char[] keyPassword = decrypted.toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);

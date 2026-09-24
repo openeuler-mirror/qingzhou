@@ -154,7 +154,7 @@ public class HttpServerImplTest {
 
     static HttpServerImpl build() throws Exception {
         Map<String, String> config = new HashMap<>();
-        config.put("port", "1111");
+        config.put("port", "0");
         config.put("ssl_enabled", "false");
         return start(config);
     }
@@ -200,7 +200,7 @@ public class HttpServerImplTest {
 
     private static Map<String, String> sslConfig() {
         Map<String, String> config = new HashMap<>();
-        config.put("port", "1111");
+        config.put("port", "0");
         config.put("ssl_enabled", "true");
         config.put("ssl_keystore_path", keystoreFile().getAbsolutePath());
         config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + KEYSTORE_PASSWORD);

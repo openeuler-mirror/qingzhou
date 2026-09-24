@@ -41,7 +41,8 @@ public class HttpServerImpl implements HttpServer {
             throw new IllegalArgumentException("port is required");
         }
         int port = Integer.parseInt(portStr.trim());
-        if (port < 1 || port > 65535)
+        // 0 是合法值：交由操作系统分配空闲端口（测试与动态端口场景依赖它）
+        if (port < 0 || port > 65535)
             throw new IllegalArgumentException("qingzhou-http-server.port out of range: " + port);
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
@@ -71,17 +72,11 @@ public class HttpServerImpl implements HttpServer {
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
-        if (isSslEnabled) {
-            try {
+        try {
+            if (isSslEnabled) {
                 SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);
                 httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
-            } catch (Exception e) {
-                disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
-                throw e;
             }
-        }
-
-        try {
             disposableServer = httpServer.bindNow();
         } catch (Exception e) {
             disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
@@ -165,7 +160,7 @@ public class HttpServerImpl implements HttpServer {
         if (defaultValue instanceof Boolean) {
             // 布尔不得静默降级：非 true/false 一律报错，否则 ssl_enabled=TRUE/1 会被解析为关闭
             if ("true".equals(val) || "false".equals(val)) return (T) Boolean.valueOf(val);
-            throw new IllegalArgumentException(key + " must be exactly 'true' or 'false' (case sensitive), got: " + val);
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be exactly 'true' or 'false' (case sensitive), got: " + val);
         }
 
         return defaultValue;

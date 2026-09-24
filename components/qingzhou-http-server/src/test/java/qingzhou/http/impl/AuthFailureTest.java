@@ -68,9 +68,9 @@ public class AuthFailureTest {
             authManager.doAuth(request("10.1." + (i / 254) + "." + (i % 254 + 1)), entry());
         }
 
+        // 以相对量断言，避免与主类常量硬编码耦合：记录数必须远小于注入的来源数
         int tracked = trackedHosts(authManager);
-        Assert.assertTrue(tracked <= MAX_TRACKED_HOSTS + 1000,
-                "failure records must stay bounded, was " + tracked);
+        Assert.assertTrue(tracked < hosts / 2, "failure records must stay bounded, was " + tracked);
     }
 
     private static AuthManager manager(int maxFailures, int windowSeconds) throws Exception {

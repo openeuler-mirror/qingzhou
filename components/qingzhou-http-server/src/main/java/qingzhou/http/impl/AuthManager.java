@@ -31,7 +31,7 @@ public class AuthManager {
     private final Map<String, AuthFailure> authFailures = new ConcurrentHashMap<>();
 
     @Activate
-    public void init(Map<String, String> config) { // 与 addAuthenticator 同锁：暂存日志的回放与动态绑定并发互斥
+    public void init(Map<String, String> config) { // 暂存日志的回放与动态绑定的互斥由 PendingLogs 自身同步保证
         maxAuthFailures = getConfig(config, "auth_fail_max", 10);
         authFailWindowMillis = getConfig(config, "auth_fail_window", 60) * 1000;
 

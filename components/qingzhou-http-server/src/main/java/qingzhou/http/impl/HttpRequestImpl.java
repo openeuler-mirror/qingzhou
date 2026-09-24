@@ -40,15 +40,14 @@ class HttpRequestImpl implements HttpRequest {
     }
 
     // 认证层写入口，由 AuthManager.authenticateWithHandler 在每请求内调用一次；不允许多次调用。
+    // 前置：authResult 为 PASS 且主体非 null——无主体的认证结果已由认证层按未认证拒绝
     // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
-        // 判据独立于 principal：否则无主体的认证结果会让下面的防护永不触发
+        // 判据独立于 principal：否则无主体的认证结果会让防护永不触发
         if (authSet) throw new IllegalStateException("auth result already set");
         authSet = true;
 
         authPrincipal = authResult.getPrincipal();
-        if (authPrincipal == null) return; // 角色依附于身份：无主体则无角色
-
         String[] roles = authResult.getRoles();
         authRoles = roles == null ? null : roles.clone();
     }
