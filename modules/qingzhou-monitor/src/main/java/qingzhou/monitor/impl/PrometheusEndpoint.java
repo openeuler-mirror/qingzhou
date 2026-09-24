@@ -1,4 +1,4 @@
-package qingzhou.monitor;
+package qingzhou.monitor.impl;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -15,7 +15,7 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.Authenticator;
+import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -27,11 +27,11 @@ public class PrometheusEndpoint implements HttpHandler {
     @Reference
     private Registry registry;
     @Reference
-    private CustomAuthenticator customAuthenticator;
+    private MonitorAuthenticator monitorAuthenticator;
 
     @Override
-    public Authenticator customAuthenticator() {
-        return request -> customAuthenticator.authenticate(request);
+    public HandlerAuthenticator customAuthenticator() {
+        return request -> monitorAuthenticator.authenticate(request);
     }
 
     @Override

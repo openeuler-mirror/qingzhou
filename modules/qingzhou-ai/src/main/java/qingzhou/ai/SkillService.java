@@ -4,14 +4,8 @@ import java.util.Map;
 
 public interface SkillService {
     String SKILL_NAME = "SKILL_NAME";
+    String SKILL_DESCRIPTION = "SKILL_DESCRIPTION";
     String SKILL_REQUIRED = "SKILL_REQUIRED";
-
-    // 内置技能名称
-    String HEALTH_CHECK_SKILL = "HealthCheck";
-    String TROUBLESHOOTING_SKILL = "Troubleshooting";
-    String SYSTEM_SKILL = "SystemSkill";
-
-    String description();
 
     // 技能的说明书：激活后注入系统提示词，可用于引导 AI 如何使用该技能下的工具，如果没有工具，那就只是一段提示词增强
     default String instruction() {

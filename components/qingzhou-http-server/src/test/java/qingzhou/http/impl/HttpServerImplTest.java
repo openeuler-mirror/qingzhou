@@ -131,6 +131,21 @@ public class HttpServerImplTest {
     }
 
     @Test
+    public void startFailed_wrongKeystorePassword_resourcesReleased() throws Exception {
+        Map<String, String> config = sslConfig(0);
+        config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + "wrong-password");
+        HttpServerImpl httpServer = buildHttpServer(config);
+        try {
+            httpServer.start(config);
+            Assert.fail("start should throw when ssl keystore password is wrong");
+        } catch (IllegalStateException e) {
+            // 激活失败不会触发 @Deactivate，泄漏的 EventLoop 线程池将永不回收
+            assertFieldNull(httpServer, "loopResources");
+            assertFieldNull(httpServer, "disposableServer");
+        }
+    }
+
+    @Test
     public void sslInvalidKeystoreType_start_throwsException() throws Exception {
         Map<String, String> config = sslConfig(0);
         config.put("ssl_keystore_type", "DSA");
@@ -170,9 +185,9 @@ public class HttpServerImplTest {
         setField(dispatcherHandler, "handlerManager", handlerManager);
 
         setField(authManager, "logger", logger);
-        setField(authManager, "handlerManager", handlerManager);
 
         dispatcherHandler.init(config);
+        authManager.init(config); // 生产由 OSGi @Activate 触发，手动装配时须补齐
 
         return httpServer;
     }
@@ -200,6 +215,12 @@ public class HttpServerImplTest {
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().contains(expectedMessage), e.getMessage());
         }
+    }
+
+    private static void assertFieldNull(HttpServerImpl httpServer, String fieldName) throws Exception {
+        Field field = HttpServerImpl.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Assert.assertNull(field.get(httpServer), fieldName + " must be released when start fails");
     }
 
     private static int actualPort(HttpServerImpl httpServer) throws Exception {

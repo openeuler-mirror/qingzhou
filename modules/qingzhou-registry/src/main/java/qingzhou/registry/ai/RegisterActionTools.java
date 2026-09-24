@@ -9,7 +9,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
 import qingzhou.api.action.Monitor;
@@ -26,7 +25,7 @@ import qingzhou.registry.web.PermissionChecker;
 import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
-public class AppActionTools {
+public class RegisterActionTools {
     @Reference
     private Registry registry;
     @Reference
@@ -62,12 +61,12 @@ public class AppActionTools {
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
-            String actionToolName = "app_action_" + invokedActionCode;
+            String actionToolName = "app_model_action_" + invokedActionCode;
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
+            properties.put(ToolService.PARENT_SKILL, Skill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, actionToolName);
-            properties.put(SkillService.SKILL_NAME, SkillService.SYSTEM_SKILL);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> AppActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
+            ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
             registrations.add(bundleContext.registerService(ToolInterceptor.class, (toolName, toolArgs, c) -> {
                 if (toolName.equals(actionToolName)) {

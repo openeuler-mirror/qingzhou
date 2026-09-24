@@ -3,6 +3,8 @@ package qingzhou.ai;
 import java.util.Map;
 
 public interface ToolService {
+    String PARENT_SKILL = "PARENT_SKILL";
+
     String TOOL_NAME = "TOOL_NAME";
     String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
 

@@ -1,10 +1,5 @@
 package qingzhou.http.impl;
 
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -12,8 +7,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.http.server.AuthResult;
 import reactor.netty.http.server.HttpServerRequest;
 
 /**
@@ -170,26 +170,7 @@ public class HttpRequestImplTest {
         Assert.assertEquals(request.getRemoteHost(), "unknown");
     }
 
-    // ---------- 10. 属性存取 ----------
-
-    @Test
-    public void attributeSet_getAttribute_returnsStoredValue() {
-        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
-        Object attribute = new Object();
-
-        request.setAttribute("username", attribute);
-
-        Assert.assertSame(request.getAttribute("username"), attribute);
-    }
-
-    @Test
-    public void attributeNotSet_getAttribute_returnsNull() {
-        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
-
-        Assert.assertNull(request.getAttribute("never-set"));
-    }
-
-    // ---------- 11. 请求体读取 ----------
+    // ---------- 10. 请求体读取 ----------
 
     @Test
     public void bodyNotSet_getBody_returnsNull() {
@@ -211,14 +192,49 @@ public class HttpRequestImplTest {
         Assert.assertSame(request.getBody(), second);
     }
 
+    // ---------- 11. 认证结果只读 ----------
+
+    @Test
+    public void authSet_getPrincipalAndRoles_returnStoredValues() {
+        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
+
+        request.setAuth(AuthResult.pass("user", new String[]{"admin"}));
+
+        Assert.assertEquals(request.getPrincipal(), "user");
+        Assert.assertEquals(request.getRoles()[0], "admin");
+    }
+
+    @Test
+    public void authRolesMutatedAfterSetAuth_getRoles_returnsStoredRoles() {
+        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
+        String[] roles = {"admin"};
+
+        request.setAuth(AuthResult.pass("user", roles));
+        request.getRoles()[0] = "root"; // 写入后篡改原数组，不应影响已存认证结果
+
+        Assert.assertEquals(request.getRoles()[0], "admin");
+    }
+
+    @Test
+    public void authNotSet_getPrincipalAndRoles_returnNull() {
+        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
+
+        Assert.assertNull(request.getPrincipal());
+        Assert.assertNull(request.getRoles());
+    }
+
     // ---------- 桩对象构造 ----------
 
-    /** 默认桩：无请求头、远端地址为 null、非表单类型。 */
+    /**
+     * 默认桩：无请求头、远端地址为 null、非表单类型。
+     */
     private HttpRequestImpl newRequest(String uri, String path, HttpMethod method, HttpHeaders headers, boolean form) {
         return newRequest(uri, path, method, headers, form, null);
     }
 
-    /** 以动态代理构造 HttpServerRequest 桩，模拟任务书所需的服务端请求场景。 */
+    /**
+     * 以动态代理构造 HttpServerRequest 桩，模拟任务书所需的服务端请求场景。
+     */
     private HttpRequestImpl newRequest(String uri, String path, HttpMethod method,
                                        HttpHeaders headers, boolean form, SocketAddress remoteAddress) {
         HttpServerRequest stub = (HttpServerRequest) Proxy.newProxyInstance(
@@ -243,7 +259,9 @@ public class HttpRequestImplTest {
         return new HttpRequestImpl(stub, path);
     }
 
-    /** 为代理桩中未显式配置的原始类型方法提供默认值，避免反射调用抛 NPE。 */
+    /**
+     * 为代理桩中未显式配置的原始类型方法提供默认值，避免反射调用抛 NPE。
+     */
     private Object primitiveDefault(Class<?> type) {
         if (type == boolean.class) {
             return false;

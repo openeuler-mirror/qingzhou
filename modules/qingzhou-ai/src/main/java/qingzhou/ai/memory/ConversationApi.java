@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -23,9 +22,8 @@ public class ConversationApi implements HttpHandler {
      * userId 由鉴权层从 token 解析；未开鉴权时为匿名
      */
     public static String resolveUserId(HttpRequest httpRequest) {
-        Object principal = httpRequest.getAttribute(AuthResult.AUTH_PRINCIPAL_ATTRIBUTE);
-        String s = principal instanceof String ? (String) principal : null;
-        return s != null && !s.isEmpty() ? s : "anonymous";
+        String principal = httpRequest.getPrincipal();
+        return principal != null && !principal.isEmpty() ? principal : "anonymous";
     }
 
     @Reference

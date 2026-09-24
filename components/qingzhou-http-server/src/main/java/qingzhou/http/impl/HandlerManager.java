@@ -1,6 +1,9 @@
 package qingzhou.http.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.ServiceReference;
@@ -17,8 +20,21 @@ public class HandlerManager {
     private final List<String> tempMsg = new ArrayList<>();
 
     // handler 由 OSGi 动态注册/解绑，与请求分发并发读写，故用并发容器
-    private final Map<String, HttpHandler> handlerMap = new ConcurrentHashMap<>();
-    final Set<HttpHandler> noAuthHandlerSet = ConcurrentHashMap.newKeySet();
+    private final Map<String, HandlerEntry> handlerMap = new ConcurrentHashMap<>();
+
+    /**
+     * 注册路径对应的 handler 与免认证标记。
+     * 标记随路径存储而非随 handler 实例：同一实例注册到多条路径时，各自的认证要求互不干扰。
+     */
+    static final class HandlerEntry {
+        final HttpHandler handler;
+        final boolean noAuth;
+
+        HandlerEntry(HttpHandler handler, boolean noAuth) {
+            this.handler = handler;
+            this.noAuth = noAuth;
+        }
+    }
 
     @Activate
     public synchronized void init() {
@@ -49,17 +65,14 @@ public class HandlerManager {
 
         String conflict = conflict(path);
         if (conflict != null) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).getClass().getName() + "]");
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + "(" + originPath + ") of [" + component + "] conflicts: " + conflict + " of [" + handlerMap.get(conflict).handler.getClass().getName() + "]");
         }
 
-        handlerMap.put(path, httpHandler);
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
-        if (isNoAuth) {
-            noAuthHandlerSet.add(httpHandler);
-        }
+        handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth));
 
         // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-        String msg = "registered: " + component + "=" + originPath + (isNoAuth ? " (no auth)" : "");
+        String msg = "registered: [" + path + "]" + (isNoAuth ? " (no auth)" : "");
         if (logger != null) {
             logger.info(msg);
         } else {
@@ -82,40 +95,32 @@ public class HandlerManager {
         return path.endsWith("/") ? path : path + "/";
     }
 
-    /**
-     * 解绑方法的名称由被注解方法的名称生成。
-     * 如果被注解方法的名称以bind、set或add开头，则会分别将这些前缀替换为unbind、unset或remove，以此生成解绑方法的候选名称；
-     * 若被注解方法的名称不以这些前缀开头，则会在方法名前添加前缀un，生成解绑方法的候选名称。
-     * 若组件类中存在一个方法与该候选名称一致，则此候选名称即作为解绑方法的名称。
-     * 若组件类中存在该候选名称对应的方法，但开发者希望不声明任何解绑方法，则必须将该属性值设为-。
-     */
+    // 方法名由 addHttpHandler 按 OSGi DS 规范推导（add -> remove），不可随意改名
     public void removeHttpHandler(HttpHandler httpHandler) {
-        String contextPath = null;
-        for (Map.Entry<String, HttpHandler> e : handlerMap.entrySet()) {
-            if (Objects.equals(e.getValue(), httpHandler)) {
-                contextPath = e.getKey();
-                break;
-            }
-        }
-        if (contextPath == null) return;
+        // 同一实例可注册到多条路径，须全部移除：残留条目（尤其 noAuth）会继续对外服务
+        List<String> removedPaths = new ArrayList<>();
+        handlerMap.entrySet().removeIf(e -> {
+            if (!Objects.equals(e.getValue().handler, httpHandler)) return false;
+            removedPaths.add(e.getKey());
+            return true;
+        });
+        if (removedPaths.isEmpty()) return;
 
-        handlerMap.remove(contextPath);
-        noAuthHandlerSet.remove(httpHandler);
-
-        logger.info("unregistered: " + contextPath);
+        if (logger != null) logger.info("unregistered: " + removedPaths);
     }
 
     /**
      * 分发专用：只按「请求路径以已注册路径为前缀」匹配，并取最长者。
      * 反向匹配（已注册路径以请求路径为前缀）会让后代 handler 服务祖先请求，
      * 例如请求 / 命中 /ai/chat/config、请求 /ai/chat 命中 /ai/chat/stream，故不做。
-     * 直接返回 handler 而非路径：OSGi 可并发解绑 handler，先查路径再取 handler 会取到 null。
+     * 直接返回整个条目而非先查路径再取 handler：OSGi 可并发解绑 handler，两步走会取到 null；
+     * 免认证标记也必须随条目返回，否则只能按 handler 实例判断，会被多路径注册串味。
      */
-    HttpHandler findHandler(String checkPath) {
+    HandlerEntry findHandler(String checkPath) {
         String request = withTrailingSlash(checkPath);
-        HttpHandler matched = null;
+        HandlerEntry matched = null;
         int matchedLength = 0;
-        for (Map.Entry<String, HttpHandler> entry : handlerMap.entrySet()) {
+        for (Map.Entry<String, HandlerEntry> entry : handlerMap.entrySet()) {
             String existsPath = entry.getKey();
             if (existsPath.length() > matchedLength && request.startsWith(existsPath)) {
                 matched = entry.getValue();

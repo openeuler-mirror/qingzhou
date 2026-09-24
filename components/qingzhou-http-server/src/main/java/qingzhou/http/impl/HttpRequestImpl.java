@@ -2,10 +2,14 @@ package qingzhou.http.impl;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -15,7 +19,10 @@ class HttpRequestImpl implements HttpRequest {
 
     private byte[] requestBody;
     private Map<String, List<String>> parameters;
-    private Map<String, Object> attributes;
+
+    // 认证结果：由认证层写入，对外只暴露只读的强类型接口
+    private String authPrincipal;
+    private String[] authRoles;
 
     HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
@@ -25,6 +32,12 @@ class HttpRequestImpl implements HttpRequest {
     void setRequestBody(byte[] requestBody) {
         this.requestBody = requestBody;
         this.parameters = null; // 请求体变化后需重新解析
+    }
+
+    // 仅认证层调用：roles 在此处 clone，外部拿到的副本被改动不影响认证结果
+    void setAuth(AuthResult authResult) {
+        this.authPrincipal = authResult.getPrincipal();
+        this.authRoles = authResult.getRoles();
     }
 
     @Override
@@ -108,13 +121,12 @@ class HttpRequestImpl implements HttpRequest {
     }
 
     @Override
-    public void setAttribute(String name, Object value) {
-        if (attributes == null) attributes = new HashMap<>();
-        attributes.put(name, value);
+    public String getPrincipal() {
+        return authPrincipal;
     }
 
     @Override
-    public Object getAttribute(String name) {
-        return attributes != null ? attributes.get(name) : null;
+    public String[] getRoles() {
+        return authRoles == null ? null : authRoles.clone(); // 副本：调用方改动不影响认证结果
     }
 }
