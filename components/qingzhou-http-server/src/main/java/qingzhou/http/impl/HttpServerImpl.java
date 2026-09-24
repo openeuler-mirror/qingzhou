@@ -31,17 +31,18 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        int selectorThreads = positive(getConfig(config, "selector", 1), "selector");
-        int workerThreads = positive(getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2), "worker");
+        int selectorThreads = atLeast(getConfig(config, "selector", 1), 1, "selector");
+        int workerThreads = atLeast(getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2), 1, "worker");
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
-        int idleTimeout = notNegative(getConfig(config, "idle_timeout", 60), "idle_timeout");
+        int idleTimeout = atLeast(getConfig(config, "idle_timeout", 60), 0, "idle_timeout");
         String host = getConfig(config, "host", "0.0.0.0");
         String portStr = config.get("port");
         if (portStr == null || portStr.trim().isEmpty()) {
             throw new IllegalArgumentException("port is required");
         }
         int port = Integer.parseInt(portStr.trim());
-        if (port < 1 || port > 65535) throw new IllegalArgumentException("port out of range: " + port);
+        if (port < 1 || port > 65535)
+            throw new IllegalArgumentException("qingzhou-http-server.port out of range: " + port);
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -114,15 +115,16 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
-    private int positive(int value, String key) {
-        if (value <= 0)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
+    // 配置值下限校验：min=1 表示必须为正，min=0 表示可为 0 但不能为负
+    static int atLeast(int value, int min, String key) {
+        if (value < min)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be >= " + min + ": " + value);
         return value;
     }
 
-    private int notNegative(int value, String key) {
-        if (value < 0)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must not be negative: " + value);
+    static long atLeast(long value, long min, String key) {
+        if (value < min)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be >= " + min + ": " + value);
         return value;
     }
 

@@ -26,6 +26,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 import reactor.util.concurrent.Queues;
 
+import static qingzhou.http.impl.HttpServerImpl.atLeast;
 import static qingzhou.http.impl.HttpServerImpl.getConfig;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
@@ -77,13 +78,12 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     @Activate
     public void init(Map<String, String> config) {
-        int maxConcurrentRequests = getConfig(config, "max_concurrent_requests", 1000);
-        if (maxConcurrentRequests <= 0) throw new IllegalArgumentException("max_concurrent_requests must be positive");
+        int maxConcurrentRequests = atLeast(getConfig(config, "max_concurrent_requests", 1000), 1, "max_concurrent_requests");
         this.concurrentSemaphore = new Semaphore(maxConcurrentRequests);
 
         isSslEnabled = getConfig(config, "ssl_enabled", true);
 
-        maxStreamBytes = positive(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), "max_stream_bytes");
+        maxStreamBytes = atLeast(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), 1L, "max_stream_bytes");
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
         maxAggregatedBytes = getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024);
         if (maxBodyBytes > maxAggregatedBytes) { // 否则长度未知的请求恒被拒，服务不可用却无明确报错
@@ -94,12 +94,6 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         coop = getConfig(config, "coop", "");
         corp = getConfig(config, "corp", "");
         corsAllowedOrigins = splitOrigins(getConfig(config, "cors_allowed_origins", ""));
-    }
-
-    private static long positive(long value, String key) {
-        if (value <= 0)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
-        return value;
     }
 
     private String[] splitOrigins(String value) {
