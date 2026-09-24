@@ -34,7 +34,7 @@ public interface HttpRequest {
     boolean isFormUrlencoded();
 
     /**
-     * 请求体副本，可自由修改，不影响框架后续解析。
+     * 请求体。返回内部数组，<b>调用方不得修改</b>其内容——参数解析缓存基于同一数组。
      */
     byte[] getBody();
 

@@ -56,10 +56,9 @@ public interface AuthResult {
         };
     }
 
-    // 弃权：凭据类型不匹配等「本认证器说了不算」的场景，返回 null 与返回本值等价；无状态，共享单例
-    AuthResult ABSTAIN = () -> Status.ABSTAIN;
-
+    // 弃权：凭据类型不匹配等「本认证器说了不算」的场景，返回 null 与返回本值等价。
+    // 不提为常量：接口字段只能是 public，那会把内部单例暴露成对外的 API 面
     static AuthResult abstain() {
-        return ABSTAIN;
+        return () -> Status.ABSTAIN;
     }
 }

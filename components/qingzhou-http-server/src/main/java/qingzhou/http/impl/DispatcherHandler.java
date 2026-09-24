@@ -70,7 +70,10 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private volatile int maxBodyBytes; // 单个请求体聚合进内存的上限
     private volatile long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
     private volatile String csp;
-    private volatile String[] corsAllowedOrigins; // 允许的跨域来源；空表示不开放 CORS
+    private volatile String permissionsPolicy = "";
+    private volatile String coop = ""; // 默认空：COOP 会阻断 OAuth2 弹窗回调对 window.opener 的访问
+    private volatile String corp = ""; // 默认空：CORP 会阻断跨站引用本服务资源
+    private volatile String[] corsAllowedOrigins = new String[0]; // 允许的跨域来源；空表示不开放 CORS
 
     @Activate
     public void init(Map<String, String> config) {
@@ -80,14 +83,23 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
         isSslEnabled = getConfig(config, "ssl_enabled", true);
 
-        maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
+        maxStreamBytes = positive(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), "max_stream_bytes");
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
         maxAggregatedBytes = getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024);
         if (maxBodyBytes > maxAggregatedBytes) { // 否则长度未知的请求恒被拒，服务不可用却无明确报错
             throw new IllegalArgumentException("max_body_bytes must not exceed max_aggregated_bytes");
         }
         csp = getConfig(config, "csp", "none");
+        permissionsPolicy = getConfig(config, "permissions_policy", "geolocation=(), microphone=(), camera=()");
+        coop = getConfig(config, "coop", "");
+        corp = getConfig(config, "corp", "");
         corsAllowedOrigins = splitOrigins(getConfig(config, "cors_allowed_origins", ""));
+    }
+
+    private static long positive(long value, String key) {
+        if (value <= 0)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
+        return value;
     }
 
     private String[] splitOrigins(String value) {
@@ -420,15 +432,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     private void addSecurityHeaders(HttpServerResponse response) {
         response.header("X-Content-Type-Options", "nosniff")
+                // 与 CSP 的 frame-ancestors 并存：不支持 CSP 的老浏览器仅认此头，二者不冲突
+                .header("X-Frame-Options", "SAMEORIGIN")
                 .header("Referrer-Policy", "no-referrer")
-                .header("Cross-Origin-Opener-Policy", "same-origin")
-                .header("Cross-Origin-Resource-Policy", "same-origin")
-                .header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+                .header("Permissions-Policy", permissionsPolicy);
         if (csp != null && !csp.isEmpty() && !csp.equals("none")) {
-            response.header("Content-Security-Policy", csp); // 嵌套控制交给 frame-ancestors，不再输出 X-Frame-Options
-        } else {
-            response.header("X-Frame-Options", "SAMEORIGIN");
+            response.header("Content-Security-Policy", csp);
         }
+        if (!coop.isEmpty()) response.header("Cross-Origin-Opener-Policy", coop);
+        if (!corp.isEmpty()) response.header("Cross-Origin-Resource-Policy", corp);
         if (isSslEnabled) {
             response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         }

@@ -134,7 +134,7 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public byte[] getBody() {
-        return requestBody == null ? null : requestBody.clone(); // 副本：与 getRoles 一致，handler 改动不影响参数解析
+        return requestBody;
     }
 
     @Override

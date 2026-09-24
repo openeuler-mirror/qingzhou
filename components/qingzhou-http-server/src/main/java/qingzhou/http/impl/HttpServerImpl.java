@@ -33,14 +33,15 @@ public class HttpServerImpl implements HttpServer {
     public void start(Map<String, String> config) throws Exception {
         int selectorThreads = positive(getConfig(config, "selector", 1), "selector");
         int workerThreads = positive(getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2), "worker");
-        // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务
-        int idleTimeout = positive(getConfig(config, "idle_timeout", 60), "idle_timeout");
+        // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
+        int idleTimeout = notNegative(getConfig(config, "idle_timeout", 60), "idle_timeout");
         String host = getConfig(config, "host", "0.0.0.0");
         String portStr = config.get("port");
         if (portStr == null || portStr.trim().isEmpty()) {
             throw new IllegalArgumentException("port is required");
         }
         int port = Integer.parseInt(portStr.trim());
+        if (port < 1 || port > 65535) throw new IllegalArgumentException("port out of range: " + port);
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -59,17 +60,27 @@ public class HttpServerImpl implements HttpServer {
                 .option(ChannelOption.SO_BACKLOG, 1024) // tcp 层连接队列，应对突发流量避免客户端被拒绝，过大会消耗系统资源
                 .childOption(ChannelOption.SO_KEEPALIVE, true) // tcp 层保活探测，避免对方意外断电等资源无效占用
                 .childOption(ChannelOption.TCP_NODELAY, true) // 现代带宽充足，路由器处理能力强，「小包风暴」的影响远小于实时性不足带来的业务问题
-                .idleTimeout(Duration.ofSeconds(idleTimeout)) // 一条连接，无任何读或写活动，则主动关闭连接释放资源，不设置则无限
                 .httpRequestDecoder(spec -> spec.maxInitialLineLength(4096).maxHeaderSize(8192)) // 显式收敛请求行/头，不依赖框架默认值（升级即行为漂移）
                 .handle(dispatcherHandler); // 业务路由
 
+        // 一条连接无任何读写活动则关闭释放资源；0 表示不启用，留给 SSE 等长连接
+        if (idleTimeout > 0) {
+            httpServer = httpServer.idleTimeout(Duration.ofSeconds(idleTimeout));
+        }
+
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
-        try {
-            if (isSslEnabled) {
+        if (isSslEnabled) {
+            try {
                 SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);
                 httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
+            } catch (Exception e) {
+                disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
+                throw e;
             }
+        }
+
+        try {
             disposableServer = httpServer.bindNow();
         } catch (Exception e) {
             disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
@@ -83,12 +94,6 @@ public class HttpServerImpl implements HttpServer {
     public void stop() {
         disposeResources();
         logger.info("http server stopped");
-    }
-
-    private static int positive(int value, String key) {
-        if (value <= 0)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
-        return value;
     }
 
     // 置空已释放的资源：使 stop 可重复调用，且 start 失败路径可安全复用
@@ -107,6 +112,18 @@ public class HttpServerImpl implements HttpServer {
                     .block(Duration.ofSeconds(15)); // 同步等待：否则 stop 返回后线程仍在运行，重启时端口与线程残留
             loopResources = null;
         }
+    }
+
+    private int positive(int value, String key) {
+        if (value <= 0)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be positive: " + value);
+        return value;
+    }
+
+    private int notNegative(int value, String key) {
+        if (value < 0)
+            throw new IllegalArgumentException("qingzhou-http-server." + key + " must not be negative: " + value);
+        return value;
     }
 
     @Override
