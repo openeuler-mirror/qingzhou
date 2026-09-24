@@ -65,6 +65,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         maxStreamBytes = getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024);
         maxBodyBytes = getConfig(config, "max_body_bytes", 8 * 1024 * 1024);
         maxAggregatedBytes = getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024);
+        if (maxBodyBytes > maxAggregatedBytes) { // 否则长度未知的请求恒被拒，服务不可用却无明确报错
+            throw new IllegalArgumentException("max_body_bytes must not exceed max_aggregated_bytes");
+        }
         csp = getConfig(config, "csp", "none");
 
         // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
@@ -86,22 +89,34 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             return respondAndClose(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
         }
         RequestContext ctx = new RequestContext(request, response);
-        // 延迟执行：分发逻辑同步抛异常时也能走到 doFinally，不至于泄漏许可
-        return Flux.defer(() -> dispatch(ctx)).doFinally(signal -> {
-            // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
-            concurrentSemaphore.release();
-            if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
-        });
+        // 闸门判定同步执行：它有副作用（预留全局配额），放进 defer 会在重复订阅时被重复执行
+        Publisher<Void> denial;
+        try {
+            denial = checkGates(ctx);
+        } catch (Throwable e) {
+            release(ctx);
+            throw e;
+        }
+        // 延迟执行：业务处理同步抛异常时也能走到 doFinally，不至于泄漏许可与配额
+        return Flux.defer(() -> denial != null ? denial : dispatch(ctx)).doFinally(signal -> release(ctx));
     }
 
-    private Publisher<Void> dispatch(RequestContext ctx) {
-        // 安全检查
+    // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
+    private void release(RequestContext ctx) {
+        concurrentSemaphore.release();
+        if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
+    }
+
+    // 返回 null 表示放行，非 null 则作为终止响应；顺序即优先级，见 init() 中的 gates
+    private Publisher<Void> checkGates(RequestContext ctx) {
         for (RequestGate gate : gates) {
             Publisher<Void> denial = gate.check(ctx);
             if (denial != null) return denial;
         }
+        return null;
+    }
 
-        // 处理业务
+    private Publisher<Void> dispatch(RequestContext ctx) {
         int queueSize = 1024; // 慢客户端时最多缓存的响应分片数
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
                 .onBackpressureBuffer(Queues.<byte[]>get(queueSize).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
@@ -266,7 +281,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private long reserveAggregation(HttpServerRequest request) {
         // 返回预留的字节数；-1 表示在途聚合总量已达上限
         long size = declaredBodySize(request);
-        if (size < 0) size = maxBodyBytes; // 仅 chunked 长度未知，按单体上限保守预留
+        if (size < 0) size = maxBodyBytes;
         while (true) {
             long current = aggregatedBytes.get();
             if (current + size > maxAggregatedBytes) return -1;
@@ -280,14 +295,14 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         return upper.contains("%2E") || upper.contains("%25");
     }
 
-    // 无请求体返回 0；chunked（长度未知）返回 -1；非法 Content-Length 返回 0，交由字节计数兜底
+    // 无请求体返回 0；长度未知（chunked 或非法 Content-Length）返回 -1，交由字节计数兜底并按单体上限保守预留
     private long declaredBodySize(HttpServerRequest request) {
         String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);
         if (value != null) {
             try {
                 return Long.parseLong(value);
             } catch (NumberFormatException e) {
-                return 0;
+                return -1;
             }
         }
         return request.requestHeaders()
