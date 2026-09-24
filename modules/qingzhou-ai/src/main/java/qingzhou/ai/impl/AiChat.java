@@ -110,7 +110,7 @@ public class AiChat implements HttpHandler {
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(refDocs)
-                    .skills(LlmConverter.convertSkills(llmSkills))
+                    .skills(LlmConverter.convertSkills(llmSkills, logger))
                     .enableThinking(true)
                     .interceptor(convertInterceptor(userId, userRoles))
                     .chatMemory(() -> conversationStore.getMessageList(userId, conversationId));

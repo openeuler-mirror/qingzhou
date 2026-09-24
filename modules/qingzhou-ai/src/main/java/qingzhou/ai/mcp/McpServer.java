@@ -104,7 +104,7 @@ public class McpServer implements HttpHandler {
     }
 
     private Collection<Tool> llmTools() {
-        return LlmConverter.convertSkills(llmSkills).stream().flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
+        return LlmConverter.convertSkills(llmSkills, logger).stream().flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
     }
 
     private Object tools() {
