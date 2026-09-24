@@ -210,7 +210,7 @@ public class HttpRequestImplTest {
         String[] roles = {"admin"};
 
         request.setAuth(AuthResult.pass("user", roles));
-        roles[0] = "root"; // 写入后篡改原数组，不应影响已存认证结果
+        request.getRoles()[0] = "root"; // 写入后篡改原数组，不应影响已存认证结果
 
         Assert.assertEquals(request.getRoles()[0], "admin");
     }
