@@ -369,6 +369,24 @@ public class DispatcherHandlerTest {
     }
 
     @Test
+    public void handlerSendsWithoutFinish_request_completes() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("partial"), "/noFinish");
+
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/noFinish")
+                    .method(HttpMethod.GET));
+
+            // 只 send 未 finish 时框架必须补上终止信号，否则响应永不结束、请求挂到 idle_timeout
+            Assert.assertEquals(result.getStatus(), 200);
+            Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "partial");
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
     public void prefixPathRegistered_request_routesByPrefix() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {

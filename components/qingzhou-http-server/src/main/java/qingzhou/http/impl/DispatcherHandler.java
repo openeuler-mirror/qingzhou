@@ -157,7 +157,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                             Throwable cause = getCause(err);
                             streamHandler.onError(cause);
                             // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
-                            if (!httpResponse.isUsed()) {
+                            if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
                                 HttpResponseStatus status = statusOf(cause);
                                 httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
@@ -183,14 +183,13 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                     try {
                         ctx.httpRequest.setRequestBody(bytes);
                         httpHandler.handle(ctx.httpRequest, httpResponse);
-                        if (!httpResponse.isUsed()) {
-                            streamResponse.tryEmitComplete(); // 避免请求无限等
-                        }
+                        // 幂等：handler 未收尾（含 send 后漏 finish）时补上终止信号，避免请求无限等
+                        httpResponse.finish();
                     } catch (Throwable e) {
                         Throwable cause = getCause(e);
                         logger.error("http handler error", cause);
-                        if (httpResponse.isUsed()) {
-                            streamResponse.tryEmitComplete(); // 已写过响应，状态码无法回退，只能干净收尾
+                        if (httpResponse.isCommitted()) {
+                            httpResponse.finish(); // 已提交，状态码无法回退，只能干净收尾
                         } else {
                             HttpResponseStatus status = statusOf(cause);
                             httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
