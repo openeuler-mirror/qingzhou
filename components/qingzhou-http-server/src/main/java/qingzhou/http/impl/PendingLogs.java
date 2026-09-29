@@ -20,6 +20,7 @@ final class PendingLogs {
     }
 
     synchronized void replay(Logger logger) {
+        if (logger == null) return; // 保留暂存消息，待 logger 可用后再回放
         messages.forEach(logger::info);
         messages.clear();
     }

@@ -152,6 +152,14 @@ public class HttpServerImplTest {
         assertStartFails(config, "ssl_keystore_type");
     }
 
+    @Test
+    public void invalidPort_start_throwsExceptionWithKeyName() throws Exception {
+        Map<String, String> config = sslConfig();
+        config.put("port", "not-a-number");
+        // 数值解析失败须带配置项名：裸 NumberFormatException 无法定位是哪一项写错
+        assertStartFails(config, "port must be an integer");
+    }
+
     static HttpServerImpl build() throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("port", "0");

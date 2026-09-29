@@ -5,12 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
+import java.util.*;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
@@ -54,11 +49,9 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
                     + ", generate it with bin/gen-keystore.sh");
         }
-        String decrypted = cipher.tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password");
-        if (decrypted == null) { // 解密失败须明确报错，否则 NPE 无从定位
-            throw new IllegalArgumentException("failed to decrypt ssl_keystore_password");
-        }
-        char[] keyPassword = decrypted.toCharArray();
+        // tryDecrypt 解密失败会直接抛出（含明文写法指引），不返回 null，故此处无需判空；
+        // 传入 trim 后的值：空值检查按 trim 判定，解密也须用同一值，否则空白导致的失败无从定位
+        char[] keyPassword = cipher.tryDecrypt(password.trim(), "qingzhou-http-server.ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);

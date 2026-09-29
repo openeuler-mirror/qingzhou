@@ -3,6 +3,9 @@ package qingzhou.http.impl;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import qingzhou.http.server.HttpHandler;
@@ -18,7 +21,16 @@ final class TestServerSupport {
     }
 
     static TestServer startServer() throws Exception {
-        HttpServerImpl httpServer = HttpServerImplTest.build(); // 端口 0：由操作系统分配空闲端口
+        return startServer(Collections.emptyMap());
+    }
+
+    // 在默认配置（端口 0、关闭 TLS）之上叠加用例自定义配置（如 cors_allowed_origins）
+    static TestServer startServer(Map<String, String> extraConfig) throws Exception {
+        Map<String, String> config = new HashMap<>();
+        config.put("port", "0");
+        config.put("ssl_enabled", "false");
+        config.putAll(extraConfig);
+        HttpServerImpl httpServer = HttpServerImplTest.start(config);
         try {
             Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
             field.setAccessible(true);

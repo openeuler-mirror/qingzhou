@@ -2,11 +2,8 @@ package qingzhou.http.impl;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -23,9 +20,10 @@ class HttpRequestImpl implements HttpRequest {
     // 以下由框架/认证层在 EventLoop 写入，handler 可能在业务线程读取，须保证可见性
     private volatile byte[] requestBody;
     private volatile Map<String, List<String>> parameters;
+    private final Object parameterLock = new Object();
 
     // 认证结果：由认证层写入，对外只暴露只读的强类型接口
-    private volatile boolean authSet;
+    private final AtomicBoolean authSet = new AtomicBoolean();
     private volatile String authPrincipal;
     private volatile String[] authRoles;
 
@@ -34,18 +32,23 @@ class HttpRequestImpl implements HttpRequest {
         this.requestPath = requestPath;
     }
 
+    // body 更新与缓存失效须在同一临界区内：「缓存与 body 配对」的不变式不依赖调用方时序；
+    // requestBody 为 volatile，锁内写无额外代价
     void setRequestBody(byte[] requestBody) {
-        this.requestBody = requestBody;
-        this.parameters = null; // 请求体变化后需重新解析
+        synchronized (parameterLock) {
+            this.requestBody = requestBody;
+            this.parameters = null; // 请求体变化后需重新解析
+        }
     }
 
     // 认证层写入口，由 AuthManager.authenticateWithHandler 在每请求内调用一次；不允许多次调用。
     // 前置：authResult 为 PASS 且主体非 null——无主体的认证结果已由认证层按未认证拒绝
     // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
     void setAuth(AuthResult authResult) {
-        // 判据独立于 principal：否则无主体的认证结果会让防护永不触发
-        if (authSet) throw new IllegalStateException("auth result already set");
-        authSet = true;
+        // 判据独立于 principal：否则无主体的认证结果会让防护永不触发；CAS 保证防御检查自身原子
+        if (!authSet.compareAndSet(false, true)) {
+            throw new IllegalStateException("auth result already set");
+        }
 
         authPrincipal = authResult.getPrincipal();
         String[] roles = authResult.getRoles();
@@ -90,48 +93,51 @@ class HttpRequestImpl implements HttpRequest {
 
     @Override
     public String getParameter(String name) {
-        Map<String, List<String>> parameters = getParameters();
-        if (parameters != null) {
-            List<String> list = parameters.get(name);
-            if (list != null && !list.isEmpty()) {
-                return list.get(0);
-            }
-        }
-
-        return null;
+        List<String> values = getParameters().get(name);
+        return values == null || values.isEmpty() ? null : values.get(0);
     }
 
     @Override
     public Map<String, List<String>> getParameters() {
         Map<String, List<String>> snapshot = parameters;
         if (snapshot == null) {
-            // 先在局部构建完成再整体发布：直接写字段会让并发读者拿到空表或半填充表
-            Map<String, List<String>> parsed = new ConcurrentHashMap<>(); // 并发容器：handler 可能把请求交给业务线程，HashMap 并发 resize 会损坏
-            try {
-                // 与表单体同阈值：query 侧不再依赖框架默认上限（升级即行为漂移）
-                parsed.putAll(new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters());
-            } catch (IllegalArgumentException e) {
-                // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
-            }
-            byte[] body = requestBody;
-            if (body != null && body.length > 0 && isFormUrlencoded()) {
-                try {
-                    // hasPath=false：表单体整段即 query，无需拼 "/?" 前缀（省掉一次与请求体等长的字符串分配）
-                    // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
-                    new QueryStringDecoder(new String(body, StandardCharsets.UTF_8),
-                            StandardCharsets.UTF_8, false, MAX_FORM_PARAMS).parameters()
-                            .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
-                                List<String> merged = new ArrayList<>(oldValues);
-                                merged.addAll(newValues);
-                                return merged;
-                            }));
-                } catch (IllegalArgumentException e) {
-                    // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
+            // 解析一次即缓存：表单体最大 8MB，重复解析的代价远高于一次加锁
+            synchronized (parameterLock) {
+                snapshot = parameters;
+                if (snapshot == null) {
+                    parameters = snapshot = parseParameters();
                 }
             }
-            parameters = snapshot = parsed;
         }
-        return Collections.unmodifiableMap(snapshot); // 只读视图：防止调用方篡改已解析的参数
+        return snapshot;
+    }
+
+    // 先在局部构建完成、再经 volatile 字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
+    private Map<String, List<String>> parseParameters() {
+        Map<String, List<String>> parsed = new LinkedHashMap<>(); // 保序：同名参数按 query 在前、表单体在后排列
+        try {
+            // 与表单体同阈值：query 侧不再依赖框架默认上限（升级即行为漂移）
+            parsed.putAll(new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters());
+        } catch (IllegalArgumentException e) {
+            // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
+        }
+        byte[] body = requestBody;
+        if (body != null && body.length > 0 && isFormUrlencoded()) {
+            try {
+                // hasPath=false：表单体整段即 query，无需拼 "/?" 前缀（省掉一次与请求体等长的字符串分配）
+                // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
+                new QueryStringDecoder(new String(body, StandardCharsets.UTF_8),
+                        StandardCharsets.UTF_8, false, MAX_FORM_PARAMS).parameters()
+                        .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
+                            List<String> merged = new ArrayList<>(oldValues);
+                            merged.addAll(newValues);
+                            return merged;
+                        }));
+            } catch (IllegalArgumentException e) {
+                // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
+            }
+        }
+        return Collections.unmodifiableMap(parsed); // 只读视图：防止调用方篡改已解析的参数
     }
 
     @Override

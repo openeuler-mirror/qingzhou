@@ -15,6 +15,9 @@ import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
 
+import static qingzhou.http.impl.ConfigUtil.atLeast;
+import static qingzhou.http.impl.ConfigUtil.getConfig;
+
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
     @Reference
@@ -40,10 +43,7 @@ public class HttpServerImpl implements HttpServer {
         if (portStr == null || portStr.trim().isEmpty()) {
             throw new IllegalArgumentException("port is required");
         }
-        int port = Integer.parseInt(portStr.trim());
-        // 0 是合法值：交由操作系统分配空闲端口（测试与动态端口场景依赖它）
-        if (port < 0 || port > 65535)
-            throw new IllegalArgumentException("qingzhou-http-server.port out of range: " + port);
+        int port = ConfigUtil.parsePort(portStr.trim(), "port");
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -79,17 +79,27 @@ public class HttpServerImpl implements HttpServer {
             }
             disposableServer = httpServer.bindNow();
         } catch (Exception e) {
-            disposeResources(); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
+            disposeOnStartFailure(e); // 激活失败时 @Deactivate 不会被调用，已创建的 EventLoop 须在此回收
             throw e;
         }
 
-        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + port + "/web");
+        // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
+        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + disposableServer.port() + "/web");
     }
 
     @Deactivate
     public void stop() {
         disposeResources();
         logger.info("http server stopped");
+    }
+
+    // 释放失败不得掩盖真正的启动失败原因，否则排障看到的是释放异常而非端口/密钥库问题
+    private void disposeOnStartFailure(Exception startError) {
+        try {
+            disposeResources();
+        } catch (Exception releaseError) {
+            startError.addSuppressed(releaseError);
+        }
     }
 
     // 置空已释放的资源：使 stop 可重复调用，且 start 失败路径可安全复用
@@ -108,19 +118,6 @@ public class HttpServerImpl implements HttpServer {
                     .block(Duration.ofSeconds(15)); // 同步等待：否则 stop 返回后线程仍在运行，重启时端口与线程残留
             loopResources = null;
         }
-    }
-
-    // 配置值下限校验：min=1 表示必须为正，min=0 表示可为 0 但不能为负
-    static int atLeast(int value, int min, String key) {
-        if (value < min)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be >= " + min + ": " + value);
-        return value;
-    }
-
-    static long atLeast(long value, long min, String key) {
-        if (value < min)
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be >= " + min + ": " + value);
-        return value;
     }
 
     @Override
@@ -144,25 +141,5 @@ public class HttpServerImpl implements HttpServer {
     @Override
     public void unregisterHttpHandler(HttpHandler httpHandler) {
         handlerManager.removeHttpHandler(httpHandler);
-    }
-
-    @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
-    static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
-        String val = config.get(key);
-        if (val == null) return defaultValue;
-        val = val.trim(); // 值允许带前后空白，但不得因此解析失败或静默降级
-        if (val.isEmpty()) return defaultValue;
-
-        if (defaultValue instanceof String) return (T) val;
-        // 数值解析失败直接抛出，暴露配置笔误而非静默回退默认值
-        if (defaultValue instanceof Integer) return (T) Integer.valueOf(val);
-        if (defaultValue instanceof Long) return (T) Long.valueOf(val);
-        if (defaultValue instanceof Boolean) {
-            // 布尔不得静默降级：非 true/false 一律报错，否则 ssl_enabled=TRUE/1 会被解析为关闭
-            if ("true".equals(val) || "false".equals(val)) return (T) Boolean.valueOf(val);
-            throw new IllegalArgumentException("qingzhou-http-server." + key + " must be exactly 'true' or 'false' (case sensitive), got: " + val);
-        }
-
-        return defaultValue;
     }
 }

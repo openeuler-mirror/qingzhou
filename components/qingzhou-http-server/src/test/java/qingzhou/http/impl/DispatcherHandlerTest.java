@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -368,6 +369,32 @@ public class DispatcherHandlerTest {
                 "request must be rejected, got status " + status);
     }
 
+    /**
+     * 直连发送原始报文并读取完整响应（请求须带 Connection: close，读到 EOF 即返回），
+     * 供响应头断言使用；{@link #statusOfRawRequest} 只取状态行。
+     * 若服务端未关闭连接，readLine 将挂到 SoTimeout 并抛出——该失败本身就是信号。
+     */
+    private static String rawResponse(int port, String rawRequest) throws Exception {
+        try (Socket socket = new Socket("localhost", port)) {
+            socket.setSoTimeout(5000);
+            OutputStream out = socket.getOutputStream();
+            out.write(rawRequest.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) response.append(line).append('\n');
+            return response.toString();
+        }
+    }
+
+    // Netty 按传入名原样输出（HttpHeaderNames 为小写），断言统一转小写避免大小写耦合
+    private static String lower(String response) {
+        return response.toLowerCase(Locale.ROOT);
+    }
+
     @Test
     public void handlerSendsWithoutFinish_request_completes() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
@@ -560,6 +587,172 @@ public class DispatcherHandlerTest {
         } finally {
             testServer.server.stop();
         }
+    }
+
+    @Test
+    public void corsAllowedOrigin_request_getsCorsHeaders() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(
+                Collections.singletonMap("cors_allowed_origins", "https://a.example"));
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+
+            // CORS 头必须出现在实际响应上：只在预检回显会让浏览器在真实请求阶段被拦
+            String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: https://a.example\r\n"
+                    + "Connection: close\r\n\r\n"));
+
+            Assert.assertTrue(response.contains("access-control-allow-origin: https://a.example"), response);
+            Assert.assertTrue(response.contains("access-control-allow-credentials: true"), response);
+            Assert.assertTrue(response.contains("vary: origin"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void corsWildcardOrigin_request_getsWildcardWithoutCredentials() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(Collections.singletonMap("cors_allowed_origins", "*"));
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+
+            // 通配来源与可携带凭据并存会被浏览器直接拒绝
+            String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: https://a.example\r\n"
+                    + "Connection: close\r\n\r\n"));
+
+            Assert.assertTrue(response.contains("access-control-allow-origin: *"), response);
+            Assert.assertFalse(response.contains("access-control-allow-credentials"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void corsUnknownOrigin_request_noCorsHeaders() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(
+                Collections.singletonMap("cors_allowed_origins", "https://a.example"));
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+
+            String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: https://b.example\r\n"
+                    + "Connection: close\r\n\r\n"));
+
+            Assert.assertFalse(response.contains("access-control-allow-origin"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void corsConfigured_preflight_returns204WithCorsHeaders() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(
+                Collections.singletonMap("cors_allowed_origins", "https://a.example"));
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+
+            String response = lower(rawResponse(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: https://a.example\r\n"
+                    + "Access-Control-Request-Method: POST\r\n"
+                    + "Access-Control-Request-Headers: X-Custom-Trace, Content-Type\r\n"
+                    + "Connection: close\r\n\r\n"));
+
+            Assert.assertTrue(response.startsWith("http/1.1 204"), response);
+            Assert.assertTrue(response.contains("access-control-allow-origin: https://a.example"), response);
+            Assert.assertTrue(response.contains("access-control-allow-methods"), response);
+            // 客户端声明的头按白名单语义回显（非 *）：固定值会让携带其它自定义头的跨域请求被浏览器拒绝
+            Assert.assertTrue(response.contains("access-control-allow-headers: x-custom-trace, content-type"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void corsWildcardRequestedHeaders_preflight_fallsBackToDefaultSet() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(
+                Collections.singletonMap("cors_allowed_origins", "https://a.example"));
+        try {
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+
+            // 客户端传 * 会宣告放行任意自定义请求头（防御纵深弱化），须按不存在处理回退默认集
+            String response = lower(rawResponse(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: https://a.example\r\n"
+                    + "Access-Control-Request-Method: POST\r\n"
+                    + "Access-Control-Request-Headers: *\r\n"
+                    + "Connection: close\r\n\r\n"));
+
+            Assert.assertTrue(response.startsWith("http/1.1 204"), response);
+            Assert.assertFalse(response.contains("access-control-allow-headers: *"), response);
+            Assert.assertTrue(response.contains("access-control-allow-headers: content-type, authorization"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void streamHandlerEndsResponseEarly_connectionClosedWithoutResidualBody() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            // onBegin 即终止响应、不消费上传体：框架必须断开连接，
+            // 残留请求体（含其后的管道化请求）不得在保活连接上被当作下一个请求解析（请求走私）
+            testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
+                @Override
+                public void handle(HttpRequest request, HttpResponse response) {
+                    response.status400Finish(); // 仅聚合分支会进入
+                }
+
+                @Override
+                public StreamHandler multipartStreamHandler() {
+                    return new StreamHandler() {
+                        @Override
+                        public void onBegin(HttpRequest request, HttpResponse response) {
+                            response.status(403).sendFinish("forbidden");
+                        }
+
+                        @Override
+                        public void onNext(byte[] data) { }
+
+                        @Override
+                        public void onError(Throwable t) { }
+
+                        @Override
+                        public void onComplete() { }
+                    };
+                }
+            }, "/earlyStop");
+
+            String body = String.join("", Collections.nCopies(64, "0123456789abcdef")); // 1KB 上传体
+            String part = "--B\r\nContent-Disposition: form-data; name=\"f\"; filename=\"f\"\r\n"
+                    + "Content-Type: application/octet-stream\r\n\r\n" + body + "\r\n";
+            String pipelined = "GET /earlyStop HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+            String raw = "POST /earlyStop HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Content-Type: multipart/form-data; boundary=B\r\n"
+                    + "Content-Length: " + part.length() + "\r\n"
+                    + "Connection: keep-alive\r\n\r\n" + part + pipelined;
+
+            // rawResponse 读到 EOF 才返回：连接若未被关闭，readLine 将挂到 SoTimeout 并抛出，用例即失败
+            String response = lower(rawResponse(testServer.port, raw));
+
+            Assert.assertTrue(response.startsWith("http/1.1 403"), response); // 早停响应未被断连截断
+            Assert.assertTrue(response.contains("forbidden"), response);
+            Assert.assertEquals(countStatusLines(response), 1, "pipelined request must not be served: " + response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    private static int countStatusLines(String response) {
+        int count = 0;
+        for (String line : response.split("\n")) {
+            if (line.startsWith("http/1.1 ")) count++;
+        }
+        return count;
     }
 
     @Test

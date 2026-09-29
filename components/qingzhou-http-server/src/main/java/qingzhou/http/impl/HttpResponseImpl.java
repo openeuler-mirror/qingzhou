@@ -20,6 +20,12 @@ class HttpResponseImpl implements HttpResponse {
 
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性
     private volatile boolean committed = false;
+    private volatile boolean cancelled = false;
+
+    // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
+    boolean isCancelled() {
+        return cancelled;
+    }
 
     /**
      * 响应是否已提交（写入过响应体，或已发出终止信号）。
@@ -90,6 +96,7 @@ class HttpResponseImpl implements HttpResponse {
             Sinks.EmitResult result = streamResponse.tryEmitNext(body);
             // 失败原因可能是客户端断开、背压缓冲满、已结束或并发发射，须如实暴露而非一律归为断连
             if (result.isFailure()) {
+                cancelled = result == Sinks.EmitResult.FAIL_CANCELLED;
                 throw new IllegalStateException("cannot emit response body: " + result);
             }
             committed = true;
