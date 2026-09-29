@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.impl.LlmConverter;
-import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -24,8 +23,6 @@ public class McpServer implements HttpHandler {
     private Json json;
     @Reference
     private Logger logger;
-    @Reference
-    private McpAuthenticator mcpAuthenticator;
 
     private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 
@@ -58,11 +55,6 @@ public class McpServer implements HttpHandler {
     // OSGI 框架根据名称规则自动识别调用此方法
     public void unbindAiSkill(SkillService skill) {
         llmSkills.remove(skill);
-    }
-
-    @Override
-    public HandlerAuthenticator customAuthenticator() {
-        return request -> mcpAuthenticator.authenticate(request);
     }
 
     @Override

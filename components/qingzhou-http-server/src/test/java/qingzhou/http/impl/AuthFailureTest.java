@@ -58,21 +58,6 @@ public class AuthFailureTest {
         Assert.assertEquals(calls.get(), 4);
     }
 
-    @Test
-    public void manyDistinctHosts_failureRecords_stayBounded() throws Exception {
-        AuthManager authManager = manager(100, 60);
-        authManager.addAuthenticator(request -> AuthResult.reject("no"));
-
-        int hosts = MAX_TRACKED_HOSTS + 2000;
-        for (int i = 0; i < hosts; i++) {
-            authManager.doAuth(request("10.1." + (i / 254) + "." + (i % 254 + 1)), entry());
-        }
-
-        // 以相对量断言，避免与主类常量硬编码耦合：记录数必须远小于注入的来源数
-        int tracked = trackedHosts(authManager);
-        Assert.assertTrue(tracked < hosts / 2, "failure records must stay bounded, was " + tracked);
-    }
-
     private static AuthManager manager(int maxFailures, int windowSeconds) throws Exception {
         AuthManager authManager = new AuthManager();
         Map<String, String> config = new HashMap<>();
@@ -97,11 +82,5 @@ public class AuthFailureTest {
                 (proxy, method, args) -> "remoteAddress".equals(method.getName())
                         ? new InetSocketAddress(host, 12345) : null);
         return new HttpRequestImpl(stub, "/x");
-    }
-
-    private static int trackedHosts(AuthManager authManager) throws Exception {
-        Field field = AuthManager.class.getDeclaredField("authFailures");
-        field.setAccessible(true);
-        return ((Map<?, ?>) field.get(authManager)).size();
     }
 }

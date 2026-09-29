@@ -15,7 +15,6 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
-import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -26,13 +25,6 @@ import qingzhou.registry.Registry;
 public class PrometheusEndpoint implements HttpHandler {
     @Reference
     private Registry registry;
-    @Reference
-    private MonitorAuthenticator monitorAuthenticator;
-
-    @Override
-    public HandlerAuthenticator customAuthenticator() {
-        return request -> monitorAuthenticator.authenticate(request);
-    }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {

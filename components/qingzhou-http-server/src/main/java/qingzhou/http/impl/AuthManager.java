@@ -7,7 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.component.annotations.*;
-import qingzhou.http.server.*;
+import qingzhou.http.server.AuthResult;
+import qingzhou.http.server.Authenticator;
+import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
 
 import static qingzhou.http.impl.HttpServerImpl.getConfig;
@@ -89,28 +91,10 @@ public class AuthManager {
     }
 
     private boolean authenticateWithHandler(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
-        HttpHandler httpHandler = handlerEntry.handler;
-
         AuthResult authResult = null;
-        // 自定义 Authenticator，优先使用
-        HandlerAuthenticator customAuthenticator = httpHandler.customAuthenticator();
-        if (customAuthenticator != null) {
-            AuthResult custom;
-            try {
-                custom = customAuthenticator.authenticate(httpRequest);
-            } catch (Throwable e) { // 认证器出错一律拒绝：不放行，且留下可排障的日志而非静默断连
-                // 必须是 Throwable：OSGi 刷新/卸载 bundle 时会抛 NoClassDefFoundError，只捕 Exception 会静默穿透
-                logger.error("custom authentication error: " + httpHandler.getClass().getName(), e);
-                return false;
-            }
-            if (custom != null && custom.status() != AuthResult.Status.ABSTAIN) authResult = custom;
-        }
-        // 系统级 Authenticator
-        if (authResult == null) {
-            boolean needAuth = !handlerEntry.noAuth; // 认证只能按路径由 noAuth 豁免，无全局开关
-            if (needAuth) {
-                authResult = authenticate(httpRequest);
-            }
+        boolean needAuth = !handlerEntry.noAuth; // 认证只能按路径由 noAuth 豁免，无全局开关
+        if (needAuth) {
+            authResult = authenticate(httpRequest);
         }
 
         // 不需要校验
