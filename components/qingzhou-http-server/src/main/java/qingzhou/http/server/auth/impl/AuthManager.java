@@ -28,7 +28,7 @@ public class AuthManager {
     // OSGi 动态绑定与请求线程并发读写，须用写时复制容器避免遍历中结构变更
     private final List<Authenticator> authenticators = new CopyOnWriteArrayList<>();
 
-    private FailureLockout lockout;
+    private volatile FailureLockout lockout;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -58,29 +58,25 @@ public class AuthManager {
      * 免认证标记取自 handlerEntry（随注册路径）；不提供全局免认证开关，避免一处配置放通全站。
      */
     public boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
-        String host = httpRequest.getRemoteHost();
-        if (lockout.isLocked(host)) return false; // 锁定告警在进入锁定时的 recordFailure 处发出
+        if (handlerEntry.noAuth) return true;
 
-        boolean doneAuth = authenticateWithHandler(httpRequest, handlerEntry);
+        String host = httpRequest.getRemoteHost();
+        if (lockout.isLocked(host)) return false;
+
+        boolean doneAuth = authenticateWithHandler(httpRequest);
 
         if (doneAuth) {
             lockout.clear(host); // 认证成功后清空计数
         } else {
             lockout.recordFailure(host);
+            logger.warn("http authentication failed: path=" + httpRequest.getPath() + ", host=" + host);
         }
 
         return doneAuth;
     }
 
-    private boolean authenticateWithHandler(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
-        AuthResult authResult = null;
-        boolean needAuth = !handlerEntry.noAuth; // 认证只能按路径由 noAuth 豁免，无全局开关
-        if (needAuth) {
-            authResult = authenticate(httpRequest);
-        }
-
-        // 不需要校验
-        if (authResult == null) return true;
+    private boolean authenticateWithHandler(HttpRequestImpl httpRequest) {
+        AuthResult authResult = authenticate(httpRequest);
 
         // 校验未通过
         if (authResult.status() != AuthResult.Status.PASS) return false;

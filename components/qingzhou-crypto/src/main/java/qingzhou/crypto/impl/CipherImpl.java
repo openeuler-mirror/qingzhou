@@ -14,8 +14,6 @@ class CipherImpl implements Cipher {
     private static final String ALG = "AES";
     private static final String ALG_MODE = ALG + "/GCM/NoPadding";
 
-    // 固定参数：AES-128密钥长度(16字节)、IV长度(12字节)、GCM标签长度(128位)
-    private static final int IV_SIZE = 12;
     private static final int TAG_SIZE = 16;
 
     private static final SecureRandom RANDOM = new SecureRandom();

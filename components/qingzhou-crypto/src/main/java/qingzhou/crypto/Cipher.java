@@ -2,6 +2,7 @@ package qingzhou.crypto;
 
 public interface Cipher {
     String PLAIN_PREFIX_MARKER = "plain:";
+    int IV_SIZE = 12;
 
     String encrypt(String s) throws Exception;
 

@@ -65,6 +65,10 @@ public class Invoke implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        if (!"POST".equals(httpRequest.getMethod())) {
+            httpResponse.status(405).sendFinish("method not allowed");
+            return;
+        }
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
             httpResponse.status400Finish();
@@ -84,8 +88,8 @@ public class Invoke implements HttpHandler {
             parseBodyParameters(httpRequest, request);
             app.invokeApp(request);
         } catch (Throwable e) {
-            httpResponse.status500Finish(e.getMessage());
-            logger.error(e.getMessage(), e);
+            logger.error("http invoke failed", e);
+            httpResponse.status500Finish("internal server error");
             return;
         }
 
@@ -97,6 +101,9 @@ public class Invoke implements HttpHandler {
         if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
             return false;
         } else {
+            logger.warn("forbidden: app=" + request.getApp() + ", model=" + request.getModel()
+                    + ", action=" + request.getAction() + ", user=" + httpRequest.getPrincipal()
+                    + ", host=" + httpRequest.getRemoteHost());
             httpResponse.status(403).sendFinish("Forbidden");
             return true;
         }
@@ -185,8 +192,8 @@ public class Invoke implements HttpHandler {
             String json = this.json.toJson(result);
             httpResponse.sendFinish(json);
         } catch (Exception e) {
-            httpResponse.status500Finish(e.getMessage());
-            logger.error(e.getMessage(), e);
+            logger.error("failed to serialize invoke response", e);
+            httpResponse.status500Finish("internal server error");
         }
     }
 
@@ -254,8 +261,8 @@ public class Invoke implements HttpHandler {
                 applyParserResults(parser, request);
                 app.invokeApp(request);
             } catch (Throwable e) {
-                httpResponse.status500Finish(e.getMessage());
-                logger.error(e.getMessage(), e);
+                logger.error("multipart invoke failed", e);
+                httpResponse.status500Finish("internal server error");
                 return;
             } finally {
                 parser.abort();

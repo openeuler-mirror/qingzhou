@@ -6,9 +6,9 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 基于来源 key 的失败锁定器：滑动窗口内失败次数达到上限即锁定，成功后清零。
+ * 基于来源 key 的失败锁定器：固定窗口内失败次数达到上限即锁定，成功后清零。
  * <p>
- * 滑动窗口：窗口过期后在下次判定/记录时重置计数，重新获得完整失败预算。
+ * 固定窗口：窗口过期后在下次判定/记录时重置计数，重新获得完整失败预算。
  * 容量有界：key 数超过上限时，先回收窗口已过期的记录（零代价），
  * 仍超员再按「最久未失败」优先淘汰到低水位（上限的 90%），摊销全表遍历。
  * <p>
@@ -28,10 +28,13 @@ public final class FailureLockout {
      * @param maxTrackedKeys 跟踪的 key 数上限，达到即触发淘汰，须 >= 1
      */
     public FailureLockout(int maxFailures, long windowMillis, int maxTrackedKeys) {
+        if (maxFailures < 1 || windowMillis < 1 || maxTrackedKeys < 1) {
+            throw new IllegalArgumentException("lockout limits must be positive");
+        }
         this.maxFailures = maxFailures;
         this.windowMillis = windowMillis;
         this.maxTrackedKeys = maxTrackedKeys;
-        this.evictWatermark = maxTrackedKeys * 9 / 10;
+        this.evictWatermark = Math.max(1, maxTrackedKeys * 9 / 10);
     }
 
     /**

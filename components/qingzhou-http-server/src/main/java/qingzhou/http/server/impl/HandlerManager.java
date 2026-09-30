@@ -14,7 +14,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 
 /**
- * 路由表：handler 仅在启动期注册、停止期解绑，与请求分发不存在并发竞争，故无需额外索引或同步。
+ * 路由表：注册与解绑可能和请求分发并发；写操作串行化，读取使用并发 Map 快照。
  */
 @Component(service = HandlerManager.class)
 public class HandlerManager {
@@ -45,7 +45,7 @@ public class HandlerManager {
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             unbind = "removeHttpHandler")
-    public void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
+    public synchronized void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
         String originPath = properties.get(HttpHandler.HANDLE_PATH);
 
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
@@ -102,7 +102,7 @@ public class HandlerManager {
     }
 
     // 方法名由 addHttpHandler 按 OSGi DS 规范推导（add -> remove），不可随意改名
-    public void removeHttpHandler(HttpHandler httpHandler) {
+    public synchronized void removeHttpHandler(HttpHandler httpHandler) {
         // 同一实例可注册到多条路径，须全部移除：残留条目（尤其 noAuth）会继续对外服务
         List<String> removedPaths = new ArrayList<>();
         handlerMap.entrySet().removeIf(e -> {

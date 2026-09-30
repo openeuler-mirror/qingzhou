@@ -660,8 +660,9 @@ public class DispatcherHandlerTest {
             Assert.assertTrue(response.startsWith("http/1.1 204"), response);
             Assert.assertTrue(response.contains("access-control-allow-origin: https://a.example"), response);
             Assert.assertTrue(response.contains("access-control-allow-methods"), response);
-            // 客户端声明的头按白名单语义回显（非 *）：固定值会让携带其它自定义头的跨域请求被浏览器拒绝
-            Assert.assertTrue(response.contains("access-control-allow-headers: x-custom-trace, content-type"), response);
+            // 未列入服务端白名单的自定义头不得被回显
+            Assert.assertFalse(response.contains("x-custom-trace"), response);
+            Assert.assertTrue(response.contains("access-control-allow-headers: content-type"), response);
         } finally {
             testServer.server.stop();
         }

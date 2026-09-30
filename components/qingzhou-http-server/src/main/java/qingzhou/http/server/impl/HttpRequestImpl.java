@@ -17,14 +17,14 @@ public class HttpRequestImpl implements HttpRequest {
     private final String requestPath;
 
     // 以下由框架/认证层在 EventLoop 写入，handler 可能在业务线程读取，须保证可见性
-    private byte[] requestBody;
-    private Map<String, List<String>> parameters;
+    private volatile byte[] requestBody;
+    private volatile Map<String, List<String>> parameters;
     private final Object parameterLock = new Object();
 
     // 认证结果：由认证层写入，对外只暴露只读的强类型接口
     private final AtomicBoolean authSet = new AtomicBoolean();
-    private String authPrincipal;
-    private String[] authRoles;
+    private volatile String authPrincipal;
+    private volatile String[] authRoles;
 
     HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
@@ -32,7 +32,7 @@ public class HttpRequestImpl implements HttpRequest {
     }
 
     // body 更新与缓存失效须在同一临界区内：「缓存与 body 配对」的不变式不依赖调用方时序；
-    // requestBody 为 ，锁内写无额外代价
+    // requestBody 为 volatile，锁内写不增加额外同步成本
     void setRequestBody(byte[] requestBody) {
         synchronized (parameterLock) {
             this.requestBody = requestBody;
@@ -106,7 +106,7 @@ public class HttpRequestImpl implements HttpRequest {
         return snapshot;
     }
 
-    // 先在局部构建完成、再经  字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
+    // 先在局部构建完成、再经 volatile 字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
     private Map<String, List<String>> parseParameters() {
         Map<String, List<String>> parsed = new LinkedHashMap<>(); // 保序：同名参数按 query 在前、表单体在后排列
         try {

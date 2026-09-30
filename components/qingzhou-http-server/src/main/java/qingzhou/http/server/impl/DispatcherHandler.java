@@ -38,12 +38,12 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private final AtomicLong aggregatedBytes = new AtomicLong();
 
     // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性；协作对象在 init 时整体重建
-    private Semaphore concurrentSemaphore;
-    private Semaphore streamSemaphore;
+    private volatile Semaphore concurrentSemaphore;
+    private volatile Semaphore streamSemaphore;
 
-    private ResponseHeaders responseHeaders;
-    private RequestGates requestGates;
-    private BodyProcessors bodyProcessors;
+    private volatile ResponseHeaders responseHeaders;
+    private volatile RequestGates requestGates;
+    private volatile BodyProcessors bodyProcessors;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -79,7 +79,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             throw e;
         }
         // 延迟执行：业务处理同步抛异常时也能走到 doFinally，不至于泄漏许可与配额
-        return Flux.defer(() -> denial != null ? denial : bodyProcessors.process(ctx))
+        return Flux.defer(() -> denial != null ? denial : bodyProcessors.handle(ctx))
                 .doFinally(signal -> release(ctx));
     }
 

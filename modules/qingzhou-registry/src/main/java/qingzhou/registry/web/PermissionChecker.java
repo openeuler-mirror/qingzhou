@@ -26,10 +26,10 @@ public class PermissionChecker {
                 // 检查操作级权限
                 return matchesRoles(userRoles, action.roles);
             }
-            break;
+            return false;
         }
 
-        return true;
+        return false;
     }
 
     private static boolean matchesRoles(String[] actual, String declaration) {

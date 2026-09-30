@@ -76,7 +76,10 @@ public class AiChat implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, Object> params = params(httpRequest);
-        if (params == null) return;
+        if (params == null) {
+            httpResponse.status400Finish();
+            return;
+        }
 
         String question = ((String) params.get("question")).trim();
         String app = (String) params.get("app");

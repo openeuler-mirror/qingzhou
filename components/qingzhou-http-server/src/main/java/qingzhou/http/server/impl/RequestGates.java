@@ -95,19 +95,22 @@ final class RequestGates {
     private Publisher<Void> denyPreflight(RequestContext ctx) {
         if (ctx.request.method() != HttpMethod.OPTIONS) return null;
         HttpHeaders headers = ctx.request.requestHeaders();
-        if (headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD) == null) return null; // 普通探测仍走 handler
+        String requestedMethod = headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD);
+        if (requestedMethod == null) return null; // 普通探测仍走 handler
+        if (Arrays.stream(ALLOWED_METHODS).noneMatch(method -> method.name().equals(requestedMethod))) {
+            return ctx.respond(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        }
 
         String requestedHeaders = sanitizeRequestedHeaders(headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS));
         ctx.response.header(HttpHeaderNames.ALLOW, ALLOW_HEADER)
                 .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, ALLOW_HEADER)
-                // 回显客户端实际请求的头：固定值会让携带其它自定义头的跨域请求被浏览器拒绝
+                // 仅回显服务端允许的请求头，避免任意自定义头被跨域放行
                 .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, requestedHeaders)
                 .header(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "86400");
         return ctx.respond(HttpResponseStatus.NO_CONTENT); // 204 无体，不得带 Content-Length
     }
 
-    // 预检请求头白名单化：客户端传 * 会让浏览器放行任意自定义请求头（防御纵深弱化），按不存在处理回退默认集；
-    // 逐段剥空格，空列表同样回退默认集
+    // 预检请求头仅允许 Content-Type 与 Authorization；空列表回退默认集
     private String sanitizeRequestedHeaders(String requestedHeaders) {
         String defaultHeader = "Content-Type, Authorization";
         if (requestedHeaders == null || requestedHeaders.isEmpty()) {
@@ -116,7 +119,9 @@ final class RequestGates {
         List<String> allowed = new ArrayList<>();
         for (String header : requestedHeaders.split(",")) {
             String name = header.trim();
-            if (!name.isEmpty() && !"*".equals(name)) allowed.add(name);
+            if ("Content-Type".equalsIgnoreCase(name) || "Authorization".equalsIgnoreCase(name)) {
+                allowed.add(name);
+            }
         }
         return allowed.isEmpty() ? defaultHeader : String.join(", ", allowed);
     }

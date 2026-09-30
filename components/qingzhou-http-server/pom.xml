@@ -12,8 +12,8 @@
     <artifactId>qingzhou-http-server</artifactId>
 
     <properties>
-        <reactor-netty-version>1.2.17</reactor-netty-version>
-        <netty-version>4.1.132.Final</netty-version>
+        <reactor-netty-version>1.2.18</reactor-netty-version>
+        <netty-version>4.1.138.Final</netty-version>
     </properties>
 
     <dependencies>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-            <version>3.7.18</version>
+            <version>3.7.19</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

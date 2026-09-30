@@ -36,7 +36,7 @@ final class BodyProcessors {
         this.logger = logger;
     }
 
-    Publisher<Void> process(RequestContext ctx) {
+    Publisher<Void> handle(RequestContext ctx) {
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
                 .onBackpressureBuffer(Queues.<byte[]>get(RESPONSE_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
         HttpResponseImpl httpResponse = new HttpResponseImpl(ctx.response, streamResponse);

@@ -18,8 +18,7 @@ import qingzhou.json.Json;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/monitor",
-        HttpHandler.HANDLE_NO_AUTH + "=true"})
+@Component(property = HttpHandler.HANDLE_PATH + "=/monitor")
 public class Monitor implements HttpHandler {
     @Reference
     private Registry registry;

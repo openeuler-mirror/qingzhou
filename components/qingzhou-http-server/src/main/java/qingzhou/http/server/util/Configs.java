@@ -9,10 +9,13 @@ import java.util.function.Function;
  * 而漏掉的那处恰好会在运行时静默降级（如窗口非正数令防爆破失效）。
  */
 public final class Configs {
-    private static final String KEY_PREFIX = "qingzhou-http-server.";
 
     public static int atLeast(Map<String, String> config, String key, int min, long defaultValue) {
-        return (int) atLeast(config, key, (long) min, defaultValue);
+        long value = atLeast(config, key, (long) min, defaultValue);
+        if (value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(invalid(key, " must be <= " + Integer.MAX_VALUE, String.valueOf(value)));
+        }
+        return (int) value;
     }
 
     // 配置值下限校验：min=1 表示必须为正，min=0 表示可为 0 但不能为负
@@ -80,6 +83,6 @@ public final class Configs {
     }
 
     private static String invalid(String key, String requirement, String val) {
-        return KEY_PREFIX + key + " " + requirement + ", got: " + val;
+        return key + " " + requirement + ", got: " + val;
     }
 }

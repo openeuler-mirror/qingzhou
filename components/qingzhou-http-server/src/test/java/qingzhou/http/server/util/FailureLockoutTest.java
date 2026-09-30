@@ -33,6 +33,15 @@ public class FailureLockoutTest {
     }
 
     @Test
+    public void singleCapacity_keepsTrackedEntry() throws Exception {
+        FailureLockout throttle = new FailureLockout(1, 60_000, 1);
+        throttle.recordFailure("ip1");
+
+        Assert.assertTrue(throttle.isLocked("ip1"));
+        Assert.assertEquals(countStates(throttle), 1);
+    }
+
+    @Test
     public void capacityOverflow_evictsOldestEntries() throws Exception {
         FailureLockout throttle = new FailureLockout(5, 60_000, 100); // 水位 90
         for (int i = 0; i < 101; i++) {

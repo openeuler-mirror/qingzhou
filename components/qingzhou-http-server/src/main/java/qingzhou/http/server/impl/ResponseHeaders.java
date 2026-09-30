@@ -24,7 +24,7 @@ final class ResponseHeaders {
 
     ResponseHeaders(Map<String, String> config) {
         this.sslEnabled = getConfig(config, "ssl_enabled", true);
-        this.csp = getConfig(config, "csp", "none");
+        this.csp = getConfig(config, "csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
         this.permissionsPolicy = getConfig(config, "permissions_policy", "geolocation=(), microphone=(), camera=()");
         this.coop = getConfig(config, "coop", "");
         this.corp = getConfig(config, "corp", "");

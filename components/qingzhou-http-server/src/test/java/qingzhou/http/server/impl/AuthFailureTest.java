@@ -41,6 +41,19 @@ public class AuthFailureTest {
     }
 
     @Test
+    public void lockedHost_noAuthRoute_stillAllowed() throws Exception {
+        AuthManager authManager = manager(1, 60);
+        authManager.addAuthenticator(request -> AuthResult.reject("no"));
+        HttpRequestImpl request = request("10.0.0.3");
+        Assert.assertFalse(authManager.doAuth(request, entry()));
+
+        HandlerManager.HandlerEntry noAuth = new HandlerManager.HandlerEntry((req, response) -> {
+        }, true);
+        Assert.assertTrue(authManager.doAuth(request, noAuth));
+        Assert.assertFalse(authManager.doAuth(request, entry()));
+    }
+
+    @Test
     public void authenticationPassed_failureRecord_cleared() throws Exception {
         AuthManager authManager = manager(2, 60);
         AtomicInteger calls = new AtomicInteger();

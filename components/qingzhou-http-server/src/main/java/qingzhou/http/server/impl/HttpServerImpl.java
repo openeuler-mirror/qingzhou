@@ -37,7 +37,7 @@ public class HttpServerImpl implements HttpServer {
         int workerThreads = atLeast(config, "worker", 1, Runtime.getRuntime().availableProcessors() * 2);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
         int idleTimeout = atLeast(config, "idle_timeout", 0, 60);
-        String host = getConfig(config, "host", "0.0.0.0");
+        String host = getConfig(config, "host", "127.0.0.1");
         int port = port(config, "port");
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
@@ -52,7 +52,7 @@ public class HttpServerImpl implements HttpServer {
                 .host(host)
                 .port(port)
                 .runOn(loopResources)
-                // TCP 底层配置（生产环境优化必备，防止半连接、粘包等问题）
+                // TCP 底层配置：限制连接队列并启用存活探测
                 .option(ChannelOption.SO_REUSEADDR, true) // tcp 层端口复用（高效，但有数据混乱低风险，因netty等框架有容错检测故可打开）
                 .option(ChannelOption.SO_BACKLOG, 1024) // tcp 层连接队列，应对突发流量避免客户端被拒绝，过大会消耗系统资源
                 .childOption(ChannelOption.SO_KEEPALIVE, true) // tcp 层保活探测，避免对方意外断电等资源无效占用
@@ -79,7 +79,8 @@ public class HttpServerImpl implements HttpServer {
         }
 
         // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://localhost:" + disposableServer.port() + "/web");
+        if (!sslEnabled) logger.warn("http server is using plaintext HTTP; enable TLS before remote exposure");
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port() + "/web");
     }
 
     @Deactivate
@@ -97,21 +98,25 @@ public class HttpServerImpl implements HttpServer {
         }
     }
 
-    // 置空已释放的资源：使 stop 可重复调用，且 start 失败路径可安全复用
+    // 两类资源独立收尾：服务端关闭失败也必须继续回收 EventLoop
     private void disposeResources() {
-        if (disposableServer != null) {
-            disposableServer.disposeNow(Duration.ofSeconds(30)); // 优雅关闭，超时 30 秒
+        try {
+            if (disposableServer != null) disposableServer.disposeNow(Duration.ofSeconds(30));
+        } finally {
             disposableServer = null;
-        }
-        if (loopResources != null) {
-            loopResources.disposeLater()
-                    .timeout(Duration.ofSeconds(10))
-                    .onErrorResume(ex -> {
-                        logger.error("failed to close loop resources:", ex);
-                        return Mono.empty();
-                    })
-                    .block(Duration.ofSeconds(15)); // 同步等待：否则 stop 返回后线程仍在运行，重启时端口与线程残留
-            loopResources = null;
+            if (loopResources != null) {
+                try {
+                    loopResources.disposeLater()
+                            .timeout(Duration.ofSeconds(10))
+                            .onErrorResume(ex -> {
+                                logger.error("failed to close loop resources:", ex);
+                                return Mono.empty();
+                            })
+                            .block(Duration.ofSeconds(15));
+                } finally {
+                    loopResources = null;
+                }
+            }
         }
     }
 

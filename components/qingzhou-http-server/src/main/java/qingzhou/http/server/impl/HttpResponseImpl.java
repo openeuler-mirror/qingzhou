@@ -19,8 +19,8 @@ class HttpResponseImpl implements HttpResponse {
     }
 
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性
-    private boolean committed = false;
-    private boolean cancelled = false;
+    private volatile boolean committed;
+    private volatile boolean cancelled;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
     boolean isCancelled() {
@@ -32,7 +32,7 @@ class HttpResponseImpl implements HttpResponse {
      * 提交后状态码与响应头不可再更改，框架只能做干净收尾。
      * 仅 send/finish 置位：status/header/contentType 之后仍允许错误分支改写状态码。
      */
-    public boolean isCommitted() {
+    boolean isCommitted() {
         return committed;
     }
 

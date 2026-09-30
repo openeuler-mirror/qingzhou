@@ -22,6 +22,9 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
+import static qingzhou.http.server.util.Configs.atLeast;
+import static qingzhou.http.server.util.Configs.notBlank;
+
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
@@ -33,8 +36,8 @@ public class OAuth2Handler implements HttpHandler {
     private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
     private static final String CONSOLE_PATH = "/web"; // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
 
-    private static final String CSRF_COOKIE_NAME = "oauth2_csrf";
-    static final String TOKEN_COOKIE_NAME = "oauth2_session";
+    public static final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    public static final String TOKEN_COOKIE_NAME = "oauth2_session";
 
     private static final String USER_SP = "@";
     private static final String ROLES_SP = ",";
@@ -62,17 +65,17 @@ public class OAuth2Handler implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        authorizationEndpoint = config.get("oauth2_authorize_endpoint");
-        clientId = config.get("oauth2_client_id");
-        clientSecret = config.get("oauth2_client_secret"); //安全考虑：此处不要解密
-        tokenEndpoint = config.get("oauth2_token_endpoint");
-        userinfoEndpoint = config.get("oauth2_userinfo_endpoint");
+        authorizationEndpoint = notBlank(config, "oauth2_authorize_endpoint");
+        clientId = notBlank(config, "oauth2_client_id");
+        clientSecret = notBlank(config, "oauth2_client_secret"); // 安全考虑：此处不要解密
+        tokenEndpoint = notBlank(config, "oauth2_token_endpoint");
+        userinfoEndpoint = notBlank(config, "oauth2_userinfo_endpoint");
         usernameField = config.get("oauth2_userinfo_username_field");
         scope = config.get("oauth2_scope");
-        thisServerUrl = config.get("oauth2_this_server");
+        thisServerUrl = notBlank(config, "oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
-        tokenExpireMillis = Integer.parseInt(config.getOrDefault("token_expire_seconds", "" + 30 * 60)) * 1000L;
+        tokenExpireMillis = atLeast(config, "token_expire_seconds", 1, 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
         clientSecretCipher = crypto.getGlobalCipher();
     }
@@ -142,8 +145,7 @@ public class OAuth2Handler implements HttpHandler {
         String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
         Map tokenBody = json.fromJson(tokenBodyText, Map.class);
         if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
-            // 此授权服务器的错误响应以 HTTP 200 返回（如 invalid_client），仅凭状态码判断会误报为 "failed to get user info"
-            response.status500Finish("token exchange failed: " + tokenBodyText);
+            response.status500Finish("token exchange failed");
             return;
         }
         String user = extractUser(tokenBody);
@@ -231,9 +233,14 @@ public class OAuth2Handler implements HttpHandler {
     Object[] verifyToken(String token) {
         try {
             String payload = tokenCipher.decrypt(token);
-            String[] sep = payload.split(USER_SP);
-            return System.currentTimeMillis() < Long.parseLong(sep[2])
-                    ? new Object[]{sep[0], sep[1].split(ROLES_SP)} : null;
+            int expiresSeparator = payload.lastIndexOf(USER_SP);
+            int rolesSeparator = expiresSeparator < 0 ? -1 : payload.lastIndexOf(USER_SP, expiresSeparator - 1);
+            if (rolesSeparator < 0) return null;
+            String user = payload.substring(0, rolesSeparator);
+            String roleText = payload.substring(rolesSeparator + USER_SP.length(), expiresSeparator);
+            long expiresAt = Long.parseLong(payload.substring(expiresSeparator + USER_SP.length()));
+            return System.currentTimeMillis() < expiresAt
+                    ? new Object[]{user, roleText.isEmpty() ? new String[0] : roleText.split(ROLES_SP)} : null;
         } catch (Exception e) {
             return null;
         }

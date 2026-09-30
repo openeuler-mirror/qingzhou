@@ -1,6 +1,5 @@
 package qingzhou.auth;
 
-import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class AuthHandler implements HttpHandler {
     private FailureLockout lockout;
 
     @Activate
-    public void init(Map<String, String> config) throws InvalidKeyException {
+    public void init(Map<String, String> config) {
         username = Configs.notBlank(config, "username");
         passwordDigest = Configs.notBlank(config, "password");
         String rolesStr = config.get("roles");
@@ -84,6 +83,10 @@ public class AuthHandler implements HttpHandler {
 
             login(request, response);
         } else if (path.equals(LOGOUT_PATH)) {
+            if (!"POST".equals(request.getMethod())) {
+                response.status(405).sendFinish("method not allowed");
+                return;
+            }
             logout(response);
         } else {
             response.status400Finish();
@@ -91,17 +94,22 @@ public class AuthHandler implements HttpHandler {
     }
 
     private void login(HttpRequest request, HttpResponse response) {
+        String reqUser = request.getParameter("username");
         String ip = request.getRemoteHost();
-        if (lockout.isLocked(ip)) {
+        if (reqUser != null && reqUser.length() > 128) {
+            response.status(401).sendFinish("invalid username or password");
+            return;
+        }
+        String lockKey = ip + '\0' + (reqUser == null ? "" : reqUser);
+        if (lockout.isLocked(lockKey)) {
             response.status(429).sendFinish("too many login failures, try again later");
             return;
         }
 
-        String reqUser = request.getParameter("username");
         String reqPass = request.getParameter("password");
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
-            lockout.recordFailure(ip);
+            lockout.recordFailure(lockKey);
             response.status(401).sendFinish("invalid username or password");
             return;
         }
@@ -113,12 +121,12 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
             if (!verifyCode(code, response)) {
-                lockout.recordFailure(ip);
+                lockout.recordFailure(lockKey);
                 return;
             }
         }
 
-        lockout.clear(ip);
+        lockout.clear(lockKey);
         response.header("Cache-Control", "no-store") // token 响应不得被缓存
                 .contentTypeJsonUtf8()
                 .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}");
@@ -147,7 +155,8 @@ public class AuthHandler implements HttpHandler {
     }
 
     private void logout(HttpResponse response) {
-        // 无状态 token 无法服务端撤销，客户端删除凭据即完成登出
-        response.sendFinish("ok");
+        response.header("Set-Cookie", qingzhou.auth.oauth2.OAuth2Handler.TOKEN_COOKIE_NAME
+                        + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
+                .sendFinish("ok");
     }
 }

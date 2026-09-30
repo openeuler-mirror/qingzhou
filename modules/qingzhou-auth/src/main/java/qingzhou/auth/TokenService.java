@@ -48,10 +48,15 @@ public class TokenService {
     public Object[] verifyToken(String token) {
         try {
             String payload = tokenCipher.decrypt(token);
-            String[] sep = payload.split(USER_SP);
-            if (sep.length != 3 || Long.parseLong(sep[2]) <= System.currentTimeMillis()) return null;
-            String[] roles = sep[1].isEmpty() ? new String[0] : sep[1].split(ROLES_SP); // 空角色段返回空数组而非 [""] 脏数据
-            return new Object[]{sep[0], roles};
+            int expiresSeparator = payload.lastIndexOf(USER_SP);
+            int rolesSeparator = expiresSeparator < 0 ? -1 : payload.lastIndexOf(USER_SP, expiresSeparator - 1);
+            if (rolesSeparator < 0) return null;
+            String user = payload.substring(0, rolesSeparator);
+            String roleText = payload.substring(rolesSeparator + USER_SP.length(), expiresSeparator);
+            long expiresAt = Long.parseLong(payload.substring(expiresSeparator + USER_SP.length()));
+            if (expiresAt <= System.currentTimeMillis()) return null;
+            String[] roles = roleText.isEmpty() ? new String[0] : roleText.split(ROLES_SP);
+            return new Object[]{user, roles};
         } catch (Exception e) {
             return null;
         }
