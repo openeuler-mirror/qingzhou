@@ -503,6 +503,7 @@ public class AgentInvokerTest {
         HandlerManager handlerManager = new HandlerManager();
         DispatcherHandler dispatcherHandler = new DispatcherHandler();
         AuthManager authManager = new AuthManager();
+        authManager.init(new HashMap<>());
 
         setField(httpServer, "crypto", crypto);
         setField(httpServer, "logger", logger);
