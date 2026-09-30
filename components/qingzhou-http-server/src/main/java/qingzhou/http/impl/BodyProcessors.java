@@ -1,6 +1,5 @@
 package qingzhou.http.impl;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,10 +15,8 @@ import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
 import reactor.util.concurrent.Queues;
 
-import static qingzhou.http.impl.ConfigUtil.atLeast;
-import static qingzhou.http.impl.ConfigUtil.getConfig;
-import static qingzhou.http.impl.Errors.getCause;
-import static qingzhou.http.impl.Errors.safeRun;
+import static qingzhou.http.impl.util.Errors.getCause;
+import static qingzhou.http.impl.util.Errors.safeRun;
 
 /**
  * 请求体处理：按闸门判定结果分流的聚合（进内存）与流式（handler 直收）两条链。
@@ -29,14 +26,14 @@ final class BodyProcessors {
     private static final byte[] EMPTY_BODY = new byte[0];
     private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
 
-    private final Logger logger;
+    private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxStreamBytes; // 流式上传总量上限
-    private final int maxBodyBytes; // 单个请求体聚合进内存的上限
+    private final Logger logger;
 
-    BodyProcessors(Map<String, String> config, Logger logger) {
+    BodyProcessors(long maxBodyBytes, long maxStreamBytes, Logger logger) {
+        this.maxBodyBytes = maxBodyBytes;
+        this.maxStreamBytes = maxStreamBytes;
         this.logger = logger;
-        this.maxStreamBytes = atLeast(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), 1L, "max_stream_bytes");
-        this.maxBodyBytes = atLeast(getConfig(config, "max_body_bytes", 8 * 1024 * 1024), 1, "max_body_bytes");
     }
 
     Publisher<Void> process(RequestContext ctx) {

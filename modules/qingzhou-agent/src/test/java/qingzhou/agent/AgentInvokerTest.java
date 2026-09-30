@@ -22,7 +22,7 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
-import qingzhou.http.impl.AuthManager;
+import qingzhou.http.impl.auth.AuthManager;
 import qingzhou.http.impl.DispatcherHandler;
 import qingzhou.http.impl.HandlerManager;
 import qingzhou.http.impl.HttpServerImpl;

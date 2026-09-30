@@ -1,4 +1,4 @@
-package qingzhou.http.server;
+package qingzhou.http.impl.auth;
 
 public interface AuthResult {
     /**

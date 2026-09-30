@@ -15,8 +15,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
 
-import static qingzhou.http.impl.ConfigUtil.atLeast;
-import static qingzhou.http.impl.ConfigUtil.getConfig;
+import static qingzhou.http.impl.util.Configs.*;
 
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
@@ -34,16 +33,12 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        int selectorThreads = atLeast(getConfig(config, "selector", 1), 1, "selector");
-        int workerThreads = atLeast(getConfig(config, "worker", Runtime.getRuntime().availableProcessors() * 2), 1, "worker");
+        int selectorThreads = atLeast(config, "selector", 1, 1);
+        int workerThreads = atLeast(config, "worker", 1, Runtime.getRuntime().availableProcessors() * 2);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
-        int idleTimeout = atLeast(getConfig(config, "idle_timeout", 60), 0, "idle_timeout");
+        int idleTimeout = atLeast(config, "idle_timeout", 0, 60);
         String host = getConfig(config, "host", "0.0.0.0");
-        String portStr = config.get("port");
-        if (portStr == null || portStr.trim().isEmpty()) {
-            throw new IllegalArgumentException("port is required");
-        }
-        int port = ConfigUtil.parsePort(portStr.trim(), "port");
+        int port = port(config, "port");
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -71,9 +66,9 @@ public class HttpServerImpl implements HttpServer {
         }
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
-        boolean isSslEnabled = getConfig(config, "ssl_enabled", true);
+        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
         try {
-            if (isSslEnabled) {
+            if (sslEnabled) {
                 SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);
                 httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
             }
@@ -84,7 +79,7 @@ public class HttpServerImpl implements HttpServer {
         }
 
         // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
-        logger.info("http server started: " + (isSslEnabled ? "https" : "http") + "://localhost:" + disposableServer.port() + "/web");
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://localhost:" + disposableServer.port() + "/web");
     }
 
     @Deactivate
@@ -134,6 +129,7 @@ public class HttpServerImpl implements HttpServer {
     private void register(HttpHandler httpHandler, String handlePath, boolean noAuth) {
         Map<String, String> properties = new HashMap<>();
         properties.put(HttpHandler.HANDLE_PATH, handlePath);
+        properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");
         if (noAuth) properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
         handlerManager.addHttpHandler(httpHandler, properties, null);
     }

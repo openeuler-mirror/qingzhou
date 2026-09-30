@@ -109,7 +109,7 @@ public class InitInstance extends Processor {
         Object messageDigest = crypto.getClass().getMethod("getMessageDigest").invoke(crypto);
         Method digest = cryptoLoader.loadClass("qingzhou.crypto.MessageDigest")
                 .getMethod("digest", String.class, String.class, int.class, int.class);
-        write(propsFile, putValue(read(propsFile), "qingzhou-auth.password",
+        write(propsFile, putValue(read(propsFile), "qingzhou-http-server.auth_password",
                 (String) digest.invoke(messageDigest, password, "SHA-256", 16, 2)));
         logSimple("admin password updated");
     }

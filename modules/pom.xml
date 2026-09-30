@@ -16,7 +16,6 @@
         <module>qingzhou-api</module>
         <module>qingzhou-dto</module>
         <module>qingzhou-registry</module>
-        <module>qingzhou-auth</module>
         <module>qingzhou-oauth2</module>
         <module>qingzhou-agent</module>
         <module>qingzhou-web</module>

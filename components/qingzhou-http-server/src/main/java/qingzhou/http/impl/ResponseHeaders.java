@@ -9,11 +9,10 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import static qingzhou.http.impl.ConfigUtil.getConfig;
+import static qingzhou.http.impl.util.Configs.getConfig;
 
 /**
- * 响应安全头与跨域头。每次配置激活时重建的不可变对象：
- * 替代多个各自 volatile 的散字段，避免热更新时多字段非原子切换。
+ * 响应安全头与跨域头。
  */
 final class ResponseHeaders {
     private final boolean sslEnabled;

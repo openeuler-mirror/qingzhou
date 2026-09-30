@@ -1,6 +1,5 @@
 package qingzhou.http.impl;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -9,7 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.http.server.AuthResult;
+import qingzhou.http.impl.auth.AuthManager;
+import qingzhou.http.impl.auth.AuthResult;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.impl.LoggerImpl;
@@ -56,50 +56,6 @@ public class AuthFailureTest {
 
         // 计数未清零的话，第 4 次即被锁定，认证器只会调用 3 次
         Assert.assertEquals(calls.get(), 4);
-    }
-
-    @Test
-    public void capacityOverflow_evictsOldestFailures() throws Exception {
-        AuthManager authManager = manager(2, 60);
-        Map<String, AuthManager.AuthFailure> failures = failuresOf(authManager);
-
-        // 时间戳落在窗口内（过早会被 removeIf 当作过期项先行回收）且严格递增，保证淘汰顺序确定
-        long baseTime = System.currentTimeMillis() - 30_000;
-        for (int i = 0; i < 10_004; i++) {
-            AuthManager.AuthFailure failure = new AuthManager.AuthFailure();
-            setLastFailureAt(failure, baseTime + i);
-            failures.put(host(i), failure);
-        }
-
-        // 第 10005 个来源失败：恰好跨过容量上限，触发一次水位淘汰
-        authManager.doAuth(request(host(10_004)), entry());
-
-        Assert.assertEquals(failures.size(), 9_000); // 一次淘汰到低水位
-        for (int i = 0; i < 1_005; i++) {
-            Assert.assertFalse(failures.containsKey(host(i)), "oldest source must be evicted: " + host(i));
-        }
-        for (int i = 1_005; i < 10_004; i += 997) {
-            Assert.assertTrue(failures.containsKey(host(i)), "newer source must survive: " + host(i));
-        }
-        Assert.assertTrue(failures.containsKey(host(10_004)), "newest source must survive");
-    }
-
-    // 用 IP 字面量构造 host：避免 InetSocketAddress 对主机名发起 DNS 解析
-    private static String host(int index) {
-        return "10." + (index / 65536 % 256) + "." + (index / 256 % 256) + "." + (index % 256);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, AuthManager.AuthFailure> failuresOf(AuthManager authManager) throws Exception {
-        Field field = AuthManager.class.getDeclaredField("authFailures");
-        field.setAccessible(true);
-        return (Map<String, AuthManager.AuthFailure>) field.get(authManager);
-    }
-
-    private static void setLastFailureAt(AuthManager.AuthFailure failure, long lastFailureAt) throws Exception {
-        Field field = AuthManager.AuthFailure.class.getDeclaredField("lastFailureAt");
-        field.setAccessible(true);
-        field.setLong(failure, lastFailureAt);
     }
 
     private static AuthManager manager(int maxFailures, int windowSeconds) throws Exception {

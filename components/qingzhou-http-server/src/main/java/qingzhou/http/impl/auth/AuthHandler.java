@@ -1,11 +1,10 @@
-package qingzhou.auth;
+package qingzhou.http.impl.auth;
 
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -17,11 +16,15 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
 
-@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
+import static qingzhou.http.impl.util.Configs.atLeast;
+import static qingzhou.http.impl.util.Configs.notBlank;
+
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {HttpHandler.HANDLE_PATH + "=" + AuthHandler.ROOT_PATH, HttpHandler.HANDLE_PATH_ABSOLUTE + "=true", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class AuthHandler implements HttpHandler {
-    private static final String LOGIN_PATH = "/auth/login";
-    private static final String LOGOUT_PATH = "/auth/logout";
+    public static final String ROOT_PATH = "/auth";
+    private static final String LOGIN_PATH = ROOT_PATH + "/login";
+    private static final String LOGOUT_PATH = ROOT_PATH + "/logout";
 
     @Reference
     private Crypto crypto;
@@ -33,20 +36,16 @@ public class AuthHandler implements HttpHandler {
     private String username;
     private String passwordDigest;
     private String[] roles;
-    private int maxFailures;
-    private long lockMillis;
-    private final Map<String, long[]> failures = new ConcurrentHashMap<>(); // ip -> {count, firstTime}
 
     private boolean totpEnabled;
     private String totpSecret;
 
+    private FailureLockout lockout;
+
     @Activate
-    public void start(Map<String, String> config) throws InvalidKeyException {
-        passwordDigest = config.get("password");
-        if (passwordDigest == null || passwordDigest.isEmpty()) { // 未配置时直接启动失败，避免静默变成「谁都登不进」
-            throw new IllegalArgumentException("qingzhou-auth.password must be configured, use bin/gen-auth-password.sh.");
-        }
-        username = config.get("username");
+    public void init(Map<String, String> config) throws InvalidKeyException {
+        username = notBlank(config, "auth_username");
+        passwordDigest = notBlank(config, "auth_password");
         String rolesStr = config.get("roles");
         if (rolesStr != null) {
             List<String> roleList = new ArrayList<>();
@@ -58,16 +57,17 @@ public class AuthHandler implements HttpHandler {
             roles = roleList.toArray(new String[0]);
         }
 
-        maxFailures = parseInt(config.get("max_failures"), 5);
-        lockMillis = parseInt(config.get("lock_seconds"), 300) * 1000L;
-
-        totpEnabled = Boolean.parseBoolean(config.get("totp_enabled"));
+        totpEnabled = Boolean.parseBoolean(config.get("auth_totp_enabled"));
         if (totpEnabled) {
-            totpSecret = config.get("totp_secret"); // 安全考虑：此处不要解密
+            totpSecret = config.get("auth_totp_secret"); // 安全考虑：此处不要解密
             if (totpSecret == null || totpSecret.trim().isEmpty()) {
-                throw new InvalidKeyException("'totp_secret' must be configured, use bin/gen-totp-key.sh");
+                throw new InvalidKeyException("'auth_totp_secret' must be configured, use bin/gen-totp-key.sh");
             }
         }
+
+        int maxFailures = atLeast(config, "max_failures", 1, 5);
+        long lockMillis = atLeast(config, "lock_seconds", 1, 300) * 1000L;
+        lockout = new FailureLockout(maxFailures, lockMillis, 10_000);
     }
 
     @Override
@@ -94,17 +94,16 @@ public class AuthHandler implements HttpHandler {
 
     private void login(HttpRequest request, HttpResponse response) {
         String ip = request.getRemoteHost();
-        if (isLocked(ip)) {
+        if (lockout.isLocked(ip)) {
             response.status(429).sendFinish("too many login failures, try again later");
             return;
         }
 
         String reqUser = request.getParameter("username");
-        String password = request.getParameter("password");
-        boolean verified = Objects.equals(reqUser, username)
-                && crypto.getMessageDigest().matches(password, passwordDigest);
+        String reqPass = request.getParameter("password");
+        boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
-            recordFailure(ip);
+            lockout.recordFailure(ip);
             response.status(401).sendFinish("invalid username or password");
             return;
         }
@@ -116,21 +115,32 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
             if (!verifyCode(code, response)) {
-                recordFailure(ip);
+                lockout.recordFailure(ip);
                 return;
             }
         }
 
-        failures.remove(ip);
+        lockout.clear(ip);
         response.header("Cache-Control", "no-store") // token 响应不得被缓存
                 .contentTypeJsonUtf8()
                 .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}");
     }
 
+    private boolean verifyUserPassword(String reqUser, String reqPass) {
+        if (reqPass == null) reqPass = ""; // null 会让 matches 抛 NPE 变 500，泄露「用户名有效」信号；按空凭据处理
+
+        return Objects.equals(reqUser, username)
+                & // 用户名错误也执行等价慢哈希：抹平与「密码错误」的响应时序差，防用户名枚举
+                crypto.getMessageDigest().matches(reqPass, passwordDigest);
+    }
+
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (crypto.getTotpCipher().verifyCode(crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"), code))
+            if (crypto.getTotpCipher().verifyCode(
+                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-http-server.auth_totp_secret"),
+                    code)) {
                 return true;
+            }
         } catch (Exception e) {
             logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");
         }
@@ -138,41 +148,8 @@ public class AuthHandler implements HttpHandler {
         return false;
     }
 
-    private boolean isLocked(String ip) {
-        long[] record = failures.get(ip);
-        if (record == null) return false;
-
-        if (record[0] < maxFailures) return false;
-
-        long now = System.currentTimeMillis();
-        return now - record[1] <= lockMillis;
-    }
-
-    private void recordFailure(String ip) {
-        failures.compute(ip, (key, record) -> {
-            long now = System.currentTimeMillis();
-            if (record == null || now - record[1] > lockMillis) {
-                return new long[]{1, now};
-            }
-            record[0]++;
-            return record;
-        });
-        if (failures.size() > 10_000) { // 惰性清理过期记录，防止不同 IP 洪水导致内存膨胀
-            long now = System.currentTimeMillis();
-            failures.entrySet().removeIf(entry -> now - entry.getValue()[1] > lockMillis);
-        }
-    }
-
     private void logout(HttpResponse response) {
         // 无状态 token 无法服务端撤销，客户端删除凭据即完成登出
         response.sendFinish("ok");
-    }
-
-    private int parseInt(String val, int defaultValue) {
-        try {
-            return Integer.parseInt(val);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
     }
 }

@@ -7,25 +7,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import qingzhou.http.server.AuthResult;
 import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
 
-class HttpRequestImpl implements HttpRequest {
+public class HttpRequestImpl implements HttpRequest {
     private static final int MAX_FORM_PARAMS = 1000; // 表单参数个数上限：请求体可达 8MB，不限量会放大内存
 
     private final HttpServerRequest request;
     private final String requestPath;
 
     // 以下由框架/认证层在 EventLoop 写入，handler 可能在业务线程读取，须保证可见性
-    private volatile byte[] requestBody;
-    private volatile Map<String, List<String>> parameters;
+    private byte[] requestBody;
+    private Map<String, List<String>> parameters;
     private final Object parameterLock = new Object();
 
     // 认证结果：由认证层写入，对外只暴露只读的强类型接口
     private final AtomicBoolean authSet = new AtomicBoolean();
-    private volatile String authPrincipal;
-    private volatile String[] authRoles;
+    private String authPrincipal;
+    private String[] authRoles;
 
     HttpRequestImpl(HttpServerRequest request, String requestPath) {
         this.request = request;
@@ -33,7 +32,7 @@ class HttpRequestImpl implements HttpRequest {
     }
 
     // body 更新与缓存失效须在同一临界区内：「缓存与 body 配对」的不变式不依赖调用方时序；
-    // requestBody 为 volatile，锁内写无额外代价
+    // requestBody 为 ，锁内写无额外代价
     void setRequestBody(byte[] requestBody) {
         synchronized (parameterLock) {
             this.requestBody = requestBody;
@@ -41,17 +40,12 @@ class HttpRequestImpl implements HttpRequest {
         }
     }
 
-    // 认证层写入口，由 AuthManager.authenticateWithHandler 在每请求内调用一次；不允许多次调用。
-    // 前置：authResult 为 PASS 且主体非 null——无主体的认证结果已由认证层按未认证拒绝
-    // roles 在此处 clone，认证器后续改动其入参数组不影响已确定的认证结果
-    void setAuth(AuthResult authResult) {
-        // 判据独立于 principal：否则无主体的认证结果会让防护永不触发；CAS 保证防御检查自身原子
+    public void setPrincipal(String principal, String[] roles) {
         if (!authSet.compareAndSet(false, true)) {
             throw new IllegalStateException("auth result already set");
         }
 
-        authPrincipal = authResult.getPrincipal();
-        String[] roles = authResult.getRoles();
+        authPrincipal = principal;
         authRoles = roles == null ? null : roles.clone();
     }
 
@@ -112,7 +106,7 @@ class HttpRequestImpl implements HttpRequest {
         return snapshot;
     }
 
-    // 先在局部构建完成、再经 volatile 字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
+    // 先在局部构建完成、再经  字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
     private Map<String, List<String>> parseParameters() {
         Map<String, List<String>> parsed = new LinkedHashMap<>(); // 保序：同名参数按 query 在前、表单体在后排列
         try {

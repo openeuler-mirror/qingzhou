@@ -2,8 +2,8 @@ package qingzhou.oauth2;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.http.server.AuthResult;
-import qingzhou.http.server.Authenticator;
+import qingzhou.http.impl.auth.AuthResult;
+import qingzhou.http.impl.auth.Authenticator;
 import qingzhou.http.server.HttpRequest;
 
 @Component

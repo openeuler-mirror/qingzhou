@@ -1,4 +1,4 @@
-package qingzhou.auth;
+package qingzhou.http.impl.auth;
 
 import java.util.Map;
 
@@ -9,10 +9,10 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 
-@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)
 public class TokenService {
-    private static final String USER_SP = "@";
+    private static final String USER_SP = ">";
     private static final String ROLES_SP = ",";
 
     @Reference
@@ -48,8 +48,9 @@ public class TokenService {
         try {
             String payload = tokenCipher.decrypt(token);
             String[] sep = payload.split(USER_SP);
-            return System.currentTimeMillis() < Long.parseLong(sep[2])
-                    ? new Object[]{sep[0], sep[1].split(ROLES_SP)} : null;
+            if (sep.length != 3 || Long.parseLong(sep[2]) <= System.currentTimeMillis()) return null;
+            String[] roles = sep[1].isEmpty() ? new String[0] : sep[1].split(ROLES_SP); // 空角色段返回空数组而非 [""] 脏数据
+            return new Object[]{sep[0], roles};
         } catch (Exception e) {
             return null;
         }

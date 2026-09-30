@@ -1,4 +1,4 @@
-package qingzhou.http.impl;
+package qingzhou.http.impl.util;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -8,50 +8,50 @@ import java.util.function.Function;
  * 服务器、分发器、认证器三个组件同读一份配置：分散解析时新增一项校验极易漏掉某一处，
  * 而漏掉的那处恰好会在运行时静默降级（如窗口非正数令防爆破失效）。
  */
-final class ConfigUtil {
-    private static final String keyPrefix = "qingzhou-http-server.";
+public final class Configs {
+    private static final String KEY_PREFIX = "qingzhou-http-server.";
 
-    private ConfigUtil() {
+    public static int atLeast(Map<String, String> config, String key, int min, long defaultValue) {
+        return (int) atLeast(config, key, (long) min, defaultValue);
     }
 
     // 配置值下限校验：min=1 表示必须为正，min=0 表示可为 0 但不能为负
-    static int atLeast(int value, int min, String key) {
-        if (value < min)
-            throw new IllegalArgumentException(keyPrefix + key + " must be >= " + min + ": " + value);
+    public static long atLeast(Map<String, String> config, String key, long min, long defaultValue) {
+        long value = getConfig(config, key, defaultValue);
+        if (value < min) {
+            throw new IllegalArgumentException(invalid(key, " must be >= " + min, String.valueOf(value)));
+        }
         return value;
     }
 
-    static long atLeast(long value, long min, String key) {
-        if (value < min)
-            throw new IllegalArgumentException(keyPrefix + key + " must be >= " + min + ": " + value);
-        return value;
-    }
-
-    // 配置值上界校验：防止数值参与后续运算时溢出（如窗口秒数 * 1000 变负令节流失效）
-    static int atMost(int value, int max, String key) {
+    public static long between(Map<String, String> config, String key, long min, long max, long defaultValue) {
+        long value = atLeast(config, key, min, defaultValue);
         if (value > max)
-            throw new IllegalArgumentException(keyPrefix + key + " must be <= " + max + ": " + value);
+            throw new IllegalArgumentException(invalid(key, " must be <= " + max, String.valueOf(value)));
         return value;
     }
 
     // 必填整数配置解析（无默认值场景）：失败报错带配置项名，与 getConfig 各分支口径一致
-    static int parsePort(String val, String key) {
-        int port;
-        try {
-            port = Integer.parseInt(val);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(invalid(key, val, "must be an integer"));
-        }
-
+    public static int port(Map<String, String> config, String key) {
+        String val = notBlank(config, key);
+        int port = number(val, key, Integer::parseInt);
         // 0 是合法值：交由操作系统分配空闲端口（测试与动态端口场景依赖它）
-        if (port < 0 || port > 65535)
-            throw new IllegalArgumentException(invalid(key, val, "out of range"));
-
+        if (port < 0 || port > 65535) {
+            throw new IllegalArgumentException(invalid(key, "out of range", val));
+        }
         return port;
     }
 
+    public static String notBlank(Map<String, String> config, String key) {
+        String val = config.get(key);
+        if (val == null || val.trim().isEmpty()) { // 未配置时原实现可用字面量 "null"，故 fail-fast
+            throw new IllegalArgumentException(invalid(key, "must be configured", val));
+        }
+        return val.trim();
+    }
+
     @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
-    static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
+    public static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
         String val = config.get(key);
         if (val == null) return defaultValue;
         val = val.trim(); // 值允许带前后空白，但不得因此解析失败或静默降级
@@ -64,7 +64,7 @@ final class ConfigUtil {
         if (defaultValue instanceof Boolean) {
             // 布尔不得静默降级：非 true/false 一律报错，否则 ssl_enabled=TRUE/1 会被解析为关闭
             if ("true".equals(val) || "false".equals(val)) return (T) Boolean.valueOf(val);
-            throw new IllegalArgumentException(invalid(key, val, "must be exactly 'true' or 'false' (case sensitive)"));
+            throw new IllegalArgumentException(invalid(key, "must be exactly 'true' or 'false' (case sensitive)", val));
         }
 
         return defaultValue;
@@ -75,11 +75,11 @@ final class ConfigUtil {
         try {
             return parser.apply(val);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(invalid(key, val, "must be an integer"));
+            throw new IllegalArgumentException(invalid(key, "must be an integer", val));
         }
     }
 
-    private static String invalid(String key, String val, String requirement) {
-        return keyPrefix + key + " " + requirement + ", got: " + val;
+    private static String invalid(String key, String requirement, String val) {
+        return KEY_PREFIX + key + " " + requirement + ", got: " + val;
     }
 }

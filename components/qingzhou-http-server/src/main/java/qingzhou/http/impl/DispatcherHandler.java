@@ -13,17 +13,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import qingzhou.http.impl.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import static qingzhou.http.impl.ConfigUtil.atLeast;
-import static qingzhou.http.impl.ConfigUtil.getConfig;
+import static qingzhou.http.impl.util.Configs.atLeast;
 
 /**
  * 请求分发入口：装配安全头、准入闸门与 body 处理三条协作链，并持有许可的获取与归还。
- * 具体判定见 {@link RequestGates}，body 处理见 {@link BodyProcessors}，响应头见 {@link ResponseHeaders}。
  */
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = DispatcherHandler.class)
@@ -39,23 +38,26 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     private final AtomicLong aggregatedBytes = new AtomicLong();
 
     // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性；协作对象在 init 时整体重建
-    private volatile Semaphore concurrentSemaphore;
-    private volatile Semaphore streamSemaphore;
-    private volatile ResponseHeaders responseHeaders;
-    private volatile RequestGates requestGates;
-    private volatile BodyProcessors bodyProcessors;
+    private Semaphore concurrentSemaphore;
+    private Semaphore streamSemaphore;
+
+    private ResponseHeaders responseHeaders;
+    private RequestGates requestGates;
+    private BodyProcessors bodyProcessors;
 
     @Activate
     public void init(Map<String, String> config) {
-        int maxConcurrentRequests = atLeast(getConfig(config, "max_concurrent_requests", 1000), 1, "max_concurrent_requests");
+        int maxConcurrentRequests = atLeast(config, "max_concurrent_requests", 1, 1000);
         this.concurrentSemaphore = new Semaphore(maxConcurrentRequests);
         // 流式上传不占堆内存配额，须单独限并发：否则大量并发上传会同时占满临时文件与连接
-        int maxStreams = atLeast(getConfig(config, "max_concurrent_streams", Math.min(maxConcurrentRequests, 64)),
-                1, "max_concurrent_streams");
+        int maxStreams = atLeast(config, "max_concurrent_streams", 1, Math.min(maxConcurrentRequests, 64));
         this.streamSemaphore = new Semaphore(maxStreams);
+
+        long maxBodyBytes = atLeast(config, "max_body_bytes", 1L, 8 * 1024 * 1024);
+        long maxStreamBytes = atLeast(config, "max_stream_bytes", 1L, 1024L * 1024 * 1024);
         this.responseHeaders = new ResponseHeaders(config);
-        this.requestGates = new RequestGates(config, authManager, handlerManager, logger, aggregatedBytes);
-        this.bodyProcessors = new BodyProcessors(config, logger);
+        this.requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, authManager, handlerManager, logger, aggregatedBytes);
+        this.bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);
     }
 
     @Override

@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
+import qingzhou.http.impl.auth.AuthManager;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;

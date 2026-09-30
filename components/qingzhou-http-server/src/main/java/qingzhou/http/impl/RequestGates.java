@@ -7,12 +7,12 @@ import java.util.stream.Collectors;
 
 import io.netty.handler.codec.http.*;
 import org.reactivestreams.Publisher;
+import qingzhou.http.impl.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
-import static qingzhou.http.impl.ConfigUtil.atLeast;
-import static qingzhou.http.impl.ConfigUtil.getConfig;
-import static qingzhou.http.impl.Errors.getCause;
+import static qingzhou.http.impl.util.Configs.atLeast;
+import static qingzhou.http.impl.util.Errors.getCause;
 
 /**
  * 请求准入闸门链：方法白名单、路径规范化、路由、认证、body 形态与配额。
@@ -35,19 +35,19 @@ final class RequestGates {
     // 全局聚合配额计数：由主类持有并跨配置更新共享，热更新重建本类时在途预留仍归还到同一计数
     private final AtomicLong aggregatedBytes;
     private final long maxStreamBytes; // 流式上传总量上限
-    private final int maxBodyBytes; // 单个请求体聚合进内存的上限
+    private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
     private final List<RequestGate> gates;
 
-    RequestGates(Map<String, String> config, AuthManager authManager, HandlerManager handlerManager,
+    RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, AuthManager authManager, HandlerManager handlerManager,
                  Logger logger, AtomicLong aggregatedBytes) {
         this.authManager = authManager;
         this.handlerManager = handlerManager;
         this.logger = logger;
         this.aggregatedBytes = aggregatedBytes;
-        this.maxStreamBytes = atLeast(getConfig(config, "max_stream_bytes", 1024L * 1024 * 1024), 1L, "max_stream_bytes");
-        this.maxBodyBytes = atLeast(getConfig(config, "max_body_bytes", 8 * 1024 * 1024), 1, "max_body_bytes");
-        this.maxAggregatedBytes = atLeast(getConfig(config, "max_aggregated_bytes", 64L * 1024 * 1024), 1L, "max_aggregated_bytes");
+        this.maxStreamBytes = maxStreamBytes;
+        this.maxBodyBytes = maxBodyBytes;
+        this.maxAggregatedBytes = atLeast(config, "max_aggregated_bytes", 1L, 64L * 1024 * 1024);
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");

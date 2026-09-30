@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
+import qingzhou.http.impl.util.PendingLogs;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 
@@ -27,9 +28,9 @@ public class HandlerManager {
      * 注册路径对应的 handler 与免认证标记。
      * 标记随路径存储而非随 handler 实例：同一实例注册到多条路径时，各自的认证要求互不干扰。
      */
-    static final class HandlerEntry {
-        final HttpHandler handler;
-        final boolean noAuth;
+    public static final class HandlerEntry {
+        public final HttpHandler handler;
+        public final boolean noAuth;
 
         HandlerEntry(HttpHandler handler, boolean noAuth) {
             this.handler = handler;
@@ -38,7 +39,7 @@ public class HandlerManager {
     }
 
     @Activate
-    public void init() {
+    public void activate() {
         pendingLogs.replay(logger);
     }
 
@@ -46,22 +47,29 @@ public class HandlerManager {
             unbind = "removeHttpHandler")
     public void addHttpHandler(HttpHandler httpHandler, Map<String, String> properties, ServiceReference<HttpHandler> reference) {
         String originPath = properties.get(HttpHandler.HANDLE_PATH);
+
         String component = properties.get(ComponentConstants.COMPONENT_NAME);
         if (component == null) component = "@App";
+
         if (originPath == null || originPath.trim().isEmpty()) {
             throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be empty");
         }
-
         String path = originPath.trim();
+
         if (!path.startsWith("/")) {
-            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with /");
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] must start with /, got: " + path);
         }
-        if (reference != null) {
+        path = withTrailingSlash(path); // 统一以尾斜杠存储，匹配时无需逐个 key 再做转换
+
+        boolean isAbsolute = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_PATH_ABSOLUTE));
+        if (!isAbsolute) {
             String prefix = reference.getBundle().getSymbolicName();
             prefix = prefix.replace("qingzhou-", "");
             path = "/" + prefix + path;
         }
-        path = withTrailingSlash(path); // 统一以尾斜杠存储，匹配时无需逐个 key 再做转换
+        if (path.equals("/")) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component + "] cannot be root path");
+        }
 
         String conflict = conflict(path);
         if (conflict != null) {
@@ -82,11 +90,8 @@ public class HandlerManager {
 
     // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽
     private String conflict(String checkPath) {
-        String request = withTrailingSlash(checkPath);
         for (String existsPath : handlerMap.keySet()) {
-            // 根路径仅作兜底（它必然与所有路径重叠），双向跳过以免注册顺序决定成败
-            if (existsPath.equals("/") || request.equals("/")) continue;
-            if (request.startsWith(existsPath) || existsPath.startsWith(request)) return existsPath;
+            if (checkPath.startsWith(existsPath) || existsPath.startsWith(checkPath)) return existsPath;
         }
         return null;
     }

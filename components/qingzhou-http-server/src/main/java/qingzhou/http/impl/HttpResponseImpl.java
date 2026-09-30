@@ -19,8 +19,8 @@ class HttpResponseImpl implements HttpResponse {
     }
 
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性
-    private volatile boolean committed = false;
-    private volatile boolean cancelled = false;
+    private boolean committed = false;
+    private boolean cancelled = false;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
     boolean isCancelled() {

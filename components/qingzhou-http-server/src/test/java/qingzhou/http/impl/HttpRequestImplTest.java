@@ -13,7 +13,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.http.server.AuthResult;
 import reactor.netty.http.server.HttpServerRequest;
 
 /**
@@ -198,7 +197,7 @@ public class HttpRequestImplTest {
     public void authSet_getPrincipalAndRoles_returnStoredValues() {
         HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
 
-        request.setAuth(AuthResult.pass("user", new String[]{"admin"}));
+        request.setPrincipal("user", new String[]{"admin"});
 
         Assert.assertEquals(request.getPrincipal(), "user");
         Assert.assertEquals(request.getRoles()[0], "admin");
@@ -209,7 +208,7 @@ public class HttpRequestImplTest {
         HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.GET, null, false);
         String[] roles = {"admin"};
 
-        request.setAuth(AuthResult.pass("user", roles));
+        request.setPrincipal("user", roles);
         request.getRoles()[0] = "root"; // 写入后篡改原数组，不应影响已存认证结果
 
         Assert.assertEquals(request.getRoles()[0], "admin");
