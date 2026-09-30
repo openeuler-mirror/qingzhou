@@ -16,8 +16,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
 
-import static qingzhou.http.impl.util.Configs.atLeast;
-import static qingzhou.http.impl.util.Configs.notBlank;
+import static qingzhou.http.impl.util.Configs.*;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + AuthHandler.ROOT_PATH, HttpHandler.HANDLE_PATH_ABSOLUTE + "=true", HttpHandler.HANDLE_NO_AUTH + "=true"})
@@ -46,7 +45,7 @@ public class AuthHandler implements HttpHandler {
     public void init(Map<String, String> config) throws InvalidKeyException {
         username = notBlank(config, "auth_username");
         passwordDigest = notBlank(config, "auth_password");
-        String rolesStr = config.get("roles");
+        String rolesStr = config.get("auth_roles");
         if (rolesStr != null) {
             List<String> roleList = new ArrayList<>();
             for (String s : rolesStr.split(",")) {
@@ -57,16 +56,13 @@ public class AuthHandler implements HttpHandler {
             roles = roleList.toArray(new String[0]);
         }
 
-        totpEnabled = Boolean.parseBoolean(config.get("auth_totp_enabled"));
+        totpEnabled = getConfig(config, "auth_totp_enabled", false);
         if (totpEnabled) {
-            totpSecret = config.get("auth_totp_secret"); // 安全考虑：此处不要解密
-            if (totpSecret == null || totpSecret.trim().isEmpty()) {
-                throw new InvalidKeyException("'auth_totp_secret' must be configured, use bin/gen-totp-key.sh");
-            }
+            totpSecret = notBlank(config, "auth_totp_secret"); // 安全考虑：此处不要解密
         }
 
-        int maxFailures = atLeast(config, "max_failures", 1, 5);
-        long lockMillis = atLeast(config, "lock_seconds", 1, 300) * 1000L;
+        int maxFailures = atLeast(config, "auth_max_failures", 1, 5);
+        long lockMillis = atLeast(config, "auth_lock_seconds", 1, 300) * 1000L;
         lockout = new FailureLockout(maxFailures, lockMillis, 10_000);
     }
 

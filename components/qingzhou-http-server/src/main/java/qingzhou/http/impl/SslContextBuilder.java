@@ -11,6 +11,7 @@ import javax.net.ssl.SSLContext;
 
 import io.netty.handler.ssl.SslContext;
 import qingzhou.crypto.Cipher;
+import qingzhou.http.impl.util.Configs;
 import qingzhou.logger.Logger;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露
@@ -27,10 +28,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
     }
 
     static SslContext buildSslContext(Map<String, String> config, Cipher cipher, Logger logger) {
-        String keystorePath = config.get("ssl_keystore_path");
-        if (keystorePath == null || keystorePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("ssl_keystore_path is required when ssl_enabled=true");
-        }
+        String keystorePath = Configs.notBlank(config, "ssl_keystore_path");
 
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
@@ -44,13 +42,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
         }
 
-        String password = config.get("ssl_keystore_password");
-        if (password == null || password.trim().isEmpty()) { // 口令强度策略交由部署方决定，此处只校验配置完整性
-            throw new IllegalArgumentException("ssl_keystore_password is required when ssl_enabled=true"
-                    + ", generate it with bin/gen-keystore.sh");
-        }
-        // tryDecrypt 解密失败会直接抛出（含明文写法指引），不返回 null，故此处无需判空；
-        // 传入 trim 后的值：空值检查按 trim 判定，解密也须用同一值，否则空白导致的失败无从定位
+        String password = Configs.notBlank(config, "ssl_keystore_password");
         char[] keyPassword = cipher.tryDecrypt(password.trim(), "qingzhou-http-server.ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {

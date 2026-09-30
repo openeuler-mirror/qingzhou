@@ -55,7 +55,7 @@ public class ConversationStore {
         boolean persistent = config != null && "file".equalsIgnoreCase(config.get("memory_store"));
         if (persistent) {
             String dir = config.get("memory_store_dir");
-            if (dir == null || dir.isEmpty()) dir = "data/ai-conversations";
+            if (dir == null || dir.trim().isEmpty()) dir = "data/ai-conversations";
             kvStore = storeFactory.buildFileStore(Paths.get(config.get("qingzhou.instance"), dir).toFile());
         } else {
             kvStore = storeFactory.buildMemoryStore();

@@ -55,6 +55,9 @@ public class Heartbeat {
         registerToken = registerTokenConfig == null || registerTokenConfig.trim().isEmpty() ? null : registerTokenConfig.trim();
 
         String registryUrl = config.get("url");
+        if (registryUrl == null || registryUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-agent.url can not be empty");
+        }
         while (registryUrl.endsWith("/")) {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
@@ -88,7 +91,7 @@ public class Heartbeat {
                     logger.error("heartbeat service error", e);
                 }
             }
-        }, 1000 * 10, 1000 * Long.parseLong(config.get("interval")));
+        }, 1000 * 10, 1000 * Long.parseLong(config.getOrDefault("interval", "6")));
     }
 
     @Deactivate

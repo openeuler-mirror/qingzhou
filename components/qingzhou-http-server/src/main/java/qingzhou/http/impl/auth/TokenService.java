@@ -8,6 +8,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
+import qingzhou.http.impl.util.Configs;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)
@@ -23,7 +24,7 @@ public class TokenService {
 
     @Activate
     public void init(Map<String, String> config) {
-        tokenExpireMillis = Integer.parseInt(config.getOrDefault("token_expire_seconds", "" + 30 * 60)) * 1000L;
+        tokenExpireMillis = Configs.getConfig(config, "auth_token_expire_seconds", 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
     }
 

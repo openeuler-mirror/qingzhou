@@ -32,6 +32,9 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
     @Activate
     public void init(Map<String, String> config) {
         baseUrl = config.get("base_url");
+        if (baseUrl == null || baseUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-llm.base_url is missing");
+        }
         apiKey = config.get("api_key");
         model = config.get("model");
 

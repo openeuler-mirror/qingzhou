@@ -64,12 +64,13 @@ public class Register implements HttpHandler {
         String registerTokenConfig = config.get("register_token");
         if (registerTokenConfig == null || registerTokenConfig.trim().isEmpty()) {
             logger.warn("'register_token' is not configured, remote instance registration is unavailable.");
+            return;
         } else {
             registerToken = registerTokenConfig.trim().getBytes(StandardCharsets.UTF_8);
         }
 
-        long interval = 1000 * Long.parseLong(config.get("interval"));
-        long timeout = 1000 * Long.parseLong(config.get("timeout"));
+        long interval = 1000 * Long.parseLong(config.getOrDefault("interval", "6"));
+        long timeout = 1000 * Long.parseLong(config.getOrDefault("timeout", "12"));
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
@@ -100,7 +101,7 @@ public class Register implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        if (pairCipher == null) {
+        if (pairCipher == null || registerToken == null) {
             httpResponse.status500Finish("Service Unavailable");
             return;
         }

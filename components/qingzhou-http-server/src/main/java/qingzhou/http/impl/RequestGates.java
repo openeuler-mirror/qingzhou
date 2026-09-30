@@ -219,8 +219,8 @@ final class RequestGates {
         return ctx.reservedBytes < 0 ? ctx.respond(HttpResponseStatus.SERVICE_UNAVAILABLE) : null;
     }
 
+    // 返回预留的字节数；-1 表示在途聚合总量已达上限
     private long reserveAggregation(HttpServerRequest request) {
-        // 返回预留的字节数；-1 表示在途聚合总量已达上限
         long size = declaredBodySize(request);
         if (size == UNKNOWN_BODY_SIZE) size = maxBodyBytes; // 长度未知，按单体上限保守预留
         else if (size < 0) size = 0; // 非法头已由 denyOversizedBody 拒绝，此处不再预留
