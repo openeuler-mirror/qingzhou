@@ -151,7 +151,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
         <dependency>
             <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
@@ -178,7 +178,9 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.http.server</Export-Package>
+                        <Export-Package>
+                            qingzhou.http.server,qingzhou.http.server.auth,qingzhou.http.server.util
+                        </Export-Package>
                         <Import-Package>
                             qingzhou.crypto,
                             qingzhou.logger,

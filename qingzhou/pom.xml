@@ -306,7 +306,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-oauth2</artifactId>
+            <artifactId>qingzhou-auth</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
