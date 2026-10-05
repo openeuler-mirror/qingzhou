@@ -15,7 +15,6 @@ import static qingzhou.http.server.util.Configs.getConfig;
  * 响应安全头与跨域头。
  */
 final class ResponseHeaders {
-    private final boolean sslEnabled;
     private final String csp; // "none" 或空串表示不下发 CSP
     private final String permissionsPolicy;
     private final String coop;
@@ -23,7 +22,6 @@ final class ResponseHeaders {
     private final String[] corsAllowedOrigins; // 允许的跨域来源；空表示不开放跨域
 
     ResponseHeaders(Map<String, String> config) {
-        this.sslEnabled = getConfig(config, "ssl_enabled", true);
         this.csp = getConfig(config, "csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
         this.permissionsPolicy = getConfig(config, "permissions_policy", "geolocation=(), microphone=(), camera=()");
         this.coop = getConfig(config, "coop", "");
@@ -45,9 +43,8 @@ final class ResponseHeaders {
         }
         if (!coop.isEmpty()) response.header("Cross-Origin-Opener-Policy", coop);
         if (!corp.isEmpty()) response.header("Cross-Origin-Resource-Policy", corp);
-        if (sslEnabled) {
-            response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-        }
+        boolean isTls = "https".equals(request.scheme());
+        if (isTls) response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
         applyCors(request, response);
     }
 

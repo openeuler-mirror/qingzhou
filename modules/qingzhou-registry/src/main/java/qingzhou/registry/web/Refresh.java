@@ -45,7 +45,7 @@ public class Refresh implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (pairCipher == null) {
-            httpResponse.status500Finish("Service Unavailable");
+            httpResponse.status(500).finish();
             return;
         }
         synchronized (REFRESH_KEY_LOCK) {
@@ -84,10 +84,10 @@ public class Refresh implements HttpHandler {
             instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
             instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
         } catch (Exception e) {
-            httpResponse.status500Finish("instance key error");
+            httpResponse.status(500).finish();
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
-        httpResponse.sendFinish(encrypt);
+        httpResponse.send(encrypt).finish();
     }
 }

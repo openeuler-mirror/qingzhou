@@ -69,7 +69,6 @@ public class AuthManager {
             lockout.clear(host); // 认证成功后清空计数
         } else {
             lockout.recordFailure(host);
-            logger.warn("http authentication failed: path=" + httpRequest.getPath() + ", host=" + host);
         }
 
         return doneAuth;
@@ -78,7 +77,7 @@ public class AuthManager {
     private boolean authenticateWithHandler(HttpRequestImpl httpRequest) {
         AuthResult authResult = authenticate(httpRequest);
 
-        // 校验未通过
+        // 校验未通过：拒绝原因仅记服务端日志，不回显给客户端
         if (authResult.status() != AuthResult.Status.PASS) return false;
 
         // PASS 但无主体是模糊态：角色无从归属，handler 按角色鉴权只会拿到 null，故按未认证拒绝
@@ -101,10 +100,14 @@ public class AuthManager {
                 logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error"); // 单个认证器故障转为拒绝，不影响其余认证器继续判定
             }
-            if (r == null || r.status() == AuthResult.Status.ABSTAIN) continue; // 弃权：转交后续认证器
-            if (r.status() == AuthResult.Status.PASS) return r;
-
-            if (reject == null) reject = r;
+            if (r == null) continue; // 弃权：转交后续认证器
+            switch (r.status()) {
+                case PASS:
+                    return r;
+                case REJECT:
+                    if (reject == null) reject = r;
+                    break;
+            }
         }
         if (reject != null) return reject;
 

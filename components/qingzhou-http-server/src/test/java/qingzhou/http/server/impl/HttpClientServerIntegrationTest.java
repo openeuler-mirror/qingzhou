@@ -24,10 +24,19 @@ import qingzhou.http.server.impl.TestServerSupport.TestServer;
  * 若反向依赖则形成 Maven 循环依赖。
  */
 public class HttpClientServerIntegrationTest {
+    private static HttpClientImpl sharedClient;
+
+    // 共享一个客户端并在 JVM 退出时释放线程池：逐个用例创建会持续堆积空闲线程
     static HttpClientImpl buildHttpClientImpl() {
-        HttpClientImpl httpClient = new HttpClientImpl();
-        httpClient.activate();
-        return httpClient;
+        synchronized (HttpClientServerIntegrationTest.class) {
+            if (sharedClient == null) {
+                HttpClientImpl httpClient = new HttpClientImpl();
+                httpClient.activate();
+                Runtime.getRuntime().addShutdownHook(new Thread(httpClient::deactivate));
+                sharedClient = httpClient;
+            }
+            return sharedClient;
+        }
     }
 
     @Test
@@ -38,7 +47,7 @@ public class HttpClientServerIntegrationTest {
         try {
             String path = "/headerTest";
             httpServer.registerHttpHandlerNoAuth((request, response) ->
-                    response.sendFinish("received: " + request.getHeader("X-Request-Id")), path);
+                    response.send("received: " + request.getHeader("X-Request-Id")).finish(), path);
 
             HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + port + path)
@@ -63,7 +72,7 @@ public class HttpClientServerIntegrationTest {
                 String headerA = request.getHeader("Header-A");
                 String headerB = request.getHeader("Header-B");
                 String oldHeader = request.getHeader("Old-Header");
-                response.sendFinish("A=" + headerA + ",B=" + headerB + ",Old=" + oldHeader);
+                response.send("A=" + headerA + ",B=" + headerB + ",Old=" + oldHeader).finish();
             }, path);
 
             Map<String, String> newHeaders = new HashMap<>();

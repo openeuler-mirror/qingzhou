@@ -47,7 +47,7 @@ final class TestServerSupport {
         return new HttpHandler() {
             @Override
             public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-                httpResponse.status400Finish(); // multipart 请求不会进入此方法
+                httpResponse.status(400).finish(); // multipart 请求不会进入此方法
             }
 
             @Override
@@ -68,14 +68,14 @@ final class TestServerSupport {
 
                     @Override
                     public void onError(Throwable t) {
-                        httpResponse.status500Finish(t.getMessage());
+                        httpResponse.status(500).finish();
                     }
 
                     @Override
                     public void onComplete() {
                         byte[] body = buffer.toByteArray();
                         received.set(body);
-                        httpResponse.sendFinish(body);
+                        httpResponse.send(body).finish();
                     }
                 };
             }

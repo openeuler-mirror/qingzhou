@@ -1,10 +1,7 @@
 package qingzhou.http.server.auth;
 
 public interface AuthResult {
-    /**
-     * PASS 放行；REJECT 拒绝；ABSTAIN 弃权——本认证器不适用于该请求，交由后续认证器判定。
-     */
-    enum Status {PASS, REJECT, ABSTAIN}
+    enum Status {PASS, REJECT}
 
     Status status();
 
@@ -54,11 +51,5 @@ public interface AuthResult {
                 return reason;
             }
         };
-    }
-
-    // 弃权：凭据类型不匹配等「本认证器说了不算」的场景，返回 null 与返回本值等价。
-    // 不提为常量：接口字段只能是 public，那会把内部单例暴露成对外的 API 面
-    static AuthResult abstain() {
-        return () -> Status.ABSTAIN;
     }
 }

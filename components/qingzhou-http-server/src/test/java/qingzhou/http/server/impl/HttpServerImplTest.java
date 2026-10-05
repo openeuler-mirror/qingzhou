@@ -14,12 +14,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
-import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.impl.LoggerImpl;
 import reactor.netty.DisposableServer;
 
@@ -60,7 +60,7 @@ public class HttpServerImplTest {
     public void normalPath_registerHttpHandler_usePathHttpService() throws Exception {
         HttpServerImpl httpServer = build();
         String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
+        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
 
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
@@ -76,7 +76,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build();
 
         String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.sendFinish("Hello: " + httpRequest.getPath());
+        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
@@ -91,7 +91,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = start(sslConfig());
         try {
             String path = "/sslTest";
-            httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.sendFinish("ssl-ok"), path);
+            httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.send("ssl-ok").finish(), path);
 
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = httpClient.send(httpClient.newRequest("https://localhost:" + actualPort(httpServer) + path)

@@ -37,18 +37,6 @@ class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public void status500Finish(String msg) {
-        response.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        sendFinish(msg);
-    }
-
-    @Override
-    public void status400Finish() {
-        response.status(HttpResponseStatus.BAD_REQUEST);
-        finish();
-    }
-
-    @Override
     public HttpResponse status(int status) {
         if (status < 100 || status > 599) { // 非法状态码会让 Netty 输出无意义的状态行
             throw new IllegalArgumentException("invalid http status: " + status);
@@ -61,14 +49,6 @@ class HttpResponseImpl implements HttpResponse {
     public HttpResponse header(String name, String value) {
         response.header(name, value);
         return this;
-    }
-
-    @Override
-    public void redirect(String url) {
-        response.status(HttpResponseStatus.FOUND)
-                .header(HttpHeaderNames.LOCATION, url)
-                .header(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
-        finish();
     }
 
     @Override
@@ -111,14 +91,10 @@ class HttpResponseImpl implements HttpResponse {
     }
 
     @Override
-    public void sendFinish(String bodyAsUtf8) {
-        send(bodyAsUtf8);
-        finish();
-    }
-
-    @Override
-    public void sendFinish(byte[] body) {
-        send(body);
+    public void redirect(String url) {
+        response.status(HttpResponseStatus.FOUND)
+                .header(HttpHeaderNames.LOCATION, url)
+                .header(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
         finish();
     }
 }

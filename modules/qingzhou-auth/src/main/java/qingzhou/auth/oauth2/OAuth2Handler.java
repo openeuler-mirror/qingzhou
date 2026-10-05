@@ -22,8 +22,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-import static qingzhou.http.server.util.Configs.atLeast;
-import static qingzhou.http.server.util.Configs.notBlank;
+import static qingzhou.http.server.util.Configs.*;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
@@ -49,6 +48,7 @@ public class OAuth2Handler implements HttpHandler {
     @Reference
     private Crypto crypto;
 
+    private boolean enabled;
     private String authorizationEndpoint;
     private String clientId;
     private String clientSecret;
@@ -65,6 +65,8 @@ public class OAuth2Handler implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
+        enabled = getConfig(config, "oauth2_enabled", false);
+        if (!enabled) return;
         authorizationEndpoint = notBlank(config, "oauth2_authorize_endpoint");
         clientId = notBlank(config, "oauth2_client_id");
         clientSecret = notBlank(config, "oauth2_client_secret"); // 安全考虑：此处不要解密
@@ -82,6 +84,11 @@ public class OAuth2Handler implements HttpHandler {
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
+        if (!enabled) {
+            response.status(404).finish();
+            return;
+        }
+
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
         if (path.equals(AUTHORIZE_PATH)) {
@@ -92,7 +99,7 @@ public class OAuth2Handler implements HttpHandler {
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
-            response.status400Finish();
+            response.status(400).finish();
         }
     }
 
@@ -123,13 +130,13 @@ public class OAuth2Handler implements HttpHandler {
     private void callback(HttpRequest request, HttpResponse response) throws Exception {
         String csrfToken = request.getParameter("state"); // OAUTH2 协议要求 state 必须传递
         if (csrfToken == null || !csrfToken.equals(getCookie(request, CSRF_COOKIE_NAME))) {
-            response.status400Finish();
+            response.status(400).finish();
             return;
         }
 
         String code = request.getParameter("code");
         if (code == null) {
-            response.status400Finish();
+            response.status(400).finish();
             return;
         }
 
@@ -145,18 +152,18 @@ public class OAuth2Handler implements HttpHandler {
         String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
         Map tokenBody = json.fromJson(tokenBodyText, Map.class);
         if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
-            response.status500Finish("token exchange failed");
+            response.status(500).finish();
             return;
         }
         String user = extractUser(tokenBody);
         if (user == null) {
-            response.status500Finish("failed to get user info");
+            response.status(500).finish();
             return;
         }
 
         // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
-                        + "; Path=/; HttpOnly; SameSite=Lax" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
+                        + "; Path=/; HttpOnly; SameSite=Strict" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
                 .header("Cache-Control", "no-store")
                 .redirect(CONSOLE_PATH); // 登录后回到管控台，前端在 /web 下按路由渲染首页
     }

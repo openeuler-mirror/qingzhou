@@ -178,6 +178,6 @@ public class ConversationApi implements HttpHandler {
     }
 
     private void sendJson(HttpResponse httpResponse, int status, Object body) throws Exception {
-        httpResponse.status(status).contentTypeJsonUtf8().sendFinish(json.toJson(body));
+        httpResponse.status(status).contentTypeJsonUtf8().send(json.toJson(body)).finish();
     }
 }

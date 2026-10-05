@@ -77,7 +77,7 @@ public class AiChat implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, Object> params = params(httpRequest);
         if (params == null) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 

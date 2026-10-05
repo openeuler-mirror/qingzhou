@@ -65,7 +65,7 @@ public class McpServer implements HttpHandler {
         try {
             requestMap = json.fromJson(body, HashMap.class);
         } catch (Exception e) {
-            httpResponse.status(400).sendFinish("Invalid JSON");
+            httpResponse.status(400).finish();
             return;
         }
 
@@ -88,9 +88,9 @@ public class McpServer implements HttpHandler {
         // 响应
         try {
             httpResponse.contentTypeJsonUtf8()
-                    .sendFinish(json.toJson(result));
+                    .send(json.toJson(result)).finish();
         } catch (Exception e) {
-            httpResponse.status500Finish("Internal Server Error");
+            httpResponse.status(500).finish();
             logger.error(e.getMessage(), e);
         }
     }

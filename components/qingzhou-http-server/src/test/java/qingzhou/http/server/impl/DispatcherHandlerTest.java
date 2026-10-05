@@ -7,6 +7,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.testng.Assert;
@@ -33,7 +35,7 @@ public class DispatcherHandlerTest {
     public void unregisteredPath_request_returns404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/test");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/other")
@@ -50,7 +52,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
-                    response.sendFinish("hello-" + request.getMethod()), "/test");
+                    response.send("hello-" + request.getMethod()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test")
@@ -67,7 +69,7 @@ public class DispatcherHandlerTest {
     public void unregisteredHandler_request_returns404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            HttpHandler handler = (request, response) -> response.sendFinish("ok");
+            HttpHandler handler = (request, response) -> response.send("ok").finish();
             testServer.server.registerHttpHandlerNoAuth(handler, "/temp");
             testServer.server.unregisterHttpHandler(handler);
 
@@ -85,7 +87,7 @@ public class DispatcherHandlerTest {
     public void sameHandlerAtTwoPaths_unregisterHttpHandler_allPathsReturn404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            HttpHandler handler = (request, response) -> response.sendFinish("ok");
+            HttpHandler handler = (request, response) -> response.send("ok").finish();
             testServer.server.registerHttpHandlerNoAuth(handler, "/pathOne");
             testServer.server.registerHttpHandlerNoAuth(handler, "/pathTwo");
             testServer.server.unregisterHttpHandler(handler); // 两条路径须一并移除，否则残留免认证条目继续对外服务
@@ -109,7 +111,7 @@ public class DispatcherHandlerTest {
                 String path = request.getPath();
                 byte[] body = request.getBody();
                 String bodyStr = body == null ? "null" : new String(body, StandardCharsets.UTF_8);
-                response.sendFinish("M=" + method + ",P=" + path + ",B=" + bodyStr);
+                response.send("M=" + method + ",P=" + path + ",B=" + bodyStr).finish();
             }, "/infoTest");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
@@ -132,7 +134,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
                     response.status(201)
                             .header("X-Test-Header", "test-value")
-                            .sendFinish("created-body"), "/respTest");
+                            .send("created-body").finish(), "/respTest");
 
             // HttpClientImpl 未暴露响应头读取，此处用其底层的 HttpURLConnection 完整验证三个回写 API
             HttpURLConnection conn = (HttpURLConnection) new URL("http://localhost:" + testServer.port + "/respTest")
@@ -161,7 +163,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
-                    response.sendFinish(new String(request.getBody(), StandardCharsets.UTF_8)), "/postTest");
+                    response.send(new String(request.getBody(), StandardCharsets.UTF_8)).finish(), "/postTest");
 
             Map<String, String> params = new HashMap<>();
             params.put("name", "qingzhou");
@@ -184,7 +186,7 @@ public class DispatcherHandlerTest {
             Files.write(tempFile.toPath(), "content".getBytes(StandardCharsets.UTF_8));
             TestServer testServer = TestServerSupport.startServer();
             try {
-                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/upload");
+                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/upload");
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
@@ -262,7 +264,7 @@ public class DispatcherHandlerTest {
                 testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
                     @Override
                     public void handle(HttpRequest request, HttpResponse response) {
-                        response.status400Finish(); // multipart 请求不会进入此方法
+                        response.status(400).finish(); // multipart 请求不会进入此方法
                     }
 
                     @Override
@@ -309,7 +311,7 @@ public class DispatcherHandlerTest {
     public void traceMethod_request_returns405() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/traceTest");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/traceTest");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/traceTest")
@@ -325,7 +327,7 @@ public class DispatcherHandlerTest {
     public void invalidContentLength_request_rejected() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/clTest");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/clTest");
 
             // 非法头不得按"长度未知"预留配额，否则少量并发即可耗尽聚合预算
             assertRejected(testServer.port, "POST /clTest HTTP/1.1\r\n"
@@ -391,17 +393,53 @@ public class DispatcherHandlerTest {
         return response.toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * 回归用例：模拟 SSE 这类「handler 返回后由后台线程继续写」的场景。
+     * 框架若在 handler 返回时无条件 finish，后续写入会以 FAIL_TERMINATED 失败，late 分片丢失。
+     */
+    @Test
+    public void asyncHandlerWritesAfterReturn_response_containsLateChunk() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            CountDownLatch lateWriteFailed = new CountDownLatch(1);
+            testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
+                @Override
+                public void handle(HttpRequest request, HttpResponse response) {
+                    response.send("first");
+                    new Thread(() -> { // 与 AiChat 中模型回调线程等价
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(1500);
+                            response.send("second").finish();
+                        } catch (Throwable t) {
+                            lateWriteFailed.countDown();
+                        }
+                    }).start();
+                }
+            }, "/asyncDiag");
+
+            String response = rawResponse(testServer.port, "GET /asyncDiag HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Connection: close\r\n\r\n");
+
+            Assert.assertTrue(response.contains("first"), response);
+            Assert.assertFalse(lateWriteFailed.await(2, TimeUnit.SECONDS), "late write failed");
+            Assert.assertTrue(response.contains("second"), "late chunk lost: " + response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
     @Test
     public void handlerSendsWithoutFinish_request_completes() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("partial"), "/noFinish");
+            // 契约：响应必须由 handler 自己收尾；此处只 send 不 finish 属编程错误，请求会挂到空闲超时
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("partial").finish(), "/noFinish");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/noFinish")
                     .method(HttpMethod.GET));
 
-            // 只 send 未 finish 时框架必须补上终止信号，否则响应永不结束、请求挂到 idle_timeout
             Assert.assertEquals(result.getStatus(), 200);
             Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "partial");
         } finally {
@@ -413,7 +451,7 @@ public class DispatcherHandlerTest {
     public void prefixPathRegistered_request_routesByPrefix() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("prefix"), "/a");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("prefix").finish(), "/a");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/a/b/c")
@@ -430,11 +468,11 @@ public class DispatcherHandlerTest {
     public void overlappingPathRegister_registerHttpHandler_throwsException() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("a"), "/a");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("a").finish(), "/a");
 
             // HttpServer 注册阶段禁止前缀包含的重叠路径（DispatcherHandler 的长路径优先排序为防御性逻辑）
             try {
-                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ab"), "/a/b");
+                testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ab").finish(), "/a/b");
                 Assert.fail("registering overlapping path should throw");
             } catch (IllegalArgumentException e) {
                 Assert.assertTrue(e.getMessage() != null && e.getMessage().contains("/a/b"));
@@ -448,7 +486,7 @@ public class DispatcherHandlerTest {
     public void deepPathRegistered_requestRoot_returns404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("deep"), "/a/b");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("deep").finish(), "/a/b");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/")
@@ -464,8 +502,8 @@ public class DispatcherHandlerTest {
     public void childPathRegistered_requestParent_returns404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("stream"), "/ai/chat/stream");
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("config"), "/ai/chat/config");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("stream").finish(), "/ai/chat/stream");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("config").finish(), "/ai/chat/config");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/ai/chat")
@@ -481,7 +519,7 @@ public class DispatcherHandlerTest {
     public void siblingPrefixPath_requestSibling_returns404() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("foo"), "/foo");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("foo").finish(), "/foo");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/foobar")
@@ -497,8 +535,8 @@ public class DispatcherHandlerTest {
     public void rootAndChildRegistered_requestChild_routesToLongest() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("root"), "/root/other");
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("child"), "/root/child");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("root").finish(), "/root/other");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("child").finish(), "/root/child");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response child = client.send(client.newRequest("http://localhost:" + testServer.port + "/root/child/deep")
@@ -519,7 +557,7 @@ public class DispatcherHandlerTest {
     public void traversalPath_request_returns400() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("echo:" + request.getPath()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test/../../etc/passwd")
@@ -535,7 +573,7 @@ public class DispatcherHandlerTest {
     public void redundantSlashPath_request_normalized() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("echo:" + request.getPath()), "/test");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("echo:" + request.getPath()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "//test//a")
@@ -553,7 +591,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer();
         try {
             testServer.server.registerHttpHandlerNoAuth((request, response) ->
-                    response.sendFinish("decoded-" + request.getPath()), "/hello world");
+                    response.send("decoded-" + request.getPath()).finish(), "/hello world");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/hello%20world")
@@ -570,7 +608,7 @@ public class DispatcherHandlerTest {
     public void optionsPreflight_request_returns204() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/pre");
 
             // 预检不带凭据，须在认证之前终止；带 Access-Control-Request-Method 才算预检
             int status = statusOfRawRequest(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
@@ -590,7 +628,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer(
                 Collections.singletonMap("cors_allowed_origins", "https://a.example"));
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/cors");
 
             // CORS 头必须出现在实际响应上：只在预检回显会让浏览器在真实请求阶段被拦
             String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
@@ -610,7 +648,7 @@ public class DispatcherHandlerTest {
     public void corsWildcardOrigin_request_getsWildcardWithoutCredentials() throws Exception {
         TestServer testServer = TestServerSupport.startServer(Collections.singletonMap("cors_allowed_origins", "*"));
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/cors");
 
             // 通配来源与可携带凭据并存会被浏览器直接拒绝
             String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
@@ -630,7 +668,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer(
                 Collections.singletonMap("cors_allowed_origins", "https://a.example"));
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/cors");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/cors");
 
             String response = lower(rawResponse(testServer.port, "GET /cors HTTP/1.1\r\n"
                     + "Host: localhost\r\n"
@@ -648,7 +686,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer(
                 Collections.singletonMap("cors_allowed_origins", "https://a.example"));
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/pre");
 
             String response = lower(rawResponse(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
                     + "Host: localhost\r\n"
@@ -673,7 +711,7 @@ public class DispatcherHandlerTest {
         TestServer testServer = TestServerSupport.startServer(
                 Collections.singletonMap("cors_allowed_origins", "https://a.example"));
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/pre");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/pre");
 
             // 客户端传 * 会宣告放行任意自定义请求头（防御纵深弱化），须按不存在处理回退默认集
             String response = lower(rawResponse(testServer.port, "OPTIONS /pre HTTP/1.1\r\n"
@@ -700,7 +738,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
                 @Override
                 public void handle(HttpRequest request, HttpResponse response) {
-                    response.status400Finish(); // 仅聚合分支会进入
+                    response.status(400).finish(); // 仅聚合分支会进入
                 }
 
                 @Override
@@ -708,7 +746,7 @@ public class DispatcherHandlerTest {
                     return new StreamHandler() {
                         @Override
                         public void onBegin(HttpRequest request, HttpResponse response) {
-                            response.status(403).sendFinish("forbidden");
+                            response.status(403).send("forbidden").finish();
                         }
 
                         @Override
@@ -759,7 +797,7 @@ public class DispatcherHandlerTest {
     public void negativeContentLength_request_rejected() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/neg");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/neg");
 
             // 负长度若按 0 预留配额，少量并发即可绕过全局聚合预算
             assertRejected(testServer.port, "POST /neg HTTP/1.1\r\n"
@@ -775,7 +813,7 @@ public class DispatcherHandlerTest {
     public void multiLayerEncodedPath_request_returns400() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.sendFinish("ok"), "/enc");
+            testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/enc");
 
             // %252f 一次解码后仍残留编码形态，各 handler 的穿越防护未必覆盖得住
             Assert.assertEquals(statusOfRawRequest(testServer.port, "GET /enc/%252f..%252fetc HTTP/1.1\r\n"
@@ -796,7 +834,7 @@ public class DispatcherHandlerTest {
                 testServer.server.registerHttpHandlerNoAuth(new HttpHandler() {
                     @Override
                     public void handle(HttpRequest request, HttpResponse response) {
-                        response.status400Finish(); // multipart 请求不会进入此方法
+                        response.status(400).finish(); // multipart 请求不会进入此方法
                     }
 
                     @Override

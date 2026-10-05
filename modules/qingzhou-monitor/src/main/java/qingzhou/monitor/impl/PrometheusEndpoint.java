@@ -61,7 +61,7 @@ public class PrometheusEndpoint implements HttpHandler {
             }
         }
 
-        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8").sendFinish(result.toString());
+        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8").send(result.toString()).finish();
     }
 
     private void collect(Map<String, MetricGroup> groups, String instanceId, String appCode, AppStub stub) {

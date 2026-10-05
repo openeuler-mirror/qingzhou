@@ -5,8 +5,8 @@ import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
-import qingzhou.http.server.impl.TestServerSupport.TestServer;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.impl.TestServerSupport.TestServer;
 
 /**
  * 认证链路自动化测试集：免认证标记的作用域、自定义认证器的成功与异常分支。
@@ -19,7 +19,7 @@ public class AuthManagerTest {
     public void sameHandlerInstanceAtTwoPaths_authPath_stillRequiresAuth() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            HttpHandler handler = (request, response) -> response.sendFinish("leak");
+            HttpHandler handler = (request, response) -> response.send("leak").finish();
             testServer.server.registerHttpHandlerNoAuth(handler, "/noAuthPath");
             testServer.server.registerHttpHandler(handler, "/authPath"); // 同一实例，认证要求不得被串味
 

@@ -14,18 +14,18 @@ class ProcessHandler {
     static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, ProcessHandlerCallback callback) {
         byte[] requestBody = httpRequest.getBody();
         if (requestBody.length == 0) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
         InstanceInfo thisInstanceInfo = Heartbeat.thisInstanceInfo;
         if (thisInstanceInfo == null) {
-            httpResponse.status(503).sendFinish("agent not ready");
+            httpResponse.status(503).finish();
             return;
         }
 
         if (requestBody.length <= IV_SIZE) { // 长度校验须先于 IV 提取，防止数组越界
-            httpResponse.status500Finish("key auth error"); // 与解密失败同文案，避免成为判别信号
+            httpResponse.status(500).finish(); // 与解密失败同文案，避免成为判别信号
             return;
         }
 
@@ -36,7 +36,7 @@ class ProcessHandler {
             cipher = crypto.getCipher(thisInstanceInfo.getKey());
             requestData = cipher.decrypt(requestBody);
         } catch (Exception e) {
-            httpResponse.status500Finish("key auth error");
+            httpResponse.status(500).finish();
             return;
         }
 
@@ -46,7 +46,7 @@ class ProcessHandler {
             responseData = callback.doProcess(requestData);
         } catch (Throwable e) {
             e.printStackTrace(System.err);
-            httpResponse.status500Finish("business processing error");
+            httpResponse.status(500).finish();
             return;
         }
 
@@ -55,10 +55,10 @@ class ProcessHandler {
         try {
             encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.status500Finish("encryption failed");
+            httpResponse.status(500).finish();
             return;
         }
-        httpResponse.sendFinish(encrypt);
+        httpResponse.send(encrypt).finish();
     }
 
     interface ProcessHandlerCallback {

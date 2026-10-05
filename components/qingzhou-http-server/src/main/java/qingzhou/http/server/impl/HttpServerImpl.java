@@ -65,6 +65,10 @@ public class HttpServerImpl implements HttpServer {
             httpServer = httpServer.idleTimeout(Duration.ofSeconds(idleTimeout));
         }
 
+        // 连接级 DoS 防护：限制单连接保活请求数与连接总数，防止慢连接长期占用 EventLoop 与连接槽
+        int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
+        httpServer = httpServer.maxKeepAliveRequests(maxKeepAliveRequests);
+
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean sslEnabled = getConfig(config, "ssl_enabled", true);
         try {

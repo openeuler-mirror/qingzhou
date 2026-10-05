@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
@@ -29,13 +30,13 @@ public class PermissionChecker {
             return false;
         }
 
-        return false;
+        return Constants.SYSTEM_MODEL_CODE.equals(targetModel);
     }
 
     private static boolean matchesRoles(String[] actual, String declaration) {
-        if (declaration == null) return true;
+        if (declaration == null || declaration.trim().isEmpty()) return true;
 
-        Set<String> required = Arrays.stream(declaration.split(","))
+        Set<String> required = Arrays.stream(declaration.trim().split(","))
                 .map(String::trim).filter(role -> !role.isEmpty()).collect(Collectors.toSet());
         if (required.isEmpty()) return true;
 

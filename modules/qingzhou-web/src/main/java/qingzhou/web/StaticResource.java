@@ -60,14 +60,14 @@ public class StaticResource implements HttpHandler {
         } else if (requestPath.startsWith("/web/")) {
             requestPath = requestPath.substring("/web".length());
         } else {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
         // 安全修复（路径穿越）：getResource 在目录型 ClassLoader 下会解析 ".."，
         // 形如 /web/../../x 的请求可能读取到 webapp/ 之外的资源，故含非法字符的路径直接拒绝
         if (!isPathSafe(requestPath)) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
@@ -123,10 +123,10 @@ public class StaticResource implements HttpHandler {
                 response.status(304).finish();
             } else { // 响应资源内容
                 response.contentType(getContentType(extension))
-                        .sendFinish(resourceCache.getContent());
+                        .send(resourceCache.getContent()).finish();
             }
         } catch (Exception e) {
-            response.status500Finish("internal server error");
+            response.status(500).finish();
         }
     }
 

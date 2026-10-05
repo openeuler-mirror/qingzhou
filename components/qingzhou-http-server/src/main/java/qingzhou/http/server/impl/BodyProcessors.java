@@ -78,7 +78,7 @@ final class BodyProcessors {
                             if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
                                 HttpResponseStatus status = statusOf(cause);
-                                httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                                httpResponse.status(status.code()).finish();
                             }
                         },
                         () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还
@@ -113,8 +113,9 @@ final class BodyProcessors {
                     try {
                         ctx.httpRequest.setRequestBody(bytes);
                         httpHandler.handle(ctx.httpRequest, httpResponse);
-                        // 幂等：handler 未收尾（含 send 后漏 finish）时补上终止信号，避免请求无限等
-                        httpResponse.finish();
+                        // 契约：handler 必须自行调用终态方法收尾；此处不得补 finish，
+                        // 否则「返回后由后台线程继续写」的响应会被提前终结（后续发送 FAIL_TERMINATED）。
+                        // 未收尾属于 handler 的编程错误，请求会挂到 idle_timeout。
                     } catch (Throwable e) {
                         Throwable cause = getCause(e);
                         // 客户端中断会让 sink 发射失败，属正常终止：逐条记 ERROR 会被放大为日志洪水
@@ -123,7 +124,7 @@ final class BodyProcessors {
                             httpResponse.finish(); // 已提交，状态码无法回退，只能干净收尾
                         } else {
                             HttpResponseStatus status = statusOf(cause);
-                            httpResponse.status(status.code()).sendFinish(status.reasonPhrase());
+                            httpResponse.status(status.code()).finish();
                         }
                     }
                     return ctx.response.sendByteArray(streamResponse.asFlux()).then();

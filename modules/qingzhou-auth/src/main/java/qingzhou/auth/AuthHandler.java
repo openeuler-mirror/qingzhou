@@ -73,23 +73,23 @@ public class AuthHandler implements HttpHandler {
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
         if (path.equals(LOGIN_PATH)) {
             if (!"POST".equals(request.getMethod())) { // 防密码经 GET 进入 URL/访问日志
-                response.status(405).sendFinish("method not allowed");
+                response.status(405).send("method not allowed").finish();
                 return;
             }
             if (request.getRawUri().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
-                response.status400Finish();
+                response.status(400).finish();
                 return;
             }
 
             login(request, response);
         } else if (path.equals(LOGOUT_PATH)) {
             if (!"POST".equals(request.getMethod())) {
-                response.status(405).sendFinish("method not allowed");
+                response.status(405).send("method not allowed").finish();
                 return;
             }
             logout(response);
         } else {
-            response.status400Finish();
+            response.status(400).finish();
         }
     }
 
@@ -97,12 +97,12 @@ public class AuthHandler implements HttpHandler {
         String reqUser = request.getParameter("username");
         String ip = request.getRemoteHost();
         if (reqUser != null && reqUser.length() > 128) {
-            response.status(401).sendFinish("invalid username or password");
+            response.status(401).send("invalid username or password").finish();
             return;
         }
         String lockKey = ip + '\0' + (reqUser == null ? "" : reqUser);
         if (lockout.isLocked(lockKey)) {
-            response.status(429).sendFinish("too many login failures, try again later");
+            response.status(429).send("too many login failures, try again later").finish();
             return;
         }
 
@@ -110,14 +110,14 @@ public class AuthHandler implements HttpHandler {
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
             lockout.recordFailure(lockKey);
-            response.status(401).sendFinish("invalid username or password");
+            response.status(401).send("invalid username or password").finish();
             return;
         }
 
         if (totpEnabled) {
             String code = request.getParameter("code");
             if (code == null || code.isEmpty()) {
-                response.status(401).sendFinish("totp code required"); // 请求不完整，不计入失败
+                response.status(401).send("totp code required").finish(); // 请求不完整，不计入失败
                 return;
             }
             if (!verifyCode(code, response)) {
@@ -129,7 +129,7 @@ public class AuthHandler implements HttpHandler {
         lockout.clear(lockKey);
         response.header("Cache-Control", "no-store") // token 响应不得被缓存
                 .contentTypeJsonUtf8()
-                .sendFinish("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}");
+                .send("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}").finish();
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
@@ -150,13 +150,13 @@ public class AuthHandler implements HttpHandler {
         } catch (Exception e) {
             logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");
         }
-        response.status(401).sendFinish("invalid totp code");
+        response.status(401).send("invalid totp code").finish();
         return false;
     }
 
     private void logout(HttpResponse response) {
         response.header("Set-Cookie", qingzhou.auth.oauth2.OAuth2Handler.TOKEN_COOKIE_NAME
                         + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
-                .sendFinish("ok");
+                .send("ok").finish();
     }
 }

@@ -66,19 +66,19 @@ public class Invoke implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (!"POST".equals(httpRequest.getMethod())) {
-            httpResponse.status(405).sendFinish("method not allowed");
+            httpResponse.status(405).send("method not allowed").finish();
             return;
         }
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
         AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
 
         if (app == null) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
@@ -89,7 +89,7 @@ public class Invoke implements HttpHandler {
             app.invokeApp(request);
         } catch (Throwable e) {
             logger.error("http invoke failed", e);
-            httpResponse.status500Finish("internal server error");
+            httpResponse.status(500).finish();
             return;
         }
 
@@ -104,7 +104,7 @@ public class Invoke implements HttpHandler {
             logger.warn("forbidden: app=" + request.getApp() + ", model=" + request.getModel()
                     + ", action=" + request.getAction() + ", user=" + httpRequest.getPrincipal()
                     + ", host=" + httpRequest.getRemoteHost());
-            httpResponse.status(403).sendFinish("Forbidden");
+            httpResponse.status(403).send("Forbidden").finish();
             return true;
         }
     }
@@ -190,10 +190,10 @@ public class Invoke implements HttpHandler {
                 httpResponse.contentTypeJsonUtf8();
             }
             String json = this.json.toJson(result);
-            httpResponse.sendFinish(json);
+            httpResponse.send(json).finish();
         } catch (Exception e) {
             logger.error("failed to serialize invoke response", e);
-            httpResponse.status500Finish("internal server error");
+            httpResponse.status(500).finish();
         }
     }
 
@@ -217,12 +217,18 @@ public class Invoke implements HttpHandler {
             this.httpResponse = httpResponse;
 
             request = buildRequest(httpRequest);
-            if (request == null) return;
+            if (request == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
             app = registry.getAppStub(request.getInstance(), request.getApp());
-            if (app == null) return;
+            if (app == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
-            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return;
+            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return; // 已写入 403
 
             String boundary = null;
             String contentType = httpRequest.getContentType();
@@ -234,7 +240,10 @@ public class Invoke implements HttpHandler {
                     }
                 }
             }
-            if (boundary == null) return;
+            if (boundary == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
             this.parser = new MultipartStreamParser(
                     boundary, uploadBase,
@@ -252,7 +261,7 @@ public class Invoke implements HttpHandler {
         @Override
         public void onComplete() {
             if (parser == null) {
-                httpResponse.status400Finish();
+                httpResponse.status(400).finish();
                 return;
             }
 
@@ -262,7 +271,7 @@ public class Invoke implements HttpHandler {
                 app.invokeApp(request);
             } catch (Throwable e) {
                 logger.error("multipart invoke failed", e);
-                httpResponse.status500Finish("internal server error");
+                httpResponse.status(500).finish();
                 return;
             } finally {
                 parser.abort();

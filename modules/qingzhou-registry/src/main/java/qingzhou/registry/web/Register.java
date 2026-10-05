@@ -31,7 +31,7 @@ public class Register implements HttpHandler {
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
+            httpResponse.send("key auth error").finish();
             return null;
         }
 
@@ -102,7 +102,7 @@ public class Register implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         if (pairCipher == null || registerToken == null) {
-            httpResponse.status500Finish("Service Unavailable");
+            httpResponse.status(500).finish();
             return;
         }
         synchronized (Refresh.REFRESH_KEY_LOCK) {
@@ -117,7 +117,7 @@ public class Register implements HttpHandler {
         // 报文：registerToken + InstanceInfoJson
         String[] parts = decryptedRequest.split(Constants.AGENT_REGISTER_TOKEN_SP, 2);
         if (parts.length < 2) {
-            httpResponse.sendFinish("data format error");
+            httpResponse.send("data format error").finish();
             return;
         }
 
@@ -125,7 +125,7 @@ public class Register implements HttpHandler {
         // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
         if (!isAuthorized(registerToken, parts[0])) {
             logger.warn("registration rejected: register_token error");
-            httpResponse.sendFinish("register_token error");
+            httpResponse.send("register_token error").finish();
             return;
         }
 
@@ -134,7 +134,7 @@ public class Register implements HttpHandler {
             instanceInfo = json.fromJson(parts[1], InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
-            httpResponse.sendFinish("data format error");
+            httpResponse.send("data format error").finish();
             return;
         }
 
@@ -158,11 +158,11 @@ public class Register implements HttpHandler {
             Cipher cipher = crypto.getCipher(instanceKey);
             encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.status500Finish("instance key error");
+            httpResponse.status(500).finish();
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
-        httpResponse.sendFinish(encrypt);
+        httpResponse.send(encrypt).finish();
     }
 
     private boolean isAuthorized(byte[] registerToken, String presentedToken) {

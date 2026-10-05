@@ -166,7 +166,7 @@ public class SseListener implements Listener {
             finished = true;
             stopWatchdog();
             try {
-                httpResponse.sendFinish(toSseText(SseEvent.of(SseEvent.Type.RUN_ERROR).message(error).code(code)));
+                httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.RUN_ERROR).message(error).code(code))).finish();
             } catch (Exception e) {
                 // 客户端已断开连接，无法发送错误信息，忽略
             }
@@ -228,7 +228,7 @@ public class SseListener implements Listener {
             finished = true;
             stopWatchdog();
             try {
-                httpResponse.sendFinish(toSseText(SseEvent.of(SseEvent.Type.RUN_FINISHED)));
+                httpResponse.send(toSseText(SseEvent.of(SseEvent.Type.RUN_FINISHED))).finish();
             } catch (Exception e) {
                 // 客户端已断开连接，无法发送结束事件，忽略
             }

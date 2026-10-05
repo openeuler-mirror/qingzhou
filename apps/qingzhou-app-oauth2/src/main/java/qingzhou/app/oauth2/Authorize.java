@@ -132,8 +132,8 @@ public class Authorize implements HttpHandler {
         response.contentType("text/html; charset=utf-8")
                 .header("Cache-Control", "no-store")
                 .header("X-Frame-Options", "DENY") // 授权页不允许被嵌套，防止点击劫持
-                .sendFinish(page(responseType, client.get("client_name"), client.get("client_id"), client.get("redirect_uri"),
-                        request.getParameter("scope"), request.getParameter("state"), error));
+                .send(page(responseType, client.get("client_name"), client.get("client_id"), client.get("redirect_uri"),
+                        request.getParameter("scope"), request.getParameter("state"), error)).finish();
     }
 
     /**
