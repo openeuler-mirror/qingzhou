@@ -7,7 +7,7 @@ public interface Constants {
 
     String AGENT_INVOKE_URI = "/invoke";
     String AGENT_UPLOAD_URI = "/upload";
-    String AGENT_UPLOAD_KEY = "key";
+    String AGENT_UPLOAD_FILE_KEY = "fileKey";
     String AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP = ",";
     String AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP = "=";
     String AGENT_REGISTER_TOKEN_SP = "\n";

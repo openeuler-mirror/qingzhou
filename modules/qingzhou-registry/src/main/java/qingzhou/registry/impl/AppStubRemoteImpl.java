@@ -10,7 +10,6 @@ import java.util.List;
 
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
-import qingzhou.crypto.ReplayGuard;
 import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
@@ -68,15 +67,13 @@ class AppStubRemoteImpl implements AppStubRemote {
             doFileUploads(request, cipher);
 
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
-            // 时间戳+随机数作为 AAD 参与认证：既绑定了时效，也提供去重键
-            long timestamp = System.currentTimeMillis();
-            byte[] nonce = ReplayGuard.newNonce();
-            byte[] encrypted = cipher.encrypt(data, ReplayGuard.aad(timestamp, nonce));
+            // seal 内部生成时间戳与随机数作为 AAD：绑定时效并提供去重键
+            byte[] encrypted = crypto.getReplayGuardCipher(cipher).encrypt(data, 0, data.length, null);
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
             response = httpClient.send(httpClient.buildRequest(invokeUrl).method(HttpMethod.POST)
-                    .body(ReplayGuard.wrap(timestamp, nonce, encrypted)));
+                    .body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
@@ -144,14 +141,13 @@ class AppStubRemoteImpl implements AppStubRemote {
         byte[] buffer = new byte[1024 * 8];
         try (InputStream in = Files.newInputStream(file.toPath())) {
             int bytesRead;
-            long chunkIndex = 0;
             while ((bytesRead = in.read(buffer)) != -1) {
-                // 分片以序号+上传键作为 AAD：分片无法被重排、重放或跨上传拼接
-                byte[] chunkAad = ReplayGuard.uploadAad(fileTempKey, chunkIndex++);
-                byte[] encrypt = cipher.encrypt(buffer, 0, bytesRead, chunkAad);
+                // 分片以上传键作为绑定上下文：分片无法被重放到其他上传或拼接
+                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(buffer, 0, bytesRead,
+                        fileTempKey.getBytes(StandardCharsets.UTF_8));
 
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
-                String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey;
+                String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_FILE_KEY + "=" + fileTempKey;
 
                 Response uploadResult = httpClient.send(
                         httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));

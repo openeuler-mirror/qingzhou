@@ -22,11 +22,6 @@ public interface Cipher {
     byte[] decrypt(byte[] s) throws Exception;
 
     /**
-     * 带附加认证数据（AAD）加密：aad 不进入密文，但参与 GCM 认证，任何篡改都会导致解密失败。
-     */
-    byte[] encrypt(byte[] s, byte[] aad) throws Exception;
-
-    /**
      * 带附加认证数据（AAD）解密：aad 必须与加密时一致，否则认证失败。
      */
     byte[] decrypt(byte[] s, byte[] aad) throws Exception;

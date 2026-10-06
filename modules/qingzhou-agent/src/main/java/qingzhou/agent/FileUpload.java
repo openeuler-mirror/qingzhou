@@ -44,7 +44,8 @@ public class FileUpload implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        ProcessHandler.handle(httpRequest, httpResponse, crypto, requestData -> processFileUpload(requestData, httpRequest.getParameter(Constants.AGENT_UPLOAD_KEY)));
+        ProcessHandler.handle(httpRequest, httpResponse, crypto,
+                requestData -> processFileUpload(requestData, httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY)));
     }
 
     private String processFileUpload(byte[] data, String key) throws Throwable {

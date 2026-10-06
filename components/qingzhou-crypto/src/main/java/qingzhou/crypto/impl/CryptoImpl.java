@@ -28,6 +28,11 @@ public class CryptoImpl implements Crypto {
     private volatile Cipher globalCipher;
 
     @Override
+    public ReplayGuardCipher getReplayGuardCipher(Cipher cipher) {
+        return new ReplayGuardCipherImpl(cipher);
+    }
+
+    @Override
     public String generateKey() {
         byte[] key = new byte[16];
         RANDOM.nextBytes(key);
@@ -97,11 +102,6 @@ public class CryptoImpl implements Crypto {
     @Override
     public Base64Coder getBase64Coder() {
         return base64Coder;
-    }
-
-    @Override
-    public Base32Coder getBase32Coder() {
-        return base32Coder;
     }
 
     @Override

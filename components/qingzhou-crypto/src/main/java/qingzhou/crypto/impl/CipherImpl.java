@@ -72,11 +72,6 @@ class CipherImpl implements Cipher {
     }
 
     @Override
-    public byte[] encrypt(byte[] s, byte[] aad) throws Exception {
-        return encrypt(s, 0, s.length, aad);
-    }
-
-    @Override
     public byte[] decrypt(byte[] s, byte[] aad) throws Exception {
         if (s == null) return null;
 
