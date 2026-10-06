@@ -86,6 +86,13 @@ public class HttpServerImpl implements HttpServer {
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean sslEnabled = getConfig(config, "ssl_enabled", true);
+        boolean allowPlaintext = getConfig(config, "allow_plaintext", false);
+        boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
+        if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
+            // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
+            throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
+                    + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");
+        }
         try {
             if (sslEnabled) {
                 SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);

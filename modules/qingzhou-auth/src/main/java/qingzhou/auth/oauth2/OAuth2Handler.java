@@ -94,13 +94,19 @@ public class OAuth2Handler implements HttpHandler {
         if (path.equals(AUTHORIZE_PATH)) {
             String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
             response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
-                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Lax" + (callbackUrl.startsWith("https") ? "; Secure" : ""))
+                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Strict"
+                            + secureSuffix(request))
                     .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
             response.status(400).finish();
         }
+    }
+
+    // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时，按配置判定会漏发
+    private String secureSuffix(HttpRequest request) {
+        return "https".equals(request.getScheme()) ? "; Secure" : "";
     }
 
     private String newState() {
@@ -163,7 +169,7 @@ public class OAuth2Handler implements HttpHandler {
 
         // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
         response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
-                        + "; Path=/; HttpOnly; SameSite=Strict" + (thisServerUrl.startsWith("https") ? "; Secure" : ""))
+                        + "; Path=/; HttpOnly; SameSite=Strict" + secureSuffix(request))
                 .header("Cache-Control", "no-store")
                 .redirect(CONSOLE_PATH); // 登录后回到管控台，前端在 /web 下按路由渲染首页
     }

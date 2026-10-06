@@ -2,16 +2,17 @@ package qingzhou.http.server.impl;
 
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.http.server.auth.impl.AuthManager;
-import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.auth.AuthResult;
+import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.impl.LoggerImpl;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -24,8 +25,6 @@ import static qingzhou.http.server.impl.HttpServerImplTest.setField;
  * 一旦锁定，authenticateWithHandler 不再执行，认证器也就不会被调用。
  */
 public class AuthFailureTest {
-    private static final int MAX_TRACKED_HOSTS = 10000; // 与 AuthManager 保持一致
-
     @Test
     public void failuresReachMax_nextRequest_skipsAuthenticator() throws Exception {
         AuthManager authManager = manager(2, 60);
@@ -48,7 +47,7 @@ public class AuthFailureTest {
         Assert.assertFalse(authManager.doAuth(request, entry()));
 
         HandlerManager.HandlerEntry noAuth = new HandlerManager.HandlerEntry((req, response) -> {
-        }, true);
+        }, true, Collections.emptyList());
         Assert.assertTrue(authManager.doAuth(request, noAuth));
         Assert.assertFalse(authManager.doAuth(request, entry()));
     }
@@ -84,7 +83,7 @@ public class AuthFailureTest {
 
     private static HandlerManager.HandlerEntry entry() {
         return new HandlerManager.HandlerEntry((HttpRequest request, HttpResponse response) -> {
-        }, false);
+        }, false, Collections.emptyList());
     }
 
     // 仅 remoteAddress 会被 doAuth 用到，其余方法返回 null 即可

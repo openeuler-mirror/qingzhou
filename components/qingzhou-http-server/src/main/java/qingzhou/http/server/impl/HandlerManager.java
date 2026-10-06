@@ -91,7 +91,7 @@ public class HandlerManager {
     }
 
     // 注册专用：方法须属框架白名单，非法值在注册期即暴露，避免运行期静默放行
-    private List<String> parseMethods(String declared, String component) {
+    private static List<String> parseMethods(String declared, String component) {
         if (declared == null || declared.trim().isEmpty()) return Collections.emptyList();
         List<String> methods = new ArrayList<>();
         for (String name : declared.split(",")) {
@@ -115,7 +115,7 @@ public class HandlerManager {
     }
 
     // 补尾部斜杠：使 /a 只匹配 /a/...，不会误匹配 /abc
-    private String withTrailingSlash(String path) {
+    private static String withTrailingSlash(String path) {
         return path.endsWith("/") ? path : path + "/";
     }
 

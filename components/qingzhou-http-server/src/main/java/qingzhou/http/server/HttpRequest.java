@@ -31,6 +31,12 @@ public interface HttpRequest {
 
     String getMethod();
 
+    /**
+     * 本次连接的协议标识（http/https），由框架按实际连接给出。
+     * 安全相关判定（Cookie 的 Secure、HSTS 等）须以此为准，不能依据配置字符串。
+     */
+    String getScheme();
+
     boolean isFormUrlencoded();
 
     /**

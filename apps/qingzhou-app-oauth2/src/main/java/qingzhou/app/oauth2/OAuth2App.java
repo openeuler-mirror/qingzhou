@@ -58,7 +58,7 @@ public class OAuth2App implements QingzhouApp {
         }
 
         for (int i = 0; i < endpoints.length; i++) {
-            httpServer.registerHttpHandlerNoAuth(endpoints[i], PATH_PREFIX + ENDPOINT_PATHS[i]);
+            httpServer.registerHttpHandler(endpoints[i], PATH_PREFIX + ENDPOINT_PATHS[i], true);
         }
         logger.info("oauth2 授权服务已就绪：" + PATH_PREFIX + "（implicit_enabled=" + implicitEnabled + "）");
     }

@@ -87,7 +87,7 @@ public class AuthHandler implements HttpHandler {
                 response.status(405).send("method not allowed").finish();
                 return;
             }
-            logout(response);
+            logout(request, response);
         } else {
             response.status(400).finish();
         }
@@ -154,9 +154,10 @@ public class AuthHandler implements HttpHandler {
         return false;
     }
 
-    private void logout(HttpResponse response) {
+    private void logout(HttpRequest request, HttpResponse response) {
         response.header("Set-Cookie", qingzhou.auth.oauth2.OAuth2Handler.TOKEN_COOKIE_NAME
-                        + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
+                        + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"
+                        + ("https".equals(request.getScheme()) ? "; Secure" : ""))
                 .send("ok").finish();
     }
 }

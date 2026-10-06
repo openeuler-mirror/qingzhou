@@ -55,7 +55,7 @@ class HttpResponseImpl implements HttpResponse {
         return this;
     }
 
-    private boolean hasBreak(String text) {
+    private static boolean hasBreak(String text) {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             if (c == '\r' || c == '\n' || c == '\0') return true;

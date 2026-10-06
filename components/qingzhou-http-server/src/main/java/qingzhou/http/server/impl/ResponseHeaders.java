@@ -20,6 +20,7 @@ final class ResponseHeaders {
     private final String coop;
     private final String corp;
     private final String[] corsAllowedOrigins; // 允许的跨域来源；空表示不开放跨域
+    private final boolean hstsPreload;
 
     ResponseHeaders(Map<String, String> config) {
         this.csp = getConfig(config, "csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
@@ -27,6 +28,7 @@ final class ResponseHeaders {
         this.coop = getConfig(config, "coop", "");
         this.corp = getConfig(config, "corp", "");
         this.corsAllowedOrigins = splitOrigins(getConfig(config, "cors_allowed_origins", ""));
+        this.hstsPreload = getConfig(config, "hsts_preload", false);
     }
 
     // 须在任何 return 之前调用：400/401/404/413/503 等分支同样需要安全头
@@ -44,7 +46,8 @@ final class ResponseHeaders {
         if (!coop.isEmpty()) response.header("Cross-Origin-Opener-Policy", coop);
         if (!corp.isEmpty()) response.header("Cross-Origin-Resource-Policy", corp);
         boolean isTls = "https".equals(request.scheme());
-        if (isTls) response.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        if (isTls) response.header("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains" + (hstsPreload ? "; preload" : ""));
         applyCors(request, response);
     }
 

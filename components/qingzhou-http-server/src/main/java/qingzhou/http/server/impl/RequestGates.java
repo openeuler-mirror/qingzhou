@@ -128,7 +128,7 @@ final class RequestGates {
     }
 
     // 预检请求头仅允许 Content-Type 与 Authorization；空列表回退默认集
-    private String sanitizeRequestedHeaders(String requestedHeaders) {
+    private static String sanitizeRequestedHeaders(String requestedHeaders) {
         String defaultHeader = "Content-Type, Authorization";
         if (requestedHeaders == null || requestedHeaders.isEmpty()) {
             return defaultHeader;
@@ -172,7 +172,7 @@ final class RequestGates {
      * 路径规范化：折叠重复斜杠与 "." 段；发现 ".." 段返回 null（拒绝请求）。
      * 各 handler 自行解析路径，防护难以统一，故在分发入口一次性拦截穿越。
      */
-    private String normalize(String path) {
+    private static String normalize(String path) {
         if (path.indexOf('\0') >= 0) return null; // NUL 会被下游文件 API 截断，可能绕过路径校验
         // 反斜杠在 Windows 上等价分隔符，矩阵参数会被下游解析截断，二者都可能绕过基于路径的校验
         if (path.indexOf('\\') >= 0 || path.indexOf(';') >= 0) return null;
@@ -188,7 +188,7 @@ final class RequestGates {
 
     // 一次解码后仍残留 . / \ NUL 的编码形态，说明原始路径被多层编码（如 %252e%252e、%252f），
     // 各 handler 的穿越防护未必覆盖得住；只拦危险编码，避免误拒文件名含 % 的合法路径
-    private boolean hasDangerousEncoding(String path) {
+    private static boolean hasDangerousEncoding(String path) {
         String upper = path.toUpperCase(Locale.ROOT);
         return upper.contains("%2E") || upper.contains("%2F") || upper.contains("%5C") || upper.contains("%00");
     }
@@ -255,7 +255,7 @@ final class RequestGates {
 
     // 无请求体返回 0；chunked 返回 UNKNOWN_BODY_SIZE；
     // 非法 Content-Length 或与 Transfer-Encoding 并存返回 INVALID_BODY_SIZE（请求走私特征，调用方回 400）
-    private long declaredBodySize(HttpServerRequest request) {
+    private static long declaredBodySize(HttpServerRequest request) {
         boolean chunked = request.requestHeaders()
                 .contains(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED, true);
         String value = request.requestHeaders().get(HttpHeaderNames.CONTENT_LENGTH);

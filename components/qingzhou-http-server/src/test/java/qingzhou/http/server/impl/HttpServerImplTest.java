@@ -61,7 +61,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build();
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
-        httpServer.registerHttpHandlerNoAuth(httpHandler, path);
+        httpServer.registerHttpHandler(httpHandler, path, true);
 
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
@@ -77,7 +77,7 @@ public class HttpServerImplTest {
 
         String path = "/testHttp";
         HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
-        httpServer.registerHttpHandlerNoAuth(httpHandler, path);
+        httpServer.registerHttpHandler(httpHandler, path, true);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
         Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
@@ -91,7 +91,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = start(sslConfig());
         try {
             String path = "/sslTest";
-            httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.send("ssl-ok").finish(), path);
+            httpServer.registerHttpHandler((httpRequest, httpResponse) -> httpResponse.send("ssl-ok").finish(), path, true);
 
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
             Response result = httpClient.send(httpClient.buildRequest("https://localhost:" + actualPort(httpServer) + path)

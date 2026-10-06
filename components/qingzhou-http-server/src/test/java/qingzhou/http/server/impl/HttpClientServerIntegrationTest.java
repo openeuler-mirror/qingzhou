@@ -46,8 +46,8 @@ public class HttpClientServerIntegrationTest {
         HttpServerImpl httpServer = testServer.server;
         try {
             String path = "/headerTest";
-            httpServer.registerHttpHandlerNoAuth((request, response) ->
-                    response.send("received: " + request.getHeader("X-Request-Id")).finish(), path);
+            httpServer.registerHttpHandler((request, response) ->
+                    response.send("received: " + request.getHeader("X-Request-Id")).finish(), path, true);
 
             HttpClient client = buildHttpClientImpl();
             Response result = client.send(client.buildRequest("http://localhost:" + port + path)
@@ -68,12 +68,12 @@ public class HttpClientServerIntegrationTest {
         HttpServerImpl httpServer = testServer.server;
         try {
             String path = "/headersTest";
-            httpServer.registerHttpHandlerNoAuth((request, response) -> {
+            httpServer.registerHttpHandler((request, response) -> {
                 String headerA = request.getHeader("Header-A");
                 String headerB = request.getHeader("Header-B");
                 String oldHeader = request.getHeader("Old-Header");
                 response.send("A=" + headerA + ",B=" + headerB + ",Old=" + oldHeader).finish();
-            }, path);
+            }, path, true);
 
             Map<String, String> newHeaders = new HashMap<>();
             newHeaders.put("Header-A", "value-a");
@@ -108,7 +108,7 @@ public class HttpClientServerIntegrationTest {
             try {
                 String path = "/filesTest";
                 AtomicReference<byte[]> receivedBody = new AtomicReference<>();
-                httpServer.registerHttpHandlerNoAuth(TestServerSupport.bufferingEchoHandler(receivedBody), path);
+                httpServer.registerHttpHandler(TestServerSupport.bufferingEchoHandler(receivedBody), path, true);
 
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("upload", Arrays.asList(file1.getAbsolutePath(), file2.getAbsolutePath()));

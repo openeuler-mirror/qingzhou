@@ -20,7 +20,7 @@ public class AuthManagerTest {
         TestServer testServer = TestServerSupport.startServer();
         try {
             HttpHandler handler = (request, response) -> response.send("leak").finish();
-            testServer.server.registerHttpHandlerNoAuth(handler, "/noAuthPath");
+            testServer.server.registerHttpHandler(handler, "/noAuthPath", true);
             testServer.server.registerHttpHandler(handler, "/authPath"); // 同一实例，认证要求不得被串味
 
             Assert.assertEquals(statusOf(testServer, "/noAuthPath"), 200);

@@ -78,7 +78,10 @@ public class AuthManager {
         AuthResult authResult = authenticate(httpRequest);
 
         // 校验未通过：拒绝原因仅记服务端日志，不回显给客户端
-        if (authResult.status() != AuthResult.Status.PASS) return false;
+        if (authResult.status() != AuthResult.Status.PASS) {
+            logger.warn("http authentication rejected: " + authResult.getReason());
+            return false;
+        }
 
         // PASS 但无主体是模糊态：角色无从归属，handler 按角色鉴权只会拿到 null，故按未认证拒绝
         if (authResult.getPrincipal() == null) return false;

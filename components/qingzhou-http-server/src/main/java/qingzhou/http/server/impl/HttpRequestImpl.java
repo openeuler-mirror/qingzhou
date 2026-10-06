@@ -76,6 +76,11 @@ public class HttpRequestImpl implements HttpRequest {
     }
 
     @Override
+    public String getScheme() {
+        return request.scheme();
+    }
+
+    @Override
     public String getMethod() {
         return request.method().name();
     }
