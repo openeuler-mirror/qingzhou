@@ -8,5 +8,5 @@ public interface HttpClient {
      */
     Response send(Request request, ResponseListener listener) throws Exception;
 
-    Request newRequest(String url);
+    Request buildRequest(String url);
 }

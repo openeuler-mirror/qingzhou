@@ -36,7 +36,7 @@ public class HttpServerImplTest {
     public void normal_start_listenHttpService() throws Exception {
         HttpServerImpl httpServer = build();
         HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源
@@ -49,7 +49,7 @@ public class HttpServerImplTest {
         httpServer.stop();
         try {
             HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            httpClient.send(httpClient.newRequest("http://localhost:" + port).method(HttpMethod.GET));
+            httpClient.send(httpClient.buildRequest("http://localhost:" + port).method(HttpMethod.GET));
             Assert.fail();
         } catch (Exception e) {
             Assert.assertTrue(e instanceof ConnectException);
@@ -64,7 +64,7 @@ public class HttpServerImplTest {
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
 
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 200);
         Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
 
@@ -80,7 +80,7 @@ public class HttpServerImplTest {
         httpServer.registerHttpHandlerNoAuth(httpHandler, path);
         httpServer.unregisterHttpHandler(httpHandler);
         HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.newRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
         Assert.assertEquals(result.getStatus(), 404);
 
         httpServer.stop(); // 清理资源
@@ -94,7 +94,7 @@ public class HttpServerImplTest {
             httpServer.registerHttpHandlerNoAuth((httpRequest, httpResponse) -> httpResponse.send("ssl-ok").finish(), path);
 
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = httpClient.send(httpClient.newRequest("https://localhost:" + actualPort(httpServer) + path)
+            Response result = httpClient.send(httpClient.buildRequest("https://localhost:" + actualPort(httpServer) + path)
                     .trustAllCertificates()
                     .method(HttpMethod.GET));
             Assert.assertEquals(result.getStatus(), 200);

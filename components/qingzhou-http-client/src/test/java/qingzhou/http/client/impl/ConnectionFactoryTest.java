@@ -32,7 +32,7 @@ public class ConnectionFactoryTest {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
-                client.send(client.newRequest(url(MATCH_HOST, port)).method(HttpMethod.GET));
+                client.send(client.buildRequest(url(MATCH_HOST, port)).method(HttpMethod.GET));
                 Assert.fail("未指定受信证书时应按 JVM 默认 CA 校验，自签名服务端请求应当失败");
             } catch (Exception e) {
                 Assert.assertTrue(isHandshakeFailure(e), "期望握手失败，实际异常：" + e);
@@ -44,7 +44,7 @@ public class ConnectionFactoryTest {
     public void trustAllCertificates_selfSignedServerWithMismatchedHost_requestSucceeds() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url(mismatchHost, port))
+            Response response = client.send(client.buildRequest(url(mismatchHost, port))
                     .method(HttpMethod.GET)
                     .trustAllCertificates());
 
@@ -57,7 +57,7 @@ public class ConnectionFactoryTest {
     public void matchedTrustedCertificate_selfSignedServer_requestSucceeds() throws Exception {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url(MATCH_HOST, port))
+            Response response = client.send(client.buildRequest(url(MATCH_HOST, port))
                     .method(HttpMethod.GET)
                     .trustedCertificates(certificate(SERVER_KEYSTORE)));
 
@@ -71,7 +71,7 @@ public class ConnectionFactoryTest {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
-                client.send(client.newRequest(url(MATCH_HOST, port))
+                client.send(client.buildRequest(url(MATCH_HOST, port))
                         .method(HttpMethod.GET)
                         .trustedCertificates(certificate(OTHER_KEYSTORE)));
                 Assert.fail("服务端证书不在受信证书内，请求应当失败");
@@ -86,7 +86,7 @@ public class ConnectionFactoryTest {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
             try {
-                client.send(client.newRequest(url(mismatchHost, port))
+                client.send(client.buildRequest(url(mismatchHost, port))
                         .method(HttpMethod.GET)
                         .trustedCertificates(certificate(SERVER_KEYSTORE)));
                 Assert.fail("证书与主机名不匹配，请求应当失败");
@@ -101,13 +101,13 @@ public class ConnectionFactoryTest {
         withSelfSignedServer((mismatchHost, port) -> {
             HttpClient client = HttpClientImplTest.buildHttpClientImpl();
 
-            Response trusted = client.send(client.newRequest(url(MATCH_HOST, port))
+            Response trusted = client.send(client.buildRequest(url(MATCH_HOST, port))
                     .method(HttpMethod.GET)
                     .trustedCertificates(certificate(SERVER_KEYSTORE)));
             Assert.assertEquals(trusted.getStatus(), 200);
 
             // 上一次请求的受信证书不应影响后续请求的校验策略
-            Response trustAll = client.send(client.newRequest(url(mismatchHost, port))
+            Response trustAll = client.send(client.buildRequest(url(mismatchHost, port))
                     .method(HttpMethod.GET)
                     .trustAllCertificates());
             Assert.assertEquals(trustAll.getStatus(), 200);

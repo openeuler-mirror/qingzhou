@@ -21,7 +21,7 @@ import qingzhou.llm.Interceptor;
 import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
+@Component(property = {HttpHandler.HANDLE_PATH + "=/chat/stream", HttpHandler.HANDLE_METHODS + "=POST"})
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +

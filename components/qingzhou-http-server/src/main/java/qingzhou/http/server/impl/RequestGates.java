@@ -57,6 +57,7 @@ final class RequestGates {
                 this::denyDisallowedMethod, // 405
                 this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越
                 this::denyUnroutedPath,     // 404
+                this::denyMethodNotAllowedByHandler, // 405：路由声明的方法白名单，认证前即拒绝
                 this::denyPreflight,        // 204：预检免认证但须已路由，故排在认证之前
                 this::denyUnauthenticated,  // 401
                 this::denyUnsupportedBody,  // 415
@@ -83,11 +84,27 @@ final class RequestGates {
     }
 
     // TRACE 等非业务方法不应进入任何 handler；PATCH 为 qingzhou-ai 会话接口所需
-    private static boolean isMethodAllowed(HttpMethod method) {
+    private boolean isMethodAllowed(HttpMethod method) {
         for (HttpMethod allowed : ALLOWED_METHODS) {
             if (allowed == method) return true;
         }
         return false;
+    }
+
+    // 供路由注册期校验 HANDLE_METHODS：与全站方法白名单共用同一份数据
+    static boolean isSupportedMethod(String method) {
+        for (HttpMethod allowed : ALLOWED_METHODS) {
+            if (allowed.name().equals(method)) return true;
+        }
+        return false;
+    }
+
+    // 405：路由以 HANDLE_METHODS 声明了允许的方法，不在其中的请求在认证前即拒绝，handler 无需各自判断
+    private Publisher<Void> denyMethodNotAllowedByHandler(RequestContext ctx) {
+        List<String> methods = ctx.entry.methods;
+        if (methods.isEmpty() || methods.contains(ctx.request.method().name())) return null;
+        ctx.response.header(HttpHeaderNames.ALLOW, String.join(", ", methods));
+        return ctx.respond(HttpResponseStatus.METHOD_NOT_ALLOWED);
     }
 
     // 204：仅跨域预检（必带 Access-Control-Request-Method）在此终止，下放业务 handler 会返回页面内容；

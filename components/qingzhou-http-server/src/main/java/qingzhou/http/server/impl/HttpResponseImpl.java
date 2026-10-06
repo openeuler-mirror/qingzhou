@@ -47,8 +47,20 @@ class HttpResponseImpl implements HttpResponse {
 
     @Override
     public HttpResponse header(String name, String value) {
+        // 头名或值含 CR/LF/NUL 会构造出额外的响应头或响应体（响应头注入）
+        if (name == null || value == null || hasBreak(name) || hasBreak(value)) {
+            throw new IllegalArgumentException("invalid http header");
+        }
         response.header(name, value);
         return this;
+    }
+
+    private boolean hasBreak(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\r' || c == '\n' || c == '\0') return true;
+        }
+        return false;
     }
 
     @Override

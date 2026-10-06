@@ -19,19 +19,28 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
+    private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册/刷新报文上限
 
     static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
         byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return null;
+        if (requestBody == null || requestBody.length == 0) {
+            httpResponse.status(400).finish();
+            return null;
+        }
+        // 私钥解密按模长分块，成本随报文线性增长；注册/刷新报文实际仅数 KB，先设硬上限防 CPU DoS
+        if (requestBody.length > MAX_REGISTER_BODY) {
+            httpResponse.status(413).finish();
+            return null;
+        }
 
         byte[] decrypted;
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.send("key auth error").finish();
+            httpResponse.status(400).send("key auth error").finish();
             return null;
         }
 

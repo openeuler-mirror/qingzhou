@@ -25,7 +25,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/invoke",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/invoke", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Invoke implements HttpHandler {
     private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
@@ -65,10 +65,6 @@ public class Invoke implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        if (!"POST".equals(httpRequest.getMethod())) {
-            httpResponse.status(405).send("method not allowed").finish();
-            return;
-        }
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
             httpResponse.status(400).finish();

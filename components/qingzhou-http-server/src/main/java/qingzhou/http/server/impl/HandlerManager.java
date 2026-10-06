@@ -1,16 +1,13 @@
 package qingzhou.http.server.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
 
 /**
@@ -25,16 +22,19 @@ public class HandlerManager {
     private final Map<String, HandlerEntry> handlerMap = new ConcurrentHashMap<>();
 
     /**
-     * 注册路径对应的 handler 与免认证标记。
+     * 注册路径对应的 handler、免认证标记与允许的方法。
      * 标记随路径存储而非随 handler 实例：同一实例注册到多条路径时，各自的认证要求互不干扰。
+     * 方法列表为空表示允许全部方法；非空时由框架在认证前拦截。
      */
     public static final class HandlerEntry {
         public final HttpHandler handler;
         public final boolean noAuth;
+        public final List<String> methods; // 允许的方法；空表示全部允许
 
-        HandlerEntry(HttpHandler handler, boolean noAuth) {
+        HandlerEntry(HttpHandler handler, boolean noAuth, List<String> methods) {
             this.handler = handler;
             this.noAuth = noAuth;
+            this.methods = methods;
         }
     }
 
@@ -78,14 +78,32 @@ public class HandlerManager {
         }
 
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
-        handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth));
+        List<String> methods = parseMethods(properties.get(HttpHandler.HANDLE_METHODS), component);
+        handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth, methods));
 
         // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
-        pendingLogs.log(logger, "registered: [" + path + "] by [" + source + "]" + (isNoAuth ? " (no auth)" : ""));
+        pendingLogs.log(logger, "registered: [" + path + "] by [" + source + "]"
+                + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : ""));
         if (isNoAuth) {
             pendingLogs.warn(logger, "no-auth route: [" + path + "] is publicly reachable, declared by [" + source + "]");
         }
+    }
+
+    // 注册专用：方法须属框架白名单，非法值在注册期即暴露，避免运行期静默放行
+    private List<String> parseMethods(String declared, String component) {
+        if (declared == null || declared.trim().isEmpty()) return Collections.emptyList();
+        List<String> methods = new ArrayList<>();
+        for (String name : declared.split(",")) {
+            String method = name.trim().toUpperCase(Locale.ROOT);
+            if (method.isEmpty()) continue;
+            if (!RequestGates.isSupportedMethod(method)) {
+                throw new IllegalArgumentException(HttpHandler.HANDLE_METHODS + " of [" + component
+                        + "] contains unsupported method: " + method);
+            }
+            methods.add(method);
+        }
+        return methods;
     }
 
     // 注册专用：父子路径任一方向重叠即冲突，避免二者在分发时互相遮蔽

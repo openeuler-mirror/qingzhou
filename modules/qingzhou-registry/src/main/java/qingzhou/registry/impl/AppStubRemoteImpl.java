@@ -16,6 +16,7 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -70,7 +71,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
-            response = httpClient.send(httpClient.newRequest(invokeUrl).body(encrypted));
+            response = httpClient.send(httpClient.buildRequest(invokeUrl).method(HttpMethod.POST).body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
@@ -144,7 +145,8 @@ class AppStubRemoteImpl implements AppStubRemote {
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
                 String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey;
 
-                Response uploadResult = httpClient.send(httpClient.newRequest(uploadUrl).body(encrypt));
+                Response uploadResult = httpClient.send(
+                        httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));
                 if (uploadResult.getStatus() != 200) {
                     String msg = "response code: " + uploadResult.getStatus() + " ";
                     byte[] body = uploadResult.getBody();

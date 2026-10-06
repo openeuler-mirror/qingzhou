@@ -77,7 +77,7 @@ public final class EtcdConfigSource implements RemoteConfigSource {
     }
 
     private String post(String path, String body) throws Exception {
-        Request request = http.newRequest(endpoint + "/v3" + path)
+        Request request = http.buildRequest(endpoint + "/v3" + path)
                 .method(HttpMethod.POST)
                 .header("Content-Type", "application/json")// 覆盖客户端默认的表单类型
                 .body(body.getBytes(StandardCharsets.UTF_8))

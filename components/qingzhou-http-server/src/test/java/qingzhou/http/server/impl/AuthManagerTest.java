@@ -32,7 +32,7 @@ public class AuthManagerTest {
 
     private static int statusOf(TestServer testServer, String path) throws Exception {
         HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = client.send(client.newRequest("http://localhost:" + testServer.port + path)
+        Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + path)
                 .method(HttpMethod.GET));
         return result.getStatus();
     }

@@ -252,7 +252,7 @@ public class ZookeeperApp implements QingzhouApp {
                 Map<String, String> headMap = new HashMap<>();
                 headMap.put("Content-Type", "application/json");
                 headMap.put("accept", "application/json");
-                Request request = httpClient.newRequest(environmentUrl)
+                Request request = httpClient.buildRequest(environmentUrl)
                         .method(HttpMethod.GET).headers(headMap);
                 Response response = httpClient.send(request);
                 if (200 != response.getStatus() || response.getBody() == null) {

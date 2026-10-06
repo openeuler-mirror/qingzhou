@@ -59,7 +59,7 @@ public abstract class AbstractZkCommandService extends ModelBase {
         if (ZookeeperApp.logger.isDebugEnabled()) {
             ZookeeperApp.logger.debug("send url " + url);
         }
-        String data = ZookeeperApp.sendHttp(ZookeeperApp.httpClient.newRequest(url).method(HttpMethod.GET));
+        String data = ZookeeperApp.sendHttp(ZookeeperApp.httpClient.buildRequest(url).method(HttpMethod.GET));
         if (Util.notBlank(data)) {
             return ZookeeperApp.json.fromJson(data, HashMap.class);
         }

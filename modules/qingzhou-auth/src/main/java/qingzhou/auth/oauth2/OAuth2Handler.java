@@ -148,7 +148,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "qingzhou-auth.client_secret"));
 
         Response tokenResponse = httpClient.send(
-                httpClient.newRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
+                httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
         String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
         Map tokenBody = json.fromJson(tokenBodyText, Map.class);
         if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
@@ -176,7 +176,7 @@ public class OAuth2Handler implements HttpHandler {
         // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
         String accessToken = (String) tokenBody.get("access_token");
         if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
-            Response resp = httpClient.send(httpClient.newRequest(userinfoEndpoint)
+            Response resp = httpClient.send(httpClient.buildRequest(userinfoEndpoint)
                     .header("Authorization", "Bearer " + accessToken));
             if (resp.getStatus() == 200) {
                 Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);

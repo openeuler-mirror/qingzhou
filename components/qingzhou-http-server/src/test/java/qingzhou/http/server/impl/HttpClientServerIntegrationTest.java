@@ -50,7 +50,7 @@ public class HttpClientServerIntegrationTest {
                     response.send("received: " + request.getHeader("X-Request-Id")).finish(), path);
 
             HttpClient client = buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + port + path)
+            Response result = client.send(client.buildRequest("http://localhost:" + port + path)
                     .method(HttpMethod.GET)
                     .header("X-Request-Id", "request-123"));
 
@@ -80,7 +80,7 @@ public class HttpClientServerIntegrationTest {
             newHeaders.put("Header-B", "value-b");
 
             HttpClient client = buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + port + path)
+            Response result = client.send(client.buildRequest("http://localhost:" + port + path)
                     .method(HttpMethod.GET)
                     .header("Old-Header", "old-value")
                     .headers(newHeaders));
@@ -116,7 +116,7 @@ public class HttpClientServerIntegrationTest {
                 params.put("desc", "unit-test");
 
                 HttpClient client = buildHttpClientImpl();
-                Response result = client.send(client.newRequest("http://localhost:" + port + path)
+                Response result = client.send(client.buildRequest("http://localhost:" + port + path)
                         .method(HttpMethod.POST)
                         .files(files)
                         .params(params));

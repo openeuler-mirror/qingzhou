@@ -33,7 +33,7 @@ public class HttpClientImplTest {
     public void unsupportedProtocol_send_throwsIllegalArgumentException() {
         HttpClient client = buildHttpClientImpl();
         try {
-            client.send(client.newRequest("ftp://127.0.0.1/file"));
+            client.send(client.buildRequest("ftp://127.0.0.1/file"));
             Assert.fail("不支持的协议应抛出 IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().contains("unsupported protocol"), "实际异常：" + e);
@@ -50,7 +50,7 @@ public class HttpClientImplTest {
             writeResponse(exchange, 200, "get-success");
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.GET));
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET));
 
             Assert.assertEquals(response.getStatus(), 200);
             Assert.assertEquals(new String(response.getBody(), StandardCharsets.UTF_8), "get-success");
@@ -66,7 +66,7 @@ public class HttpClientImplTest {
             writeResponse(exchange, 200, "post-success");
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.POST));
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.POST));
 
             Assert.assertEquals(response.getStatus(), 200);
             Assert.assertEquals(new String(response.getBody(), StandardCharsets.UTF_8), "post-success");
@@ -82,7 +82,7 @@ public class HttpClientImplTest {
             writeResponse(exchange, 200, "header-received");
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url)
+            Response response = client.send(client.buildRequest(url)
                     .method(HttpMethod.GET)
                     .header("X-Request-Id", "request-123"));
 
@@ -99,7 +99,7 @@ public class HttpClientImplTest {
             writeResponse(exchange, 200, "body-received");
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url)
+            Response response = client.send(client.buildRequest(url)
                     .method(HttpMethod.POST)
                     .body("name=qingzhou".getBytes(StandardCharsets.UTF_8)));
 
@@ -112,7 +112,7 @@ public class HttpClientImplTest {
     public void createdResponse_getStatus_returnsResponseStatus() throws Exception {
         withServer(exchange -> writeResponse(exchange, 201, "created"), url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.GET));
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET));
 
             Assert.assertEquals(response.getStatus(), 201);
         });
@@ -122,7 +122,7 @@ public class HttpClientImplTest {
     public void responseWithBody_getBody_returnsResponseContent() throws Exception {
         withServer(exchange -> writeResponse(exchange, 200, "response-content"), url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.GET));
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET));
 
             Assert.assertEquals(new String(response.getBody(), StandardCharsets.UTF_8), "response-content");
         });
@@ -146,7 +146,7 @@ public class HttpClientImplTest {
         }, url -> {
             HttpClient client = buildHttpClientImpl();
             try {
-                Response response = client.send(client.newRequest(url).method(HttpMethod.GET), new ResponseListener() {
+                Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ResponseListener() {
                     @Override
                     public void onBody(String line) {
                         receivedLine.set(line);
@@ -182,7 +182,7 @@ public class HttpClientImplTest {
         AtomicReference<Throwable> error = new AtomicReference<>();
         withServer(exchange -> writeResponse(exchange, 500, "server-error"), url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.GET), new ResponseListener() {
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ResponseListener() {
                 @Override
                 public void onBody(String line) {
                     Assert.fail("非 2xx 不应回调 onBody");
@@ -210,7 +210,7 @@ public class HttpClientImplTest {
         withServer(exchange -> writeResponse(exchange, 200, "0123456789abcdef"), url -> {
             HttpClient client = buildHttpClientImpl();
             try {
-                client.send(client.newRequest(url).method(HttpMethod.GET).maxBodySize(8));
+                client.send(client.buildRequest(url).method(HttpMethod.GET).maxBodySize(8));
                 Assert.fail("响应体超过 maxBodySize 应抛出 IOException");
             } catch (IOException e) {
                 Assert.assertTrue(e.getMessage().contains("maxBodySize"), "实际异常：" + e);
@@ -227,7 +227,7 @@ public class HttpClientImplTest {
                 Map<String, List<String>> files = new HashMap<>();
                 files.put("field\r\nX-Injected: 1", Collections.singletonList(tempFile.getAbsolutePath()));
 
-                client.send(client.newRequest(url).method(HttpMethod.POST).files(files));
+                client.send(client.buildRequest(url).method(HttpMethod.POST).files(files));
                 Assert.fail("含 CRLF 的 multipart 字段名应抛出 IllegalArgumentException");
             } catch (IllegalArgumentException e) {
                 Assert.assertTrue(e.getMessage().contains("illegal multipart"), "实际异常：" + e);
@@ -250,7 +250,7 @@ public class HttpClientImplTest {
             Map<String, String> params = new HashMap<>();
             params.put("q", "a b&c=d");
 
-            Response response = client.send(client.newRequest(url).method(HttpMethod.POST).params(params));
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.POST).params(params));
 
             Assert.assertEquals(response.getStatus(), 200);
             Assert.assertEquals(receivedBody.get(), "q=a+b%26c%3Dd");
@@ -273,7 +273,7 @@ public class HttpClientImplTest {
             }
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.newRequest(url).method(HttpMethod.GET), new ResponseListener() {
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ResponseListener() {
                 @Override
                 public void onBody(String line) {
                     firstLine.countDown();

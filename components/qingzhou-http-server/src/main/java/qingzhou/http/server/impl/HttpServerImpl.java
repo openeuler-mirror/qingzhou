@@ -68,6 +68,8 @@ public class HttpServerImpl implements HttpServer {
         // 连接级 DoS 防护：限制单连接保活请求数与连接总数，防止慢连接长期占用 EventLoop 与连接槽
         int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
         httpServer = httpServer.maxKeepAliveRequests(maxKeepAliveRequests);
+        int maxConnections = atLeast(config, "max_connections", 0, 10_000);
+        if (maxConnections > 0) httpServer = httpServer.maxConnections(maxConnections);
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean sslEnabled = getConfig(config, "ssl_enabled", true);
@@ -126,20 +128,20 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
-        register(httpHandler, handlePath, false);
+        registerHttpHandler(httpHandler, handlePath, false);
     }
 
     @Override
-    public void registerHttpHandlerNoAuth(HttpHandler httpHandler, String handlePath) {
-        register(httpHandler, handlePath, true);
-    }
-
-    // 两个注册 API 仅差一个 no-auth 属性，收敛到同一构建逻辑
-    private void register(HttpHandler httpHandler, String handlePath, boolean noAuth) {
+    public void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth, String... methods) {
         Map<String, String> properties = new HashMap<>();
         properties.put(HttpHandler.HANDLE_PATH, handlePath);
         properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");
-        if (noAuth) properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        if (noAuth) {
+            properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        }
+        if (methods != null && methods.length > 0) {
+            properties.put(HttpHandler.HANDLE_METHODS, String.join(",", methods));
+        }
         handlerManager.addHttpHandler(httpHandler, properties, null);
     }
 

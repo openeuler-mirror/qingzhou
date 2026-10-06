@@ -54,7 +54,8 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         this.streamSemaphore = new Semaphore(maxStreams);
 
         long maxBodyBytes = atLeast(config, "max_body_bytes", 1L, 8 * 1024 * 1024);
-        long maxStreamBytes = atLeast(config, "max_stream_bytes", 1L, 1024L * 1024 * 1024);
+        // 流式上传落临时文件，默认额度过大易打满磁盘
+        long maxStreamBytes = atLeast(config, "max_stream_bytes", 1L, 256L * 1024 * 1024);
         this.responseHeaders = new ResponseHeaders(config);
         this.requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, authManager, handlerManager, logger, aggregatedBytes);
         this.bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);

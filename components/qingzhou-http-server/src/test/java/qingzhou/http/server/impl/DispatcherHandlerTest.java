@@ -38,7 +38,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/other")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/other")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 404);
@@ -55,7 +55,7 @@ public class DispatcherHandlerTest {
                     response.send("hello-" + request.getMethod()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/test")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 200);
@@ -74,7 +74,7 @@ public class DispatcherHandlerTest {
             testServer.server.unregisterHttpHandler(handler);
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/temp")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/temp")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 404);
@@ -93,9 +93,9 @@ public class DispatcherHandlerTest {
             testServer.server.unregisterHttpHandler(handler); // 两条路径须一并移除，否则残留免认证条目继续对外服务
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Assert.assertEquals(client.send(client.newRequest("http://localhost:" + testServer.port + "/pathOne")
+            Assert.assertEquals(client.send(client.buildRequest("http://localhost:" + testServer.port + "/pathOne")
                     .method(HttpMethod.GET)).getStatus(), 404);
-            Assert.assertEquals(client.send(client.newRequest("http://localhost:" + testServer.port + "/pathTwo")
+            Assert.assertEquals(client.send(client.buildRequest("http://localhost:" + testServer.port + "/pathTwo")
                     .method(HttpMethod.GET)).getStatus(), 404);
         } finally {
             testServer.server.stop();
@@ -115,7 +115,7 @@ public class DispatcherHandlerTest {
             }, "/infoTest");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/infoTest")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/infoTest")
                     .method(HttpMethod.POST)
                     .body("hello-body".getBytes(StandardCharsets.UTF_8)));
 
@@ -168,7 +168,7 @@ public class DispatcherHandlerTest {
             Map<String, String> params = new HashMap<>();
             params.put("name", "qingzhou");
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/postTest")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/postTest")
                     .method(HttpMethod.POST)
                     .params(params));
 
@@ -191,7 +191,7 @@ public class DispatcherHandlerTest {
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
                 HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/upload")
+                Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/upload")
                         .method(HttpMethod.POST)
                         .files(files));
 
@@ -219,7 +219,7 @@ public class DispatcherHandlerTest {
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
                 HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + path)
+                Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + path)
                         .method(HttpMethod.POST)
                         .files(files));
 
@@ -245,7 +245,7 @@ public class DispatcherHandlerTest {
             }, "/boom");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/boom")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/boom")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 500);
@@ -294,7 +294,7 @@ public class DispatcherHandlerTest {
                 files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
 
                 HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/beginBoom")
+                Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/beginBoom")
                         .method(HttpMethod.POST)
                         .files(files));
 
@@ -314,7 +314,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("ok").finish(), "/traceTest");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/traceTest")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/traceTest")
                     .method(HttpMethod.TRACE)); // 非业务方法不得进入 handler，否则可被用于跨站追踪
 
             Assert.assertEquals(result.getStatus(), 405);
@@ -437,7 +437,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("partial").finish(), "/noFinish");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/noFinish")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/noFinish")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 200);
@@ -454,7 +454,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("prefix").finish(), "/a");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/a/b/c")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/a/b/c")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 200);
@@ -489,7 +489,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("deep").finish(), "/a/b");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 404);
@@ -506,7 +506,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("config").finish(), "/ai/chat/config");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/ai/chat")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/ai/chat")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 404);
@@ -522,7 +522,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("foo").finish(), "/foo");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/foobar")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/foobar")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 404);
@@ -539,12 +539,12 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("child").finish(), "/root/child");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response child = client.send(client.newRequest("http://localhost:" + testServer.port + "/root/child/deep")
+            Response child = client.send(client.buildRequest("http://localhost:" + testServer.port + "/root/child/deep")
                     .method(HttpMethod.GET));
             Assert.assertEquals(child.getStatus(), 200);
             Assert.assertEquals(new String(child.getBody(), StandardCharsets.UTF_8), "child");
 
-            Response root = client.send(client.newRequest("http://localhost:" + testServer.port + "/root/other")
+            Response root = client.send(client.buildRequest("http://localhost:" + testServer.port + "/root/other")
                     .method(HttpMethod.GET));
             Assert.assertEquals(root.getStatus(), 200);
             Assert.assertEquals(new String(root.getBody(), StandardCharsets.UTF_8), "root");
@@ -560,7 +560,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("echo:" + request.getPath()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/test/../../etc/passwd")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/test/../../etc/passwd")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 400);
@@ -576,7 +576,7 @@ public class DispatcherHandlerTest {
             testServer.server.registerHttpHandlerNoAuth((request, response) -> response.send("echo:" + request.getPath()).finish(), "/test");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "//test//a")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "//test//a")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 200);
@@ -594,7 +594,7 @@ public class DispatcherHandlerTest {
                     response.send("decoded-" + request.getPath()).finish(), "/hello world");
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/hello%20world")
+            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/hello%20world")
                     .method(HttpMethod.GET));
 
             Assert.assertEquals(result.getStatus(), 200);
@@ -865,7 +865,7 @@ public class DispatcherHandlerTest {
 
                 HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
                 // 回调异常若无人兜底，此处会一直挂到 idle_timeout
-                Response result = client.send(client.newRequest("http://localhost:" + testServer.port + "/completeBoom")
+                Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/completeBoom")
                         .method(HttpMethod.POST)
                         .files(files));
 

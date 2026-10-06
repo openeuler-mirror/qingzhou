@@ -18,7 +18,7 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/refresh", HttpHandler.HANDLE_NO_AUTH + "=true"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=/refresh", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Refresh implements HttpHandler {
     public static final Object REFRESH_KEY_LOCK = new Object();
@@ -55,24 +55,27 @@ public class Refresh implements HttpHandler {
 
     private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
         String decryptedRequest = Register.decryptRequest(httpRequest, httpResponse, pairCipher);
-        if (decryptedRequest == null) return;
+        if (decryptedRequest == null) return; // decryptRequest 已写入错误响应
 
         String[] split = decryptedRequest.split(",");
         if (split.length < 3) {
-            logger.warn("malformed refresh request"); // 旧版 agent 只发两段，升级时需同步
+            httpResponse.status(400).finish();
             return;
         }
         String instanceId = split[0];
         String newKey = split[1];
         String oldKey = split[2];
         InstanceInfo instanceInfo = registry.getRemoteInstance(instanceId);
-        if (instanceInfo == null) return;
+        if (instanceInfo == null) {
+            httpResponse.status(400).finish();
+            return;
+        }
 
         // 必须证明持有当前共享密钥：registry 公钥会被分发给所有 agent，不是秘密，
         // 仅凭「能用公钥加密」不足以授权改密钥
         if (!MessageDigest.isEqual(instanceInfo.getKey().getBytes(StandardCharsets.UTF_8),
                 oldKey.getBytes(StandardCharsets.UTF_8))) { // 常量时间比较，防时序侧信道
-            logger.warn("refresh request rejected: key proof mismatch, instance: " + instanceId);
+            httpResponse.status(400).finish(); // 与其它失败同状态码，避免成为实例存在性的判别信号
             return;
         }
 
