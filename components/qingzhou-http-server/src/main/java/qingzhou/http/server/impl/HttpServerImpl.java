@@ -3,6 +3,7 @@ package qingzhou.http.server.impl;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
@@ -65,11 +66,23 @@ public class HttpServerImpl implements HttpServer {
             httpServer = httpServer.idleTimeout(Duration.ofSeconds(idleTimeout));
         }
 
-        // 连接级 DoS 防护：限制单连接保活请求数与连接总数，防止慢连接长期占用 EventLoop 与连接槽
+        // 单连接保活请求数上限：防止慢连接长期占用同一连接的请求配额
         int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
         httpServer = httpServer.maxKeepAliveRequests(maxKeepAliveRequests);
+
+        // 连接总数上限（0 表示不限）：限制实际 TCP 连接数，防慢连接洪水占满连接槽。
+        // 业内常见做法：在连接建立处计数，超限即关闭新连接；计数以连接关闭为唯一归还点，避免计数漂移。
         int maxConnections = atLeast(config, "max_connections", 0, 10_000);
-        if (maxConnections > 0) httpServer = httpServer.maxConnections(maxConnections);
+        if (maxConnections > 0) {
+            AtomicInteger connections = new AtomicInteger();
+            httpServer = httpServer.doOnConnection(connection -> {
+                if (connections.incrementAndGet() > maxConnections) {
+                    connection.channel().close(); // 超限：立即关闭，不占用 EventLoop 与请求配额
+                    return;
+                }
+                connection.channel().closeFuture().addListener(future -> connections.decrementAndGet());
+            });
+        }
 
         // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
         boolean sslEnabled = getConfig(config, "ssl_enabled", true);
