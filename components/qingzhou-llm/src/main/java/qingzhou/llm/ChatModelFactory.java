@@ -13,6 +13,12 @@ public interface ChatModelFactory {
     Attachment newImageAttachment(String base64, String mimeType);
 
     interface ChatModelBuilder {
+        /**
+         * 单篇技能说明书/参考文档注入系统提示的字符上限默认值。
+         * 调用方按注入量估算上下文开销时须引用同一常量，避免两处口径脱钩
+         */
+        int DEFAULT_MAX_DOC_CHARS = 6000;
+
         ChatModelBuilder systemPrompt(String systemPrompt);
 
         ChatModelBuilder docs(List<String> docs);

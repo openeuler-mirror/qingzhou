@@ -20,4 +20,13 @@ public interface ChatMemory {
             return () -> content;
         }
     }
+
+    /**
+     * 此前对话的摘要：既非用户发言也非助手回答，作为背景事实置于历史之前注入
+     */
+    interface SummaryMessage extends Message {
+        static SummaryMessage of(String content) {
+            return () -> content;
+        }
+    }
 }

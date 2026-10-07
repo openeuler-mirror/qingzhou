@@ -1,5 +1,6 @@
 package qingzhou.ai.memory;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,112 +11,168 @@ import java.util.regex.Pattern;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatMemory;
+import qingzhou.llm.ChatModelFactory;
 import qingzhou.logger.Logger;
 import qingzhou.store.Store;
 import qingzhou.store.StoreFactory;
 
+/**
+ * 会话记忆：容量有界 + 长会话可续。
+ * 占用有界靠三层降级而非直接丢弃：先压缩（保留摘要）→ 再归档（只留标题与摘要）→ 最后才删除。
+ * KV 仍是唯一正本，{@link ConversationCatalog} 是纯派生索引，可随时从 KV 重建
+ */
 @Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = ConversationStore.class)
 public class ConversationStore {
+    private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,64}"); // 防路径遍历
+    private static final String SUMMARY_MESSAGE_ID = "summary";
+
     @Reference
     private Json json;
     @Reference
     private Logger logger;
     @Reference
     private StoreFactory storeFactory;
+    // 可选：未加载 llm 时仅丧失摘要能力，会话存取与查询不受影响
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL)
+    private volatile ChatModelFactory chatModelFactory;
 
-    private final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,64}"); // 防路径遍历
     private Store kvStore;
+    private MemoryLimits limits;
+    private ConversationCatalog catalog;
+    private ConversationQuota quota;
+    private ConversationCompactor compactor;
 
     @Activate
     public void init(Map<String, String> config) {
-        if (config != null && "file".equalsIgnoreCase(config.get("memory_store"))) {
+        limits = new MemoryLimits(config);
+        boolean persistent = config != null && "file".equalsIgnoreCase(config.get("memory_store"));
+        if (persistent) {
             String dir = config.get("memory_store_dir");
             if (dir == null || dir.isEmpty()) dir = "data/ai-conversations";
             kvStore = storeFactory.buildFileStore(Paths.get(config.get("qingzhou.instance"), dir).toFile());
         } else {
             kvStore = storeFactory.buildMemoryStore();
         }
+        catalog = new ConversationCatalog();
+        quota = new ConversationQuota(this, limits);
+        compactor = new ConversationCompactor(this, limits, logger, () -> chatModelFactory);
+
+        rebuild();
+        synchronized (this) {
+            if (!persistent) {
+                // 内存后端：超限即内存已实际占用，必须立即收敛（只归档/淘汰，不调 LLM）
+                quota.enforce(null);
+            } else if (catalog.overQuota(limits)) {
+                // 文件后端：不在启动路径做破坏性动作，交由后续写入逐步收敛
+                logger.warn("conversation store already exceeds the configured quota, it will converge on subsequent writes");
+            }
+        }
+    }
+
+    @Deactivate
+    public void destroy() {
+        compactor.shutdown();
     }
 
     /**
-     * 记忆注入上下文的消息列表
+     * 记忆注入上下文的消息列表：摘要置于历史之前，历史按剩余预算由新到旧截取
      */
-    public List<ChatMemory.Message> getMessageList(String userId, String conversationId) {
-        List<HistoryMessage> messages = listMessages(userId, conversationId);
+    public synchronized List<ChatMemory.Message> getMessageList(String userId, String conversationId, int overhead) {
+        List<ChatMemory.Message> result = new ArrayList<>();
+        ConversationRecord record = ownedRecord(userId, conversationId);
+        if (record == null) return result;
+
+        if (record.summary != null && !record.summary.isEmpty()) {
+            result.add(ChatMemory.SummaryMessage.of(record.summary));
+        }
+        if (record.archived || record.messages == null) return result;
+
+        List<StoredMessage> messages = record.messages;
+        // 摘要同样占用上下文，须从预算中扣除；扣完仍不低于下限
+        int budget = Math.max(limits.historyMinChars,
+                limits.historyBudget(overhead) - MemoryTexts.length(record.summary));
+        int maxMessages = Math.max(2, limits.historyMaxMessages); // 最近 1 轮问答是硬保底，条数护栏不能压过它
         int from = messages.size();
         int chars = 0;
-        int HISTORY_MAX_MESSAGES = 20; // 记忆注入上下文的最大历史条数
-        int HISTORY_MAX_CHARS = 8000; // 记忆注入上下文的总字符预算
-        while (from > 0 && from > messages.size() - HISTORY_MAX_MESSAGES) {
-            String content = messages.get(from - 1).content;
-            if (chars + content.length() > HISTORY_MAX_CHARS) break;
-            chars += content.length();
+        while (from > 0 && messages.size() - from < maxMessages) {
+            int len = MemoryTexts.length(messages.get(from - 1).content);
+            boolean mustKeep = messages.size() - from < 2; // 硬保底：至少保留最近 1 轮问答
+            if (!mustKeep && chars + len > budget) break;
+            chars += len;
             from--;
         }
-        List<ChatMemory.Message> result = new ArrayList<>();
-        for (HistoryMessage historyMessage : messages.subList(from, messages.size())) {
-            if (historyMessage.role.equals("user")) {
-                result.add(ChatMemory.UserMessage.of(historyMessage.content));
-            } else if (historyMessage.role.equals("assistant")) {
-                result.add(ChatMemory.AssistantMessage.of(historyMessage.content));
+        for (StoredMessage message : messages.subList(from, messages.size())) {
+            if ("user".equals(message.role)) {
+                result.add(ChatMemory.UserMessage.of(message.content));
+            } else if ("assistant".equals(message.role)) {
+                result.add(ChatMemory.AssistantMessage.of(message.content));
             } else {
-                logger.warn("Unknown Message Type: " + historyMessage.role);
+                logger.warn("Unknown Message Type: " + message.role);
             }
         }
         return result;
     }
 
     /**
-     * 某用户的全部会话摘要（按 updatedAt 倒序：活跃会话靠前）
+     * 某用户的全部会话摘要（按 updatedAt 倒序：活跃会话靠前），走内存索引
      */
-    public List<ConversationSummary> listConversations(String userId) {
+    synchronized List<ConversationSummary> listConversations(String userId) {
         List<ConversationSummary> conversations = new ArrayList<>();
-        for (String conversationId : kvStore.keys()) {
-            ConversationRecord record = load(conversationId);
-            if (record != null && record.userId != null && record.userId.equals(userId)) {
-                conversations.add(new ConversationSummary(conversationId, record.title, record.updatedAt));
-            }
+        for (CatalogEntry entry : catalog.byUser(userId)) {
+            conversations.add(new ConversationSummary(entry.id, entry.title, entry.updatedAt));
         }
         conversations.sort((a, b) -> Long.compare(b.updatedAt, a.updatedAt));
         return conversations;
     }
 
     /**
-     * 完整消息列表（时间正序）：空内容条目跳过；会话不存在或归属不符返回空列表
+     * 完整消息列表（时间正序）：空内容条目跳过；会话不存在或归属不符返回空列表；
+     * 已归档会话返回一条摘要消息，避免旧会话在前端凭空消失
      */
-    public List<HistoryMessage> listMessages(String userId, String conversationId) {
+    synchronized List<HistoryMessage> listMessages(String userId, String conversationId) {
         List<HistoryMessage> messages = new ArrayList<>();
-        ConversationRecord record = load(conversationId);
-        if (record != null && record.userId != null && record.userId.equals(userId) && record.messages != null) {
-            for (StoredMessage msg : record.messages) {
-                if (msg.content == null || msg.content.isEmpty()) continue;
-                messages.add(new HistoryMessage(msg.id, msg.role, msg.content));
-            }
+        ConversationRecord record = ownedRecord(userId, conversationId);
+        if (record == null) return messages;
+
+        if (record.archived) {
+            String summary = record.summary == null || record.summary.isEmpty()
+                    ? "（历史内容已归档）" : "（历史摘要）" + record.summary;
+            messages.add(new HistoryMessage(SUMMARY_MESSAGE_ID, "assistant", summary));
+            return messages;
+        }
+        if (record.messages == null) return messages;
+        for (StoredMessage message : record.messages) {
+            if (message.content == null || message.content.isEmpty()) continue;
+            messages.add(new HistoryMessage(message.id, message.role, message.content));
         }
         return messages;
     }
 
     public String storeUserMessage(String conversationId, String userId, String content) {
-        StoredMessage msg = message("user", content);
-        append(conversationId, userId, msg);
-        return msg.id;
+        StoredMessage message = message("user", content);
+        append(conversationId, userId, message);
+        return message.id;
     }
 
     public void storeAssistantMessage(String conversationId, String userId, String content, String messageId) {
-        StoredMessage msg = message("assistant", content);
-        msg.id = messageId;
-        append(conversationId, userId, msg);
+        StoredMessage message = message("assistant", content);
+        message.id = messageId;
+        append(conversationId, userId, message);
     }
 
     /**
      * 重命名（title null 表示未命名）：归属不符或不存在且无标题返回 false；
      * 不存在且带标题时创建（首条消息在回答完成后才落库，rename 先到属正常时序）
      */
-    public synchronized boolean rename(String userId, String conversationId, String title) {
+    synchronized boolean rename(String userId, String conversationId, String title) {
+        if (!VALID_ID.matcher(conversationId).matches()) return false;
         ConversationRecord record = load(conversationId);
         if (record == null) {
             if (title == null) return false; // 不凭空产生未命名会话
@@ -125,96 +182,119 @@ public class ConversationStore {
         } else if (record.userId == null || !record.userId.equals(userId)) {
             return false;
         }
-        try {
-            record.title = title;
-            record.updatedAt = System.currentTimeMillis();
-            if (record.createdAt == 0) record.createdAt = record.updatedAt;
-            kvStore.put(conversationId, json.toJson(record));
-            return true;
-        } catch (Throwable t) {
-            logger.warn("failed to rename conversation: " + t.getMessage());
-            return false;
-        }
+        record.title = title;
+        record.updatedAt = System.currentTimeMillis();
+        if (record.createdAt == 0) record.createdAt = record.updatedAt;
+        return save(conversationId, record);
     }
 
     /**
      * 删除本人会话：命中返回 true；会话不存在或归属不符返回 false（调用方 404），数据保留
      */
-    public synchronized boolean remove(String userId, String conversationId) {
+    synchronized boolean remove(String userId, String conversationId) {
         ConversationRecord record = load(conversationId);
         if (record == null || record.userId == null || !record.userId.equals(userId)) return false;
-        kvStore.delete(conversationId);
+        deleteRecord(conversationId);
         return true;
     }
 
     /**
-     * 删除本人会话内的单条消息：命中返回 true；会话不存在、归属不符或消息不存在返回 false（调用方 404）。
+     * 删除本人会话内的单条消息：命中返回 true；会话不存在、归属不符、已归档或消息不存在返回 false（调用方 404）。
      * 删除不更新 updatedAt（删除不该把会话顶到列表最前）；消息删空后连会话一起删，避免零消息空壳
      */
-    public synchronized boolean removeMessage(String userId, String conversationId, String messageId) {
+    synchronized boolean removeMessage(String userId, String conversationId, String messageId) {
         if (messageId == null || !VALID_ID.matcher(messageId).matches()) return false;
         ConversationRecord record = load(conversationId);
-        if (record == null || record.userId == null || !record.userId.equals(userId) || record.messages == null) {
+        if (record == null || record.archived || record.userId == null
+                || !record.userId.equals(userId) || record.messages == null) {
             return false;
         }
-        boolean removed = record.messages.removeIf(msg -> msg.id != null && msg.id.equals(messageId));
+        boolean removed = record.messages.removeIf(message -> message.id != null && message.id.equals(messageId));
         if (!removed) return false;
-        try {
-            if (record.messages.isEmpty()) {
-                kvStore.delete(conversationId);
-            } else {
-                kvStore.put(conversationId, json.toJson(record));
-            }
-            return true;
-        } catch (Throwable t) {
-            logger.warn("failed to remove message: " + t.getMessage());
+        if (record.messages.isEmpty()) {
+            deleteRecord(conversationId);
+        } else if (!save(conversationId, record)) {
             return false;
         }
+        return true;
     }
 
-    private StoredMessage message(String role, String content) {
-        StoredMessage msg = new StoredMessage();
-        msg.id = UUID.randomUUID().toString();
-        msg.role = role;
-        msg.content = truncate(content);
-        msg.createdAt = System.currentTimeMillis();
-        return msg;
-    }
-
-    /**
-     * 读改写整条记录，synchronized 防并发覆盖
-     */
-    private synchronized void append(String conversationId, String userId, StoredMessage msg) {
+    private void append(String conversationId, String userId, StoredMessage message) {
         if (!VALID_ID.matcher(conversationId).matches()) {
             logger.warn("invalid conversation id, message skipped");
             return;
         }
-        try {
+        boolean needCompact;
+        synchronized (this) {
             ConversationRecord record = load(conversationId);
             if (record == null) {
                 record = new ConversationRecord();
                 record.id = conversationId;
                 record.userId = userId;
-                record.createdAt = msg.createdAt;
+                record.createdAt = message.createdAt;
             } else if (record.userId != null && !record.userId.equals(userId)) {
                 logger.warn("conversation " + conversationId + " does not belong to user, message skipped");
                 return;
             }
+            if (record.archived) record.archived = false; // 继续对话即重新激活，原摘要仍作背景保留
             if (record.messages == null) record.messages = new ArrayList<>();
-            record.messages.add(msg);
-            int MAX_MESSAGES_PER_CONVERSATION = 200; // 单会话消息条数上限
-            while (record.messages.size() > MAX_MESSAGES_PER_CONVERSATION) {
+            record.messages.add(message);
+            while (record.messages.size() > limits.hardMessages) { // 兜底：压缩失败时也不让单会话无界增长
                 record.messages.remove(0);
             }
-            record.updatedAt = msg.createdAt;
-            kvStore.put(conversationId, json.toJson(record));
-        } catch (Throwable t) {
-            logger.warn("failed to persist conversation message: " + t.getMessage());
+            record.updatedAt = message.createdAt;
+            if (!save(conversationId, record)) return; // 未落库就不按陈旧索引判定配额
+            quota.enforce(userId);
+
+            CatalogEntry entry = catalog.get(conversationId);
+            needCompact = entry != null && !entry.archived && entry.messageCount > limits.softMessages;
+        }
+        if (needCompact) compactor.submit(conversationId);
+    }
+
+    private void rebuild() {
+        synchronized (this) {
+            catalog.clear();
+            for (String conversationId : kvStore.keys()) {
+                if (!VALID_ID.matcher(conversationId).matches()) continue;
+                String value = kvStore.get(conversationId);
+                if (value == null) continue;
+                try {
+                    ConversationRecord record = json.fromJson(value, ConversationRecord.class);
+                    if (record == null) continue;
+                    catalog.reindex(conversationId, new CatalogEntry(conversationId, record, byteSize(value)));
+                } catch (Throwable t) {
+                    logger.warn("failed to parse conversation: " + t.getMessage());
+                }
+            }
         }
     }
 
-    private ConversationRecord load(String conversationId) {
-        if (!VALID_ID.matcher(conversationId).matches()) return null;
+    /**
+     * 索引的唯一写入口：先落 KV 再更新索引，KV 写失败时索引保持与旧值一致
+     */
+    synchronized boolean save(String conversationId, ConversationRecord record) {
+        try {
+            record.id = conversationId;
+            String value = json.toJson(record);
+            kvStore.put(conversationId, value);
+            catalog.reindex(conversationId, new CatalogEntry(conversationId, record, byteSize(value)));
+            return true;
+        } catch (Throwable t) {
+            logger.warn("failed to persist conversation: " + t.getMessage());
+            return false;
+        }
+    }
+
+    synchronized boolean deleteRecord(String conversationId) {
+        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return false;
+        kvStore.delete(conversationId);
+        catalog.reindex(conversationId, null);
+        return true;
+    }
+
+    synchronized ConversationRecord load(String conversationId) {
+        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return null;
         String value = kvStore.get(conversationId);
         if (value == null) return null;
         try {
@@ -225,52 +305,26 @@ public class ConversationStore {
         }
     }
 
-    private String truncate(String text) {
-        if (text == null) return null;
-        int MAX_CONTENT_CHARS = 8000; // 单条消息内容上限
-        return text.length() <= MAX_CONTENT_CHARS ? text : text.substring(0, MAX_CONTENT_CHARS);
+    ConversationCatalog catalog() {
+        return catalog;
     }
 
-    /**
-     * KV 内会话记录结构，title 为 null 表示未命名
-     */
-    private static class ConversationRecord {
-        public String id;
-        public String userId;
-        public String title;
-        public long createdAt;
-        public long updatedAt;
-        public List<StoredMessage> messages;
+    private ConversationRecord ownedRecord(String userId, String conversationId) {
+        ConversationRecord record = load(conversationId);
+        if (record != null && record.userId != null && record.userId.equals(userId)) return record;
+        return null;
     }
 
-    private static class StoredMessage {
-        public String id;
-        public String role;
-        public String content;
-        public long createdAt;
+    private StoredMessage message(String role, String content) {
+        StoredMessage message = new StoredMessage();
+        message.id = UUID.randomUUID().toString();
+        message.role = role;
+        message.content = MemoryTexts.truncate(content, limits.messageMaxChars);
+        message.createdAt = System.currentTimeMillis();
+        return message;
     }
 
-    private static class HistoryMessage {
-        public final String id;
-        public final String role;
-        public final String content;
-
-        public HistoryMessage(String id, String role, String content) {
-            this.id = id;
-            this.role = role;
-            this.content = content;
-        }
-    }
-
-    private static class ConversationSummary {
-        public final String conversationId;
-        public final String title;
-        public final long updatedAt;
-
-        public ConversationSummary(String conversationId, String title, long updatedAt) {
-            this.conversationId = conversationId;
-            this.title = title;
-            this.updatedAt = updatedAt;
-        }
+    private static long byteSize(String value) {
+        return value == null ? 0 : value.getBytes(StandardCharsets.UTF_8).length;
     }
 }

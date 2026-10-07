@@ -87,17 +87,23 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         if (messageList == null) return;
 
         messageList.forEach(msg -> {
-            String role = null;
-            if (msg instanceof ChatMemory.UserMessage) {
+            String role;
+            String content = msg.content();
+            if (msg instanceof ChatMemory.SummaryMessage) {
+                // 摘要自成一条背景消息，排在历史之前，不与系统提示词缝合
+                role = "system";
+                content = "[此前对话摘要]\n" + content;
+            } else if (msg instanceof ChatMemory.UserMessage) {
                 role = "user";
             } else if (msg instanceof ChatMemory.AssistantMessage) {
                 role = "assistant";
+            } else {
+                return;
             }
-            if (role == null) return;
 
             Map<String, Object> historyMessage = new HashMap<>();
             historyMessage.put("role", role);
-            historyMessage.put("content", msg.content());
+            historyMessage.put("content", content);
             messages.add(historyMessage);
         });
     }

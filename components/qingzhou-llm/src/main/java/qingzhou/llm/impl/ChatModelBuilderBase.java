@@ -18,7 +18,7 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
     public Collection<Skill> skills;
 
     public int maxToolResultChars = 2000;
-    public int maxDocChars = 6000;
+    public int maxDocChars = DEFAULT_MAX_DOC_CHARS;
 
     public int maxRetries = 4;
     public int maxToolIterations = 20;
