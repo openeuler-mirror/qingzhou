@@ -67,8 +67,33 @@ class CipherImpl implements Cipher {
      */
     @Override
     public byte[] encrypt(byte[] s) throws Exception {
+        return encrypt(s, null);
+    }
+
+    @Override
+    public byte[] decrypt(byte[] s) throws Exception {
+        return decrypt(s, null);
+    }
+
+    @Override
+    public byte[] encrypt(byte[] s, byte[] aad) throws Exception {
         if (s == null) return null;
-        return encrypt(s, 0, s.length);
+
+        // 生成随机IV
+        byte[] iv = new byte[IV_SIZE];
+        RANDOM.nextBytes(iv);
+
+        // 执行加密，结果包含：密文+认证标签
+        javax.crypto.Cipher cipher = getCipher();
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
+        if (aad != null) cipher.updateAAD(aad);
+        byte[] ciphertext = cipher.doFinal(s);
+
+        // 拼接 IV(12) + 密文+标签
+        byte[] result = new byte[IV_SIZE + ciphertext.length];
+        System.arraycopy(iv, 0, result, 0, IV_SIZE);
+        System.arraycopy(ciphertext, 0, result, IV_SIZE, ciphertext.length);
+        return result;
     }
 
     @Override
@@ -83,50 +108,6 @@ class CipherImpl implements Cipher {
         javax.crypto.Cipher cipher = getCipher();
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
         if (aad != null) cipher.updateAAD(aad); // AAD 参与认证但不出现在密文中
-        return cipher.doFinal(encrypted);
-    }
-
-    @Override
-    public byte[] encrypt(byte[] s, int off, int len) throws Exception {
-        return encrypt(s, off, len, null);
-    }
-
-    @Override
-    public byte[] encrypt(byte[] s, int off, int len, byte[] aad) throws Exception {
-        if (s == null) return null;
-
-        // 生成随机IV
-        byte[] iv = new byte[IV_SIZE];
-        RANDOM.nextBytes(iv);
-
-        // 执行加密，结果包含：密文+认证标签
-        javax.crypto.Cipher cipher = getCipher();
-        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
-        if (aad != null) cipher.updateAAD(aad);
-        byte[] ciphertext = cipher.doFinal(s, off, len);
-
-        // 拼接 IV(12) + 密文+标签
-        byte[] result = new byte[IV_SIZE + ciphertext.length];
-        System.arraycopy(iv, 0, result, 0, IV_SIZE);
-        System.arraycopy(ciphertext, 0, result, IV_SIZE, ciphertext.length);
-        return result;
-    }
-
-    @Override
-    public byte[] decrypt(byte[] s) throws Exception {
-        if (s == null) {
-            return null;
-        }
-
-        // 拆分 IV、密文+标签
-        byte[] iv = new byte[IV_SIZE];
-        System.arraycopy(s, 0, iv, 0, IV_SIZE);
-        byte[] encrypted = new byte[s.length - IV_SIZE];
-        System.arraycopy(s, IV_SIZE, encrypted, 0, encrypted.length);
-
-        // 执行解密+校验，返回原始数据
-        javax.crypto.Cipher cipher = getCipher();
-        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
         return cipher.doFinal(encrypted);
     }
 

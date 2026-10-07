@@ -47,14 +47,14 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     }
 
     @Override
-    public byte[] encrypt(byte[] data, int off, int len, byte[] context) throws Exception {
+    public byte[] encrypt(byte[] data, byte[] context) throws Exception {
         if (data == null) return null;
 
         long timestamp = System.currentTimeMillis();
         byte[] nonce = new byte[NONCE_SIZE];
         RANDOM.nextBytes(nonce);
 
-        byte[] ciphertext = cipher.encrypt(data, off, len, aad(timestamp, nonce, context));
+        byte[] ciphertext = cipher.encrypt(data, aad(timestamp, nonce, context));
         return wrap(timestamp, nonce, ciphertext);
     }
 

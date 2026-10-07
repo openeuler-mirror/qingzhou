@@ -68,7 +68,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
             // seal 内部生成时间戳与随机数作为 AAD：绑定时效并提供去重键
-            byte[] encrypted = crypto.getReplayGuardCipher(cipher).encrypt(data, 0, data.length, null);
+            byte[] encrypted = crypto.getReplayGuardCipher(cipher).encrypt(data, null);
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
@@ -143,7 +143,7 @@ class AppStubRemoteImpl implements AppStubRemote {
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
                 // 分片以上传键作为绑定上下文：分片无法被重放到其他上传或拼接
-                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(buffer, 0, bytesRead,
+                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(buffer,
                         fileTempKey.getBytes(StandardCharsets.UTF_8));
 
                 // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI

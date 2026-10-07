@@ -21,7 +21,7 @@ public interface ReplayGuardCipher {
      *
      * @param context 额外绑定的上下文字节（如上传键），可为 null；须与 {@link #decrypt} 时一致
      */
-    byte[] encrypt(byte[] data, int off, int len, byte[] context) throws Exception;
+    byte[] encrypt(byte[] data, byte[] context) throws Exception;
 
     /**
      * 校验时间窗与去重并解密。

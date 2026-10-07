@@ -58,16 +58,6 @@ class ProcessHandler {
         httpResponse.send(encrypt).finish();
     }
 
-    // 原子登记：并发重放的同一密文只有一个能登记成功，其余判为重放；
-    // 密钥轮换即整体清空，使去重表生命周期不超过密钥生命周期，避免旧 IV 被挤出后可重放
-    private static synchronized boolean registerIv(String iv, String currentKey) {
-        if (!Objects.equals(seenIvKey, currentKey)) {
-            seenIvKey = currentKey;
-            SEEN_IV.clear();
-        }
-        return SEEN_IV.put(iv, System.currentTimeMillis()) == null;
-    }
-
     interface ProcessHandlerCallback {
         String doProcess(byte[] requestData) throws Throwable;
     }
