@@ -46,9 +46,9 @@ class CipherImpl implements Cipher {
         try {
             return decrypt(s);
         } catch (Exception e) {
-            System.err.println("WARNING: >>> ");
-            System.err.println("WARNING: >>> failed to decrypt: " + configName + ", use bin/gen-cipher-password.sh to encrypt it");
-            System.err.println("WARNING: >>> ");
+            // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级
+            System.err.println("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "
+                    + "Use bin/gen-cipher-password.sh to encrypt it.");
             return s;
         }
     }

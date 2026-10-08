@@ -98,7 +98,8 @@ public class RegistryImpl implements Registry {
     private void unbindApp0(AppStubLocal appStub) {
         AppMeta appMeta = appStub.getAppMeta();
         String appCode = appMeta.getApp().code;
-        localApps.remove(appCode);
+        // 两参 remove：动态重绑时同 code 的新服务可能已覆盖，仅当仍是本服务时才移除
+        localApps.remove(appCode, appStub);
 
         logger.info(String.format("app unregistered: %s", appCode));
     }

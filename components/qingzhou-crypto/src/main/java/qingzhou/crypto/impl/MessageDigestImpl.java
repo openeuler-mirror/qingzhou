@@ -33,16 +33,21 @@ class MessageDigestImpl implements MessageDigest {
             return false;
         }
 
-        String[] splitPwd = msgDigest.split("\\" + SALT_SEPARATOR);
-        if (splitPwd.length != 4) return false; // 格式非法的摘要直接判定不匹配
+        try {
+            String[] splitPwd = msgDigest.split("\\" + SALT_SEPARATOR);
+            if (splitPwd.length != 4) return false; // 格式非法的摘要直接判定不匹配
 
-        String algorithm = splitPwd[0];
-        byte[] salt = decode(splitPwd[1]);
-        int iterations = Integer.parseInt(splitPwd[2]);
-        String digest = mutate(text, algorithm, salt, iterations);
-        // 常量时间比较，防止时序侧信道推算摘要
-        return java.security.MessageDigest.isEqual(digest.getBytes(StandardCharsets.UTF_8),
-                msgDigest.getBytes(StandardCharsets.UTF_8));
+            String algorithm = splitPwd[0];
+            byte[] salt = decode(splitPwd[1]);
+            int iterations = Integer.parseInt(splitPwd[2]);
+            String digest = mutate(text, algorithm, salt, iterations);
+            // 常量时间比较，防止时序侧信道推算摘要
+            return java.security.MessageDigest.isEqual(digest.getBytes(StandardCharsets.UTF_8),
+                    msgDigest.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            // 段数合法但内容非法（坏盐/坏迭代数/未知算法）按不匹配处理：登录应回 401 而非 500
+            return false;
+        }
     }
 
     @Override

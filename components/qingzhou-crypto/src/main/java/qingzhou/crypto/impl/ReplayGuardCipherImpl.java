@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.ReplayGuardCipher;
+import qingzhou.crypto.ReplayGuardException;
 
 /**
  * {@link ReplayGuardCipher} 的默认实现。魔数、版本、时间窗、去重表等细节全部封闭在包内。
@@ -71,7 +72,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     @Override
     public byte[] decrypt(byte[] packet, byte[] context) throws Exception {
         if (!isWrapped(packet) || packet[1] != VERSION)
-            throw new IllegalArgumentException("invalid packet");
+            throw new ReplayGuardException(ReplayGuardException.Reason.INVALID_PACKET, "invalid packet");
 
         ByteBuffer header = ByteBuffer.wrap(packet, 2, 8 + NONCE_SIZE);
         long timestamp = header.getLong();
@@ -79,14 +80,16 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
         header.get(nonce);
 
         if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_CLOCK_SKEW_MILLIS)
-            throw new IllegalArgumentException("timestamp out of window");
+            throw new ReplayGuardException(ReplayGuardException.Reason.TIMESTAMP_OUT_OF_WINDOW, "timestamp out of window");
 
         byte[] ciphertext = new byte[packet.length - HEADER_SIZE];
         System.arraycopy(packet, HEADER_SIZE, ciphertext, 0, ciphertext.length);
 
         // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放
         byte[] plaintext = cipher.decrypt(ciphertext, aad(timestamp, nonce, context));
-        if (!registerIfAbsent(nonce, timestamp)) throw new IllegalArgumentException("replay");
+        if (!registerIfAbsent(nonce, timestamp)) {
+            throw new ReplayGuardException(ReplayGuardException.Reason.REPLAY, "replay detected");
+        }
         return plaintext;
     }
 

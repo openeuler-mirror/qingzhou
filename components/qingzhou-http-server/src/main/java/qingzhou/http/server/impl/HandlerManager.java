@@ -92,7 +92,7 @@ public class HandlerManager {
 
     // 注册专用：方法须属框架白名单，非法值在注册期即暴露，避免运行期静默放行
     private static List<String> parseMethods(String declared, String component) {
-        if (declared == null || declared.trim().isEmpty()) return Collections.emptyList();
+        if (declared == null) return Collections.emptyList(); // 未声明：允许全部白名单方法
         List<String> methods = new ArrayList<>();
         for (String name : declared.split(",")) {
             String method = name.trim().toUpperCase(Locale.ROOT);
@@ -102,6 +102,10 @@ public class HandlerManager {
                         + "] contains unsupported method: " + method);
             }
             methods.add(method);
+        }
+        // 显式声明却解析为空（如 "," 或全空白）属配置错误：fail-fast 而非静默放行
+        if (methods.isEmpty()) {
+            throw new IllegalArgumentException(HttpHandler.HANDLE_METHODS + " of [" + component + "] is empty: " + declared);
         }
         return methods;
     }

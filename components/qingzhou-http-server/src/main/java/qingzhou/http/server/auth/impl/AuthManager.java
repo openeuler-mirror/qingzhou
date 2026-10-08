@@ -103,9 +103,10 @@ public class AuthManager {
                 logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error"); // 单个认证器故障转为拒绝，不影响其余认证器继续判定
             }
-            if (r == null) continue; // 弃权：转交后续认证器
+            if (r == null || r.status() == null) continue; // 弃权或无效结果：转交后续认证器，不得让单个认证器阻断其余
             switch (r.status()) {
                 case PASS:
+                    if (r.getPrincipal() == null) break; // PASS 但无主体属模糊态：不采信，交由后续认证器判定
                     return r;
                 case REJECT:
                     if (reject == null) reject = r;

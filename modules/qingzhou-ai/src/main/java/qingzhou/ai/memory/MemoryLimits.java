@@ -23,21 +23,27 @@ final class MemoryLimits {
     final int historyMaxMessages;
 
     MemoryLimits(Map<String, String> config) {
-        maxBytes = number(config, "memory_max_bytes", 209715200L);
-        maxConversations = (int) number(config, "memory_max_conversations", 1000);
-        maxPerUser = (int) number(config, "memory_max_conversations_per_user", 50);
-        maxAnonymous = (int) number(config, "memory_max_conversations_anonymous", 20);
-        maxArchived = (int) number(config, "memory_max_archived", 2000);
-        messageMaxChars = (int) number(config, "message_max_chars", 8000);
-        summaryMaxChars = (int) number(config, "summary_max_chars", 2000);
-        softMessages = (int) number(config, "conversation_soft_messages", 80);
-        hardMessages = (int) number(config, "conversation_hard_messages", 150);
-        keepMessages = (int) number(config, "conversation_keep_messages", 80);
-        compactionInputMaxChars = (int) number(config, "compaction_input_max_chars", 24000);
-        historyTotalBudget = (int) number(config, "history_total_budget", 20000);
-        historyOutputReserve = (int) number(config, "history_output_reserve", 4000);
-        historyMinChars = (int) number(config, "history_min_chars", 2000);
-        historyMaxMessages = (int) number(config, "history_max_messages", 20);
+        // numberPositive 在解析时同步做正数与取值范围校验，激活期 fail-fast：
+        // 非法容量若放行到运行期，会表现为静默降级或死循环（如负 hard 值令 remove(0) 持续执行）
+        maxBytes = numberPositive(config, "memory_max_bytes", 209715200L);
+        maxConversations = numberPositive(config, "memory_max_conversations", 1000);
+        maxPerUser = numberPositive(config, "memory_max_conversations_per_user", 50);
+        maxAnonymous = numberPositive(config, "memory_max_conversations_anonymous", 20);
+        maxArchived = numberPositive(config, "memory_max_archived", 2000);
+        messageMaxChars = numberPositive(config, "message_max_chars", 8000);
+        summaryMaxChars = numberPositive(config, "summary_max_chars", 2000);
+        softMessages = numberPositive(config, "conversation_soft_messages", 80);
+        hardMessages = numberPositive(config, "conversation_hard_messages", 150);
+        keepMessages = numberPositive(config, "conversation_keep_messages", 80);
+        compactionInputMaxChars = numberPositive(config, "compaction_input_max_chars", 24000);
+        historyTotalBudget = numberPositive(config, "history_total_budget", 20000);
+        historyOutputReserve = numberPositive(config, "history_output_reserve", 4000);
+        historyMinChars = numberPositive(config, "history_min_chars", 2000);
+        historyMaxMessages = numberPositive(config, "history_max_messages", 20);
+        if (keepMessages > softMessages || softMessages > hardMessages) {
+            throw new IllegalArgumentException("conversation_keep_messages must be <= soft <= hard, got: "
+                    + keepMessages + "/" + softMessages + "/" + hardMessages);
+        }
     }
 
     /**
@@ -60,7 +66,26 @@ final class MemoryLimits {
         try {
             return Long.parseLong(value.trim());
         } catch (NumberFormatException e) {
-            return defaultValue;
+            throw new IllegalArgumentException("config '" + key + "' must be an number, got: " + value);
         }
+    }
+
+    // 解析并校验为正数：键名只出现一次，校验与解析不分离就不会漏配
+    private static long numberPositive(Map<String, String> config, String key, long defaultValue) {
+        long value = number(config, key, defaultValue);
+        if (value <= 0) {
+            throw new IllegalArgumentException("config '" + key + "' must be positive, got: " + value);
+        }
+        return value;
+    }
+
+    // int 字段的重载：同时防超范围值在强转时被静默截断
+    private static int numberPositive(Map<String, String> config, String key, int defaultValue) {
+        long value = number(config, key, defaultValue);
+        if (value <= 0 || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "config '" + key + "' must be a positive number, got: " + value);
+        }
+        return (int) value;
     }
 }

@@ -4,13 +4,16 @@ import java.nio.charset.StandardCharsets;
 
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
+import qingzhou.crypto.ReplayGuardException;
 import qingzhou.dto.Constants;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.Logger;
 
 class ProcessHandler {
-    static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, ProcessHandlerCallback callback) {
+    static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, Logger logger,
+                       ProcessHandlerCallback callback) {
         byte[] requestBody = httpRequest.getBody();
         if (requestBody == null || requestBody.length == 0) {
             httpResponse.status(400).finish();
@@ -32,7 +35,18 @@ class ProcessHandler {
             String uploadKey = httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY);
             byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
             requestData = crypto.getReplayGuardCipher(cipher).decrypt(requestBody, context);
+        } catch (ReplayGuardException e) {
+            // 报文由请求方控制：格式/时间窗回 400，重放回 409（冲突）便于发送方区分「已受理过」
+            if (e.getReason() == ReplayGuardException.Reason.REPLAY) {
+                logger.warn("agent request replayed");
+                httpResponse.status(409).finish();
+            } else {
+                logger.warn("invalid agent request: " + e.getMessage());
+                httpResponse.status(400).finish();
+            }
+            return;
         } catch (Exception e) {
+            logger.error("agent request processing error", e);
             httpResponse.status(500).finish();
             return;
         }
@@ -42,7 +56,7 @@ class ProcessHandler {
         try {
             responseData = callback.doProcess(requestData);
         } catch (Throwable e) {
-            e.printStackTrace(System.err);
+            logger.error("agent business processing error", e);
             httpResponse.status(500).finish();
             return;
         }
@@ -52,6 +66,7 @@ class ProcessHandler {
         try {
             encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
+            logger.error("agent response encryption error", e);
             httpResponse.status(500).finish();
             return;
         }

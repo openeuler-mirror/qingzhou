@@ -26,8 +26,9 @@ public interface ReplayGuardCipher {
     /**
      * 校验时间窗与去重并解密。
      * <p>
-     * 报文无效（格式、版本、时间窗）或重放时抛 {@link IllegalArgumentException}；
-     * 解密失败抛 {@link Exception}。nonce 仅在解密成功后登记，避免被无效请求预先烧掉。
+     * 报文无效（格式、版本、时间窗）或重放时抛 {@link ReplayGuardException}（可按
+     * {@link ReplayGuardException.Reason} 区分响应码）；解密失败抛 {@link Exception}。
+     * nonce 仅在解密成功后登记，避免被无效请求预先烧掉。
      *
      * @param context 须与 {@link #encrypt} 时一致
      * @return 明文

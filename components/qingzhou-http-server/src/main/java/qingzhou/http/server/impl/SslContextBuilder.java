@@ -70,8 +70,16 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
                 if (supported.contains(cipher)) enabled.add(cipher);
             }
             if (enabled.isEmpty()) {
-                logger.warn("no strong cipher suite is supported by this JDK, falling back to JDK defaults");
-                return supported;
+                // 回退时仍须排除弱套件：CBC/3DES/RC4/匿名/导出级一律剔除；剩余为空则交由握手失败，宁可启动不可用也不静默降级
+                logger.warn("no strong cipher suite is supported by this JDK, falling back to filtered JDK defaults");
+                List<String> filtered = new ArrayList<>();
+                for (String suite : supported) {
+                    String upper = suite.toUpperCase();
+                    if (upper.contains("CBC") || upper.contains("3DES") || upper.contains("RC4")
+                            || upper.contains("NULL") || upper.contains("EXPORT") || upper.contains("ANON")) continue;
+                    filtered.add(suite);
+                }
+                return filtered;
             }
             return enabled;
         } catch (NoSuchAlgorithmException e) {

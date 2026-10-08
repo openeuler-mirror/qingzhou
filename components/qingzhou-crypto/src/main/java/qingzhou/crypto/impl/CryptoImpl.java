@@ -126,7 +126,11 @@ public class CryptoImpl implements Crypto {
             }
         }
         if (secret == null || secret.isEmpty()) {
-            secret = generateKey(); // 未配置则随机生成，不适用于生产环境
+            // 未配置则随机生成，不适用于生产环境：须让运维可见，否则集群各节点互不相认、重启后令牌全部失效
+            System.err.println("WARNING: global secret key is not configured (conf/secret-key.properties). "
+                    + "A random key is generated for this run: tokens and encrypted configs will not survive restart, "
+                    + "and cluster nodes will not trust each other.");
+            secret = generateKey();
         }
         return secret;
     }

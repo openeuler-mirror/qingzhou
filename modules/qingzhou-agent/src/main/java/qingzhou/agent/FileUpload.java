@@ -17,6 +17,7 @@ import qingzhou.dto.Constants;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
@@ -24,6 +25,8 @@ import qingzhou.http.server.HttpResponse;
 public class FileUpload implements HttpHandler {
     @Reference
     private Crypto crypto;
+    @Reference
+    private Logger logger;
 
     private File uploadBase;
 
@@ -44,7 +47,7 @@ public class FileUpload implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        ProcessHandler.handle(httpRequest, httpResponse, crypto,
+        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger,
                 requestData -> processFileUpload(requestData, httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY)));
     }
 

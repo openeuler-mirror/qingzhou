@@ -23,13 +23,14 @@ final class RequestContext {
     final Semaphore concurrentSemaphore;
     final Semaphore streamSemaphore;
 
-    String path; // 规范化后的路径
-    HandlerManager.HandlerEntry entry;
-    HttpRequestImpl httpRequest;
-    HttpHandler.StreamHandler streamHandler;
-    boolean streamRequired;
-    boolean streamPermitHeld; // 流式分支已取得的并发许可
-    long reservedBytes; // 聚合分支已预留的内存配额
+    // 以下字段由 EventLoop 上的各闸门写入，release()/doFinally 可能在业务线程执行，须保证跨线程可见性
+    volatile String path; // 规范化后的路径
+    volatile HandlerManager.HandlerEntry entry;
+    volatile HttpRequestImpl httpRequest;
+    volatile HttpHandler.StreamHandler streamHandler;
+    volatile boolean streamRequired;
+    volatile boolean streamPermitHeld; // 流式分支已取得的并发许可
+    volatile long reservedBytes; // 聚合分支已预留的内存配额（long 需防 32 位字撕裂）
 
     RequestContext(HttpServerRequest request, HttpServerResponse response,
                    Semaphore concurrentSemaphore, Semaphore streamSemaphore) {

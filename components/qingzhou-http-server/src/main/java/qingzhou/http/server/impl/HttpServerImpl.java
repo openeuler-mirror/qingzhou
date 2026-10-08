@@ -34,12 +34,23 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
+        // 纯配置校验须先于任何资源创建：激活失败时 @Deactivate 不会被调用，晚校验会泄漏已创建的 EventLoop
         int selectorThreads = atLeast(config, "selector", 1, 1);
         int workerThreads = atLeast(config, "worker", 1, Runtime.getRuntime().availableProcessors() * 2);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
         int idleTimeout = atLeast(config, "idle_timeout", 0, 60);
         String host = getConfig(config, "host", "127.0.0.1");
         int port = port(config, "port");
+        int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
+        int maxConnections = atLeast(config, "max_connections", 0, 10_000);
+        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
+        boolean allowPlaintext = getConfig(config, "allow_plaintext", false);
+        boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
+        if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
+            // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
+            throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
+                    + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");
+        }
 
         // 创建可复用的 EventLoop 资源（生产必备：避免线程池重复创建，支持优雅关闭）
         loopResources = LoopResources.create(
@@ -67,12 +78,10 @@ public class HttpServerImpl implements HttpServer {
         }
 
         // 单连接保活请求数上限：防止慢连接长期占用同一连接的请求配额
-        int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
         httpServer = httpServer.maxKeepAliveRequests(maxKeepAliveRequests);
 
         // 连接总数上限（0 表示不限）：限制实际 TCP 连接数，防慢连接洪水占满连接槽。
         // 业内常见做法：在连接建立处计数，超限即关闭新连接；计数以连接关闭为唯一归还点，避免计数漂移。
-        int maxConnections = atLeast(config, "max_connections", 0, 10_000);
         if (maxConnections > 0) {
             AtomicInteger connections = new AtomicInteger();
             httpServer = httpServer.doOnConnection(connection -> {
@@ -84,15 +93,6 @@ public class HttpServerImpl implements HttpServer {
             });
         }
 
-        // 密钥库校验必须在绑定端口前完成，任一配置错误都应直接启动失败且不监听端口
-        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
-        boolean allowPlaintext = getConfig(config, "allow_plaintext", false);
-        boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
-        if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
-            // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
-            throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
-                    + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");
-        }
         try {
             if (sslEnabled) {
                 SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);

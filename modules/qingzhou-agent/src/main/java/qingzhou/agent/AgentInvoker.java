@@ -16,6 +16,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
@@ -29,10 +30,12 @@ public class AgentInvoker implements HttpHandler {
     private Crypto crypto;
     @Reference
     private FileUpload fileUpload;
+    @Reference
+    private Logger logger;
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        ProcessHandler.handle(httpRequest, httpResponse, crypto, this::processRequest);
+        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, this::processRequest);
     }
 
     private String processRequest(byte[] data) throws Throwable {
