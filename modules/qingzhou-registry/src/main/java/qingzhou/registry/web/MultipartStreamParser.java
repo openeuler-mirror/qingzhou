@@ -30,7 +30,6 @@ class MultipartStreamParser {
 
     private int partCount;
     private String currentFieldName;
-    private String currentFileName;
     private boolean isFileField;
 
     private final ByteArrayOutputStream fieldBuffer = new ByteArrayOutputStream();
@@ -197,7 +196,6 @@ class MultipartStreamParser {
             fieldBuffer.reset();
         }
         currentFieldName = null;
-        currentFileName = null;
         isFileField = false;
     }
 
@@ -241,7 +239,7 @@ class MultipartStreamParser {
             throw new IllegalStateException("too many multipart parts");
         }
         currentFieldName = extractValue(headers, "name=\"");
-        currentFileName = extractValue(headers, "filename=\"");
+        String currentFileName = extractValue(headers, "filename=\"");
         if (currentFileName != null && !currentFileName.isEmpty()) {
             // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束
             if (currentFileName.contains("..") || currentFileName.contains("/") || currentFileName.contains("\\")) {

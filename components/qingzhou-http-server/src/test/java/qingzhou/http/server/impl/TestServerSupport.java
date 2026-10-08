@@ -42,6 +42,20 @@ final class TestServerSupport {
         }
     }
 
+    // 注册带方法白名单的路由：运行时 API 未透出 methods，测试经 handlerManager 直注
+    static void registerWithMethods(TestServer testServer, HttpHandler handler, String path,
+                                    boolean noAuth, String methods) throws Exception {
+        Field field = HttpServerImpl.class.getDeclaredField("handlerManager");
+        field.setAccessible(true);
+        HandlerManager handlerManager = (HandlerManager) field.get(testServer.server);
+        Map<String, String> properties = new HashMap<>();
+        properties.put(HttpHandler.HANDLE_PATH, path);
+        properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");
+        if (noAuth) properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        if (methods != null) properties.put(HttpHandler.HANDLE_METHODS, methods);
+        handlerManager.addHttpHandler(handler, properties, null);
+    }
+
     // 缓冲全部上传字节并在完成后原样回写，供断言比对 multipart 内容
     static HttpHandler bufferingEchoHandler(AtomicReference<byte[]> received) {
         return new HttpHandler() {

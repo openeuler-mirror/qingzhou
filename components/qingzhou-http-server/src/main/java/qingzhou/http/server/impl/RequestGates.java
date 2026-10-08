@@ -11,9 +11,9 @@ import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
+import static qingzhou.http.server.impl.Errors.getCause;
 import static qingzhou.http.server.util.Configs.atLeast;
 import static qingzhou.http.server.util.Configs.splitList;
-import static qingzhou.http.server.util.Errors.getCause;
 
 /**
  * 请求准入闸门链：方法白名单、路径规范化、路由、认证、body 形态与配额。

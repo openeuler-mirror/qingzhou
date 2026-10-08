@@ -61,7 +61,6 @@ public class OAuth2Handler implements HttpHandler {
 
     private long tokenExpireMillis;
     private Cipher tokenCipher;
-    private Cipher clientSecretCipher;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -79,7 +78,6 @@ public class OAuth2Handler implements HttpHandler {
 
         tokenExpireMillis = atLeast(config, "token_expire_seconds", 1, 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
-        clientSecretCipher = crypto.getGlobalCipher();
     }
 
     @Override
@@ -152,7 +150,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("code", code);
         params.put("client_id", clientId);
         params.put("redirect_uri", callbackUrl); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
-        params.put("client_secret", clientSecretCipher.tryDecrypt(clientSecret, "qingzhou-auth.client_secret"));
+        params.put("client_secret", tokenCipher.tryDecrypt(clientSecret, "qingzhou-auth.client_secret"));
 
         Response tokenResponse = httpClient.send(
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));

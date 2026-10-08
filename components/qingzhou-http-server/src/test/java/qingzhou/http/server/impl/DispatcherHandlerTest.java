@@ -430,10 +430,10 @@ public class DispatcherHandlerTest {
     }
 
     @Test
-    public void handlerSendsWithoutFinish_request_completes() throws Exception {
+    public void handlerSendsAndFinishes_request_completes() throws Exception {
         TestServer testServer = TestServerSupport.startServer();
         try {
-            // 契约：响应必须由 handler 自己收尾；此处只 send 不 finish 属编程错误，请求会挂到空闲超时
+            // 契约：响应必须由 handler 自己收尾；send 后调用 finish 是正确的收尾方式
             testServer.server.registerHttpHandler((request, response) -> response.send("partial").finish(), "/noFinish", true);
 
             HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
@@ -869,6 +869,7 @@ public class DispatcherHandlerTest {
                         .method(HttpMethod.POST)
                         .files(files));
 
+                // onComplete 已处于收尾阶段，错误只记录不再改写状态码；关键断言是响应必须结束、许可必须归还
                 Assert.assertTrue(result.getStatus() >= 200, "response must complete, got " + result.getStatus());
             } finally {
                 testServer.server.stop();
@@ -878,4 +879,57 @@ public class DispatcherHandlerTest {
         }
     }
 
+    @Test
+    public void postOnlyRoute_getRequest_405WithRouteAllowHeader() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            TestServerSupport.registerWithMethods(testServer,
+                    (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
+
+            String response = rawResponse(testServer.port,
+                    "GET /postOnly HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+
+            Assert.assertTrue(response.startsWith("HTTP/1.1 405"), response);
+            Assert.assertTrue(response.toLowerCase().contains("allow: post"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void postOnlyRoute_preflight_responds204WithRouteMethods() throws Exception {
+        TestServer testServer = TestServerSupport.startServer();
+        try {
+            TestServerSupport.registerWithMethods(testServer,
+                    (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
+
+            // 预检须先于路由方法白名单判定，否则 POST-only 路由收不到预检（回归：闸门顺序）
+            String response = rawResponse(testServer.port, "OPTIONS /postOnly HTTP/1.1\r\n"
+                    + "Host: localhost\r\n"
+                    + "Origin: http://other.example\r\n"
+                    + "Access-Control-Request-Method: POST\r\n"
+                    + "Connection: close\r\n\r\n");
+
+            Assert.assertTrue(response.startsWith("HTTP/1.1 204"), response);
+            Assert.assertTrue(response.toLowerCase().contains("access-control-allow-methods: post"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
+
+    @Test
+    public void bodyExceedingMaxBodyBytes_413() throws Exception {
+        TestServer testServer = TestServerSupport.startServer(Collections.singletonMap("max_body_bytes", "64"));
+        try {
+            testServer.server.registerHttpHandler((req, resp) -> resp.send("ok").finish(), "/echo", true);
+
+            StringBuilder raw = new StringBuilder("POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Length: 2048\r\nConnection: close\r\n\r\n");
+            for (int i = 0; i < 2048; i++) raw.append('a');
+
+            String response = rawResponse(testServer.port, raw.toString());
+            Assert.assertTrue(response.startsWith("HTTP/1.1 413"), response);
+        } finally {
+            testServer.server.stop();
+        }
+    }
 }

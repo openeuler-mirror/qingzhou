@@ -15,8 +15,9 @@ import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
 import reactor.util.concurrent.Queues;
 
-import static qingzhou.http.server.util.Errors.getCause;
-import static qingzhou.http.server.util.Errors.safeRun;
+import static qingzhou.http.server.impl.Errors.getCause;
+import static qingzhou.http.server.impl.Errors.safeRun;
+
 
 /**
  * 请求体处理：按闸门判定结果分流的聚合（进内存）与流式（handler 直收）两条链。
@@ -83,8 +84,9 @@ final class BodyProcessors {
                             // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
                             httpResponse.finish();
                         },
-                        () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还
-                            bodyFullyRead.set(true);
+                        () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还。
+                            // 此处只记录并收尾，不改状态码：onComplete 阶段响应头可能已随流写出，
+                            // 此时置状态会触发 "Status and headers already sent"，应流式 handler 自行在 onError/收尾前定状态
                             Throwable cause = safeRun(streamHandler::onComplete);
                             if (cause != null) logger.error("http stream handler error", cause);
                             httpResponse.finish();

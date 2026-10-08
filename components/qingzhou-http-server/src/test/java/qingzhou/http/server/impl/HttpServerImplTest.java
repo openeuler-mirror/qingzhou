@@ -35,11 +35,13 @@ public class HttpServerImplTest {
     @Test
     public void normal_start_listenHttpService() throws Exception {
         HttpServerImpl httpServer = build();
-        HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
-        Assert.assertEquals(result.getStatus(), 404);
-
-        httpServer.stop(); // 清理资源
+        try {
+            HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
+            Assert.assertEquals(result.getStatus(), 404);
+        } finally {
+            httpServer.stop(); // 断言失败也不能泄漏 Netty 线程与监听端口
+        }
     }
 
     @Test
@@ -59,31 +61,34 @@ public class HttpServerImplTest {
     @Test
     public void normalPath_registerHttpHandler_usePathHttpService() throws Exception {
         HttpServerImpl httpServer = build();
-        String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
-        httpServer.registerHttpHandler(httpHandler, path, true);
+        try {
+            String path = "/testHttp";
+            HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
+            httpServer.registerHttpHandler(httpHandler, path, true);
 
-        HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
-        Assert.assertEquals(result.getStatus(), 200);
-        Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
-
-        httpServer.stop(); // 清理资源
+            HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+            Assert.assertEquals(result.getStatus(), 200);
+            Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
+        } finally {
+            httpServer.stop(); // 断言失败也不能泄漏 Netty 线程与监听端口
+        }
     }
 
     @Test
     public void normalPath_unregisterHttpHandler_noPathHttpService() throws Exception {
         HttpServerImpl httpServer = build();
-
-        String path = "/testHttp";
-        HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
-        httpServer.registerHttpHandler(httpHandler, path, true);
-        httpServer.unregisterHttpHandler(httpHandler);
-        HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-        Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
-        Assert.assertEquals(result.getStatus(), 404);
-
-        httpServer.stop(); // 清理资源
+        try {
+            String path = "/testHttp";
+            HttpHandler httpHandler = (httpRequest, httpResponse) -> httpResponse.send("Hello: " + httpRequest.getPath()).finish();
+            httpServer.registerHttpHandler(httpHandler, path, true);
+            httpServer.unregisterHttpHandler(httpHandler);
+            HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+            Assert.assertEquals(result.getStatus(), 404);
+        } finally {
+            httpServer.stop(); // 断言失败也不能泄漏 Netty 线程与监听端口
+        }
     }
 
     @Test

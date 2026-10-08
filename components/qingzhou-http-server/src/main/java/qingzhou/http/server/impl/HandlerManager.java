@@ -7,7 +7,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
 
 /**

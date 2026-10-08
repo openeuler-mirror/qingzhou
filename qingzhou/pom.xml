@@ -21,7 +21,6 @@
             <id>develop</id>
             <properties>
                 <DevMode>true</DevMode>
-                <ChangePwd>false</ChangePwd>
             </properties>
         </profile>
 
@@ -29,7 +28,6 @@
             <id>release</id>
             <properties>
                 <DevMode>false</DevMode>
-                <ChangePwd>true</ChangePwd>
             </properties>
         </profile>
     </profiles>
