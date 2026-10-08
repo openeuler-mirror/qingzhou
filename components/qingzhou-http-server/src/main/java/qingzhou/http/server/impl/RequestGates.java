@@ -57,8 +57,8 @@ final class RequestGates {
                 this::denyDisallowedMethod, // 405
                 this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越
                 this::denyUnroutedPath,     // 404
+                this::denyPreflight,        // 204：预检免认证但须已路由；须排在方法白名单之前，否则 POST-only 路由收不到预检
                 this::denyMethodNotAllowedByHandler, // 405：路由声明的方法白名单，认证前即拒绝
-                this::denyPreflight,        // 204：预检免认证但须已路由，故排在认证之前
                 this::denyUnauthenticated,  // 401
                 this::denyUnsupportedBody,  // 415
                 this::denyOversizedBody,    // 400 / 413
@@ -117,10 +117,18 @@ final class RequestGates {
         if (Arrays.stream(ALLOWED_METHODS).noneMatch(method -> method.name().equals(requestedMethod))) {
             return ctx.respond(HttpResponseStatus.METHOD_NOT_ALLOWED);
         }
+        // 路由声明了方法白名单时，预检的目标方法也必须在其内，否则「预检 204、真实请求 405」
+        List<String> routeMethods = ctx.entry.methods;
+        if (!routeMethods.isEmpty() && !routeMethods.contains(requestedMethod)) {
+            ctx.response.header(HttpHeaderNames.ALLOW, String.join(", ", routeMethods));
+            return ctx.respond(HttpResponseStatus.METHOD_NOT_ALLOWED);
+        }
 
+        // 路由声明了方法白名单时，回显它而不是全站白名单：否则浏览器认为 POST 之外的后续请求也可用
+        String allowedMethods = routeMethods.isEmpty() ? ALLOW_HEADER : String.join(", ", routeMethods);
         String requestedHeaders = sanitizeRequestedHeaders(headers.get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS));
-        ctx.response.header(HttpHeaderNames.ALLOW, ALLOW_HEADER)
-                .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, ALLOW_HEADER)
+        ctx.response.header(HttpHeaderNames.ALLOW, allowedMethods)
+                .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, allowedMethods)
                 // 仅回显服务端允许的请求头，避免任意自定义头被跨域放行
                 .header(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, requestedHeaders)
                 .header(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "86400");

@@ -78,8 +78,10 @@ final class BodyProcessors {
                             if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
                                 HttpResponseStatus status = statusOf(cause);
-                                httpResponse.status(status.code()).finish();
+                                httpResponse.status(status.code());
                             }
+                            // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
+                            httpResponse.finish();
                         },
                         () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还
                             bodyFullyRead.set(true);

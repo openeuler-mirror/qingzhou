@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import qingzhou.crypto.Cipher;
@@ -142,11 +143,13 @@ class AppStubRemoteImpl implements AppStubRemote {
         try (InputStream in = Files.newInputStream(file.toPath())) {
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
+                // 只加密本次实际读到的字节：直接传 buffer 会把上一片的残留字节一起发送，导致远端文件损坏。
                 // 分片以上传键作为绑定上下文：分片无法被重放到其他上传或拼接
-                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(buffer,
+                byte[] chunk = Arrays.copyOf(buffer, bytesRead);
+                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(chunk,
                         fileTempKey.getBytes(StandardCharsets.UTF_8));
 
-                // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
+                // 参考：qingzhou.agent.FileUpload 中的 Constants.AGENT_UPLOAD_URI
                 String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_FILE_KEY + "=" + fileTempKey;
 
                 Response uploadResult = httpClient.send(

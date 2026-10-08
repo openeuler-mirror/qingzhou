@@ -76,11 +76,11 @@ public class HttpServerImpl implements HttpServer {
         if (maxConnections > 0) {
             AtomicInteger connections = new AtomicInteger();
             httpServer = httpServer.doOnConnection(connection -> {
+                // 先注册归还回调：被拒连接同样要走这条路，否则计数只增不减，最终永久拒绝所有连接
+                connection.channel().closeFuture().addListener(future -> connections.decrementAndGet());
                 if (connections.incrementAndGet() > maxConnections) {
                     connection.channel().close(); // 超限：立即关闭，不占用 EventLoop 与请求配额
-                    return;
                 }
-                connection.channel().closeFuture().addListener(future -> connections.decrementAndGet());
             });
         }
 

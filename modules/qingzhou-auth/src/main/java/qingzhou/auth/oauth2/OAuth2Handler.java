@@ -93,8 +93,9 @@ public class OAuth2Handler implements HttpHandler {
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
         if (path.equals(AUTHORIZE_PATH)) {
             String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
+            // state Cookie 必须 Lax：回调是 IdP 发起的跨站顶级 GET 导航，Strict 不会被携带，登录必然失败
             response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
-                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Strict"
+                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Lax"
                             + secureSuffix(request))
                     .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
