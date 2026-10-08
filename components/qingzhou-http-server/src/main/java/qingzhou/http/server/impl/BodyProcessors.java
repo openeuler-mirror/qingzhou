@@ -85,6 +85,7 @@ final class BodyProcessors {
                             httpResponse.finish();
                         },
                         () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还。
+                            bodyFullyRead.set(true); // 请求体已读完：doFinally 据此决定是否需要断开残留连接
                             // 此处只记录并收尾，不改状态码：onComplete 阶段响应头可能已随流写出，
                             // 此时置状态会触发 "Status and headers already sent"，应流式 handler 自行在 onError/收尾前定状态
                             Throwable cause = safeRun(streamHandler::onComplete);

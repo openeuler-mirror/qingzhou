@@ -56,6 +56,7 @@
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,
                             qingzhou.http.server,
+                            qingzhou.http.server.util,
                             qingzhou.logger,
                             qingzhou.json,
                             qingzhou.llm,qingzhou.llm.openai,

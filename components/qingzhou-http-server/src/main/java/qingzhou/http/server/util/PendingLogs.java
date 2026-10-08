@@ -1,4 +1,4 @@
-package qingzhou.http.server.impl;
+package qingzhou.http.server.util;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -15,6 +15,7 @@ import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
+import qingzhou.http.server.util.PendingLogs;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -35,8 +36,7 @@ public class RegistryImpl implements Registry {
     @Reference
     private Crypto crypto;
 
-    // 在 ReferencePolicy.DYNAMIC 内，Logger 可能尚未注入，故先暂存消息，在 @Activate 中一起输出
-    private final List<String> tempMsg = new ArrayList<>();
+    private final PendingLogs pendingLogs = new PendingLogs();
 
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
@@ -53,10 +53,7 @@ public class RegistryImpl implements Registry {
     public void start(Map<String, String> config) {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
-        synchronized (tempMsg) {
-            tempMsg.forEach(s -> logger.info(s));
-            tempMsg.clear();
-        }
+        pendingLogs.replay(logger);
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -70,14 +67,7 @@ public class RegistryImpl implements Registry {
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);
 
-        synchronized (tempMsg) {
-            String msg = String.format("app registered: %s", appCode);
-            if (logger != null) {
-                logger.info(msg);
-            } else {
-                tempMsg.add(msg);
-            }
-        }
+        pendingLogs.log(logger, String.format("app registered: %s", appCode));
     }
 
     /**
