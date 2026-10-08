@@ -1,5 +1,8 @@
 package qingzhou.http.server.util;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -43,6 +46,18 @@ public final class Configs {
             throw new IllegalArgumentException(invalid(key, "out of range", val));
         }
         return port;
+    }
+
+    // 逗号分隔列表：去空白、丢空项；未配置或全空时返回空列表
+    public static List<String> splitList(Map<String, String> config, String key) {
+        String val = config.get(key);
+        if (val == null || val.trim().isEmpty()) return Collections.emptyList();
+        List<String> items = new ArrayList<>();
+        for (String item : val.split(",")) {
+            String trimmed = item.trim();
+            if (!trimmed.isEmpty()) items.add(trimmed);
+        }
+        return items;
     }
 
     public static String notBlank(Map<String, String> config, String key) {

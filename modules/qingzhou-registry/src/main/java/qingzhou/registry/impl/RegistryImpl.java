@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -39,12 +40,13 @@ public class RegistryImpl implements Registry {
 
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
-    private long registryDataVersion = System.currentTimeMillis();
+    // 单调递增的数据版本：用计数器而非毫秒墙钟，避免同一毫秒内的多次变更互相覆盖
+    private final AtomicLong registryDataVersion = new AtomicLong(System.currentTimeMillis());
 
     private final Map<String, AppStubLocal> localApps = java.util.Collections
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
-    private final Map<String, InstanceInfo> remoteApps = java.util.Collections
+    private final Map<String, InstanceInfo> remoteInstances = java.util.Collections
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
     @Activate
@@ -60,7 +62,7 @@ public class RegistryImpl implements Registry {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindApp(AppStubLocal appStub) {
         bindApp0(appStub);
-        registryDataVersion = System.currentTimeMillis();
+        registryDataVersion.incrementAndGet();
     }
 
     private void bindApp0(AppStubLocal appStub) {
@@ -90,7 +92,7 @@ public class RegistryImpl implements Registry {
      */
     public void unbindApp(AppStubLocal appStub) {
         unbindApp0(appStub);
-        registryDataVersion = System.currentTimeMillis();
+        registryDataVersion.incrementAndGet();
     }
 
     private void unbindApp0(AppStubLocal appStub) {
@@ -103,7 +105,7 @@ public class RegistryImpl implements Registry {
 
     @Override
     public long getRegistryDataVersion() {
-        return registryDataVersion;
+        return registryDataVersion.get();
     }
 
     @Override
@@ -155,24 +157,24 @@ public class RegistryImpl implements Registry {
 
     @Override
     public List<String> getAllRemoteInstances() {
-        return new ArrayList<>(remoteApps.keySet());
+        return new ArrayList<>(remoteInstances.keySet());
     }
 
     @Override
     public InstanceInfo getRemoteInstance(String instanceId) {
-        return remoteApps.get(instanceId);
+        return remoteInstances.get(instanceId);
     }
 
     @Override
     public List<String> getAllRemoteApps(String instanceId) {
-        InstanceInfo instanceInfo = remoteApps.get(instanceId);
+        InstanceInfo instanceInfo = remoteInstances.get(instanceId);
         if (instanceInfo == null) return null;
         return instanceInfo.getAppMetas().stream().map(appMeta -> appMeta.getApp().code).collect(Collectors.toList());
     }
 
     @Override
     public AppStubRemote getRemoteApp(String instanceId, String appCode) {
-        InstanceInfo instanceInfo = remoteApps.get(instanceId);
+        InstanceInfo instanceInfo = remoteInstances.get(instanceId);
         if (instanceInfo == null) return null;
         for (AppMeta appMeta : instanceInfo.getAppMetas()) {
             if (appMeta.getApp().code.equals(appCode)) {
@@ -183,17 +185,16 @@ public class RegistryImpl implements Registry {
     }
 
     public InstanceInfo addRemoteApps(InstanceInfo instanceInfo) {
-        InstanceInfo exists = remoteApps.put(instanceInfo.getId(), instanceInfo);
-        if (exists == null) {
-            long currentTimeMillis = System.currentTimeMillis();
-            instanceInfo.setLastRefreshTime(currentTimeMillis); // 更新刷新时间
-            registryDataVersion = currentTimeMillis;
-        }
-        return exists;
+        // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
+        // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
+        // 重复注册同样要填：新对象的 lastRefreshTime 为 0，不填则重注册恢复路径必然被健康检查删除。
+        instanceInfo.setLastRefreshTime(System.currentTimeMillis());
+        registryDataVersion.incrementAndGet();
+        return remoteInstances.put(instanceInfo.getId(), instanceInfo);
     }
 
     public void removeRemoteApps(String instanceId) {
-        remoteApps.remove(instanceId);
-        registryDataVersion = System.currentTimeMillis();
+        remoteInstances.remove(instanceId);
+        registryDataVersion.incrementAndGet();
     }
 }

@@ -257,6 +257,10 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
             recordDir.mkdirs();
         }
 
+        // 只允许搬移上传目录内的临时文件：否则 attachment 可指向任意本地路径并被搬走/外带
+        File uploadBase = new File(getAppContext().getTempDir(), "qingzhou-upload");
+        String uploadBasePath = uploadBase.getCanonicalPath();
+
         // attachment 可能是逗号分隔的混合值：已有文件名 + 临时文件路径
         String[] parts = attachmentValue.split(",");
         List<String> fileNames = new ArrayList<>();
@@ -267,6 +271,9 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
 
             File srcFile = new File(part);
             if (srcFile.exists() && srcFile.isFile()) {
+                if (!srcFile.getCanonicalPath().startsWith(uploadBasePath + File.separator)) {
+                    throw new IllegalArgumentException("invalid attachment path");
+                }
                 // 临时文件路径：移动到记录目录
                 String fileName = srcFile.getName();
                 File destFile = new File(recordDir, fileName);

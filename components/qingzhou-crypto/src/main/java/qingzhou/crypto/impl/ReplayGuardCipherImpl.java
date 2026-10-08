@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -108,25 +107,18 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
      */
     private boolean registerIfAbsent(byte[] nonce, long timestamp) {
         String key = Base64.getEncoder().encodeToString(nonce);
-        amortizedPrune(timestamp);
+        pruneExpired(timestamp);
+        // 只回收已过期的键：丢弃窗口内的 nonce 等于自己开一个重放窗口。
+        // 过期回收后仍超容量，说明窗口内吞吐超出设计，此时拒绝而不是丢弃（容量可按部署调大）。
+        if (SEEN_NONCES.size() > MAX_TRACKED_NONCES) return false;
         return SEEN_NONCES.putIfAbsent(key, timestamp) == null;
     }
 
-    // 淘汰是纯内存回收（非安全边界，安全边界是时间窗）：先按 TTL 精确回收已过期的键，
-    // 窗口内洪水仍超额时再按登记序丢弃一批；lastPruneAt 摊销，避免洪水下每个请求都全表扫描
-    private void amortizedPrune(long now) {
+    // lastPruneAt 摊销：避免洪水下每个请求都全表扫描
+    private void pruneExpired(long now) {
         if (SEEN_NONCES.size() <= MAX_TRACKED_NONCES || now - lastPruneAt < PRUNE_INTERVAL_MILLIS) return;
         lastPruneAt = now;
-
         long expireBefore = now - MAX_CLOCK_SKEW_MILLIS * 2;
         SEEN_NONCES.values().removeIf(ts -> ts < expireBefore);
-
-        int excess = SEEN_NONCES.size() - MAX_TRACKED_NONCES;
-        if (excess <= 0) return;
-        Iterator<Long> it = SEEN_NONCES.values().iterator();
-        while (it.hasNext() && excess-- > 0) {
-            it.next();
-            it.remove();
-        }
     }
 }

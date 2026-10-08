@@ -1,6 +1,5 @@
 package qingzhou.http.server.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +9,7 @@ import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
 import static qingzhou.http.server.util.Configs.getConfig;
+import static qingzhou.http.server.util.Configs.splitList;
 
 /**
  * 响应安全头与跨域头。
@@ -19,7 +19,7 @@ final class ResponseHeaders {
     private final String permissionsPolicy;
     private final String coop;
     private final String corp;
-    private final String[] corsAllowedOrigins; // 允许的跨域来源；空表示不开放跨域
+    private final List<String> corsAllowedOrigins; // 允许的跨域来源；空表示不开放跨域
     private final boolean hstsPreload;
 
     ResponseHeaders(Map<String, String> config) {
@@ -27,7 +27,7 @@ final class ResponseHeaders {
         this.permissionsPolicy = getConfig(config, "permissions_policy", "geolocation=(), microphone=(), camera=()");
         this.coop = getConfig(config, "coop", "");
         this.corp = getConfig(config, "corp", "");
-        this.corsAllowedOrigins = splitOrigins(getConfig(config, "cors_allowed_origins", ""));
+        this.corsAllowedOrigins = splitList(config, "cors_allowed_origins");
         this.hstsPreload = getConfig(config, "hsts_preload", false);
     }
 
@@ -56,7 +56,7 @@ final class ResponseHeaders {
      * cors_allowed_origins 形同虚设。白名单为空表示不开放跨域。
      */
     private void applyCors(HttpServerRequest request, HttpServerResponse response) {
-        if (corsAllowedOrigins.length == 0) return;
+        if (corsAllowedOrigins.isEmpty()) return;
         String origin = request.requestHeaders().get(HttpHeaderNames.ORIGIN);
         if (origin == null) return;
 
@@ -76,15 +76,5 @@ final class ResponseHeaders {
             if ("*".equals(allowed) || allowed.equals(origin)) return allowed;
         }
         return null;
-    }
-
-    private String[] splitOrigins(String value) {
-        if (value.isEmpty()) return new String[0];
-        List<String> origins = new ArrayList<>();
-        for (String origin : value.split(",")) {
-            String trimmed = origin.trim();
-            if (!trimmed.isEmpty()) origins.add(trimmed);
-        }
-        return origins.toArray(new String[0]);
     }
 }

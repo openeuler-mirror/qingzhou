@@ -12,6 +12,7 @@ import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
 import static qingzhou.http.server.util.Configs.atLeast;
+import static qingzhou.http.server.util.Configs.splitList;
 import static qingzhou.http.server.util.Errors.getCause;
 
 /**
@@ -37,6 +38,7 @@ final class RequestGates {
     private final long maxStreamBytes; // 流式上传总量上限
     private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
+    private final Set<String> corsAllowedOrigins; // 显式允许的跨域来源，跨站写请求据此放行
     private final List<RequestGate> gates;
 
     RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, AuthManager authManager, HandlerManager handlerManager,
@@ -48,6 +50,7 @@ final class RequestGates {
         this.maxStreamBytes = maxStreamBytes;
         this.maxBodyBytes = maxBodyBytes;
         this.maxAggregatedBytes = atLeast(config, "max_aggregated_bytes", 1L, 64L * 1024 * 1024);
+        this.corsAllowedOrigins = new HashSet<>(splitList(config, "cors_allowed_origins"));
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");
@@ -60,6 +63,7 @@ final class RequestGates {
                 this::denyPreflight,        // 204：预检免认证但须已路由；须排在方法白名单之前，否则 POST-only 路由收不到预检
                 this::denyMethodNotAllowedByHandler, // 405：路由声明的方法白名单，认证前即拒绝
                 this::denyUnauthenticated,  // 401
+                this::denyCrossSiteWrite,   // 403：Cookie 凭据会随跨站请求自动附加，SameSite 挡不住同站跨源
                 this::denyUnsupportedBody,  // 415
                 this::denyOversizedBody,    // 400 / 413
                 this::denyExhaustedStreams, // 503：流式上传的并发数上限
@@ -97,6 +101,21 @@ final class RequestGates {
             if (allowed.name().equals(method)) return true;
         }
         return false;
+    }
+
+    // 403：状态变更请求的来源必须与本站同源；否则同站跨源表单可借自动附加的 Cookie 执行写操作。
+    // 无 Origin 的为非浏览器/服务端调用，不受 CSRF 面影响；跨域 API 须显式列入 cors_allowed_origins
+    private Publisher<Void> denyCrossSiteWrite(RequestContext ctx) {
+        HttpMethod method = ctx.request.method();
+        if (method == HttpMethod.GET || method == HttpMethod.HEAD || method == HttpMethod.OPTIONS) return null;
+
+        String origin = ctx.request.requestHeaders().get(HttpHeaderNames.ORIGIN);
+        if (origin == null || "null".equals(origin)) return null;
+        String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
+        if (host != null && !host.isEmpty() && origin.endsWith("//" + host)) return null;
+        // 与 ResponseHeaders 同一白名单语义："*" 表示放开全部来源
+        if (corsAllowedOrigins.contains("*") || corsAllowedOrigins.contains(origin)) return null;
+        return ctx.respond(HttpResponseStatus.FORBIDDEN);
     }
 
     // 405：路由以 HANDLE_METHODS 声明了允许的方法，不在其中的请求在认证前即拒绝，handler 无需各自判断
