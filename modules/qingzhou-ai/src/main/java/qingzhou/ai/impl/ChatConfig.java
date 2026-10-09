@@ -52,6 +52,6 @@ public class ChatConfig implements HttpHandler {
 
         String jsonData = json.toJson(data);
         httpResponse.contentTypeJsonUtf8()
-                .sendFinish(jsonData);
+                .send(jsonData).finish();
     }
 }

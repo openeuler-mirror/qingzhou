@@ -43,7 +43,7 @@ public class NacosApi {
                 // 直接调用认证 API，不使用通用方法（避免递归）
                 String url = buildAuthUrl();
                 Map<String, String> stringParams = convertToStringParams(params);
-                Response result = httpClient.send(httpClient.newRequest(url).method(HttpMethod.POST).params(stringParams));
+                Response result = httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).params(stringParams));
                 
                 if (result.getStatus() == 200) {
                     Map<String, Object> response = parseObject(result);
@@ -275,7 +275,7 @@ public class NacosApi {
      */
     private Response httpGet(String path, Map<String, String> queryParams) throws Exception {
         String url = buildUrl(path, queryParams);
-        return httpClient.send(httpClient.newRequest(url).method(HttpMethod.GET));
+        return httpClient.send(httpClient.buildRequest(url).method(HttpMethod.GET));
     }
     
     /**
@@ -284,7 +284,7 @@ public class NacosApi {
     private Response httpPost(String path, Map<String, Object> params) throws Exception {
         String url = buildUrl(path, null);
         Map<String, String> stringParams = convertToStringParams(params);
-        return httpClient.send(httpClient.newRequest(url).method(HttpMethod.POST).params(stringParams));
+        return httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).params(stringParams));
     }
     
     /**
@@ -293,7 +293,7 @@ public class NacosApi {
     private Response httpPut(String path, Map<String, Object> params) throws Exception {
         String url = buildUrl(path, null);
         Map<String, String> stringParams = convertToStringParams(params);
-        return httpClient.send(httpClient.newRequest(url).method(HttpMethod.PUT).params(stringParams));
+        return httpClient.send(httpClient.buildRequest(url).method(HttpMethod.PUT).params(stringParams));
     }
     
     /**
@@ -301,7 +301,7 @@ public class NacosApi {
      */
     private Response httpDelete(String path, Map<String, String> queryParams) throws Exception {
         String url = buildUrl(path, queryParams);
-        return httpClient.send(httpClient.newRequest(url).method(HttpMethod.DELETE));
+        return httpClient.send(httpClient.buildRequest(url).method(HttpMethod.DELETE));
     }
     
     // ==================== 辅助方法 ====================

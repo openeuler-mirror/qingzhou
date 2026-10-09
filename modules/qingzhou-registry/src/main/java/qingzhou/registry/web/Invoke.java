@@ -25,7 +25,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/invoke",
+@Component(property = {HttpHandler.HANDLE_PATH + "=/invoke", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Invoke implements HttpHandler {
     private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
@@ -67,14 +67,14 @@ public class Invoke implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
         AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
 
         if (app == null) {
-            httpResponse.status400Finish();
+            httpResponse.status(400).finish();
             return;
         }
 
@@ -84,8 +84,8 @@ public class Invoke implements HttpHandler {
             parseBodyParameters(httpRequest, request);
             app.invokeApp(request);
         } catch (Throwable e) {
-            httpResponse.status500Finish(e.getMessage());
-            logger.error(e.getMessage(), e);
+            logger.error("http invoke failed", e);
+            httpResponse.status(500).finish();
             return;
         }
 
@@ -97,7 +97,10 @@ public class Invoke implements HttpHandler {
         if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
             return false;
         } else {
-            httpResponse.status(403).sendFinish("Forbidden");
+            logger.warn("forbidden: app=" + request.getApp() + ", model=" + request.getModel()
+                    + ", action=" + request.getAction() + ", user=" + httpRequest.getPrincipal()
+                    + ", host=" + httpRequest.getRemoteHost());
+            httpResponse.status(403).send("Forbidden").finish();
             return true;
         }
     }
@@ -183,10 +186,10 @@ public class Invoke implements HttpHandler {
                 httpResponse.contentTypeJsonUtf8();
             }
             String json = this.json.toJson(result);
-            httpResponse.sendFinish(json);
+            httpResponse.send(json).finish();
         } catch (Exception e) {
-            httpResponse.status500Finish(e.getMessage());
-            logger.error(e.getMessage(), e);
+            logger.error("failed to serialize invoke response", e);
+            httpResponse.status(500).finish();
         }
     }
 
@@ -210,12 +213,18 @@ public class Invoke implements HttpHandler {
             this.httpResponse = httpResponse;
 
             request = buildRequest(httpRequest);
-            if (request == null) return;
+            if (request == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
             app = registry.getAppStub(request.getInstance(), request.getApp());
-            if (app == null) return;
+            if (app == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
-            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return;
+            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return; // 已写入 403
 
             String boundary = null;
             String contentType = httpRequest.getContentType();
@@ -227,7 +236,10 @@ public class Invoke implements HttpHandler {
                     }
                 }
             }
-            if (boundary == null) return;
+            if (boundary == null) {
+                httpResponse.status(400).finish();
+                return;
+            }
 
             this.parser = new MultipartStreamParser(
                     boundary, uploadBase,
@@ -245,7 +257,7 @@ public class Invoke implements HttpHandler {
         @Override
         public void onComplete() {
             if (parser == null) {
-                httpResponse.status400Finish();
+                httpResponse.status(400).finish();
                 return;
             }
 
@@ -254,8 +266,8 @@ public class Invoke implements HttpHandler {
                 applyParserResults(parser, request);
                 app.invokeApp(request);
             } catch (Throwable e) {
-                httpResponse.status500Finish(e.getMessage());
-                logger.error(e.getMessage(), e);
+                logger.error("multipart invoke failed", e);
+                httpResponse.status(500).finish();
                 return;
             } finally {
                 parser.abort();

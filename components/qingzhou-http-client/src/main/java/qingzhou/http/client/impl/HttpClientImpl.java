@@ -98,7 +98,7 @@ public class HttpClientImpl implements HttpClient {
     }
 
     @Override
-    public Request newRequest(String url) {
+    public Request buildRequest(String url) {
         return new RequestImpl(url);
     }
 

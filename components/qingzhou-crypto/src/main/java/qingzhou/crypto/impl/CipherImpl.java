@@ -14,8 +14,6 @@ class CipherImpl implements Cipher {
     private static final String ALG = "AES";
     private static final String ALG_MODE = ALG + "/GCM/NoPadding";
 
-    // 固定参数：AES-128密钥长度(16字节)、IV长度(12字节)、GCM标签长度(128位)
-    private static final int IV_SIZE = 12;
     private static final int TAG_SIZE = 16;
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -42,18 +40,16 @@ class CipherImpl implements Cipher {
     public String tryDecrypt(String s, String configName) {
         if (s == null) return null;
         if (s.startsWith(Cipher.PLAIN_PREFIX_MARKER)) {
-            System.err.println("WARNING: >>> ");
-            System.err.println("WARNING: >>> Plain Text: " + configName + ", use bin/gen-cipher-password.sh to encrypt it");
-            System.err.println("WARNING: >>> ");
-            return s.substring(Cipher.PLAIN_PREFIX_MARKER.length()); // 显式声明的明文配置
+            return s.substring(Cipher.PLAIN_PREFIX_MARKER.length());
         }
 
         try {
             return decrypt(s);
         } catch (Exception e) {
-            // 解密失败须立即失败而非回退为明文，防止篡改的配置被当作字面口令静默生效
-            throw new IllegalStateException("failed to decrypt '" + configName
-                    + "', encrypt it with bin/gen-cipher-password.sh, or prefix the plaintext value with '" + PLAIN_PREFIX_MARKER + "'", e);
+            // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级
+            System.err.println("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "
+                    + "Use bin/gen-cipher-password.sh to encrypt it.");
+            return s;
         }
     }
 
@@ -71,12 +67,16 @@ class CipherImpl implements Cipher {
      */
     @Override
     public byte[] encrypt(byte[] s) throws Exception {
-        if (s == null) return null;
-        return encrypt(s, 0, s.length);
+        return encrypt(s, null);
     }
 
     @Override
-    public byte[] encrypt(byte[] s, int off, int len) throws Exception {
+    public byte[] decrypt(byte[] s) throws Exception {
+        return decrypt(s, null);
+    }
+
+    @Override
+    public byte[] encrypt(byte[] s, byte[] aad) throws Exception {
         if (s == null) return null;
 
         // 生成随机IV
@@ -86,7 +86,8 @@ class CipherImpl implements Cipher {
         // 执行加密，结果包含：密文+认证标签
         javax.crypto.Cipher cipher = getCipher();
         cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
-        byte[] ciphertext = cipher.doFinal(s, off, len);
+        if (aad != null) cipher.updateAAD(aad);
+        byte[] ciphertext = cipher.doFinal(s);
 
         // 拼接 IV(12) + 密文+标签
         byte[] result = new byte[IV_SIZE + ciphertext.length];
@@ -96,20 +97,17 @@ class CipherImpl implements Cipher {
     }
 
     @Override
-    public byte[] decrypt(byte[] s) throws Exception {
-        if (s == null) {
-            return null;
-        }
+    public byte[] decrypt(byte[] s, byte[] aad) throws Exception {
+        if (s == null) return null;
 
-        // 拆分 IV、密文+标签
         byte[] iv = new byte[IV_SIZE];
         System.arraycopy(s, 0, iv, 0, IV_SIZE);
         byte[] encrypted = new byte[s.length - IV_SIZE];
         System.arraycopy(s, IV_SIZE, encrypted, 0, encrypted.length);
 
-        // 执行解密+校验，返回原始数据
         javax.crypto.Cipher cipher = getCipher();
         cipher.init(javax.crypto.Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_SIZE * 8, iv));
+        if (aad != null) cipher.updateAAD(aad); // AAD 参与认证但不出现在密文中
         return cipher.doFinal(encrypted);
     }
 

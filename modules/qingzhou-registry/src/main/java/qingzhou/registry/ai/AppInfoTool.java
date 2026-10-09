@@ -5,13 +5,12 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolService;
-import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.registry.web.AppInfo;
 import qingzhou.registry.web.HandlingContext;
 import qingzhou.registry.web.WebUtil;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/app/info",
+@Component(property = {
         ToolService.PARENT_SKILL + "=" + Skill.TOOL_LABEL,
 
         ToolService.TOOL_DESCRIPTION + "=该接口返回特定应用的详细信息，内容包括：应用的基本信息（代码标识、名称、描述等等）；应用内包含的业务模块列表信息（模块的代码标识、名称、描述、所属功能菜单等）。",

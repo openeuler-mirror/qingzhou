@@ -18,12 +18,17 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-crypto</artifactId>
+            <artifactId>qingzhou-http-client</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-logger</artifactId>
+            <artifactId>qingzhou-json</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -37,7 +42,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>qingzhou.http.server,qingzhou.crypto,qingzhou.logger</Import-Package>
+                        <Import-Package>
+                            qingzhou.http.server,qingzhou.http.server.auth,qingzhou.http.server.util,
+                            qingzhou.http.client,
+                            qingzhou.json,qingzhou.logger,qingzhou.crypto
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

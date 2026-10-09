@@ -1,0 +1,260 @@
+package qingzhou.auth.oauth2;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.Crypto;
+import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
+import qingzhou.http.client.Response;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
+import qingzhou.json.Json;
+
+import static qingzhou.http.server.util.Configs.*;
+
+@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
+                HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
+                HttpHandler.HANDLE_NO_AUTH + "=true"},
+        service = {OAuth2Handler.class, HttpHandler.class})
+public class OAuth2Handler implements HttpHandler {
+    public static final String ROOT_PATH = "/oauth2";
+    private static final String AUTHORIZE_PATH = ROOT_PATH + "/authorize";
+    private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
+    private static final String CONSOLE_PATH = "/web"; // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
+
+    public static final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    public static final String TOKEN_COOKIE_NAME = "oauth2_session";
+
+    private static final String USER_SP = "@";
+    private static final String ROLES_SP = ",";
+
+    @Reference
+    private HttpClient httpClient;
+    @Reference
+    private Json json;
+    @Reference
+    private Crypto crypto;
+
+    private boolean enabled;
+    private String authorizationEndpoint;
+    private String clientId;
+    private String clientSecret;
+    private String tokenEndpoint;
+    private String userinfoEndpoint;
+    private String scope;
+    private String thisServerUrl;
+    private String callbackUrl;
+    private String usernameField;
+
+    private long tokenExpireMillis;
+    private Cipher tokenCipher;
+
+    @Activate
+    public void init(Map<String, String> config) {
+        enabled = getConfig(config, "oauth2_enabled", false);
+        if (!enabled) return;
+        authorizationEndpoint = notBlank(config, "oauth2_authorize_endpoint");
+        clientId = notBlank(config, "oauth2_client_id");
+        clientSecret = notBlank(config, "oauth2_client_secret"); // 安全考虑：此处不要解密
+        tokenEndpoint = notBlank(config, "oauth2_token_endpoint");
+        userinfoEndpoint = notBlank(config, "oauth2_userinfo_endpoint");
+        usernameField = config.get("oauth2_userinfo_username_field");
+        scope = config.get("oauth2_scope");
+        thisServerUrl = notBlank(config, "oauth2_this_server");
+        callbackUrl = thisServerUrl + CALLBACK_PATH;
+
+        tokenExpireMillis = atLeast(config, "token_expire_seconds", 1, 30 * 60) * 1000L;
+        tokenCipher = crypto.getGlobalCipher();
+    }
+
+    @Override
+    public void handle(HttpRequest request, HttpResponse response) throws Exception {
+        if (!enabled) {
+            response.status(404).finish();
+            return;
+        }
+
+        String path = request.getPath();
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
+        if (path.equals(AUTHORIZE_PATH)) {
+            String state = newState(); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
+            // state Cookie 必须 Lax：回调是 IdP 发起的跨站顶级 GET 导航，Strict 不会被携带，登录必然失败
+            response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
+                            + "; Path=" + ROOT_PATH + "; Max-Age=600; HttpOnly; SameSite=Lax"
+                            + secureSuffix(request))
+                    .redirect(buildAuthorizationUrl(state));
+        } else if (path.equals(CALLBACK_PATH)) {
+            callback(request, response);
+        } else {
+            response.status(400).finish();
+        }
+    }
+
+    // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时，按配置判定会漏发
+    private String secureSuffix(HttpRequest request) {
+        return "https".equals(request.getScheme()) ? "; Secure" : "";
+    }
+
+    private String newState() {
+        byte[] bytes = new byte[16];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private String buildAuthorizationUrl(String state) {
+        StringBuilder url = new StringBuilder(authorizationEndpoint)
+                .append("?response_type=code")
+                .append("&client_id=").append(encode(clientId))
+                .append("&redirect_uri=").append(encode(callbackUrl))
+                .append("&state=").append(encode(state));
+        if (scope != null) url.append("&scope=").append(encode(scope));
+        return url.toString();
+    }
+
+    private String encode(String val) {
+        try {
+            return URLEncoder.encode(val, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void callback(HttpRequest request, HttpResponse response) throws Exception {
+        String csrfToken = request.getParameter("state"); // OAUTH2 协议要求 state 必须传递
+        if (csrfToken == null || !csrfToken.equals(getCookie(request, CSRF_COOKIE_NAME))) {
+            response.status(400).finish();
+            return;
+        }
+
+        String code = request.getParameter("code");
+        if (code == null) {
+            response.status(400).finish();
+            return;
+        }
+
+        Map<String, String> params = new HashMap<>();
+        params.put("grant_type", "authorization_code");
+        params.put("code", code);
+        params.put("client_id", clientId);
+        params.put("redirect_uri", callbackUrl); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
+        params.put("client_secret", tokenCipher.tryDecrypt(clientSecret, "qingzhou-auth.client_secret"));
+
+        Response tokenResponse = httpClient.send(
+                httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
+        String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
+        Map tokenBody = json.fromJson(tokenBodyText, Map.class);
+        if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
+            response.status(500).finish();
+            return;
+        }
+        String user = extractUser(tokenBody);
+        if (user == null) {
+            response.status(500).finish();
+            return;
+        }
+
+        // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
+        response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + createToken(user, null) // TODO: No Roles ?
+                        + "; Path=/; HttpOnly; SameSite=Strict" + secureSuffix(request))
+                .header("Cache-Control", "no-store")
+                .redirect(CONSOLE_PATH); // 登录后回到管控台，前端在 /web 下按路由渲染首页
+    }
+
+    /**
+     * 身份必须由授权服务器校验：只接受 userinfo endpoint 返回的 sub。
+     * 不接受未验签的 id_token——其 payload 可任意伪造，据此登录等同于身份可被直接接管。
+     */
+    private String extractUser(Map<String, Object> tokenBody) throws Exception {
+        // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
+        String accessToken = (String) tokenBody.get("access_token");
+        if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
+            Response resp = httpClient.send(httpClient.buildRequest(userinfoEndpoint)
+                    .header("Authorization", "Bearer " + accessToken));
+            if (resp.getStatus() == 200) {
+                Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
+                return pickUsername(info);
+            }
+        }
+        return null;
+    }
+
+    String getCookie(HttpRequest request, String name) {
+        String cookieHeader = request.getHeader("Cookie");
+        if (cookieHeader == null) return null;
+
+        for (String cookie : cookieHeader.split(";")) {
+            String trimmed = cookie.trim();
+            if (trimmed.startsWith(name + "=")) {
+                return trimmed.substring(name.length() + 1);
+            }
+        }
+
+        return null;
+    }
+
+    private String pickUsername(Map<String, Object> map) {
+        String[] tryUserNames = {usernameField,
+                "preferred_username",// OIDC 标准 scope=profile 时属性，服务器决定是否有值
+                "name", // OIDC 标准 scope=profile 时属性，服务器决定是否有值
+                "sub" // OIDC scope=openid 标准属性，一个id字符串
+        };
+        for (String field : tryUserNames) {
+            if (field == null || field.isEmpty()) continue;
+            String val = str(map.get(field));
+            if (val != null) return val;
+        }
+        return null;
+    }
+
+    private String str(Object val) {
+        if (val == null) return null;
+        String s = String.valueOf(val).trim();
+        return s.isEmpty() ? null : s;
+    }
+
+    private String createToken(String user, String[] roles) {
+        try {
+            StringBuilder roleStr = new StringBuilder();
+            if (roles != null) {
+                for (String role : roles) {
+                    if (roleStr.length() > 0) {
+                        roleStr.append(ROLES_SP);
+                    }
+                    roleStr.append(role);
+                }
+            }
+            return tokenCipher.encrypt(user + USER_SP + roleStr + USER_SP + (System.currentTimeMillis() + tokenExpireMillis));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    Object[] verifyToken(String token) {
+        try {
+            String payload = tokenCipher.decrypt(token);
+            int expiresSeparator = payload.lastIndexOf(USER_SP);
+            int rolesSeparator = expiresSeparator < 0 ? -1 : payload.lastIndexOf(USER_SP, expiresSeparator - 1);
+            if (rolesSeparator < 0) return null;
+            String user = payload.substring(0, rolesSeparator);
+            String roleText = payload.substring(rolesSeparator + USER_SP.length(), expiresSeparator);
+            long expiresAt = Long.parseLong(payload.substring(expiresSeparator + USER_SP.length()));
+            return System.currentTimeMillis() < expiresAt
+                    ? new Object[]{user, roleText.isEmpty() ? new String[0] : roleText.split(ROLES_SP)} : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+}

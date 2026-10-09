@@ -15,6 +15,7 @@ import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -55,6 +56,9 @@ public class Heartbeat {
         registerToken = registerTokenConfig == null || registerTokenConfig.trim().isEmpty() ? null : registerTokenConfig.trim();
 
         String registryUrl = config.get("url");
+        if (registryUrl == null || registryUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-agent.url can not be empty");
+        }
         while (registryUrl.endsWith("/")) {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
@@ -88,7 +92,7 @@ public class Heartbeat {
                     logger.error("heartbeat service error", e);
                 }
             }
-        }, 1000 * 10, 1000 * Long.parseLong(config.get("interval")));
+        }, 1000 * 10, 1000 * Long.parseLong(config.getOrDefault("interval", "6")));
     }
 
     @Deactivate
@@ -119,7 +123,9 @@ public class Heartbeat {
     private String send(String url, byte[] data) {
         try {
             byte[] encrypted = pairCipher.encryptWithPublicKey(data);
-            Response response = httpClient.send(httpClient.newRequest(url).body(encrypted));
+            // 显式 POST：请求必须带密文正文，且 registry 侧已限定 POST
+            Response response = httpClient.send(
+                    httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
             if (response.getStatus() != 200) {
                 logger.warn("response code error [ " + response.getStatus() + " ] : " + url);
             }

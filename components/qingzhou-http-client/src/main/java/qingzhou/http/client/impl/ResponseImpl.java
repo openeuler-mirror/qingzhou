@@ -14,8 +14,8 @@ class ResponseImpl implements Response {
     private final HttpURLConnection conn;
     private final boolean streaming;
 
-    private volatile byte[] result;
-    private volatile boolean cancelled;
+    private byte[] result;
+    private boolean cancelled;
 
     ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
         this.conn = conn;

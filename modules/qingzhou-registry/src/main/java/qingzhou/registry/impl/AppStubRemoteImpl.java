@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import qingzhou.crypto.Cipher;
@@ -16,6 +17,7 @@ import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -66,11 +68,13 @@ class AppStubRemoteImpl implements AppStubRemote {
             doFileUploads(request, cipher);
 
             byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
-            byte[] encrypted = cipher.encrypt(data);
+            // seal 内部生成时间戳与随机数作为 AAD：绑定时效并提供去重键
+            byte[] encrypted = crypto.getReplayGuardCipher(cipher).encrypt(data, null);
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
-            response = httpClient.send(httpClient.newRequest(invokeUrl).body(encrypted));
+            response = httpClient.send(httpClient.buildRequest(invokeUrl).method(HttpMethod.POST)
+                    .body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
@@ -139,12 +143,17 @@ class AppStubRemoteImpl implements AppStubRemote {
         try (InputStream in = Files.newInputStream(file.toPath())) {
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
-                byte[] encrypt = cipher.encrypt(buffer, 0, bytesRead);
+                // 只加密本次实际读到的字节：直接传 buffer 会把上一片的残留字节一起发送，导致远端文件损坏。
+                // 分片以上传键作为绑定上下文：分片无法被重放到其他上传或拼接
+                byte[] chunk = Arrays.copyOf(buffer, bytesRead);
+                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(chunk,
+                        fileTempKey.getBytes(StandardCharsets.UTF_8));
 
-                // 参考：qingzhou.agent.AgentHttpHandler.FILE_UPLOAD_URI
-                String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_KEY + "=" + fileTempKey;
+                // 参考：qingzhou.agent.FileUpload 中的 Constants.AGENT_UPLOAD_URI
+                String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_FILE_KEY + "=" + fileTempKey;
 
-                Response uploadResult = httpClient.send(httpClient.newRequest(uploadUrl).body(encrypt));
+                Response uploadResult = httpClient.send(
+                        httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));
                 if (uploadResult.getStatus() != 200) {
                     String msg = "response code: " + uploadResult.getStatus() + " ";
                     byte[] body = uploadResult.getBody();

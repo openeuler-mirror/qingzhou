@@ -169,10 +169,18 @@ public class Connector extends TomcatModelBase implements Page, Show, Add, Updat
         addXmlNode(file, "//Service", "Connector", attrs);
     }
 
+    // XPath 由 ID 拼接而成，必须先把 ID 约束为合法端口，否则 ' or '1'='1 之类会命中非目标节点
+    private static String requireValidPort(String id) {
+        if (id == null || !id.matches("\\d{1,5}")) throw new IllegalArgumentException("invalid connector port: " + id);
+        int port = Integer.parseInt(id);
+        if (port < 1 || port > 65535) throw new IllegalArgumentException("invalid connector port: " + id);
+        return id;
+    }
+
     @Override
     public void delete(String id) throws Exception {
         File file = getServerXmlFile();
-        deleteXmlNode(file, "//Connector[@port='" + id + "']");
+        deleteXmlNode(file, "//Connector[@port='" + requireValidPort(id) + "']");
     }
 
     @Override
@@ -187,9 +195,9 @@ public class Connector extends TomcatModelBase implements Page, Show, Add, Updat
             String value = data.get(field);
             attrs.setProperty(field, value != null ? value : "");
         }
-        attrs.setProperty("port", id);
+        attrs.setProperty("port", requireValidPort(id));
 
-        updateXmlNode(file, "//Connector[@port='" + id + "']", attrs);
+        updateXmlNode(file, "//Connector[@port='" + requireValidPort(id) + "']", attrs);
     }
 
 

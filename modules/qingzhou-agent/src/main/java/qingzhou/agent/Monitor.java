@@ -18,7 +18,7 @@ import qingzhou.json.Json;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/monitor", HttpHandler.HANDLE_NO_AUTH + "=true"})
+@Component(property = HttpHandler.HANDLE_PATH + "=/monitor")
 public class Monitor implements HttpHandler {
     @Reference
     private Registry registry;
@@ -28,7 +28,7 @@ public class Monitor implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         Map<String, Object> data = collect();
-        httpResponse.contentType("application/json; charset=utf-8").sendFinish(json.toJson(data));
+        httpResponse.contentTypeJsonUtf8().send(json.toJson(data)).finish();
     }
 
     public Map<String, Object> collect() {

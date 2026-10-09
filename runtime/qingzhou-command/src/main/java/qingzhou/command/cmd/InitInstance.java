@@ -101,7 +101,10 @@ public class InitInstance extends Processor {
     }
 
     private void initAdminPassword(Console console) throws Exception {
-        if (!confirm(console, "Reset the admin password? [y/N] ")) return;
+        if (!confirm(console, "Reset the admin password? [y/N] ")) {
+            logSimple("warning: admin password was not changed");
+            return;
+        }
 
         String password = readPassword(console, "New admin password: ");
         if (password == null) return;
@@ -154,10 +157,16 @@ public class InitInstance extends Processor {
             }
             char[] confirm = console.readPassword("Confirm password: ");
             if (confirm == null || confirm.length == 0) {
+                Arrays.fill(password, '\0');
+                if (confirm != null) Arrays.fill(confirm, '\0');
                 logSimple("empty password, skipped");
                 return null;
             }
-            if (Arrays.equals(password, confirm)) return new String(password);
+            boolean matched = Arrays.equals(password, confirm);
+            String value = matched ? new String(password) : null;
+            Arrays.fill(password, '\0');
+            Arrays.fill(confirm, '\0');
+            if (matched) return value;
             logSimple("passwords do not match, try again");
         }
     }

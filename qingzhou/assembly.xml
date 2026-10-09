@@ -121,7 +121,6 @@
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-web</include>
                 <include>${project.groupId}:qingzhou-auth</include>
-                <include>${project.groupId}:qingzhou-oauth2</include>
                 <include>${project.groupId}:qingzhou-ai</include>
                 <include>${project.groupId}:qingzhou-monitor</include>
             </includes>

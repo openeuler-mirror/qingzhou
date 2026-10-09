@@ -19,19 +19,28 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.registry.impl.RegistryImpl;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
+    private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册/刷新报文上限
 
     static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
         byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return null;
+        if (requestBody == null || requestBody.length == 0) {
+            httpResponse.status(400).finish();
+            return null;
+        }
+        // 私钥解密按模长分块，成本随报文线性增长；注册/刷新报文实际仅数 KB，先设硬上限防 CPU DoS
+        if (requestBody.length > MAX_REGISTER_BODY) {
+            httpResponse.status(413).finish();
+            return null;
+        }
 
         byte[] decrypted;
         try {
             decrypted = pairCipher.decryptWithPrivateKey(requestBody);
         } catch (Exception e) {
-            httpResponse.sendFinish("key auth error");
+            httpResponse.status(400).send("key auth error").finish();
             return null;
         }
 
@@ -64,12 +73,13 @@ public class Register implements HttpHandler {
         String registerTokenConfig = config.get("register_token");
         if (registerTokenConfig == null || registerTokenConfig.trim().isEmpty()) {
             logger.warn("'register_token' is not configured, remote instance registration is unavailable.");
+            return;
         } else {
             registerToken = registerTokenConfig.trim().getBytes(StandardCharsets.UTF_8);
         }
 
-        long interval = 1000 * Long.parseLong(config.get("interval"));
-        long timeout = 1000 * Long.parseLong(config.get("timeout"));
+        long interval = 1000 * Long.parseLong(config.getOrDefault("interval", "6"));
+        long timeout = 1000 * Long.parseLong(config.getOrDefault("timeout", "12"));
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
@@ -100,8 +110,8 @@ public class Register implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        if (pairCipher == null) {
-            httpResponse.status500Finish("Service Unavailable");
+        if (pairCipher == null || registerToken == null) {
+            httpResponse.status(500).finish();
             return;
         }
         synchronized (Refresh.REFRESH_KEY_LOCK) {
@@ -116,7 +126,7 @@ public class Register implements HttpHandler {
         // 报文：registerToken + InstanceInfoJson
         String[] parts = decryptedRequest.split(Constants.AGENT_REGISTER_TOKEN_SP, 2);
         if (parts.length < 2) {
-            httpResponse.sendFinish("data format error");
+            httpResponse.send("data format error").finish();
             return;
         }
 
@@ -124,7 +134,7 @@ public class Register implements HttpHandler {
         // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
         if (!isAuthorized(registerToken, parts[0])) {
             logger.warn("registration rejected: register_token error");
-            httpResponse.sendFinish("register_token error");
+            httpResponse.send("register_token error").finish();
             return;
         }
 
@@ -133,7 +143,7 @@ public class Register implements HttpHandler {
             instanceInfo = json.fromJson(parts[1], InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
-            httpResponse.sendFinish("data format error");
+            httpResponse.send("data format error").finish();
             return;
         }
 
@@ -157,11 +167,11 @@ public class Register implements HttpHandler {
             Cipher cipher = crypto.getCipher(instanceKey);
             encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.status500Finish("instance key error");
+            httpResponse.status(500).finish();
             logger.error("encryption failed, key len: " + instanceKey.length());
             return;
         }
-        httpResponse.sendFinish(encrypt);
+        httpResponse.send(encrypt).finish();
     }
 
     private boolean isAuthorized(byte[] registerToken, String presentedToken) {

@@ -15,7 +15,6 @@ import qingzhou.logger.Logger;
                 "en:OAuth 2.0 authorization code, password, client credentials and refresh token grants."})
 @Menu(name = {"接入管理", "en:Access Management"}, code = "access", icon = "Grid", order = 1)
 public class OAuth2App implements QingzhouApp {
-    // 不能占用 /oauth2：平台单点登录客户端模块 qingzhou-oauth2 已注册该前缀（其 /oauth2/authorize、/oauth2/callback 是该客户端自身的入口与回调），两者重叠会因端点冲突导致本应用启动失败
     private static final String PATH_PREFIX = "/oauth2-server";
     private static final String[] ENDPOINT_PATHS = {"/authorize", "/token", "/userinfo", "/introspect", "/revoke"};
 
@@ -59,7 +58,7 @@ public class OAuth2App implements QingzhouApp {
         }
 
         for (int i = 0; i < endpoints.length; i++) {
-            httpServer.registerHttpHandlerNoAuth(endpoints[i], PATH_PREFIX + ENDPOINT_PATHS[i]);
+            httpServer.registerHttpHandler(endpoints[i], PATH_PREFIX + ENDPOINT_PATHS[i], true);
         }
         logger.info("oauth2 授权服务已就绪：" + PATH_PREFIX + "（implicit_enabled=" + implicitEnabled + "）");
     }

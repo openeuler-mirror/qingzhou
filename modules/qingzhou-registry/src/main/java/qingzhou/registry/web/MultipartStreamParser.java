@@ -9,6 +9,10 @@ import java.nio.file.Files;
 import java.util.*;
 
 class MultipartStreamParser {
+    private static final int MAX_PART_HEADERS = 8192; // 单个分片的头部上限
+    private static final int MAX_FIELD_BYTES = 1024 * 1024; // 单个文本字段上限
+    private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
+
     private final byte[] boundaryDelimiter;
     private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
@@ -24,8 +28,8 @@ class MultipartStreamParser {
 
     private final ByteArrayOutputStream headerBuffer = new ByteArrayOutputStream();
 
+    private int partCount;
     private String currentFieldName;
-    private String currentFileName;
     private boolean isFileField;
 
     private final ByteArrayOutputStream fieldBuffer = new ByteArrayOutputStream();
@@ -111,6 +115,9 @@ class MultipartStreamParser {
         int idx = indexOf(data, HEADER_DELIMITER, pos);
         if (idx < 0) {
             headerBuffer.write(data, pos, data.length - pos);
+            if (headerBuffer.size() > MAX_PART_HEADERS) {
+                throw new IllegalStateException("multipart part headers too large");
+            }
             return data.length;
         }
         int end = idx + HEADER_DELIMITER.length;
@@ -169,6 +176,9 @@ class MultipartStreamParser {
         if (isFileField) {
             fileStream.write(data, offset, len);
         } else {
+            if (fieldBuffer.size() + len > MAX_FIELD_BYTES) {
+                throw new IllegalStateException("multipart field too large: " + currentFieldName);
+            }
             fieldBuffer.write(data, offset, len);
         }
     }
@@ -186,7 +196,6 @@ class MultipartStreamParser {
             fieldBuffer.reset();
         }
         currentFieldName = null;
-        currentFileName = null;
         isFileField = false;
     }
 
@@ -226,12 +235,16 @@ class MultipartStreamParser {
     }
 
     private void parsePartHeaders(String headers) {
+        if (++partCount > MAX_TOTAL_PARTS) {
+            throw new IllegalStateException("too many multipart parts");
+        }
         currentFieldName = extractValue(headers, "name=\"");
-        currentFileName = extractValue(headers, "filename=\"");
-        if (currentFileName != null && !currentFileName.isEmpty()
-                && !currentFileName.contains("..")
-                && !currentFileName.contains("/")
-                && !currentFileName.contains("\\")) {
+        String currentFileName = extractValue(headers, "filename=\"");
+        if (currentFileName != null && !currentFileName.isEmpty()) {
+            // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束
+            if (currentFileName.contains("..") || currentFileName.contains("/") || currentFileName.contains("\\")) {
+                throw new IllegalStateException("invalid upload file name");
+            }
             isFileField = currentFieldName != null && fieldTypeResolver.isFileField(currentFieldName);
         }
         if (isFileField) {

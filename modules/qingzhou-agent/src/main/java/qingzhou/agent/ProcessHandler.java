@@ -1,59 +1,63 @@
 package qingzhou.agent;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
+import qingzhou.crypto.ReplayGuardException;
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.Logger;
 
 class ProcessHandler {
-    private static final int IV_SIZE = 12; // 与 CipherImpl 的 AES-GCM IV 长度一致
-    private static final Map<String, Long> SEEN_IV = new ConcurrentHashMap<>();
-
-    static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, ProcessHandlerCallback callback) {
+    static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, Logger logger,
+                       ProcessHandlerCallback callback) {
         byte[] requestBody = httpRequest.getBody();
-        if (requestBody.length == 0) return;
+        if (requestBody == null || requestBody.length == 0) {
+            httpResponse.status(400).finish();
+            return;
+        }
 
         InstanceInfo thisInstanceInfo = Heartbeat.thisInstanceInfo;
-        if (thisInstanceInfo == null) return; // Agent 尚未注册
-
-        if (requestBody.length <= IV_SIZE) { // 长度校验须先于 IV 提取，防止数组越界
-            httpResponse.status500Finish("key auth error"); // 与解密失败同文案，避免成为判别信号
+        if (thisInstanceInfo == null) {
+            httpResponse.status(503).finish();
             return;
         }
 
-        // AES-GCM 每次加密都生成新的随机 IV，重放的密文 IV 必然重复，据此在解密前就丢弃
-        String iv = ivOf(crypto, requestBody);
-        if (SEEN_IV.containsKey(iv)) {
-            httpResponse.status500Finish("key auth error"); // 与解密失败同文案，避免成为判别信号
-            return;
-        }
-
-        // 解密，得到请求数据
         Cipher cipher;
         byte[] requestData;
         try {
             cipher = crypto.getCipher(thisInstanceInfo.getKey());
-            requestData = cipher.decrypt(requestBody);
+            // seal/open 内部以时间戳+随机数作为 AAD：时间窗拒绝过期报文，随机数去重拒绝重放；
+            // 上传分片以 URL 中的上传键作为绑定上下文，防止分片被重放到其他上传
+            String uploadKey = httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY);
+            byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
+            requestData = crypto.getReplayGuardCipher(cipher).decrypt(requestBody, context);
+        } catch (ReplayGuardException e) {
+            // 报文由请求方控制：格式/时间窗回 400，重放回 409（冲突）便于发送方区分「已受理过」
+            if (e.getReason() == ReplayGuardException.Reason.REPLAY) {
+                logger.warn("agent request replayed");
+                httpResponse.status(409).finish();
+            } else {
+                logger.warn("invalid agent request: " + e.getMessage());
+                httpResponse.status(400).finish();
+            }
+            return;
         } catch (Exception e) {
-            httpResponse.status500Finish("key auth error");
+            logger.error("agent request processing error", e);
+            httpResponse.status(500).finish();
             return;
         }
-        rememberIv(iv); // 解密成功才登记，防止无效密文撑爆去重表
 
         // 处理业务，得到响应数据
         String responseData;
         try {
             responseData = callback.doProcess(requestData);
         } catch (Throwable e) {
-            // 业务异常可回显以便代理定位；NPE 的 Helpful 消息含内部类结构、IO 异常含服务器绝对路径，均不回显
-            String msg = e instanceof NullPointerException || e instanceof IOException ? null : e.getMessage();
-            httpResponse.status500Finish(msg != null ? msg : "business processing error");
+            logger.error("agent business processing error", e);
+            httpResponse.status(500).finish();
             return;
         }
 
@@ -62,25 +66,11 @@ class ProcessHandler {
         try {
             encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            httpResponse.status500Finish("encryption failed");
+            logger.error("agent response encryption error", e);
+            httpResponse.status(500).finish();
             return;
         }
-        httpResponse.sendFinish(encrypt);
-    }
-
-    private static String ivOf(Crypto crypto, byte[] body) {
-        byte[] iv = new byte[IV_SIZE];
-        System.arraycopy(body, 0, iv, 0, IV_SIZE);
-        return crypto.getBase64Coder().encode(iv);
-    }
-
-    private static void rememberIv(String iv) {
-        if (SEEN_IV.size() > 10_000) { // 惰性清理过期记录，防止重放洪水导致内存膨胀
-            long now = System.currentTimeMillis();
-            long IV_TTL_MILLIS = 5 * 60 * 1000;
-            SEEN_IV.entrySet().removeIf(entry -> now - entry.getValue() > IV_TTL_MILLIS);
-        }
-        SEEN_IV.put(iv, System.currentTimeMillis());
+        httpResponse.send(encrypt).finish();
     }
 
     interface ProcessHandlerCallback {

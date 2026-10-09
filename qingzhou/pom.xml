@@ -21,7 +21,6 @@
             <id>develop</id>
             <properties>
                 <DevMode>true</DevMode>
-                <ChangePwd>false</ChangePwd>
             </properties>
         </profile>
 
@@ -29,7 +28,6 @@
             <id>release</id>
             <properties>
                 <DevMode>false</DevMode>
-                <ChangePwd>true</ChangePwd>
             </properties>
         </profile>
     </profiles>
@@ -307,11 +305,6 @@
         </dependency>
         <dependency>
             <artifactId>qingzhou-auth</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-oauth2</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

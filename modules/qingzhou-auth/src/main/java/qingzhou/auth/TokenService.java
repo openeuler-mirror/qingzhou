@@ -8,11 +8,12 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
+import qingzhou.http.server.util.Configs;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)
 public class TokenService {
-    private static final String USER_SP = "@";
+    private static final String USER_SP = ">";
     private static final String ROLES_SP = ",";
 
     @Reference
@@ -23,7 +24,7 @@ public class TokenService {
 
     @Activate
     public void init(Map<String, String> config) {
-        tokenExpireMillis = Integer.parseInt(config.getOrDefault("token_expire_seconds", "" + 30 * 60)) * 1000L;
+        tokenExpireMillis = Configs.getConfig(config, "token_expire_seconds", 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
     }
 
@@ -47,9 +48,15 @@ public class TokenService {
     public Object[] verifyToken(String token) {
         try {
             String payload = tokenCipher.decrypt(token);
-            String[] sep = payload.split(USER_SP);
-            return System.currentTimeMillis() < Long.parseLong(sep[2])
-                    ? new Object[]{sep[0], sep[1].split(ROLES_SP)} : null;
+            int expiresSeparator = payload.lastIndexOf(USER_SP);
+            int rolesSeparator = expiresSeparator < 0 ? -1 : payload.lastIndexOf(USER_SP, expiresSeparator - 1);
+            if (rolesSeparator < 0) return null;
+            String user = payload.substring(0, rolesSeparator);
+            String roleText = payload.substring(rolesSeparator + USER_SP.length(), expiresSeparator);
+            long expiresAt = Long.parseLong(payload.substring(expiresSeparator + USER_SP.length()));
+            if (expiresAt <= System.currentTimeMillis()) return null;
+            String[] roles = roleText.isEmpty() ? new String[0] : roleText.split(ROLES_SP);
+            return new Object[]{user, roles};
         } catch (Exception e) {
             return null;
         }

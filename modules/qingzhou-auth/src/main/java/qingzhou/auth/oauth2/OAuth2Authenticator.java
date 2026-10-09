@@ -1,0 +1,24 @@
+package qingzhou.auth.oauth2;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.http.server.auth.AuthResult;
+import qingzhou.http.server.auth.Authenticator;
+import qingzhou.http.server.HttpRequest;
+
+@Component
+public class OAuth2Authenticator implements Authenticator {
+    @Reference
+    private OAuth2Handler oAuth2Handler;
+
+    @Override
+    public AuthResult authenticate(HttpRequest request) {
+        String token = oAuth2Handler.getCookie(request, OAuth2Handler.TOKEN_COOKIE_NAME);
+        if (token == null) {
+            return AuthResult.reject("token missing");
+        }
+        Object[] userRoles = oAuth2Handler.verifyToken(token);
+        if (userRoles == null) return AuthResult.reject("invalid token");
+        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1]);
+    }
+}

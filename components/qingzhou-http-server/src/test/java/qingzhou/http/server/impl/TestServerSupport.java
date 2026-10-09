@@ -1,0 +1,108 @@
+package qingzhou.http.server.impl;
+
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
+import reactor.netty.DisposableServer;
+
+/**
+ * http-server 测试公共夹具：端口 0 启动 + 实际端口读取 + 缓冲回显的流式 handler。
+ */
+final class TestServerSupport {
+    private TestServerSupport() {
+    }
+
+    static TestServer startServer() throws Exception {
+        return startServer(Collections.emptyMap());
+    }
+
+    // 在默认配置（端口 0、关闭 TLS）之上叠加用例自定义配置（如 cors_allowed_origins）
+    static TestServer startServer(Map<String, String> extraConfig) throws Exception {
+        Map<String, String> config = new HashMap<>();
+        config.put("port", "0");
+        config.put("ssl_enabled", "false");
+        config.putAll(extraConfig);
+        HttpServerImpl httpServer = HttpServerImplTest.start(config);
+        try {
+            Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
+            field.setAccessible(true);
+            DisposableServer disposableServer = (DisposableServer) field.get(httpServer);
+            return new TestServer(httpServer, ((InetSocketAddress) disposableServer.address()).getPort());
+        } catch (Exception e) {
+            httpServer.stop(); // 端口读取失败时也不能泄漏已启动的服务
+            throw e;
+        }
+    }
+
+    // 注册带方法白名单的路由：运行时 API 未透出 methods，测试经 handlerManager 直注
+    static void registerWithMethods(TestServer testServer, HttpHandler handler, String path,
+                                    boolean noAuth, String methods) throws Exception {
+        Field field = HttpServerImpl.class.getDeclaredField("handlerManager");
+        field.setAccessible(true);
+        HandlerManager handlerManager = (HandlerManager) field.get(testServer.server);
+        Map<String, String> properties = new HashMap<>();
+        properties.put(HttpHandler.HANDLE_PATH, path);
+        properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");
+        if (noAuth) properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        if (methods != null) properties.put(HttpHandler.HANDLE_METHODS, methods);
+        handlerManager.addHttpHandler(handler, properties, null);
+    }
+
+    // 缓冲全部上传字节并在完成后原样回写，供断言比对 multipart 内容
+    static HttpHandler bufferingEchoHandler(AtomicReference<byte[]> received) {
+        return new HttpHandler() {
+            @Override
+            public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+                httpResponse.status(400).finish(); // multipart 请求不会进入此方法
+            }
+
+            @Override
+            public StreamHandler multipartStreamHandler() {
+                return new StreamHandler() {
+                    private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    private HttpResponse httpResponse;
+
+                    @Override
+                    public void onBegin(HttpRequest request, HttpResponse response) {
+                        this.httpResponse = response;
+                    }
+
+                    @Override
+                    public void onNext(byte[] data) {
+                        buffer.write(data, 0, data.length); // ByteArrayOutputStream.write 不抛出 IOException
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        httpResponse.status(500).finish();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        byte[] body = buffer.toByteArray();
+                        received.set(body);
+                        httpResponse.send(body).finish();
+                    }
+                };
+            }
+        };
+    }
+
+    static class TestServer {
+        final HttpServerImpl server;
+        final int port;
+
+        TestServer(HttpServerImpl server, int port) {
+            this.server = server;
+            this.port = port;
+        }
+    }
+}

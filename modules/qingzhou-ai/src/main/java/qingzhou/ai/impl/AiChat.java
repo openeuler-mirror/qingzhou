@@ -21,7 +21,7 @@ import qingzhou.llm.Interceptor;
 import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/chat/stream")
+@Component(property = {HttpHandler.HANDLE_PATH + "=/chat/stream", HttpHandler.HANDLE_METHODS + "=POST"})
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +
@@ -76,7 +76,10 @@ public class AiChat implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, Object> params = params(httpRequest);
-        if (params == null) return;
+        if (params == null) {
+            httpResponse.status(400).finish();
+            return;
+        }
 
         String question = ((String) params.get("question")).trim();
         String app = (String) params.get("app");

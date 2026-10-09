@@ -24,7 +24,7 @@ public class WebUtil {
             try {
                 long cachedTime = Long.parseLong(cacheKey);
                 if (cachedTime == registry.getRegistryDataVersion()) {
-                    httpResponse.sendFinish("{\"success\":true}");
+                    httpResponse.send("{\"success\":true}").finish();
                     return true;
                 }
             } catch (NumberFormatException ignored) {
@@ -41,6 +41,6 @@ public class WebUtil {
         metaData.put(REQUEST_PARAMETER_NAME_CACHE_KEY, registry.getRegistryDataVersion());
         String jsonResult = json.toJson(metaData);
         httpResponse.contentTypeJsonUtf8()
-                .sendFinish(jsonResult);
+                .send(jsonResult).finish();
     }
 }

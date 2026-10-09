@@ -5,21 +5,20 @@ package qingzhou.http.server;
  */
 public interface HttpHandler {
     String HANDLE_PATH = "HANDLE_PATH";
+    String HANDLE_PATH_ABSOLUTE = "HANDLE_PATH_ABSOLUTE";
     String HANDLE_NO_AUTH = "HANDLE_NO_AUTH";
-
-    void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
+    // 该路径允许的 HTTP 方法（逗号分隔，如 POST）；缺省表示允许全部方法
+    String HANDLE_METHODS = "HANDLE_METHODS";
 
     /**
-     * Handler 级认证器，优先级高于系统级 {@link Authenticator}：
-     * 返回 {@link AuthResult#pass} 时系统级认证器不再执行；返回 {@link AuthResult#reject} 直接以 401 结束请求；
-     * 返回 {@link AuthResult#abstain()} 或 null 表示弃权，转交系统级认证器。
+     * 处理请求。
      * <p>
-     * 抛出的任何 {@link Throwable}（含 OSGi 刷新 bundle 时的 {@link NoClassDefFoundError}）一律按拒绝处理。
-     * 注意：{@code noAuth} 注册方式只豁免系统级认证器，本认证器返回 reject 时仍然拒绝请求。
+     * 本方法只负责「开始」：响应必须由 handler 自己以终态方法收尾（{@link HttpResponse#finish()}、
+     * {@link HttpResponse#redirect(String)}）。未收尾的请求会一直挂到空闲超时，属 handler 的编程错误。
+     * 允许 handler 返回后再由其它线程继续写入并收尾（如 SSE），框架不会代为结束。
+     * 仅当本方法抛出异常时，框架才会自行终止响应。
      */
-    default HandlerAuthenticator customAuthenticator() {
-        return null;
-    }
+    void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 
     default StreamHandler multipartStreamHandler() {
         return null;

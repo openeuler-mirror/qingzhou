@@ -121,7 +121,7 @@ public class RegistryImplTest {
     }
 
     @Test
-    public void addRemoteAppsExistingInstanceId_registryDataVersion_unchanged() throws InterruptedException {
+    public void addRemoteAppsExistingInstanceId_registryDataVersion_changed() throws InterruptedException {
         RegistryImpl registry = newRegistry();
         InstanceInfo first = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1);
         Thread.sleep(10);
@@ -133,10 +133,11 @@ public class RegistryImplTest {
         InstanceInfo exists = registry.addRemoteApps(second);
 
         Assert.assertEquals(exists, first);
-        Assert.assertEquals(registry.getRegistryDataVersion(), versionAfterFirst);
+        // 重注册携带新的共享密钥，数据确实变更：版本必须递增，否则前端轮询感知不到
+        Assert.assertTrue(registry.getRegistryDataVersion() > versionAfterFirst);
         Assert.assertEquals(registry.getRemoteInstance(REMOTE_INSTANCE_ID), second);
-        // 重复注册时实现不调用 setLastRefreshTime，新实例的 lastRefreshTime 保持默认值 0
-        Assert.assertEquals(second.getLastRefreshTime(), 0);
+        // 重复注册也必须刷新存活时间：否则新对象 lastRefreshTime=0，会被健康检查立即剔除（实例周期性抖动的根因）
+        Assert.assertTrue(second.getLastRefreshTime() > 0);
         Assert.assertTrue(first.getLastRefreshTime() > 0);
     }
 

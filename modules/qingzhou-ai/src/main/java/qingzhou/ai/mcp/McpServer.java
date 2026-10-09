@@ -9,7 +9,6 @@ import java.util.stream.Stream;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.impl.LlmConverter;
-import qingzhou.http.server.HandlerAuthenticator;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -18,14 +17,12 @@ import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=/mcp")
+@Component(property = {HttpHandler.HANDLE_PATH + "=/mcp", HttpHandler.HANDLE_METHODS + "=POST"})
 public class McpServer implements HttpHandler {
     @Reference
     private Json json;
     @Reference
     private Logger logger;
-    @Reference
-    private McpAuthenticator mcpAuthenticator;
 
     private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
 
@@ -61,19 +58,19 @@ public class McpServer implements HttpHandler {
     }
 
     @Override
-    public HandlerAuthenticator customAuthenticator() {
-        return request -> mcpAuthenticator.authenticate(request);
-    }
-
-    @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         // 解析JSON请求
-        String body = new String(httpRequest.getBody(), StandardCharsets.UTF_8);
+        byte[] requestBody = httpRequest.getBody();
+        String body = requestBody == null ? "" : new String(requestBody, StandardCharsets.UTF_8);
         Map<String, Object> requestMap;
         try {
             requestMap = json.fromJson(body, HashMap.class);
         } catch (Exception e) {
-            httpResponse.status(400).sendFinish("Invalid JSON");
+            httpResponse.status(400).finish();
+            return;
+        }
+        if (requestMap == null) {
+            httpResponse.status(400).finish();
             return;
         }
 
@@ -96,9 +93,9 @@ public class McpServer implements HttpHandler {
         // 响应
         try {
             httpResponse.contentTypeJsonUtf8()
-                    .sendFinish(json.toJson(result));
+                    .send(json.toJson(result)).finish();
         } catch (Exception e) {
-            httpResponse.status500Finish("Internal Server Error");
+            httpResponse.status(500).finish();
             logger.error(e.getMessage(), e);
         }
     }

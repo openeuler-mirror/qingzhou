@@ -38,7 +38,6 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
-                            qingzhou.crypto,
                             qingzhou.registry,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,

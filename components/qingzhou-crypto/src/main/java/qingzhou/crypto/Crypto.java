@@ -29,7 +29,10 @@ public interface Crypto {
 
     Base64Coder getBase64Coder();
 
-    Base32Coder getBase32Coder();
-
     Base16Coder getBase16Coder();
+
+    /**
+     * 请求报文的防重放封装。返回的实例在同一 JVM 内共享，去重状态唯一。
+     */
+    ReplayGuardCipher getReplayGuardCipher(Cipher cipher);
 }

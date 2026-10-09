@@ -12,8 +12,8 @@
     <artifactId>qingzhou-http-server</artifactId>
 
     <properties>
-        <reactor-netty-version>1.2.17</reactor-netty-version>
-        <netty-version>4.1.132.Final</netty-version>
+        <reactor-netty-version>1.2.18</reactor-netty-version>
+        <netty-version>4.1.138.Final</netty-version>
     </properties>
 
     <dependencies>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-            <version>3.7.18</version>
+            <version>3.7.19</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -151,7 +151,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
         <dependency>
             <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
@@ -178,7 +178,9 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.http.server</Export-Package>
+                        <Export-Package>
+                            qingzhou.http.server,qingzhou.http.server.auth,qingzhou.http.server.util
+                        </Export-Package>
                         <Import-Package>
                             qingzhou.crypto,
                             qingzhou.logger,

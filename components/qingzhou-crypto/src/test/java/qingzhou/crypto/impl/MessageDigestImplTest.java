@@ -159,4 +159,12 @@ public class MessageDigestImplTest {
             Assert.assertTrue(digest.matches("pwd", format), "无法解析格式: " + format);
         }
     }
+
+    // 畸形摘要（段数合法但内容非法）必须按不匹配处理：登录回 401 而非 500
+    @Test
+    public void malformedDigest_matches_returnFalseInsteadOfThrowing() {
+        MessageDigestImpl digest = newDigest();
+        Assert.assertFalse(digest.matches("pwd", "SHA-256$ZZ$notanumber$ABCD"));
+        Assert.assertFalse(digest.matches("pwd", "SHA-256$ABCD$99999999999999$ABCD"));
+    }
 }
