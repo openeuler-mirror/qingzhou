@@ -9,7 +9,7 @@ import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-@App(icon = "Key",
+@App(icon = "Key", roles = "admin",
         name = {"OAuth2 授权服务", "en:OAuth2 Server"},
         info = {"提供 OAuth 2.0 授权码、密码、客户端凭证与刷新令牌能力。",
                 "en:OAuth 2.0 authorization code, password, client credentials and refresh token grants."})

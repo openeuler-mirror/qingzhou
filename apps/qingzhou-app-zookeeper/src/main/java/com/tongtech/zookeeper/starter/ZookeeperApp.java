@@ -31,7 +31,7 @@ import java.util.Properties;
 /**
  * Zookeeper 应用入口：启动时探测安装路径、加载配置并初始化监控元数据。
  */
-@App(icon = "Cloud",
+@App(icon = "Cloud", roles = "admin",
         name = {"Zookeeper应用", "en:Zookeeper Application"},
         info = {"用于演示Zookeeper的核心功能，包括服务注册发现、配置管理等。", "en:Zookeeper application demo with service discovery and configuration management."})
 @Menu(name = {"概要", "en:Summary"}, code = "summary", icon = "House", order = 1)

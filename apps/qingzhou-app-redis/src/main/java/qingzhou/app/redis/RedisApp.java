@@ -21,7 +21,7 @@ import qingzhou.app.redis.util.RedisUtil;
 @I18n(name = {"Key 数量分布", "en:Key Count Distribution"}, code = "KeyCount")
 @I18n(name = {"内存分布", "en:Memory Distribution"}, code = "MemoryDist")
 
-@App(code = "redis", icon = "/icons/redis.svg",
+@App(code = "redis", icon = "/icons/redis.svg", roles = "admin",
         name = {"Redis管理", "en:Redis Manager"},
         info = {"Redis日常运维管理控制台，支持单机/哨兵/集群模式。",
                 "en:Redis management console, supports standalone/sentinel/cluster modes."})
