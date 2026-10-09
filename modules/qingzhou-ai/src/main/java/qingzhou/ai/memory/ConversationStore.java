@@ -172,7 +172,7 @@ public class ConversationStore {
      * 不存在且带标题时创建（首条消息在回答完成后才落库，rename 先到属正常时序）
      */
     synchronized boolean rename(String userId, String conversationId, String title) {
-        if (!VALID_ID.matcher(conversationId).matches()) return false;
+        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return false;
         ConversationRecord record = load(conversationId);
         if (record == null) {
             if (title == null) return false; // 不凭空产生未命名会话
@@ -220,7 +220,7 @@ public class ConversationStore {
     }
 
     private void append(String conversationId, String userId, StoredMessage message) {
-        if (!VALID_ID.matcher(conversationId).matches()) {
+        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) {
             logger.warn("invalid conversation id, message skipped");
             return;
         }
