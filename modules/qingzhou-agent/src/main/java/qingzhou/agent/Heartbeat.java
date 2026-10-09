@@ -81,9 +81,23 @@ public class Heartbeat {
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         thisInstanceInfo.setKey(newKey);
                     } else {
-                        // 注册报文：registerToken\ninstanceInfoJson，令牌授权新实例注册与重复注册
+                        // 注册报文：registerToken + timestamp + nonce + currentKeyProof + instanceInfoJson。
+                        // timestamp 与 nonce 供 registry 做时间窗与重放判定；currentKeyProof = 用当前实例密钥
+                        // 加密 nonce，重复注册必须证明持有当前密钥，否则重放的旧注册包可回滚共享密钥。
+                        // 若密钥已失配（证明被拒），registry 会在健康检查超时后移除实例，随后本注册即可通过
+                        String nonce = UUID.randomUUID().toString();
+                        String currentKeyProof = "";
+                        try {
+                            Cipher cipher = crypto.getCipher(thisInstanceInfo.getKey());
+                            currentKeyProof = cipher.encrypt(nonce);
+                        } catch (Exception e) {
+                            logger.error("failed to build registration proof", e);
+                        }
                         String registerData = String.join(Constants.AGENT_REGISTER_TOKEN_SP,
                                 registerToken == null ? "" : registerToken,
+                                String.valueOf(System.currentTimeMillis()),
+                                nonce,
+                                currentKeyProof,
                                 json.toJson(thisInstanceInfo));
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));
                         logger.info("registration response: " + registration);

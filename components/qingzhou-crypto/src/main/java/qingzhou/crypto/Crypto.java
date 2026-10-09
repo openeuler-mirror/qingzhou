@@ -35,4 +35,9 @@ public interface Crypto {
      * 请求报文的防重放封装。返回的实例在同一 JVM 内共享，去重状态唯一。
      */
     ReplayGuardCipher getReplayGuardCipher(Cipher cipher);
+
+    /**
+     * 与加密方式无关的 nonce 去重登记器，同一 JVM 内共享。
+     */
+    NonceRegistry getNonceRegistry();
 }
