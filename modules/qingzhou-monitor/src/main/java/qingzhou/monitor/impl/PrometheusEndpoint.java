@@ -28,6 +28,7 @@ public class PrometheusEndpoint implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        // todo 缺少 PermissionChecker 权限验证？
         Map<String, MetricGroup> groups = new LinkedHashMap<>();
 
         for (String appCode : registry.getAllLocalApps()) {
