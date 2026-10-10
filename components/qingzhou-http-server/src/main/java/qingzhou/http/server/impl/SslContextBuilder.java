@@ -26,7 +26,8 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
     }
 
     static SslContext buildSslContext(Map<String, String> config, Cipher cipher, Logger logger) {
-        String keystorePath = Configs.notBlank(config, "ssl_keystore_path");
+        Configs configs = new Configs(config);
+        String keystorePath = configs.notBlank("ssl_keystore_path");
 
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
@@ -40,7 +41,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
         }
 
-        String password = Configs.notBlank(config, "ssl_keystore_password");
+        String password = configs.notBlank("ssl_keystore_password");
         char[] keyPassword = cipher.tryDecrypt(password.trim(), "qingzhou-http-server.ssl_keystore_password").toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {

@@ -45,8 +45,9 @@ public class AuthHandler implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        username = Configs.notBlank(config, "username");
-        passwordDigest = Configs.notBlank(config, "password");
+        Configs configs = new Configs(config);
+        username = configs.notBlank("username");
+        passwordDigest = configs.notBlank("password");
         String rolesStr = config.get("roles");
         if (rolesStr != null && !rolesStr.trim().isEmpty()) {
             List<String> roleList = new ArrayList<>();
@@ -58,13 +59,13 @@ public class AuthHandler implements HttpHandler {
             roles = roleList.toArray(new String[0]);
         }
 
-        totpEnabled = Configs.getConfig(config, "totp_enabled", false);
+        totpEnabled = configs.getConfig("totp_enabled", false);
         if (totpEnabled) {
-            totpSecret = Configs.notBlank(config, "totp_secret"); // 安全考虑：此处不要解密
+            totpSecret = configs.notBlank("totp_secret"); // 安全考虑：此处不要解密
         }
 
-        int maxFailures = Configs.atLeast(config, "max_failures", 1, 5);
-        long lockMillis = Configs.atLeast(config, "lock_seconds", 1, 300) * 1000L;
+        int maxFailures = configs.atLeast("max_failures", 1, 5);
+        long lockMillis = configs.atLeast("lock_seconds", 1, 300) * 1000L;
         lockout = new FailureLockout(maxFailures, lockMillis, 10_000);
     }
 

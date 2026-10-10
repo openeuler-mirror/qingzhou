@@ -12,8 +12,7 @@ import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
 import static qingzhou.http.server.impl.Errors.getCause;
-import static qingzhou.common.Configs.atLeast;
-import static qingzhou.common.Configs.splitList;
+import qingzhou.common.Configs;
 
 /**
  * 请求准入闸门链：方法白名单、路径规范化、路由、认证、body 形态与配额。
@@ -43,14 +42,15 @@ final class RequestGates {
 
     RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, AuthManager authManager, HandlerManager handlerManager,
                  Logger logger, AtomicLong aggregatedBytes) {
+        Configs configs = new Configs(config);
         this.authManager = authManager;
         this.handlerManager = handlerManager;
         this.logger = logger;
         this.aggregatedBytes = aggregatedBytes;
         this.maxStreamBytes = maxStreamBytes;
         this.maxBodyBytes = maxBodyBytes;
-        this.maxAggregatedBytes = atLeast(config, "max_aggregated_bytes", 1L, 64L * 1024 * 1024);
-        this.corsAllowedOrigins = new HashSet<>(splitList(config, "cors_allowed_origins"));
+        this.maxAggregatedBytes = configs.atLeast("max_aggregated_bytes", 1L, 64L * 1024 * 1024);
+        this.corsAllowedOrigins = new HashSet<>(configs.splitList("cors_allowed_origins"));
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");

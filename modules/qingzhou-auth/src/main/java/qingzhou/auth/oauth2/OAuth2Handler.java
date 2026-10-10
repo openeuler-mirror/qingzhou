@@ -22,7 +22,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-import static qingzhou.common.Configs.*;
+import qingzhou.common.Configs;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
@@ -64,19 +64,20 @@ public class OAuth2Handler implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        enabled = getConfig(config, "oauth2_enabled", false);
+        Configs configs = new Configs(config);
+        enabled = configs.getConfig("oauth2_enabled", false);
         if (!enabled) return;
-        authorizationEndpoint = notBlank(config, "oauth2_authorize_endpoint");
-        clientId = notBlank(config, "oauth2_client_id");
-        clientSecret = notBlank(config, "oauth2_client_secret"); // 安全考虑：此处不要解密
-        tokenEndpoint = notBlank(config, "oauth2_token_endpoint");
-        userinfoEndpoint = notBlank(config, "oauth2_userinfo_endpoint");
+        authorizationEndpoint = configs.notBlank("oauth2_authorize_endpoint");
+        clientId = configs.notBlank("oauth2_client_id");
+        clientSecret = configs.notBlank("oauth2_client_secret"); // 安全考虑：此处不要解密
+        tokenEndpoint = configs.notBlank("oauth2_token_endpoint");
+        userinfoEndpoint = configs.notBlank("oauth2_userinfo_endpoint");
         usernameField = config.get("oauth2_userinfo_username_field");
         scope = config.get("oauth2_scope");
-        thisServerUrl = notBlank(config, "oauth2_this_server");
+        thisServerUrl = configs.notBlank("oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
-        tokenExpireMillis = atLeast(config, "token_expire_seconds", 1, 30 * 60) * 1000L;
+        tokenExpireMillis = configs.atLeast("token_expire_seconds", 1, 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
     }
 

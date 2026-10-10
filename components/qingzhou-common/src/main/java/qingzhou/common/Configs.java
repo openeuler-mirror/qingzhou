@@ -13,8 +13,14 @@ import java.util.function.Function;
  */
 public final class Configs {
 
-    public static int atLeast(Map<String, String> config, String key, int min, long defaultValue) {
-        long value = atLeast(config, key, (long) min, defaultValue);
+    private final Map<String, String> config;
+
+    public Configs(Map<String, String> config) {
+        this.config = config;
+    }
+
+    public int atLeast(String key, int min, long defaultValue) {
+        long value = atLeast(key, (long) min, defaultValue);
         if (value > Integer.MAX_VALUE) {
             throw new IllegalArgumentException(invalid(key, " must be <= " + Integer.MAX_VALUE, String.valueOf(value)));
         }
@@ -22,24 +28,24 @@ public final class Configs {
     }
 
     // 配置值下限校验：min=1 表示必须为正，min=0 表示可为 0 但不能为负
-    public static long atLeast(Map<String, String> config, String key, long min, long defaultValue) {
-        long value = getConfig(config, key, defaultValue);
+    public long atLeast(String key, long min, long defaultValue) {
+        long value = getConfig(key, defaultValue);
         if (value < min) {
             throw new IllegalArgumentException(invalid(key, " must be >= " + min, String.valueOf(value)));
         }
         return value;
     }
 
-    public static long between(Map<String, String> config, String key, long min, long max, long defaultValue) {
-        long value = atLeast(config, key, min, defaultValue);
+    public long between(String key, long min, long max, long defaultValue) {
+        long value = atLeast(key, min, defaultValue);
         if (value > max)
             throw new IllegalArgumentException(invalid(key, " must be <= " + max, String.valueOf(value)));
         return value;
     }
 
     // 必填整数配置解析（无默认值场景）：失败报错带配置项名，与 getConfig 各分支口径一致
-    public static int port(Map<String, String> config, String key) {
-        String val = notBlank(config, key);
+    public int port(String key) {
+        String val = notBlank(key);
         int port = number(val, key, Integer::parseInt);
         // 0 是合法值：交由操作系统分配空闲端口（测试与动态端口场景依赖它）
         if (port < 0 || port > 65535) {
@@ -49,7 +55,7 @@ public final class Configs {
     }
 
     // 逗号分隔列表：去空白、丢空项；未配置或全空时返回空列表
-    public static List<String> splitList(Map<String, String> config, String key) {
+    public List<String> splitList(String key) {
         String val = config.get(key);
         if (val == null || val.trim().isEmpty()) return Collections.emptyList();
         List<String> items = new ArrayList<>();
@@ -60,7 +66,7 @@ public final class Configs {
         return items;
     }
 
-    public static String notBlank(Map<String, String> config, String key) {
+    public String notBlank(String key) {
         String val = config.get(key);
         if (val == null || val.trim().isEmpty()) { // 未配置时原实现可用字面量 "null"，故 fail-fast
             throw new IllegalArgumentException(invalid(key, "must be configured", val));
@@ -69,7 +75,7 @@ public final class Configs {
     }
 
     @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
-    public static <T> T getConfig(Map<String, String> config, String key, T defaultValue) {
+    public <T> T getConfig(String key, T defaultValue) {
         String val = config.get(key);
         if (val == null) return defaultValue;
         val = val.trim(); // 值允许带前后空白，但不得因此解析失败或静默降级
@@ -89,7 +95,7 @@ public final class Configs {
     }
 
     // 解析失败须带上配置项名：裸 NumberFormatException 无法定位是哪一项写错
-    private static <N> N number(String val, String key, Function<String, N> parser) {
+    private <N> N number(String val, String key, Function<String, N> parser) {
         try {
             return parser.apply(val);
         } catch (NumberFormatException e) {
@@ -97,7 +103,7 @@ public final class Configs {
         }
     }
 
-    private static String invalid(String key, String requirement, String val) {
+    private String invalid(String key, String requirement, String val) {
         return key + " " + requirement + ", got: " + val;
     }
 }

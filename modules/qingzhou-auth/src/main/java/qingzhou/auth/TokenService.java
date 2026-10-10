@@ -24,7 +24,8 @@ public class TokenService {
 
     @Activate
     public void init(Map<String, String> config) {
-        tokenExpireMillis = Configs.getConfig(config, "token_expire_seconds", 30 * 60) * 1000L;
+        Configs configs = new Configs(config);
+        tokenExpireMillis = configs.getConfig("token_expire_seconds", 30 * 60) * 1000L;
         tokenCipher = crypto.getGlobalCipher();
     }
 

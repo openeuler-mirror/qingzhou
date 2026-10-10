@@ -14,8 +14,7 @@ import qingzhou.common.FailureLockout;
 import qingzhou.logger.Logger;
 import qingzhou.logger.util.PendingLogs;
 
-import static qingzhou.common.Configs.atLeast;
-import static qingzhou.common.Configs.between;
+import qingzhou.common.Configs;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = AuthManager.class)
@@ -32,8 +31,9 @@ public class AuthManager {
 
     @Activate
     public void init(Map<String, String> config) {
-        int maxAuthFailures = atLeast(config, "auth_fail_max", 1, 10);
-        long authFailWindowSeconds = between(config, "auth_fail_window", 1L, 86400L, 60);
+        Configs configs = new Configs(config);
+        int maxAuthFailures = configs.atLeast("auth_fail_max", 1, 10);
+        long authFailWindowSeconds = configs.between("auth_fail_window", 1L, 86400L, 60);
         long authFailWindowMillis = authFailWindowSeconds * 1000L;
         lockout = new FailureLockout(maxAuthFailures, authFailWindowMillis, 10_000);
 

@@ -22,7 +22,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import static qingzhou.common.Configs.atLeast;
+import qingzhou.common.Configs;
 
 /**
  * 请求分发入口：装配安全头、准入闸门与 body 处理三条协作链，并持有许可的获取与归还。
@@ -51,18 +51,19 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
 
     @Activate
     public void init(Map<String, String> config) {
-        int maxConcurrentRequests = atLeast(config, "max_concurrent_requests", 1, 1000);
+        Configs configs = new Configs(config);
+        int maxConcurrentRequests = configs.atLeast("max_concurrent_requests", 1, 1000);
         this.concurrentSemaphore = new Semaphore(maxConcurrentRequests);
         // 流式上传不占堆内存配额，须单独限并发：否则大量并发上传会同时占满临时文件与连接
-        int maxStreams = atLeast(config, "max_concurrent_streams", 1, Math.min(maxConcurrentRequests, 64));
+        int maxStreams = configs.atLeast("max_concurrent_streams", 1, Math.min(maxConcurrentRequests, 64));
         this.streamSemaphore = new Semaphore(maxStreams);
 
-        long maxBodyBytes = atLeast(config, "max_body_bytes", 1L, 8 * 1024 * 1024);
+        long maxBodyBytes = configs.atLeast("max_body_bytes", 1L, 8 * 1024 * 1024);
         // 流式上传落临时文件，默认额度过大易打满磁盘
-        long maxStreamBytes = atLeast(config, "max_stream_bytes", 1L, 256L * 1024 * 1024);
+        long maxStreamBytes = configs.atLeast("max_stream_bytes", 1L, 256L * 1024 * 1024);
         // 请求进入期（准入到请求体读完）总时长上限：慢速滴漏请求被 idle_timeout 漏掉
         // （每秒 1 字节连接永远"活跃"），却可长期占住并发许可。0 表示不启用
-        intakeTimeoutSeconds = atLeast(config, "request_timeout_seconds", 0, 10);
+        intakeTimeoutSeconds = configs.atLeast("request_timeout_seconds", 0, 10);
         this.responseHeaders = new ResponseHeaders(config);
         this.requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, authManager, handlerManager, logger, aggregatedBytes);
         this.bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);
