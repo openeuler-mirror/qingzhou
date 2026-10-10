@@ -1,4 +1,4 @@
-package qingzhou.registry.web;
+package qingzhou.registry.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -17,7 +17,6 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
-import qingzhou.registry.impl.RegistryImpl;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -150,7 +149,7 @@ public class Register implements HttpHandler {
         }
 
         RegistryImpl registryImpl = (RegistryImpl) registry;
-        registryImpl.addRemoteApps(instanceInfo);
+        registryImpl.addRemoteInstanceInfo(instanceInfo);
 
         String msg;
         if (exists != null) {

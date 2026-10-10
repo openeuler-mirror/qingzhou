@@ -1,4 +1,4 @@
-package qingzhou.registry.web;
+package qingzhou.registry.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -79,18 +79,21 @@ public class Refresh implements HttpHandler {
             return;
         }
 
-        String instanceKey = instanceInfo.getKey();
         byte[] encrypt;
         try {
-            Cipher cipher = crypto.getCipher(instanceKey);
+            Cipher cipher = crypto.getCipher(oldKey);
             encrypt = cipher.encrypt(Boolean.TRUE.toString().getBytes(StandardCharsets.UTF_8));
+
             instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
             instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
+            // 记录旧钥供宽限期内 invoke 继续加密：agent 要收到本响应才切新钥，
+            // 期间 registry 用新钥加密必然解密失败（RTT 窗口）
+            ((RegistryImpl) registry).keyRotation.onRotated(instanceId, oldKey);
+
+            httpResponse.send(encrypt).finish();
         } catch (Exception e) {
+            logger.error("refresh failed", e);
             httpResponse.status(500).finish();
-            logger.error("encryption failed, key len: " + instanceKey.length());
-            return;
         }
-        httpResponse.send(encrypt).finish();
     }
 }

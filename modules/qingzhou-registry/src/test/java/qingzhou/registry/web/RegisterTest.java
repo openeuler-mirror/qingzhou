@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.registry.impl.Register;
 
 public class RegisterTest {
     private static final byte[] REGISTER_TOKEN = "token-1234567890".getBytes(java.nio.charset.StandardCharsets.UTF_8);

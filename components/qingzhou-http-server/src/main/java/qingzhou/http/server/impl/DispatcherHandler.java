@@ -2,9 +2,11 @@ package qingzhou.http.server.impl;
 
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -16,6 +18,7 @@ import org.reactivestreams.Publisher;
 import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
+import reactor.netty.Connection;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
@@ -40,6 +43,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     // 以下由 OSGi 激活线程写入、Netty EventLoop 读取，须保证可见性；协作对象在 init 时整体重建
     private volatile Semaphore concurrentSemaphore;
     private volatile Semaphore streamSemaphore;
+    private volatile int intakeTimeoutSeconds;
 
     private volatile ResponseHeaders responseHeaders;
     private volatile RequestGates requestGates;
@@ -56,6 +60,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         long maxBodyBytes = atLeast(config, "max_body_bytes", 1L, 8 * 1024 * 1024);
         // 流式上传落临时文件，默认额度过大易打满磁盘
         long maxStreamBytes = atLeast(config, "max_stream_bytes", 1L, 256L * 1024 * 1024);
+        // 请求进入期（准入到请求体读完）总时长上限：慢速滴漏请求被 idle_timeout 漏掉
+        // （每秒 1 字节连接永远"活跃"），却可长期占住并发许可。0 表示不启用
+        intakeTimeoutSeconds = atLeast(config, "request_timeout_seconds", 0, 10);
         this.responseHeaders = new ResponseHeaders(config);
         this.requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, authManager, handlerManager, logger, aggregatedBytes);
         this.bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);
@@ -71,6 +78,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         }
 
         RequestContext ctx = new RequestContext(request, response, concurrentSemaphore, streamSemaphore);
+
+        if (intakeTimeoutSeconds > 0) scheduleIntakeTimeout(ctx);
+
         // 闸门判定同步执行：它有副作用（预留全局配额），放进 defer 会在重复订阅时被重复执行
         Publisher<Void> denial;
         try {
@@ -84,9 +94,27 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
                 .doFinally(signal -> release(ctx));
     }
 
+    /**
+     * 请求进入期超时（防 Slowloris）：到时请求体仍未读完则强制断开。
+     * 关闭连接会中止在途管道，doFinally 仍会归还许可与配额；进入期正常结束时由
+     * {@link RequestContext#intakeComplete()}（聚合/流式读完）或 release()（拒绝/异常）取消，
+     * 故 handler 执行期与 SSE 等长响应不受此约束。
+     */
+    private void scheduleIntakeTimeout(RequestContext ctx) {
+        // 运行时实现类（ChannelOperations）本身实现 Connection 接口，由此取得底层 channel
+        Channel channel = ((Connection) ctx.request).channel();
+        ctx.intakeTimeout = channel.eventLoop().schedule(() -> {
+            if (ctx.released.get()) return; // 与 release() 的取消竞态：已结束的请求不再处理
+            logger.warn("request intake exceeded " + intakeTimeoutSeconds + "s, closing connection: "
+                    + ctx.request.method() + " " + ctx.request.uri());
+            channel.close();
+        }, intakeTimeoutSeconds, TimeUnit.SECONDS);
+    }
+
     // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
     private void release(RequestContext ctx) {
         if (!ctx.released.compareAndSet(false, true)) return; // 归还次数须与 tryAcquire 一致，重复订阅不得超发许可
+        ctx.intakeComplete(); // 拒绝分支/异常分支的进入期到此结束
         ctx.concurrentSemaphore.release();
         if (ctx.streamPermitHeld) ctx.streamSemaphore.release();
         if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);

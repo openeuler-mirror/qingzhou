@@ -83,7 +83,7 @@ public class HandlerManager {
 
         // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
-        pendingLogs.log(logger, "registered: [" + path + "] by [" + source + "]"
+        pendingLogs.info(logger, "registered: [" + path + "] by [" + source + "]"
                 + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : ""));
         if (isNoAuth) {
             pendingLogs.warn(logger, "no-auth route: [" + path + "] is publicly reachable, declared by [" + source + "]");

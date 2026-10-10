@@ -2,6 +2,7 @@ package qingzhou.agent;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -47,8 +48,11 @@ public class FileUpload implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger,
-                requestData -> processFileUpload(requestData, httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY)));
+        // 上传分片以上传键作为 AAD 绑定上下文：分片无法被重放到其他上传——绑定知识属于上传方，不进入传输层
+        String uploadKey = httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY);
+        byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
+        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, context,
+                requestData -> processFileUpload(requestData, uploadKey));
     }
 
     private String processFileUpload(byte[] data, String key) throws Throwable {

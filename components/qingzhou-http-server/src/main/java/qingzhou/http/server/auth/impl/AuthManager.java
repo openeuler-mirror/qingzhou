@@ -45,7 +45,7 @@ public class AuthManager {
     public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
-        pendingLogs.log(logger, "http authenticator registered: " + authenticator.getClass().getName());
+        pendingLogs.info(logger, "http authenticator registered: " + authenticator.getClass().getName());
     }
 
     public void removeAuthenticator(Authenticator authenticator) {

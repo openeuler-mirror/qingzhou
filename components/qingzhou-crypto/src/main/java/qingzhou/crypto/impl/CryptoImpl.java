@@ -112,6 +112,11 @@ public class CryptoImpl implements Crypto {
     }
 
     @Override
+    public Base32Coder getBase32Coder() {
+        return base32Coder;
+    }
+
+    @Override
     public Base16Coder getBase16Coder() {
         return base16Coder;
     }

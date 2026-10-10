@@ -1,9 +1,12 @@
 package qingzhou.crypto.impl;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.Crypto;
 
 public class Base32CoderImplTest {
     // Base32合法字符正则：仅大写A-Z、数字2-7、填充符=
@@ -15,16 +18,21 @@ public class Base32CoderImplTest {
     // 混入非法字符版本（0/1/8/9）
     private static final String TEST_BASE32_DIRTY = "OR01S89XG5A=";
 
+    private Base32Coder getBase32Coder() {
+        Crypto crypto = new CryptoImpl();
+        return crypto.getBase32Coder();
+    }
+
     // ===================== encode(byte[]) 编码测试 =====================
     @Test
     public void dataNull_encode_returnNull() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         Assert.assertNull(coder.encode(null));
     }
 
     @Test
     public void dataEmptyByteArray_encode_returnEmptyString() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] emptyBytes = new byte[0];
         String result = coder.encode(emptyBytes);
         Assert.assertEquals(result, "");
@@ -32,7 +40,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataNormalByteArray_encode_returnStandardBase32() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         // "test" 的标准Base32编码为 ORSXG5A=
         byte[] sourceData = "test".getBytes(StandardCharsets.UTF_8);
         String encodeResult = coder.encode(sourceData);
@@ -41,7 +49,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataSingleByte_encode_returnValidBase32() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] sourceData = new byte[]{0x66};  // 单字节 'f'
         String encodeResult = coder.encode(sourceData);
         Assert.assertEquals(encodeResult, "MY======");
@@ -51,14 +59,14 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encode_onlyValidBase32Char() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[][] testDatas = {
-            "Hello".getBytes(StandardCharsets.UTF_8),
-            "Base32".getBytes(StandardCharsets.UTF_8),
-            "12345".getBytes(StandardCharsets.UTF_8),
-            new byte[]{0x00, 0x01, 0x02, 0x7F, (byte) 0xFF},
-            new byte[]{0x41, 0x42, 0x43},
-            "".getBytes(StandardCharsets.UTF_8)
+                "Hello".getBytes(StandardCharsets.UTF_8),
+                "Base32".getBytes(StandardCharsets.UTF_8),
+                "12345".getBytes(StandardCharsets.UTF_8),
+                new byte[]{0x00, 0x01, 0x02, 0x7F, (byte) 0xFF},
+                new byte[]{0x41, 0x42, 0x43},
+                "".getBytes(StandardCharsets.UTF_8)
         };
         for (byte[] data : testDatas) {
             String encodeResult = coder.encode(data);
@@ -70,20 +78,20 @@ public class Base32CoderImplTest {
     // ===================== decode(String) 解码测试 =====================
     @Test
     public void dataNull_decode_returnNull() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         Assert.assertNull(coder.decode((String) null));
     }
 
     @Test
     public void dataEmptyString_decode_returnEmptyByteArray() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] result = coder.decode("");
         Assert.assertEquals(result.length, 0);
     }
 
     @Test
     public void dataStandardBase32Str_decode_restoreSourceText() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] decodeBytes = coder.decode(TEST_BASE32);
         String realText = new String(decodeBytes, StandardCharsets.UTF_8);
         Assert.assertEquals(realText, "test");
@@ -91,7 +99,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataEncodeThenDecode_decode_restoreOriginalBytes() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] originBytes = "Java Base32 Crypto Demo".getBytes(StandardCharsets.UTF_8);
         String encodeStr = coder.encode(originBytes);
         byte[] decodeBytes = coder.decode(encodeStr);
@@ -100,15 +108,15 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encodeThenDecode_restoreOriginalBytes() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[][] testDatas = {
-            new byte[0],
-            new byte[]{0x00},
-            new byte[]{(byte) 0xFF},
-            new byte[]{0x00, 0x01, 0x02, 0x03, 0x04},
-            "ABC".getBytes(StandardCharsets.UTF_8),
-            "Hello Base32!".getBytes(StandardCharsets.UTF_8),
-            new byte[]{0x00, 0x7F, (byte) 0x80, (byte) 0xFF},
+                new byte[0],
+                new byte[]{0x00},
+                new byte[]{(byte) 0xFF},
+                new byte[]{0x00, 0x01, 0x02, 0x03, 0x04},
+                "ABC".getBytes(StandardCharsets.UTF_8),
+                "Hello Base32!".getBytes(StandardCharsets.UTF_8),
+                new byte[]{0x00, 0x7F, (byte) 0x80, (byte) 0xFF},
         };
         for (byte[] origin : testDatas) {
             String encoded = coder.encode(origin);
@@ -119,7 +127,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataLowercaseBase32Str_decode_restoreSourceText() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] decodeBytes = coder.decode(TEST_BASE32_LOWER);
         String realText = new String(decodeBytes, StandardCharsets.UTF_8);
         Assert.assertEquals(realText, "test");
@@ -127,7 +135,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataMixedIllegalCharStr_decode_throwIllegalArgument() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         try {
             coder.decode(TEST_BASE32_DIRTY);
             Assert.fail("非法字符必须显式失败，而非静默跳过导致数据失真");
@@ -138,7 +146,7 @@ public class Base32CoderImplTest {
 
     @Test
     public void dataOnlyPaddingStr_decode_returnEmptyByteArray() {
-        Base32CoderImpl coder = new Base32CoderImpl();
+        Base32Coder coder = getBase32Coder();
         byte[] result = coder.decode("========");
         Assert.assertEquals(result.length, 0);
     }

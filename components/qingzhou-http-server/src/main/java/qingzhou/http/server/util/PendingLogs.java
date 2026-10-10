@@ -10,7 +10,7 @@ public final class PendingLogs {
     private final List<String> messages = new ArrayList<>();
     private final List<String> warnings = new ArrayList<>();
 
-    public synchronized void log(Logger logger, String message) {
+    public synchronized void info(Logger logger, String message) {
         if (logger != null) logger.info(message);
         else messages.add(message);
     }

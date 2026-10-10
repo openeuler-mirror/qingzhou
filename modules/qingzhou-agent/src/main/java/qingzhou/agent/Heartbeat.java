@@ -46,6 +46,26 @@ public class Heartbeat {
 
     static volatile InstanceInfo thisInstanceInfo;
 
+
+    // 轮换前的旧钥：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
+    private static volatile String previousKey;
+    private static volatile long previousKeyAt;
+
+    /**
+     * 宽限期内返回轮换前的旧钥，供 ProcessHandler 解密回退；过期或无轮换返回 null
+     */
+    static String decryptKeyFallback() {
+        String key = previousKey;
+        if (key == null) return null;
+
+        if (System.currentTimeMillis() - previousKeyAt <= Constants.AGENT_KEY_GRACE_MILLIS * 2) {
+            return key;
+        } else {
+            previousKey = null;
+            return null;
+        }
+    }
+
     @Activate
     public void start(Map<String, String> config) throws Exception {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
@@ -79,6 +99,11 @@ public class Heartbeat {
                     String refreshInfos = thisInstanceInfo.getId() + "," + newKey + "," + thisInstanceInfo.getKey();
                     String refreshed = send(refreshUrl, refreshInfos.getBytes(StandardCharsets.UTF_8));
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
+                        // 宽限切换：registry 已切新钥，但其 invoke 在宽限期内仍用旧钥加密（本响应也是旧钥密文），
+                        // 保留旧钥一段时间令窗口内的报文仍可解密，invoke 不再因轮换必然失败
+                        previousKey = thisInstanceInfo.getKey();
+                        previousKeyAt = System.currentTimeMillis();
+
                         thisInstanceInfo.setKey(newKey);
                     } else {
                         // 注册报文：registerToken + timestamp + nonce + currentKeyProof + instanceInfoJson。

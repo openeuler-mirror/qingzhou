@@ -35,7 +35,8 @@ public class AgentInvoker implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, this::processRequest);
+        // invoke 报文整体唯一，无需额外 AAD 绑定上下文
+        ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, null, this::processRequest);
     }
 
     private String processRequest(byte[] data) throws Throwable {
