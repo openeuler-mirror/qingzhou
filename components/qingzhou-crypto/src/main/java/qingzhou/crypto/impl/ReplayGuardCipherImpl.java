@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import qingzhou.common.NonceRegistry;
 import qingzhou.crypto.Cipher;
-import qingzhou.crypto.NonceRegistry;
 import qingzhou.crypto.ReplayGuardCipher;
 
 /**
@@ -29,12 +29,13 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final Cipher cipher;
-    private final NonceRegistry nonceRegistry;
+    // 共享登记器：AES 报文（ReplayGuardCipher）与 RSA 注册报文共用同一份去重状态实现
+    private static final NonceRegistry nonceRegistry = new NonceRegistry();
 
-    ReplayGuardCipherImpl(Cipher cipher, NonceRegistry nonceRegistry) {
+    private final Cipher cipher;
+
+    ReplayGuardCipherImpl(Cipher cipher) {
         this.cipher = cipher;
-        this.nonceRegistry = nonceRegistry;
     }
 
     @Override
@@ -84,7 +85,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
         return plaintext;
     }
 
-    private static boolean isWrapped(byte[] packet) {
+    private boolean isWrapped(byte[] packet) {
         return packet != null && packet.length > HEADER_SIZE && (packet[0] & 0xFF) == MAGIC;
     }
 

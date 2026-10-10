@@ -8,7 +8,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.server.util.Configs;
+import qingzhou.common.Configs;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)

@@ -1,4 +1,4 @@
-package qingzhou.http.server.util;
+package qingzhou.common;
 
 import java.util.Comparator;
 import java.util.Map;

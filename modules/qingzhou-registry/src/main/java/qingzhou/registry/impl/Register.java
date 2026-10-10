@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.NonceRegistry;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
@@ -59,6 +60,7 @@ public class Register implements HttpHandler {
     @Reference
     private Json json;
 
+    private final NonceRegistry nonceRegistry = new NonceRegistry();
     private PairCipher pairCipher;
     private byte[] registerToken;
     private Timer timer;
@@ -201,7 +203,7 @@ public class Register implements HttpHandler {
         }
 
         // nonce 去重：拦截时间窗内的精确重放。登记须先于任何状态变更
-        if (!crypto.getNonceRegistry().registerIfAbsent(parts[2], timestamp, MAX_CLOCK_SKEW_MILLIS * 2)) {
+        if (!nonceRegistry.registerIfAbsent(parts[2], timestamp, MAX_CLOCK_SKEW_MILLIS * 2)) {
             httpResponse.status(409).send("replay").finish();
             return false;
         }

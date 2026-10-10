@@ -22,7 +22,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-import static qingzhou.http.server.util.Configs.*;
+import static qingzhou.common.Configs.*;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,

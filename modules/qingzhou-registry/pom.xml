@@ -66,6 +66,7 @@
                             qingzhou.http.client,
                             qingzhou.logger,qingzhou.logger.util,
                             qingzhou.json,
+                            qingzhou.common,
                             qingzhou.crypto,
                             qingzhou.ai
                         </Import-Package>

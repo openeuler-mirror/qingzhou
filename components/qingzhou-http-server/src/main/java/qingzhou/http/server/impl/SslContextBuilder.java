@@ -11,7 +11,7 @@ import javax.net.ssl.SSLContext;
 
 import io.netty.handler.ssl.SslContext;
 import qingzhou.crypto.Cipher;
-import qingzhou.http.server.util.Configs;
+import qingzhou.common.Configs;
 import qingzhou.logger.Logger;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露

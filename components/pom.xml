@@ -12,6 +12,7 @@
 
     <packaging>pom</packaging>
     <modules>
+        <module>qingzhou-common</module>
         <module>qingzhou-logger</module>
         <module>qingzhou-json</module>
         <module>qingzhou-jdbc</module>

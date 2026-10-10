@@ -1,4 +1,4 @@
-package qingzhou.http.server.util;
+package qingzhou.common;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * qingzhou-http-server 配置的统一读取与校验入口。
- * 服务器、分发器、认证器三个组件同读一份配置：分散解析时新增一项校验极易漏掉某一处，
+ * 平台各模块配置的统一读取与校验入口。
+ * 多个组件同读一份配置：分散解析时新增一项校验极易漏掉某一处，
  * 而漏掉的那处恰好会在运行时静默降级（如窗口非正数令防爆破失效）。
  */
 public final class Configs {

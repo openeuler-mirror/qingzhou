@@ -13,8 +13,8 @@ import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.util.Configs;
-import qingzhou.http.server.util.FailureLockout;
+import qingzhou.common.Configs;
+import qingzhou.common.FailureLockout;
 import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,

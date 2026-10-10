@@ -26,17 +26,10 @@ public class CryptoImpl implements Crypto {
     private final TotpCipher totpCipher = new TotpCipherImpl(base16Coder, base32Coder);
 
     private volatile Cipher globalCipher;
-    // 共享登记器：AES 报文（ReplayGuardCipher）与 RSA 注册报文共用同一份去重状态实现
-    private final NonceRegistry nonceRegistry = new NonceRegistryImpl();
 
     @Override
     public ReplayGuardCipher getReplayGuardCipher(Cipher cipher) {
-        return new ReplayGuardCipherImpl(cipher, nonceRegistry);
-    }
-
-    @Override
-    public NonceRegistry getNonceRegistry() {
-        return nonceRegistry;
+        return new ReplayGuardCipherImpl(cipher);
     }
 
     @Override

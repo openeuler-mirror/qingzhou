@@ -8,8 +8,8 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import static qingzhou.http.server.util.Configs.getConfig;
-import static qingzhou.http.server.util.Configs.splitList;
+import static qingzhou.common.Configs.getConfig;
+import static qingzhou.common.Configs.splitList;
 
 /**
  * 响应安全头与跨域头。

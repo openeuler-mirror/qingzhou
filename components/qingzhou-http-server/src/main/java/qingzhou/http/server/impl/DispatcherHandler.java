@@ -22,7 +22,7 @@ import reactor.netty.Connection;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
 
-import static qingzhou.http.server.util.Configs.atLeast;
+import static qingzhou.common.Configs.atLeast;
 
 /**
  * 请求分发入口：装配安全头、准入闸门与 body 处理三条协作链，并持有许可的获取与归还。

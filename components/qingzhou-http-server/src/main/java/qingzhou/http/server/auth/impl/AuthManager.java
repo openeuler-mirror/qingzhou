@@ -10,12 +10,12 @@ import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.auth.Authenticator;
 import qingzhou.http.server.impl.HandlerManager;
 import qingzhou.http.server.impl.HttpRequestImpl;
-import qingzhou.http.server.util.FailureLockout;
+import qingzhou.common.FailureLockout;
 import qingzhou.logger.Logger;
 import qingzhou.logger.util.PendingLogs;
 
-import static qingzhou.http.server.util.Configs.atLeast;
-import static qingzhou.http.server.util.Configs.between;
+import static qingzhou.common.Configs.atLeast;
+import static qingzhou.common.Configs.between;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = AuthManager.class)

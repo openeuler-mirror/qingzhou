@@ -2,7 +2,7 @@ package qingzhou.ai.memory;
 
 import java.util.Map;
 
-import static qingzhou.http.server.util.Configs.atLeast;
+import static qingzhou.common.Configs.atLeast;
 
 /**
  * 容量与预算阈值：全部可配置，memory 与 file 两种存储后端共用同一套数值
