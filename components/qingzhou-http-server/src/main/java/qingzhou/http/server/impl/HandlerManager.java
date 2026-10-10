@@ -7,8 +7,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
+import qingzhou.logger.util.PendingLogs;
 
 /**
  * 路由表：注册与解绑可能和请求分发并发；写操作串行化，读取使用并发 Map 快照。

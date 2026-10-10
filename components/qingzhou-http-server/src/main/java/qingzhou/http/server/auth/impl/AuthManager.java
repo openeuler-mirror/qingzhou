@@ -11,8 +11,8 @@ import qingzhou.http.server.auth.Authenticator;
 import qingzhou.http.server.impl.HandlerManager;
 import qingzhou.http.server.impl.HttpRequestImpl;
 import qingzhou.http.server.util.FailureLockout;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
+import qingzhou.logger.util.PendingLogs;
 
 import static qingzhou.http.server.util.Configs.atLeast;
 import static qingzhou.http.server.util.Configs.between;

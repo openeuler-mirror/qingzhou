@@ -183,7 +183,7 @@
                         </Export-Package>
                         <Import-Package>
                             qingzhou.crypto,
-                            qingzhou.logger,
+                            qingzhou.logger,qingzhou.logger.util,
                             org.osgi.framework,
                             javax.net.ssl,javax.security.cert
                         </Import-Package>
