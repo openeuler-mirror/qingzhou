@@ -72,11 +72,14 @@ public class AuthManager {
         }
 
         // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
-        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户
+        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户。判断依据是认证结果原因而非直接读头：
+        // TokenAuthenticator 对无/畸形 Bearer 返回 "token missing"，即"未出示凭据"，不计入锁定；
+        // 只有出示了凭据却失败（如 "invalid token"）才消耗锁定计数，从而仍能拖慢凭据爆破
         String reason = authResult.getReason();
         boolean noCredential = reason == null || "no credential provided".equals(reason)
-                || "no authenticator ready".equals(reason);
-        if (!noCredential && httpRequest.getHeader("Authorization") != null) {
+                || "no authenticator ready".equals(reason)
+                || "token missing".equals(reason);
+        if (!noCredential) {
             lockout.recordFailure(host);
         }
 

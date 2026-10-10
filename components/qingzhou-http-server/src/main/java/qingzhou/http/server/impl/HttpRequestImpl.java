@@ -67,12 +67,14 @@ public class HttpRequestImpl implements HttpRequest {
 
     @Override
     public String getHeader(String header) {
-        return request.requestHeaders().get(header);
+        io.netty.handler.codec.http.HttpHeaders headers = request.requestHeaders();
+        return headers != null ? headers.get(header) : null;
     }
 
     @Override
     public String getContentType() {
-        return request.requestHeaders().get(HttpHeaderNames.CONTENT_TYPE);
+        io.netty.handler.codec.http.HttpHeaders headers = request.requestHeaders();
+        return headers != null ? headers.get(HttpHeaderNames.CONTENT_TYPE) : null;
     }
 
     @Override
