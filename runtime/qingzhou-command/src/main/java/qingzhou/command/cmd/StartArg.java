@@ -63,6 +63,12 @@ public class StartArg extends Processor {
                     log("ignore forbidden jvm arg: " + s);
                     continue;
                 }
+                // jvm.arg 经 sh 的 eval 执行，`$()`/反引号等会被 shell 展开构成命令注入；
+                // 仅拒双引号不足以防御，须拒绝一切 shell 元字符（与 wrap 的引号拒绝互补）
+                if (containsShellMeta(s)) {
+                    log("ignore jvm arg with unsafe characters: " + s);
+                    continue;
+                }
                 commands.add(s);
             }
         }
@@ -92,6 +98,18 @@ public class StartArg extends Processor {
     private static boolean isForbiddenJvmArg(String arg) {
         return arg.startsWith("-agentlib") || arg.startsWith("-javaagent")
                 || arg.startsWith("-agentpath") || arg.startsWith("-Xrun");
+    }
+
+    // sh 经 eval 执行启动命令：以下字符可被 shell 当作语法/展开/重定向，必须拒之门外
+    private static boolean containsShellMeta(String arg) {
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            if (c == '$' || c == '`' || c == '(' || c == ')' || c == ';' || c == '&'
+                    || c == '|' || c == '<' || c == '>' || c == '\n' || c == '\r') {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 默认拒绝上述参数；确有需要（如接入 APM 探针）时，可用 jvm.arg.allowed 配置前缀显式放行

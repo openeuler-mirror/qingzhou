@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -30,8 +31,8 @@ public class AppDriver implements BundleActivator {
     private AppMeta appMeta;
     private AppContextImpl appContext;
 
-    private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
-    private final Map<String, Object> serviceObjects = new HashMap<>();
+    private final Set<ServiceReference<?>> serviceReferences = ConcurrentHashMap.newKeySet();
+    private final Map<String, Object> serviceObjects = new ConcurrentHashMap<>();
 
     @Override
     public void start(BundleContext context) throws Exception {
@@ -114,7 +115,8 @@ public class AppDriver implements BundleActivator {
 
     private App parseAnnotations() throws Exception {
         URL annotationFile = context.getBundle().getResource("/QZ-INF/annotation.json");
-        if (annotationFile == null) throw new IllegalStateException("Missing /QZ-INF/annotation.json in bundle: " + context.getBundle().getSymbolicName());
+        if (annotationFile == null)
+            throw new IllegalStateException("Missing /QZ-INF/annotation.json in bundle: " + context.getBundle().getSymbolicName());
 
         try (InputStream inputStream = annotationFile.openStream()) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

@@ -3,6 +3,7 @@ package qingzhou.ai.impl;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
@@ -52,7 +53,7 @@ public class AiChat implements HttpHandler {
     @Reference
     private InterceptToolInvocation interceptToolInvocation;
 
-    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
+    private final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
@@ -195,8 +196,12 @@ public class AiChat implements HttpHandler {
     private ParsedImage parseImage(String content) {
         if (content.startsWith("data:")) {
             int comma = content.indexOf(',');
+            // 缺逗号/分号分隔符时按纯 base64 处理，避免 substring 越界把恶意请求变成 500
+            if (comma < 0) return new ParsedImage(content, null);
             String meta = content.substring("data:".length(), comma);
-            return new ParsedImage(content.substring(comma + 1), meta.substring(0, meta.indexOf(';')));
+            int sep = meta.indexOf(';');
+            String mime = sep < 0 ? meta : meta.substring(0, sep);
+            return new ParsedImage(content.substring(comma + 1), mime);
         }
         return new ParsedImage(content, null);
     }

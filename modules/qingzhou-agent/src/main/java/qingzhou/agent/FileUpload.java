@@ -55,10 +55,18 @@ public class FileUpload implements HttpHandler {
                 requestData -> processFileUpload(requestData, uploadKey));
     }
 
+    // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
+    private static final long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024;
+
     private String processFileUpload(byte[] data, String key) throws Throwable {
         String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
         File tempFile = resolveInUploadBase(uploadId);
         try {
+            long total = tempFile.length() + (data == null ? 0 : data.length);
+            if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
+                tempFile.delete();
+                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
+            }
             if (tempFile.exists()) {
                 Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
             } else {

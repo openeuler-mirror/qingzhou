@@ -16,10 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.Request;
-import qingzhou.http.client.Response;
-import qingzhou.http.client.ResponseListener;
+import qingzhou.http.client.*;
 
 @Component
 public class HttpClientImpl implements HttpClient {
@@ -52,6 +49,12 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
+        // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException
+        boolean methodHasBody = req.method != null && req.method != HttpMethod.GET && req.method != HttpMethod.HEAD;
+        if (!methodHasBody && req.body == null && req.params != null) {
+            req.url = appendQuery(req.url, req.params);
+        }
+
         HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout, req.trustedCertificates, req.trustAll);
 
         if (req.method != null) {
@@ -67,7 +70,7 @@ public class HttpClientImpl implements HttpClient {
         byte[] body = null;
         if (req.body != null) {
             body = req.body;
-        } else if (req.params != null && req.files == null) {
+        } else if (req.params != null && req.files == null && methodHasBody) {
             body = encodeForm(req.params);
             if (conn.getRequestProperty("Content-Type") == null) {
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -112,6 +115,20 @@ public class HttpClientImpl implements HttpClient {
                     .append(URLEncoder.encode(value, "UTF-8"));
         }
         return body.length() > 0 ? body.toString().getBytes(StandardCharsets.UTF_8) : null;
+    }
+
+    // 将参数拼到 URL 查询串（供 GET/HEAD 使用），与 encodeForm 复用同一套编码
+    private static String appendQuery(String url, Map<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder query = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String value = entry.getValue();
+            if (value == null) continue;
+            if (query.length() > 0) query.append('&');
+            query.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
+                    .append(URLEncoder.encode(value, "UTF-8"));
+        }
+        if (query.length() == 0) return url;
+        return url + (url.indexOf('?') < 0 ? "?" : "&") + query;
     }
 
     private void writeMultipart(RequestImpl req, HttpURLConnection conn) throws IOException {

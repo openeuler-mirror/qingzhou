@@ -110,7 +110,9 @@ final class RequestGates {
         if (method == HttpMethod.GET || method == HttpMethod.HEAD || method == HttpMethod.OPTIONS) return null;
 
         String origin = ctx.request.requestHeaders().get(HttpHeaderNames.ORIGIN);
-        if (origin == null || "null".equals(origin)) return null;
+        // 仅「无 Origin 头」视为非浏览器/服务端调用而放行；字面量 "null"（sandboxed iframe、data: 等不透明源）
+        // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
+        if (origin == null) return null;
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
         if (host != null && !host.isEmpty() && origin.endsWith("//" + host)) return null;
         // 与 ResponseHeaders 同一白名单语义："*" 表示放开全部来源

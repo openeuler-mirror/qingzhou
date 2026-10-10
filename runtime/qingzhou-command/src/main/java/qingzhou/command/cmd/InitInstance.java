@@ -4,6 +4,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -113,7 +114,8 @@ public class InitInstance extends Processor {
         Method digest = cryptoLoader.loadClass("qingzhou.crypto.MessageDigest")
                 .getMethod("digest", String.class, String.class, int.class, int.class);
         write(propsFile, putValue(read(propsFile), "qingzhou-auth.password",
-                (String) digest.invoke(messageDigest, password, "SHA-256", 16, 2)));
+                // PBKDF2 替代简单迭代哈希：带盐 + 高迭代次数（200000），抗离线爆破；旧 SHA-256 摘要仍可经 matches 校验
+                (String) digest.invoke(messageDigest, password, "PBKDF2WithHmacSHA256", 16, 200000)));
         logSimple("admin password updated");
     }
 
@@ -121,9 +123,16 @@ public class InitInstance extends Processor {
         List<String> command = Arrays.asList(keytool(), "-genkeypair", "-alias", "qingzhou",
                 "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA", "-validity", "3650",
                 "-storetype", "PKCS12", "-keystore", keystore.getAbsolutePath(),
-                "-storepass", password, "-keypass", password,
                 "-dname", "CN=qingzhou", "-ext", "SAN=dns:localhost,ip:127.0.0.1");
+        // 口令经 stdin 传入而非命令行参数，避免明文出现在 ps 输出中被同机其它用户读取
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        try (OutputStream out = process.getOutputStream()) {
+            // 新建密钥库依次索要 storepass（两次）与 keypass；keypass 缺省沿用 storepass，
+            // 重复写入同一口令以覆盖两种提示顺序，多余行被进程忽略
+            byte[] line = (password + "\n").getBytes(StandardCharsets.UTF_8);
+            for (int i = 0; i < 4; i++) out.write(line);
+            out.flush();
+        }
         try (InputStream inputStream = process.getInputStream()) {
             byte[] bytes = new byte[1024 * 4];
             StringBuilder output = new StringBuilder();

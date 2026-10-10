@@ -7,11 +7,14 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.Configs;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
@@ -21,8 +24,6 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-
-import qingzhou.common.Configs;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
@@ -40,6 +41,11 @@ public class OAuth2Handler implements HttpHandler {
 
     private static final String USER_SP = "@";
     private static final String ROLES_SP = ",";
+
+    // 吊销令牌容量上限：令牌短时效，黑名单只需覆盖到过期，超出则淘汰最旧
+    private static final int MAX_REVOKED_TOKENS = 100_000;
+    // 登出后吊销的令牌集合（内存态），verifyToken 前拦截，使已签发令牌立即失效
+    private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
     @Reference
     private HttpClient httpClient;
@@ -244,6 +250,7 @@ public class OAuth2Handler implements HttpHandler {
     }
 
     Object[] verifyToken(String token) {
+        if (token == null || revokedTokens.contains(token)) return null; // 已吊销令牌立即失效
         try {
             String payload = tokenCipher.decrypt(token);
             int expiresSeparator = payload.lastIndexOf(USER_SP);
@@ -257,5 +264,10 @@ public class OAuth2Handler implements HttpHandler {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    // 登出吊销：将令牌加入黑名单，使 Cookie 与 Bearer 两种携带方式的令牌都立即失效
+    public void revokeToken(String token) {
+        if (token != null && !token.isEmpty()) revokedTokens.add(token);
     }
 }

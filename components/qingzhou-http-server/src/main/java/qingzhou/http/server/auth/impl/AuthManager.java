@@ -5,16 +5,15 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Configs;
+import qingzhou.common.FailureLockout;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.auth.Authenticator;
 import qingzhou.http.server.impl.HandlerManager;
 import qingzhou.http.server.impl.HttpRequestImpl;
-import qingzhou.common.FailureLockout;
 import qingzhou.logger.Logger;
 import qingzhou.logger.util.PendingLogs;
-
-import qingzhou.common.Configs;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = AuthManager.class)
@@ -63,32 +62,26 @@ public class AuthManager {
         String host = httpRequest.getRemoteHost();
         if (lockout.isLocked(host)) return false;
 
-        boolean doneAuth = authenticateWithHandler(httpRequest);
+        AuthResult authResult = authenticate(httpRequest);
 
-        if (doneAuth) {
-            lockout.clear(host); // 认证成功后清空计数
-        } else {
+        // 校验通过：清空失败计数并写入受保护的认证字段（避免被 handler 覆写）
+        if (authResult.status() == AuthResult.Status.PASS && authResult.getPrincipal() != null) {
+            lockout.clear(host);
+            httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
+            return true;
+        }
+
+        // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
+        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户
+        String reason = authResult.getReason();
+        boolean noCredential = reason == null || "no credential provided".equals(reason)
+                || "no authenticator ready".equals(reason);
+        if (!noCredential && httpRequest.getHeader("Authorization") != null) {
             lockout.recordFailure(host);
         }
 
-        return doneAuth;
-    }
-
-    private boolean authenticateWithHandler(HttpRequestImpl httpRequest) {
-        AuthResult authResult = authenticate(httpRequest);
-
-        // 校验未通过：拒绝原因仅记服务端日志，不回显给客户端
-        if (authResult.status() != AuthResult.Status.PASS) {
-            logger.warn("http authentication rejected: " + authResult.getReason());
-            return false;
-        }
-
-        // PASS 但无主体是模糊态：角色无从归属，handler 按角色鉴权只会拿到 null，故按未认证拒绝
-        if (authResult.getPrincipal() == null) return false;
-
-        // 校验通过：写入受保护的认证字段而非通用 attribute，避免被 handler 覆写
-        httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
-        return true;
+        logger.warn("http authentication rejected: " + reason);
+        return false;
     }
 
     private AuthResult authenticate(HttpRequest request) {

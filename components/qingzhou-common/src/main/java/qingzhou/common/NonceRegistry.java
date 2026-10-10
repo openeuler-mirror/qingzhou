@@ -1,5 +1,8 @@
 package qingzhou.common;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +36,9 @@ public class NonceRegistry {
      */
     public boolean registerIfAbsent(String nonce, long timestamp, long ttlMillis) {
         pruneExpired(timestamp, ttlMillis);
-        if (nonces.size() > MAX_TRACKED_NONCES) return false;
+        // 容量满时主动淘汰最旧记录腾出空间，而非拒绝新登记：防止 nonce 洪水耗尽容量后把正常请求当成重放拒绝（DoS）。
+        // 被淘汰的多为已过期项；极端洪水下可能丢弃少量有效项，仅放开一个极小的重放窗口，以可用性为优先
+        if (nonces.size() >= MAX_TRACKED_NONCES) evictOldest();
         return nonces.putIfAbsent(nonce, timestamp) == null;
     }
 
@@ -42,5 +47,15 @@ public class NonceRegistry {
         lastPruneAt = now;
         long expireBefore = now - ttlMillis;
         nonces.values().removeIf(ts -> ts < expireBefore);
+    }
+
+    // 按登记时间淘汰最旧的 n 条，给新登记腾出空间
+    private void evictOldest() {
+        List<Map.Entry<String, Long>> entries = new ArrayList<>(nonces.entrySet());
+        entries.sort(Comparator.comparingLong(Map.Entry::getValue));
+        int remove = Math.min(MAX_TRACKED_NONCES / 10, entries.size());
+        for (int i = 0; i < remove; i++) {
+            nonces.remove(entries.get(i).getKey());
+        }
     }
 }

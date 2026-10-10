@@ -2,14 +2,15 @@ package qingzhou.ai.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
-import qingzhou.ai.impl.LlmConverter;
 import qingzhou.ai.impl.InterceptToolInvocation;
+import qingzhou.ai.impl.LlmConverter;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -27,7 +28,7 @@ public class McpServer implements HttpHandler {
     @Reference
     private InterceptToolInvocation interceptToolInvocation;
 
-    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
+    private final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
 
     private Map<String, Object> initializeData;
 

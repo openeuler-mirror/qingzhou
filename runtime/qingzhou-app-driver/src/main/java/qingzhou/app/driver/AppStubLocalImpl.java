@@ -104,7 +104,7 @@ class AppStubLocalImpl implements AppStubLocal {
                 try {
                     invokeMethod(request, method, modelBase, request);
                 } finally {
-                    modelBase.setCurrentRequest(null);
+                    modelBase.clearCurrentRequest();
                 }
             }
         }
