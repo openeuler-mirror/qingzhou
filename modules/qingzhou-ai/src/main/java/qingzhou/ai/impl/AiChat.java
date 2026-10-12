@@ -35,11 +35,6 @@ public class AiChat implements HttpHandler {
             "代码块内部须是一个完整的 ECharts Option 对象，只输出对象本身，不要生成 const/let/var/import/export/function/HTML/JavaScript/Markdown 包裹\n" +
             "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表\n";
 
-    /**
-     * 单篇技能说明书/参考文档注入系统提示的字符上限：引用模型层同一常量，保证开销统计与实际注入口径一致
-     */
-    private static final int MAX_REF_CHARS = ChatModelFactory.ChatModelBuilder.DEFAULT_MAX_DOC_CHARS;
-
     @Reference
     private Logger logger;
     @Reference
@@ -142,13 +137,15 @@ public class AiChat implements HttpHandler {
      * 按注入时的截断上限计入，供会话记忆据此裁剪历史注入量；技能未激活时也计入，属保守上界
      */
     private static int overhead(Collection<Skill> skills, List<String> docs, int questionChars) {
+        int maxRefChars = 10000; // 单篇技能说明书/参考文档注入系统提示的字符上限
+
         int chars = SYSTEM_PROMPT.length() + questionChars;
         for (Skill skill : skills) {
-            chars += Math.min(length(skill.instruction()), MAX_REF_CHARS);
+            chars += Math.min(length(skill.instruction()), maxRefChars);
         }
         if (docs != null) {
             for (String doc : docs) {
-                chars += Math.min(length(doc), MAX_REF_CHARS);
+                chars += Math.min(length(doc), maxRefChars);
             }
         }
         return chars;

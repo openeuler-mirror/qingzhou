@@ -1,6 +1,7 @@
 package qingzhou.registry.ai;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -11,15 +12,13 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
-import qingzhou.api.FieldType;
-import qingzhou.api.InputType;
-import qingzhou.api.action.*;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.App;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
-import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -54,29 +53,30 @@ public class RegisterActionTools {
     public void init(ComponentContext context) {
         bundleContext = context.getBundleContext();
 
+        AtomicInteger p = new AtomicInteger();
         Hashtable<String, String> sharedProperties = new Hashtable<String, String>() {{
-            put(ToolService.PARAMETER_NAME + ".1", WebUtil.INSTANCE_ID);
-            put(ToolService.PARAMETER_DESCRIPTION + ".1", "应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。");
+            put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.INSTANCE_ID);
+            put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。");
 
-            put(ToolService.PARAMETER_NAME + ".2", WebUtil.APP_CODE);
-            put(ToolService.PARAMETER_DESCRIPTION + ".2", "应用的唯一编码，该编码在同一个轻舟实例下不会重复。");
+            put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.APP_CODE);
+            put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "应用的唯一编码，该编码在同一个轻舟实例下不会重复。");
 
-            put(ToolService.PARAMETER_NAME + ".3", WebUtil.MODEL_CODE);
-            put(ToolService.PARAMETER_DESCRIPTION + ".3", "模块的唯一编码，该编码在同一个应用内不会重复。");
+            put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.MODEL_CODE);
+            put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "模块的唯一编码，该编码在同一个应用内不会重复。");
 
-            put(ToolService.PARAMETER_NAME + ".4", WebUtil.DATA_ID);
-            put(ToolService.PARAMETER_DESCRIPTION + ".4", "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前调用的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
-            put(ToolService.PARAMETER_REQUIRED + ".4", "false");
+            put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.DATA_ID);
+            put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前调用的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
+            put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
         }};
 
         Map<String, String> tools = new HashMap<String, String>() {{
-            put(Page.ACTION_CODE_PAGE, "该接口返回某个应用模块的业务数据或资源的列表信息。列表数据分页返回，每次调用只返回一页，可通过 " + PAGE_NUM + " 指定页码。"
+            put(Page.ACTION_CODE_PAGE, "该接口返回某个应用模块的业务数据或资源的列表信息。列表数据分页返回，每次调用只返回一页，可通过 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 指定页码。"
                     + "如果返回内容以【分页提示】开头，说明列表共有多页，此时须遵守以下规则："
                     + "1. 即使用户要求列出全部数据，也只查询这一页；用户指定页码前，不要查询其他页，也不要通过猜测编号、逐条调用其他工具等方式获取本页以外的数据。"
                     + "2. 如实列出本页数据，禁止推测或编造其他页的内容；如果用户的问题涉及全部数据（如统计、排序、查找最大值），须说明结论仅基于本页。"
                     + "3. 如果返回内容被截断，如实说明本页有部分数据未能显示，不要推测被截断的内容，也不要为补全而重复调用工具。"
                     + "4. 回复末尾注明“第 X/Y 页”（最后一页注明“已是最后一页”），并提示用户可回复页码（如“第 2 页”或“下一页”）查看其他页；页码超出范围时，告知用户有效的页码范围。"
-                    + "5. 用户指定页码后，使用相同的参数并传入 " + PAGE_NUM + " 再次调用本工具。");
+                    + "5. 用户指定页码后，使用相同的参数并传入 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 再次调用本工具。");
             put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
             put(SwitchSpace.ACTION_CODE_SWITCHSPACE, "该接口将应用的模块切换到指定的空间上。");
@@ -100,6 +100,9 @@ public class RegisterActionTools {
             properties.put(ToolService.PARENT_SKILL, InvokeActionSkill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, actionToolName);
             if (Page.ACTION_CODE_PAGE.equals(invokedActionCode)) {
+                properties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+                properties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
+                properties.put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
                 properties.put(ToolService.PARAMETER_NAME + ".5", PAGE_NUM);
                 properties.put(ToolService.PARAMETER_DESCRIPTION + ".5", "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
                 properties.put(ToolService.PARAMETER_REQUIRED + ".5", "false");
@@ -157,6 +160,7 @@ public class RegisterActionTools {
         if (dataId != null) {
             request.setId(dataId);
         }
+        applyPageNum(request, toolArgs.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM));
         applyPageNum(request, toolArgs.get(PAGE_NUM));
         if (ID_REQUIRED_ACTIONS.contains(actionCode) && (dataId == null || dataId.isEmpty())) {
             return "操作 " + actionCode + " 必须指定参数 " + WebUtil.DATA_ID + "。";
@@ -187,7 +191,7 @@ public class RegisterActionTools {
         if (pageNum == null) return;
 
         String value = pageNum instanceof Number ? String.valueOf(((Number) pageNum).intValue()) : pageNum.toString().trim();
-        request.getParameters().put(PAGE_NUM, value);
+        request.getParameters().put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, value);
     }
 
     private static void applyWriteProperties(String actionCode, Hashtable<String, String> properties) {
@@ -343,9 +347,9 @@ public class RegisterActionTools {
         if (!response.isSuccess() || !(response.getData() instanceof Map)) return null;
 
         Map<?, ?> data = (Map<?, ?>) response.getData();
-        Object pageNum = data.get(PAGE_NUM);
-        Object pageSize = data.get("pageSize");
-        Object totalSize = data.get("totalSize");
+        Object pageNum = data.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+        Object pageSize = data.get(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE);
+        Object totalSize = data.get(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE);
         if (!(pageNum instanceof Number && pageSize instanceof Number && totalSize instanceof Number)) return null;
 
         return pagingHint(((Number) pageNum).intValue(), ((Number) pageSize).intValue(), ((Number) totalSize).intValue());

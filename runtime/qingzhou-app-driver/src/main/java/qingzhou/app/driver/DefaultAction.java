@@ -11,6 +11,7 @@ import qingzhou.api.*;
 import qingzhou.api.action.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
@@ -86,8 +87,8 @@ public class DefaultAction {
         }
 
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
-        int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
-        int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
+        int pageNum = parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM), 1);
+        int pageSize = Math.min(parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE), 10), 100);
         List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
         int totalSize = page.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
@@ -102,9 +103,9 @@ public class DefaultAction {
                 listResult.add(dataMap);
             });
             finalResult.put("data", listResult);
-            finalResult.put("pageNum", pageNum);
-            finalResult.put("pageSize", pageSize);
-            finalResult.put("totalSize", totalSize);
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, totalSize);
             response.data(finalResult);
         }
     }

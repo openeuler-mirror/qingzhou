@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.testng.annotations.Test;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 
@@ -125,9 +126,9 @@ public class RegisterActionToolsTest {
 
     private static ResponseImpl pagedResponse(Object pageNum, Object pageSize, Object totalSize) {
         Map<String, Object> data = new HashMap<>();
-        data.put("pageNum", pageNum);
-        data.put("pageSize", pageSize);
-        data.put("totalSize", totalSize);
+        data.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
+        data.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
+        data.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, totalSize);
         ResponseImpl response = new ResponseImpl();
         response.data(data);
         return response;
