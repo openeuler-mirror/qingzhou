@@ -73,7 +73,7 @@ class SyncSender {
             Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, false), false, builder, httpClient, json, crypto);
             response = httpClient.send(request);
         } catch (Exception e) {
-            if (attempt < builder.maxRetries) {
+            if (attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 return sendSync(messages, toolDefs, attempt + 1);
             }
@@ -81,7 +81,7 @@ class SyncSender {
         }
         int status = response.getStatus();
         if (status != 200) {
-            if ((status == 429 || status >= 500) && attempt < builder.maxRetries) {
+            if ((status == 429 || status >= 500) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 return sendSync(messages, toolDefs, attempt + 1);
             }

@@ -11,7 +11,6 @@ import reactor.core.Disposable;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-import reactor.core.scheduler.Schedulers;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
 import reactor.util.concurrent.Queues;
@@ -119,11 +118,24 @@ final class BodyProcessors {
                 .defaultIfEmpty(EMPTY_BODY)
                 .flatMap(bytes -> {
                     ctx.intakeComplete(); // 请求体已读完：进入期结束，handler 执行期不受进入期超时约束
-                    // handler 可能含阻塞 IO（DB/下游请求）：挪到弹性调度器执行，
-                    // 否则 EventLoop 被阻塞会拖垮同一线程上的所有连接
-                    return Mono.<Void>fromRunnable(() -> runHandler(ctx, httpResponse, bytes))
-                            .subscribeOn(Schedulers.boundedElastic())
-                            .then(Mono.defer(() -> ctx.response.sendByteArray(streamResponse.asFlux())));
+                    try {
+                        ctx.httpRequest.setRequestBody(bytes);
+                        httpHandler.handle(ctx.httpRequest, httpResponse);
+                        // 契约：handler 必须自行调用终态方法收尾；此处不得补 finish，
+                        // 否则「返回后由后台线程继续写」的响应会被提前终结（后续发送 FAIL_TERMINATED）。
+                        // 未收尾属于 handler 的编程错误，请求会挂到 idle_timeout。
+                    } catch (Throwable e) {
+                        Throwable cause = getCause(e);
+                        // 客户端中断会让 sink 发射失败，属正常终止：逐条记 ERROR 会被放大为日志洪水
+                        if (!httpResponse.isCancelled()) logger.error("http handler error", cause);
+                        if (httpResponse.isCommitted()) {
+                            httpResponse.finish(); // 已提交，状态码无法回退，只能干净收尾
+                        } else {
+                            HttpResponseStatus status = statusOf(cause);
+                            httpResponse.status(status.code()).finish();
+                        }
+                    }
+                    return ctx.response.sendByteArray(streamResponse.asFlux()).then();
                 })
                 // 连接中断等也应回响应，且不能一律报 413；已写出响应体时不得再发状态行，否则造成响应污染
                 .onErrorResume(e -> {
@@ -133,26 +145,6 @@ final class BodyProcessors {
                     }
                     return ctx.respond(statusOf(getCause(e)));
                 });
-    }
-
-    private void runHandler(RequestContext ctx, HttpResponseImpl httpResponse, byte[] bytes) {
-        try {
-            ctx.httpRequest.setRequestBody(bytes);
-            ctx.entry.handler.handle(ctx.httpRequest, httpResponse);
-            // 契约：handler 必须自行调用终态方法收尾；此处不得补 finish，
-            // 否则「返回后由后台线程继续写」的响应会被提前终结（后续发送 FAIL_TERMINATED）。
-            // 未收尾属于 handler 的编程错误，请求会挂到 idle_timeout。
-        } catch (Throwable e) {
-            Throwable cause = getCause(e);
-            // 客户端中断会让 sink 发射失败，属正常终止：逐条记 ERROR 会被放大为日志洪水
-            if (!httpResponse.isCancelled()) logger.error("http handler error", cause);
-            if (httpResponse.isCommitted()) {
-                httpResponse.finish(); // 已提交，状态码无法回退，只能干净收尾
-            } else {
-                HttpResponseStatus status = statusOf(cause);
-                httpResponse.status(status.code()).finish();
-            }
-        }
     }
 
     // 入参须为最内层 cause：Reactor 会包装异常，调用方先用 getCause 展开再传入，避免重复遍历
