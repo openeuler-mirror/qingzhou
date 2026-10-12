@@ -2,12 +2,14 @@ package qingzhou.ai.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
+import qingzhou.ai.impl.InterceptToolInvocation;
 import qingzhou.ai.impl.LlmConverter;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -23,8 +25,10 @@ public class McpServer implements HttpHandler {
     private Json json;
     @Reference
     private Logger logger;
+    @Reference
+    private InterceptToolInvocation interceptToolInvocation;
 
-    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
+    private final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
 
     private Map<String, Object> initializeData;
 
@@ -74,30 +78,39 @@ public class McpServer implements HttpHandler {
             return;
         }
 
-        // 响应对象
-        Map<String, Object> result = new HashMap<>();
-        result.put("jsonrpc", "2.0");
-        result.put("id", requestMap.get("id"));
-        Map<String, Object> resultData = new HashMap<>();
-        result.put("result", resultData);
+        // 响应信封
+        Map<String, Object> response = new HashMap<>();
+        response.put("jsonrpc", "2.0");
+        response.put("id", requestMap.get("id"));
 
         String requestMethod = (String) requestMap.get("method");
         if ("initialize".equals(requestMethod)) {
-            resultData.putAll(initializeData);
+            response.put("result", new HashMap<>(initializeData));
         } else if ("tools/list".equals(requestMethod)) {
+            Map<String, Object> resultData = new HashMap<>();
             resultData.put("tools", tools());
+            response.put("result", resultData);
         } else if ("tools/call".equals(requestMethod)) {
-            resultData.putAll(call(requestMap.get("params")));
+            response.putAll(call(httpRequest, requestMap.get("params")));
+        } else {
+            response.put("error", errorBody(-32601, "Method not found"));
         }
 
         // 响应
         try {
             httpResponse.contentTypeJsonUtf8()
-                    .send(json.toJson(result)).finish();
+                    .send(json.toJson(response)).finish();
         } catch (Exception e) {
             httpResponse.status(500).finish();
             logger.error(e.getMessage(), e);
         }
+    }
+
+    private static Map<String, Object> errorBody(int code, String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("code", code);
+        error.put("message", message);
+        return error;
     }
 
     private Collection<Tool> llmTools() {
@@ -143,17 +156,38 @@ public class McpServer implements HttpHandler {
         return tools;
     }
 
-    private Map<String, Object> call(Object requestParams) {
+    private Map<String, Object> call(HttpRequest httpRequest, Object requestParams) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (!(requestParams instanceof Map)) {
+            response.put("error", errorBody(-32602, "Invalid params"));
+            return response;
+        }
         Map<String, Object> params = (Map<String, Object>) requestParams;
-        String toolName = (String) params.get("name");
-        Map<String, Object> arguments = (Map<String, Object>) params.get("arguments");
+
+        Object toolNameObj = params.get("name");
+        if (!(toolNameObj instanceof String) || ((String) toolNameObj).isEmpty()) {
+            response.put("error", errorBody(-32602, "Invalid params: missing tool name"));
+            return response;
+        }
+        String toolName = (String) toolNameObj;
+
+        Object argumentsObj = params.get("arguments");
+        Map<String, Object> arguments = argumentsObj instanceof Map
+                ? (Map<String, Object>) argumentsObj : Collections.emptyMap();
+
+        // 授权：复用共享拦截链；未认证请求已在框架闸门拦截，principal/roles 非 null
+        String denied = interceptToolInvocation.intercept(toolName, arguments, httpRequest.getPrincipal(), httpRequest.getRoles());
+        if (denied != null) {
+            response.put("error", errorBody(-32000, denied));
+            return response;
+        }
 
         boolean isError = true;
         String invokeResult = null;
         try {
             boolean found = false;
-            Collection<Tool> llmTools = llmTools();
-            for (Tool tool : llmTools) {
+            for (Tool tool : llmTools()) {
                 if (tool.name().equals(toolName)) {
                     invokeResult = tool.invoke(arguments);
                     isError = false;
@@ -165,8 +199,9 @@ public class McpServer implements HttpHandler {
                 invokeResult = "Not Found Tool";
             }
         } catch (Throwable e) {
-            invokeResult = e.getMessage();
-            logger.error(e.getMessage(), e);
+            // 工具内部异常仅记服务端日志，不回传客户端，避免信息泄露
+            logger.error("mcp tool invoke failed: " + toolName, e);
+            invokeResult = "tool invocation failed";
         }
 
         List<Map<String, Object>> contentList = new ArrayList<>();
@@ -178,6 +213,7 @@ public class McpServer implements HttpHandler {
         Map<String, Object> resultData = new HashMap<>();
         resultData.put("content", contentList);
         resultData.put("isError", isError);
-        return resultData;
+        response.put("result", resultData);
+        return response;
     }
 }

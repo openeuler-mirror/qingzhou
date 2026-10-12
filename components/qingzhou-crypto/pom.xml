@@ -11,6 +11,19 @@
     <packaging>bundle</packaging>
     <artifactId>qingzhou-crypto</artifactId>
 
+    <dependencies>
+        <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-logger</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -19,7 +32,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.crypto</Export-Package>
-                        <Import-Package>javax.crypto,javax.crypto.spec</Import-Package>
+                        <Import-Package>qingzhou.common,qingzhou.logger,javax.crypto,javax.crypto.spec</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

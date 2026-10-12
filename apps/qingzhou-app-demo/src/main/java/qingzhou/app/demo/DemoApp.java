@@ -41,7 +41,7 @@ import qingzhou.logger.Logger;
 @I18n(name = {"教师启用状态", "en:Teacher Status"}, code = "TeacherStatus")
 @I18n(name = {"配置详情", "en:Config Details"}, code = "ConfigDetails")
 
-@App(icon = "DataBoard",
+@App(icon = "DataBoard", roles = "admin",
         name = {"示例应用", "en:Demo Application"},
         info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 public class DemoApp implements QingzhouApp {

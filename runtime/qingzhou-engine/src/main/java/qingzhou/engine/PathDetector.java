@@ -108,15 +108,15 @@ public class PathDetector {
             process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
             reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-            // 2. 数据探查
+            // 2. 数据探查（processNames 转小写并拆分只需一次，避免在每一行上重复计算）
+            String[] keywords = processNames.toLowerCase().split(",");
             return reader.lines()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
                     .map(line -> { // 从行中提取匹配到的目录前缀 (到关键字为止)
                         // 统一转为小写查找，兼容大小写
                         String lowerPath = line.toLowerCase();
-                        String lowerKeyword = processNames.toLowerCase();
-                        for (String kw : lowerKeyword.split(",")) {
+                        for (String kw : keywords) {
                             int idx = lowerPath.indexOf(kw);
                             if (idx != -1) {
                                 return line.substring(0, idx).replace('\\', '/');

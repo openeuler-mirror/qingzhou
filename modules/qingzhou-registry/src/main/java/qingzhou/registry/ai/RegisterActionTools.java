@@ -71,7 +71,7 @@ public class RegisterActionTools {
         tools.forEach((invokedActionCode, toolDescription) -> {
             String actionToolName = "app_model_action_" + invokedActionCode;
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
-            properties.put(ToolService.PARENT_SKILL, Skill.TOOL_LABEL);
+            properties.put(ToolService.PARENT_SKILL, InvokeActionSkill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, actionToolName);
             if (Page.ACTION_CODE_PAGE.equals(invokedActionCode)) {
                 properties.put(ToolService.PARAMETER_NAME + ".5", PAGE_NUM);

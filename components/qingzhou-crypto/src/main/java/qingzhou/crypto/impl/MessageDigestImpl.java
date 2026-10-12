@@ -3,6 +3,9 @@ package qingzhou.crypto.impl;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.MessageDigest;
@@ -76,10 +79,26 @@ class MessageDigestImpl implements MessageDigest {
         if (salt == null) {
             salt = new byte[0];
         }
-        byte[] digest = digest(algorithm, iterations, salt,
-                data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
+        byte[] digest;
+        if (algorithm.startsWith("PBKDF2")) {
+            // 口令摘要使用 PBKDF2 而非简单迭代哈希：带盐、高迭代次数，抗离线爆破
+            digest = pbkdf2(algorithm, iterations, salt, data);
+        } else {
+            digest = digest(algorithm, iterations, salt,
+                    data == null ? new byte[0] : data.getBytes(StandardCharsets.UTF_8));
+        }
         String pwd = encode(digest);
         return algorithm + SALT_SEPARATOR + encode(salt) + SALT_SEPARATOR + iterations + SALT_SEPARATOR + pwd;
+    }
+
+    private byte[] pbkdf2(String algorithm, int iterations, byte[] salt, String password) {
+        try {
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(algorithm);
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
+            return skf.generateSecret(spec).getEncoded();
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private byte[] decode(String encode) {

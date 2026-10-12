@@ -27,11 +27,12 @@ public class Monitor implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+        // todo 缺少：qingzhou.agent.ProcessHandler.handle
         Map<String, Object> data = collect();
         httpResponse.contentTypeJsonUtf8().send(json.toJson(data)).finish();
     }
 
-    public Map<String, Object> collect() {
+    private Map<String, Object> collect() {
         Map<String, Object> result = new LinkedHashMap<>();
         for (String appCode : registry.getAllLocalApps()) {
             AppStubLocal stub = registry.getLocalApp(appCode);

@@ -2,7 +2,7 @@ package qingzhou.ai.memory;
 
 import java.util.Map;
 
-import static qingzhou.http.server.util.Configs.atLeast;
+import qingzhou.common.Configs;
 
 /**
  * 容量与预算阈值：全部可配置，memory 与 file 两种存储后端共用同一套数值
@@ -25,23 +25,24 @@ final class MemoryLimits {
     final int historyMaxMessages;
 
     MemoryLimits(Map<String, String> config) {
-        // Configs.atLeast 在解析时同步做下界与取值范围校验，激活期 fail-fast：
+        Configs configs = new Configs(config);
+        // Configs 在解析时同步做下界与取值范围校验，激活期 fail-fast：
         // 非法容量若放行到运行期，会表现为静默降级或死循环（如负 hard 值令 remove(0) 持续执行）
-        maxBytes = atLeast(config, "memory_max_bytes", 1, 209715200L);
-        maxConversations = atLeast(config, "memory_max_conversations", 1, 1000);
-        maxPerUser = atLeast(config, "memory_max_conversations_per_user", 1, 50);
-        maxAnonymous = atLeast(config, "memory_max_conversations_anonymous", 1, 20);
-        maxArchived = atLeast(config, "memory_max_archived", 1, 2000);
-        messageMaxChars = atLeast(config, "message_max_chars", 1, 8000);
-        summaryMaxChars = atLeast(config, "summary_max_chars", 1, 2000);
-        softMessages = atLeast(config, "conversation_soft_messages", 1, 80);
-        hardMessages = atLeast(config, "conversation_hard_messages", 1, 150);
-        keepMessages = atLeast(config, "conversation_keep_messages", 1, 80);
-        compactionInputMaxChars = atLeast(config, "compaction_input_max_chars", 1, 24000);
-        historyTotalBudget = atLeast(config, "history_total_budget", 1, 20000);
-        historyOutputReserve = atLeast(config, "history_output_reserve", 0, 4000); // 0 表示不预留输出预算
-        historyMinChars = atLeast(config, "history_min_chars", 1, 2000);
-        historyMaxMessages = atLeast(config, "history_max_messages", 1, 20);
+        maxBytes = configs.atLeast("memory_max_bytes", 1, 209715200L);
+        maxConversations = configs.atLeast("memory_max_conversations", 1, 1000);
+        maxPerUser = configs.atLeast("memory_max_conversations_per_user", 1, 50);
+        maxAnonymous = configs.atLeast("memory_max_conversations_anonymous", 1, 20);
+        maxArchived = configs.atLeast("memory_max_archived", 1, 2000);
+        messageMaxChars = configs.atLeast("message_max_chars", 1, 8000);
+        summaryMaxChars = configs.atLeast("summary_max_chars", 1, 2000);
+        softMessages = configs.atLeast("conversation_soft_messages", 1, 80);
+        hardMessages = configs.atLeast("conversation_hard_messages", 1, 150);
+        keepMessages = configs.atLeast("conversation_keep_messages", 1, 80);
+        compactionInputMaxChars = configs.atLeast("compaction_input_max_chars", 1, 24000);
+        historyTotalBudget = configs.atLeast("history_total_budget", 1, 20000);
+        historyOutputReserve = configs.atLeast("history_output_reserve", 0, 4000); // 0 表示不预留输出预算
+        historyMinChars = configs.atLeast("history_min_chars", 1, 2000);
+        historyMaxMessages = configs.atLeast("history_max_messages", 1, 20);
         if (keepMessages > softMessages || softMessages > hardMessages) {
             throw new IllegalArgumentException("conversation_keep_messages must be <= soft <= hard, got: "
                     + keepMessages + "/" + softMessages + "/" + hardMessages);

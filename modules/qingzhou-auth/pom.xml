@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-http-server</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
@@ -43,7 +48,8 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
-                            qingzhou.http.server,qingzhou.http.server.auth,qingzhou.http.server.util,
+                            qingzhou.common,
+                            qingzhou.http.server,qingzhou.http.server.auth,
                             qingzhou.http.client,
                             qingzhou.json,qingzhou.logger,qingzhou.crypto
                         </Import-Package>

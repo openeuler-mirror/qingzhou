@@ -18,14 +18,6 @@ public class ConversationApi implements HttpHandler {
     public static final String API_PREFIX = "/conversations";
     private static final Map<String, Boolean> OK_BODY = Collections.singletonMap("ok", true);
 
-    /**
-     * userId 由鉴权层从 token 解析；未开鉴权时为匿名
-     */
-    public static String resolveUserId(HttpRequest httpRequest) {
-        String principal = httpRequest.getPrincipal();
-        return principal != null && !principal.isEmpty() ? principal : "anonymous";
-    }
-
     @Reference
     private ConversationStore store;
 
@@ -59,7 +51,7 @@ public class ConversationApi implements HttpHandler {
     }
 
     private void dispatch(HttpRequest httpRequest, HttpResponse httpResponse, String rest) throws Exception {
-        String userId = resolveUserId(httpRequest);
+        String userId = httpRequest.getPrincipal();
 
         // GET /conversations → 会话列表
         if (rest.isEmpty() || rest.equals("/")) {

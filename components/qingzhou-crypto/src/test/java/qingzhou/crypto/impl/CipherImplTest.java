@@ -39,7 +39,7 @@ public class CipherImplTest {
     }
 
     void doTest(TestLogicNormal testLogicNormal) {
-        CryptoImpl crypto = new CryptoImpl();
+        CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
         String key = crypto.generateKey();
         try {
             Cipher cipher = crypto.getCipher(key);

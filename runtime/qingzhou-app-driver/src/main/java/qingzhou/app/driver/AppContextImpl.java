@@ -20,7 +20,7 @@ public class AppContextImpl implements AppContext {
 
     private final AppDriver appDriver;
     private final BundleContext bundleContext;
-    private final File appTemp;
+    private File appTemp;
 
     Properties appProperties;
     String detectedPath;
@@ -43,7 +43,6 @@ public class AppContextImpl implements AppContext {
         this.appDriver = appDriver;
         this.bundleContext = bundleContext;
         this.appMeta = appMeta;
-        this.appTemp = Paths.get(getRoot().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
     }
 
     void start() throws Exception {
@@ -92,6 +91,10 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public File getTempDir() {
+        // 惰性计算：code 可能由配置覆盖，须在覆盖生效后才确定，否则会落到 apps/null
+        if (appTemp == null) {
+            appTemp = Paths.get(getRoot().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
+        }
         return appTemp;
     }
 

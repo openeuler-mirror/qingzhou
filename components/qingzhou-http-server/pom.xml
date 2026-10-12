@@ -153,6 +153,11 @@
         </dependency>
 
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
@@ -179,11 +184,12 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            qingzhou.http.server,qingzhou.http.server.auth,qingzhou.http.server.util
+                            qingzhou.http.server,qingzhou.http.server.auth
                         </Export-Package>
                         <Import-Package>
+                            qingzhou.common,
                             qingzhou.crypto,
-                            qingzhou.logger,
+                            qingzhou.logger,qingzhou.logger.util,
                             org.osgi.framework,
                             javax.net.ssl,javax.security.cert
                         </Import-Package>

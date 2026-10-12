@@ -264,6 +264,11 @@
         </dependency>
 
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-logger</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>

@@ -1,4 +1,4 @@
-package qingzhou.http.server.util;
+package qingzhou.common;
 
 import java.lang.reflect.Field;
 import java.util.Map;

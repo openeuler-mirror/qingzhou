@@ -7,8 +7,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
+import qingzhou.logger.util.PendingLogs;
 
 /**
  * 路由表：注册与解绑可能和请求分发并发；写操作串行化，读取使用并发 Map 快照。
@@ -83,7 +83,7 @@ public class HandlerManager {
 
         // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
-        pendingLogs.log(logger, "registered: [" + path + "] by [" + source + "]"
+        pendingLogs.info(logger, "registered: [" + path + "] by [" + source + "]"
                 + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : ""));
         if (isNoAuth) {
             pendingLogs.warn(logger, "no-auth route: [" + path + "] is publicly reachable, declared by [" + source + "]");

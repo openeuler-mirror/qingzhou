@@ -16,10 +16,11 @@ import qingzhou.dto.I18nService;
 
 @Component
 public class I18nServiceImpl implements I18nService {
-    private final Map<Character, Character> ZH_TR_MAP = new HashMap<>();
+    private static final Map<Character, Character> ZH_TR_MAP = new HashMap<>();
 
     @Activate
     public void init() {
+        ZH_TR_MAP.clear(); // 允许组件重新激活时重建，避免静态映射残留上次内容
         try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream("/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/") + "/zh_Hant.txt")) {
             String zh = "";
             String zhHant = "";

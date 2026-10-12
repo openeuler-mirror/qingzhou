@@ -17,6 +17,8 @@ import qingzhou.http.server.HttpResponse;
  */
 @Component(property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
+    private static final String INDEX_FILE = "/index.html";
+
     @Reference
     private Crypto crypto;
 
@@ -79,8 +81,6 @@ public class StaticResource implements HttpHandler {
      * 提供静态资源
      */
     private void serveStaticResource(HttpRequest httpRequest, String path, HttpResponse response) {
-        String INDEX_FILE = "/index.html";
-
         // 规范化路径
         if (path.equals("/") || path.isEmpty()) {
             path = INDEX_FILE;
@@ -110,7 +110,7 @@ public class StaticResource implements HttpHandler {
 
         // 扩展名只解析一次，供 Cache-Control 与 Content-Type 共用
         String extension = getExtension(path);
-        response.header("Cache-Control", getCacheControl(extension));
+        response.header("Cache-Control", getCacheControl(extension, path));
 
         try {
             String etag = resourceCache.getETag();
@@ -159,7 +159,11 @@ public class StaticResource implements HttpHandler {
         return "";
     }
 
-    private String getCacheControl(String extension) {
+    private String getCacheControl(String extension, String path) {
+        if (path.equals(INDEX_FILE)) {
+            // 入口 HTML 不长期缓存：发版后老用户若长期缓存 index.html 会一直白屏
+            return "max-age=0, must-revalidate";
+        }
         if (extension.equals("html") || extension.equals("htm")
                 || imageExtensions.contains(extension)) {
             return "max-age=2592000, must-revalidate, proxy-revalidate, no-transform"; // 一个月

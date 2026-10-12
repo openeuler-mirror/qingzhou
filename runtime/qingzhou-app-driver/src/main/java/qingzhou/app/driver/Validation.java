@@ -1,6 +1,7 @@
 package qingzhou.app.driver;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -235,11 +236,15 @@ class Validation implements ActionFilter {
         }
     }
 
+    // 自定义 pattern 按字符串缓存编译结果，避免每次校验都重新编译正则（#35）
+    private static final ConcurrentHashMap<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
+
     class CustomPattern implements Validator {
         @Override
         public String validate(ValidationContext context) {
             String pattern = context.field.pattern;
-            return context.parameter.matches(pattern) ? null : i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);
+            Pattern compiled = PATTERN_CACHE.computeIfAbsent(pattern, Pattern::compile);
+            return compiled.matcher(context.parameter).matches() ? null : i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);
         }
     }
 }

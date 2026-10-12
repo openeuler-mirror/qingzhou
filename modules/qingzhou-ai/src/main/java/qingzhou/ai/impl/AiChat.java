@@ -7,8 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
-import qingzhou.ai.ToolInterceptor;
-import qingzhou.ai.memory.ConversationApi;
 import qingzhou.ai.memory.ConversationStore;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -17,7 +15,6 @@ import qingzhou.json.Json;
 import qingzhou.llm.Attachment;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.ChatModelFactory;
-import qingzhou.llm.Interceptor;
 import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
@@ -53,10 +50,10 @@ public class AiChat implements HttpHandler {
     private ChatConfig chatConfig;
     @Reference
     private ConversationStore conversationStore;
-    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
-    private final Set<ToolInterceptor> toolInterceptors = ConcurrentHashMap.newKeySet();
+    @Reference
+    private InterceptToolInvocation interceptToolInvocation;
 
-    private final Map<SkillService, Map<String, Object>> llmSkills = new HashMap<>();
+    private final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
@@ -98,7 +95,7 @@ public class AiChat implements HttpHandler {
         // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）
         String conversationId = (String) params.get("conversationId");
         // userId 由鉴权层从 token 解析，不接受前端传参
-        String userId = ConversationApi.resolveUserId(httpRequest);
+        String userId = httpRequest.getPrincipal();
         String[] userRoles = httpRequest.getRoles();
 
         // 发出响应前的准备
@@ -122,7 +119,7 @@ public class AiChat implements HttpHandler {
                     .docs(refDocs)
                     .skills(skills)
                     .enableThinking(true)
-                    .interceptor(convertInterceptor(userId, userRoles))
+                    .interceptor((toolName, argsMap) -> interceptToolInvocation.intercept(toolName, argsMap, userId, userRoles))
                     .chatMemory(() -> conversationStore.getMessageList(userId, conversationId, overhead));
             ChatModel chatModel = builder.build();
             chatModel.chat(finalQuestion, sseListener, images);
@@ -159,27 +156,6 @@ public class AiChat implements HttpHandler {
 
     private static int length(String text) {
         return text == null ? 0 : text.length();
-    }
-
-    private Interceptor convertInterceptor(String userId, String[] userRoles) {
-        ToolInterceptor.InterceptorContext context = new ToolInterceptor.InterceptorContext() {
-            @Override
-            public String getPrincipal() {
-                return userId;
-            }
-
-            @Override
-            public String[] getRoles() {
-                return userRoles;
-            }
-        };
-        return (toolName, argsMap) -> {
-            for (ToolInterceptor interceptor : toolInterceptors) {
-                String result = interceptor.intercept(toolName, argsMap, context);
-                if (result != null) return result;
-            }
-            return null;
-        };
     }
 
     private Map<String, Object> params(HttpRequest httpRequest) {
@@ -220,8 +196,12 @@ public class AiChat implements HttpHandler {
     private ParsedImage parseImage(String content) {
         if (content.startsWith("data:")) {
             int comma = content.indexOf(',');
+            // 缺逗号/分号分隔符时按纯 base64 处理，避免 substring 越界把恶意请求变成 500
+            if (comma < 0) return new ParsedImage(content, null);
             String meta = content.substring("data:".length(), comma);
-            return new ParsedImage(content.substring(comma + 1), meta.substring(0, meta.indexOf(';')));
+            int sep = meta.indexOf(';');
+            String mime = sep < 0 ? meta : meta.substring(0, sep);
+            return new ParsedImage(content.substring(comma + 1), mime);
         }
         return new ParsedImage(content, null);
     }
