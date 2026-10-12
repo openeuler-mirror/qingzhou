@@ -15,9 +15,9 @@ import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.logger.util.PendingLogs;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.AppStubRemote;
@@ -49,6 +49,8 @@ public class RegistryImpl implements Registry {
     private final Map<String, InstanceInfo> remoteInstances = java.util.Collections
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
+    final KeyRotation keyRotation = new KeyRotation(Constants.AGENT_KEY_GRACE_MILLIS);
+
     @Activate
     public void start(Map<String, String> config) {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
@@ -67,7 +69,7 @@ public class RegistryImpl implements Registry {
         String appCode = appMeta.getApp().code;
         localApps.put(appCode, appStub);
 
-        pendingLogs.log(logger, String.format("app registered: %s", appCode));
+        pendingLogs.info(logger, String.format("app registered: %s", appCode));
     }
 
     /**
@@ -169,19 +171,20 @@ public class RegistryImpl implements Registry {
         if (instanceInfo == null) return null;
         for (AppMeta appMeta : instanceInfo.getAppMetas()) {
             if (appMeta.getApp().code.equals(appCode)) {
-                return new AppStubRemoteImpl(instanceInfo, appMeta, json, httpClient, crypto, logger);
+                return new AppStubRemoteImpl(instanceInfo, appMeta, json, httpClient, crypto, logger, keyRotation);
             }
         }
         return null;
     }
 
-    public InstanceInfo addRemoteApps(InstanceInfo instanceInfo) {
+    public void addRemoteInstanceInfo(InstanceInfo instanceInfo) {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
         // 重复注册同样要填：新对象的 lastRefreshTime 为 0，不填则重注册恢复路径必然被健康检查删除。
         instanceInfo.setLastRefreshTime(System.currentTimeMillis());
         registryDataVersion.incrementAndGet();
-        return remoteInstances.put(instanceInfo.getId(), instanceInfo);
+        remoteInstances.put(instanceInfo.getId(), instanceInfo);
+        keyRotation.onReRegistered(instanceInfo.getId()); // 重新注册 = agent 已重建密钥，旧钥宽限作废
     }
 
     public void removeRemoteApps(String instanceId) {

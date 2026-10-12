@@ -32,33 +32,35 @@ public class BundleConverter {
         // 待处理的原应用的 jar
         File appTmpDir = new File(targetJar.getParentFile(), targetJar.getName() + UUID.randomUUID());
         appTmpDir.mkdirs();
-        unZipToDir(sourceJar, appTmpDir);
+        try {
+            unZipToDir(sourceJar, appTmpDir);
 
-        // 生成注解文件
-        if (classPool == null) {
-            ClassPool.doPruning = true;
-            classPool = ClassPool.getDefault();
-            classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
-        }
-        ClassPath appendedClassPath = classPool.appendClassPath(appTmpDir.getAbsolutePath());
-        addAnnotationFile(appTmpDir, targetJar);
-        classPool.removeClassPath(appendedClassPath);
-
-        // 放入 OSGI 驱动类
-        addDriverClasses(appTmpDir, libDir);
-
-        // 添加 MANIFEST.MF 中 OSGI 声明
-        addManifest(appTmpDir, targetJar);
-
-        // 构建为 bundle jar
-        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(targetJar.toPath()))) {
-            for (File file : appTmpDir.listFiles()) {
-                zipFiles(zos, file, file.getName());
+            // 生成注解文件
+            if (classPool == null) {
+                ClassPool.doPruning = true;
+                classPool = ClassPool.getDefault();
+                classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
             }
-        }
+            ClassPath appendedClassPath = classPool.appendClassPath(appTmpDir.getAbsolutePath());
+            addAnnotationFile(appTmpDir, targetJar);
+            classPool.removeClassPath(appendedClassPath);
 
-        // 清理
-        FileUtil.forceDeleteQuietly(appTmpDir);
+            // 放入 OSGI 驱动类
+            addDriverClasses(appTmpDir, libDir);
+
+            // 添加 MANIFEST.MF 中 OSGI 声明
+            addManifest(appTmpDir, targetJar);
+
+            // 构建为 bundle jar
+            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(targetJar.toPath()))) {
+                for (File file : appTmpDir.listFiles()) {
+                    zipFiles(zos, file, file.getName());
+                }
+            }
+        } finally {
+            // 无论成功或异常都清理临时目录，否则随 UUID 无限累积（磁盘耗尽）
+            FileUtil.forceDeleteQuietly(appTmpDir);
+        }
     }
 
     private void addManifest(File appTmpDir, File targetJar) throws Exception {

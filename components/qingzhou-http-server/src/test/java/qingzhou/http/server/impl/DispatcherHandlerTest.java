@@ -936,4 +936,38 @@ public class DispatcherHandlerTest {
             testServer.server.stop();
         }
     }
+
+    @Test
+    public void intakeTimeout_stalledBody_connectionClosed_normalRequestUnaffected() throws Exception {
+        Map<String, String> config = new HashMap<>();
+        config.put("request_timeout_seconds", "1");
+        TestServer testServer = TestServerSupport.startServer(config);
+        try {
+            testServer.server.registerHttpHandler((req, resp) -> resp.send("ok").finish(), "/test", true);
+
+            // 正常请求：进入期在超时前完成，须正常服务（验证聚合/拒绝路径的 intakeComplete 取消逻辑）
+            HttpClient client = HttpClientServerIntegrationTest.buildHttpClientImpl();
+            Assert.assertEquals(client.send(client.buildRequest("http://localhost:" + testServer.port + "/test")
+                    .method(HttpMethod.GET)).getStatus(), 200);
+
+            // Slowloris 形态：声明大请求体只发一半即静默——idle_timeout 漏掉的形态，
+            // 须在进入期超时（1s）后被服务端强制断开，而不是无限期占住并发许可
+            Socket socket = new Socket("localhost", testServer.port);
+            try {
+                socket.getOutputStream().write(("POST /test HTTP/1.1\r\nHost: localhost\r\n"
+                        + "Content-Length: 2048\r\n\r\nhalf-body").getBytes(StandardCharsets.UTF_8));
+                socket.getOutputStream().flush();
+                socket.setSoTimeout(8000);
+                long start = System.currentTimeMillis();
+                int firstByte = socket.getInputStream().read(); // 服务端关闭 → EOF(-1)；未关闭则 8s 超时抛异常使用例失败
+                long elapsed = System.currentTimeMillis() - start;
+                Assert.assertTrue(elapsed >= 800, "closed too early (" + elapsed + "ms), not by intake timeout");
+                Assert.assertTrue(firstByte == -1 || firstByte >= 0, "connection terminated"); // EOF 或错误响应首字节均可
+            } finally {
+                socket.close();
+            }
+        } finally {
+            testServer.server.stop();
+        }
+    }
 }

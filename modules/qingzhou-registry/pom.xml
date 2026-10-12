@@ -63,10 +63,10 @@
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,
-                            qingzhou.http.server.util,
                             qingzhou.http.client,
-                            qingzhou.logger,
+                            qingzhou.logger,qingzhou.logger.util,
                             qingzhou.json,
+                            qingzhou.common,
                             qingzhou.crypto,
                             qingzhou.ai
                         </Import-Package>

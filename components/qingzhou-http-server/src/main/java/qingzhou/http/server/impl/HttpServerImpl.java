@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
 
-import static qingzhou.http.server.util.Configs.*;
+import qingzhou.common.Configs;
 
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
@@ -34,17 +34,18 @@ public class HttpServerImpl implements HttpServer {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
+        Configs configs = new Configs(config);
         // 纯配置校验须先于任何资源创建：激活失败时 @Deactivate 不会被调用，晚校验会泄漏已创建的 EventLoop
-        int selectorThreads = atLeast(config, "selector", 1, 1);
-        int workerThreads = atLeast(config, "worker", 1, Runtime.getRuntime().availableProcessors() * 2);
+        int selectorThreads = configs.atLeast("selector", 1, 1);
+        int workerThreads = configs.atLeast("worker", 1, Runtime.getRuntime().availableProcessors() * 2);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
-        int idleTimeout = atLeast(config, "idle_timeout", 0, 60);
-        String host = getConfig(config, "host", "127.0.0.1");
-        int port = port(config, "port");
-        int maxKeepAliveRequests = atLeast(config, "max_keep_alive_requests", 1, 100);
-        int maxConnections = atLeast(config, "max_connections", 0, 10_000);
-        boolean sslEnabled = getConfig(config, "ssl_enabled", true);
-        boolean allowPlaintext = getConfig(config, "allow_plaintext", false);
+        int idleTimeout = configs.atLeast("idle_timeout", 0, 60);
+        String host = configs.getConfig("host", "127.0.0.1");
+        int port = configs.port("port");
+        int maxKeepAliveRequests = configs.atLeast("max_keep_alive_requests", 1, 100);
+        int maxConnections = configs.atLeast("max_connections", 0, 10_000);
+        boolean sslEnabled = configs.getConfig("ssl_enabled", true);
+        boolean allowPlaintext = configs.getConfig("allow_plaintext", false);
         boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
         if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
             // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认

@@ -12,8 +12,7 @@ import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
 import static qingzhou.http.server.impl.Errors.getCause;
-import static qingzhou.http.server.util.Configs.atLeast;
-import static qingzhou.http.server.util.Configs.splitList;
+import qingzhou.common.Configs;
 
 /**
  * 请求准入闸门链：方法白名单、路径规范化、路由、认证、body 形态与配额。
@@ -43,14 +42,15 @@ final class RequestGates {
 
     RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, AuthManager authManager, HandlerManager handlerManager,
                  Logger logger, AtomicLong aggregatedBytes) {
+        Configs configs = new Configs(config);
         this.authManager = authManager;
         this.handlerManager = handlerManager;
         this.logger = logger;
         this.aggregatedBytes = aggregatedBytes;
         this.maxStreamBytes = maxStreamBytes;
         this.maxBodyBytes = maxBodyBytes;
-        this.maxAggregatedBytes = atLeast(config, "max_aggregated_bytes", 1L, 64L * 1024 * 1024);
-        this.corsAllowedOrigins = new HashSet<>(splitList(config, "cors_allowed_origins"));
+        this.maxAggregatedBytes = configs.atLeast("max_aggregated_bytes", 1L, 64L * 1024 * 1024);
+        this.corsAllowedOrigins = new HashSet<>(configs.splitList("cors_allowed_origins"));
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");
@@ -110,7 +110,9 @@ final class RequestGates {
         if (method == HttpMethod.GET || method == HttpMethod.HEAD || method == HttpMethod.OPTIONS) return null;
 
         String origin = ctx.request.requestHeaders().get(HttpHeaderNames.ORIGIN);
-        if (origin == null || "null".equals(origin)) return null;
+        // 仅「无 Origin 头」视为非浏览器/服务端调用而放行；字面量 "null"（sandboxed iframe、data: 等不透明源）
+        // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
+        if (origin == null) return null;
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
         if (host != null && !host.isEmpty() && origin.endsWith("//" + host)) return null;
         // 与 ResponseHeaders 同一白名单语义："*" 表示放开全部来源

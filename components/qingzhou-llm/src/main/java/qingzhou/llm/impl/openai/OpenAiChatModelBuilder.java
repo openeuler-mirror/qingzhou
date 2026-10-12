@@ -22,9 +22,11 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     private final Json json;
     private final Crypto crypto;
 
-    public ReasoningEffort effort;
-    public ImageDetail imageDetail;
-    public ResponseFormat format;
+    // 这些都是单次 build 前的配置项：改为私有，防止 build 后被外部直接改写造成配置串味；
+    // 每次 newChatModelBuilder() 返回全新实例，本就是按请求隔离，不存在跨对话共享
+    private ReasoningEffort effort;
+    private ImageDetail imageDetail;
+    private ResponseFormat format;
 
     private String reasoningField;
 

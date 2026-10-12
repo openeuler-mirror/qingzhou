@@ -73,6 +73,7 @@ final class BodyProcessors {
                             // ByteBuf 由 Reactor Netty 框架负责释放，无需手动 release，否则引用计数提前耗尽
                         },
                         err -> {
+                            ctx.intakeComplete(); // 进入期结束：读失败也退出超时管辖
                             Throwable cause = getCause(err);
                             safeRun(() -> streamHandler.onError(cause)); // 回调自身出错不得吞掉下方兜底
                             // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
@@ -85,6 +86,7 @@ final class BodyProcessors {
                             httpResponse.finish();
                         },
                         () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还。
+                            ctx.intakeComplete(); // 请求体已读完：进入期结束，长响应（SSE）不再受进入期超时约束
                             bodyFullyRead.set(true); // 请求体已读完：doFinally 据此决定是否需要断开残留连接
                             // 此处只记录并收尾，不改状态码：onComplete 阶段响应头可能已随流写出，
                             // 此时置状态会触发 "Status and headers already sent"，应流式 handler 自行在 onError/收尾前定状态
@@ -115,6 +117,7 @@ final class BodyProcessors {
                 .aggregate().asByteArray() // 所有输入 聚合 到一起再发送给订阅者
                 .defaultIfEmpty(EMPTY_BODY)
                 .flatMap(bytes -> {
+                    ctx.intakeComplete(); // 请求体已读完：进入期结束，handler 执行期不受进入期超时约束
                     try {
                         ctx.httpRequest.setRequestBody(bytes);
                         httpHandler.handle(ctx.httpRequest, httpResponse);

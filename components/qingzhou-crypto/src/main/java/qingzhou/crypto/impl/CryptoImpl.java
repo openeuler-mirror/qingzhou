@@ -10,12 +10,17 @@ import java.security.*;
 import java.util.Properties;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.*;
 import qingzhou.crypto.MessageDigest;
+import qingzhou.logger.Logger;
 
 @Component
 public class CryptoImpl implements Crypto {
     private static final SecureRandom RANDOM = new SecureRandom();
+
+    @Reference
+    private Logger logger;
 
     private final Base64Coder base64Coder = new Base64CoderImpl();
     private final Base32Coder base32Coder = new Base32CoderImpl();
@@ -44,7 +49,7 @@ public class CryptoImpl implements Crypto {
         if (key == null || key.trim().length() != 24) {
             throw new InvalidKeyException("key length must be 24");
         }
-        return new CipherImpl(key.trim(), base64Coder);
+        return new CipherImpl(key.trim(), base64Coder, logger);
     }
 
     @Override
@@ -105,6 +110,11 @@ public class CryptoImpl implements Crypto {
     }
 
     @Override
+    public Base32Coder getBase32Coder() {
+        return base32Coder;
+    }
+
+    @Override
     public Base16Coder getBase16Coder() {
         return base16Coder;
     }
@@ -127,7 +137,7 @@ public class CryptoImpl implements Crypto {
         }
         if (secret == null || secret.isEmpty()) {
             // 未配置则随机生成，不适用于生产环境：须让运维可见，否则集群各节点互不相认、重启后令牌全部失效
-            System.err.println("WARNING: global secret key is not configured (conf/secret-key.properties). "
+            logger.warn("WARNING: global secret key is not configured (conf/secret-key.properties). "
                     + "A random key is generated for this run: tokens and encrypted configs will not survive restart, "
                     + "and cluster nodes will not trust each other.");
             secret = generateKey();

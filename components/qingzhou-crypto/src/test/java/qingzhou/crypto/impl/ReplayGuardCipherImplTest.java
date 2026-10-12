@@ -9,14 +9,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import qingzhou.crypto.ReplayGuardCipher;
-import qingzhou.crypto.ReplayGuardException;
-import qingzhou.crypto.ReplayGuardException.Reason;
+import qingzhou.crypto.ReplayGuardCipher.ReplayGuardException.Reason;
 
 public class ReplayGuardCipherImplTest {
     // 每个用例独立密钥与 guard，避免共享去重状态互相干扰
     private ReplayGuardCipher newGuard() {
         try {
-            CryptoImpl crypto = new CryptoImpl();
+            CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
             return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateKey()));
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -38,7 +37,7 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt(packet, null);
             Assert.fail();
-        } catch (ReplayGuardException e) {
+        } catch (ReplayGuardCipher.ReplayGuardException e) {
             Assert.assertEquals(e.getReason(), Reason.REPLAY);
         }
     }
@@ -51,7 +50,7 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt(packet, null);
             Assert.fail();
-        } catch (ReplayGuardException e) {
+        } catch (ReplayGuardCipher.ReplayGuardException e) {
             Assert.assertEquals(e.getReason(), Reason.TIMESTAMP_OUT_OF_WINDOW);
         }
     }
@@ -63,7 +62,7 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt(packet, "channel-B".getBytes(StandardCharsets.UTF_8));
             Assert.fail();
-        } catch (ReplayGuardException e) {
+        } catch (ReplayGuardCipher.ReplayGuardException e) {
             Assert.fail("AAD 失配应表现为解密失败而非重放", e);
         } catch (Exception ignored) {
             // GCM 认证失败
@@ -104,7 +103,7 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt("not a packet".getBytes(StandardCharsets.UTF_8), null);
             Assert.fail();
-        } catch (ReplayGuardException e) {
+        } catch (ReplayGuardCipher.ReplayGuardException e) {
             Assert.assertEquals(e.getReason(), Reason.INVALID_PACKET);
         } catch (Exception e) {
             Assert.fail("非本协议报文应抛 ReplayGuardException", e);

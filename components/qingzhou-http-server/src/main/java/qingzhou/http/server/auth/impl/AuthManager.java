@@ -5,17 +5,15 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Configs;
+import qingzhou.common.FailureLockout;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.auth.Authenticator;
 import qingzhou.http.server.impl.HandlerManager;
 import qingzhou.http.server.impl.HttpRequestImpl;
-import qingzhou.http.server.util.FailureLockout;
-import qingzhou.http.server.util.PendingLogs;
 import qingzhou.logger.Logger;
-
-import static qingzhou.http.server.util.Configs.atLeast;
-import static qingzhou.http.server.util.Configs.between;
+import qingzhou.logger.util.PendingLogs;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = AuthManager.class)
@@ -32,8 +30,9 @@ public class AuthManager {
 
     @Activate
     public void init(Map<String, String> config) {
-        int maxAuthFailures = atLeast(config, "auth_fail_max", 1, 10);
-        long authFailWindowSeconds = between(config, "auth_fail_window", 1L, 86400L, 60);
+        Configs configs = new Configs(config);
+        int maxAuthFailures = configs.atLeast("auth_fail_max", 1, 10);
+        long authFailWindowSeconds = configs.between("auth_fail_window", 1L, 86400L, 60);
         long authFailWindowMillis = authFailWindowSeconds * 1000L;
         lockout = new FailureLockout(maxAuthFailures, authFailWindowMillis, 10_000);
 
@@ -45,7 +44,7 @@ public class AuthManager {
     public void addAuthenticator(Authenticator authenticator) {
         authenticators.add(authenticator);
 
-        pendingLogs.log(logger, "http authenticator registered: " + authenticator.getClass().getName());
+        pendingLogs.info(logger, "http authenticator registered: " + authenticator.getClass().getName());
     }
 
     public void removeAuthenticator(Authenticator authenticator) {
@@ -63,32 +62,29 @@ public class AuthManager {
         String host = httpRequest.getRemoteHost();
         if (lockout.isLocked(host)) return false;
 
-        boolean doneAuth = authenticateWithHandler(httpRequest);
+        AuthResult authResult = authenticate(httpRequest);
 
-        if (doneAuth) {
-            lockout.clear(host); // 认证成功后清空计数
-        } else {
+        // 校验通过：清空失败计数并写入受保护的认证字段（避免被 handler 覆写）
+        if (authResult.status() == AuthResult.Status.PASS && authResult.getPrincipal() != null) {
+            lockout.clear(host);
+            httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
+            return true;
+        }
+
+        // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
+        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户。判断依据是认证结果原因而非直接读头：
+        // TokenAuthenticator 对无/畸形 Bearer 返回 "token missing"，即"未出示凭据"，不计入锁定；
+        // 只有出示了凭据却失败（如 "invalid token"）才消耗锁定计数，从而仍能拖慢凭据爆破
+        String reason = authResult.getReason();
+        boolean noCredential = reason == null || "no credential provided".equals(reason)
+                || "no authenticator ready".equals(reason)
+                || "token missing".equals(reason);
+        if (!noCredential) {
             lockout.recordFailure(host);
         }
 
-        return doneAuth;
-    }
-
-    private boolean authenticateWithHandler(HttpRequestImpl httpRequest) {
-        AuthResult authResult = authenticate(httpRequest);
-
-        // 校验未通过：拒绝原因仅记服务端日志，不回显给客户端
-        if (authResult.status() != AuthResult.Status.PASS) {
-            logger.warn("http authentication rejected: " + authResult.getReason());
-            return false;
-        }
-
-        // PASS 但无主体是模糊态：角色无从归属，handler 按角色鉴权只会拿到 null，故按未认证拒绝
-        if (authResult.getPrincipal() == null) return false;
-
-        // 校验通过：写入受保护的认证字段而非通用 attribute，避免被 handler 覆写
-        httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
-        return true;
+        logger.warn("http authentication rejected: " + reason);
+        return false;
     }
 
     private AuthResult authenticate(HttpRequest request) {

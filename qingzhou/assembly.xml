@@ -132,6 +132,7 @@
         </dependencySet>
         <dependencySet>
             <includes>
+                <include>${project.groupId}:qingzhou-common</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-xml</include>

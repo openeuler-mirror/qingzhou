@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>components</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <packaging>bundle</packaging>
+    <artifactId>qingzhou-common</artifactId>
+
+    <!--
+        平台基础原语模块：跨模块共享、无业务语义、无协议语义的底层工具。
+        准入判据：≥2 个模块需要 + 不含密码学 + 不含业务规则。
+        零依赖：本模块不得引入任何 qingzhou 或第三方依赖。
+    -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Export-Package>qingzhou.common</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

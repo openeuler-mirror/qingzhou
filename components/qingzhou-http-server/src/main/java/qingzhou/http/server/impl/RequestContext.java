@@ -1,5 +1,6 @@
 package qingzhou.http.server.impl;
 
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,12 +33,23 @@ final class RequestContext {
     volatile boolean streamPermitHeld; // 流式分支已取得的并发许可
     volatile long reservedBytes; // 聚合分支已预留的内存配额（long 需防 32 位字撕裂）
 
+    // 请求进入期超时任务（防 Slowloris）：只覆盖「准入 → 请求体读完」，不覆盖 handler 执行期（SSE 等长响应合法）
+    volatile ScheduledFuture<?> intakeTimeout;
+
     RequestContext(HttpServerRequest request, HttpServerResponse response,
                    Semaphore concurrentSemaphore, Semaphore streamSemaphore) {
         this.request = request;
         this.response = response;
         this.concurrentSemaphore = concurrentSemaphore;
         this.streamSemaphore = streamSemaphore;
+    }
+
+    /**
+     * 请求进入期结束（读完/读失败/响应已发放到 handler 之外）时调用：正常业务耗时不再受进入期超时约束
+     */
+    void intakeComplete() {
+        ScheduledFuture<?> future = intakeTimeout;
+        if (future != null) future.cancel(false);
     }
 
     /**

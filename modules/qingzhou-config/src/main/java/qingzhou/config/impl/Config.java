@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -35,13 +36,16 @@ public class Config {
     private final String qzInstance = System.getProperty("qingzhou.instance");
     private final String qzVersion = System.getProperty("qingzhou.version");
 
+    // 左侧空白裁剪：正则固定，预编译后复用，避免在每一行上重复编译（#34）
+    private static final Pattern LEFT_TRIM = Pattern.compile("^[\\s　]+");
+
     // 在 qingzhou.command.cmd.StartArg 中反射引用
     public static Map<String, String> parse(String text) {
         Map<String, String> result = new LinkedHashMap<>();
         StringBuilder folded = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
             for (String line; (line = reader.readLine()) != null; ) {
-                line = line.replaceAll("^[\\s\u3000]+", ""); // 只 trim 左侧空白符，保留右侧，右侧的可能是业务需要的值
+                line = LEFT_TRIM.matcher(line).replaceFirst(""); // 只 trim 左侧空白符，保留右侧，右侧的可能是业务需要的值
                 if (line.isEmpty() || line.startsWith("#") || line.startsWith("\\")) continue;
 
                 if (line.endsWith("\\")) {// 折行

@@ -9,17 +9,18 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.Configs;
+import qingzhou.common.FailureLockout;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
-import qingzhou.http.server.util.Configs;
-import qingzhou.http.server.util.FailureLockout;
 import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + AuthHandler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
+                HttpHandler.HANDLE_METHODS + "=POST",// 防密码经 GET 进入 URL/访问日志
                 HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class AuthHandler implements HttpHandler {
     public static final String ROOT_PATH = "/auth";
@@ -44,10 +45,11 @@ public class AuthHandler implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        username = Configs.notBlank(config, "username");
-        passwordDigest = Configs.notBlank(config, "password");
+        Configs configs = new Configs(config);
+        username = configs.notBlank("username");
+        passwordDigest = configs.notBlank("password");
         String rolesStr = config.get("roles");
-        if (rolesStr != null) {
+        if (rolesStr != null && !rolesStr.trim().isEmpty()) {
             List<String> roleList = new ArrayList<>();
             for (String s : rolesStr.split(",")) {
                 if (!s.trim().isEmpty()) {
@@ -57,13 +59,13 @@ public class AuthHandler implements HttpHandler {
             roles = roleList.toArray(new String[0]);
         }
 
-        totpEnabled = Configs.getConfig(config, "totp_enabled", false);
+        totpEnabled = configs.getConfig("totp_enabled", false);
         if (totpEnabled) {
-            totpSecret = Configs.notBlank(config, "totp_secret"); // 安全考虑：此处不要解密
+            totpSecret = configs.notBlank("totp_secret"); // 安全考虑：此处不要解密
         }
 
-        int maxFailures = Configs.atLeast(config, "max_failures", 1, 5);
-        long lockMillis = Configs.atLeast(config, "lock_seconds", 1, 300) * 1000L;
+        int maxFailures = configs.atLeast("max_failures", 1, 5);
+        long lockMillis = configs.atLeast("lock_seconds", 1, 300) * 1000L;
         lockout = new FailureLockout(maxFailures, lockMillis, 10_000);
     }
 
@@ -72,21 +74,12 @@ public class AuthHandler implements HttpHandler {
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
         if (path.equals(LOGIN_PATH)) {
-            if (!"POST".equals(request.getMethod())) { // 防密码经 GET 进入 URL/访问日志
-                response.status(405).send("method not allowed").finish();
-                return;
-            }
             if (request.getRawUri().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
                 response.status(400).finish();
                 return;
             }
-
             login(request, response);
         } else if (path.equals(LOGOUT_PATH)) {
-            if (!"POST".equals(request.getMethod())) {
-                response.status(405).send("method not allowed").finish();
-                return;
-            }
             logout(request, response);
         } else {
             response.status(400).finish();
@@ -127,9 +120,7 @@ public class AuthHandler implements HttpHandler {
         }
 
         lockout.clear(lockKey);
-        response.header("Cache-Control", "no-store") // token 响应不得被缓存
-                .contentTypeJsonUtf8()
-                .send("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}").finish();
+        tokenService.sendToken(reqUser, roles, response);
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
@@ -143,7 +134,7 @@ public class AuthHandler implements HttpHandler {
     private boolean verifyCode(String code, HttpResponse response) {
         try {
             if (crypto.getTotpCipher().verifyCode(
-                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.auth_totp_secret"),
+                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"),
                     code)) {
                 return true;
             }
@@ -155,9 +146,6 @@ public class AuthHandler implements HttpHandler {
     }
 
     private void logout(HttpRequest request, HttpResponse response) {
-        response.header("Set-Cookie", qingzhou.auth.oauth2.OAuth2Handler.TOKEN_COOKIE_NAME
-                        + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"
-                        + ("https".equals(request.getScheme()) ? "; Secure" : ""))
-                .send("ok").finish();
+        tokenService.revokeToken(request, response);
     }
 }

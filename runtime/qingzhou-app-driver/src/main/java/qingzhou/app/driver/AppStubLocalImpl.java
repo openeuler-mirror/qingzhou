@@ -24,6 +24,9 @@ class AppStubLocalImpl implements AppStubLocal {
 
     private final Map<String, SystemCall> systemCallMap;
 
+    // 默认 action 方法清单在类加载时反射一次并缓存，避免每次请求都扫描 DefaultAction 的全部方法
+    private static final Method[] DEFAULT_ACTION_METHODS = DefaultAction.class.getMethods();
+
     AppStubLocalImpl(AppContextImpl appContext) {
         this.appContext = appContext;
 
@@ -84,7 +87,7 @@ class AppStubLocalImpl implements AppStubLocal {
 
         ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
-            for (Method method : DefaultAction.class.getMethods()) {
+            for (Method method : DEFAULT_ACTION_METHODS) {
                 // 默认操作名已由 list 改为 page（action.code），方法名仍为 list，用 methodName 匹配
                 if (method.getName().equals(action.methodName)) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -104,7 +107,7 @@ class AppStubLocalImpl implements AppStubLocal {
                 try {
                     invokeMethod(request, method, modelBase, request);
                 } finally {
-                    modelBase.setCurrentRequest(null);
+                    modelBase.clearCurrentRequest();
                 }
             }
         }

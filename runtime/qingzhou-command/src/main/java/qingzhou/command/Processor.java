@@ -60,6 +60,10 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
     }
 
     protected File initInstance(String instanceName) {
+        if (!isSafeInstanceName(instanceName)) {
+            log("invalid instance name: " + instanceName);
+            return null;
+        }
         File instance = Paths.get(getHomeDir().getAbsolutePath(), "instances", instanceName).toFile();
         File configFile = Paths.get(instance.getAbsolutePath(), "conf", "qingzhou.properties").toFile();
         if (configFile.isFile()) {
@@ -68,6 +72,12 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
             log("instance does not exist: " + instanceName);
             return null;
         }
+    }
+
+    // 实例名直接拼进路径，须拒绝任何能逃出 instances 目录的字符，否则可读写其它实例配置/密钥
+    private static boolean isSafeInstanceName(String name) {
+        if (name == null || name.isEmpty()) return false;
+        return !name.contains("..") && !name.contains("/") && !name.contains("\\") && name.indexOf('\0') < 0;
     }
 
     @Override

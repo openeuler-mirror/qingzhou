@@ -25,6 +25,11 @@ public abstract class ModelBase implements QingzhouModel {
         REQUEST_THREAD_LOCAL.set(request);
     }
 
+    // 请求处理结束必须清除：线程池复用线程时若不 remove，会残留上一个会话的 Request 引用（会话泄漏）
+    public void clearCurrentRequest() {
+        REQUEST_THREAD_LOCAL.remove();
+    }
+
     public void start() {
     }
 

@@ -4,12 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import qingzhou.common.NonceRegistry;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.ReplayGuardCipher;
-import qingzhou.crypto.ReplayGuardException;
 
 /**
  * {@link ReplayGuardCipher} 的默认实现。魔数、版本、时间窗、去重表等细节全部封闭在包内。
@@ -29,16 +27,10 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
      */
     private static final long MAX_CLOCK_SKEW_MILLIS = 2 * 60 * 1000;
 
-    /**
-     * 去重键上限：仅用于内存兜底，安全边界是时间窗
-     */
-    private static final int MAX_TRACKED_NONCES = 100_000;
-    private static final long PRUNE_INTERVAL_MILLIS = 1_000; // 淘汰的最小间隔（摊销）
-
     private static final SecureRandom RANDOM = new SecureRandom();
-    // nonce → 登记时间。CHM 的 putIfAbsent 提供原子登记，热路径无全局锁
-    private static final Map<String, Long> SEEN_NONCES = new ConcurrentHashMap<>();
-    private static volatile long lastPruneAt;
+
+    // 共享登记器：AES 报文（ReplayGuardCipher）与 RSA 注册报文共用同一份去重状态实现
+    private static final NonceRegistry nonceRegistry = new NonceRegistry();
 
     private final Cipher cipher;
 
@@ -72,7 +64,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     @Override
     public byte[] decrypt(byte[] packet, byte[] context) throws Exception {
         if (!isWrapped(packet) || packet[1] != VERSION)
-            throw new ReplayGuardException(ReplayGuardException.Reason.INVALID_PACKET, "invalid packet");
+            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.INVALID_PACKET, "invalid packet");
 
         ByteBuffer header = ByteBuffer.wrap(packet, 2, 8 + NONCE_SIZE);
         long timestamp = header.getLong();
@@ -80,7 +72,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
         header.get(nonce);
 
         if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_CLOCK_SKEW_MILLIS)
-            throw new ReplayGuardException(ReplayGuardException.Reason.TIMESTAMP_OUT_OF_WINDOW, "timestamp out of window");
+            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.TIMESTAMP_OUT_OF_WINDOW, "timestamp out of window");
 
         byte[] ciphertext = new byte[packet.length - HEADER_SIZE];
         System.arraycopy(packet, HEADER_SIZE, ciphertext, 0, ciphertext.length);
@@ -88,12 +80,12 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
         // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放
         byte[] plaintext = cipher.decrypt(ciphertext, aad(timestamp, nonce, context));
         if (!registerIfAbsent(nonce, timestamp)) {
-            throw new ReplayGuardException(ReplayGuardException.Reason.REPLAY, "replay detected");
+            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.REPLAY, "replay detected");
         }
         return plaintext;
     }
 
-    private static boolean isWrapped(byte[] packet) {
+    private boolean isWrapped(byte[] packet) {
         return packet != null && packet.length > HEADER_SIZE && (packet[0] & 0xFF) == MAGIC;
     }
 
@@ -104,24 +96,10 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
         return buffer.array();
     }
 
-    /**
-     * 原子登记去重键（putIfAbsent）。返回 true 表示 nonce 首次出现（登记成功）；false 表示此前已处理过（重放）。
-     * 无锁：CHM 的原子性取代全局 synchronized，多线程登记可线性扩展。
-     */
+    // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放。
+    // TTL 取时间窗两倍：过期键先回收，仍超容量时由登记器拒绝而非丢弃窗口内记录
     private boolean registerIfAbsent(byte[] nonce, long timestamp) {
         String key = Base64.getEncoder().encodeToString(nonce);
-        pruneExpired(timestamp);
-        // 只回收已过期的键：丢弃窗口内的 nonce 等于自己开一个重放窗口。
-        // 过期回收后仍超容量，说明窗口内吞吐超出设计，此时拒绝而不是丢弃（容量可按部署调大）。
-        if (SEEN_NONCES.size() > MAX_TRACKED_NONCES) return false;
-        return SEEN_NONCES.putIfAbsent(key, timestamp) == null;
-    }
-
-    // lastPruneAt 摊销：避免洪水下每个请求都全表扫描
-    private void pruneExpired(long now) {
-        if (SEEN_NONCES.size() <= MAX_TRACKED_NONCES || now - lastPruneAt < PRUNE_INTERVAL_MILLIS) return;
-        lastPruneAt = now;
-        long expireBefore = now - MAX_CLOCK_SKEW_MILLIS * 2;
-        SEEN_NONCES.values().removeIf(ts -> ts < expireBefore);
+        return nonceRegistry.registerIfAbsent(key, timestamp, MAX_CLOCK_SKEW_MILLIS * 2);
     }
 }

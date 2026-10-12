@@ -101,38 +101,37 @@ public class RegistryImplTest {
         RegistryImpl registry = newRegistry();
         InstanceInfo remote = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1);
 
-        registry.addRemoteApps(remote);
+        registry.addRemoteInstanceInfo(remote);
 
         Assert.assertEquals(registry.getRemoteInstance(REMOTE_INSTANCE_ID), remote);
         Assert.assertTrue(registry.getAllRemoteInstances().contains(REMOTE_INSTANCE_ID));
     }
 
     @Test
-    public void addRemoteAppsNewInstanceId_registryDataVersion_changed() throws InterruptedException {
+    public void addRemoteInstanceInfoNewInstanceId_registryDataVersion_changed() throws InterruptedException {
         RegistryImpl registry = newRegistry();
         InstanceInfo remote = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1);
         long before = registry.getRegistryDataVersion();
 
         Thread.sleep(10);
-        registry.addRemoteApps(remote);
+        registry.addRemoteInstanceInfo(remote);
 
         Assert.assertTrue(registry.getRegistryDataVersion() > before);
         Assert.assertTrue(remote.getLastRefreshTime() > 0);
     }
 
     @Test
-    public void addRemoteAppsExistingInstanceId_registryDataVersion_changed() throws InterruptedException {
+    public void addRemoteInstanceInfoExistingInstanceId_registryDataVersion_changed() throws InterruptedException {
         RegistryImpl registry = newRegistry();
         InstanceInfo first = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1);
         Thread.sleep(10);
-        registry.addRemoteApps(first);
+        registry.addRemoteInstanceInfo(first);
         long versionAfterFirst = registry.getRegistryDataVersion();
 
         Thread.sleep(10);
         InstanceInfo second = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_2);
-        InstanceInfo exists = registry.addRemoteApps(second);
+        registry.addRemoteInstanceInfo(second);
 
-        Assert.assertEquals(exists, first);
         // 重注册携带新的共享密钥，数据确实变更：版本必须递增，否则前端轮询感知不到
         Assert.assertTrue(registry.getRegistryDataVersion() > versionAfterFirst);
         Assert.assertEquals(registry.getRemoteInstance(REMOTE_INSTANCE_ID), second);
@@ -146,7 +145,7 @@ public class RegistryImplTest {
         RegistryImpl registry = newRegistry();
         InstanceInfo remote = newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1);
         Thread.sleep(10);
-        registry.addRemoteApps(remote);
+        registry.addRemoteInstanceInfo(remote);
         long before = registry.getRegistryDataVersion();
 
         Thread.sleep(10);
@@ -169,7 +168,7 @@ public class RegistryImplTest {
     @Test
     public void getAllRemoteApps_registeredInstance_returnAppCodes() {
         RegistryImpl registry = newRegistry();
-        registry.addRemoteApps(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1, APP_CODE_2));
+        registry.addRemoteInstanceInfo(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1, APP_CODE_2));
 
         List<String> appCodes = registry.getAllRemoteApps(REMOTE_INSTANCE_ID);
 
@@ -189,7 +188,7 @@ public class RegistryImplTest {
     @Test
     public void getRemoteApp_registeredInstanceAndCode_returnStub() {
         RegistryImpl registry = newRegistry();
-        registry.addRemoteApps(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
+        registry.addRemoteInstanceInfo(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
 
         AppStubRemote remoteApp = registry.getRemoteApp(REMOTE_INSTANCE_ID, APP_CODE_1);
 
@@ -201,7 +200,7 @@ public class RegistryImplTest {
     @Test
     public void getRemoteApp_unknownCode_returnNull() {
         RegistryImpl registry = newRegistry();
-        registry.addRemoteApps(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
+        registry.addRemoteInstanceInfo(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
 
         Assert.assertNull(registry.getRemoteApp(REMOTE_INSTANCE_ID, APP_CODE_2));
     }
@@ -231,7 +230,7 @@ public class RegistryImplTest {
     @Test
     public void getAppStub_remoteInstanceId_returnRemoteAppStub() {
         RegistryImpl registry = newRegistry();
-        registry.addRemoteApps(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
+        registry.addRemoteInstanceInfo(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
 
         AppStub result = registry.getAppStub(REMOTE_INSTANCE_ID, APP_CODE_1);
 
@@ -249,7 +248,7 @@ public class RegistryImplTest {
     @Test
     public void getAppStub_remoteInstanceIdUnknownCode_returnNull() {
         RegistryImpl registry = newRegistry();
-        registry.addRemoteApps(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
+        registry.addRemoteInstanceInfo(newRemoteInstance(REMOTE_INSTANCE_ID, APP_CODE_1));
 
         Assert.assertNull(registry.getAppStub(REMOTE_INSTANCE_ID, APP_CODE_2));
     }

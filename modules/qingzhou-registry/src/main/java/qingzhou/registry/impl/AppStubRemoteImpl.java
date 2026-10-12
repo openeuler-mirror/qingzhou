@@ -22,7 +22,6 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.web.Refresh;
 
 class AppStubRemoteImpl implements AppStubRemote {
     private final InstanceInfo instanceInfo;
@@ -31,15 +30,18 @@ class AppStubRemoteImpl implements AppStubRemote {
     private final HttpClient httpClient;
     private final Crypto crypto;
     private final Logger logger;
+    private final KeyRotation keyRotation;
     private final String agentBaseUrl;
 
-    AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto, Logger logger) {
+    AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto,
+                      Logger logger, KeyRotation keyRotation) {
         this.instanceInfo = instanceInfo;
         this.appMeta = appMeta;
         this.json = json;
         this.httpClient = httpClient;
         this.crypto = crypto;
         this.logger = logger;
+        this.keyRotation = keyRotation;
 
         String protocol = instanceInfo.isSslEnabled() ? "https" : "http";
         agentBaseUrl = protocol + "://" + instanceInfo.getHost() + ":" + instanceInfo.getPort() + "/agent";
@@ -52,16 +54,12 @@ class AppStubRemoteImpl implements AppStubRemote {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        synchronized (Refresh.REFRESH_KEY_LOCK) {
-            invokeApp0(request);
-        }
-    }
-
-    private void invokeApp0(RequestImpl request) throws Throwable {
-        Response response;
+        // 不再持全局 REFRESH_KEY_LOCK：持锁跨网络 I/O 会串行化所有远程调用并令健康检查误判实例失联；
+        // 轮换打断进行中调用的问题由两侧密钥宽限解决——registry 宽限期内继续用旧钥加密，
+        // agent 侧保留旧钥解密回退，本调用内加密与响应解密始终用同一把钥
         String originTargetName = request.getInstance();
         request.setInstance(Constants.LOCAL_INSTANCE_ID); // 远程到实例后，去本地实例找
-        Cipher cipher = crypto.getCipher(instanceInfo.getKey());
+        Cipher cipher = crypto.getCipher(keyRotation.getEffectiveKey(instanceInfo.getId(), instanceInfo.getKey()));
 
         try {
             // 处理文件上传：将本地文件上传到远程 agent
@@ -73,7 +71,8 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
-            response = httpClient.send(httpClient.buildRequest(invokeUrl).method(HttpMethod.POST)
+            Response response = httpClient.send(httpClient.buildRequest(invokeUrl)
+                    .method(HttpMethod.POST)
                     .body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
