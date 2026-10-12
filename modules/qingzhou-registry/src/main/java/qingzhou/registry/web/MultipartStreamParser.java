@@ -12,6 +12,8 @@ class MultipartStreamParser {
     private static final int MAX_PART_HEADERS = 8192; // 单个分片的头部上限
     private static final int MAX_FIELD_BYTES = 1024 * 1024; // 单个文本字段上限
     private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
+    // 文件分片总量上限：与服务端请求体上限对齐，防止认证用户用单个请求写满磁盘
+    private static final long MAX_TOTAL_BYTES = 256L * 1024 * 1024;
 
     private final byte[] boundaryDelimiter;
     private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
@@ -29,6 +31,7 @@ class MultipartStreamParser {
     private final ByteArrayOutputStream headerBuffer = new ByteArrayOutputStream();
 
     private int partCount;
+    private long totalBytes;
     private String currentFieldName;
     private boolean isFileField;
 
@@ -53,6 +56,11 @@ class MultipartStreamParser {
 
     void feed(byte[] data, boolean isLast) throws IOException {
         if (state == State.DONE) return;
+
+        totalBytes += data.length;
+        if (totalBytes > MAX_TOTAL_BYTES) {
+            throw new IllegalStateException("multipart body too large");
+        }
 
         byte[] searchArea;
         if (leftoverLen > 0) {

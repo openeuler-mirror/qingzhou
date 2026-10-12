@@ -49,13 +49,15 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public Response send(Request request, ResponseListener listener) throws Exception {
         RequestImpl req = (RequestImpl) request;
-        // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException
+        // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException。
+        // 拼接结果只用于本次发送，不回写请求对象：同一 Request 可重复 send，且不在线程间共享可变状态
         boolean methodHasBody = req.method != null && req.method != HttpMethod.GET && req.method != HttpMethod.HEAD;
+        String requestUrl = req.url;
         if (!methodHasBody && req.body == null && req.params != null) {
-            req.url = appendQuery(req.url, req.params);
+            requestUrl = appendQuery(req.url, req.params);
         }
 
-        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(req.url, req.connectTimeout, req.readTimeout, req.trustedCertificates, req.trustAll);
+        HttpURLConnection conn = ConnectionFactory.getInstance().getConnection(requestUrl, req.connectTimeout, req.readTimeout, req.trustedCertificates, req.trustAll);
 
         if (req.method != null) {
             conn.setRequestMethod(req.method.name());
@@ -67,10 +69,8 @@ public class HttpClientImpl implements HttpClient {
             }
         }
 
-        byte[] body = null;
-        if (req.body != null) {
-            body = req.body;
-        } else if (req.params != null && req.files == null && methodHasBody) {
+        byte[] body = req.body;
+        if (body == null && req.params != null && req.files == null && methodHasBody) {
             body = encodeForm(req.params);
             if (conn.getRequestProperty("Content-Type") == null) {
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -106,29 +106,27 @@ public class HttpClientImpl implements HttpClient {
     }
 
     private static byte[] encodeForm(Map<String, String> params) throws UnsupportedEncodingException {
-        StringBuilder body = new StringBuilder();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            String value = entry.getValue();
-            if (value == null) continue;
-            if (body.length() > 0) body.append('&');
-            body.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
-                    .append(URLEncoder.encode(value, "UTF-8"));
-        }
-        return body.length() > 0 ? body.toString().getBytes(StandardCharsets.UTF_8) : null;
+        String encoded = encodePairs(params);
+        return encoded.isEmpty() ? null : encoded.getBytes(StandardCharsets.UTF_8);
     }
 
     // 将参数拼到 URL 查询串（供 GET/HEAD 使用），与 encodeForm 复用同一套编码
     private static String appendQuery(String url, Map<String, String> params) throws UnsupportedEncodingException {
-        StringBuilder query = new StringBuilder();
+        String query = encodePairs(params);
+        if (query.isEmpty()) return url;
+        return url + (url.indexOf('?') < 0 ? "?" : "&") + query;
+    }
+
+    private static String encodePairs(Map<String, String> params) throws UnsupportedEncodingException {
+        StringBuilder pairs = new StringBuilder();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             String value = entry.getValue();
             if (value == null) continue;
-            if (query.length() > 0) query.append('&');
-            query.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
+            if (pairs.length() > 0) pairs.append('&');
+            pairs.append(URLEncoder.encode(entry.getKey(), "UTF-8")).append('=')
                     .append(URLEncoder.encode(value, "UTF-8"));
         }
-        if (query.length() == 0) return url;
-        return url + (url.indexOf('?') < 0 ? "?" : "&") + query;
+        return pairs.toString();
     }
 
     private void writeMultipart(RequestImpl req, HttpURLConnection conn) throws IOException {

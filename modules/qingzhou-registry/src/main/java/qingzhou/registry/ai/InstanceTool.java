@@ -19,6 +19,6 @@ public class InstanceTool implements ToolService {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        return json.toJson(instance.function.apply(null));
+        return json.toJson(instance.getFunction().apply(null));
     }
 }

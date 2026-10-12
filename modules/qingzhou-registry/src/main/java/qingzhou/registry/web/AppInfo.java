@@ -27,7 +27,7 @@ public class AppInfo implements HttpHandler {
     @Reference
     private Json json;
 
-    public Function<HandlingContext, Object> function = (context) -> {
+    private final Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
         String appCode = context.getParameter(WebUtil.APP_CODE);
         if (instanceId == null || appCode == null) return null;
@@ -89,12 +89,16 @@ public class AppInfo implements HttpHandler {
         return appMetaInfo;
     };
 
+    public Function<HandlingContext, Object> getFunction() {
+        return function;
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         // 是否已缓存
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
+        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

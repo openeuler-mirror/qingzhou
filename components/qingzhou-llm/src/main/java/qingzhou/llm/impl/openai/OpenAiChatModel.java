@@ -28,8 +28,8 @@ class OpenAiChatModel implements ChatModel {
         this.crypto = crypto;
         this.syncSender = new SyncSender(builder, httpClient, json, crypto);
 
-        if (builder.tools != null) {
-            builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
+        if (builder.getTools() != null) {
+            builder.getTools().forEach(tool -> baseTools.put(tool.name(), tool));
         }
     }
 
@@ -41,11 +41,11 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            if (builder.skills != null && !builder.skills.isEmpty()) {
+            if (builder.getSkills() != null && !builder.getSkills().isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
             }
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json, crypto));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, () -> new OpenAiChatModelBuilder(builder.getBaseUrl(), builder.getApiKey(), builder.getModel(), httpClient, json, crypto));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
@@ -69,7 +69,7 @@ class OpenAiChatModel implements ChatModel {
      * 请求返回 200 后本方法立即返回，流式读取与后续回调（onBody/onComplete/onError）在后台线程进行。
      */
     private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
-        if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
+        if (toolIteration >= builder.getMaxToolIterations()) { // 达到工具调用上限：明确告知调用方，避免静默终止
             Utils.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
@@ -90,7 +90,7 @@ class OpenAiChatModel implements ChatModel {
             if (response.getStatus() == 200) return;
 
             response.cancel();
-            if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.maxRetries) {
+            if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
@@ -98,7 +98,7 @@ class OpenAiChatModel implements ChatModel {
             chatListener.onError("API error " + response.getStatus() + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
-            if (attempt < builder.maxRetries) {
+            if (attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
@@ -215,7 +215,7 @@ class OpenAiChatModel implements ChatModel {
                     chatListener.onReasoningPause();
                     for (ToolCallInfo toolCallInfo : toolCalls.values()) {
                         chatListener.onToolCall(toolCallInfo.id, toolCallInfo.name, toolCallInfo.arguments);
-                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json, builder.interceptor)));
+                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json, builder.getInterceptor())));
                     }
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);

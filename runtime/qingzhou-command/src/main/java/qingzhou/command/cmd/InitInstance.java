@@ -1,10 +1,6 @@
 package qingzhou.command.cmd;
 
-import java.io.Console;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -21,10 +17,6 @@ import java.util.Locale;
 import qingzhou.command.Processor;
 
 public class InitInstance extends Processor {
-    private static final String PROPS = "conf/qingzhou.properties";
-    private static final String SECRET_PROPS = "conf/secret-key.properties";
-    private static final String KEYSTORE = "conf/keystore.p12";
-
     private File instanceDir;
     private File propsFile;
     private URLClassLoader cryptoLoader;
@@ -42,19 +34,16 @@ public class InitInstance extends Processor {
 
     @Override
     public void doCommandLine(String[] args) throws Exception {
-        String instance = args.length > 0 && !args[0].isEmpty() ? args[0] : "default";
-        instanceDir = initInstance(instance);
+        instanceDir = initInstance(args);
         if (instanceDir == null) return;
 
         Console console = System.console();
         if (console == null) { // 确认与密码均需交互，无终端时不得按默认值擅自初始化
-            logSimple("no interactive terminal found, run this command in a terminal");
+            log("no interactive terminal found, run this command in a terminal");
             return;
         }
 
-        propsFile = new File(instanceDir, PROPS);
-        // 全局密钥的读取位置由 qingzhou.instance 决定，命令进程须显式指向目标实例
-        System.setProperty("qingzhou.instance", instanceDir.getAbsolutePath());
+        propsFile = new File(instanceDir, "conf/qingzhou.properties");
         try {
             loadCrypto();
             initKeys();
@@ -63,15 +52,15 @@ public class InitInstance extends Processor {
         } finally {
             if (cryptoLoader != null) cryptoLoader.close();
         }
-        logSimple("done, restart the instance to take effect");
+        log("done, restart the instance to take effect");
     }
 
     private void initKeys() throws Exception {
-        File secretFile = new File(instanceDir, SECRET_PROPS);
+        File secretFile = new File(instanceDir, "conf/secret-key.properties");
         String secret = read(secretFile);
         if (isBlank(getValue(secret, "global"))) { // 已存在则静默跳过，避免已签发的令牌失效
             write(secretFile, putValue(secret, "global", generateKey()));
-            logSimple("cipher key generated");
+            log("cipher key generated");
         }
 
         String props = read(propsFile);
@@ -80,7 +69,7 @@ public class InitInstance extends Processor {
             props = putValue(props, "qingzhou-registry.private_key", encrypt(pairKey[1]));
             props = putValue(props, "qingzhou-agent.public_key", pairKey[0]);
             write(propsFile, props);
-            logSimple("key pair generated");
+            log("key pair generated");
         }
     }
 
@@ -90,7 +79,7 @@ public class InitInstance extends Processor {
         String password = readPassword(console, "New keystore password: ");
         if (password == null) return;
 
-        File keystore = new File(instanceDir, KEYSTORE);
+        File keystore = new File(instanceDir, "conf/keystore.p12");
         Files.deleteIfExists(keystore.toPath());
         genKeystore(keystore, password);
         String props = read(propsFile);
@@ -98,12 +87,12 @@ public class InitInstance extends Processor {
         props = putValue(props, "qingzhou-http-server.ssl_enabled", "true"); // 证书与口令同时就绪，随即启用 https
         write(propsFile, props);
         chmod600(keystore);
-        logSimple("ssl certificate generated and ssl_enabled set to true, restart to enable https");
+        log("ssl certificate generated and ssl_enabled set to true, restart to enable https");
     }
 
     private void initAdminPassword(Console console) throws Exception {
         if (!confirm(console, "Reset the admin password? [y/N] ")) {
-            logSimple("warning: admin password was not changed");
+            log("warning: admin password was not changed");
             return;
         }
 
@@ -116,7 +105,7 @@ public class InitInstance extends Processor {
         write(propsFile, putValue(read(propsFile), "qingzhou-auth.password",
                 // PBKDF2 替代简单迭代哈希：带盐 + 高迭代次数（200000），抗离线爆破；旧 SHA-256 摘要仍可经 matches 校验
                 (String) digest.invoke(messageDigest, password, "PBKDF2WithHmacSHA256", 16, 200000)));
-        logSimple("admin password updated");
+        log("admin password updated");
     }
 
     private void genKeystore(File keystore, String password) throws Exception {
@@ -126,6 +115,18 @@ public class InitInstance extends Processor {
                 "-dname", "CN=qingzhou", "-ext", "SAN=dns:localhost,ip:127.0.0.1");
         // 口令经 stdin 传入而非命令行参数，避免明文出现在 ps 输出中被同机其它用户读取
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        StringBuilder output = new StringBuilder();
+        // keytool 的提示输出可能在 stdin 写入期间填满管道缓冲，须并行读取输出，避免双方互相等待死锁
+        Thread outputDrainer = new Thread(() -> {
+            try (InputStream inputStream = process.getInputStream()) {
+                byte[] bytes = new byte[1024 * 4];
+                for (int n; (n = inputStream.read(bytes)) != -1; ) {
+                    output.append(new String(bytes, 0, n, StandardCharsets.UTF_8));
+                }
+            } catch (IOException ignored) { // 进程退出时读流中断属正常路径
+            }
+        });
+        outputDrainer.start();
         try (OutputStream out = process.getOutputStream()) {
             // 新建密钥库依次索要 storepass（两次）与 keypass；keypass 缺省沿用 storepass，
             // 重复写入同一口令以覆盖两种提示顺序，多余行被进程忽略
@@ -133,15 +134,9 @@ public class InitInstance extends Processor {
             for (int i = 0; i < 4; i++) out.write(line);
             out.flush();
         }
-        try (InputStream inputStream = process.getInputStream()) {
-            byte[] bytes = new byte[1024 * 4];
-            StringBuilder output = new StringBuilder();
-            for (int n; (n = inputStream.read(bytes)) != -1; ) {
-                output.append(new String(bytes, 0, n, StandardCharsets.UTF_8));
-            }
-            if (process.waitFor() != 0) {
-                throw new IllegalStateException("keytool failed: " + output);
-            }
+        outputDrainer.join();
+        if (process.waitFor() != 0) {
+            throw new IllegalStateException("keytool failed: " + output);
         }
     }
 
@@ -161,14 +156,14 @@ public class InitInstance extends Processor {
         while (true) { // 密码不回显，输入两遍比对，避免输错后到下次登录/启动才暴露
             char[] password = console.readPassword(prompt);
             if (password == null || password.length == 0) {
-                logSimple("empty password, skipped");
+                log("empty password, skipped");
                 return null;
             }
             char[] confirm = console.readPassword("Confirm password: ");
             if (confirm == null || confirm.length == 0) {
                 Arrays.fill(password, '\0');
                 if (confirm != null) Arrays.fill(confirm, '\0');
-                logSimple("empty password, skipped");
+                log("empty password, skipped");
                 return null;
             }
             boolean matched = Arrays.equals(password, confirm);
@@ -176,7 +171,7 @@ public class InitInstance extends Processor {
             Arrays.fill(password, '\0');
             Arrays.fill(confirm, '\0');
             if (matched) return value;
-            logSimple("passwords do not match, try again");
+            log("passwords do not match, try again");
         }
     }
 
@@ -219,7 +214,9 @@ public class InitInstance extends Processor {
     private static void write(File file, String content) throws IOException {
         File temp = new File(file.getParentFile(), file.getName() + ".tmp"); // 先写临时文件，避免写坏原文件
         Files.write(temp.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        chmod600(temp); // 配置可能含密钥/口令，落盘即收敛权限，不留明文窗口
         Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        chmod600(file);
     }
 
     static String getValue(String content, String key) {

@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -52,6 +53,7 @@ public class OAuth2Handler implements HttpHandler {
     private String scope;
     private String callbackUrl;
     private String usernameField;
+    private List<String> grantedRoles;
 
     private Cipher tokenCipher;
 
@@ -67,6 +69,9 @@ public class OAuth2Handler implements HttpHandler {
         userinfoEndpoint = configs.notBlank("oauth2_userinfo_endpoint");
         usernameField = config.get("oauth2_userinfo_username_field");
         scope = config.get("oauth2_scope");
+        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，
+        // 防止"能通过外部 IdP 认证即获得平台管理权限"
+        grantedRoles = configs.splitList("oauth2_roles");
         String thisServerUrl = configs.notBlank("oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
@@ -120,6 +125,9 @@ public class OAuth2Handler implements HttpHandler {
             response.status(400).finish(); // 拦截 csrf 攻击
             return;
         }
+        // state 一次性使用：校验通过立即作废 Cookie，防止 600 秒窗口内被重复提交
+        response.header("Set-Cookie", CSRF_COOKIE_NAME + "=; Path=" + ROOT_PATH
+                + "; Max-Age=0; HttpOnly; SameSite=Lax");
 
         String code = request.getParameter("code");
         if (code == null) {
@@ -136,6 +144,8 @@ public class OAuth2Handler implements HttpHandler {
             return;
         }
 
+        String[] roles = grantedRoles.toArray(new String[0]);
+        tokenService.sendToken(user, roles, request, response);
         String[] roles = new String[]{"admin"}; // todo 从本地数据库查询用户角色
         tokenService.sendToken(request, user, roles, response);
         response.redirect("/web"); // 管控台前端入口，登录成功后回到此处
@@ -187,13 +197,13 @@ public class OAuth2Handler implements HttpHandler {
         };
         for (String field : tryUserNames) {
             if (field == null || field.isEmpty()) continue;
-            String val = str(map.get(field));
+            String val = trimToNull(map.get(field));
             if (val != null) return val;
         }
         return null;
     }
 
-    private String str(Object val) {
+    private String trimToNull(Object val) {
         if (val == null) return null;
         String s = String.valueOf(val).trim();
         return s.isEmpty() ? null : s;

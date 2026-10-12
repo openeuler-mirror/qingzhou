@@ -32,9 +32,9 @@ public class TotpKey extends Processor {
             generateKey.setAccessible(true);
             String totpKey = (String) generateKey.invoke(totpCipher);
 
-            logSimple("--------------------------- Totp Key ----------------------------");
-            logSimple(totpKey);
-            logSimple("--------------------------- End -----------------------------------");
+            log("--------------------------- Totp Key ----------------------------");
+            log(totpKey);
+            log("--------------------------- End -----------------------------------");
         }
     }
 }

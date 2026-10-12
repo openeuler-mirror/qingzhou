@@ -49,7 +49,13 @@ public class CryptoImpl implements Crypto {
         if (key == null || key.trim().length() != 24) {
             throw new InvalidKeyException("key length must be 24");
         }
-        return new CipherImpl(key.trim(), base64Coder, logger);
+        byte[] cipherKey;
+        try {
+            cipherKey = base64Coder.decode(key.trim());// 先校验 Base64 合法性：非法字符应在此报 InvalidKeyException，而非构造时抛 IAE 破坏契约
+        } catch (IllegalArgumentException e) {
+            throw (InvalidKeyException) new InvalidKeyException("key is not valid base64").initCause(e);
+        }
+        return new CipherImpl(cipherKey, base64Coder, logger);
     }
 
     @Override

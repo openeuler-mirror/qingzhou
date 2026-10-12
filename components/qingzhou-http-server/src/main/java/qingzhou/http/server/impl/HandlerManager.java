@@ -34,7 +34,8 @@ public class HandlerManager {
         HandlerEntry(HttpHandler handler, boolean noAuth, List<String> methods) {
             this.handler = handler;
             this.noAuth = noAuth;
-            this.methods = methods;
+            // 只读视图：防止外部绕过注册期校验篡改方法白名单
+            this.methods = methods == null ? Collections.emptyList() : Collections.unmodifiableList(methods);
         }
     }
 
@@ -63,6 +64,11 @@ public class HandlerManager {
 
         boolean isAbsolute = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_PATH_ABSOLUTE));
         if (!isAbsolute) {
+            // 相对路径须挂到来源 bundle 前缀下：reference 缺失时无法推导前缀，fail-fast 而非 NPE
+            if (reference == null) {
+                throw new IllegalArgumentException(HttpHandler.HANDLE_PATH + " of [" + component
+                        + "] is relative but the source bundle is unknown; declare it absolute or fix the registration");
+            }
             String prefix = reference.getBundle().getSymbolicName();
             prefix = prefix.replace("qingzhou-", "");
             path = "/" + prefix + path;

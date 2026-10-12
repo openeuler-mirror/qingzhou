@@ -46,23 +46,36 @@ public class FileUpload implements HttpHandler {
         }
     }
 
+    private void cleanExpiredUploads() {
+        File[] files = uploadBase.listFiles();
+        if (files == null) return;
+
+        // 运行期惰性清理：分片上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘
+        long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+        long expireBefore = System.currentTimeMillis() - TEMP_FILE_TTL_MILLIS;
+        for (File file : files) {
+            if (file.lastModified() < expireBefore) file.delete();
+        }
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         // 上传分片以上传键作为 AAD 绑定上下文：分片无法被重放到其他上传——绑定知识属于上传方，不进入传输层
         String uploadKey = httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY);
         byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
         ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, context,
-                requestData -> processFileUpload(requestData, uploadKey));
+                requestData -> {
+                    cleanExpiredUploads();
+                    return processFileUpload(requestData, uploadKey);
+                });
     }
-
-    // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
-    private static final long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024;
 
     private String processFileUpload(byte[] data, String key) throws Throwable {
         String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
         File tempFile = resolveInUploadBase(uploadId);
         try {
             long total = tempFile.length() + (data == null ? 0 : data.length);
+            long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024; // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
             if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
                 tempFile.delete();
                 throw new IllegalStateException("upload exceeds size limit: " + uploadId);

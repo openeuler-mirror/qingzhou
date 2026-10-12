@@ -28,7 +28,7 @@ public class AppModel implements HttpHandler {
     @Reference
     private Json json;
 
-    public Function<HandlingContext, Object> function = (context) -> {
+    private final Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
         String appCode = context.getParameter(WebUtil.APP_CODE);
         String modelCode = context.getParameter(WebUtil.MODEL_CODE);
@@ -48,6 +48,10 @@ public class AppModel implements HttpHandler {
         }
         return null;
     };
+
+    public Function<HandlingContext, Object> getFunction() {
+        return function;
+    }
 
     private Map<String, Object> modelMetaInfo(I18nService i18nService, Model model, String instanceId, String appCode, String lang) {
         Map<String, Object> modelMetaInfo = new HashMap<>();
@@ -71,7 +75,7 @@ public class AppModel implements HttpHandler {
 
     private <T> T cloneView(T from, Class<T> toClass, I18nService i18nService, String lang) {
         try {
-            T viewObject = toClass.newInstance();
+            T viewObject = toClass.getDeclaredConstructor().newInstance(); // newInstance() 自 Java 9 起废弃
             for (Field field : toClass.getFields()) {
                 Object fromVal = field.get(from);
 
@@ -98,6 +102,6 @@ public class AppModel implements HttpHandler {
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
+        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

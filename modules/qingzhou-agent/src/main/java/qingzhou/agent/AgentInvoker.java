@@ -40,12 +40,10 @@ public class AgentInvoker implements HttpHandler {
     }
 
     private String processRequest(byte[] data) throws Throwable {
-        // 3. 得到请求对象
         RequestImpl request = json.fromJson(new String(data, StandardCharsets.UTF_8), RequestImpl.class);
 
-        // 4. 处理
-        Set<String> originalFilePaths = new HashSet<>(); // 处理之前，须先保存原始文件路径，用于 finally 块中的清理，因应用可能修改此参数值
-        Set<File> rawTempFiles = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
+        Set<File> tempFileList = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
+
         final String fileSp = ","; // TODO：应引用 ModelField.separator()
         try {
             request.getUploadFileFields().forEach(field -> {
@@ -58,32 +56,23 @@ public class AgentInvoker implements HttpHandler {
                         continue;
                     }
                     File tempFile = resolveInUploadBase(pair[0]);
-                    rawTempFiles.add(tempFile);
                     File localFile = resolveInUploadBase(pair[1]);
-                    tempFile.renameTo(localFile);
+                    tempFileList.add(tempFile);
+                    tempFileList.add(localFile);
+                    if (!tempFile.renameTo(localFile)) { // 重命名失败仍继续会向业务暴露不存在的路径
+                        throw new IllegalStateException("failed to rename uploaded temp file: " + tempFile.getName());
+                    }
                     paths.add(localFile.getAbsolutePath());
                 }
                 String newPaths = String.join(fileSp, paths);
                 request.getParameters().put(field, newPaths);
-                originalFilePaths.add(newPaths);
             });
 
             AppStubLocal appStub = registry.getLocalApp(request.getApp());
             if (appStub == null) throw new IllegalArgumentException("business processing error");
             appStub.invokeApp(request);
         } finally {
-            for (String paths : originalFilePaths) {
-                for (String path : paths.split(fileSp)) {
-                    try {
-                        resolveInUploadBase(path.trim()).delete();
-                    } catch (IllegalArgumentException e) {
-                        // 路径越界，不删除
-                    }
-                }
-            }
-            for (File tempFile : rawTempFiles) {
-                tempFile.delete(); // 已被 rename 的文件此处删除无副作用
-            }
+            for (File tempFile : tempFileList) tempFile.delete(); // 已被 rename 的文件此处删除无副作用
         }
 
         // 响应数据

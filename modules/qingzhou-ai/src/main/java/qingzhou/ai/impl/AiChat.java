@@ -62,7 +62,7 @@ public class AiChat implements HttpHandler {
 
     @Deactivate
     public void deactivate() {
-        SseListener.WATCHDOG_EXECUTOR.shutdownNow();
+        SseListener.watchdog().shutdownNow();
     }
 
     @Override

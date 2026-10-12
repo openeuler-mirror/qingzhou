@@ -19,6 +19,10 @@ public final class Configs {
         this.config = config;
     }
 
+    public String get(String key) {
+        return config.get(key);
+    }
+
     public int atLeast(String key, int min, long defaultValue) {
         long value = atLeast(key, (long) min, defaultValue);
         if (value > Integer.MAX_VALUE) {

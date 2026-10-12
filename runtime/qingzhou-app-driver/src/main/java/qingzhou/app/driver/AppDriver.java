@@ -50,7 +50,8 @@ public class AppDriver implements BundleActivator {
             appMeta.getApp().code = code.trim();
         }
         appContext.appProperties = appProperties;
-        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path");
+        // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
+        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + context.getBundle().getSymbolicName());
 
         // 初始化对象
         appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).getDeclaredConstructor().newInstance();
@@ -64,6 +65,8 @@ public class AppDriver implements BundleActivator {
         appContext.stop();
 
         serviceReferences.forEach(context::ungetService);
+        serviceReferences.clear();
+        serviceObjects.clear(); // 缓存的服务包装实例随 bundle 停止失效，重复 start 须重新获取
     }
 
     <T> T getService(Class<T> serviceType, String name) {
@@ -133,6 +136,7 @@ public class AppDriver implements BundleActivator {
     private Properties parseProperties() throws IOException {
         Properties appProperties = new Properties();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
+        if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
             Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",

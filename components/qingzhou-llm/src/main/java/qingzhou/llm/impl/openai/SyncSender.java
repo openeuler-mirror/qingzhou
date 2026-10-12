@@ -31,7 +31,7 @@ class SyncSender {
 
     String chat(Map<String, Tool> baseTools, String message, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json, crypto));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, () -> new OpenAiChatModelBuilder(builder.getBaseUrl(), builder.getApiKey(), builder.getModel(), httpClient, json, crypto));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             List<Object> messages = new ArrayList<>();
@@ -41,7 +41,7 @@ class SyncSender {
             messages.add(builder.buildUserMessage(message, attachment));
             List<Object> toolDefs = builder.buildToolDefinitions(activeTools.values());
 
-            for (int i = 0; i < builder.maxToolIterations; i++) {
+            for (int i = 0; i < builder.getMaxToolIterations(); i++) {
                 Response response = sendSync(messages, toolDefs, 0);
                 Map<String, Object> msg = requireResponseMessage(response);
 
@@ -52,10 +52,10 @@ class SyncSender {
                 }
                 messages.add(msg);
                 for (ToolCallInfo toolCall : toolCalls) {
-                    messages.add(builder.buildToolMessage(toolCall.id, Utils.invokeTool(toolCall, activeTools, json, builder.interceptor)));
+                    messages.add(builder.buildToolMessage(toolCall.id, Utils.invokeTool(toolCall, activeTools, json, builder.getInterceptor())));
                 }
             }
-            Utils.println("Tool iterations have reached the limit: " + builder.maxToolIterations);
+            Utils.println("Tool iterations have reached the limit: " + builder.getMaxToolIterations());
             messages.add(builder.buildUserMessageForMaxToolIterations());
             Response response = sendSync(messages, null, 0); // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
             Map<String, Object> msg = requireResponseMessage(response);

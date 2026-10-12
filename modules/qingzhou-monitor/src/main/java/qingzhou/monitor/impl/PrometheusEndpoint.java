@@ -125,11 +125,17 @@ public class PrometheusEndpoint implements HttpHandler {
             groups.put(metricName, group);
         }
         group.lines.add(metricName
-                + "{instance=\"" + instanceId
-                + "\",app=\"" + appCode
-                + "\",model=\"" + modelCode
-                + "\",field=\"" + field.code + "\"} "
+                + "{instance=\"" + escapeLabel(instanceId)
+                + "\",app=\"" + escapeLabel(appCode)
+                + "\",model=\"" + escapeLabel(modelCode)
+                + "\",field=\"" + escapeLabel(field.code) + "\"} "
                 + number);
+    }
+
+    // 标签值须转义反斜杠/引号/换行，否则可破坏 exposition 格式（label injection）
+    private static String escapeLabel(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
     }
 
     private Double toDouble(String value) {

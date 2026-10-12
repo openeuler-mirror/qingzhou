@@ -8,6 +8,7 @@ import java.util.*;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Configs;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
@@ -68,17 +69,12 @@ public class Heartbeat {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+        Configs configs = new Configs(config);
+        qzVersion = configs.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+        pairCipher = crypto.getPairCipher(configs.notBlank("public_key"), null);
+        registerToken = configs.notBlank("register_token");
 
-        pairCipher = crypto.getPairCipher(config.get("public_key"), null);
-
-        String registerTokenConfig = config.get("register_token");
-        registerToken = registerTokenConfig == null || registerTokenConfig.trim().isEmpty() ? null : registerTokenConfig.trim();
-
-        String registryUrl = config.get("url");
-        if (registryUrl == null || registryUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("qingzhou-agent.url can not be empty");
-        }
+        String registryUrl = configs.notBlank("url");
         while (registryUrl.endsWith("/")) {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
@@ -119,7 +115,7 @@ public class Heartbeat {
                             logger.error("failed to build registration proof", e);
                         }
                         String registerData = String.join(Constants.AGENT_REGISTER_TOKEN_SP,
-                                registerToken == null ? "" : registerToken,
+                                registerToken,
                                 String.valueOf(System.currentTimeMillis()),
                                 nonce,
                                 currentKeyProof,
@@ -131,7 +127,7 @@ public class Heartbeat {
                     logger.error("heartbeat service error", e);
                 }
             }
-        }, 1000 * 10, 1000 * Long.parseLong(config.getOrDefault("interval", "6")));
+        }, 1000 * 10, 1000L * configs.atLeast("interval", 2, 6));
     }
 
     @Deactivate
@@ -141,19 +137,20 @@ public class Heartbeat {
         }
     }
 
-    private boolean appChanged() {
+    private boolean appChanged() throws Exception {
         InstanceInfo instanceInfo = thisInstanceInfo;
         if (instanceInfo == null) return true;
 
-        List<AppMeta> appMetaList = instanceInfo.getAppMetas();
+        List<AppMeta> storedAppMetas = new ArrayList<>(instanceInfo.getAppMetas()); // 拷贝后排序，不改动被 Netty 线程读取的共享列表
         List<AppMeta> currentAppMetas = currentAppMetas();
-        if (appMetaList.size() != currentAppMetas.size()) return true;
+        if (storedAppMetas.size() != currentAppMetas.size()) return true;
 
         Comparator<AppMeta> comparator = Comparator.comparing(o -> o.getApp().code);
-        appMetaList.sort(comparator); // 固定顺序，避免指纹计算错误
+        storedAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
         currentAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
-        for (int i = 0; i < appMetaList.size(); i++) {
-            if (appMetaList.get(i) != currentAppMetas.get(i)) return true;
+        for (int i = 0; i < storedAppMetas.size(); i++) {
+            // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
+            if (!json.toJson(storedAppMetas.get(i)).equals(json.toJson(currentAppMetas.get(i)))) return true;
         }
 
         return false;
@@ -193,34 +190,34 @@ public class Heartbeat {
     }
 
     private void buildInstanceInfo() throws Exception {
-        InstanceInfo thisInstanceInfo = new InstanceInfo();
+        InstanceInfo instanceInfo = new InstanceInfo();
 
         // 实例部署的应用
         List<AppMeta> currentAppMetas = currentAppMetas();
         currentAppMetas.sort(Comparator.comparing(appMeta -> appMeta.getApp().code)); // 固定顺序，避免指纹计算错误
-        thisInstanceInfo.getAppMetas().addAll(currentAppMetas);
+        instanceInfo.getAppMetas().addAll(currentAppMetas);
 
         // 实例版本
-        thisInstanceInfo.setVersion(qzVersion);
+        instanceInfo.setVersion(qzVersion);
 
         // 实例端口
         Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
         int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
-        thisInstanceInfo.setPort(serverPort);
+        instanceInfo.setPort(serverPort);
 
         boolean sslEnabled = Boolean.parseBoolean(String.valueOf(httpServerConfig.get("ssl_enabled")));
-        thisInstanceInfo.setSslEnabled(sslEnabled);
+        instanceInfo.setSslEnabled(sslEnabled);
 
         // 所有信息收集完成后，计算实例 ID，同一个实例多次重启的 ID 不应该变化
-        String digestTemp = json.toJson(thisInstanceInfo);
+        String digestTemp = json.toJson(instanceInfo);
         digestTemp += ips(); // 集群下的多实例，除了IP别的都是一样的，加入 IP 标识可区分集群中的不同实例
         String uniqueDataId = crypto.getMessageDigest().md5(digestTemp);
-        thisInstanceInfo.setId(uniqueDataId);
+        instanceInfo.setId(uniqueDataId);
 
         // 实例密钥，动态生成的，放在 ID 计算之前，不参与 ID 计算
-        thisInstanceInfo.setKey(crypto.generateKey());
+        instanceInfo.setKey(crypto.generateKey());
 
-        Heartbeat.thisInstanceInfo = thisInstanceInfo;
+        Heartbeat.thisInstanceInfo = instanceInfo;
     }
 
     private String ips() throws Exception {

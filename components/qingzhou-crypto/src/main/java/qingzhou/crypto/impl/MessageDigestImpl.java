@@ -13,6 +13,8 @@ import qingzhou.crypto.MessageDigest;
 class MessageDigestImpl implements MessageDigest {
     private static final SecureRandom random = new SecureRandom();
     private static final String SALT_SEPARATOR = "$";
+    // 迭代数上限：来自被校验串，不设上界会被恶意摘要用超大迭代数拖垮 CPU（CPU DoS）
+    private static final int MAX_ITERATIONS = 1_000_000;
 
     private final Base16Coder base16Coder;
 
@@ -43,6 +45,7 @@ class MessageDigestImpl implements MessageDigest {
             String algorithm = splitPwd[0];
             byte[] salt = decode(splitPwd[1]);
             int iterations = Integer.parseInt(splitPwd[2]);
+            if (iterations < 1 || iterations > MAX_ITERATIONS) return false;
             String digest = mutate(text, algorithm, salt, iterations);
             // 常量时间比较，防止时序侧信道推算摘要
             return java.security.MessageDigest.isEqual(digest.getBytes(StandardCharsets.UTF_8),

@@ -20,7 +20,7 @@ public class Instance implements HttpHandler {
     @Reference
     private Json json;
 
-    public Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
+    private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
         public Object apply(HandlingContext context) {
             List<InstanceInfo> remoteInstanceList = new ArrayList<>();
@@ -32,17 +32,21 @@ public class Instance implements HttpHandler {
 
             List<Map<String, String>> result = new ArrayList<>();
             for (InstanceInfo info : remoteInstanceList) {
-                result.add(new HashMap<String, String>() {{
-                    put(WebUtil.INSTANCE_ID, info.getId());
-                    put("host", info.getHost());
-                    put("port", String.valueOf(info.getPort()));
-                    put("version", info.getVersion());
-                }});
+                Map<String, String> item = new HashMap<>();
+                item.put(WebUtil.INSTANCE_ID, info.getId());
+                item.put("host", info.getHost());
+                item.put("port", String.valueOf(info.getPort()));
+                item.put("version", info.getVersion());
+                result.add(item);
             }
 
             return result;
         }
     };
+
+    public Function<HandlingContext, Object> getFunction() {
+        return function;
+    }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
@@ -50,6 +54,6 @@ public class Instance implements HttpHandler {
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
+        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

@@ -158,6 +158,7 @@ public class AuthHandler implements HttpHandler {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+        tokenService.sendToken(reqUser, roles, request, response);
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {

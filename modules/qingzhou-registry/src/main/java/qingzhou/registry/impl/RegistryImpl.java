@@ -177,6 +177,7 @@ public class RegistryImpl implements Registry {
         return null;
     }
 
+    @Override
     public void addRemoteInstanceInfo(InstanceInfo instanceInfo) {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
@@ -187,6 +188,7 @@ public class RegistryImpl implements Registry {
         keyRotation.onReRegistered(instanceInfo.getId()); // 重新注册 = agent 已重建密钥，旧钥宽限作废
     }
 
+    @Override
     public void removeRemoteApps(String instanceId) {
         remoteInstances.remove(instanceId);
         registryDataVersion.incrementAndGet();

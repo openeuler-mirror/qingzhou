@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -118,10 +117,11 @@ class AppStubRemoteImpl implements AppStubRemote {
                 continue;
             }
             List<String> remotePaths = new ArrayList<>();
-            for (String item : value.split(",")) { // TODO：应引用 ModelField.separator()
+            // 项分隔符须与 agent 侧 AgentInvoker.processRequest 的拼接保持一致
+            for (String item : value.split(",")) {
                 String path = item.trim();
                 File file = new File(path);
-                if (!file.isFile()) { // 如多文件上传，更新之前的部分值？
+                if (!file.isFile()) { // 非本次上传的本地临时文件（业务已有文件名），原样传递
                     remotePaths.add(path);
                     continue;
                 }
@@ -138,7 +138,8 @@ class AppStubRemoteImpl implements AppStubRemote {
      */
     private String uploadFileToRemoteAgent(File file, Cipher cipher) throws Exception {
         String fileTempKey = "";
-        byte[] buffer = new byte[1024 * 8];
+        int uploadChunkBytes = 256 * 1024; // 分片大小：过小会导致大文件按 8KB 逐片独立加密 POST（请求数与开销巨大）
+        byte[] buffer = new byte[uploadChunkBytes];
         try (InputStream in = Files.newInputStream(file.toPath())) {
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
@@ -159,7 +160,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                     if (body != null) {
                         msg += new String(body, StandardCharsets.UTF_8);
                     }
-                    throw new RemoteException(msg);
+                    throw new IllegalStateException(msg);
                 } else {
                     byte[] result = cipher.decrypt(uploadResult.getBody());
                     fileTempKey = new String(result, StandardCharsets.UTF_8);

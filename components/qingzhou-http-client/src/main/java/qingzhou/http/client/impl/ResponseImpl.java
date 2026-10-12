@@ -15,7 +15,8 @@ class ResponseImpl implements Response {
     private final boolean streaming;
 
     private byte[] result;
-    private boolean cancelled;
+    // cancel() 由调用线程写、流式读取线程读，volatile 保证取消状态及时可见
+    private volatile boolean cancelled;
 
     ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
         this.conn = conn;

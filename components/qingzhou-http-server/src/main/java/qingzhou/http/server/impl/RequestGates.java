@@ -115,10 +115,31 @@ final class RequestGates {
         // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
         if (origin == null) return null;
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
-        if (host != null && !host.isEmpty() && origin.endsWith("//" + host)) return null;
+        if (host != null && !host.isEmpty() && isSameOrigin(origin, host)) return null;
         // 与 ResponseHeaders 同一白名单语义："*" 表示放开全部来源
         if (corsAllowedOrigins.contains("*") || corsAllowedOrigins.contains(origin)) return null;
         return ctx.respond(HttpResponseStatus.FORBIDDEN);
+    }
+
+    // Origin = scheme://authority[/path]：取 authority 与 Host 精确比较（忽略大小写），
+    // 后缀匹配（endsWith("//" + host)）会被 origin=x.evil.com//host 之类的构造绕过。
+    // scheme 默认端口在 Host 缺省而 Origin 显式携带时视为同源
+    private static boolean isSameOrigin(String origin, String host) {
+        String authority = origin;
+        String scheme = "";
+        int schemeEnd = origin.indexOf("://");
+        if (schemeEnd >= 0) {
+            scheme = origin.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
+            authority = origin.substring(schemeEnd + 3);
+        }
+        int pathStart = authority.indexOf('/');
+        if (pathStart >= 0) authority = authority.substring(0, pathStart);
+        if ("http".equals(scheme) && authority.endsWith(":80")) {
+            authority = authority.substring(0, authority.length() - 3);
+        } else if ("https".equals(scheme) && authority.endsWith(":443")) {
+            authority = authority.substring(0, authority.length() - 4);
+        }
+        return host.equalsIgnoreCase(authority);
     }
 
     // 405：路由以 HANDLE_METHODS 声明了允许的方法，不在其中的请求在认证前即拒绝，handler 无需各自判断

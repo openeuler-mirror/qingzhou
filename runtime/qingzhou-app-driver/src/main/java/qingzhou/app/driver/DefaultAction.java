@@ -237,7 +237,10 @@ public class DefaultAction {
             } catch (NumberFormatException ignored) { // 非法 offset 视为从头下载
             }
         }
-        if (offset < 0) return;
+        if (offset < 0) { // 非法 offset 直接回 400，避免客户端静默等待
+            response.error("illegal download offset");
+            return;
+        }
 
         byte[] byteRead;
 

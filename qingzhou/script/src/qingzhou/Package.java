@@ -14,13 +14,16 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * 主类，用于打包指定目录并生成zip文件。
+ * <p>
+ * 版本目录与开发模式不由命令行参数传入：调用方（构建脚本）通过系统属性
+ * {@code BuildVersion} 与 {@code DevMode} 控制。
  */
 public class Package {
 
     /**
      * 主方法，程序的入口点。
      *
-     * @param args 命令行参数，第一个参数是版本目录的路径，第二个参数是开发模式的标志（true/false）。
+     * @param args 未使用；配置经系统属性 BuildVersion / DevMode 传入
      * @throws Exception 抛出可能发生的异常。
      */
     public static void main(String[] args) throws Exception {
@@ -29,6 +32,9 @@ public class Package {
         File buildHome = new File(mvnTarget, "qingzhou");
         boolean devMode = Boolean.getBoolean("DevMode");
         String buildVersion = System.getProperty("BuildVersion");
+        if (buildVersion == null || buildVersion.trim().isEmpty()) {
+            throw new IllegalStateException("system property 'BuildVersion' is required");
+        }
 
         // 构建版本
         File versionDir = new File(buildHome, "lib" + File.separator + "version");
@@ -61,7 +67,7 @@ public class Package {
                                 + ".zip"));
         boolean delete = delete(versionDir);
         if (!delete) {
-            throw new IllegalStateException(versionDir.toString());
+            throw new IllegalStateException("failed to delete version dir: " + versionDir);
         }
     }
 

@@ -15,6 +15,7 @@ import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)
@@ -22,6 +23,9 @@ public class TokenService {
     private static final String TOKEN_COOKIE_NAME = "auth_token";
     private static final String BEARER_PREFIX = "Bearer ";
 
+    private static final String USER = "u";
+    private static final String ROLES = "r";
+    private static final String EXPIRE = "e";
     private static final String u = "u";
     private static final String r = "r";
     private static final String e = "e";
@@ -31,11 +35,16 @@ public class TokenService {
     private Crypto crypto;
     @Reference
     private Json json;
+    @Reference
+    private Logger logger;
 
     private long tokenExpireMillis;
     private Cipher tokenCipher;
     private String cookieAttrs;
 
+    // 登出后吊销的 Bearer 令牌（内存态，随实例重启清空）；值为其最迟失效时刻，
+    // 过期即从表中移除，防止集合无界增长。令牌本身短时效，重启不影响安全。
+    private final Map<String, Long> revokedTokens = new ConcurrentHashMap<>();
     // 用户会话版本号：登出递增使该用户全部已发令牌失效（内存态随重启清空，令牌短时效兜底）
     private final Map<String, Integer> tokenVersions = new ConcurrentHashMap<>();
 
@@ -52,6 +61,13 @@ public class TokenService {
         cookieAttrs = "; Path=/; HttpOnly; SameSite=" + sameSite;
     }
 
+    public void sendToken(String user, String[] roles, HttpRequest request, HttpResponse response) {
+        String token = createToken(user, roles);
+        response.header("Set-Cookie", TOKEN_COOKIE_NAME + "=" + token
+                        // Path 必须为 /：令牌既供 /web 下的前端使用，也供 /registry、/ai 等接口使用，限定前缀会导致接口收不到 Cookie 而报 401
+                        + "; Path=/; HttpOnly; SameSite=Strict" + cookieSecure(request))
+                .header("Cache-Control", "no-store")
+                .redirect("/web"); // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
     /** 下发会话 cookie；响应形态（JSON/重定向）由调用方决定 */
     public void sendToken(HttpRequest request, String user, String[] roles, HttpResponse response) {
         response.header("Set-Cookie", setCookie(request, createToken(user, roles), ""))
@@ -76,6 +92,15 @@ public class TokenService {
     }
 
     public void revokeToken(HttpRequest request, HttpResponse response) {
+        String token = retrieveToken(request);
+        if (token != null && !token.isEmpty()) {
+            purgeExpiredRevokedTokens();
+            // 服务端注销
+            revokedTokens.put(token, System.currentTimeMillis() + tokenExpireMillis);
+            // 通知客户端注销
+            response.header("Set-Cookie", TOKEN_COOKIE_NAME
+                            + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict" + cookieSecure(request))
+                    .send("ok").finish();
         Object[] userRoles = verifyToken(retrieveToken(request));
         if (userRoles != null) {
             tokenVersions.merge((String) userRoles[0], 1, Integer::sum); // 服务端注销：使用户所有已发令牌失效
@@ -92,9 +117,25 @@ public class TokenService {
         return setCookie(request, createToken((String) userRoles[0], (String[]) userRoles[1]), "");
     }
 
+    // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时，按配置判定会漏发
+    private String cookieSecure(HttpRequest request) {
+        return "https".equals(request.getScheme()) ? "; Secure" : "";
+    }
+
+    // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
+    private void purgeExpiredRevokedTokens() {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
+            if (entry.getValue() <= now) revokedTokens.remove(entry.getKey());
+        }
+    }
+
     private String createToken(String user, String[] roles) {
         try {
             Map<String, Object> payload = new HashMap<>();
+            payload.put(USER, user);
+            payload.put(ROLES, roles == null ? new String[0] : roles);
+            payload.put(EXPIRE, System.currentTimeMillis() + tokenExpireMillis);
             payload.put(u, user);
             payload.put(r, roles == null ? new String[0] : roles);
             payload.put(e, System.currentTimeMillis() + tokenExpireMillis);
@@ -109,21 +150,27 @@ public class TokenService {
     /** 校验通过返回 {user, roles, expiresAt}；无效/过期/已吊销返回 null */
     public Object[] verifyToken(String token) {
         if (token == null) return null;
+        if (revokedTokens.containsKey(token)) return null;
 
         try {
             String payload = tokenCipher.decrypt(token);
             Map<String, Object> map = json.fromJson(payload, Map.class);
             if (map != null) {
-                String user = (String) map.get(u);
+                String user = (String) map.get(USER);
                 if (user == null) return null;
+                long expiresAt = ((Number) map.get(EXPIRE)).longValue();
                 Number version = (Number) map.get(v);
                 int tokenV = version == null ? 0 : version.intValue(); // 旧格式令牌视作版本 0
                 if (tokenV != tokenVersions.getOrDefault(user, 0)) return null; // 已被登出吊销
                 long expiresAt = ((Number) map.get(e)).longValue();
                 if (expiresAt <= System.currentTimeMillis()) return null;
+                String[] roles = toRoles(map.get(ROLES));
+                return new Object[]{user, roles};
                 return new Object[]{user, toRoles(map.get(r)), expiresAt};
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            // 校验失败是常见攻击面（伪造/篡改令牌），记录摘要便于审计；不打印令牌本身防止泄露凭据
+            logger.warn("Token verification failed: " + e.getMessage());
         }
         return null;
     }

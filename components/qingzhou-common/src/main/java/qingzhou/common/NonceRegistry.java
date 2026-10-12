@@ -1,9 +1,8 @@
 package qingzhou.common;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -13,7 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 两者时间窗不同，故 TTL 由调用方按自身窗口给出（通常取窗口的两倍）。
  * <p>
  * 只回收已过期的记录：丢弃仍在有效时间窗内的 nonce 等于自己开一个重放窗口；
- * 过期回收后仍超容量时拒绝新登记（容量可按部署调大），而非丢弃有效记录。
+ * 过期回收后仍超容量时按登记时间淘汰最旧记录腾出空间（而非拒绝新登记），
+ * 极端洪水下被淘汰项的重放窗口以可用性为优先，容量可按部署调大。
  */
 public class NonceRegistry {
     /**
@@ -32,7 +32,7 @@ public class NonceRegistry {
      * @param nonce     报文唯一标识，同一 nonce 第二次登记即为重放
      * @param timestamp 报文时间戳，用于过期回收
      * @param ttlMillis 生存期：早于 {@code timestamp - ttlMillis} 的记录会被回收
-     * @return true 表示首次登记成功；false 表示此前已登记（重放）或容量已满
+     * @return true 表示首次登记成功；false 表示此前已登记（重放）
      */
     public boolean registerIfAbsent(String nonce, long timestamp, long ttlMillis) {
         pruneExpired(timestamp, ttlMillis);
@@ -49,13 +49,17 @@ public class NonceRegistry {
         nonces.values().removeIf(ts -> ts < expireBefore);
     }
 
-    // 按登记时间淘汰最旧的 n 条，给新登记腾出空间
+    // 有界堆一次遍历选出登记最早的 n 条（O(n log k)）：全量拷贝排序（O(n log n)）会在解密热路径上造成停顿
     private void evictOldest() {
-        List<Map.Entry<String, Long>> entries = new ArrayList<>(nonces.entrySet());
-        entries.sort(Comparator.comparingLong(Map.Entry::getValue));
-        int remove = Math.min(MAX_TRACKED_NONCES / 10, entries.size());
-        for (int i = 0; i < remove; i++) {
-            nonces.remove(entries.get(i).getKey());
+        int remove = Math.min(MAX_TRACKED_NONCES / 10, nonces.size());
+        PriorityQueue<Map.Entry<String, Long>> newest = new PriorityQueue<>(remove + 1,
+                Comparator.<Map.Entry<String, Long>>comparingLong(Map.Entry::getValue).reversed());
+        for (Map.Entry<String, Long> entry : nonces.entrySet()) {
+            newest.offer(entry);
+            if (newest.size() > remove) newest.poll();
+        }
+        for (Map.Entry<String, Long> entry : newest) {
+            nonces.remove(entry.getKey(), entry.getValue());
         }
     }
 }

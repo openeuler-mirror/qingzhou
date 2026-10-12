@@ -84,6 +84,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     void addChatMemory(List<Object> messages) {
+        ChatMemory chatMemory = getChatMemory();
         if (chatMemory == null) return;
         List<ChatMemory.Message> messageList = chatMemory.getMessageList();
         if (messageList == null) return;
@@ -112,16 +113,16 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     Map<String, Object> buildLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
-        req.put("model", model);
+        req.put("model", getModel());
         req.put("messages", messages);
         req.put("stream", stream);
         if (effort != null) {
             req.put("reasoning_effort", effort.name());
         }
         if (format != null) {
-            req.put("response_format", new HashMap<String, String>() {{
-                put("type", format.name());
-            }});
+            Map<String, String> responseFormat = new HashMap<>();
+            responseFormat.put("type", format.name());
+            req.put("response_format", responseFormat);
         }
         if (stream) {
             // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
@@ -237,12 +238,12 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", Utils.truncate(toolResult, maxToolResultChars));
+        toolResultMsg.put("content", Utils.truncate(toolResult, getMaxToolResultChars()));
         return toolResultMsg;
     }
 
     Map<String, Object> buildSystemMessage(Collection<Skill> activeSkills) {
-        StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
+        StringBuilder sysMsg = new StringBuilder(getSystemPrompt() != null ? getSystemPrompt() : "");
 
         for (Skill skill : activeSkills) {
             String msg = skill.instruction();
@@ -250,17 +251,17 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                 if (sysMsg.length() > 0) {
                     sysMsg.append("\n\n");
                 }
-                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, maxDocChars));
+                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, getMaxDocChars()));
             }
         }
 
-        if (docs != null) {
-            for (String doc : docs) {
+        if (getDocs() != null) {
+            for (String doc : getDocs()) {
                 if (doc != null && !doc.isEmpty()) {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, maxDocChars));
+                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, getMaxDocChars()));
                 }
             }
         }

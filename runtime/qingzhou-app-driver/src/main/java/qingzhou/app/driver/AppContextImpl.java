@@ -5,6 +5,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -31,13 +33,13 @@ public class AppContextImpl implements AppContext {
     private final File instanceFile = new File(Objects.requireNonNull(System.getProperty("qingzhou.instance"), "qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
     private final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
-    // 应用启动过程中，可能被调用
-    final List<ActionFilter> actionFilters = new ArrayList<>();
+    // 应用启动过程中，可能被调用；运行期读多写少，用 COW 保证请求线程遍历安全
+    final List<ActionFilter> actionFilters = new CopyOnWriteArrayList<>();
 
-    private ServiceRegistration<AppStubLocal> appRegistration;
+    private volatile ServiceRegistration<AppStubLocal> appRegistration;
 
-    private final Set<ServiceRegistration<?>> sharedFunctionServiceRegistrationList = new HashSet<>();
-    private final Set<ServiceReference<?>> sharedFunctionServiceReferences = new HashSet<>();
+    private final Set<ServiceRegistration<?>> sharedFunctionServiceRegistrationList = ConcurrentHashMap.newKeySet();
+    private final Set<ServiceReference<?>> sharedFunctionServiceReferences = ConcurrentHashMap.newKeySet();
 
     AppContextImpl(AppDriver appDriver, BundleContext bundleContext, AppMeta appMeta) {
         this.appDriver = appDriver;
@@ -55,7 +57,9 @@ public class AppContextImpl implements AppContext {
     }
 
     void stop() {
-        appRegistration.unregister();
+        if (appRegistration != null) { // start 中途失败尚未注册时避免 NPE
+            appRegistration.unregister();
+        }
         sharedFunctionServiceRegistrationList.forEach(ServiceRegistration::unregister);
         sharedFunctionServiceReferences.forEach(bundleContext::ungetService);
         actionFilters.clear();

@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +33,7 @@ public class StartArg extends Processor {
 
     @Override
     public void doCommandLine(String[] args) throws Exception {
-        String instance = args.length > 0 ? args[0] : "default";
-        instanceDir = initInstance(instance);
+        instanceDir = initInstance(args);
         if (instanceDir == null) return;
 
         Path configFile = Paths.get(instanceDir.getAbsolutePath(), "conf", "qingzhou.properties");
@@ -60,13 +61,13 @@ public class StartArg extends Processor {
                 s = s.trim();
                 if (s.isEmpty()) continue;
                 if (isForbiddenJvmArg(s) && !isAllowedJvmArg(s, properties.get("jvm.arg.allowed"))) {
-                    log("ignore forbidden jvm arg: " + s);
+                    logStartInfo("ignore forbidden jvm arg: " + s);
                     continue;
                 }
                 // jvm.arg 经 sh 的 eval 执行，`$()`/反引号等会被 shell 展开构成命令注入；
                 // 仅拒双引号不足以防御，须拒绝一切 shell 元字符（与 wrap 的引号拒绝互补）
                 if (containsShellMeta(s)) {
-                    log("ignore jvm arg with unsafe characters: " + s);
+                    logStartInfo("ignore jvm arg with unsafe characters: " + s);
                     continue;
                 }
                 commands.add(s);
@@ -86,6 +87,11 @@ public class StartArg extends Processor {
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator))));
         commands.add("qingzhou.engine.QingzhouMain");
         return commands;
+    }
+
+    protected void logStartInfo(String msg) {
+        DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        System.out.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
     }
 
     private String wrap(String str) { // 兼容启动参数中包含中文空格
@@ -123,6 +129,7 @@ public class StartArg extends Processor {
         return false;
     }
 
+    @SuppressWarnings("unchecked") // Config.parse 的返回形态由反射加载的实现保证为 Map<String, String>
     private Map<String, String> parseConfig(Path configFile) throws Exception {
         URL configJar = Paths.get(getLibDir().getAbsolutePath(), "modules", "qingzhou-config.jar").toUri().toURL();
         try (URLClassLoader loader = new URLClassLoader(new URL[]{configJar})) {
