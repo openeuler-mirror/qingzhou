@@ -9,6 +9,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Cipher;
+import qingzhou.logger.Logger;
 
 class CipherImpl implements Cipher {
     private static final String ALG = "AES";
@@ -21,10 +22,12 @@ class CipherImpl implements Cipher {
     private final Base64Coder base64Coder;
 
     private final SecretKeySpec key;
+    private final Logger logger;
 
-    CipherImpl(String key, Base64Coder base64Coder) {
+    CipherImpl(String key, Base64Coder base64Coder, Logger logger) {
         this.key = new SecretKeySpec(base64Coder.decode(key), ALG);
         this.base64Coder = base64Coder;
+        this.logger = logger;
     }
 
     @Override
@@ -48,8 +51,8 @@ class CipherImpl implements Cipher {
             return decrypt(s);
         } catch (Exception e) {
             // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级
-            System.err.println("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "
-                    + "Use bin/gen-cipher-password.sh to encrypt it.");
+            logger.warn("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "
+                    + "Use bin/gen-cipher-password.sh to encrypt it.", e);
             return s;
         }
     }

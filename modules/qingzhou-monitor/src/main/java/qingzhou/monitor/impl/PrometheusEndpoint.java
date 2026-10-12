@@ -18,6 +18,7 @@ import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
@@ -25,6 +26,8 @@ import qingzhou.registry.Registry;
 public class PrometheusEndpoint implements HttpHandler {
     @Reference
     private Registry registry;
+    @Reference
+    private Logger logger;
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -36,7 +39,8 @@ public class PrometheusEndpoint implements HttpHandler {
             if (stub == null) continue;
             try {
                 collect(groups, Constants.LOCAL_INSTANCE_ID, appCode, stub);
-            } catch (Throwable ignored) {
+            } catch (Throwable t) {
+                logger.debug("skip failed local app metric collection: " + appCode, t);
             }
         }
 
@@ -48,7 +52,8 @@ public class PrometheusEndpoint implements HttpHandler {
                 if (stub == null) continue;
                 try {
                     collect(groups, instanceId, appCode, stub);
-                } catch (Throwable ignored) {
+                } catch (Throwable t) {
+                    logger.debug("skip failed remote app metric collection: " + appCode, t);
                 }
             }
         }
@@ -79,7 +84,8 @@ public class PrometheusEndpoint implements HttpHandler {
             request.setAction(Monitor.ACTION_CODE_MONITOR);
             try {
                 stub.invokeApp(request);
-            } catch (Throwable ignored) {
+            } catch (Throwable t) {
+                logger.debug("skip model metric invocation failed: " + model.code, t);
                 continue;
             }
 

@@ -120,11 +120,11 @@ public class Register implements HttpHandler {
             return;
         }
         synchronized (Refresh.REFRESH_KEY_LOCK) {
-            handle0(httpRequest, httpResponse);
+            handleInternal(httpRequest, httpResponse);
         }
     }
 
-    private void handle0(HttpRequest httpRequest, HttpResponse httpResponse) {
+    private void handleInternal(HttpRequest httpRequest, HttpResponse httpResponse) {
         String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return;
 

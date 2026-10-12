@@ -22,6 +22,8 @@ import qingzhou.xml.Doc;
 
 class DocImpl implements Doc {
     private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    // XPathFactory 线程安全且创建昂贵，复用一个实例；XPath 仍每次新建（非线程安全）
+    private static final XPathFactory xPathFactory = XPathFactory.newInstance();
 
     private final org.w3c.dom.Document dom;
 
@@ -123,7 +125,7 @@ class DocImpl implements Doc {
      * XPath 非线程安全，每次求值新建实例。
      */
     private static XPath newXPath() {
-        return XPathFactory.newInstance().newXPath();
+        return xPathFactory.newXPath();
     }
 
     private Properties getPropertiesFromNode(Node node) {
