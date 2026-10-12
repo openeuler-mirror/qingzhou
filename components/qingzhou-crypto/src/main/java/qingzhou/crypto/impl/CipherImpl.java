@@ -30,7 +30,8 @@ class CipherImpl implements Cipher {
     @Override
     public String encrypt(String s) throws Exception {
         if (s == null) return null;
-        s = s.trim();
+        // 不得对明文 trim：首尾空格是敏感值的一部分，trim 会造成 encrypt 后失真，
+        // 使 decrypt(encrypt(s)) != s，破坏密文保真性
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         byte[] encrypt = encrypt(bytes);
         return base64Coder.encode(encrypt);

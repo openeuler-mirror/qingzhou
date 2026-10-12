@@ -134,6 +134,9 @@ public class HttpClientImpl implements HttpClient {
     private void writeMultipart(RequestImpl req, HttpURLConnection conn) throws IOException {
         String boundary = "----WebKitFormBoundary" + UUID.randomUUID();
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+        // 启用分块流式：否则 HttpURLConnection 会把整个 multipart 请求体缓冲进堆，大文件上传直接 OOM。
+        // 文件本身按 8KB 分块读取，配合此模式即可边读边发，不再整文件驻留内存
+        conn.setChunkedStreamingMode(8192);
 
         try (OutputStream output = conn.getOutputStream()) {
             if (req.params != null) {
