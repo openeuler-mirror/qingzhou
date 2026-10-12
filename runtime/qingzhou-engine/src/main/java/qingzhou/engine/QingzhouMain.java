@@ -1,6 +1,9 @@
 package qingzhou.engine;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -29,6 +32,7 @@ public class QingzhouMain {
 
         String libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");
+        checkRequiredConfigs();
 
         // 获取 FrameworkFactory
         Iterator<FrameworkFactory> factories = ServiceLoader.load(FrameworkFactory.class).iterator();
@@ -60,6 +64,31 @@ public class QingzhouMain {
             } catch (Exception ignored) {
             }
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
+    }
+
+    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
+    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
+
+    private static void checkRequiredConfigs() {
+        File propsFile = instanceDir == null ? null
+                : Paths.get(instanceDir, "conf", "qingzhou.properties").toFile();
+        Properties props = new Properties();
+        if (propsFile != null && propsFile.isFile()) {
+            try (Reader reader = Files.newBufferedReader(propsFile.toPath())) {
+                props.load(reader);
+            } catch (IOException ignored) { // 读取失败按未配置处理，与缺失同走初始化引导
+            }
+        }
+        for (String key : REQUIRED_CONFIGS) {
+            String value = props.getProperty(key);
+            if (value == null || value.trim().isEmpty()) {
+                String instanceName = instanceDir == null ? "<instance>" : new File(instanceDir).getName();
+                System.err.println(key + " is not configured in "
+                        + "instances/" + instanceName + "/conf/qingzhou.properties"
+                        + ", run bin/init.sh to initialize the instance");
+                System.exit(1);
+            }
+        }
     }
 
     static void startDirAndJars(File bundleDir) throws BundleException {
