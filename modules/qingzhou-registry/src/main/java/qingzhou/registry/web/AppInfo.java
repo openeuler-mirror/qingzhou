@@ -27,7 +27,7 @@ public class AppInfo implements HttpHandler {
     @Reference
     private Json json;
 
-    private Function<HandlingContext, Object> function = (context) -> {
+    public Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
         String appCode = context.getParameter(WebUtil.APP_CODE);
         if (instanceId == null || appCode == null) return null;

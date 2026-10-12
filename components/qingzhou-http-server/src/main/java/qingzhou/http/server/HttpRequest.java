@@ -27,6 +27,8 @@ public interface HttpRequest {
 
     String getHeader(String header);
 
+    String getCookie(String header);
+
     String getContentType();
 
     String getMethod();

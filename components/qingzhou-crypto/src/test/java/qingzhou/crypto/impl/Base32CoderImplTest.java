@@ -1,12 +1,12 @@
 package qingzhou.crypto.impl;
 
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.Crypto;
 
 public class Base32CoderImplTest {
     // Base32合法字符正则：仅大写A-Z、数字2-7、填充符=
@@ -19,8 +19,13 @@ public class Base32CoderImplTest {
     private static final String TEST_BASE32_DIRTY = "OR01S89XG5A=";
 
     private Base32Coder getBase32Coder() {
-        Crypto crypto = new CryptoImpl();
-        return crypto.getBase32Coder();
+        return CryptoImplTest.getCryptoImpl().getBase32Coder();
+    }
+
+    static void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     // ===================== encode(byte[]) 编码测试 =====================

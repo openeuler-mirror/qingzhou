@@ -12,13 +12,13 @@ public class PairCipherImplTest {
     private static final String PLAIN_TEXT = "qingzhou crypto pair cipher test 轻舟加密测试";
 
     private PairCipher newPairCipher() {
-        CryptoImpl crypto = new CryptoImpl();
+        CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
         String[] pairKey = crypto.generatePairKey();
         return new PairCipherImpl(pairKey[0], pairKey[1], new Base64CoderImpl());
     }
 
     private PairCipher newPublicKeyOnlyPairCipher() {
-        CryptoImpl crypto = new CryptoImpl();
+        CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
         String[] pairKey = crypto.generatePairKey();
         return new PairCipherImpl(pairKey[0], null, new Base64CoderImpl());
     }
@@ -202,7 +202,7 @@ public class PairCipherImplTest {
 
     @Test
     public void nullPublicKey_getPairCipher_throwInvalidKeyException() {
-        CryptoImpl crypto = new CryptoImpl();
+        CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
         try {
             crypto.getPairCipher(null, null);
             Assert.fail("公私钥均为 null 时应抛出异常");

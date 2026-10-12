@@ -193,6 +193,7 @@ public class HttpServerImplTest {
         setField(httpServer, "dispatcherHandler", dispatcherHandler);
 
         setField(handlerManager, "logger", logger);
+        setField(crypto, "logger", logger);
 
         setField(dispatcherHandler, "logger", logger);
         setField(dispatcherHandler, "authManager", authManager);

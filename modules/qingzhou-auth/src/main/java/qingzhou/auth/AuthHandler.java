@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.osgi.service.component.annotations.*;
-import qingzhou.auth.oauth2.OAuth2Handler;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.Configs;
 import qingzhou.common.FailureLockout;
 import qingzhou.crypto.Crypto;
@@ -31,9 +33,6 @@ public class AuthHandler implements HttpHandler {
     private TokenService tokenService;
     @Reference
     private Logger logger;
-    // OAuth2 为可选能力：未启用时该引用为 null，logout 仅吊销 qingzhou-auth 自身令牌
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-    private OAuth2Handler oAuth2Handler;
 
     private String username;
     private String passwordDigest;
@@ -121,9 +120,7 @@ public class AuthHandler implements HttpHandler {
         }
 
         lockout.clear(lockKey);
-        response.header("Cache-Control", "no-store") // token 响应不得被缓存
-                .contentTypeJsonUtf8()
-                .send("{\"token\":\"" + tokenService.createToken(reqUser, roles) + "\"}").finish();
+        tokenService.sendToken(reqUser, roles, response);
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
@@ -137,7 +134,7 @@ public class AuthHandler implements HttpHandler {
     private boolean verifyCode(String code, HttpResponse response) {
         try {
             if (crypto.getTotpCipher().verifyCode(
-                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.auth_totp_secret"),
+                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"),
                     code)) {
                 return true;
             }
@@ -149,29 +146,6 @@ public class AuthHandler implements HttpHandler {
     }
 
     private void logout(HttpRequest request, HttpResponse response) {
-        revokeTokens(request); // 仅清 Cookie 不够：Bearer 令牌仍可被重放，须显式吊销
-        response.header("Set-Cookie", qingzhou.auth.oauth2.OAuth2Handler.TOKEN_COOKIE_NAME
-                        + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict"
-                        + ("https".equals(request.getScheme()) ? "; Secure" : ""))
-                .send("ok").finish();
-    }
-
-    // 吊销本次请求携带的令牌：Bearer 头与 Cookie 中的会话令牌都覆盖，使登出后令牌立即失效
-    private void revokeTokens(HttpRequest request) {
-        String auth = request.getHeader("Authorization");
-        if (auth != null && auth.regionMatches(true, 0, "Bearer ", 0, 7)) {
-            String token = auth.substring(7).trim();
-            tokenService.revokeToken(token);
-            if (oAuth2Handler != null) oAuth2Handler.revokeToken(token);
-        }
-        String cookie = request.getHeader("Cookie");
-        if (cookie != null && oAuth2Handler != null) {
-            for (String part : cookie.split(";")) {
-                String trim = part.trim();
-                if (trim.startsWith(OAuth2Handler.TOKEN_COOKIE_NAME + "=")) {
-                    oAuth2Handler.revokeToken(trim.substring(trim.indexOf('=') + 1));
-                }
-            }
-        }
+        tokenService.revokeToken(request, response);
     }
 }

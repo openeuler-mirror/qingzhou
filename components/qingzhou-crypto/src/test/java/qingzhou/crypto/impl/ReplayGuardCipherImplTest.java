@@ -15,7 +15,7 @@ public class ReplayGuardCipherImplTest {
     // 每个用例独立密钥与 guard，避免共享去重状态互相干扰
     private ReplayGuardCipher newGuard() {
         try {
-            CryptoImpl crypto = new CryptoImpl();
+            CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
             return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateKey()));
         } catch (Exception e) {
             throw new IllegalStateException(e);

@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
 import qingzhou.http.server.HttpRequest;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -68,13 +69,23 @@ public class HttpRequestImpl implements HttpRequest {
     @Override
     public String getHeader(String header) {
         io.netty.handler.codec.http.HttpHeaders headers = request.requestHeaders();
-        return headers != null ? headers.get(header) : null;
+        return headers.get(header);
+    }
+
+    @Override
+    public String getCookie(String name) {
+        Map<CharSequence, List<Cookie>> allCookies = request.allCookies();
+        List<Cookie> cookies = allCookies.get(name);
+        if (!cookies.isEmpty()) {
+            return cookies.get(0).value();
+        }
+        return null;
     }
 
     @Override
     public String getContentType() {
         io.netty.handler.codec.http.HttpHeaders headers = request.requestHeaders();
-        return headers != null ? headers.get(HttpHeaderNames.CONTENT_TYPE) : null;
+        return headers.get(HttpHeaderNames.CONTENT_TYPE);
     }
 
     @Override
