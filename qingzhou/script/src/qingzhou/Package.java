@@ -95,14 +95,7 @@ public class Package {
      * @throws IOException 抛出可能发生的IO异常。
      */
     private static List<String> fileToString(File file) throws IOException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            List<String> content = new ArrayList<>();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
-            for (String line; (line = reader.readLine()) != null; ) {
-                content.add(line);
-            }
-            return content;
-        }
+        return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -114,13 +107,11 @@ public class Package {
      */
     private static void writeFile(File file, List<String> fileLines) throws IOException {
         mkdirs(file.getParentFile());
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8));
-            StringBuilder context = new StringBuilder();
-            fileLines.forEach(s -> context.append(s).append(System.lineSeparator()));
-            bw.write(context.toString(), 0, context.length());
-            bw.flush();
-            bw.close();
+        try (BufferedWriter bw = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+            for (String line : fileLines) {
+                bw.write(line);
+                bw.write(System.lineSeparator());
+            }
         }
     }
 

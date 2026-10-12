@@ -99,11 +99,11 @@ class SyncSender {
             if (fn == null) continue;
             ToolCallInfo call = new ToolCallInfo();
             Object id = tc.get("id");
-            call.id = id != null ? String.valueOf(id) : "";
+            call.setId(id != null ? String.valueOf(id) : "");
             Object name = fn.get("name");
-            call.name = name != null ? String.valueOf(name) : "";
+            call.setName(name != null ? String.valueOf(name) : "");
             Object arguments = fn.get("arguments");
-            call.arguments = arguments != null ? String.valueOf(arguments) : null;
+            call.setArguments(arguments != null ? String.valueOf(arguments) : null);
             result.add(call);
         }
         return result;

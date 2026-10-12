@@ -180,8 +180,9 @@ public class AppDriver implements BundleActivator {
                         if (val != null) {
                             modelField.default_value = val.toString();
                         }
-                    } catch (Throwable ignored) {
-                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code + ", field: " + modelField.code);
+                    } catch (Throwable e) {
+                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code
+                                + ", field: " + modelField.code + ", cause: " + e);
                     }
                 });
 

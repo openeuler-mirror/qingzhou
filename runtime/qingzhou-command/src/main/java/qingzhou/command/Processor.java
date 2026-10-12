@@ -3,6 +3,7 @@ package qingzhou.command;
 import java.io.Console;
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 
 public abstract class Processor { // 兼容 老版本，因此动这个要小心
@@ -49,7 +50,10 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
         }
 
         char[] password = console.readPassword();
-        return password == null ? null : new String(password);
+        if (password == null) return null;
+        String result = new String(password);
+        Arrays.fill(password, '\0'); // char[] 用后清零，减少明文驻留
+        return result;
     }
 
     protected File initInstance(String[] args) {

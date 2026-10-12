@@ -53,7 +53,7 @@ public class CryptoImpl implements Crypto {
         try {
             cipherKey = base64Coder.decode(key.trim());// 先校验 Base64 合法性：非法字符应在此报 InvalidKeyException，而非构造时抛 IAE 破坏契约
         } catch (IllegalArgumentException e) {
-            throw (InvalidKeyException) new InvalidKeyException("key is not valid base64").initCause(e);
+            throw new InvalidKeyException("key is not valid base64", e);
         }
         return new CipherImpl(cipherKey, base64Coder, logger);
     }
@@ -133,7 +133,12 @@ public class CryptoImpl implements Crypto {
 
     private String getSecret() throws IOException {
         String secret = null;
-        Path secretFile = Paths.get(System.getProperty("qingzhou.instance"), "conf", "secret-key.properties");
+        String instanceDir = System.getProperty("qingzhou.instance");
+        if (instanceDir == null || instanceDir.trim().isEmpty()) {
+            // fail-fast 给出可读错误，而非 Paths.get(null) 的裸 NPE 被包装成误导性的 IllegalStateException
+            throw new IllegalStateException("system property 'qingzhou.instance' is required to locate the global secret key");
+        }
+        Path secretFile = Paths.get(instanceDir, "conf", "secret-key.properties");
         if (secretFile.toFile().exists()) {
             try (InputStream inputStream = Files.newInputStream(secretFile, StandardOpenOption.READ)) {
                 Properties properties = new Properties();

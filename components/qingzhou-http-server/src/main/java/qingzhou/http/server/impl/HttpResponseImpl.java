@@ -105,10 +105,13 @@ class HttpResponseImpl implements HttpResponse {
 
     @Override
     public void redirect(String url) {
-        // 双防线：CRLF 防响应头注入；协议白名单防开放重定向（Location 可控时把用户引到任意站点）
-        boolean validTarget = url != null && !url.isEmpty()
-                && (url.startsWith("/") || url.regionMatches(true, 0, "http://", 0, 7)
-                    || url.regionMatches(true, 0, "https://", 0, 8));
+        // 双防线：CRLF 防响应头注入；协议白名单防开放重定向（Location 可控时把用户引到任意站点）。
+        // 站内相对地址须排除 "//host" 形式：浏览器按当前 scheme 跳转，属协议相对的外站地址
+        boolean validTarget = url != null && !url.isEmpty() && (
+                url.startsWith("/") && !url.startsWith("//")
+                        || url.regionMatches(true, 0, "http://", 0, 7)
+                        || url.regionMatches(true, 0, "https://", 0, 8)
+        );
         if (!validTarget || hasBreak(url)) throw new IllegalArgumentException("invalid redirect url");
         response.status(HttpResponseStatus.FOUND)
                 .header(HttpHeaderNames.LOCATION, url)

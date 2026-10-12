@@ -331,12 +331,9 @@ public class BundleConverter {
             String fieldName = method.getName(); // 方法名 = 注解属性名
             Object fieldValue;
             try {
-                fieldValue = method.invoke(annotation); // 调用方法获取属性值（无参，传null）
+                fieldValue = method.invoke(annotation); // 注解实例的属性值经方法调用获取
             } catch (Exception e) {
-                // 这里会发生什么错误？
-                // 答案：当注解属性值为默认值时，method.invoke 会抛出异常，因为默认值不是通过方法调用获取的
-                // 如何获取默认值？
-                // 答案：通过 method.getDefaultValue() 获取
+                // 反射调用失败（如代理被外部干预）时回退注解声明的默认值，避免中断注解解析
                 fieldValue = method.getDefaultValue();
             }
             object.getClass().getField(fieldName)

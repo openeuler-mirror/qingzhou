@@ -75,7 +75,7 @@ public class AppModel implements HttpHandler {
 
     private <T> T cloneView(T from, Class<T> toClass, I18nService i18nService, String lang) {
         try {
-            T viewObject = toClass.getDeclaredConstructor().newInstance(); // newInstance() 自 Java 9 起废弃
+            T viewObject = toClass.getDeclaredConstructor().newInstance(); // getDeclaredConstructor().newInstance() 为非废弃写法
             for (Field field : toClass.getFields()) {
                 Object fromVal = field.get(from);
 

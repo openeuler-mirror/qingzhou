@@ -25,7 +25,7 @@ public class Utils {
     public static void sleepBackoff(int attempt) {
         int capped = Math.min(attempt, 5); // 移位封顶，防止大 attempt 休眠天文数字时长
         try {
-            Thread.sleep(1000L << capped); // 指数退避：1s / 2s / 4s / 8s 封顶
+            Thread.sleep(1000L << capped); // 指数退避：1s / 2s / 4s / 8s / 16s / 32s 封顶
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -40,7 +40,7 @@ public class Utils {
         return s.substring(0, maxChars) + "\n…（内容过长已截断，原长度 " + s.length() + " 字符）";
     }
 
-    // 按需加载技能恒
+    // 按需激活技能：required 技能恒生效，其余先词面匹配、再交由模型筛选
     public static List<Skill> getActiveSkills(Collection<Skill> skills, String message, ActiveSkillCallback callback) {
         if (skills == null || skills.isEmpty()) return Collections.emptyList();
 
@@ -86,13 +86,13 @@ public class Utils {
     }
 
     public static String invokeTool(ToolCallInfo toolCallInfo, Map<String, Tool> tools, Json json, Interceptor interceptor) {
-        Tool tool = tools.get(toolCallInfo.name);
-        if (tool == null) return "Tool not found: " + toolCallInfo.name;
+        Tool tool = tools.get(toolCallInfo.getName());
+        if (tool == null) return "Tool not found: " + toolCallInfo.getName();
 
         Map<String, Object> args = null;
-        if (toolCallInfo.arguments != null && !toolCallInfo.arguments.isEmpty()) {
+        if (toolCallInfo.getArguments() != null && !toolCallInfo.getArguments().isEmpty()) {
             try {
-                args = json.fromJson(toolCallInfo.arguments, Map.class);
+                args = json.fromJson(toolCallInfo.getArguments(), Map.class);
             } catch (Exception ignored) {
             }
         }

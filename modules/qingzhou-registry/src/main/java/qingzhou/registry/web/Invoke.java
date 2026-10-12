@@ -127,7 +127,11 @@ public class Invoke implements HttpHandler {
         }
 
         // 添加 URL 里的参数
-        httpRequest.getParameters().forEach((k, v) -> request.getParameters().put(k, v.get(0)));
+        httpRequest.getParameters().forEach((k, v) -> {
+            if (v != null && !v.isEmpty()) { // 畸形参数表可能产生空值列表，直接 get(0) 会越界
+                request.getParameters().put(k, v.get(0));
+            }
+        });
         return request;
     }
 

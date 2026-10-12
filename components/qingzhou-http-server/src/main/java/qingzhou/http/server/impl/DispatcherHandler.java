@@ -15,14 +15,13 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
+import qingzhou.common.Configs;
 import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
 import reactor.netty.Connection;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
-
-import qingzhou.common.Configs;
 
 /**
  * 请求分发入口：装配安全头、准入闸门与 body 处理三条协作链，并持有许可的获取与归还。
@@ -102,7 +101,13 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
      * 故 handler 执行期与 SSE 等长响应不受此约束。
      */
     private void scheduleIntakeTimeout(RequestContext ctx) {
-        // 运行时实现类（ChannelOperations）本身实现 Connection 接口，由此取得底层 channel
+        // 运行时实现类（ChannelOperations）本身实现 Connection 接口，由此取得底层 channel；
+        // 实现细节随框架版本可能变化：不符合预期时跳过超时兜底（记录告警），不做脆弱强转
+        if (!(ctx.request instanceof Connection)) {
+            logger.warn("cannot schedule intake timeout: request is not a Connection: "
+                    + ctx.request.getClass().getName());
+            return;
+        }
         Channel channel = ((Connection) ctx.request).channel();
         ctx.intakeTimeout = channel.eventLoop().schedule(() -> {
             if (ctx.released.get()) return; // 与 release() 的取消竞态：已结束的请求不再处理

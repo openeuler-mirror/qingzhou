@@ -136,7 +136,7 @@ public class FileUtil {
             try {
                 forceDelete(file);
             } catch (IOException ioe) {
-                exception = ioe;
+                if (exception == null) exception = ioe; // 保留首个失败：继续清理其余文件，不丢失最初的失败原因
             }
         }
 

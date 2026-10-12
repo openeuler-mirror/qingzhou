@@ -53,12 +53,36 @@ public class McpServer implements HttpHandler {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             target = "(" + SkillService.SKILL_REQUIRED + "=true)")
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
-        llmSkills.put(skill, properties);
+        synchronized (this) {
+            llmSkills.put(skill, properties);
+            toolsCacheValid = false; // 技能集变更，使工具缓存失效
+        }
     }
 
     // OSGI 框架根据名称规则自动识别调用此方法
     public void unbindAiSkill(SkillService skill) {
-        llmSkills.remove(skill);
+        synchronized (this) {
+            llmSkills.remove(skill);
+            toolsCacheValid = false;
+        }
+    }
+
+    // 技能转换结果缓存：llmSkills 仅在 DS bind/unbind 时变更，无需每次请求全量重转
+    private volatile Set<Tool> cachedTools;
+    private volatile boolean toolsCacheValid;
+
+    private Collection<Tool> llmTools() {
+        if (!toolsCacheValid || cachedTools == null) {
+            synchronized (this) {
+                if (!toolsCacheValid || cachedTools == null) {
+                    cachedTools = LlmConverter.convertSkills(llmSkills, logger).stream()
+                            .flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream())
+                            .collect(Collectors.toSet());
+                    toolsCacheValid = true;
+                }
+            }
+        }
+        return cachedTools;
     }
 
     @Override
@@ -111,10 +135,6 @@ public class McpServer implements HttpHandler {
         error.put("code", code);
         error.put("message", message);
         return error;
-    }
-
-    private Collection<Tool> llmTools() {
-        return LlmConverter.convertSkills(llmSkills, logger).stream().flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream()).collect(Collectors.toSet());
     }
 
     private Object tools() {

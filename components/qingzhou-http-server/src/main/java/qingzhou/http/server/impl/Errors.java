@@ -1,9 +1,9 @@
 package qingzhou.http.server.impl;
 
 /**
- * 请求分发链上的异常展开与回调收敛工具。仅供框架内部使用，不在导出包内。
+ * 请求分发链上的异常展开与回调收敛工具。仅供框架内部使用，不在导出包内，故收窄为包级可见。
  */
-public final class Errors {
+final class Errors {
     // Reactor 包装通常 2~3 层，上限仅兜底循环引用的异常链
     private static final int MAX_CAUSE_DEPTH = 8;
 

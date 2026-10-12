@@ -73,25 +73,22 @@ public class AuthManager {
             return authResult;
         }
 
-        // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
-        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户。判断依据是认证结果原因而非直接读头：
-        // TokenAuthenticator 对无/畸形 Bearer 返回 "token missing"，即"未出示凭据"，不计入锁定；
-        // 只有出示了凭据却失败（如 "invalid token"）才消耗锁定计数，从而仍能拖慢凭据爆破
-        String reason = authResult.getReason();
-        boolean noCredential = reason == null || "no credential provided".equals(reason)
-                || "no authenticator ready".equals(reason)
-                || "token missing".equals(reason);
-        if (!noCredential) {
+        // 仅当请求确实携带了凭据却失败（REJECT）才计入锁定：未出示凭据（NO_CREDENTIAL）的匿名访问
+        // （NAT 下大量正常请求）不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户；
+        // 出示了凭据却失败才消耗锁定计数，从而仍能拖慢凭据爆破
+        if (authResult.status() != AuthResult.Status.NO_CREDENTIAL) {
             lockout.recordFailure(host);
         }
 
+        logger.warn("http authentication rejected: " + authResult.getReason());
+        return false;
         logger.warn("http authentication rejected: " + reason);
         return authResult.status() == AuthResult.Status.REJECT ? authResult
                 : AuthResult.reject("no credential provided"); // PASS 而无主体属模糊态：按无凭据拒绝
     }
 
     private AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
+        if (authenticators.isEmpty()) return AuthResult.rejectNoCredential("no authenticator ready");
 
         AuthResult reject = null;
         for (Authenticator authenticator : authenticators) {
@@ -114,6 +111,6 @@ public class AuthManager {
         }
         if (reject != null) return reject;
 
-        return AuthResult.reject("no credential provided");
+        return AuthResult.rejectNoCredential("no credential provided");
     }
 }

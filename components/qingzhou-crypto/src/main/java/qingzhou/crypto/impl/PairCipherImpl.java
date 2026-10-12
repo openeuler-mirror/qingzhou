@@ -48,22 +48,34 @@ class PairCipherImpl implements PairCipher {
 
     @Override
     public byte[] encryptWithPublicKey(byte[] input) throws Exception {
+        requireKey(publicKey, "public_key");
         return encryptWithKey(publicKey, input);
     }
 
     @Override
     public String encryptWithPublicKey(String input) throws Exception {
+        requireKey(publicKey, "public_key");
         return encryptWithKey(publicKey, input);
     }
 
     @Override
     public byte[] decryptWithPrivateKey(byte[] input) throws Exception {
+        requireKey(privateKey, "private_key");
         return decryptWithKey(privateKey, input);
     }
 
     @Override
     public String decryptWithPrivateKey(String input) throws Exception {
+        requireKey(privateKey, "private_key");
         return decryptWithKey(privateKey, input);
+    }
+
+    // 前置状态校验：调用未注入侧的方法时给出明确的构建期指引，而非深层运行期 InvalidKeyException
+    private static void requireKey(java.security.Key key, String configName) {
+        if (key == null) {
+            throw new IllegalStateException("this cipher was built without " + configName
+                    + "; regenerate a pair with bin/gen-pair-key.sh and inject it");
+        }
     }
 
     private PublicKey convertPublic(String keyAsBase64) throws Exception {

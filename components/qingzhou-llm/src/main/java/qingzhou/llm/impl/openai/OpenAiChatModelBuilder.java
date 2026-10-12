@@ -137,7 +137,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     List<Object> buildToolDefinitions(Collection<Tool> tools) {
-        return tools.stream().map((Function<Tool, Object>) tool -> {
+        return tools.stream().map(tool -> {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("type", "object");
             Map<String, Object> paramMap = new HashMap<>();
@@ -209,11 +209,11 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         if (toolCalls != null) {
             for (ToolCallInfo tc : toolCalls) {
                 Map<String, Object> call = new HashMap<>();
-                call.put("id", tc.id);
+                call.put("id", tc.getId());
                 call.put("type", "function");
                 Map<String, Object> fn = new HashMap<>();
-                fn.put("name", tc.name);
-                fn.put("arguments", tc.arguments != null && !tc.arguments.isEmpty() ? tc.arguments : "{}");
+                fn.put("name", tc.getName());
+                fn.put("arguments", tc.getArguments() != null && !tc.getArguments().isEmpty() ? tc.getArguments() : "{}");
                 call.put("function", fn);
                 calls.add(call);
             }

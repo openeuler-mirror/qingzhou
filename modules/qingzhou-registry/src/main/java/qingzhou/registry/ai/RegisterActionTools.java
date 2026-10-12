@@ -117,7 +117,10 @@ public class RegisterActionTools {
                     String[] roles = c.getRoles();
                     AppStub appStub = retrieveAppStub(toolArgs);
                     String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
-                    if (appStub == null || modelCode == null) return null;
+                    // 参数缺失/应用不存在时 fail-closed：拒绝执行而非放行，防止绕过权限模型
+                    if (appStub == null || modelCode == null) {
+                        return "操作执行失败：无法定位目标应用或模块，请确认参数后重试。";
+                    }
 
                     boolean allowed = PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, invokedActionCode, roles);
                     if (allowed) return null;

@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -40,8 +41,9 @@ public class StartArg extends Processor {
         Map<String, String> properties = parseConfig(configFile);
         List<String> jvmConfig = getJvmArgs(properties);
 
-        // prepare javaCmd
-        String javaCmd = Paths.get(System.getProperty("java.home"), "bin", "java").toString();
+        // prepare javaCmd：Windows 的可执行文件带 .exe 后缀
+        boolean windows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+        String javaCmd = Paths.get(System.getProperty("java.home"), "bin", windows ? "java.exe" : "java").toString();
         // 构造启动命令
         StringBuilder startCmd = new StringBuilder("\"" + javaCmd + "\"");
         for (String arg : jvmConfig) {
@@ -65,8 +67,8 @@ public class StartArg extends Processor {
                     continue;
                 }
                 // jvm.arg 经 sh 的 eval 执行，`$()`/反引号等会被 shell 展开构成命令注入；
-                // 仅拒双引号不足以防御，须拒绝一切 shell 元字符（与 wrap 的引号拒绝互补）
-                if (containsShellMeta(s)) {
+                // 引号同样会破坏 eval 的命令结构（与 wrap 的引号拒绝一致），一并拒绝
+                if (containsShellMeta(s) || s.contains("\"")) {
                     logStartInfo("ignore jvm arg with unsafe characters: " + s);
                     continue;
                 }
@@ -89,8 +91,9 @@ public class StartArg extends Processor {
         return commands;
     }
 
+    private static final DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     protected void logStartInfo(String msg) {
-        DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         System.out.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
     }
 

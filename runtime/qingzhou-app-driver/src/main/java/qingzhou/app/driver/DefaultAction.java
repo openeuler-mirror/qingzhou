@@ -368,6 +368,7 @@ public class DefaultAction {
                         delete = true;
                     }
                 } catch (Exception e) {
+                    // 文件名不含时间前缀属历史遗留/外部产物，跳过即可；打印原始文件名辅助排查
                     System.err.println("failed to parse time: " + historicalKey);
                 }
                 if (delete) {

@@ -7,7 +7,6 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
-import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
@@ -34,8 +33,6 @@ public class ActionCheckTool implements ToolService {
     private Registry registry;
     @Reference
     private Logger logger;
-    @Reference
-    private Json json;
 
     @Override
     public String invoke(Map<String, Object> toolArgs) {

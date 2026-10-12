@@ -78,6 +78,7 @@ public class Config {
                         .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
                         .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
             } catch (Throwable t) {
+                // 配置错误即终止启动，不兜底，否则业务问题无法及早发现
                 System.err.println("!!! Failed to pull remote configuration. Startup terminated !!! ");
                 t.printStackTrace(System.err);
                 System.exit(1);

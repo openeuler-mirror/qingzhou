@@ -30,15 +30,18 @@ public class JdbcPoolImpl implements JdbcPool {
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
         for (Map.Entry<String, String> entry : config.entrySet()) {
+            PropertyDescriptor matched = null;
             for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
                 if (pd.getName().equals(entry.getKey())) {
-                    Method writeMethod = pd.getWriteMethod();
-                    if (writeMethod != null) {
-                        writeMethod.invoke(props, convert(entry.getValue(), writeMethod.getParameterTypes()[0]));
-                    }
+                    matched = pd;
                     break;
                 }
             }
+            // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
+            if (matched == null || matched.getWriteMethod() == null) {
+                throw new IllegalArgumentException("unknown qingzhou-jdbc config item: " + entry.getKey());
+            }
+            matched.getWriteMethod().invoke(props, convert(entry.getValue(), matched.getWriteMethod().getParameterTypes()[0]));
         }
         this.poolConfig = props;
     }

@@ -80,7 +80,8 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
     private boolean isLoopback(String host) {
         if (host == null) return false;
         String normalized = host.toLowerCase(Locale.ROOT);
-        if ("localhost".equals(normalized) || "::1".equals(normalized)) return true;
+        // URL.getHost 对 IPv6 字面量返回 "[::1]" 带方括号形式
+        if ("localhost".equals(normalized) || "::1".equals(normalized) || "[::1]".equals(normalized)) return true;
         // 127.0.0.0/8 整段均为回环，不止 127.0.0.1
         return normalized.matches("127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }

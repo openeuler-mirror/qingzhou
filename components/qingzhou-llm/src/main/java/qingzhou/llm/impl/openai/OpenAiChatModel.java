@@ -179,16 +179,16 @@ class OpenAiChatModel implements ChatModel {
                         int index = ((Number) indexObj).intValue();
                         ToolCallInfo toolCallInfo = toolCalls.computeIfAbsent(index, k -> new ToolCallInfo());
                         if (dtc.get("id") != null) {
-                            toolCallInfo.id = String.valueOf(dtc.get("id"));
+                            toolCallInfo.setId(String.valueOf(dtc.get("id")));
                         }
                         Map<String, Object> dfn = (Map<String, Object>) dtc.get("function");
                         if (dfn != null) {
                             if (dfn.get("name") != null) {
-                                toolCallInfo.name = String.valueOf(dfn.get("name"));
+                                toolCallInfo.setName(String.valueOf(dfn.get("name")));
                             }
                             if (dfn.get("arguments") != null) {
-                                String args = toolCallInfo.arguments != null ? toolCallInfo.arguments : "";
-                                toolCallInfo.arguments = args + dfn.get("arguments");
+                                String args = toolCallInfo.getArguments() != null ? toolCallInfo.getArguments() : "";
+                                toolCallInfo.setArguments(args + dfn.get("arguments"));
                             }
                         }
                     }
@@ -214,8 +214,8 @@ class OpenAiChatModel implements ChatModel {
 
                     chatListener.onReasoningPause();
                     for (ToolCallInfo toolCallInfo : toolCalls.values()) {
-                        chatListener.onToolCall(toolCallInfo.id, toolCallInfo.name, toolCallInfo.arguments);
-                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json, builder.getInterceptor())));
+                        chatListener.onToolCall(toolCallInfo.getId(), toolCallInfo.getName(), toolCallInfo.getArguments());
+                        messages.add(builder.buildToolMessage(toolCallInfo.getId(), Utils.invokeTool(toolCallInfo, tools, json, builder.getInterceptor())));
                     }
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);

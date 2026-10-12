@@ -81,6 +81,8 @@ public class InitInstance extends Processor {
 
         File keystore = new File(instanceDir, "conf/keystore.p12");
         Files.deleteIfExists(keystore.toPath());
+        if (!keystore.createNewFile()) throw new IllegalStateException("cannot create keystore: " + keystore);
+        chmod600(keystore); // keytool 写入前即收敛权限，避免口令文件短暂可读
         genKeystore(keystore, password);
         String props = read(propsFile);
         props = putValue(props, "qingzhou-http-server.ssl_keystore_password", encrypt(password));
@@ -135,7 +137,11 @@ public class InitInstance extends Processor {
             out.flush();
         }
         outputDrainer.join();
-        if (process.waitFor() != 0) {
+        if (!process.waitFor(60, java.util.concurrent.TimeUnit.SECONDS)) { // 挂起即强杀，避免 init 命令永久阻塞
+            process.destroyForcibly();
+            throw new IllegalStateException("keytool timed out: " + output);
+        }
+        if (process.exitValue() != 0) {
             throw new IllegalStateException("keytool failed: " + output);
         }
     }

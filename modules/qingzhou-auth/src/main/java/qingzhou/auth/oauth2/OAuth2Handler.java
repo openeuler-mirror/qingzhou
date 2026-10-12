@@ -163,9 +163,10 @@ public class OAuth2Handler implements HttpHandler {
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
         String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
         Map tokenBody = json.fromJson(tokenBodyText, Map.class);
-        if (tokenResponse.getStatus() != 200 || tokenBody.get("error") != null) {
-            String error = tokenBody.get("error") != null ? tokenBody.get("error").toString() : "Forbidden";
-            response.status(403).send(error).finish();
+        // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
+        if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
+            // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
+            response.status(403).send("token exchange failed").finish();
             return null;
         }
 

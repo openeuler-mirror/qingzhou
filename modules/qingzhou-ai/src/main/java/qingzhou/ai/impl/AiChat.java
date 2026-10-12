@@ -20,6 +20,9 @@ import qingzhou.logger.Logger;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/chat/stream", HttpHandler.HANDLE_METHODS + "=POST"})
 public class AiChat implements HttpHandler {
+    // 单次提问字符上限：正常业务提问远低于此值，超出即视为滥用
+    private static final int MAX_QUESTION_CHARS = 10_000;
+
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +
             "你是轻舟平台智能助手，帮助开发者、运维人员和管理员理解和使用轻舟平台\n" +
@@ -74,6 +77,11 @@ public class AiChat implements HttpHandler {
         }
 
         String question = ((String) params.get("question")).trim();
+        // 提问长度上限：认证用户可借超大提问放大 LLM token 与内存开销
+        if (question.length() > MAX_QUESTION_CHARS) {
+            httpResponse.status(400).finish();
+            return;
+        }
         String app = (String) params.get("app");
         if (app != null && !app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);

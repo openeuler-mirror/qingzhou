@@ -1,7 +1,8 @@
 package qingzhou.http.server.auth;
 
 public interface AuthResult {
-    enum Status {PASS, REJECT}
+    // REJECT：已出示凭据但校验失败；NO_CREDENTIAL：未出示凭据（匿名访问），两者由认证框架区别对待（后者不计入爆破锁定）
+    enum Status {PASS, REJECT, NO_CREDENTIAL}
 
     Status status();
 
@@ -58,6 +59,20 @@ public interface AuthResult {
             @Override
             public Status status() {
                 return Status.REJECT;
+            }
+
+            @Override
+            public String getReason() {
+                return reason;
+            }
+        };
+    }
+
+    static AuthResult rejectNoCredential(String reason) {
+        return new AuthResult() {
+            @Override
+            public Status status() {
+                return Status.NO_CREDENTIAL;
             }
 
             @Override
