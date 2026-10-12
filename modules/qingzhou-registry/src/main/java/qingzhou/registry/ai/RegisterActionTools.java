@@ -11,9 +11,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
-import qingzhou.api.action.Monitor;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
+import qingzhou.api.action.*;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.App;
@@ -67,6 +65,8 @@ public class RegisterActionTools {
                     + "5. 用户指定页码后，使用相同的参数并传入 " + PAGE_NUM + " 再次调用本工具。");
             put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
+            put(SwitchSpace.ACTION_CODE_SWITCHSPACE, "该接口将应用的模块切换到指定的空间上。");
+            put(SwitchSpace.ACTION_CODE_CURRENTSPACE, "该接口返回应用当前使用的模块空间。");
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
             String actionToolName = "app_model_action_" + invokedActionCode;
