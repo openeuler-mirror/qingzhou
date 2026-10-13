@@ -19,6 +19,7 @@ public class TokenAuthenticator implements Authenticator {
         Object[] userRoles = tokenService.verifyToken(token);
         if (userRoles == null) return AuthResult.reject("invalid token");
 
-        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1]);
+        return AuthResult.pass((String) userRoles[0], (String[]) userRoles[1],
+                tokenService.renewToken(request, token));
     }
 }

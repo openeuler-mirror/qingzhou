@@ -21,7 +21,7 @@ import static qingzhou.http.server.impl.HttpServerImplTest.setField;
 /**
  * 认证失败节流的单元测试：不起服务，直接驱动 AuthManager.doAuth。
  * <p>
- * 认证失败与已被锁定都返回 false，无法从返回值区分，故统一以「认证器被调用的次数」判定：
+ * 认证失败与已被锁定都返回拒绝结果，无法从返回值区分，故统一以「认证器被调用的次数」判定：
  * 一旦锁定，authenticateWithHandler 不再执行，认证器也就不会被调用。
  */
 public class AuthFailureTest {
@@ -44,12 +44,12 @@ public class AuthFailureTest {
         AuthManager authManager = manager(1, 60);
         authManager.addAuthenticator(request -> AuthResult.reject("no"));
         HttpRequestImpl request = request("10.0.0.3");
-        Assert.assertFalse(authManager.doAuth(request, entry()));
+        Assert.assertFalse(pass(authManager.doAuth(request, entry())));
 
         HandlerManager.HandlerEntry noAuth = new HandlerManager.HandlerEntry((req, response) -> {
         }, true, Collections.emptyList());
-        Assert.assertTrue(authManager.doAuth(request, noAuth));
-        Assert.assertFalse(authManager.doAuth(request, entry()));
+        Assert.assertTrue(pass(authManager.doAuth(request, noAuth)));
+        Assert.assertFalse(pass(authManager.doAuth(request, entry())));
     }
 
     @Test
@@ -62,12 +62,17 @@ public class AuthFailureTest {
         });
 
         authManager.doAuth(request("10.0.0.2"), entry());
-        Assert.assertTrue(authManager.doAuth(request("10.0.0.2"), entry()));
+        Assert.assertTrue(pass(authManager.doAuth(request("10.0.0.2"), entry())));
 
         for (int i = 0; i < 3; i++) authManager.doAuth(request("10.0.0.2"), entry());
 
         // 计数未清零的话，第 4 次即被锁定，认证器只会调用 3 次
         Assert.assertEquals(calls.get(), 4);
+    }
+
+    // doAuth 返回 null（免认证）或 PASS 结果均视为放行
+    private static boolean pass(AuthResult result) {
+        return result == null || (result.status() == AuthResult.Status.PASS && result.getPrincipal() != null);
     }
 
     private static AuthManager manager(int maxFailures, int windowSeconds) throws Exception {

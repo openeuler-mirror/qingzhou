@@ -137,7 +137,8 @@ public class OAuth2Handler implements HttpHandler {
         }
 
         String[] roles = new String[]{"admin"}; // todo 从本地数据库查询用户角色
-        tokenService.sendToken(user, roles, response);
+        tokenService.sendToken(request, user, roles, response);
+        response.redirect("/web"); // 管控台前端入口，登录成功后回到此处
     }
 
     private String exchangeCodeForAccessToken(String code, HttpResponse response) throws Exception {

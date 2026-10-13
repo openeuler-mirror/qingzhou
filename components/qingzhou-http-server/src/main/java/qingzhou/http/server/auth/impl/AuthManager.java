@@ -55,12 +55,14 @@ public class AuthManager {
      * 安全认证：多认证器聚合——任一 PASS 即放行；首个显式 REJECT 优先拒绝（客户端已出示凭据，须明确告知 401）；
      * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。
      * 免认证标记取自 handlerEntry（随注册路径）；不提供全局免认证开关，避免一处配置放通全站。
+     *
+     * @return null 表示放行（免认证或认证通过，PASS 结果可携带续期 Set-Cookie）；否则为拒绝结果
      */
-    public boolean doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
-        if (handlerEntry.noAuth) return true;
+    public AuthResult doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
+        if (handlerEntry.noAuth) return null;
 
         String host = httpRequest.getRemoteHost();
-        if (lockout.isLocked(host)) return false;
+        if (lockout.isLocked(host)) return AuthResult.reject("auth lockout");
 
         AuthResult authResult = authenticate(httpRequest);
 
@@ -68,7 +70,7 @@ public class AuthManager {
         if (authResult.status() == AuthResult.Status.PASS && authResult.getPrincipal() != null) {
             lockout.clear(host);
             httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
-            return true;
+            return authResult;
         }
 
         // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
@@ -84,7 +86,8 @@ public class AuthManager {
         }
 
         logger.warn("http authentication rejected: " + reason);
-        return false;
+        return authResult.status() == AuthResult.Status.REJECT ? authResult
+                : AuthResult.reject("no credential provided"); // PASS 而无主体属模糊态：按无凭据拒绝
     }
 
     private AuthResult authenticate(HttpRequest request) {

@@ -1,6 +1,7 @@
 package qingzhou.auth;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -15,22 +16,25 @@ import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 @Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + AuthHandler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
-                HttpHandler.HANDLE_METHODS + "=POST",// 防密码经 GET 进入 URL/访问日志
                 HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class AuthHandler implements HttpHandler {
     public static final String ROOT_PATH = "/auth";
     private static final String LOGIN_PATH = ROOT_PATH + "/login";
     private static final String LOGOUT_PATH = ROOT_PATH + "/logout";
+    private static final String SESSION_PATH = ROOT_PATH + "/session";
 
     @Reference
     private Crypto crypto;
     @Reference
     private TokenService tokenService;
+    @Reference
+    private Json json;
     @Reference
     private Logger logger;
 
@@ -73,14 +77,20 @@ public class AuthHandler implements HttpHandler {
     public void handle(HttpRequest request, HttpResponse response) {
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
-        if (path.equals(LOGIN_PATH)) {
-            if (request.getRawUri().contains("?")) { // 凭据只允许经请求体传递，防止密码进入 URL/访问日志
+        // 凭据只允许经 POST 请求体传递，防止密码进入 URL/访问日志；session 为 GET 探测
+        boolean isPost = "POST".equals(request.getMethod());
+        if (path.equals(LOGIN_PATH) && isPost) {
+            if (request.getRawUri().contains("?")) {
                 response.status(400).finish();
                 return;
             }
             login(request, response);
-        } else if (path.equals(LOGOUT_PATH)) {
+        } else if (path.equals(LOGOUT_PATH) && isPost) {
             logout(request, response);
+        } else if (path.equals(SESSION_PATH) && "GET".equals(request.getMethod())) {
+            session(request, response);
+        } else if (path.equals(LOGIN_PATH) || path.equals(LOGOUT_PATH) || path.equals(SESSION_PATH)) {
+            response.status(405).finish();
         } else {
             response.status(400).finish();
         }
@@ -120,7 +130,34 @@ public class AuthHandler implements HttpHandler {
         }
 
         lockout.clear(lockKey);
-        tokenService.sendToken(reqUser, roles, response);
+        tokenService.sendToken(request, reqUser, roles, response);
+        Map<String, Object> body = new HashMap<>();
+        body.put("user", reqUser);
+        response.contentTypeJsonUtf8().send(jsonBody(body)).finish();
+    }
+
+    /**
+     * 会话探测：前端路由守卫与用户名展示的唯一依据
+     * （会话 cookie 为 HttpOnly，前端无法自行判断登录态，OAuth2 回调后更是如此）
+     */
+    private void session(HttpRequest request, HttpResponse response) {
+        Object[] userRoles = tokenService.verifyToken(tokenService.retrieveToken(request));
+        if (userRoles == null) {
+            response.status(401).finish();
+            return;
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", userRoles[0]);
+        body.put("roles", userRoles[1]);
+        response.contentTypeJsonUtf8().send(jsonBody(body)).finish();
+    }
+
+    private String jsonBody(Map<String, Object> body) {
+        try {
+            return json.toJson(body);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
