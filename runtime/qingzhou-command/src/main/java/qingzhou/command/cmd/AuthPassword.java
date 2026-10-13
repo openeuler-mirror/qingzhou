@@ -33,11 +33,10 @@ public class AuthPassword extends Processor {
 
             // 从接口取 Method：实现类是包级私有的，直接用其 Class 反射会 invoke 失败
             Class<?> messageDigestApi = loader.loadClass("qingzhou.crypto.MessageDigest");
-            Method digest = messageDigestApi.getMethod("digest", String.class, String.class, int.class, int.class);
+            Method digest = messageDigestApi.getMethod("digest", String.class);
 
             log("------------------------- Password Digest --------------------------");
-            // 与 InitInstance 保持同一基线：PBKDF2（20 万次迭代）替代弱摘要，旧摘要仍可经 matches 校验
-            log((String) digest.invoke(messageDigest, password, "PBKDF2WithHmacSHA256", 16, 200000));
+            log((String) digest.invoke(messageDigest, password));
             log("------------------------- End -------------------------------------");
         }
     }

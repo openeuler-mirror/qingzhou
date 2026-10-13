@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-http-server</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
@@ -58,7 +63,7 @@
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation,
                             qingzhou.http.server,qingzhou.http.client,
-                            qingzhou.logger,qingzhou.json,qingzhou.crypto
+                            qingzhou.logger,qingzhou.json,qingzhou.common,qingzhou.crypto
                         </Import-Package>
                     </instructions>
                 </configuration>

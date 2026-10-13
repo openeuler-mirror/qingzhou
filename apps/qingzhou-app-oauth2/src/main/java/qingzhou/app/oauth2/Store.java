@@ -21,9 +21,6 @@ public final class Store {
     private static final String DEFAULT_SCOPE = "read";
     private static final String TOKEN_TYPE = "bearer";
 
-    private static final String SECRET_ALGORITHM = "SHA-256";
-    private static final int SECRET_SALT_LENGTH = 16;
-    private static final int SECRET_ITERATIONS = 1000;
     private static final String[] SECRET_COLUMNS = {"client_secret", "password"};
 
     private static final String[] SCHEMA = {
@@ -288,7 +285,7 @@ public final class Store {
     private Object storedValue(String column, String value) {
         for (String secretColumn : SECRET_COLUMNS) {
             if (secretColumn.equals(column)) {
-                return Security.isEmpty(value) ? value : messageDigest.digest(value, SECRET_ALGORITHM, SECRET_SALT_LENGTH, SECRET_ITERATIONS);
+                return Security.isEmpty(value) ? value : messageDigest.digest(value);
             }
         }
         return value;

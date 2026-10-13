@@ -13,6 +13,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
+import qingzhou.common.TempFiles;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
@@ -39,45 +40,18 @@ public class Invoke implements HttpHandler {
 
     private File uploadBase;
 
-    // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
-    private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
-
     @Activate
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
-        cleanLegacyUploads();
-    }
-
-    private void cleanLegacyUploads() {
-        File[] legacy = uploadBase.listFiles();
-        if (legacy == null) return;
-        for (File file : legacy) {
-            deleteRecursively(file);
-        }
-    }
-
-    private void cleanExpiredUploads() {
-        File[] files = uploadBase.listFiles();
-        if (files == null) return;
-        long expireBefore = System.currentTimeMillis() - TEMP_FILE_TTL_MILLIS;
-        for (File file : files) {
-            if (file.lastModified() < expireBefore) deleteRecursively(file);
-        }
-    }
-
-    private void deleteRecursively(File file) {
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                deleteRecursively(child);
-            }
-        }
-        file.delete();
+        TempFiles.cleanDir(uploadBase); // 清历史残留
     }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        cleanExpiredUploads();
+        // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
+        long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
+
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
             httpResponse.status(400).finish();

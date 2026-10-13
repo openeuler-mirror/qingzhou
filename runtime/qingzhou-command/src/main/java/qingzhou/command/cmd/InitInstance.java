@@ -103,10 +103,9 @@ public class InitInstance extends Processor {
 
         Object messageDigest = crypto.getClass().getMethod("getMessageDigest").invoke(crypto);
         Method digest = cryptoLoader.loadClass("qingzhou.crypto.MessageDigest")
-                .getMethod("digest", String.class, String.class, int.class, int.class);
+                .getMethod("digest", String.class);
         write(propsFile, putValue(read(propsFile), "qingzhou-auth.password",
-                // PBKDF2 替代简单迭代哈希：带盐 + 高迭代次数（200000），抗离线爆破；旧 SHA-256 摘要仍可经 matches 校验
-                (String) digest.invoke(messageDigest, password, "PBKDF2WithHmacSHA256", 16, 200000)));
+                (String) digest.invoke(messageDigest, password)));
         log("admin password updated");
     }
 

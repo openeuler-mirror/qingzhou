@@ -23,6 +23,11 @@ class MessageDigestImpl implements MessageDigest {
     }
 
     @Override
+    public String digest(String text) {
+        return digest(text, "PBKDF2WithHmacSHA256", 16, 200000);
+    }
+
+    @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
         byte[] salt = null;
         if (saltLength > 0) {

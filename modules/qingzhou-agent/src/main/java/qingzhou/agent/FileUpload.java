@@ -13,6 +13,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.TempFiles;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.Constants;
 import qingzhou.http.server.HttpHandler;
@@ -35,27 +36,7 @@ public class FileUpload implements HttpHandler {
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
         uploadBase.mkdirs();
-        cleanLegacyUploads();
-    }
-
-    private void cleanLegacyUploads() {
-        File[] legacy = uploadBase.listFiles();
-        if (legacy == null) return;
-        for (File file : legacy) {
-            file.delete();
-        }
-    }
-
-    private void cleanExpiredUploads() {
-        File[] files = uploadBase.listFiles();
-        if (files == null) return;
-
-        // 运行期惰性清理：分片上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘
-        long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
-        long expireBefore = System.currentTimeMillis() - TEMP_FILE_TTL_MILLIS;
-        for (File file : files) {
-            if (file.lastModified() < expireBefore) file.delete();
-        }
+        TempFiles.cleanDir(uploadBase); // 清历史残留
     }
 
     @Override
@@ -65,7 +46,9 @@ public class FileUpload implements HttpHandler {
         byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
         ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, context,
                 requestData -> {
-                    cleanExpiredUploads();
+                    // 运行期惰性清理：分片上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘
+                    long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+                    TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
                     return processFileUpload(requestData, uploadKey);
                 });
     }
