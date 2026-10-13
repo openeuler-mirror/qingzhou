@@ -92,18 +92,13 @@ public class OAuth2Handler implements HttpHandler {
             // state Cookie 必须 Lax：回调是 IdP 发起的跨站顶级 GET 导航，Strict 不会被携带，登录必然失败
             response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
                             + "; Path=" + ROOT_PATH
-                            + "; Max-Age=600; HttpOnly; SameSite=Lax" + secureAttr(request))
+                            + "; Max-Age=600; HttpOnly; SameSite=Lax" + tokenService.cookieSecure(request))
                     .redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
             response.status(400).finish();
         }
-    }
-
-    // TLS 在反代终结时后端 scheme 为 http，按 scheme 判定会漏发 Secure；令牌类 Cookie 不加 Secure 可经明文 http 窃取
-    private String secureAttr(HttpRequest request) {
-        return "https".equals(request.getScheme()) ? "; Secure" : "";
     }
 
     private String buildAuthorizationUrl(String state) {
@@ -132,7 +127,7 @@ public class OAuth2Handler implements HttpHandler {
         }
         // state 一次性使用：校验通过立即作废 Cookie，防止 600 秒窗口内被重复提交
         response.header("Set-Cookie", CSRF_COOKIE_NAME + "=; Path=" + ROOT_PATH
-                + "; Max-Age=0; HttpOnly; SameSite=Lax" + secureAttr(request));
+                + "; Max-Age=0; HttpOnly; SameSite=Lax" + tokenService.cookieSecure(request));
 
         String code = request.getParameter("code");
         if (code == null) {

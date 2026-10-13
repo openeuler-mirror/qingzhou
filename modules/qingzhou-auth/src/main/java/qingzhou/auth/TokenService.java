@@ -120,7 +120,7 @@ public class TokenService {
 
     // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时按 scheme 判定会漏发，
     // 可用 cookie_secure=true/false 显式覆盖（auto 按请求 scheme）
-    private String cookieSecure(HttpRequest request) {
+    public String cookieSecure(HttpRequest request) {
         if ("true".equals(secureCookie)) return "; Secure";
         if ("false".equals(secureCookie)) return "";
         return "https".equals(request.getScheme()) ? "; Secure" : "";

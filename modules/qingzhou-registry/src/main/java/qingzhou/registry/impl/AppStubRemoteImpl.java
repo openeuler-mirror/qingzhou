@@ -76,7 +76,7 @@ class AppStubRemoteImpl implements AppStubRemote {
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
-                    // 与 agent 侧 ProcessHandler 的响应绑定对应：以请求明文的 SHA-256 作 AAD，拒绝被重放的旧响应
+                    // 与 agent 侧 ProcessHandler 的响应绑定对应：以请求明文的 SHA-256 作 AAD，将响应绑定到本次请求，防止响应被替换到其他请求
                     byte[] responseAad = crypto.getMessageDigest().sha256(data);
                     byte[] decrypted = cipher.decrypt(responseBody, responseAad);
                     ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);

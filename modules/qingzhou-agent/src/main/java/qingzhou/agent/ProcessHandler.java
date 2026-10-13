@@ -80,7 +80,7 @@ class ProcessHandler {
         // 加密响应数据
         byte[] encrypt;
         try {
-            // 响应新鲜性绑定：以请求明文的 SHA-256 作为响应 GCM 的 AAD，
+            // 响应绑定：以请求明文的 SHA-256 作为响应 GCM 的 AAD，
             // 旧响应无法被重放为对其他请求的有效应答（请求不同则 AAD 不匹配，解密失败）
             byte[] responseAad = crypto.getMessageDigest().sha256(requestData);
             encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), responseAad);
