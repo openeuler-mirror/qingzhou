@@ -7,13 +7,7 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.api.FieldType;
-import qingzhou.api.action.Monitor;
 import qingzhou.dto.Constants;
-import qingzhou.dto.RequestImpl;
-import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -31,7 +25,6 @@ public class PrometheusEndpoint implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        // todo 缺少 PermissionChecker 权限验证？
         Map<String, MetricGroup> groups = new LinkedHashMap<>();
 
         for (String appCode : registry.getAllLocalApps()) {
@@ -67,47 +60,18 @@ public class PrometheusEndpoint implements HttpHandler {
             }
         }
 
-        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8").send(result.toString()).finish();
+        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8")
+                .send(result.toString())
+                .finish();
     }
 
     private void collect(Map<String, MetricGroup> groups, String instanceId, String appCode, AppStub stub) {
-        AppMeta appMeta = stub.getAppMeta();
-        if (appMeta == null || appMeta.getApp() == null || appMeta.getApp().models == null) return;
+        // 执行本地和远程应用的 monitor 动作，收集监控指标
+        List<MonitorCollector.MonitorField> monitorFields = MonitorCollector.collectFields(instanceId, appCode, stub);
 
-        for (Model model : appMeta.getApp().models) {
-            if (!hasMonitorAction(model)) continue;
-
-            RequestImpl request = new RequestImpl();
-            request.setInstance(instanceId);
-            request.setApp(appCode);
-            request.setModel(model.code);
-            request.setAction(Monitor.ACTION_CODE_MONITOR);
-            try {
-                stub.invokeApp(request);
-            } catch (Throwable t) {
-                logger.debug("skip model metric invocation failed: " + model.code, t);
-                continue;
-            }
-
-            Object data = request.getResponse().getData();
-            if (!(data instanceof Map)) continue;
-            @SuppressWarnings("unchecked")
-            Map<String, String> monitorData = (Map<String, String>) data;
-
-            for (ModelField field : model.fields) {
-                if (field.field_type != FieldType.monitor) continue;
-                String value = monitorData.get(field.code);
-                if (value == null) continue;
-                addMetric(groups, instanceId, appCode, model.code, field, value);
-            }
+        for (MonitorCollector.MonitorField f : monitorFields) {
+            addMetric(groups, instanceId, appCode, f.modelCode, f.field, f.value);
         }
-    }
-
-    private boolean hasMonitorAction(Model model) {
-        for (ModelAction action : model.actions) {
-            if (Monitor.ACTION_CODE_MONITOR.equals(action.code)) return true;
-        }
-        return false;
     }
 
     private void addMetric(Map<String, MetricGroup> groups, String instanceId, String appCode,
