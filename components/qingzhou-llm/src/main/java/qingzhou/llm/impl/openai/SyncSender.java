@@ -52,7 +52,7 @@ class SyncSender {
                 }
                 messages.add(msg);
                 for (ToolCallInfo toolCall : toolCalls) {
-                    messages.add(builder.buildToolMessage(toolCall.id, Utils.invokeTool(toolCall, activeTools, json, builder.getInterceptor())));
+                    messages.add(builder.buildToolMessage(toolCall.getId(), Utils.invokeTool(toolCall, activeTools, json, builder.getInterceptor())));
                 }
             }
             Utils.println("Tool iterations have reached the limit: " + builder.getMaxToolIterations());

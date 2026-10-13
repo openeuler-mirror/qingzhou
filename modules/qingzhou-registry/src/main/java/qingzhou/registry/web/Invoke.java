@@ -39,6 +39,9 @@ public class Invoke implements HttpHandler {
 
     private File uploadBase;
 
+    // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
+    private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+
     @Activate
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
@@ -50,6 +53,15 @@ public class Invoke implements HttpHandler {
         if (legacy == null) return;
         for (File file : legacy) {
             deleteRecursively(file);
+        }
+    }
+
+    private void cleanExpiredUploads() {
+        File[] files = uploadBase.listFiles();
+        if (files == null) return;
+        long expireBefore = System.currentTimeMillis() - TEMP_FILE_TTL_MILLIS;
+        for (File file : files) {
+            if (file.lastModified() < expireBefore) deleteRecursively(file);
         }
     }
 
@@ -65,6 +77,7 @@ public class Invoke implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        cleanExpiredUploads();
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
             httpResponse.status(400).finish();

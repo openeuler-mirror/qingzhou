@@ -2,6 +2,7 @@ package qingzhou.llm.impl.openai;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
@@ -116,6 +117,8 @@ class OpenAiChatModel implements ChatModel {
 
         private final StringBuilder content = new StringBuilder();
         private final StringBuilder reasoningContent = new StringBuilder();
+        // 本轮服务端实际使用的思考字段名（reasoning / reasoning_content），按请求持有而非存于共享 builder
+        private final AtomicReference<String> reasoningField = new AtomicReference<>();
         private final Map<Integer, ToolCallInfo> toolCalls = new TreeMap<>();
         private boolean streamRetried; // 流式读取中断后是否已重发过（仅允许一次，避免重复输出）
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
@@ -158,7 +161,7 @@ class OpenAiChatModel implements ChatModel {
                 Map<String, Object> delta = (Map<String, Object>) choice.get("delta");
                 if (delta == null) return;
 
-                String reasoning = builder.extractReasoning(delta);
+                String reasoning = builder.extractReasoning(delta, reasoningField);
                 if (!reasoning.isEmpty()) {
                     chatListener.onReasoning(reasoning);
                     reasoningContent.append(reasoning);
@@ -210,7 +213,7 @@ class OpenAiChatModel implements ChatModel {
 
                 if (!toolCalls.isEmpty()) {
                     // 前次的思考内容在后面轮次请求时也会提交，（deepseek 要求存在tool参数时，将前面的思维链内容带上）
-                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
+                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), reasoningField.get(), toolCalls.values()));
 
                     chatListener.onReasoningPause();
                     for (ToolCallInfo toolCallInfo : toolCalls.values()) {

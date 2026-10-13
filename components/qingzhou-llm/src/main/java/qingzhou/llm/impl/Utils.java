@@ -14,7 +14,7 @@ import qingzhou.llm.Tool;
 
 public class Utils {
     public static void println(String msg) {
-        System.err.println(msg); // 方便TW等集成，不用Logger对象
+        System.err.println(msg); // 方便TW等集成，不用 Logger 对象
     }
 
     public static String errorMessage(Throwable t) {
@@ -93,7 +93,9 @@ public class Utils {
         if (toolCallInfo.getArguments() != null && !toolCallInfo.getArguments().isEmpty()) {
             try {
                 args = json.fromJson(toolCallInfo.getArguments(), Map.class);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                // 解析失败须留痕：args 以 null 传入工具会让模型收到误导性错误，无日志则难排查
+                println("failed to parse tool arguments of [" + toolCallInfo.getName() + "]: " + errorMessage(e));
             }
         }
 
@@ -106,7 +108,7 @@ public class Utils {
             return tool.invoke(args);
         } catch (Throwable t) {
             // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
-            return "Error: " + Utils.errorMessage(t);
+            return "Error: " + errorMessage(t);
         }
     }
 

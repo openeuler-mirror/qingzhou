@@ -99,6 +99,7 @@ public class Command { // 由 Launcher 来调用
         while (cmd.startsWith("-")) {
             cmd = cmd.substring(1);
         }
+        if (cmd.isEmpty()) return AcceptStatus.none; // 纯 "-" 输入剥完为空串：startsWith("") 会模糊命中全部命令
         boolean equals = Objects.equals(processor.name(), cmd);
         if (equals) {
             return AcceptStatus.full;

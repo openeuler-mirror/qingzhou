@@ -1,7 +1,7 @@
 package qingzhou.llm.impl.openai;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import qingzhou.crypto.Crypto;
@@ -27,8 +27,6 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     private ReasoningEffort effort;
     private ImageDetail imageDetail;
     private ResponseFormat format;
-
-    private String reasoningField;
 
     public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json, Crypto crypto) {
         super(baseUrl, apiKey, model);
@@ -179,15 +177,18 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
      * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
      * DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
+     * <p>
+     * 字段名经 fieldRef 交由调用方按请求持有：builder 会被并发对话共享，
+     * 存实例字段会跨请求互相覆盖，导致思考内容以错误的字段名回传。
      */
-    String extractReasoning(Map<String, Object> delta) {
+    String extractReasoning(Map<String, Object> delta, AtomicReference<String> fieldRef) {
         Object value = delta.get("reasoning");
         if (value != null) {
-            reasoningField = "reasoning";
+            fieldRef.set("reasoning");
         } else {
             value = delta.get("reasoning_content");
             if (value != null) {
-                reasoningField = "reasoning_content";
+                fieldRef.set("reasoning_content");
             }
         }
 
@@ -204,7 +205,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      * reasoningField 本轮服务端实际使用的思考字段名（reasoning / reasoning_content）。
      * 思考内容需按原字段名回传，否则部分服务端（如 deepseek）会校验失败。
      */
-    Map<String, Object> buildAssistantMessage(String content, String reasoning, Collection<ToolCallInfo> toolCalls) {
+    Map<String, Object> buildAssistantMessage(String content, String reasoning, String reasoningField, Collection<ToolCallInfo> toolCalls) {
         List<Map<String, Object>> calls = new ArrayList<>();
         if (toolCalls != null) {
             for (ToolCallInfo tc : toolCalls) {

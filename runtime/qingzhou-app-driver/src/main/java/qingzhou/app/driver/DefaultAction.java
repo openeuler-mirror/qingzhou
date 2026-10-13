@@ -90,7 +90,6 @@ public class DefaultAction {
         int pageNum = parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM), 1);
         int pageSize = Math.min(parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE), 10), 100);
         List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
-        int totalSize = page.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
             Map<String, Object> finalResult = new HashMap<>();
@@ -105,7 +104,8 @@ public class DefaultAction {
             finalResult.put("data", listResult);
             finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
             finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
-            finalResult.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, totalSize);
+            // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, page.totalSize(query));
             response.data(finalResult);
         }
     }

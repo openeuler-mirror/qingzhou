@@ -136,12 +136,13 @@ public class InitInstance extends Processor {
             for (int i = 0; i < 4; i++) out.write(line);
             out.flush();
         }
-        outputDrainer.join();
+        // 先等进程退出（带超时），再收拢排空线程：join 放在前面时，keytool 挂起会让排空线程
+        // 永远阻塞在 read 上，下方的超时保护实际不可达
         if (!process.waitFor(60, java.util.concurrent.TimeUnit.SECONDS)) { // 挂起即强杀，避免 init 命令永久阻塞
             process.destroyForcibly();
-            throw new IllegalStateException("keytool timed out: " + output);
         }
-        if (process.exitValue() != 0) {
+        outputDrainer.join(5_000);
+        if (process.isAlive() || process.exitValue() != 0) {
             throw new IllegalStateException("keytool failed: " + output);
         }
     }
@@ -237,7 +238,9 @@ public class InitInstance extends Processor {
         String[] lines = content.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].trim().startsWith(key + "=")) {
-                lines[i] = key + "=" + value; // 有该配置项则整行替换，其余行与注释原样保留
+                // 有该配置项则整行替换，其余行与注释原样保留；保留行尾 \r，避免 CRLF 文件被替换后行尾混杂
+                String cr = lines[i].endsWith("\r") ? "\r" : "";
+                lines[i] = key + "=" + value + cr;
                 return String.join("\n", lines);
             }
         }

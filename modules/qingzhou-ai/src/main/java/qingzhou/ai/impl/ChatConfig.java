@@ -1,10 +1,6 @@
 package qingzhou.ai.impl;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Component;
@@ -15,13 +11,14 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.llm.ChatModelFactory;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/config",
         service = {ChatConfig.class, HttpHandler.class})
 public class ChatConfig implements HttpHandler {
-    @Reference
-    private ChatModelFactory chatModelFactory; // 作用：利用 OSGI DS 机制，迫使本模块在没有加载 llm 的情况下不要初始化。
+    // 附件限额：与 ChatConfig 对前端的宣称一致（maxFiles=10、maxFileSize=5MB，base64 后约 6.7M 字符，留余量取 8M）
+    static final int MAX_ATTACHMENT_FILES = 10;
+    private static final int MAX_ATTACHMENT_MB = 10;
+    static final int MAX_ATTACHMENT_CHARS = MAX_ATTACHMENT_MB * 1_000_000;
 
     @Reference
     private Json json;
@@ -46,8 +43,8 @@ public class ChatConfig implements HttpHandler {
         data.put("prompts", prompts);
 
         Map<String, Object> attachments = new HashMap<>();
-        attachments.put("maxFiles", 10);
-        attachments.put("maxFileSize", 5);
+        attachments.put("maxFiles", MAX_ATTACHMENT_FILES);
+        attachments.put("maxFileSize", MAX_ATTACHMENT_MB);
         data.put("attachments", attachments);
 
         String jsonData = json.toJson(data);

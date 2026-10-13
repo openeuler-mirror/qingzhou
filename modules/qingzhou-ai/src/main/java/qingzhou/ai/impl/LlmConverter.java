@@ -85,9 +85,8 @@ public final class LlmConverter {
             try {
                 return toolService.invoke(toolArgs);
             } catch (Exception e) {
-                throw new RuntimeException(
-                        toolArgs != null ? toolArgs.toString() : e.getMessage(),
-                        e);
+                // 仅回传工具名与异常概要：toolArgs 可能含业务数据，原样外泄会随 RUN_ERROR 事件到达客户端/日志
+                throw new RuntimeException("tool [" + name + "] invocation failed: " + e.getMessage(), e);
             }
         });
     }

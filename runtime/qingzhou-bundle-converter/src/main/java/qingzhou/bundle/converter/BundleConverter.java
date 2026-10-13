@@ -35,7 +35,7 @@ public class BundleConverter {
             throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
         }
         try {
-            unZipToDir(sourceJar, appTmpDir);
+            unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
 
             // 生成注解文件
             if (classPool == null) {
@@ -126,7 +126,7 @@ public class BundleConverter {
             throw new IllegalStateException("app-driver directory not found under: " + libDir);
         }
         for (File driverJarFile : driverJarFiles) {
-            unZipToDir(driverJarFile, appTmpDir);
+            unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
         }
     }
 
@@ -341,7 +341,9 @@ public class BundleConverter {
         }
     }
 
-    private void unZipToDir(File srcFile, File unZipDir) throws IOException {
+    // @param overwrite true 时覆盖已存在的目标文件：driver 解压须置于应用之后且覆盖同名类，
+    //                  否则应用 jar 自带的 qingzhou/app/driver/ 同名类会遮蔽真正的驱动实现
+    private void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
@@ -354,7 +356,9 @@ public class BundleConverter {
                     targetFile.mkdirs();
                 } else {
                     Path targetFilePath = targetFile.toPath();
-                    if (!Files.exists(targetFilePath)) { // 不要让 app-driver 里面的 META-INF.MANIFEST.MF 覆盖了 应用 jar 里面的 META-INF.MANIFEST.MF
+                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
+                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
+                    if (overwrite || !Files.exists(targetFilePath)) {
                         targetFile.getParentFile().mkdirs();
                         try (OutputStream out = Files.newOutputStream(targetFilePath)) {
                             FileUtil.copyStream(zip.getInputStream(entry), out);

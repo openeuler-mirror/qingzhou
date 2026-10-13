@@ -41,8 +41,10 @@ public class AppList implements HttpHandler {
             }
             registry.getAllRemoteInstances().forEach(instance -> {
                 InstanceInfo remoteInstance = registry.getRemoteInstance(instance);
-                registry.getAllRemoteApps(instance).forEach(appCode -> {
-                    // 实例可能在遍历期间被健康检查移除，stub/meta 存在 NPE 窗口
+                // 实例可能被健康检查并发移除，应用列表/实例信息均可能为 null
+                List<String> remoteApps = registry.getAllRemoteApps(instance);
+                if (remoteApps == null || remoteInstance == null) return;
+                remoteApps.forEach(appCode -> {
                     AppStub stub = registry.getRemoteApp(instance, appCode);
                     if (stub == null || stub.getAppMeta() == null) return;
                     appBasicInfoList.add(appInfo(remoteInstance, stub.getAppMeta().getApp(), lang));

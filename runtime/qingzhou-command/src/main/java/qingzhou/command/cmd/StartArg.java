@@ -13,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,8 +40,6 @@ public class StartArg extends Processor {
         Map<String, String> properties = parseConfig(configFile);
         List<String> jvmConfig = getJvmArgs(properties);
 
-        // prepare javaCmd：Windows 的可执行文件带 .exe 后缀
-        boolean windows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
         String javaCmd = Paths.get(System.getProperty("java.home"), "bin", windows ? "java.exe" : "java").toString();
         // 构造启动命令
         StringBuilder startCmd = new StringBuilder("\"" + javaCmd + "\"");
@@ -67,8 +64,8 @@ public class StartArg extends Processor {
                     continue;
                 }
                 // jvm.arg 经 sh 的 eval 执行，`$()`/反引号等会被 shell 展开构成命令注入；
-                // 引号同样会破坏 eval 的命令结构（与 wrap 的引号拒绝一致），一并拒绝
-                if (containsShellMeta(s) || s.contains("\"")) {
+                // 引号会破坏 eval 的命令结构；Windows 下 bat 的 %VAR% 展开构成环境变量注入，一并拒绝
+                if (containsShellMeta(s) || s.contains("\"") || (windows && s.contains("%"))) {
                     logStartInfo("ignore jvm arg with unsafe characters: " + s);
                     continue;
                 }
@@ -93,8 +90,9 @@ public class StartArg extends Processor {
 
     private static final DateTimeFormatter LOG_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    // 输出走 stderr：stdout 是传给 standalone 脚本的启动命令契约，告警混入会破坏 eval 内容
     protected void logStartInfo(String msg) {
-        System.out.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
+        System.err.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
     }
 
     private String wrap(String str) { // 兼容启动参数中包含中文空格

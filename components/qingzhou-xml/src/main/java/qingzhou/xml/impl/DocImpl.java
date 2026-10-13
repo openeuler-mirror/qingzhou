@@ -2,10 +2,7 @@ package qingzhou.xml.impl;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -101,7 +98,8 @@ class DocImpl implements Doc {
 
         // 临时文件 + 原子替换：直接覆盖在崩溃/磁盘满时会留下半截 XML 配置
         Path target = file.toPath();
-        Path temp = Files.createTempFile(target.getParent(), file.getName(), ".tmp");
+        Path parent = target.getParent() != null ? target.getParent() : Paths.get("."); // 相对路径无父目录
+        Path temp = Files.createTempFile(parent, file.getName(), ".tmp");
         try {
             try (FileOutputStream outputStream = new FileOutputStream(temp.toFile())) {
                 transformer.transform(new DOMSource(dom), new StreamResult(outputStream));

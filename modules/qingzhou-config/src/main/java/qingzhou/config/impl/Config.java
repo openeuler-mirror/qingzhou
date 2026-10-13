@@ -98,6 +98,9 @@ public class Config {
             if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) continue;
 
             int pidIndex = configKey.indexOf(".");
+            if (pidIndex <= 0) { // 键须形如 "<pid>.<property>"：缺失时中止并给出键名，避免 substring(0, -1) 越界
+                throw new IllegalStateException("invalid config key (expected '<pid>.<property>'): " + configKey);
+            }
             configMap.computeIfAbsent(configKey.substring(0, pidIndex), pid -> new HashMap<>())
                     .put(configKey.substring(pidIndex + 1), qzConfig.get(configKey));
         }

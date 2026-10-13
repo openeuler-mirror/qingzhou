@@ -22,7 +22,9 @@ public class NonceRegistry {
     private static final int MAX_TRACKED_NONCES = 100_000;
     private static final long PRUNE_INTERVAL_MILLIS = 2_000; // 回收的最小间隔（摊销）
 
-    // nonce → 登记时间。CHM 的 putIfAbsent 提供原子登记，热路径无全局锁
+    // nonce → 过期时间（登记时间 + 调用方自己的 TTL）。CHM 的 putIfAbsent 提供原子登记，热路径无全局锁。
+    // 按各自 TTL 存过期时间而非登记时间：本表被多个协议共用（时间窗不同），
+    // 若按"当前调用方"的窗口统一剪枝，短窗调用方会提前清掉长窗协议仍在有效期内的 nonce，削弱其防重放边界
     private final Map<String, Long> nonces = new ConcurrentHashMap<>();
     private volatile long lastPruneAt;
 
@@ -30,26 +32,25 @@ public class NonceRegistry {
      * 原子登记 nonce。
      *
      * @param nonce     报文唯一标识，同一 nonce 第二次登记即为重放
-     * @param timestamp 报文时间戳，用于过期回收
-     * @param ttlMillis 生存期：早于 {@code timestamp - ttlMillis} 的记录会被回收
+     * @param timestamp 报文时间戳，用于计算过期时间
+     * @param ttlMillis 生存期：nonce 自 {@code timestamp} 起保留 {@code ttlMillis} 后可回收
      * @return true 表示首次登记成功；false 表示此前已登记（重放）
      */
     public boolean registerIfAbsent(String nonce, long timestamp, long ttlMillis) {
-        pruneExpired(timestamp, ttlMillis);
-        // 容量满时主动淘汰最旧记录腾出空间，而非拒绝新登记：防止 nonce 洪水耗尽容量后把正常请求当成重放拒绝（DoS）。
+        pruneExpired(timestamp);
+        // 容量满时主动淘汰最早过期记录腾出空间，而非拒绝新登记：防止 nonce 洪水耗尽容量后把正常请求当成重放拒绝（DoS）。
         // 被淘汰的多为已过期项；极端洪水下可能丢弃少量有效项，仅放开一个极小的重放窗口，以可用性为优先
         if (nonces.size() >= MAX_TRACKED_NONCES) evictOldest();
-        return nonces.putIfAbsent(nonce, timestamp) == null;
+        return nonces.putIfAbsent(nonce, timestamp + ttlMillis) == null;
     }
 
-    private void pruneExpired(long now, long ttlMillis) {
+    private void pruneExpired(long now) {
         if (nonces.size() <= MAX_TRACKED_NONCES || now - lastPruneAt < PRUNE_INTERVAL_MILLIS) return;
         lastPruneAt = now;
-        long expireBefore = now - ttlMillis;
-        nonces.values().removeIf(ts -> ts < expireBefore);
+        nonces.values().removeIf(expireAt -> expireAt < now);
     }
 
-    // 有界堆一次遍历选出登记最早的 n 条（O(n log k)）：全量拷贝排序（O(n log n)）会在解密热路径上造成停顿
+    // 有界堆一次遍历选出最早过期的 n 条（O(n log k)）：全量拷贝排序（O(n log n)）会在解密热路径上造成停顿
     private void evictOldest() {
         int remove = Math.min(MAX_TRACKED_NONCES / 10, nonces.size());
         PriorityQueue<Map.Entry<String, Long>> newest = new PriorityQueue<>(remove + 1,

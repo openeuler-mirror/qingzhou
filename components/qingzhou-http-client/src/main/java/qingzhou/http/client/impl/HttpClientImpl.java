@@ -8,9 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.service.component.annotations.Activate;
@@ -20,11 +18,16 @@ import qingzhou.http.client.*;
 
 @Component
 public class HttpClientImpl implements HttpClient {
+    // 并发流式响应线程上限：超出后直接拒绝（快速失败），避免线程无限增长
+    private static final int MAX_STREAM_THREADS = 200;
+
     private ExecutorService executor;
 
     @Activate
     public void activate() {
-        executor = Executors.newCachedThreadPool(new ThreadFactory() {
+        // 有界线程池：每个流式响应独占一个线程直至读毕，无上限会在海量并发流式响应时耗尽线程资源
+        executor = new ThreadPoolExecutor(0, MAX_STREAM_THREADS, 60L, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new ThreadFactory() {
             private final AtomicInteger seq = new AtomicInteger();
 
             @Override
@@ -33,7 +36,7 @@ public class HttpClientImpl implements HttpClient {
                 thread.setDaemon(true);
                 return thread;
             }
-        });
+        }, new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Deactivate

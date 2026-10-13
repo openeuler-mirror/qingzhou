@@ -4,9 +4,12 @@ import java.io.Console;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
-public abstract class Processor { // 兼容 老版本，因此动这个要小心
+public abstract class Processor {
+    protected final boolean windows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+
     private File libDir;
 
     public File getLibDir() {

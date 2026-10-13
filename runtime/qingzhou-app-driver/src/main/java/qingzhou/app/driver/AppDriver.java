@@ -70,36 +70,45 @@ public class AppDriver implements BundleActivator {
     }
 
     <T> T getService(Class<T> serviceType, String name) {
-        Object found = serviceObjects.computeIfAbsent(serviceType.getName() + (name == null ? "" : "~" + name), c -> {
-            ServiceReference<?> serviceReference = null;
-            if (name != null) {
-                try {
-                    // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
-                    // 其中 *~ 是有意的通配前缀，只转义 name 本身
-                    String escapedName = escapeFilterValue(name);
-                    Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
-                            "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
-                    if (!serviceReferences.isEmpty()) {
-                        serviceReference = serviceReferences.iterator().next();
-                    }
-                } catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-            } else {
-                serviceReference = context.getServiceReference(serviceType);
-            }
-            if (serviceReference != null) {
-                serviceReferences.add(serviceReference);
-                Object service = context.getService(serviceReference);
-                if (service instanceof Logger) {
-                    service = new AppLogger(appMeta.getApp().code, (Logger) service);
-                }
-                return service;
-            }
-            return null;
-        });
+        String cacheKey = serviceType.getName() + (name == null ? "" : "~" + name);
+        Object cached = serviceObjects.get(cacheKey);
+        if (cached != null) return serviceType.cast(cached);
 
-        return (T) found;
+        T service = loadService(serviceType, name);
+        if (service != null) {
+            // 只缓存命中结果：目标服务可能晚于首次调用注册，缓存 null 会让其永远不可见
+            serviceObjects.put(cacheKey, service);
+        }
+        return service;
+    }
+
+    private <T> T loadService(Class<T> serviceType, String name) {
+        ServiceReference<?> serviceReference = null;
+        if (name != null) {
+            try {
+                // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
+                // 其中 *~ 是有意的通配前缀，只转义 name 本身
+                String escapedName = escapeFilterValue(name);
+                Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
+                        "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
+                if (!serviceReferences.isEmpty()) {
+                    serviceReference = serviceReferences.iterator().next();
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            serviceReference = context.getServiceReference(serviceType);
+        }
+        if (serviceReference != null) {
+            serviceReferences.add(serviceReference);
+            Object service = context.getService(serviceReference);
+            if (service instanceof Logger) {
+                service = new AppLogger(appMeta.getApp().code, (Logger) service);
+            }
+            return serviceType.cast(service);
+        }
+        return null;
     }
 
     // OSGi filter 为 LDAP 语法，值中的 \ * ( ) 必须转义：否则会破坏语法，
