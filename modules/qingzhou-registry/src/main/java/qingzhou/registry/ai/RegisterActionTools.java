@@ -11,10 +11,15 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
+import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
 import qingzhou.api.action.*;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.App;
+import qingzhou.dto.meta.annotation.Model;
+import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
@@ -25,6 +30,15 @@ import qingzhou.registry.web.WebUtil;
 @Component(immediate = true)
 public class RegisterActionTools {
     private static final String PAGE_NUM = "pageNum";
+
+    // 业务字段集合：写操作的字段清单依模型而定，无法静态声明，故收敛为一个 JSON 对象字符串参数
+    private static final String DATA = "data";
+
+    private static final Set<String> DATA_ACTIONS = new HashSet<>(Arrays.asList(
+            Add.ACTION_CODE_ADD, Update.ACTION_CODE_UPDATE));
+
+    private static final Set<String> ID_REQUIRED_ACTIONS = new HashSet<>(Arrays.asList(
+            Update.ACTION_CODE_UPDATE, Delete.ACTION_CODE_DELETE));
 
     @Reference
     private Registry registry;
@@ -67,6 +81,18 @@ public class RegisterActionTools {
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
             put(SwitchSpace.ACTION_CODE_SWITCHSPACE, "该接口将应用的模块切换到指定的空间上。");
             put(SwitchSpace.ACTION_CODE_CURRENTSPACE, "该接口返回应用当前使用的模块空间。");
+
+            put(Add.ACTION_CODE_ADD, "该接口在指定模块中新建一条业务数据，这是会影响真实数据的写操作。"
+                    + "调用前须先用获取模块详细信息的工具取得该模块的新增字段清单与校验规则，禁止凭常识猜测字段编码。"
+                    + DATA + " 为 JSON 对象字符串，形如 {\"字段编码\":\"值\"}，只提交清单内的字段，未提交的字段由后端取默认值；"
+                    + "多值字段用分隔符拼成一个字符串。"
+                    + "返回 success=true 表示新建成功；失败时返回内容会给出每个字段的错误原因，据其修正后可重试。");
+            put(Update.ACTION_CODE_UPDATE, "该接口更新指定模块中已有的一条业务数据，这是会影响真实数据的写操作。"
+                    + "只更新 " + DATA + " 中出现的字段，其余字段保持不变。"
+                    + "调用前须先用获取模块详细信息的工具取得该模块的更新字段清单与校验规则，禁止凭常识猜测字段编码。"
+                    + WebUtil.DATA_ID + " 为必需参数，用于指定要更新哪条记录。");
+            put(Delete.ACTION_CODE_DELETE, "该接口删除指定模块中的一条业务数据，此操作通常不可恢复，"
+                    + "执行前须向用户复述待删除的对象并取得确认。");
         }};
         tools.forEach((invokedActionCode, toolDescription) -> {
             String actionToolName = "app_model_action_" + invokedActionCode;
@@ -77,6 +103,8 @@ public class RegisterActionTools {
                 properties.put(ToolService.PARAMETER_NAME + ".5", PAGE_NUM);
                 properties.put(ToolService.PARAMETER_DESCRIPTION + ".5", "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
                 properties.put(ToolService.PARAMETER_REQUIRED + ".5", "false");
+            } else {
+                applyWriteProperties(invokedActionCode, properties);
             }
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
             ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
@@ -130,6 +158,13 @@ public class RegisterActionTools {
             request.setId(dataId);
         }
         applyPageNum(request, toolArgs.get(PAGE_NUM));
+        if (ID_REQUIRED_ACTIONS.contains(actionCode) && (dataId == null || dataId.isEmpty())) {
+            return "操作 " + actionCode + " 必须指定参数 " + WebUtil.DATA_ID + "。";
+        }
+
+        String rejected = applyBusinessData(request, app, modelCode, actionCode, toolArgs.get(DATA));
+        if (rejected != null) return rejected; // 参数不合法时不打到后端，把可修正的原因直接回给模型
+
         try {
             appStub.invokeApp(request);
         } catch (Throwable e) {
@@ -153,6 +188,155 @@ public class RegisterActionTools {
 
         String value = pageNum instanceof Number ? String.valueOf(((Number) pageNum).intValue()) : pageNum.toString().trim();
         request.getParameters().put(PAGE_NUM, value);
+    }
+
+    private static void applyWriteProperties(String actionCode, Hashtable<String, String> properties) {
+        boolean needsData = DATA_ACTIONS.contains(actionCode);
+        boolean needsId = ID_REQUIRED_ACTIONS.contains(actionCode);
+        if (!needsData && !needsId) return;
+
+        properties.put(ToolService.PARAMETER_DESCRIPTION + ".4", needsId
+                ? "待操作记录的唯一ID，" + actionCode + " 操作必须传入。"
+                : "新增操作无需此参数。");
+        if (needsId) {
+            properties.put(ToolService.PARAMETER_REQUIRED + ".4", "true");
+        }
+        if (!needsData) return;
+
+        properties.put(ToolService.PARAMETER_NAME + ".5", DATA);
+        properties.put(ToolService.PARAMETER_DESCRIPTION + ".5", "业务字段集合，JSON 对象字符串，键为字段编码、值为字符串，"
+                + "形如 {\"字段编码\":\"值\"}。字段编码与取值规则须先用获取模块详细信息的工具取得，不得凭猜测填写；"
+                + "只提交该操作允许的字段，多值字段用分隔符拼成一个字符串。");
+        properties.put(ToolService.PARAMETER_REQUIRED + ".5", "true");
+    }
+
+    private String applyBusinessData(RequestImpl request, App app, String modelCode,
+                                     String actionCode, Object dataArg) {
+        if (!DATA_ACTIONS.contains(actionCode)) return null;
+
+        Model model = findModel(app, modelCode);
+        if (model == null) return "模块不存在：" + modelCode;
+        if (!hasAction(model, actionCode)) {
+            return "模块 " + modelCode + " 不支持操作 " + actionCode + "，可用操作：" + actionCodes(model);
+        }
+
+        Map<String, Object> data = parseDataObject(dataArg);
+        if (data == null) {
+            return "参数 " + DATA + " 须是 JSON 对象字符串，形如 {\"字段编码\":\"值\"}。当前值：" + dataArg;
+        }
+        if (data.isEmpty()) return "参数 " + DATA + " 未包含任何字段。";
+
+        boolean forAdd = Add.ACTION_CODE_ADD.equals(actionCode);
+        Map<String, ModelField> allowedFields = allowedFields(model, forAdd);
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            ModelField field = allowedFields.get(entry.getKey());
+            if (field == null) {
+                return "字段 " + entry.getKey() + " 不允许在 " + actionCode + " 操作中提交。可用字段："
+                        + describeFields(allowedFields);
+            }
+            request.getParameters().put(entry.getKey(), stringify(entry.getValue(), field.separator));
+        }
+        return null;
+    }
+
+    // 口径与 DefaultAction 的取值、Validation 的校验保持一致：form 类型、本操作可写、非只读非 ID 非文件
+    private static Map<String, ModelField> allowedFields(Model model, boolean forAdd) {
+        Map<String, ModelField> fields = new LinkedHashMap<>();
+        for (ModelField field : model.fields) {
+            if (field.field_type != FieldType.form) continue;
+            if (forAdd ? !field.add : !field.update) continue;
+            if (field.readonly || field.id) continue;
+            if (field.file || field.input_type == InputType.file) continue;
+            fields.put(field.code, field);
+        }
+        return fields;
+    }
+
+    // 拒绝提示里附上字段清单，模型改一次就能对，不必再调一次模块详情
+    private static String describeFields(Map<String, ModelField> fields) {
+        StringBuilder text = new StringBuilder();
+        for (Map.Entry<String, ModelField> entry : fields.entrySet()) {
+            ModelField field = entry.getValue();
+            if (text.length() > 0) text.append("; ");
+
+            text.append(entry.getKey()).append('(').append(fieldName(field));
+            if (field.required) text.append(",必填");
+            if (field.options != null && field.options.length > 0) {
+                text.append(",可选值:").append(String.join("|", field.options));
+            }
+            if (field.min_value != Long.MIN_VALUE || field.max_value != Long.MAX_VALUE) {
+                text.append(",数值:").append(field.min_value == Long.MIN_VALUE ? "不限" : String.valueOf(field.min_value))
+                        .append('~').append(field.max_value == Long.MAX_VALUE ? "不限" : String.valueOf(field.max_value));
+            }
+            if (field.min_length != -1 || field.max_length != Integer.MAX_VALUE) {
+                text.append(",长度:").append(field.min_length).append('~').append(field.max_length);
+            }
+            if (field.pattern != null && !field.pattern.isEmpty()) {
+                text.append(",格式:").append(field.pattern);
+            }
+            if (field.default_value != null && !field.default_value.isEmpty()) {
+                text.append(",默认:").append(field.default_value);
+            }
+            if (field.display != null && !field.display.isEmpty()) {
+                text.append(",仅当 ").append(field.display).append(" 时提交");
+            }
+            text.append(')');
+        }
+        return text.toString();
+    }
+
+    private static String fieldName(ModelField field) {
+        return field.name == null || field.name.length == 0 ? "" : field.name[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseDataObject(Object dataArg) {
+        if (dataArg instanceof Map) return (Map<String, Object>) dataArg;
+        if (dataArg == null) return null;
+
+        String text = String.valueOf(dataArg).trim();
+        if (!text.startsWith("{")) return null;
+        try {
+            return json.fromJson(text, Map.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // 多值字段（multiselect、sortable 等）用分隔符拼接，模型常常直接给数组
+    private static String stringify(Object value, String separator) {
+        if (value == null) return "";
+        if (!(value instanceof Collection)) return String.valueOf(value);
+
+        String sep = separator == null || separator.isEmpty() ? "," : separator;
+        StringBuilder joined = new StringBuilder();
+        for (Object item : (Collection<?>) value) {
+            if (joined.length() > 0) joined.append(sep);
+            joined.append(item);
+        }
+        return joined.toString();
+    }
+
+    private static Model findModel(App app, String modelCode) {
+        for (Model model : app.models) {
+            if (model.code.equals(modelCode)) return model;
+        }
+        return null;
+    }
+
+    private static boolean hasAction(Model model, String actionCode) {
+        for (ModelAction action : model.actions) {
+            if (action.code.equals(actionCode)) return true;
+        }
+        return false;
+    }
+
+    private static String actionCodes(Model model) {
+        List<String> codes = new ArrayList<>();
+        for (ModelAction action : model.actions) {
+            codes.add(action.code);
+        }
+        return codes.toString();
     }
 
     private static String buildPagingHint(ResponseImpl response) {
