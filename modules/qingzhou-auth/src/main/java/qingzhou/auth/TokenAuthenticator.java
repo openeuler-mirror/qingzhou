@@ -14,7 +14,7 @@ public class TokenAuthenticator implements Authenticator {
     @Override
     public AuthResult authenticate(HttpRequest request) {
         String token = tokenService.retrieveToken(request);
-        if (token == null) return AuthResult.rejectNoCredential("token missing"); // 未出示凭据：不计入爆破锁定
+        if (token == null) return AuthResult.noCredential("token missing"); // 未出示凭据：不计入爆破锁定
 
         Object[] userRoles = tokenService.verifyToken(token);
         if (userRoles == null) return AuthResult.reject("invalid token");

@@ -60,13 +60,16 @@ public class FileUpload implements HttpHandler {
             long total = tempFile.length() + (data == null ? 0 : data.length);
             long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024; // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
             if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
-                tempFile.delete();
                 throw new IllegalStateException("upload exceeds size limit: " + uploadId);
             }
             if (tempFile.exists()) {
                 Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
             } else {
                 Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
+            }
+            // 追加后复核：写入前检查与 APPEND 非原子（TOCTOU），并发分片可越过上限
+            if (tempFile.length() > MAX_UPLOAD_BYTES) {
+                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
             }
         } catch (Throwable e) {
             tempFile.delete();

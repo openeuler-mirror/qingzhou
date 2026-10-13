@@ -62,6 +62,9 @@ public class ResponseImpl implements Response {
 
     @Override
     public Response error(String error) {
+        // 状态码默认联动：未显式设置时按 400 下发，否则业务失败会以"HTTP 200 + success:false"返回，
+        // 网关/监控/REST 客户端均无法感知失败；调用方可先 status() 覆盖
+        if (getStatus() <= 0) status(400);
         this.message(error);
         this.messageLevel(MessageLevel.error);
         this.success(false);

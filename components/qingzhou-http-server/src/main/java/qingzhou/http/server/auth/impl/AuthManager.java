@@ -88,7 +88,7 @@ public class AuthManager {
     }
 
     private AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.rejectNoCredential("no authenticator ready");
+        if (authenticators.isEmpty()) return AuthResult.noCredential("no authenticator ready");
 
         AuthResult reject = null;
         for (Authenticator authenticator : authenticators) {
@@ -111,6 +111,6 @@ public class AuthManager {
         }
         if (reject != null) return reject;
 
-        return AuthResult.rejectNoCredential("no credential provided");
+        return AuthResult.noCredential("no credential provided");
     }
 }

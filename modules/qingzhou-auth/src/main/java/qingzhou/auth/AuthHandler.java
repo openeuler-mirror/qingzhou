@@ -163,6 +163,10 @@ public class AuthHandler implements HttpHandler {
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
         if (reqPass == null) reqPass = ""; // null 会让 matches 抛 NPE 变 500，泄露「用户名有效」信号；按空凭据处理
+        // 慢哈希成本随凭据长度增长：免认证端点上超长凭据即 CPU 放大攻击，超长直接按无效处理
+        // 凭据长度上限：正常口令远低于此值，超出即视为滥用（慢哈希成本随长度增长）
+        int MAX_CREDENTIAL_CHARS = 1024;
+        if (reqPass.length() > MAX_CREDENTIAL_CHARS) return false;
 
         return Objects.equals(reqUser, username)
                 & // 用户名错误也执行等价慢哈希：抹平与「密码错误」的响应时序差，防用户名枚举

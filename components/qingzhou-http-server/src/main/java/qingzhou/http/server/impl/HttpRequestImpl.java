@@ -67,9 +67,9 @@ public class HttpRequestImpl implements HttpRequest {
     }
 
     @Override
-    public String getHeader(String header) {
+    public String getHeader(String name) {
         io.netty.handler.codec.http.HttpHeaders headers = request.requestHeaders();
-        return headers.get(header);
+        return headers.get(name);
     }
 
     @Override

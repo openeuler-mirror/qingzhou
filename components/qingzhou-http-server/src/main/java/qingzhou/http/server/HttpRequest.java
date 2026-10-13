@@ -25,9 +25,9 @@ public interface HttpRequest {
      */
     Map<String, List<String>> getParameters();
 
-    String getHeader(String header);
+    String getHeader(String name);
 
-    String getCookie(String header);
+    String getCookie(String name);
 
     String getContentType();
 

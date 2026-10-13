@@ -76,7 +76,9 @@ class AppStubRemoteImpl implements AppStubRemote {
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
-                    byte[] decrypted = cipher.decrypt(responseBody);
+                    // 与 agent 侧 ProcessHandler 的响应绑定对应：以请求明文的 SHA-256 作 AAD，拒绝被重放的旧响应
+                    byte[] responseAad = crypto.getMessageDigest().sha256(data);
+                    byte[] decrypted = cipher.decrypt(responseBody, responseAad);
                     ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
                     request.setResponse(result);
                 }
@@ -162,7 +164,9 @@ class AppStubRemoteImpl implements AppStubRemote {
                     }
                     throw new IllegalStateException(msg);
                 } else {
-                    byte[] result = cipher.decrypt(uploadResult.getBody());
+                    // 上传响应同样绑定请求分片内容（agent 侧 ProcessHandler 以请求明文 SHA-256 作 AAD）
+                    byte[] responseAad = crypto.getMessageDigest().sha256(chunk);
+                    byte[] result = cipher.decrypt(uploadResult.getBody(), responseAad);
                     fileTempKey = new String(result, StandardCharsets.UTF_8);
                 }
             }

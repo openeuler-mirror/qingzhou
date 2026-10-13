@@ -165,7 +165,13 @@ public class DefaultAction {
         if (response.getData() == null && downloadFile != null) {
             Map<String, String> map = new TreeMap<>();
 
-            File fileBase = downloadFile.files(request.getId());
+            // id 来自 URL path 段且由应用自行拼接目录，框架统一拦截穿越字符（与 download 的 file_names 同一防线）
+            String id = request.getId();
+            if (id != null && hasIllegalPath(id)) {
+                response.error("illegal file name");
+                return;
+            }
+            File fileBase = downloadFile.files(id);
             if (fileBase.isDirectory()) {
                 File[] files = fileBase.listFiles();
                 if (files != null) {

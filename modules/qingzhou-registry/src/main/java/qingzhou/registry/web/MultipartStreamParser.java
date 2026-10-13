@@ -192,17 +192,18 @@ class MultipartStreamParser {
     }
 
     private void finishCurrentPart() throws IOException {
-        if (currentFieldName == null) return;
         if (isFileField) {
             fileStream.close();
             fileStream = null;
             uploadFileMap.computeIfAbsent(currentFieldName, k -> new ArrayList<>())
                     .add(currentTempFile.getAbsolutePath());
             uploadFileFields.add(currentFieldName);
-        } else {
+        } else if (currentFieldName != null) {
             parameters.put(currentFieldName, fieldBuffer.toString("UTF-8").trim());
-            fieldBuffer.reset();
         }
+        // fieldBuffer 须无条件复位：filename 存在而 name 缺失的 part 走文本分支时，
+        // 否则其残留内容会拼进下一个文本字段的值（同请求内参数污染）
+        fieldBuffer.reset();
         currentFieldName = null;
         isFileField = false;
     }
@@ -249,8 +250,10 @@ class MultipartStreamParser {
         currentFieldName = extractValue(headers, "name=\"");
         String currentFileName = extractValue(headers, "filename=\"");
         if (currentFileName != null && !currentFileName.isEmpty()) {
-            // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束
-            if (currentFileName.contains("..") || currentFileName.contains("/") || currentFileName.contains("\\")) {
+            // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束；
+            // '=' 是上传协议的保留字符（agent 侧按 keyName=name 分隔），混入会导致远程上传静默错位
+            if (currentFileName.contains("..") || currentFileName.contains("/")
+                    || currentFileName.contains("\\") || currentFileName.contains("=")) {
                 throw new IllegalStateException("invalid upload file name");
             }
             isFileField = currentFieldName != null && fieldTypeResolver.isFileField(currentFieldName);

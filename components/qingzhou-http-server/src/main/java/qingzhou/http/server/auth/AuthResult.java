@@ -68,7 +68,7 @@ public interface AuthResult {
         };
     }
 
-    static AuthResult rejectNoCredential(String reason) {
+    static AuthResult noCredential(String reason) {
         return new AuthResult() {
             @Override
             public Status status() {

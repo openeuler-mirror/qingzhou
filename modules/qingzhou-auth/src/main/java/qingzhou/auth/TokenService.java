@@ -26,10 +26,6 @@ public class TokenService {
     private static final String USER = "u";
     private static final String ROLES = "r";
     private static final String EXPIRE = "e";
-    private static final String u = "u";
-    private static final String r = "r";
-    private static final String e = "e";
-    private static final String v = "v";
 
     @Reference
     private Crypto crypto;
@@ -40,7 +36,7 @@ public class TokenService {
 
     private long tokenExpireMillis;
     private Cipher tokenCipher;
-    private String cookieAttrs;
+    private String secureCookie;
 
     // 登出后吊销的 Bearer 令牌（内存态，随实例重启清空）；值为其最迟失效时刻，
     // 过期即从表中移除，防止集合无界增长。令牌本身短时效，重启不影响安全。
@@ -52,6 +48,7 @@ public class TokenService {
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
         tokenExpireMillis = configs.getConfig("token_expire_seconds", 30 * 60) * 1000L;
+        secureCookie = configs.getConfig("cookie_secure", "auto");
         tokenCipher = crypto.getGlobalCipher();
         // 跨站分离部署须配置 None（浏览器强制要求配合 Secure，即 HTTPS）
         String sameSite = configs.getConfig("cookie_samesite", "Lax");
@@ -98,6 +95,8 @@ public class TokenService {
             // 服务端注销
             revokedTokens.put(token, System.currentTimeMillis() + tokenExpireMillis);
             // 通知客户端注销
+            response = response.header("Set-Cookie", TOKEN_COOKIE_NAME
+                    + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict" + cookieSecure(request));
             response.header("Set-Cookie", TOKEN_COOKIE_NAME
                             + "=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict" + cookieSecure(request))
                     .send("ok").finish();
@@ -105,6 +104,8 @@ public class TokenService {
         if (userRoles != null) {
             tokenVersions.merge((String) userRoles[0], 1, Integer::sum); // 服务端注销：使用户所有已发令牌失效
         }
+        // 无令牌也须收尾：/auth 免认证，请求挂起会被用于占用服务端连接
+        response.send("ok").finish();
         // 无论是否携带有效令牌，都通知客户端清除
         response.header("Set-Cookie", setCookie(request, "", "; Max-Age=0")).send("ok").finish();
     }
@@ -117,8 +118,11 @@ public class TokenService {
         return setCookie(request, createToken((String) userRoles[0], (String[]) userRoles[1]), "");
     }
 
-    // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时，按配置判定会漏发
+    // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时按 scheme 判定会漏发，
+    // 可用 cookie_secure=true/false 显式覆盖（auto 按请求 scheme）
     private String cookieSecure(HttpRequest request) {
+        if ("true".equals(secureCookie)) return "; Secure";
+        if ("false".equals(secureCookie)) return "";
         return "https".equals(request.getScheme()) ? "; Secure" : "";
     }
 
