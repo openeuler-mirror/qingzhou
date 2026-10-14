@@ -85,7 +85,7 @@ class SyncSender {
                 Utils.sleepBackoff(attempt);
                 return sendSync(messages, toolDefs, attempt + 1);
             }
-            throw new IllegalStateException("API error " + status + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
+            throw new IllegalStateException("API error " + status + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         }
         return response;
     }

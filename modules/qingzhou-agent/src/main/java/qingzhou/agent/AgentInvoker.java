@@ -58,7 +58,6 @@ public class AgentInvoker implements HttpHandler {
                     File tempFile = resolveInUploadBase(pair[0]);
                     File localFile = resolveInUploadBase(pair[1]);
                     tempFileList.add(tempFile);
-                    tempFileList.add(localFile);
                     if (!tempFile.renameTo(localFile)) { // 重命名失败仍继续会向业务暴露不存在的路径
                         throw new IllegalStateException("failed to rename uploaded temp file: " + tempFile.getName());
                     }
@@ -72,7 +71,8 @@ public class AgentInvoker implements HttpHandler {
             if (appStub == null) throw new IllegalArgumentException("business processing error");
             appStub.invokeApp(request);
         } finally {
-            for (File tempFile : tempFileList) tempFile.delete(); // 已被 rename 的文件此处删除无副作用
+            // 仅清理原始临时文件；renameTo 成功后原文件已不存在，delete 为空操作，不会误删业务使用的 localFile
+            for (File tempFile : tempFileList) tempFile.delete();
         }
 
         // 响应数据

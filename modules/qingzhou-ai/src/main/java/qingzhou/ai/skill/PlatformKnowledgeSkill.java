@@ -1,6 +1,5 @@
 package qingzhou.ai.skill;
 
-import java.io.File;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,18 +32,22 @@ public class PlatformKnowledgeSkill implements SkillService {
                         "当用户询问 AI 管控使用方式时，说明可通过自然语言对系统进行管理。");
         String instance = config.get("qingzhou.instance");
         String version = config.get("qingzhou.version");
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(
-                Paths.get(new File(instance).getParentFile().getParent(), "lib", "version" + version, "docs"),
-                "*.md")) {
-            for (Path md : stream) {
-                List<String> lines = Files.readAllLines(md);
-                if (!lines.isEmpty()) {
-                    String content = String.join(System.lineSeparator(), lines);
-                    msg.append("\n\n[参考附件]\n").append(content);
+        // version 直接拼入路径，须先拒绝穿越序列；instance 缺失或层级不足时用 Path 解析避免 NPE
+        if (instance != null && version != null
+                && !version.contains("..") && !version.contains("/") && !version.contains("\\")) {
+            Path docsDir = Paths.get(instance).resolve("..").resolve("..")
+                    .resolve("lib").resolve("version" + version).resolve("docs").normalize();
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(docsDir, "*.md")) {
+                for (Path md : stream) {
+                    List<String> lines = Files.readAllLines(md);
+                    if (!lines.isEmpty()) {
+                        String content = String.join(System.lineSeparator(), lines);
+                        msg.append("\n\n[参考附件]\n").append(content);
+                    }
                 }
+            } catch (Exception e) {
+                logger.warn("failed to read knowledge", e);
             }
-        } catch (Exception e) {
-            logger.warn("failed to read knowledge", e);
         }
         instruction = msg.toString();
     }

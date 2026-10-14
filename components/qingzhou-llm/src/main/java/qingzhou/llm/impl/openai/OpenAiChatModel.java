@@ -96,7 +96,7 @@ class OpenAiChatModel implements ChatModel {
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
             }
-            chatListener.onError("API error " + response.getStatus() + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
+            chatListener.onError("API error " + response.getStatus() + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.getMaxRetries()) {

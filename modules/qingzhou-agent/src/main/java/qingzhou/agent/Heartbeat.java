@@ -157,10 +157,11 @@ public class Heartbeat {
     }
 
     private String send(String url, byte[] data) {
+        Response response = null;
         try {
             byte[] encrypted = pairCipher.encryptWithPublicKey(data);
             // 显式 POST：请求必须带密文正文，且 registry 侧已限定 POST
-            Response response = httpClient.send(
+            response = httpClient.send(
                     httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
             if (response.getStatus() != 200) {
                 logger.warn("response code error [ " + response.getStatus() + " ] : " + url);
@@ -176,6 +177,9 @@ public class Heartbeat {
             logger.error("failed to connect to the URL: " + url + ", msg: " + e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+        } finally {
+            // 释放底层连接资源，避免每次心跳累积泄漏
+            if (response != null) response.cancel();
         }
         return null;
     }
@@ -202,7 +206,14 @@ public class Heartbeat {
 
         // 实例端口
         Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-        int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
+        if (httpServerConfig == null) {
+            throw new IllegalStateException("qingzhou-http-server configuration is missing");
+        }
+        Object portValue = httpServerConfig.get("port");
+        if (portValue == null) {
+            throw new IllegalStateException("qingzhou-http-server configuration is missing 'port'");
+        }
+        int serverPort = Integer.parseInt(String.valueOf(portValue));
         instanceInfo.setPort(serverPort);
 
         boolean sslEnabled = Boolean.parseBoolean(String.valueOf(httpServerConfig.get("ssl_enabled")));

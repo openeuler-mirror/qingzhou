@@ -1,6 +1,8 @@
 package qingzhou.web;
 
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,6 +56,14 @@ public class StaticResource implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         String requestPath = httpRequest.getPath();
+
+        // 解码百分号编码（如 %2e%2e、%2f），否则 isPathSafe 会被编码形式的穿越序列绕过
+        try {
+            requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            httpResponse.status(400).finish();
+            return;
+        }
 
         // 修复：仅当路径恰好是 "/web" 或以 "/web/" 开头时才剥离前缀，
         // 避免把 "/website" 等以 "web" 开头的合法路径误当作带 "/web" 前缀而错误截断

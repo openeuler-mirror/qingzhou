@@ -48,6 +48,10 @@ public class JdbcPoolImpl implements JdbcPool {
 
     private Object convert(String key, String value, Class<?> type) {
         try {
+            // dataSource 必须由 init() 注入真实对象；从字符串配置触发 Tomcat DataSource 的 JNDI lookup 是注入入口，fail-closed 拒绝
+            if (type == Object.class) {
+                throw new IllegalArgumentException("config item [" + key + "] cannot be set from a string value");
+            }
             if (type == int.class || type == Integer.class) return Integer.valueOf(value);
             if (type == long.class || type == Long.class) return Long.valueOf(value);
             if (type == short.class || type == Short.class) return Short.valueOf(value);

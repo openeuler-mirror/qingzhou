@@ -30,7 +30,11 @@ public class QingzhouMain {
                         .toURI()
         ).toString();
 
-        String libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
+        File jarParent = new File(jarPath).getParentFile();
+        if (jarParent == null || jarParent.getParentFile() == null) {
+            throw new IllegalStateException("jarPath is not a valid path" + jarPath);
+        }
+        String libDir = jarParent.getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");
         checkRequiredConfigs();
 

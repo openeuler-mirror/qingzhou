@@ -42,7 +42,11 @@ public class Launcher {
                         .getLocation()
                         .toURI()
         ).toString();
-        homeFile = new File(jarPath).getParentFile().getParentFile();
+        File jarParent = new File(jarPath).getParentFile();
+        if (jarParent == null || jarParent.getParentFile() == null) {
+            throw new IllegalStateException("jarPath is not a valid path" + jarPath);
+        }
+        homeFile = jarParent.getParentFile();
     }
 
     static void checkLatestZipVersion() throws Exception {
