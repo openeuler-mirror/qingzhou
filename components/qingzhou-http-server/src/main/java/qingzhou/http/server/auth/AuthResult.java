@@ -20,7 +20,16 @@ public interface AuthResult {
         return null;
     }
 
+    // 认证通过时需下发的 Set-Cookie 值（如活跃会话滑动续期重签令牌）；无则 null
+    default String getSetCookie() {
+        return null;
+    }
+
     static AuthResult pass(String user, String[] roles) {
+        return pass(user, roles, null);
+    }
+
+    static AuthResult pass(String user, String[] roles, String setCookie) {
         return new AuthResult() {
             @Override
             public Status status() {
@@ -35,6 +44,11 @@ public interface AuthResult {
             @Override
             public String[] getRoles() {
                 return roles;
+            }
+
+            @Override
+            public String getSetCookie() {
+                return setCookie;
             }
         };
     }

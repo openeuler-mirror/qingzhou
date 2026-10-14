@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import io.netty.handler.codec.http.*;
 import org.reactivestreams.Publisher;
+import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
@@ -228,8 +229,15 @@ final class RequestGates {
     }
 
     private Publisher<Void> denyUnauthenticated(RequestContext ctx) {
-        return authManager.doAuth(ctx.httpRequest, ctx.entry) ? null
-                : ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
+        AuthResult result = authManager.doAuth(ctx.httpRequest, ctx.entry);
+        if (result != null && result.status() == AuthResult.Status.REJECT) {
+            return ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
+        }
+        // 认证通过时认证器可携带滑动续期的 Set-Cookie
+        if (result != null && result.getSetCookie() != null) {
+            ctx.response.header(HttpHeaderNames.SET_COOKIE, result.getSetCookie());
+        }
+        return null;
     }
 
     // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500
