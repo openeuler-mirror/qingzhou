@@ -23,7 +23,7 @@ public class CipherKey extends Processor {
         URL jarUrl = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
         try (URLClassLoader loader = new URLClassLoader(new URL[]{jarUrl})) {
             Class<?> aClass = loader.loadClass("qingzhou.crypto.impl.CryptoImpl");
-            Object instance = aClass.newInstance();
+            Object instance = aClass.getDeclaredConstructor().newInstance();
             Method generateKey = aClass.getMethod("generateKey");
             String cipherKey = (String) generateKey.invoke(instance);
             log("--------------------------- Cipher Key ----------------------------");

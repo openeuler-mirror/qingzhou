@@ -58,7 +58,9 @@ public class JdbcPoolImpl implements JdbcPool {
             if (type == float.class || type == Float.class) return Float.valueOf(value);
             if (type == double.class || type == Double.class) return Double.valueOf(value);
             if (type == boolean.class || type == Boolean.class) {
-                if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) return Boolean.valueOf(value);
+                // 与全局 Configs 的严格大小写策略一致，仅接受小写的 true/false
+                if ("true".equals(value)) return Boolean.TRUE;
+                if ("false".equals(value)) return Boolean.FALSE;
                 throw new IllegalArgumentException("invalid boolean: " + value);
             }
             return value;

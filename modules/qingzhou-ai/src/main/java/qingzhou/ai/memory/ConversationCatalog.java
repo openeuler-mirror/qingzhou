@@ -62,7 +62,7 @@ final class ConversationCatalog {
     List<CatalogEntry> byUser(String userId) {
         List<CatalogEntry> found = new ArrayList<>();
         for (CatalogEntry entry : entries.values()) {
-            if (userId.equals(entry.userId)) found.add(entry);
+            if (userId != null && userId.equals(entry.userId)) found.add(entry);
         }
         return found;
     }

@@ -3,7 +3,12 @@ package qingzhou.web;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.service.component.annotations.Activate;
@@ -96,6 +101,9 @@ public class StaticResource implements HttpHandler {
             path = INDEX_FILE;
         }
 
+        // 扩展名只解析一次，供 SPA 回退、Cache-Control 与 Content-Type 共用
+        String extension = getExtension(path);
+
         // 查找资源
         String resourcePath = "/webapp" + path;
         ResourceCache resourceCache = resourceCacheMap.computeIfAbsent(resourcePath, s -> {
@@ -110,7 +118,7 @@ public class StaticResource implements HttpHandler {
             // SPA 应用特性：无扩展名的路径视为前端路由（如 /web/model/xxx），回退到 index.html；
             // 带扩展名的资源（如已被清理的旧 hash .js/.css）必须返回 404，
             // 否则浏览器会把 HTML 当 JS 解析导致模块加载失败
-            if (!path.equals(INDEX_FILE) && getExtension(path).isEmpty()) {
+            if (!path.equals(INDEX_FILE) && extension.isEmpty()) {
                 serveStaticResource(httpRequest, INDEX_FILE, response);
                 return;
             }
@@ -118,8 +126,6 @@ public class StaticResource implements HttpHandler {
             return;
         }
 
-        // 扩展名只解析一次，供 Cache-Control 与 Content-Type 共用
-        String extension = getExtension(path);
         response.header("Cache-Control", getCacheControl(extension, path));
 
         try {

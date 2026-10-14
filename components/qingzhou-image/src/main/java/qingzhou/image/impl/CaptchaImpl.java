@@ -13,8 +13,8 @@ import qingzhou.image.Captcha;
 
 @Component
 public class CaptchaImpl implements Captcha {
-    private final int width = 108;
-    private final int height = 40;
+    private static final int width = 108;
+    private static final int height = 40;
     private final char[] charArray = "3456789ABCDEFGHJKMNPQRSTUVWXY".toCharArray();
     // 验证码字体
     private final Font[] randomFont = new Font[]{
@@ -38,6 +38,7 @@ public class CaptchaImpl implements Captcha {
 
     @Override
     public byte[] genImage(String code) throws IOException {
+        if (code == null) throw new IllegalArgumentException("code required");
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         drawGraphic(code, image);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -107,12 +108,6 @@ public class CaptchaImpl implements Captcha {
      * 给定范围获得随机颜色
      */
     private Color getRandColor(int fc, int bc) {
-        if (fc > 255) {
-            fc = 255;
-        }
-        if (bc > 255) {
-            bc = 255;
-        }
         int r = fc + random.nextInt(bc - fc);
         int g = fc + random.nextInt(bc - fc);
         int b = fc + random.nextInt(bc - fc);

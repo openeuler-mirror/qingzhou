@@ -37,11 +37,12 @@ public class QrCodeImpl implements QrCode {
      *                                  Integer.MAX_VALUE
      */
     private BufferedImage genQrImage(String qrCode, int scale, int border, int lightColor, int darkColor) {
-        List<QrSegment> segs = QrSegment.makeSegments(qrCode);
-        io.nayuki.qrcodegen.QrCode qr = io.nayuki.qrcodegen.QrCode.encodeSegments(segs, io.nayuki.qrcodegen.QrCode.Ecc.HIGH, io.nayuki.qrcodegen.QrCode.MIN_VERSION, io.nayuki.qrcodegen.QrCode.MAX_VERSION, -1, true);  // Automatic mask
+        if (qrCode == null) throw new NullPointerException("qrCode required");
         if (scale <= 0 || border < 0) {
             throw new IllegalArgumentException("QrCode Value out of range");
         }
+        List<QrSegment> segs = QrSegment.makeSegments(qrCode);
+        io.nayuki.qrcodegen.QrCode qr = io.nayuki.qrcodegen.QrCode.encodeSegments(segs, io.nayuki.qrcodegen.QrCode.Ecc.HIGH, io.nayuki.qrcodegen.QrCode.MIN_VERSION, io.nayuki.qrcodegen.QrCode.MAX_VERSION, -1, true);  // Automatic mask
         if (border > Integer.MAX_VALUE / 2 || qr.size + border * 2L > Integer.MAX_VALUE / scale) {
             throw new IllegalArgumentException("QrCode scale or border too large");
         }

@@ -28,7 +28,7 @@ public class CipherPassword extends Processor {
 
         URL jarUrl = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
         try (URLClassLoader loader = new URLClassLoader(new URL[]{jarUrl})) {
-            Object crypto = loader.loadClass("qingzhou.crypto.impl.CryptoImpl").newInstance();
+            Object crypto = loader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
             Object globalCipher = crypto.getClass().getMethod("getGlobalCipher").invoke(crypto);
 
             Class<?> cipherClass = loader.loadClass("qingzhou.crypto.Cipher");

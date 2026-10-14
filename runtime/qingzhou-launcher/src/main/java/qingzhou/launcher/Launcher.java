@@ -151,6 +151,7 @@ public class Launcher {
                         // Error 等严重问题不吞，避免掩盖包损坏的真实原因
                         if (parentFile.getName().equals("docs")) {
                             failedDocsCount++; // 忽略掉这个手册文件，别影响启动流程
+                            System.err.println("failed to extract docs file: " + entry.getName() + ", " + ex.getMessage());
                         } else {
                             throw ex;
                         }

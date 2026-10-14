@@ -158,7 +158,13 @@ public class OAuth2Handler implements HttpHandler {
 
         Response tokenResponse = httpClient.send(
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
-        String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
+        byte[] tokenBodyBytes = tokenResponse.getBody();
+        if (tokenBodyBytes == null) {
+            // 上游未返回响应体：固定文案回浏览器，避免 NPE 且不外泄内部信息
+            response.status(403).send("token exchange failed").finish();
+            return null;
+        }
+        String tokenBodyText = new String(tokenBodyBytes, StandardCharsets.UTF_8);
         Map tokenBody = json.fromJson(tokenBodyText, Map.class);
         // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
         if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {

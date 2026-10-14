@@ -49,10 +49,12 @@ public class SseListener implements Listener {
         return executor;
     }
 
-    /**
-     * 连续静默达到该时长后补发一次心跳
-     */
+    // 连续静默达到该时长后补发一次心跳
     private static final long HEARTBEAT_INTERVAL_MS = 10_000L;
+    // 会话总生命周期硬上限（兜底）：即使已产出内容、且上游流静默（既不 onComplete 也不 onError）、 客户端长连接又一直未断开，心跳会无限续期，使本会话的周期任务与响应对象始终无法回收；看门狗在此上限到达时主动收尾并自取消，杜绝“僵尸会话”空转。须大于 FIRST_CONTENT_TIMEOUT_MS。
+    private static final long HARD_TIMEOUT_MS = 1_800_000L;
+    // 仅用于“僵尸连接”兜底：模型正常思考慢/工具执行久时，心跳会持续续期、不会被误杀；是否继续等待主要由前端（展示计时）与用户（决定是否停止）控制，因此该阈值放得很宽。
+    private static final long FIRST_CONTENT_TIMEOUT_MS = 600_000L;
 
     private static final Set<SseEvent.Type> CONTENT_EVENT_TYPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             SseEvent.Type.REASONING_START, SseEvent.Type.REASONING_CONTENT, SseEvent.Type.REASONING_PAUSE,
@@ -124,9 +126,6 @@ public class SseListener implements Listener {
             return;
         }
 
-        // 会话总生命周期硬上限（兜底）：即使已产出内容、且上游流静默（既不 onComplete 也不 onError）、 客户端长连接又一直未断开，心跳会无限续期，使本会话的周期任务与响应对象始终无法回收；看门狗在此上限到达时主动收尾并自取消，杜绝“僵尸会话”空转。须大于 FIRST_CONTENT_TIMEOUT_MS。
-        long HARD_TIMEOUT_MS = 1_800_000L;
-
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed >= HARD_TIMEOUT_MS) {
             // 会话总时长硬上限：无论是否已出内容、连接是否仍存活，都主动收尾并自取消，兜底回收看门狗，杜绝“已出内容后模型静默 + 客户端长连接不关”的无限心跳空转
@@ -137,8 +136,6 @@ public class SseListener implements Listener {
         long idleMs = System.currentTimeMillis() - lastEventTime;
         if (idleMs < HEARTBEAT_INTERVAL_MS) return; // 事件流正常，无需处理
 
-        // 仅用于“僵尸连接”兜底：模型正常思考慢/工具执行久时，心跳会持续续期、不会被误杀；是否继续等待主要由前端（展示计时）与用户（决定是否停止）控制，因此该阈值放得很宽。
-        long FIRST_CONTENT_TIMEOUT_MS = 600_000L;
         if (!contentStarted && idleMs >= FIRST_CONTENT_TIMEOUT_MS) {
             // 已受理但长时间没有任何模型内容产出：判定无响应，主动收尾
             finishWithError("MODEL_TIMEOUT", "模型长时间未响应，已终止本次请求，请重试");

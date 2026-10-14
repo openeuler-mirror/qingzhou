@@ -21,7 +21,7 @@ import qingzhou.registry.Registry;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/refresh", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Refresh implements HttpHandler {
-    public static final Object REFRESH_KEY_LOCK = new Object();
+    static final Object REFRESH_KEY_LOCK = new Object();
 
     @Reference
     private Crypto crypto;
@@ -57,7 +57,7 @@ public class Refresh implements HttpHandler {
         String decryptedRequest = Register.decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return; // decryptRequest 已写入错误响应
 
-        String[] split = decryptedRequest.split(",");
+        String[] split = decryptedRequest.split(",", 5);
         if (split.length < 3) {
             httpResponse.status(400).finish();
             return;

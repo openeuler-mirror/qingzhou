@@ -103,6 +103,9 @@ public class RegistryImpl implements Registry {
 
     @Override
     public AppStub getAppStub(String instanceId, String appCode) {
+        if (instanceId == null) {
+            return null;
+        }
         if (instanceId.equals(Constants.LOCAL_INSTANCE_ID)) {
             return getLocalApp(appCode);
         } else {
@@ -114,26 +117,23 @@ public class RegistryImpl implements Registry {
     public InstanceInfo getLocalInstance() {
         if (localInstanceInfo == null) {
             localInstanceInfo = new InstanceInfo() {
-                {
-                    this.setId(Constants.LOCAL_INSTANCE_ID);
-                    this.setVersion(qzVersion);
-                    this.setHost("localhost");
-
-                    // 实例端口
-                    try {
-                        Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-                        int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
-                        this.setPort(serverPort);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
                 @Override
                 public List<AppMeta> getAppMetas() {
                     return localApps.values().stream().map(AppStub::getAppMeta).collect(Collectors.toList());
                 }
             };
+            localInstanceInfo.setId(Constants.LOCAL_INSTANCE_ID);
+            localInstanceInfo.setVersion(qzVersion);
+            localInstanceInfo.setHost("localhost");
+
+            // 实例端口
+            try {
+                Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
+                int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
+                localInstanceInfo.setPort(serverPort);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return localInstanceInfo;
     }

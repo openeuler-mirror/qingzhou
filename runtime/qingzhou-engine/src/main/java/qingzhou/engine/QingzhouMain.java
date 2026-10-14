@@ -21,6 +21,9 @@ public class QingzhouMain {
     private static Framework osgiFramework;
     private static ScheduledExecutorService scheduledExecutor;
 
+    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
+    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
+
     public static void main(String[] args) throws Exception {
         // 解码 URL 编码的路径
         String jarPath = Paths.get(
@@ -69,9 +72,6 @@ public class QingzhouMain {
             }
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
     }
-
-    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
-    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
 
     private static void checkRequiredConfigs() {
         File propsFile = instanceDir == null ? null
@@ -164,7 +164,7 @@ public class QingzhouMain {
                 } else {
                     bundle.stop();
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 e.printStackTrace(System.err); // 捕获并打印，保证任务不被取消
             }
         }, 0, 5, TimeUnit.SECONDS);

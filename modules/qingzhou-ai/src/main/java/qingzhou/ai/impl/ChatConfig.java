@@ -15,7 +15,7 @@ import qingzhou.json.Json;
 @Component(property = HttpHandler.HANDLE_PATH + "=/chat/config",
         service = {ChatConfig.class, HttpHandler.class})
 public class ChatConfig implements HttpHandler {
-    // 附件限额：与 ChatConfig 对前端的宣称一致（maxFiles=10、maxFileSize=5MB，base64 后约 6.7M 字符，留余量取 8M）
+    // 附件限额：与 ChatConfig 对前端的宣称一致（maxFiles=10、maxFileSize=10MB，字符上限 10M）
     static final int MAX_ATTACHMENT_FILES = 10;
     private static final int MAX_ATTACHMENT_MB = 10;
     static final int MAX_ATTACHMENT_CHARS = MAX_ATTACHMENT_MB * 1_000_000;

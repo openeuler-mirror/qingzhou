@@ -47,7 +47,6 @@ public class Heartbeat {
 
     static volatile InstanceInfo thisInstanceInfo;
 
-
     // 轮换前的旧钥：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
     private static volatile String previousKey;
     private static volatile long previousKeyAt;
@@ -121,7 +120,7 @@ public class Heartbeat {
                                 currentKeyProof,
                                 json.toJson(thisInstanceInfo));
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));
-                        logger.info("registration response: " + registration);
+                        logger.info("instance registered, response length=" + (registration == null ? 0 : registration.length()));
                     }
                 } catch (Exception e) {
                     logger.error("heartbeat service error", e);
@@ -145,9 +144,8 @@ public class Heartbeat {
         List<AppMeta> currentAppMetas = currentAppMetas();
         if (storedAppMetas.size() != currentAppMetas.size()) return true;
 
-        Comparator<AppMeta> comparator = Comparator.comparing(o -> o.getApp().code);
-        storedAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
-        currentAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
+        sortByCode(storedAppMetas); // 固定顺序，避免指纹计算错误
+        sortByCode(currentAppMetas); // 固定顺序，避免指纹计算错误
         for (int i = 0; i < storedAppMetas.size(); i++) {
             // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
             if (!json.toJson(storedAppMetas.get(i)).equals(json.toJson(currentAppMetas.get(i)))) return true;
@@ -184,6 +182,10 @@ public class Heartbeat {
         return null;
     }
 
+    private static void sortByCode(List<AppMeta> list) {
+        list.sort(Comparator.comparing(appMeta -> appMeta.getApp().code));
+    }
+
     private List<AppMeta> currentAppMetas() {
         List<AppMeta> appMetas = new ArrayList<>();
         for (String appCode : registry.getAllLocalApps()) {
@@ -198,7 +200,7 @@ public class Heartbeat {
 
         // 实例部署的应用
         List<AppMeta> currentAppMetas = currentAppMetas();
-        currentAppMetas.sort(Comparator.comparing(appMeta -> appMeta.getApp().code)); // 固定顺序，避免指纹计算错误
+        sortByCode(currentAppMetas); // 固定顺序，避免指纹计算错误
         instanceInfo.getAppMetas().addAll(currentAppMetas);
 
         // 实例版本

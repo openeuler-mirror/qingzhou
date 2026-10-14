@@ -3,7 +3,7 @@ package qingzhou.command;
 import java.io.File;
 import java.util.*;
 
-public class Command { // 由 Launcher 来调用
+public class Command {
     private final File libDir;
 
     public Command(File libDir) {
@@ -17,7 +17,7 @@ public class Command { // 由 Launcher 来调用
             return;
         }
 
-        if (args == null || args.length < 1) {
+        if (args.length < 1) {
             System.out.println("wrong command args. Type [ --help ] for help");
             return;
         }
@@ -36,7 +36,7 @@ public class Command { // 由 Launcher 来调用
             }
 
             if (acceptStatus == AcceptStatus.startsWith) {
-                found.add(processor); // 模糊匹配，例如 startsWith
+                found.add(processor);
             }
         }
         if (found.isEmpty()) {

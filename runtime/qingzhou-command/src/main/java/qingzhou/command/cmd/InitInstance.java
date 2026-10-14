@@ -225,7 +225,7 @@ public class InitInstance extends Processor {
         chmod600(file);
     }
 
-    static String getValue(String content, String key) {
+    private static String getValue(String content, String key) {
         for (String line : content.split("\n", -1)) {
             String trim = line.trim();
             if (trim.startsWith(key + "=")) return trim.substring(key.length() + 1).trim();
@@ -233,7 +233,7 @@ public class InitInstance extends Processor {
         return null; // 无该配置项返回 null，有但为空返回空串
     }
 
-    static String putValue(String content, String key, String value) {
+    private static String putValue(String content, String key, String value) {
         String[] lines = content.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].trim().startsWith(key + "=")) {

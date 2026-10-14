@@ -28,7 +28,7 @@ public class AuthPassword extends Processor {
 
         URL jarUrl = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
         try (URLClassLoader loader = new URLClassLoader(new URL[]{jarUrl})) {
-            Object crypto = loader.loadClass("qingzhou.crypto.impl.CryptoImpl").newInstance();
+            Object crypto = loader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
             Object messageDigest = crypto.getClass().getMethod("getMessageDigest").invoke(crypto);
 
             // 从接口取 Method：实现类是包级私有的，直接用其 Class 反射会 invoke 失败
