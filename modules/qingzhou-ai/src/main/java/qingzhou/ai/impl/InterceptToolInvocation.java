@@ -14,7 +14,7 @@ import qingzhou.ai.ToolInterceptor;
  * 工具调用的统一授权闸门：所有工具调用方（McpServer、AiChat）必须经此执行授权拦截，
  * 避免任一调用路径绕过 {@link ToolInterceptor} 角色校验。
  */
-@Component
+@Component(service = InterceptToolInvocation.class)
 public class InterceptToolInvocation {
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     private final Set<ToolInterceptor> interceptors = ConcurrentHashMap.newKeySet();
