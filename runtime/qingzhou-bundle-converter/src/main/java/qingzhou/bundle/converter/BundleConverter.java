@@ -31,9 +31,11 @@ public class BundleConverter {
     public void build(File sourceJar, File targetJar, String libDir) throws Exception {
         // 待处理的原应用的 jar
         File appTmpDir = new File(targetJar.getParentFile(), targetJar.getName() + UUID.randomUUID());
-        appTmpDir.mkdirs();
+        if (!appTmpDir.mkdirs() && !appTmpDir.isDirectory()) {
+            throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
+        }
         try {
-            unZipToDir(sourceJar, appTmpDir);
+            unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
 
             // 生成注解文件
             if (classPool == null) {
@@ -41,9 +43,13 @@ public class BundleConverter {
                 classPool = ClassPool.getDefault();
                 classPool.appendClassPath(new LoaderClassPath(this.getClass().getClassLoader()));
             }
+            // 中途异常也须摘除 classPath，否则残留条目会让后续构建解析到已删除目录里的类
             ClassPath appendedClassPath = classPool.appendClassPath(appTmpDir.getAbsolutePath());
-            addAnnotationFile(appTmpDir, targetJar);
-            classPool.removeClassPath(appendedClassPath);
+            try {
+                addAnnotationFile(appTmpDir, targetJar);
+            } finally {
+                classPool.removeClassPath(appendedClassPath);
+            }
 
             // 放入 OSGI 驱动类
             addDriverClasses(appTmpDir, libDir);
@@ -52,9 +58,12 @@ public class BundleConverter {
             addManifest(appTmpDir, targetJar);
 
             // 构建为 bundle jar
+            File[] files = appTmpDir.listFiles();
             try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(targetJar.toPath()))) {
-                for (File file : appTmpDir.listFiles()) {
-                    zipFiles(zos, file, file.getName());
+                if (files != null) {
+                    for (File file : files) {
+                        zipFiles(zos, file, file.getName());
+                    }
                 }
             }
         } finally {
@@ -95,20 +104,16 @@ public class BundleConverter {
                 "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
         if (appDynamicPackages == null) {
             String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");
-            if (pkgExtra != null && !pkgExtra.trim().isEmpty()) {
-                appDynamicPackages = pkgExtra.trim();
-            } else {
-                // 确保 if (appDynamicPackages == null) 只初始化一次就行。
-                // 注：正常情况下是不应该到这里的，因 Qingzhou 框架自身也需要 sun 的某些包
-                appDynamicPackages = "";
-            }
+            appDynamicPackages = pkgExtra != null && !pkgExtra.trim().isEmpty() ? pkgExtra.trim() : "";
 
             String dynamicPkgs = System.getProperty("qingzhou.osgi.packages.import.app");
             if (dynamicPkgs != null && !dynamicPkgs.trim().isEmpty()) {
                 appDynamicPackages += ("," + dynamicPkgs.trim());
             }
         }
-        attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE, appDynamicPackages);
+        if (!appDynamicPackages.isEmpty()) { // 无需动态导入时不写入空值，避免解析出空 Package 信息
+            attributes.putValue(Constants.DYNAMICIMPORT_PACKAGE, appDynamicPackages);
+        }
 
         try (OutputStream fos = Files.newOutputStream(manifestPath)) {
             manifest.write(fos);
@@ -117,8 +122,11 @@ public class BundleConverter {
 
     private void addDriverClasses(File appTmpDir, String libDir) throws Exception {
         File[] driverJarFiles = Paths.get(libDir, "runtime", "app-driver").toFile().listFiles();
+        if (driverJarFiles == null) {
+            throw new IllegalStateException("app-driver directory not found under: " + libDir);
+        }
         for (File driverJarFile : driverJarFiles) {
-            unZipToDir(driverJarFile, appTmpDir);
+            unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
         }
     }
 
@@ -323,12 +331,9 @@ public class BundleConverter {
             String fieldName = method.getName(); // 方法名 = 注解属性名
             Object fieldValue;
             try {
-                fieldValue = method.invoke(annotation); // 调用方法获取属性值（无参，传null）
+                fieldValue = method.invoke(annotation); // 注解实例的属性值经方法调用获取
             } catch (Exception e) {
-                // 这里会发生什么错误？
-                // 答案：当注解属性值为默认值时，method.invoke 会抛出异常，因为默认值不是通过方法调用获取的
-                // 如何获取默认值？
-                // 答案：通过 method.getDefaultValue() 获取
+                // 反射调用失败（如代理被外部干预）时回退注解声明的默认值，避免中断注解解析
                 fieldValue = method.getDefaultValue();
             }
             object.getClass().getField(fieldName)
@@ -336,7 +341,9 @@ public class BundleConverter {
         }
     }
 
-    private void unZipToDir(File srcFile, File unZipDir) throws IOException {
+    // @param overwrite true 时覆盖已存在的目标文件：driver 解压须置于应用之后且覆盖同名类，
+    //                  否则应用 jar 自带的 qingzhou/app/driver/ 同名类会遮蔽真正的驱动实现
+    private void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
@@ -349,7 +356,9 @@ public class BundleConverter {
                     targetFile.mkdirs();
                 } else {
                     Path targetFilePath = targetFile.toPath();
-                    if (!Files.exists(targetFilePath)) { // 不要让 app-driver 里面的 META-INF.MANIFEST.MF 覆盖了 应用 jar 里面的 META-INF.MANIFEST.MF
+                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
+                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
+                    if (overwrite || !Files.exists(targetFilePath)) {
                         targetFile.getParentFile().mkdirs();
                         try (OutputStream out = Files.newOutputStream(targetFilePath)) {
                             FileUtil.copyStream(zip.getInputStream(entry), out);

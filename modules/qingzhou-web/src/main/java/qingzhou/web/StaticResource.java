@@ -31,24 +31,24 @@ public class StaticResource implements HttpHandler {
         imageExtensions = new HashSet<>(Arrays.asList(
                 "png", "jpg", "jpeg", "gif", "svg", "ico"));
 
-        mimeTypes = Collections.unmodifiableMap(new HashMap<String, String>() {{
-            put("html", "text/html; charset=UTF-8");
-            put("htm", "text/html; charset=UTF-8");
-            put("js", "application/javascript; charset=UTF-8");
-            put("css", "text/css; charset=UTF-8");
-            put("json", "application/json; charset=UTF-8");
-            put("png", "image/png");
-            put("jpg", "image/jpeg");
-            put("jpeg", "image/jpeg");
-            put("gif", "image/gif");
-            put("svg", "image/svg+xml");
-            put("ico", "image/x-icon");
-            put("woff", "font/woff");
-            put("woff2", "font/woff2");
-            put("ttf", "font/ttf");
-            put("eot", "application/vnd.ms-fontobject");
-            put("otf", "font/otf");
-        }});
+        Map<String, String> mimeMap = new HashMap<>();
+        mimeMap.put("html", "text/html; charset=UTF-8");
+        mimeMap.put("htm", "text/html; charset=UTF-8");
+        mimeMap.put("js", "application/javascript; charset=UTF-8");
+        mimeMap.put("css", "text/css; charset=UTF-8");
+        mimeMap.put("json", "application/json; charset=UTF-8");
+        mimeMap.put("png", "image/png");
+        mimeMap.put("jpg", "image/jpeg");
+        mimeMap.put("jpeg", "image/jpeg");
+        mimeMap.put("gif", "image/gif");
+        mimeMap.put("svg", "image/svg+xml");
+        mimeMap.put("ico", "image/x-icon");
+        mimeMap.put("woff", "font/woff");
+        mimeMap.put("woff2", "font/woff2");
+        mimeMap.put("ttf", "font/ttf");
+        mimeMap.put("eot", "application/vnd.ms-fontobject");
+        mimeMap.put("otf", "font/otf");
+        mimeTypes = Collections.unmodifiableMap(mimeMap);
     }
 
     @Override

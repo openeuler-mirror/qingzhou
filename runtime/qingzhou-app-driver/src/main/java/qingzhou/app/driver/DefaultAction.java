@@ -11,6 +11,7 @@ import qingzhou.api.*;
 import qingzhou.api.action.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
@@ -86,10 +87,9 @@ public class DefaultAction {
         }
 
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
-        int pageNum = parsePageParam(request.getParameter("pageNum"), 1);
-        int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
+        int pageNum = parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM), 1);
+        int pageSize = Math.min(parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE), 10), 100);
         List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
-        int totalSize = page.totalSize(query);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
             Map<String, Object> finalResult = new HashMap<>();
@@ -102,9 +102,10 @@ public class DefaultAction {
                 listResult.add(dataMap);
             });
             finalResult.put("data", listResult);
-            finalResult.put("pageNum", pageNum);
-            finalResult.put("pageSize", pageSize);
-            finalResult.put("totalSize", totalSize);
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
+            // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
+            finalResult.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, page.totalSize(query));
             response.data(finalResult);
         }
     }
@@ -164,7 +165,13 @@ public class DefaultAction {
         if (response.getData() == null && downloadFile != null) {
             Map<String, String> map = new TreeMap<>();
 
-            File fileBase = downloadFile.files(request.getId());
+            // id 来自 URL path 段且由应用自行拼接目录，框架统一拦截穿越字符（与 download 的 file_names 同一防线）
+            String id = request.getId();
+            if (id != null && hasIllegalPath(id)) {
+                response.error("illegal file name");
+                return;
+            }
+            File fileBase = downloadFile.files(id);
             if (fileBase.isDirectory()) {
                 File[] files = fileBase.listFiles();
                 if (files != null) {
@@ -236,7 +243,10 @@ public class DefaultAction {
             } catch (NumberFormatException ignored) { // 非法 offset 视为从头下载
             }
         }
-        if (offset < 0) return;
+        if (offset < 0) { // 非法 offset 直接回 400，避免客户端静默等待
+            response.error("illegal download offset");
+            return;
+        }
 
         byte[] byteRead;
 
@@ -364,6 +374,7 @@ public class DefaultAction {
                         delete = true;
                     }
                 } catch (Exception e) {
+                    // 文件名不含时间前缀属历史遗留/外部产物，跳过即可；打印原始文件名辅助排查
                     System.err.println("failed to parse time: " + historicalKey);
                 }
                 if (delete) {

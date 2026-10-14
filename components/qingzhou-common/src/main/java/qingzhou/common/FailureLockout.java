@@ -24,8 +24,10 @@ public final class FailureLockout {
 
     /**
      * @param maxFailures    窗口内允许的失败次数，达到即锁定，须 >= 1
-     * @param windowMillis   滑动窗口长度（毫秒），须 >= 1
-     * @param maxTrackedKeys 跟踪的 key 数上限，达到即触发淘汰，须 >= 1
+     * @param windowMillis   固定窗口长度（毫秒），须 >= 1
+     * @param maxTrackedKeys 跟踪的 key 数上限，达到即触发淘汰，须 >= 1；
+     *                       注意：淘汰以可用性为优先，key 洪水可将被锁定的恶意 key 挤出表而绕过锁定，
+     *                       部署时应配合来源限流等手段，容量亦须按实际来源规模调大
      */
     public FailureLockout(int maxFailures, long windowMillis, int maxTrackedKeys) {
         if (maxFailures < 1 || windowMillis < 1 || maxTrackedKeys < 1) {

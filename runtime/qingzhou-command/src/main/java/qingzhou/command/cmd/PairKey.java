@@ -26,11 +26,11 @@ public class PairKey extends Processor {
             Object instance = aClass.newInstance();
             Method generatePairKey = aClass.getMethod("generatePairKey");
             String[] pairKey = (String[]) generatePairKey.invoke(instance);
-            logSimple("--------------------------- Public Key ----------------------------");
-            logSimple(pairKey[0]);
-            logSimple("--------------------------- Private Key ---------------------------");
-            logSimple(pairKey[1]);
-            logSimple("--------------------------- End -----------------------------------");
+            log("--------------------------- Public Key ----------------------------");
+            log(pairKey[0]);
+            log("--------------------------- Private Key ---------------------------");
+            log(pairKey[1]);
+            log("--------------------------- End -----------------------------------");
         }
     }
 }

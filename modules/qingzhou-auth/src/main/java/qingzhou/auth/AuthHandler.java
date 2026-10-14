@@ -1,10 +1,6 @@
 package qingzhou.auth;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -63,7 +59,7 @@ public class AuthHandler implements HttpHandler {
             roles = roleList.toArray(new String[0]);
         }
 
-        totpEnabled = configs.getConfig("totp_enabled", false);
+        totpEnabled = configs.getOrDefault("totp_enabled", false);
         if (totpEnabled) {
             totpSecret = configs.notBlank("totp_secret"); // 安全考虑：此处不要解密
         }
@@ -74,29 +70,29 @@ public class AuthHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) {
+    public void handle(HttpRequest request, HttpResponse response) throws Exception {
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
-        // 凭据只允许经 POST 请求体传递，防止密码进入 URL/访问日志；session 为 GET 探测
-        boolean isPost = "POST".equals(request.getMethod());
-        if (path.equals(LOGIN_PATH) && isPost) {
-            if (request.getRawUri().contains("?")) {
-                response.status(400).finish();
-                return;
-            }
-            login(request, response);
-        } else if (path.equals(LOGOUT_PATH) && isPost) {
-            logout(request, response);
-        } else if (path.equals(SESSION_PATH) && "GET".equals(request.getMethod())) {
-            session(request, response);
-        } else if (path.equals(LOGIN_PATH) || path.equals(LOGOUT_PATH) || path.equals(SESSION_PATH)) {
-            response.status(405).finish();
-        } else {
-            response.status(400).finish();
+        switch (path) {
+            case LOGIN_PATH:
+                // 凭据只允许经 POST 请求体传递
+                boolean isPost = "POST".equals(request.getMethod());
+                if (!isPost || request.getRawUri().contains("?")) { // 防止密码进入 URL/访问日志；
+                    response.status(400).finish();
+                    return;
+                }
+                login(request, response);
+                break;
+            case LOGOUT_PATH:
+                logout(request, response);
+                break;
+            case SESSION_PATH:
+                session(request, response);
+                break;
         }
     }
 
-    private void login(HttpRequest request, HttpResponse response) {
+    private void login(HttpRequest request, HttpResponse response) throws Exception {
         String reqUser = request.getParameter("username");
         String ip = request.getRemoteHost();
         if (reqUser != null && reqUser.length() > 128) {
@@ -130,18 +126,17 @@ public class AuthHandler implements HttpHandler {
         }
 
         lockout.clear(lockKey);
-        tokenService.sendToken(request, reqUser, roles, response);
-        Map<String, Object> body = new HashMap<>();
-        body.put("user", reqUser);
-        response.contentTypeJsonUtf8().send(jsonBody(body)).finish();
+        tokenService.sendToken(reqUser, roles, request, response);
+
+        response.finish();
     }
 
     /**
      * 会话探测：前端路由守卫与用户名展示的唯一依据
      * （会话 cookie 为 HttpOnly，前端无法自行判断登录态，OAuth2 回调后更是如此）
      */
-    private void session(HttpRequest request, HttpResponse response) {
-        Object[] userRoles = tokenService.verifyToken(tokenService.retrieveToken(request));
+    private void session(HttpRequest request, HttpResponse response) throws Exception {
+        Object[] userRoles = tokenService.verifyToken(tokenService.retrieveToken(request), request, response);
         if (userRoles == null) {
             response.status(401).finish();
             return;
@@ -149,19 +144,15 @@ public class AuthHandler implements HttpHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("username", userRoles[0]);
         body.put("roles", userRoles[1]);
-        response.contentTypeJsonUtf8().send(jsonBody(body)).finish();
-    }
-
-    private String jsonBody(Map<String, Object> body) {
-        try {
-            return json.toJson(body);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+        response.contentTypeJsonUtf8().send(json.toJson(body)).finish();
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
         if (reqPass == null) reqPass = ""; // null 会让 matches 抛 NPE 变 500，泄露「用户名有效」信号；按空凭据处理
+        // 慢哈希成本随凭据长度增长：免认证端点上超长凭据即 CPU 放大攻击，超长直接按无效处理
+        // 凭据长度上限：正常口令远低于此值，超出即视为滥用（慢哈希成本随长度增长）
+        int MAX_CREDENTIAL_CHARS = 1024;
+        if (reqPass.length() > MAX_CREDENTIAL_CHARS) return false;
 
         return Objects.equals(reqUser, username)
                 & // 用户名错误也执行等价慢哈希：抹平与「密码错误」的响应时序差，防用户名枚举

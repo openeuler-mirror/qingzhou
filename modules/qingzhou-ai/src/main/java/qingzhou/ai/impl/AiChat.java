@@ -35,19 +35,12 @@ public class AiChat implements HttpHandler {
             "代码块内部须是一个完整的 ECharts Option 对象，只输出对象本身，不要生成 const/let/var/import/export/function/HTML/JavaScript/Markdown 包裹\n" +
             "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表\n";
 
-    /**
-     * 单篇技能说明书/参考文档注入系统提示的字符上限：引用模型层同一常量，保证开销统计与实际注入口径一致
-     */
-    private static final int MAX_REF_CHARS = ChatModelFactory.ChatModelBuilder.DEFAULT_MAX_DOC_CHARS;
-
     @Reference
     private Logger logger;
     @Reference
     private Json json;
     @Reference
     private ChatModelFactory chatModelFactory;
-    @Reference
-    private ChatConfig chatConfig;
     @Reference
     private ConversationStore conversationStore;
     @Reference
@@ -67,7 +60,7 @@ public class AiChat implements HttpHandler {
 
     @Deactivate
     public void deactivate() {
-        SseListener.WATCHDOG_EXECUTOR.shutdownNow();
+        SseListener.watchdog().shutdownNow();
     }
 
     @Override
@@ -77,27 +70,93 @@ public class AiChat implements HttpHandler {
             httpResponse.status(400).finish();
             return;
         }
+        ChatRequest request = parseRequest(params, httpRequest, httpResponse);
+        if (request == null) return; // 参数非法：400 已由 parseRequest 写入
+        startChat(request, httpResponse);
+    }
 
+    // 解析并校验后的会话请求：构造完成后各字段只读
+    private static final class ChatRequest {
+        final String question;
+        final List<String> refDocs;
+        final Attachment[] images;
+        final String conversationId;
+        final String userId;
+        final String[] userRoles;
+
+        ChatRequest(String question, List<String> refDocs, Attachment[] images,
+                    String conversationId, String userId, String[] userRoles) {
+            this.question = question;
+            this.refDocs = refDocs;
+            this.images = images;
+            this.conversationId = conversationId;
+            this.userId = userId;
+            this.userRoles = userRoles;
+        }
+    }
+
+    // 解析并校验请求参数；非法时写入 400 并返回 null
+    private ChatRequest parseRequest(Map<String, Object> params, HttpRequest httpRequest, HttpResponse httpResponse) {
+        // 单次提问字符上限：正常业务提问远低于此值，超出即视为滥用
         String question = ((String) params.get("question")).trim();
-        String app = (String) params.get("app");
-        if (app != null && !app.isEmpty()) {
+        int MAX_QUESTION_CHARS = 10_000;
+        if (question.length() > MAX_QUESTION_CHARS) {
+            httpResponse.status(400).finish();
+            return null;
+        }
+
+        // app 为可选参数：未传或空串表示"不限应用范围"；类型非法（非字符串）回 400，避免 try 块外强转 CCE 变 500
+        Object appValue = params.get("app");
+        String app;
+        if (appValue == null) {
+            app = "";
+        } else if (appValue instanceof String) {
+            app = (String) appValue;
+        } else {
+            httpResponse.status(400).finish();
+            return null;
+        }
+        if (!app.isEmpty()) {
             question = ("在“" + app + "”应用范围内，回复：" + question);
         }
-        String finalQuestion = question;
 
+        // 服务端强制 ChatConfig 对前端宣称的限额：附件条数与大小不设防会被用于放大内存与 token 开销
         Map<String, List<String>> attachments = findAttachments(params);
+        for (List<String> items : attachments.values()) {
+            if (items.size() > ChatConfig.MAX_ATTACHMENT_FILES) {
+                httpResponse.status(400).finish();
+                return null;
+            }
+            for (String content : items) {
+                if (content.length() > ChatConfig.MAX_ATTACHMENT_CHARS) {
+                    httpResponse.status(400).finish();
+                    return null;
+                }
+            }
+        }
+
+        // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）：缺失/空串无法落库，直接 400
+        String conversationId = null;
+        Object conversationIdVal = params.get("conversationId");
+        if (conversationIdVal instanceof String) {
+            conversationId = ((String) conversationIdVal).trim();
+        }
+        if (conversationId == null || conversationId.isEmpty()) {
+            httpResponse.status(400).finish();
+            return null;
+        }
+
+        // userId 由鉴权层从 token 解析，不接受前端传参
         List<String> refDocs = attachments.get("document");
         Attachment[] images = attachments.getOrDefault("image", Collections.emptyList()).stream()
                 .map(this::parseImage)
                 .map(image -> chatModelFactory.newImageAttachment(image.base64, image.mimeType))
                 .toArray(Attachment[]::new);
+        return new ChatRequest(question, refDocs, images, conversationId, httpRequest.getPrincipal(), httpRequest.getRoles());
+    }
 
-        // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）
-        String conversationId = (String) params.get("conversationId");
-        // userId 由鉴权层从 token 解析，不接受前端传参
-        String userId = httpRequest.getPrincipal();
-        String[] userRoles = httpRequest.getRoles();
-
+    // SSE 准备与模型调用；受理后的任何前置异常都以事件告知客户端
+    private void startChat(ChatRequest request, HttpResponse httpResponse) {
         // 发出响应前的准备
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
@@ -108,24 +167,26 @@ public class AiChat implements HttpHandler {
         // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
         String assistantMessageId = UUID.randomUUID().toString();
         // chat() 异步返回，回答全文须等流结束才完整，落库挂 onComplete
-        sseListener.onCompleteAction(() -> conversationStore.storeAssistantMessage(conversationId, userId, sseListener.allContent.toString(), assistantMessageId));
+        sseListener.onCompleteAction(() -> conversationStore.storeAssistantMessage(request.conversationId, request.userId, sseListener.allContent.toString(), assistantMessageId));
 
         try {
-            sseListener.setStarted(conversationId, assistantMessageId); // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
+            sseListener.setStarted(request.conversationId, assistantMessageId); // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
             Collection<Skill> skills = LlmConverter.convertSkills(llmSkills, logger); // 只转换一次，开销统计与实际注入同源
-            int overhead = overhead(skills, refDocs, finalQuestion.length());
+            int maxRefChars = 10000; // 单篇技能说明书/参考文档注入系统提示的字符上限
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
-                    .docs(refDocs)
+                    .docs(request.refDocs)
                     .skills(skills)
                     .enableThinking(true)
-                    .interceptor((toolName, argsMap) -> interceptToolInvocation.intercept(toolName, argsMap, userId, userRoles))
-                    .chatMemory(() -> conversationStore.getMessageList(userId, conversationId, overhead));
+                    .interceptor((toolName, argsMap) -> interceptToolInvocation.intercept(toolName, argsMap, request.userId, request.userRoles))
+                    .maxDocChars(maxRefChars)
+                    .chatMemory(() -> conversationStore.getMessageList(request.userId, request.conversationId,
+                            overhead(skills, request.refDocs, request.question.length(), maxRefChars)));
             ChatModel chatModel = builder.build();
-            chatModel.chat(finalQuestion, sseListener, images);
+            chatModel.chat(request.question, sseListener, request.images);
 
             // chat() 异步返回，立即落库（在 chatMemory 读取历史之后，避免本轮提问混入上下文重复），
-            String storedUserMessageId = conversationStore.storeUserMessage(conversationId, userId, finalQuestion);
+            String storedUserMessageId = conversationStore.storeUserMessage(request.conversationId, request.userId, request.question);
             // 保证消息时间戳正确；消息 id 随 USER_MESSAGE 下发，供前端问答成对删除
             sseListener.sendUserMessage(storedUserMessageId);
         } catch (Throwable t) {
@@ -135,27 +196,6 @@ public class AiChat implements HttpHandler {
             logger.error("ai chat request failed: " + msg, t);
             sseListener.onError(msg);
         }
-    }
-
-    /**
-     * 本轮请求的固定开销：系统提示、技能说明书、附件文档、问题原文。
-     * 按注入时的截断上限计入，供会话记忆据此裁剪历史注入量；技能未激活时也计入，属保守上界
-     */
-    private static int overhead(Collection<Skill> skills, List<String> docs, int questionChars) {
-        int chars = SYSTEM_PROMPT.length() + questionChars;
-        for (Skill skill : skills) {
-            chars += Math.min(length(skill.instruction()), MAX_REF_CHARS);
-        }
-        if (docs != null) {
-            for (String doc : docs) {
-                chars += Math.min(length(doc), MAX_REF_CHARS);
-            }
-        }
-        return chars;
-    }
-
-    private static int length(String text) {
-        return text == null ? 0 : text.length();
     }
 
     private Map<String, Object> params(HttpRequest httpRequest) {
@@ -214,5 +254,26 @@ public class AiChat implements HttpHandler {
             this.base64 = base64;
             this.mimeType = mimeType;
         }
+    }
+
+    /**
+     * 本轮请求的固定开销：系统提示、技能说明书、附件文档、问题原文。
+     * 按注入时的截断上限计入，供会话记忆据此裁剪历史注入量；技能未激活时也计入，属保守上界
+     */
+    private static int overhead(Collection<Skill> skills, List<String> docs, int questionChars, int maxRefChars) {
+        int chars = SYSTEM_PROMPT.length() + questionChars;
+        for (Skill skill : skills) {
+            chars += Math.min(length(skill.description()), maxRefChars);
+        }
+        if (docs != null) {
+            for (String doc : docs) {
+                chars += Math.min(length(doc), maxRefChars);
+            }
+        }
+        return chars;
+    }
+
+    private static int length(String text) {
+        return text == null ? 0 : text.length();
     }
 }

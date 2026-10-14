@@ -236,13 +236,18 @@ class Validation implements ActionFilter {
         }
     }
 
-    // 自定义 pattern 按字符串缓存编译结果，避免每次校验都重新编译正则（#35）
+    // 自定义 pattern 按字符串缓存编译结果，避免每次校验都重新编译正则；
+    // 容量有界：pattern 来自应用元数据，超限时整体清空重建，防止缓存无界增长
+    private static final int MAX_PATTERN_CACHE = 1000;
     private static final ConcurrentHashMap<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
     class CustomPattern implements Validator {
         @Override
         public String validate(ValidationContext context) {
             String pattern = context.field.pattern;
+            if (PATTERN_CACHE.size() >= MAX_PATTERN_CACHE) {
+                PATTERN_CACHE.clear();
+            }
             Pattern compiled = PATTERN_CACHE.computeIfAbsent(pattern, Pattern::compile);
             return compiled.matcher(context.parameter).matches() ? null : i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);
         }

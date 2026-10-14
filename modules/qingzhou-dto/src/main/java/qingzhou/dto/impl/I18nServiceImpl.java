@@ -21,16 +21,22 @@ public class I18nServiceImpl implements I18nService {
     @Activate
     public void init() {
         ZH_TR_MAP.clear(); // 允许组件重新激活时重建，避免静态映射残留上次内容
-        try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream("/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/") + "/zh_Hant.txt")) {
+        try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream(
+                "/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/")
+                        + "/zh_Hant.txt")) {
             String zh = "";
             String zhHant = "";
             BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream), StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
+                // 去掉 "lang=" 前缀：前缀字符（z/h/_/a/n/s/= 等）不得混入映射表
                 if (line.startsWith(Lang.zh_Hans + "=")) {
-                    zh = line;
+                    zh = line.substring(Lang.zh_Hans.name().length() + 1);
                 } else if (line.startsWith(Lang.zh_Hant + "=")) {
-                    zhHant = line;
+                    zhHant = line.substring(Lang.zh_Hant.name().length() + 1);
                 }
+            }
+            if (zh.length() != zhHant.length()) {
+                throw new IllegalStateException("zh_Hans and zh_Hant must be aligned character by character with equal length");
             }
             for (int i = 0; i < zh.length(); i++) {
                 Character check = ZH_TR_MAP.put(zh.charAt(i), zhHant.charAt(i));

@@ -30,27 +30,38 @@ public class JdbcPoolImpl implements JdbcPool {
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
         for (Map.Entry<String, String> entry : config.entrySet()) {
+            PropertyDescriptor matched = null;
             for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
                 if (pd.getName().equals(entry.getKey())) {
-                    Method writeMethod = pd.getWriteMethod();
-                    if (writeMethod != null) {
-                        writeMethod.invoke(props, convert(entry.getValue(), writeMethod.getParameterTypes()[0]));
-                    }
+                    matched = pd;
                     break;
                 }
             }
+            // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
+            if (matched == null || matched.getWriteMethod() == null) {
+                throw new IllegalArgumentException("unknown qingzhou-jdbc config item: " + entry.getKey());
+            }
+            matched.getWriteMethod().invoke(props, convert(entry.getKey(), entry.getValue(), matched.getWriteMethod().getParameterTypes()[0]));
         }
         this.poolConfig = props;
     }
 
-    private Object convert(String value, Class<?> type) {
-        if (type == int.class || type == Integer.class) return Integer.valueOf(value);
-        if (type == long.class || type == Long.class) return Long.valueOf(value);
-        if (type == boolean.class || type == Boolean.class) {
-            if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) return Boolean.valueOf(value);
-            throw new IllegalArgumentException("invalid boolean: " + value);
+    private Object convert(String key, String value, Class<?> type) {
+        try {
+            if (type == int.class || type == Integer.class) return Integer.valueOf(value);
+            if (type == long.class || type == Long.class) return Long.valueOf(value);
+            if (type == short.class || type == Short.class) return Short.valueOf(value);
+            if (type == float.class || type == Float.class) return Float.valueOf(value);
+            if (type == double.class || type == Double.class) return Double.valueOf(value);
+            if (type == boolean.class || type == Boolean.class) {
+                if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) return Boolean.valueOf(value);
+                throw new IllegalArgumentException("invalid boolean: " + value);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            // 异常须携带配置项名，否则反射调用栈里无法定位是哪个配置项的值非法
+            throw new IllegalArgumentException("invalid value of config item [" + key + "]: " + value, e);
         }
-        return value;
     }
 
     @Override

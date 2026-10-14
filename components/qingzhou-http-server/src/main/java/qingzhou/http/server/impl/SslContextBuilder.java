@@ -75,7 +75,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
                 logger.warn("no strong cipher suite is supported by this JDK, falling back to filtered JDK defaults");
                 List<String> filtered = new ArrayList<>();
                 for (String suite : supported) {
-                    String upper = suite.toUpperCase();
+                    String upper = suite.toUpperCase(Locale.ROOT);
                     if (upper.contains("CBC") || upper.contains("3DES") || upper.contains("RC4")
                             || upper.contains("NULL") || upper.contains("EXPORT") || upper.contains("ANON")) continue;
                     filtered.add(suite);

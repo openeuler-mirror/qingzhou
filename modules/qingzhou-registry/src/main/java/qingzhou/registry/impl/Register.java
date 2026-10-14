@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Configs;
 import qingzhou.common.NonceRegistry;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
@@ -67,7 +68,8 @@ public class Register implements HttpHandler {
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
-        String privateKey = config.get("private_key");
+        Configs configs = new Configs(config);
+        String privateKey = configs.get("private_key");
         if (privateKey == null || privateKey.trim().isEmpty()) {
             logger.warn("'private_key' is not configured, remote instance registration feature is unavailable.");
             return;
@@ -83,8 +85,8 @@ public class Register implements HttpHandler {
             registerToken = registerTokenConfig.trim().getBytes(StandardCharsets.UTF_8);
         }
 
-        long interval = 1000 * Long.parseLong(config.getOrDefault("interval", "6"));
-        long timeout = 1000 * Long.parseLong(config.getOrDefault("timeout", "12"));
+        long interval = 1000L * configs.atLeast("interval", 1, 6);
+        long timeout = 1000L * configs.atLeast("timeout", 5, 12);
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
@@ -137,7 +139,7 @@ public class Register implements HttpHandler {
             instanceInfo = json.fromJson(parts[4], InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
         } catch (Exception e) {
-            httpResponse.send("data format error").finish();
+            httpResponse.status(400).send("data format error").finish();
             return;
         }
 
@@ -171,13 +173,13 @@ public class Register implements HttpHandler {
             httpResponse.send(encrypt).finish();
         } catch (Exception e) {
             httpResponse.status(500).finish();
-            logger.error("encryption failed, key len: " + instanceKey.length());
+            logger.error("failed to encrypt registration response", e);
         }
     }
 
     private boolean isValid(String[] parts, HttpResponse httpResponse) {
         if (parts.length < 5) {
-            httpResponse.send("data format error").finish();
+            httpResponse.status(400).send("data format error").finish();
             return false;
         }
 
@@ -185,7 +187,7 @@ public class Register implements HttpHandler {
         // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
         boolean isAuthorized = registerToken != null && MessageDigest.isEqual(registerToken, parts[0].getBytes(StandardCharsets.UTF_8));
         if (!isAuthorized) {
-            httpResponse.send("register_token error").finish();
+            httpResponse.status(401).send("register_token error").finish();
             return false;
         }
 
@@ -193,7 +195,7 @@ public class Register implements HttpHandler {
         try {
             timestamp = Long.parseLong(parts[1]);
         } catch (NumberFormatException e) {
-            httpResponse.send("data format error").finish();
+            httpResponse.status(400).send("data format error").finish();
             return false;
         }
         // 时间窗：重放旧报文的时间戳必然过期，在任何状态变更之前拒绝

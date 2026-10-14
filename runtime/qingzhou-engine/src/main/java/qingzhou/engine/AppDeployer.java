@@ -34,7 +34,9 @@ class AppDeployer {
         if (appCacheDir.exists()) {
             deleteFile(appCacheDir);
         }
-        appCacheDir.mkdirs();
+        if (!appCacheDir.mkdirs() && !appCacheDir.isDirectory()) {
+            throw new IllegalStateException("cannot create app bundle cache dir: " + appCacheDir);
+        }
 
         File[] listFiles = new File(instanceDir, "apps").listFiles();
         if (listFiles != null) {

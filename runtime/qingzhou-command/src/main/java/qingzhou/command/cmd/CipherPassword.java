@@ -22,7 +22,7 @@ public class CipherPassword extends Processor {
     public void doCommandLine(String[] args) throws Exception {
         String password = readPassword(args);
         if (password == null) {
-            logSimple("usage: cipher-password <plainPassword>");
+            log("usage: cipher-password <plainPassword>");
             return;
         }
 
@@ -35,9 +35,9 @@ public class CipherPassword extends Processor {
             Method encrypt = cipherClass.getMethod("encrypt", String.class);
             String invoke = (String) encrypt.invoke(globalCipher, password);
 
-            logSimple("------------------------- Password  --------------------------");
-            logSimple(invoke);
-            logSimple("------------------------- End -------------------------------------");
+            log("------------------------- Password  --------------------------");
+            log(invoke);
+            log("------------------------- End -------------------------------------");
         }
     }
 }

@@ -26,9 +26,9 @@ public class CipherKey extends Processor {
             Object instance = aClass.newInstance();
             Method generateKey = aClass.getMethod("generateKey");
             String cipherKey = (String) generateKey.invoke(instance);
-            logSimple("--------------------------- Cipher Key ----------------------------");
-            logSimple(cipherKey);
-            logSimple("--------------------------- End -----------------------------------");
+            log("--------------------------- Cipher Key ----------------------------");
+            log(cipherKey);
+            log("--------------------------- End -----------------------------------");
         }
     }
 }

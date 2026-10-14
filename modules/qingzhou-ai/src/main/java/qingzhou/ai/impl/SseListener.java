@@ -25,11 +25,29 @@ import qingzhou.logger.Logger;
  * 防止“已出内容但模型静默 + 客户端长连接不关”时心跳无限续期造成僵尸任务空转。
  */
 public class SseListener implements Listener {
-    static final ScheduledExecutorService WATCHDOG_EXECUTOR = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "qz-ai-sse-watchdog");
-        t.setDaemon(true);
-        return t;
-    });
+    private static volatile ScheduledExecutorService watchdogExecutor = newWatchdogExecutor();
+
+    private static ScheduledExecutorService newWatchdogExecutor() {
+        return Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "qz-ai-sse-watchdog");
+            t.setDaemon(true);
+            return t;
+        });
+    }
+
+    // 组件 deactivate 会 shutdown 线程池，重启后须重建，否则看门狗任务被静默丢弃
+    static ScheduledExecutorService watchdog() {
+        ScheduledExecutorService executor = watchdogExecutor;
+        if (executor.isShutdown()) {
+            synchronized (SseListener.class) {
+                if (watchdogExecutor.isShutdown()) {
+                    watchdogExecutor = newWatchdogExecutor();
+                }
+                executor = watchdogExecutor;
+            }
+        }
+        return executor;
+    }
 
     /**
      * 连续静默达到该时长后补发一次心跳
@@ -86,7 +104,7 @@ public class SseListener implements Listener {
      */
     public void setStarted(String conversationId, String assistantMessageId) {
         startTime = System.currentTimeMillis();
-        watchdogTask = WATCHDOG_EXECUTOR.scheduleWithFixedDelay(
+        watchdogTask = watchdog().scheduleWithFixedDelay(
                 this::watchdogTick,
                 HEARTBEAT_INTERVAL_MS, HEARTBEAT_INTERVAL_MS, TimeUnit.MILLISECONDS);
 

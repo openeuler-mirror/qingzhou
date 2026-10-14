@@ -10,8 +10,6 @@ public class TotpCipherImplTest {
 
     // Base32 合法字符：大写 A-Z、数字 2-7、填充符 =
     private static final Pattern BASE32_VALID_REGEX = Pattern.compile("^[A-Z2-7=]+$");
-    // 8 字节密钥 -> Base32 固定 16 位（13 个有效字符 + 3 个填充符 =）
-    private static final int KEY_LENGTH = 16;
 
     // 每个用例独立创建实例，避免共享状态
     private TotpCipherImpl newTotp() {
@@ -29,12 +27,6 @@ public class TotpCipherImplTest {
     public void generatedKey_generateKey_matchBase32Spec() {
         String key = newTotp().generateKey();
         Assert.assertTrue(BASE32_VALID_REGEX.matcher(key).matches(), "密钥包含非法 Base32 字符: " + key);
-    }
-
-    @Test
-    public void generatedKey_generateKey_returnCorrectLength() {
-        String key = newTotp().generateKey();
-        Assert.assertEquals(key.length(), KEY_LENGTH);
     }
 
     // ===================== getCode(String key) =====================

@@ -12,6 +12,8 @@ class MultipartStreamParser {
     private static final int MAX_PART_HEADERS = 8192; // 单个分片的头部上限
     private static final int MAX_FIELD_BYTES = 1024 * 1024; // 单个文本字段上限
     private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
+    // 文件分片总量上限：与服务端请求体上限对齐，防止认证用户用单个请求写满磁盘
+    private static final long MAX_TOTAL_BYTES = 256L * 1024 * 1024;
 
     private final byte[] boundaryDelimiter;
     private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
@@ -29,6 +31,7 @@ class MultipartStreamParser {
     private final ByteArrayOutputStream headerBuffer = new ByteArrayOutputStream();
 
     private int partCount;
+    private long totalBytes;
     private String currentFieldName;
     private boolean isFileField;
 
@@ -53,6 +56,11 @@ class MultipartStreamParser {
 
     void feed(byte[] data, boolean isLast) throws IOException {
         if (state == State.DONE) return;
+
+        totalBytes += data.length;
+        if (totalBytes > MAX_TOTAL_BYTES) {
+            throw new IllegalStateException("multipart body too large");
+        }
 
         byte[] searchArea;
         if (leftoverLen > 0) {
@@ -184,17 +192,18 @@ class MultipartStreamParser {
     }
 
     private void finishCurrentPart() throws IOException {
-        if (currentFieldName == null) return;
         if (isFileField) {
             fileStream.close();
             fileStream = null;
             uploadFileMap.computeIfAbsent(currentFieldName, k -> new ArrayList<>())
                     .add(currentTempFile.getAbsolutePath());
             uploadFileFields.add(currentFieldName);
-        } else {
+        } else if (currentFieldName != null) {
             parameters.put(currentFieldName, fieldBuffer.toString("UTF-8").trim());
-            fieldBuffer.reset();
         }
+        // fieldBuffer 须无条件复位：filename 存在而 name 缺失的 part 走文本分支时，
+        // 否则其残留内容会拼进下一个文本字段的值（同请求内参数污染）
+        fieldBuffer.reset();
         currentFieldName = null;
         isFileField = false;
     }
@@ -241,8 +250,10 @@ class MultipartStreamParser {
         currentFieldName = extractValue(headers, "name=\"");
         String currentFileName = extractValue(headers, "filename=\"");
         if (currentFileName != null && !currentFileName.isEmpty()) {
-            // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束
-            if (currentFileName.contains("..") || currentFileName.contains("/") || currentFileName.contains("\\")) {
+            // 非法文件名直接拒绝：降级为文本字段会让遍历类文件名绕过上传目录约束；
+            // '=' 是上传协议的保留字符（agent 侧按 keyName=name 分隔），混入会导致远程上传静默错位
+            if (currentFileName.contains("..") || currentFileName.contains("/")
+                    || currentFileName.contains("\\") || currentFileName.contains("=")) {
                 throw new IllegalStateException("invalid upload file name");
             }
             isFileField = currentFieldName != null && fieldTypeResolver.isFileField(currentFieldName);

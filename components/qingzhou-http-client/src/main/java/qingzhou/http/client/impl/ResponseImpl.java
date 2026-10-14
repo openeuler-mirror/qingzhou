@@ -15,7 +15,8 @@ class ResponseImpl implements Response {
     private final boolean streaming;
 
     private byte[] result;
-    private boolean cancelled;
+    // cancel() 由调用线程写、流式读取线程读，volatile 保证取消状态及时可见
+    private volatile boolean cancelled;
 
     ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
         this.conn = conn;
@@ -43,7 +44,13 @@ class ResponseImpl implements Response {
 
     private void readStreaming(ResponseListener listener) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(code), StandardCharsets.UTF_8))) {
+            long received = 0;
             for (String line; !cancelled && (line = reader.readLine()) != null; ) {
+                received += line.length() + 1; // readLine 丢弃换行符，计数补回 1
+                // 流式路径同样受 maxBodySize 约束：否则服务端一条超长行即可让整行驻留内存
+                if (maxBodySize > 0 && received > maxBodySize) {
+                    throw new IOException("streaming response exceeds maxBodySize: " + maxBodySize);
+                }
                 listener.onBody(line);
             }
             if (!cancelled) {

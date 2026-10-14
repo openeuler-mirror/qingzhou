@@ -33,6 +33,6 @@ public class AppInfoTool implements ToolService {
             Object val = toolArgs.get(name);
             return val != null ? String.valueOf(val) : null;
         };
-        return json.toJson(appInfo.function.apply(context));
+        return json.toJson(appInfo.getFunction().apply(context));
     }
 }

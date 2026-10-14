@@ -28,13 +28,12 @@ public class TotpKey extends Processor {
             Object totpCipher = getTotpCipher.invoke(instance);
 
             Class<?> totpCipherClass = loader.loadClass("qingzhou.crypto.TotpCipher");
-            Method generateKey = totpCipherClass.getMethod("generateKey");
-            generateKey.setAccessible(true);
+            Method generateKey = totpCipherClass.getMethod("generateKey"); // 接口公开方法，无需穿透访问
             String totpKey = (String) generateKey.invoke(totpCipher);
 
-            logSimple("--------------------------- Totp Key ----------------------------");
-            logSimple(totpKey);
-            logSimple("--------------------------- End -----------------------------------");
+            log("--------------------------- Totp Key ----------------------------");
+            log(totpKey);
+            log("--------------------------- End -----------------------------------");
         }
     }
 }

@@ -28,6 +28,7 @@ final class RequestContext {
     volatile String path; // 规范化后的路径
     volatile HandlerManager.HandlerEntry entry;
     volatile HttpRequestImpl httpRequest;
+    volatile HttpResponseImpl httpResponse;
     volatile HttpHandler.StreamHandler streamHandler;
     volatile boolean streamRequired;
     volatile boolean streamPermitHeld; // 流式分支已取得的并发许可

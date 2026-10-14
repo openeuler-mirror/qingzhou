@@ -1,5 +1,7 @@
 package qingzhou.dto.meta.annotation;
 
+import java.util.Objects;
+
 public abstract class Base {
     public String code;
 
@@ -8,11 +10,11 @@ public abstract class Base {
         if (!(object instanceof Base)) return false;
 
         Base that = (Base) object;
-        return code.equals(that.code);
+        return Objects.equals(code, that.code); // code 为 null 的元数据进入 HashSet 不得抛 NPE
     }
 
     @Override
     public final int hashCode() {
-        return code.hashCode();
+        return Objects.hashCode(code);
     }
 }

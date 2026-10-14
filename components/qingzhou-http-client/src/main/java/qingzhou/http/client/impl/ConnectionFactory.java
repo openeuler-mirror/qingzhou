@@ -6,6 +6,10 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.*;
 
 class ConnectionFactory {
@@ -17,6 +21,8 @@ class ConnectionFactory {
 
     // 未显式调用 trustAllCertificates 时使用：信任所有证书且不校验主机名
     private volatile SSLSocketFactory trustAllFactory;
+    // 自定义信任证书的 SSLSocketFactory 缓存（按证书集内容缓存）：高频内网调用避免每次重建 KeyStore/SSLContext
+    private final Map<List<X509Certificate>, SSLSocketFactory> trustFactories = new ConcurrentHashMap<>();
 
     HttpURLConnection getConnection(String url, int connectTimeout, int readTimeout, X509Certificate[] trustedCertificates, boolean trustAll) throws Exception {
         if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is missing");
@@ -76,6 +82,10 @@ class ConnectionFactory {
     }
 
     private SSLSocketFactory getTrustFactory(X509Certificate[] trustedCertificates) throws Exception {
+        List<X509Certificate> key = Arrays.asList(trustedCertificates);
+        SSLSocketFactory cached = trustFactories.get(key);
+        if (cached != null) return cached;
+
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
         for (int i = 0; i < trustedCertificates.length; i++) {
@@ -84,7 +94,9 @@ class ConnectionFactory {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         trustManagerFactory.init(keyStore);
 
-        return newSocketFactory(trustManagerFactory.getTrustManagers());
+        SSLSocketFactory factory = newSocketFactory(trustManagerFactory.getTrustManagers());
+        SSLSocketFactory prev = trustFactories.putIfAbsent(key, factory);
+        return prev != null ? prev : factory;
     }
 
     private SSLSocketFactory newSocketFactory(TrustManager... trustManagers) throws Exception {

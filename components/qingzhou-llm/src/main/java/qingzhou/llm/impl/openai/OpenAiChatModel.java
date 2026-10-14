@@ -2,6 +2,7 @@ package qingzhou.llm.impl.openai;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
@@ -28,8 +29,8 @@ class OpenAiChatModel implements ChatModel {
         this.crypto = crypto;
         this.syncSender = new SyncSender(builder, httpClient, json, crypto);
 
-        if (builder.tools != null) {
-            builder.tools.forEach(tool -> baseTools.put(tool.name(), tool));
+        if (builder.getTools() != null) {
+            builder.getTools().forEach(tool -> baseTools.put(tool.name(), tool));
         }
     }
 
@@ -41,11 +42,11 @@ class OpenAiChatModel implements ChatModel {
     @Override
     public void chat(String message, Listener chatListener, Attachment... attachment) {
         try {
-            if (builder.skills != null && !builder.skills.isEmpty()) {
+            if (builder.getSkills() != null && !builder.getSkills().isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
             }
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.skills, message, () -> new OpenAiChatModelBuilder(builder.baseUrl, builder.apiKey, builder.model, httpClient, json, crypto));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, () -> new OpenAiChatModelBuilder(builder.getBaseUrl(), builder.getApiKey(), builder.getModel(), httpClient, json, crypto));
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
@@ -69,7 +70,7 @@ class OpenAiChatModel implements ChatModel {
      * 请求返回 200 后本方法立即返回，流式读取与后续回调（onBody/onComplete/onError）在后台线程进行。
      */
     private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
-        if (toolIteration >= builder.maxToolIterations) { // 达到工具调用上限：明确告知调用方，避免静默终止
+        if (toolIteration >= builder.getMaxToolIterations()) { // 达到工具调用上限：明确告知调用方，避免静默终止
             Utils.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
@@ -90,7 +91,7 @@ class OpenAiChatModel implements ChatModel {
             if (response.getStatus() == 200) return;
 
             response.cancel();
-            if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.maxRetries) {
+            if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
@@ -98,7 +99,7 @@ class OpenAiChatModel implements ChatModel {
             chatListener.onError("API error " + response.getStatus() + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
-            if (attempt < builder.maxRetries) {
+            if (attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
@@ -116,6 +117,8 @@ class OpenAiChatModel implements ChatModel {
 
         private final StringBuilder content = new StringBuilder();
         private final StringBuilder reasoningContent = new StringBuilder();
+        // 本轮服务端实际使用的思考字段名（reasoning / reasoning_content），按请求持有而非存于共享 builder
+        private final AtomicReference<String> reasoningField = new AtomicReference<>();
         private final Map<Integer, ToolCallInfo> toolCalls = new TreeMap<>();
         private boolean streamRetried; // 流式读取中断后是否已重发过（仅允许一次，避免重复输出）
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
@@ -158,7 +161,7 @@ class OpenAiChatModel implements ChatModel {
                 Map<String, Object> delta = (Map<String, Object>) choice.get("delta");
                 if (delta == null) return;
 
-                String reasoning = builder.extractReasoning(delta);
+                String reasoning = builder.extractReasoning(delta, reasoningField);
                 if (!reasoning.isEmpty()) {
                     chatListener.onReasoning(reasoning);
                     reasoningContent.append(reasoning);
@@ -179,16 +182,16 @@ class OpenAiChatModel implements ChatModel {
                         int index = ((Number) indexObj).intValue();
                         ToolCallInfo toolCallInfo = toolCalls.computeIfAbsent(index, k -> new ToolCallInfo());
                         if (dtc.get("id") != null) {
-                            toolCallInfo.id = String.valueOf(dtc.get("id"));
+                            toolCallInfo.setId(String.valueOf(dtc.get("id")));
                         }
                         Map<String, Object> dfn = (Map<String, Object>) dtc.get("function");
                         if (dfn != null) {
                             if (dfn.get("name") != null) {
-                                toolCallInfo.name = String.valueOf(dfn.get("name"));
+                                toolCallInfo.setName(String.valueOf(dfn.get("name")));
                             }
                             if (dfn.get("arguments") != null) {
-                                String args = toolCallInfo.arguments != null ? toolCallInfo.arguments : "";
-                                toolCallInfo.arguments = args + dfn.get("arguments");
+                                String args = toolCallInfo.getArguments() != null ? toolCallInfo.getArguments() : "";
+                                toolCallInfo.setArguments(args + dfn.get("arguments"));
                             }
                         }
                     }
@@ -210,12 +213,12 @@ class OpenAiChatModel implements ChatModel {
 
                 if (!toolCalls.isEmpty()) {
                     // 前次的思考内容在后面轮次请求时也会提交，（deepseek 要求存在tool参数时，将前面的思维链内容带上）
-                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), toolCalls.values()));
+                    messages.add(builder.buildAssistantMessage(content.toString(), reasoningContent.toString(), reasoningField.get(), toolCalls.values()));
 
                     chatListener.onReasoningPause();
                     for (ToolCallInfo toolCallInfo : toolCalls.values()) {
-                        chatListener.onToolCall(toolCallInfo.id, toolCallInfo.name, toolCallInfo.arguments);
-                        messages.add(builder.buildToolMessage(toolCallInfo.id, Utils.invokeTool(toolCallInfo, tools, json, builder.interceptor)));
+                        chatListener.onToolCall(toolCallInfo.getId(), toolCallInfo.getName(), toolCallInfo.getArguments());
+                        messages.add(builder.buildToolMessage(toolCallInfo.getId(), Utils.invokeTool(toolCallInfo, tools, json, builder.getInterceptor())));
                     }
 
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);

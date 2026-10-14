@@ -15,6 +15,7 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/list",
@@ -27,24 +28,40 @@ public class AppList implements HttpHandler {
     @Reference
     private Json json;
 
-    public Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
+    private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
         public Object apply(HandlingContext context) {
             String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
             List<Map<String, String>> appBasicInfoList = new ArrayList<>();
             for (String localApp : registry.getAllLocalApps()) {
-                appBasicInfoList.add(appInfo(registry.getLocalInstance(), registry.getLocalApp(localApp).getAppMeta().getApp(), lang));
+                qingzhou.dto.meta.annotation.App app = localAppMeta(localApp);
+                if (app != null) {
+                    appBasicInfoList.add(appInfo(registry.getLocalInstance(), app, lang));
+                }
             }
             registry.getAllRemoteInstances().forEach(instance -> {
                 InstanceInfo remoteInstance = registry.getRemoteInstance(instance);
-                registry.getAllRemoteApps(instance).forEach(appCode -> {
-                    qingzhou.dto.meta.annotation.App app = registry.getRemoteApp(instance, appCode).getAppMeta().getApp();
-                    appBasicInfoList.add(appInfo(remoteInstance, app, lang));
+                // 实例可能被健康检查并发移除，应用列表/实例信息均可能为 null
+                List<String> remoteApps = registry.getAllRemoteApps(instance);
+                if (remoteApps == null || remoteInstance == null) return;
+                remoteApps.forEach(appCode -> {
+                    AppStub stub = registry.getRemoteApp(instance, appCode);
+                    if (stub == null || stub.getAppMeta() == null) return;
+                    appBasicInfoList.add(appInfo(remoteInstance, stub.getAppMeta().getApp(), lang));
                 });
             });
             return appBasicInfoList;
         }
     };
+
+    public Function<HandlingContext, Object> getFunction() {
+        return function;
+    }
+
+    private qingzhou.dto.meta.annotation.App localAppMeta(String localApp) {
+        AppStub stub = registry.getLocalApp(localApp);
+        return stub == null || stub.getAppMeta() == null ? null : stub.getAppMeta().getApp();
+    }
 
     private Map<String, String> appInfo(InstanceInfo instanceInfo, qingzhou.dto.meta.annotation.App app, String lang) {
         Map<String, String> appInfo = new HashMap<>();
@@ -62,6 +79,6 @@ public class AppList implements HttpHandler {
         if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
 
         // 执行
-        WebUtil.sendResult(function, httpRequest, httpResponse, registry, json);
+        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

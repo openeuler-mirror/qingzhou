@@ -8,6 +8,7 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.common.FailureLockout;
 import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 import qingzhou.http.server.auth.AuthResult;
 import qingzhou.http.server.auth.Authenticator;
 import qingzhou.http.server.impl.HandlerManager;
@@ -55,49 +56,40 @@ public class AuthManager {
      * 安全认证：多认证器聚合——任一 PASS 即放行；首个显式 REJECT 优先拒绝（客户端已出示凭据，须明确告知 401）；
      * 全部既未 PASS 也未 REJECT 时按无凭据拒绝。
      * 免认证标记取自 handlerEntry（随注册路径）；不提供全局免认证开关，避免一处配置放通全站。
-     *
-     * @return null 表示放行（免认证或认证通过，PASS 结果可携带续期 Set-Cookie）；否则为拒绝结果
      */
-    public AuthResult doAuth(HttpRequestImpl httpRequest, HandlerManager.HandlerEntry handlerEntry) {
-        if (handlerEntry.noAuth) return null;
+    public boolean doAuth(HttpRequestImpl httpRequest, HttpResponse httpResponse, HandlerManager.HandlerEntry handlerEntry) {
+        if (handlerEntry.noAuth) return true;
 
         String host = httpRequest.getRemoteHost();
-        if (lockout.isLocked(host)) return AuthResult.reject("auth lockout");
+        if (lockout.isLocked(host)) return false;
 
-        AuthResult authResult = authenticate(httpRequest);
+        AuthResult authResult = authenticate(httpRequest, httpResponse);
 
         // 校验通过：清空失败计数并写入受保护的认证字段（避免被 handler 覆写）
         if (authResult.status() == AuthResult.Status.PASS && authResult.getPrincipal() != null) {
             lockout.clear(host);
             httpRequest.setPrincipal(authResult.getPrincipal(), authResult.getRoles());
-            return authResult;
+            return true;
         }
 
-        // 仅当请求确实携带了凭据却失败才计入锁定：未携带凭据的匿名访问（NAT 下大量正常请求）
-        // 不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户。判断依据是认证结果原因而非直接读头：
-        // TokenAuthenticator 对无/畸形 Bearer 返回 "token missing"，即"未出示凭据"，不计入锁定；
-        // 只有出示了凭据却失败（如 "invalid token"）才消耗锁定计数，从而仍能拖慢凭据爆破
-        String reason = authResult.getReason();
-        boolean noCredential = reason == null || "no credential provided".equals(reason)
-                || "no authenticator ready".equals(reason)
-                || "token missing".equals(reason);
-        if (!noCredential) {
+        // 仅当请求确实携带了凭据却失败（REJECT）才计入锁定；
+        // 未出示凭据（NO_CREDENTIAL）的匿名访问（NAT 下大量正常请求）不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户；
+        if (authResult.status() != AuthResult.Status.NO_CREDENTIAL) {
             lockout.recordFailure(host);
         }
 
-        logger.warn("http authentication rejected: " + reason);
-        return authResult.status() == AuthResult.Status.REJECT ? authResult
-                : AuthResult.reject("no credential provided"); // PASS 而无主体属模糊态：按无凭据拒绝
+        logger.warn("http authentication rejected: " + authResult.getReason());
+        return false;
     }
 
-    private AuthResult authenticate(HttpRequest request) {
-        if (authenticators.isEmpty()) return AuthResult.reject("no authenticator ready");
+    private AuthResult authenticate(HttpRequest request, HttpResponse response) {
+        if (authenticators.isEmpty()) return AuthResult.noCredential("no authenticator ready");
 
         AuthResult reject = null;
         for (Authenticator authenticator : authenticators) {
             AuthResult r;
             try {
-                r = authenticator.authenticate(request);
+                r = authenticator.authenticate(request, response);
             } catch (Throwable e) {
                 logger.error("authentication error: " + authenticator.getClass().getName(), e);
                 r = AuthResult.reject("authentication error"); // 单个认证器故障转为拒绝，不影响其余认证器继续判定
@@ -114,6 +106,6 @@ public class AuthManager {
         }
         if (reject != null) return reject;
 
-        return AuthResult.reject("no credential provided");
+        return AuthResult.noCredential("no credential provided");
     }
 }

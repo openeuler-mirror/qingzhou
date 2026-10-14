@@ -78,6 +78,7 @@ public class Config {
                         .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
                         .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
             } catch (Throwable t) {
+                // 配置错误即终止启动，不兜底，否则业务问题无法及早发现
                 System.err.println("!!! Failed to pull remote configuration. Startup terminated !!! ");
                 t.printStackTrace(System.err);
                 System.exit(1);
@@ -97,6 +98,9 @@ public class Config {
             if (!configKey.startsWith("qingzhou-") && !configKey.startsWith("app~")) continue;
 
             int pidIndex = configKey.indexOf(".");
+            if (pidIndex <= 0) { // 键须形如 "<pid>.<property>"：缺失时中止并给出键名，避免 substring(0, -1) 越界
+                throw new IllegalStateException("invalid config key (expected '<pid>.<property>'): " + configKey);
+            }
             configMap.computeIfAbsent(configKey.substring(0, pidIndex), pid -> new HashMap<>())
                     .put(configKey.substring(pidIndex + 1), qzConfig.get(configKey));
         }

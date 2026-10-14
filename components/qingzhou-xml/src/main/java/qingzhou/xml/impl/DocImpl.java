@@ -2,6 +2,7 @@ package qingzhou.xml.impl;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -95,9 +96,19 @@ class DocImpl implements Doc {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-        try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            StreamResult result = new StreamResult(outputStream);
-            transformer.transform(new DOMSource(dom), result);
+        // 临时文件 + 原子替换：直接覆盖在崩溃/磁盘满时会留下半截 XML 配置
+        Path target = file.toPath();
+        Path parent = target.getParent() != null ? target.getParent() : Paths.get("."); // 相对路径无父目录
+        Path temp = Files.createTempFile(parent, file.getName(), ".tmp");
+        try {
+            try (FileOutputStream outputStream = new FileOutputStream(temp.toFile())) {
+                transformer.transform(new DOMSource(dom), new StreamResult(outputStream));
+            }
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temp);
         }
     }
 

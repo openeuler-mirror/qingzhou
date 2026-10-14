@@ -23,12 +23,12 @@ final class ResponseHeaders {
 
     ResponseHeaders(Map<String, String> config) {
         Configs configs = new Configs(config);
-        this.csp = configs.getConfig("csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
-        this.permissionsPolicy = configs.getConfig("permissions_policy", "geolocation=(), microphone=(), camera=()");
-        this.coop = configs.getConfig("coop", "");
-        this.corp = configs.getConfig("corp", "");
+        this.csp = configs.getOrDefault("csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
+        this.permissionsPolicy = configs.getOrDefault("permissions_policy", "geolocation=(), microphone=(), camera=()");
+        this.coop = configs.getOrDefault("coop", "");
+        this.corp = configs.getOrDefault("corp", "");
         this.corsAllowedOrigins = configs.splitList("cors_allowed_origins");
-        this.hstsPreload = configs.getConfig("hsts_preload", false);
+        this.hstsPreload = configs.getOrDefault("hsts_preload", false);
     }
 
     // 须在任何 return 之前调用：400/401/404/413/503 等分支同样需要安全头

@@ -50,7 +50,8 @@ public class AppDriver implements BundleActivator {
             appMeta.getApp().code = code.trim();
         }
         appContext.appProperties = appProperties;
-        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path");
+        // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
+        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + context.getBundle().getSymbolicName());
 
         // 初始化对象
         appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).getDeclaredConstructor().newInstance();
@@ -64,39 +65,50 @@ public class AppDriver implements BundleActivator {
         appContext.stop();
 
         serviceReferences.forEach(context::ungetService);
+        serviceReferences.clear();
+        serviceObjects.clear(); // 缓存的服务包装实例随 bundle 停止失效，重复 start 须重新获取
     }
 
     <T> T getService(Class<T> serviceType, String name) {
-        Object found = serviceObjects.computeIfAbsent(serviceType.getName() + (name == null ? "" : "~" + name), c -> {
-            ServiceReference<?> serviceReference = null;
-            if (name != null) {
-                try {
-                    // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
-                    // 其中 *~ 是有意的通配前缀，只转义 name 本身
-                    String escapedName = escapeFilterValue(name);
-                    Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
-                            "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
-                    if (!serviceReferences.isEmpty()) {
-                        serviceReference = serviceReferences.iterator().next();
-                    }
-                } catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-            } else {
-                serviceReference = context.getServiceReference(serviceType);
-            }
-            if (serviceReference != null) {
-                serviceReferences.add(serviceReference);
-                Object service = context.getService(serviceReference);
-                if (service instanceof Logger) {
-                    service = new AppLogger(appMeta.getApp().code, (Logger) service);
-                }
-                return service;
-            }
-            return null;
-        });
+        String cacheKey = serviceType.getName() + (name == null ? "" : "~" + name);
+        Object cached = serviceObjects.get(cacheKey);
+        if (cached != null) return serviceType.cast(cached);
 
-        return (T) found;
+        T service = loadService(serviceType, name);
+        if (service != null) {
+            // 只缓存命中结果：目标服务可能晚于首次调用注册，缓存 null 会让其永远不可见
+            serviceObjects.put(cacheKey, service);
+        }
+        return service;
+    }
+
+    private <T> T loadService(Class<T> serviceType, String name) {
+        ServiceReference<?> serviceReference = null;
+        if (name != null) {
+            try {
+                // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
+                // 其中 *~ 是有意的通配前缀，只转义 name 本身
+                String escapedName = escapeFilterValue(name);
+                Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
+                        "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
+                if (!serviceReferences.isEmpty()) {
+                    serviceReference = serviceReferences.iterator().next();
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            serviceReference = context.getServiceReference(serviceType);
+        }
+        if (serviceReference != null) {
+            serviceReferences.add(serviceReference);
+            Object service = context.getService(serviceReference);
+            if (service instanceof Logger) {
+                service = new AppLogger(appMeta.getApp().code, (Logger) service);
+            }
+            return serviceType.cast(service);
+        }
+        return null;
     }
 
     // OSGi filter 为 LDAP 语法，值中的 \ * ( ) 必须转义：否则会破坏语法，
@@ -133,6 +145,7 @@ public class AppDriver implements BundleActivator {
     private Properties parseProperties() throws IOException {
         Properties appProperties = new Properties();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
+        if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
             Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
@@ -176,8 +189,9 @@ public class AppDriver implements BundleActivator {
                         if (val != null) {
                             modelField.default_value = val.toString();
                         }
-                    } catch (Throwable ignored) {
-                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code + ", field: " + modelField.code);
+                    } catch (Throwable e) {
+                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code
+                                + ", field: " + modelField.code + ", cause: " + e);
                     }
                 });
 

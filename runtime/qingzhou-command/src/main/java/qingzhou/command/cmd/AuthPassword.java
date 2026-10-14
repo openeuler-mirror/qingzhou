@@ -22,7 +22,7 @@ public class AuthPassword extends Processor {
     public void doCommandLine(String[] args) throws Exception {
         String password = readPassword(args);
         if (password == null) {
-            logSimple("usage: auth-password <plainPassword>");
+            log("usage: auth-password <plainPassword>");
             return;
         }
 
@@ -33,11 +33,11 @@ public class AuthPassword extends Processor {
 
             // 从接口取 Method：实现类是包级私有的，直接用其 Class 反射会 invoke 失败
             Class<?> messageDigestApi = loader.loadClass("qingzhou.crypto.MessageDigest");
-            Method digest = messageDigestApi.getMethod("digest", String.class, String.class, int.class, int.class);
+            Method digest = messageDigestApi.getMethod("digest", String.class);
 
-            logSimple("------------------------- Password Digest --------------------------");
-            logSimple((String) digest.invoke(messageDigest, password, "SHA-256", 16, 2));
-            logSimple("------------------------- End -------------------------------------");
+            log("------------------------- Password Digest --------------------------");
+            log((String) digest.invoke(messageDigest, password));
+            log("------------------------- End -------------------------------------");
         }
     }
 }

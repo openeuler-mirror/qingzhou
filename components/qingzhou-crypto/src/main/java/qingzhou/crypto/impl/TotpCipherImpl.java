@@ -30,7 +30,8 @@ class TotpCipherImpl implements TotpCipher {
 
     @Override
     public String generateKey() {
-        byte[] salt = new byte[8];
+        // RFC 4226 建议共享密钥不少于 160 位（20 字节），取 32 字节以留足余量
+        byte[] salt = new byte[32];
         RANDOM.nextBytes(salt);
         return base32Coder.encode(salt);
     }

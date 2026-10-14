@@ -3,11 +3,13 @@ package qingzhou.command;
 import java.io.Console;
 import java.io.File;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
-public abstract class Processor { // 兼容 老版本，因此动这个要小心
+public abstract class Processor {
+    protected final boolean windows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+
     private File libDir;
 
     public File getLibDir() {
@@ -33,20 +35,15 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
 
     public abstract void doCommandLine(String[] args) throws Exception;
 
-    protected void logSimple(String msg) {
+    protected void log(String msg) {
         System.out.println(msg);
     }
 
-    protected void log(String msg) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss >>> ");
-        String logPrefix = dateFormat.format(new Date());
-        System.out.println(logPrefix + msg);
-    }
-
-    // 读取密码：优先取命令行参数以兼容既有脚本；无参数时在交互终端下不回显读取，
+    // 读取密码：优先取命令行参数以兼容既有脚本（打印告警提醒泄露风险）；无参数时在交互终端下不回显读取，
     // 避免明文密码出现在 ps 输出中。非交互环境（重定向、后台执行）返回 null，由调用方提示用法，避免阻塞。
     protected String readPassword(String[] args) {
         if (args.length > 0 && !args[0].isEmpty()) {
+            log("warning: password passed via command line is visible in 'ps' and shell history, interactive input is recommended");
             return args[0];
         }
 
@@ -56,10 +53,14 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
         }
 
         char[] password = console.readPassword();
-        return password == null ? null : new String(password);
+        if (password == null) return null;
+        String result = new String(password);
+        Arrays.fill(password, '\0'); // char[] 用后清零，减少明文驻留
+        return result;
     }
 
-    protected File initInstance(String instanceName) {
+    protected File initInstance(String[] args) {
+        String instanceName = args.length > 0 && !args[0].isEmpty() ? args[0] : "default";
         if (!isSafeInstanceName(instanceName)) {
             log("invalid instance name: " + instanceName);
             return null;
@@ -67,6 +68,8 @@ public abstract class Processor { // 兼容 老版本，因此动这个要小心
         File instance = Paths.get(getHomeDir().getAbsolutePath(), "instances", instanceName).toFile();
         File configFile = Paths.get(instance.getAbsolutePath(), "conf", "qingzhou.properties").toFile();
         if (configFile.isFile()) {
+            // init 命令依赖全局密钥文件，全局密钥文件解析依赖系统属性
+            System.setProperty("qingzhou.instance", instance.getAbsolutePath());
             return instance;
         } else {
             log("instance does not exist: " + instanceName);

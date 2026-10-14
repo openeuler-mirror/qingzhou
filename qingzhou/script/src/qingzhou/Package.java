@@ -14,13 +14,16 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * 主类，用于打包指定目录并生成zip文件。
+ * <p>
+ * 版本目录与开发模式不由命令行参数传入：调用方（构建脚本）通过系统属性
+ * {@code BuildVersion} 与 {@code DevMode} 控制。
  */
 public class Package {
 
     /**
      * 主方法，程序的入口点。
      *
-     * @param args 命令行参数，第一个参数是版本目录的路径，第二个参数是开发模式的标志（true/false）。
+     * @param args 未使用；配置经系统属性 BuildVersion / DevMode 传入
      * @throws Exception 抛出可能发生的异常。
      */
     public static void main(String[] args) throws Exception {
@@ -28,7 +31,10 @@ public class Package {
         File mvnTarget = new File(new File("").getAbsolutePath() + File.separator + "target");
         File buildHome = new File(mvnTarget, "qingzhou");
         boolean devMode = Boolean.getBoolean("DevMode");
-        String buildVersion = System.getProperty("BuildVersion");
+        String buildVersion = System.getProperty("BuildVersion"); // maven 插件自动解析
+        if (buildVersion == null || buildVersion.trim().isEmpty()) {
+            throw new IllegalStateException("system property 'BuildVersion' is required");
+        }
 
         // 构建版本
         File versionDir = new File(buildHome, "lib" + File.separator + "version");
@@ -61,7 +67,7 @@ public class Package {
                                 + ".zip"));
         boolean delete = delete(versionDir);
         if (!delete) {
-            throw new IllegalStateException(versionDir.toString());
+            throw new IllegalStateException("failed to delete version dir: " + versionDir);
         }
     }
 
@@ -89,14 +95,7 @@ public class Package {
      * @throws IOException 抛出可能发生的IO异常。
      */
     private static List<String> fileToString(File file) throws IOException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            List<String> content = new ArrayList<>();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
-            for (String line; (line = reader.readLine()) != null; ) {
-                content.add(line);
-            }
-            return content;
-        }
+        return Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -108,13 +107,11 @@ public class Package {
      */
     private static void writeFile(File file, List<String> fileLines) throws IOException {
         mkdirs(file.getParentFile());
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8));
-            StringBuilder context = new StringBuilder();
-            fileLines.forEach(s -> context.append(s).append(System.lineSeparator()));
-            bw.write(context.toString(), 0, context.length());
-            bw.flush();
-            bw.close();
+        try (BufferedWriter bw = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8)) {
+            for (String line : fileLines) {
+                bw.write(line);
+                bw.write(System.lineSeparator());
+            }
         }
     }
 

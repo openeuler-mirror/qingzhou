@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class PathDetector {
+// 仅同包 QingzhouMain 使用，不对外暴露
+class PathDetector {
     private final String featureFiles;
     private final String detectionEnvVars;
     private String scanRoots;
@@ -29,7 +31,7 @@ public class PathDetector {
     }
 
     // ================= 主探测逻辑 =================
-    public String detect() {
+    String detect() {
         String detected = detectByFile();
 
         if (detected == null) detected = detectByProcess();
@@ -94,7 +96,7 @@ public class PathDetector {
         try {
             // 1. 构造全平台兼容的极简原生命令
             String[] cmd;
-            String os = System.getProperty("os.name").toLowerCase();
+            String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             if (os.contains("win")) {
                 // Windows: 使用 PowerShell 获取所有进程的可执行文件路径（wmic 已在新版 Windows 中被移除）
                 // -ErrorAction SilentlyContinue：访问受保护进程的 Path 会被拒绝，避免这类错误混入输出
@@ -109,7 +111,7 @@ public class PathDetector {
             reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             // 2. 数据探查（processNames 转小写并拆分只需一次，避免在每一行上重复计算）
-            String[] keywords = processNames.toLowerCase().split(",");
+            String[] keywords = processNames.toLowerCase(Locale.ROOT).split(",");
             return reader.lines()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())

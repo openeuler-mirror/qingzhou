@@ -142,8 +142,10 @@ public class Launcher {
                     }
                     try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
                         copyStream(zip.getInputStream(entry), out);
-                    } catch (Throwable ex) {
-                        if (parentFile.getName().equals("docs")) { // 某些环境下，docs 文档的中文名称会导致启动解压失败
+                    } catch (IOException ex) {
+                        // 只容错 IO 异常（如部分环境下 docs 中文名解压失败）；
+                        // Error 等严重问题不吞，避免掩盖包损坏的真实原因
+                        if (parentFile.getName().equals("docs")) {
                             failedDocsCount++; // 忽略掉这个手册文件，别影响启动流程
                         } else {
                             throw ex;

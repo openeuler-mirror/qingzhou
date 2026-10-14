@@ -1,7 +1,7 @@
 package qingzhou.llm.impl.openai;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import qingzhou.crypto.Crypto;
@@ -27,8 +27,6 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     private ReasoningEffort effort;
     private ImageDetail imageDetail;
     private ResponseFormat format;
-
-    private String reasoningField;
 
     public OpenAiChatModelBuilder(String baseUrl, String apiKey, String model, HttpClient httpClient, Json json, Crypto crypto) {
         super(baseUrl, apiKey, model);
@@ -84,6 +82,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     void addChatMemory(List<Object> messages) {
+        ChatMemory chatMemory = getChatMemory();
         if (chatMemory == null) return;
         List<ChatMemory.Message> messageList = chatMemory.getMessageList();
         if (messageList == null) return;
@@ -112,16 +111,16 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
 
     Map<String, Object> buildLlmRequest(List<Object> messages, List<Object> toolDefs, boolean stream) {
         Map<String, Object> req = new HashMap<>();
-        req.put("model", model);
+        req.put("model", getModel());
         req.put("messages", messages);
         req.put("stream", stream);
         if (effort != null) {
             req.put("reasoning_effort", effort.name());
         }
         if (format != null) {
-            req.put("response_format", new HashMap<String, String>() {{
-                put("type", format.name());
-            }});
+            Map<String, String> responseFormat = new HashMap<>();
+            responseFormat.put("type", format.name());
+            req.put("response_format", responseFormat);
         }
         if (stream) {
             // 请求流式响应末尾附带 usage 统计（最后一个 chunk 的 choices 为空、携带 usage 字段）
@@ -136,7 +135,7 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
     }
 
     List<Object> buildToolDefinitions(Collection<Tool> tools) {
-        return tools.stream().map((Function<Tool, Object>) tool -> {
+        return tools.stream().map(tool -> {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("type", "object");
             Map<String, Object> paramMap = new HashMap<>();
@@ -178,15 +177,18 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      * 思考内容的字段名没有统一标准：OpenAI 的 Chat Completions 规范里根本没有该字段，
      * 各家都是自行扩展，且还在演进——vLLM 已把 reasoning_content 改名为 reasoning
      * DeepSeek 及旧版本仍是 reasoning_content。因此这里两个都认。
+     * <p>
+     * 字段名经 fieldRef 交由调用方按请求持有：builder 会被并发对话共享，
+     * 存实例字段会跨请求互相覆盖，导致思考内容以错误的字段名回传。
      */
-    String extractReasoning(Map<String, Object> delta) {
+    String extractReasoning(Map<String, Object> delta, AtomicReference<String> fieldRef) {
         Object value = delta.get("reasoning");
         if (value != null) {
-            reasoningField = "reasoning";
+            fieldRef.set("reasoning");
         } else {
             value = delta.get("reasoning_content");
             if (value != null) {
-                reasoningField = "reasoning_content";
+                fieldRef.set("reasoning_content");
             }
         }
 
@@ -203,16 +205,16 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
      * reasoningField 本轮服务端实际使用的思考字段名（reasoning / reasoning_content）。
      * 思考内容需按原字段名回传，否则部分服务端（如 deepseek）会校验失败。
      */
-    Map<String, Object> buildAssistantMessage(String content, String reasoning, Collection<ToolCallInfo> toolCalls) {
+    Map<String, Object> buildAssistantMessage(String content, String reasoning, String reasoningField, Collection<ToolCallInfo> toolCalls) {
         List<Map<String, Object>> calls = new ArrayList<>();
         if (toolCalls != null) {
             for (ToolCallInfo tc : toolCalls) {
                 Map<String, Object> call = new HashMap<>();
-                call.put("id", tc.id);
+                call.put("id", tc.getId());
                 call.put("type", "function");
                 Map<String, Object> fn = new HashMap<>();
-                fn.put("name", tc.name);
-                fn.put("arguments", tc.arguments != null && !tc.arguments.isEmpty() ? tc.arguments : "{}");
+                fn.put("name", tc.getName());
+                fn.put("arguments", tc.getArguments() != null && !tc.getArguments().isEmpty() ? tc.getArguments() : "{}");
                 call.put("function", fn);
                 calls.add(call);
             }
@@ -237,12 +239,12 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
         toolResultMsg.put("tool_call_id", toolId);
-        toolResultMsg.put("content", Utils.truncate(toolResult, maxToolResultChars));
+        toolResultMsg.put("content", Utils.truncate(toolResult, getMaxToolResultChars()));
         return toolResultMsg;
     }
 
     Map<String, Object> buildSystemMessage(Collection<Skill> activeSkills) {
-        StringBuilder sysMsg = new StringBuilder(systemPrompt != null ? systemPrompt : "");
+        StringBuilder sysMsg = new StringBuilder(getSystemPrompt() != null ? getSystemPrompt() : "");
 
         for (Skill skill : activeSkills) {
             String msg = skill.instruction();
@@ -250,17 +252,17 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                 if (sysMsg.length() > 0) {
                     sysMsg.append("\n\n");
                 }
-                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, maxDocChars));
+                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, getMaxDocChars()));
             }
         }
 
-        if (docs != null) {
-            for (String doc : docs) {
+        if (getDocs() != null) {
+            for (String doc : getDocs()) {
                 if (doc != null && !doc.isEmpty()) {
                     if (sysMsg.length() > 0) {
                         sysMsg.append("\n\n");
                     }
-                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, maxDocChars));
+                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, getMaxDocChars()));
                 }
             }
         }

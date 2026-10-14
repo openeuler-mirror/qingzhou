@@ -1,6 +1,9 @@
 package qingzhou.engine;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -29,6 +32,7 @@ public class QingzhouMain {
 
         String libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");
+        checkRequiredConfigs();
 
         // 获取 FrameworkFactory
         Iterator<FrameworkFactory> factories = ServiceLoader.load(FrameworkFactory.class).iterator();
@@ -60,6 +64,31 @@ public class QingzhouMain {
             } catch (Exception ignored) {
             }
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
+    }
+
+    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
+    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
+
+    private static void checkRequiredConfigs() {
+        File propsFile = instanceDir == null ? null
+                : Paths.get(instanceDir, "conf", "qingzhou.properties").toFile();
+        Properties props = new Properties();
+        if (propsFile != null && propsFile.isFile()) {
+            try (Reader reader = Files.newBufferedReader(propsFile.toPath())) {
+                props.load(reader);
+            } catch (IOException ignored) { // 读取失败按未配置处理，与缺失同走初始化引导
+            }
+        }
+        for (String key : REQUIRED_CONFIGS) {
+            String value = props.getProperty(key);
+            if (value == null || value.trim().isEmpty()) {
+                String instanceName = instanceDir == null ? "<instance>" : new File(instanceDir).getName();
+                System.err.println(key + " is not configured in "
+                        + "instances/" + instanceName + "/conf/qingzhou.properties"
+                        + ", run bin/init.sh to initialize the instance");
+                System.exit(1);
+            }
+        }
     }
 
     static void startDirAndJars(File bundleDir) throws BundleException {
@@ -95,7 +124,8 @@ public class QingzhouMain {
         for (File bundleJar : bundleJars) {
             if (isFeatureDisabled(bundleJar)) continue;
 
-            Bundle bundle = osgiFramework.getBundleContext().installBundle("file:" + bundleJar.getAbsolutePath());
+            // toURI() 对路径做 URL 编码，含空格/中文的安装目录不再产生非法的 bundle location
+            Bundle bundle = osgiFramework.getBundleContext().installBundle(bundleJar.toURI().toString());
             bundleList.add(bundle);
         }
         for (Bundle bundle : bundleList) {
@@ -122,13 +152,11 @@ public class QingzhouMain {
                 PathDetector detector = new PathDetector(bundle.getHeaders());
                 String detected = detector.detect();
                 if (detected != null) {
-                    String dataFlag = "Qingzhou-Detected-Path";
+                    // 按 bundle 符号名分键传递，避免多个探测型 bundle 互相覆盖，
+                    // 也避免"设置后即清除"与 Activator 异步读取之间的竞态；属性值随检测覆盖更新，无需清除
+                    String dataFlag = "Qingzhou-Detected-Path." + bundle.getSymbolicName();
                     System.setProperty(dataFlag, detected);
-                    try {
-                        bundle.start();
-                    } finally {
-                        System.clearProperty(dataFlag);
-                    }
+                    bundle.start();
                 } else {
                     bundle.stop();
                 }
@@ -138,23 +166,26 @@ public class QingzhouMain {
         }, 0, 5, TimeUnit.SECONDS);
     }
 
-    private static boolean isFeatureDisabled(File file) {
-        String featuresDisabled = System.getProperty("qingzhou.features.disabled");
-        if (featuresDisabled != null) {
-            // 确定要检查的文件名
-            String name = file.getName();
-            if (name.endsWith(".jar")) {
-                name = name.substring(0, name.length() - ".jar".length());
-            }
+    private static volatile Set<String> disabledFeatures; // 启动期一次性解析，避免逐 jar 重复 split
 
-            // 开始检查
-            String[] checkList = featuresDisabled.split(",");
-            for (String check : checkList) {
-                if (check.trim().equals(name)) return true;
+    private static boolean isFeatureDisabled(File file) {
+        Set<String> features = disabledFeatures;
+        if (features == null) {
+            features = new HashSet<>();
+            String featuresDisabled = System.getProperty("qingzhou.features.disabled");
+            if (featuresDisabled != null) {
+                for (String check : featuresDisabled.split(",")) {
+                    if (!check.trim().isEmpty()) features.add(check.trim());
+                }
             }
+            disabledFeatures = features;
         }
 
-        return false;
+        String name = file.getName();
+        if (name.endsWith(".jar")) {
+            name = name.substring(0, name.length() - ".jar".length());
+        }
+        return features.contains(name);
     }
 
     private static Map<String, String> osgiConfig() {

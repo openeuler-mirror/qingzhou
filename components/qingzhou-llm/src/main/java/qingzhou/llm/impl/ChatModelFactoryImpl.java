@@ -1,6 +1,7 @@
 package qingzhou.llm.impl;
 
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
@@ -36,7 +37,13 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
             throw new IllegalArgumentException("qingzhou-llm.base_url is missing");
         }
         apiKey = config.get("api_key");
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-llm.api_key is missing"); // 缺失时 fail-fast，而非请求期才以 "Bearer null" 暴露
+        }
         model = config.get("model");
+        if (model == null || model.trim().isEmpty()) {
+            throw new IllegalArgumentException("qingzhou-llm.model is missing");
+        }
 
         // 安全校验：API Key 不应通过明文 HTTP 传输（本机回环除外）
         validateBaseUrl(baseUrl);
@@ -53,10 +60,6 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
     }
 
     private void validateBaseUrl(String baseUrl) {
-        if (baseUrl == null || baseUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("LLM baseUrl is missing");
-        }
-
         URL url;
         try {
             url = new URL(baseUrl);
@@ -76,6 +79,10 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
 
     private boolean isLoopback(String host) {
         if (host == null) return false;
-        return "localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host) || "::1".equals(host);
+        String normalized = host.toLowerCase(Locale.ROOT);
+        // URL.getHost 对 IPv6 字面量返回 "[::1]" 带方括号形式
+        if ("localhost".equals(normalized) || "::1".equals(normalized) || "[::1]".equals(normalized)) return true;
+        // 127.0.0.0/8 整段均为回环，不止 127.0.0.1
+        return normalized.matches("127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }
 }

@@ -14,7 +14,7 @@ import qingzhou.llm.Tool;
 
 public class Utils {
     public static void println(String msg) {
-        System.err.println(msg); // 方便TW等集成，不用Logger对象
+        System.err.println(msg); // 方便TW等集成，不用 Logger 对象
     }
 
     public static String errorMessage(Throwable t) {
@@ -25,7 +25,7 @@ public class Utils {
     public static void sleepBackoff(int attempt) {
         int capped = Math.min(attempt, 5); // 移位封顶，防止大 attempt 休眠天文数字时长
         try {
-            Thread.sleep(1000L << capped); // 指数退避：1s / 2s / 4s / 8s 封顶
+            Thread.sleep(1000L << capped); // 指数退避：1s / 2s / 4s / 8s / 16s / 32s 封顶
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -40,7 +40,7 @@ public class Utils {
         return s.substring(0, maxChars) + "\n…（内容过长已截断，原长度 " + s.length() + " 字符）";
     }
 
-    // 按需加载技能恒
+    // 按需激活技能：required 技能恒生效，其余先词面匹配、再交由模型筛选
     public static List<Skill> getActiveSkills(Collection<Skill> skills, String message, ActiveSkillCallback callback) {
         if (skills == null || skills.isEmpty()) return Collections.emptyList();
 
@@ -86,14 +86,16 @@ public class Utils {
     }
 
     public static String invokeTool(ToolCallInfo toolCallInfo, Map<String, Tool> tools, Json json, Interceptor interceptor) {
-        Tool tool = tools.get(toolCallInfo.name);
-        if (tool == null) return "Tool not found: " + toolCallInfo.name;
+        Tool tool = tools.get(toolCallInfo.getName());
+        if (tool == null) return "Tool not found: " + toolCallInfo.getName();
 
         Map<String, Object> args = null;
-        if (toolCallInfo.arguments != null && !toolCallInfo.arguments.isEmpty()) {
+        if (toolCallInfo.getArguments() != null && !toolCallInfo.getArguments().isEmpty()) {
             try {
-                args = json.fromJson(toolCallInfo.arguments, Map.class);
-            } catch (Exception ignored) {
+                args = json.fromJson(toolCallInfo.getArguments(), Map.class);
+            } catch (Exception e) {
+                // 解析失败须留痕：args 以 null 传入工具会让模型收到误导性错误，无日志则难排查
+                println("failed to parse tool arguments of [" + toolCallInfo.getName() + "]: " + errorMessage(e));
             }
         }
 
@@ -106,18 +108,18 @@ public class Utils {
             return tool.invoke(args);
         } catch (Throwable t) {
             // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
-            return "Error: " + Utils.errorMessage(t);
+            return "Error: " + errorMessage(t);
         }
     }
 
     public static Request newLlmRequest(Map<String, Object> llmRequest, boolean stream, ChatModelBuilderBase builder, HttpClient httpClient, Json json, Crypto crypto) throws Exception {
-        Request request = httpClient.buildRequest(builder.baseUrl)
+        Request request = httpClient.buildRequest(builder.getBaseUrl())
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.apiKey, "qingzhou-llm.api_key"))
+                .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.getApiKey(), "qingzhou-llm.api_key"))
                 .header("Accept", stream ? "text/event-stream" : "application/json");
         request.body(json.toJson(llmRequest).getBytes(StandardCharsets.UTF_8));
-        request.connectTimeout(builder.connectTimeout);
-        request.readTimeout(builder.readTimeout);
+        request.connectTimeout(builder.getConnectTimeout());
+        request.readTimeout(builder.getReadTimeout());
         return request;
     }
 

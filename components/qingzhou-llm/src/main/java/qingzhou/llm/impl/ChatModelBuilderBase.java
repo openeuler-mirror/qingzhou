@@ -6,25 +6,27 @@ import java.util.List;
 import qingzhou.llm.*;
 
 public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModelBuilder {
-    public final String baseUrl;
-    public final String apiKey;
-    public final String model;
+    // 全部私有 + getter：apiKey 等敏感配置不得经 public 可变字段被外部直改，
+    // sealed 防护才真正生效（否则 setter 校验与 checkSealed 均可被字段写绕过）
+    private final String baseUrl;
+    private final String apiKey;
+    private final String model;
 
-    public String systemPrompt;
-    public List<String> docs;
-    public ChatMemory chatMemory;
-    public Interceptor interceptor;
-    public Collection<Tool> tools;
-    public Collection<Skill> skills;
+    private String systemPrompt;
+    private List<String> docs;
+    private ChatMemory chatMemory;
+    private Interceptor interceptor;
+    private Collection<Tool> tools;
+    private Collection<Skill> skills;
 
-    public int maxToolResultChars = 2000;
-    public int maxDocChars = DEFAULT_MAX_DOC_CHARS;
+    private int maxToolResultChars = 2000;
+    private int maxDocChars = 6000;
 
-    public int maxRetries = 4;
-    public int maxToolIterations = 20;
+    private int maxRetries = 4;
+    private int maxToolIterations = 20;
 
-    public int connectTimeout = 60 * 1000;
-    public int readTimeout = 10 * 60 * 1000;
+    private int connectTimeout = 60 * 1000;
+    private int readTimeout = 10 * 60 * 1000;
 
     private boolean sealed;
 
@@ -34,7 +36,67 @@ public abstract class ChatModelBuilderBase implements ChatModelFactory.ChatModel
         this.model = model;
     }
 
-    public void checkSealed() {
+    public final String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public final String getApiKey() {
+        return apiKey;
+    }
+
+    public final String getModel() {
+        return model;
+    }
+
+    public final String getSystemPrompt() {
+        return systemPrompt;
+    }
+
+    public final List<String> getDocs() {
+        return docs;
+    }
+
+    public final ChatMemory getChatMemory() {
+        return chatMemory;
+    }
+
+    public final Interceptor getInterceptor() {
+        return interceptor;
+    }
+
+    public final Collection<Tool> getTools() {
+        return tools;
+    }
+
+    public final Collection<Skill> getSkills() {
+        return skills;
+    }
+
+    public final int getMaxToolResultChars() {
+        return maxToolResultChars;
+    }
+
+    public final int getMaxDocChars() {
+        return maxDocChars;
+    }
+
+    public final int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public final int getMaxToolIterations() {
+        return maxToolIterations;
+    }
+
+    public final int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public final int getReadTimeout() {
+        return readTimeout;
+    }
+
+    protected void checkSealed() {
         if (sealed) throw new IllegalStateException(this.getClass().getSimpleName() + " has been sealed.");
     }
 

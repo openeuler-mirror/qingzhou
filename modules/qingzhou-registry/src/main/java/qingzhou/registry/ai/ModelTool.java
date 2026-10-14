@@ -38,6 +38,6 @@ public class ModelTool implements ToolService {
             }
             return null;
         };
-        return json.toJson(appModel.function.apply(context));
+        return json.toJson(appModel.getFunction().apply(context));
     }
 }

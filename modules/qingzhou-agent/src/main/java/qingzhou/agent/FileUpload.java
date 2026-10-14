@@ -13,6 +13,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.TempFiles;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.Constants;
 import qingzhou.http.server.HttpHandler;
@@ -35,15 +36,7 @@ public class FileUpload implements HttpHandler {
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
         uploadBase.mkdirs();
-        cleanLegacyUploads();
-    }
-
-    private void cleanLegacyUploads() {
-        File[] legacy = uploadBase.listFiles();
-        if (legacy == null) return;
-        for (File file : legacy) {
-            file.delete();
-        }
+        TempFiles.cleanDir(uploadBase); // 清历史残留
     }
 
     @Override
@@ -52,25 +45,31 @@ public class FileUpload implements HttpHandler {
         String uploadKey = httpRequest.getParameter(Constants.AGENT_UPLOAD_FILE_KEY);
         byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
         ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, context,
-                requestData -> processFileUpload(requestData, uploadKey));
+                requestData -> {
+                    // 运行期惰性清理：分片上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘
+                    long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+                    TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
+                    return processFileUpload(requestData, uploadKey);
+                });
     }
-
-    // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
-    private static final long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024;
 
     private String processFileUpload(byte[] data, String key) throws Throwable {
         String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
         File tempFile = resolveInUploadBase(uploadId);
         try {
             long total = tempFile.length() + (data == null ? 0 : data.length);
+            long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024; // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
             if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
-                tempFile.delete();
                 throw new IllegalStateException("upload exceeds size limit: " + uploadId);
             }
             if (tempFile.exists()) {
                 Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
             } else {
                 Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
+            }
+            // 追加后复核：写入前检查与 APPEND 非原子（TOCTOU），并发分片可越过上限
+            if (tempFile.length() > MAX_UPLOAD_BYTES) {
+                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
             }
         } catch (Throwable e) {
             tempFile.delete();

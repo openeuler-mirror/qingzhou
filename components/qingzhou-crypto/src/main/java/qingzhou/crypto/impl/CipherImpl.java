@@ -24,8 +24,8 @@ class CipherImpl implements Cipher {
     private final SecretKeySpec key;
     private final Logger logger;
 
-    CipherImpl(String key, Base64Coder base64Coder, Logger logger) {
-        this.key = new SecretKeySpec(base64Coder.decode(key), ALG);
+    CipherImpl(byte[] cipherKey, Base64Coder base64Coder, Logger logger) {
+        this.key = new SecretKeySpec(cipherKey, ALG);
         this.base64Coder = base64Coder;
         this.logger = logger;
     }
@@ -103,6 +103,9 @@ class CipherImpl implements Cipher {
     @Override
     public byte[] decrypt(byte[] s, byte[] aad) throws Exception {
         if (s == null) return null;
+        if (s.length < IV_SIZE) { // 超短输入按参数错误报出，而非裸数组越界
+            throw new IllegalArgumentException("ciphertext too short: " + s.length);
+        }
 
         byte[] iv = new byte[IV_SIZE];
         System.arraycopy(s, 0, iv, 0, IV_SIZE);
