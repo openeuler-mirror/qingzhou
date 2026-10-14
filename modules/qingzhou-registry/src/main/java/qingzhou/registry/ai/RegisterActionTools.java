@@ -12,9 +12,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolInterceptor;
 import qingzhou.ai.ToolService;
-import qingzhou.api.action.Monitor;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
+import qingzhou.api.action.*;
 import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
@@ -28,16 +26,9 @@ import qingzhou.registry.web.WebUtil;
 
 @Component(immediate = true)
 public class RegisterActionTools {
-    private static final String PAGE_NUM = "pageNum";
-
     // 业务字段集合：写操作的字段清单依模型而定，无法静态声明，故收敛为一个 JSON 对象字符串参数
     private static final String DATA = "data";
-
-    private static final Set<String> DATA_ACTIONS = new HashSet<>(Arrays.asList(
-            Add.ACTION_CODE_ADD, Update.ACTION_CODE_UPDATE));
-
-    private static final Set<String> ID_REQUIRED_ACTIONS = new HashSet<>(Arrays.asList(
-            Update.ACTION_CODE_UPDATE, Delete.ACTION_CODE_DELETE));
+    private static final String TOOL_NAME_PREFIX = "qingzhou_action_";
 
     @Reference
     private Registry registry;
@@ -68,7 +59,6 @@ public class RegisterActionTools {
             put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前调用的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
             put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
         }};
-
         Map<String, String> tools = new HashMap<String, String>() {{
             put(Page.ACTION_CODE_PAGE, "该接口返回某个应用模块的业务数据或资源的列表信息。列表数据分页返回，每次调用只返回一页，可通过 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 指定页码。"
                     + "如果返回内容以【分页提示】开头，说明列表共有多页，此时须遵守以下规则："
@@ -79,6 +69,7 @@ public class RegisterActionTools {
                     + "5. 用户指定页码后，使用相同的参数并传入 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 再次调用本工具。");
             put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
             put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
+
             put(SwitchSpace.ACTION_CODE_SWITCHSPACE, "该接口将应用的模块切换到指定的空间上。");
             put(SwitchSpace.ACTION_CODE_CURRENTSPACE, "该接口返回应用当前使用的模块空间。");
 
@@ -88,32 +79,37 @@ public class RegisterActionTools {
                     + "多值字段用分隔符拼成一个字符串。"
                     + "返回 success=true 表示新建成功；失败时返回内容会给出每个字段的错误原因，据其修正后可重试。");
             put(Update.ACTION_CODE_UPDATE, "该接口更新指定模块中已有的一条业务数据，这是会影响真实数据的写操作。"
-                    + "只更新 " + DATA + " 中出现的字段，其余字段保持不变。"
+                    + "只更新 " + DATA + " 中出现的字段，其余字段保持不变。此操作通常不可恢复，执行前须向用户复述待删除的对象并取得确认。"
                     + "调用前须先用获取模块详细信息的工具取得该模块的更新字段清单与校验规则，禁止凭常识猜测字段编码。"
-                    + WebUtil.DATA_ID + " 为必需参数，用于指定要更新哪条记录。");
-            put(Delete.ACTION_CODE_DELETE, "该接口删除指定模块中的一条业务数据，此操作通常不可恢复，"
-                    + "执行前须向用户复述待删除的对象并取得确认。");
+                    + WebUtil.DATA_ID + " 为可选参数，如果模块支持" + Page.ACTION_CODE_PAGE + "操作，则必需指定，用于指定要更新哪条记录。");
+            put(Delete.ACTION_CODE_DELETE, "该接口删除指定模块中的一条业务数据。此操作通常不可恢复，执行前须向用户复述待删除的对象并取得确认。"
+                    + WebUtil.DATA_ID + " 为必选参数，用于指定要删除哪条记录。");
         }};
-        tools.forEach((invokedActionCode, toolDescription) -> {
-            String actionToolName = "app_model_action_" + invokedActionCode;
+
+        int addIndex = p.incrementAndGet();
+        tools.forEach((actionCode, toolDescription) -> {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
+            applyToolParameters(actionCode, addIndex, properties);
             properties.put(ToolService.PARENT_SKILL, InvokeActionSkill.TOOL_LABEL);
-            properties.put(ToolService.TOOL_NAME, actionToolName);
-            if (Page.ACTION_CODE_PAGE.equals(invokedActionCode)) {
-                properties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
-                properties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
-                properties.put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
-                properties.put(ToolService.PARAMETER_NAME + ".5", PAGE_NUM);
-                properties.put(ToolService.PARAMETER_DESCRIPTION + ".5", "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
-                properties.put(ToolService.PARAMETER_REQUIRED + ".5", "false");
-            } else {
-                applyWriteProperties(invokedActionCode, properties);
-            }
+            properties.put(ToolService.TOOL_NAME, TOOL_NAME_PREFIX + actionCode);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(invokedActionCode, toolArgs);
+            ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(actionCode, toolArgs);
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
-            registrations.add(bundleContext.registerService(ToolInterceptor.class, (toolName, toolArgs, c) -> {
-                if (toolName.equals(actionToolName)) {
+        });
+
+        addToolInterceptor(tools.keySet());
+    }
+
+    @Deactivate
+    public void destroy() {
+        registrations.forEach(ServiceRegistration::unregister);
+    }
+
+    private void addToolInterceptor(Set<String> interceptActions) {
+        registrations.add(bundleContext.registerService(ToolInterceptor.class, (toolName, toolArgs, c) -> {
+            if (toolName.startsWith(TOOL_NAME_PREFIX)) {
+                String actionCode = toolName.substring(TOOL_NAME_PREFIX.length());
+                if (interceptActions.contains(actionCode)) {
                     String[] roles = c.getRoles();
                     AppStub appStub = retrieveAppStub(toolArgs);
                     String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
@@ -122,18 +118,13 @@ public class RegisterActionTools {
                         return "操作执行失败：无法定位目标应用或模块，请确认参数后重试。";
                     }
 
-                    boolean allowed = PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, invokedActionCode, roles);
+                    boolean allowed = PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, actionCode, roles);
                     if (allowed) return null;
                     else return "操作执行失败：当前身份缺少对应工具执行权限，请检查权限配置后重试。";
                 }
-                return null;// 不拦截
-            }, null));
-        });
-    }
-
-    @Deactivate
-    public void destroy() {
-        registrations.forEach(ServiceRegistration::unregister);
+            }
+            return null;// 不拦截
+        }, null));
     }
 
     private AppStub retrieveAppStub(Map<String, Object> toolArgs) {
@@ -160,154 +151,66 @@ public class RegisterActionTools {
         request.setModel(modelCode);
         request.setAction(actionCode);
         String dataId = (String) toolArgs.get(WebUtil.DATA_ID);
-        if (dataId != null) {
-            request.setId(dataId);
-        }
-        applyPageNum(request, toolArgs.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM));
-        applyPageNum(request, toolArgs.get(PAGE_NUM));
-        if (ID_REQUIRED_ACTIONS.contains(actionCode) && (dataId == null || dataId.isEmpty())) {
-            return "操作 " + actionCode + " 必须指定参数 " + WebUtil.DATA_ID + "。";
-        }
+        if (dataId != null) request.setId(dataId);
 
-        String rejected = applyBusinessData(request, app, modelCode, actionCode, toolArgs.get(DATA));
-        if (rejected != null) return rejected; // 参数不合法时不打到后端，把可修正的原因直接回给模型
+        String error = preInvoke(actionCode, toolArgs, request);
+        if (error != null) return error;
 
         try {
             appStub.invokeApp(request);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
         }
-
         ResponseImpl response = request.getResponse();
-        String pagingHint = Page.ACTION_CODE_PAGE.equals(actionCode) ? buildPagingHint(response) : null;
+
         try {
             String result = json.toJson(response);
-            // 工具返回内容发给大模型前会按长度截断（见 qingzhou-llm 的 maxToolResultChars），分页提示须放在最前面才不会被截掉
-            return pagingHint == null ? result : pagingHint + "\n" + result;
+            String postInvokeMsg = postInvoke(actionCode, response);
+            return postInvokeMsg == null ? result : postInvokeMsg + "\n" + result;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return null;
         }
     }
 
-    private static void applyPageNum(RequestImpl request, Object pageNum) {
-        if (pageNum == null) return;
-
-        String value = pageNum instanceof Number ? String.valueOf(((Number) pageNum).intValue()) : pageNum.toString().trim();
-        request.getParameters().put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, value);
-    }
-
-    private static void applyWriteProperties(String actionCode, Hashtable<String, String> properties) {
-        boolean needsData = DATA_ACTIONS.contains(actionCode);
-        boolean needsId = ID_REQUIRED_ACTIONS.contains(actionCode);
-        if (!needsData && !needsId) return;
-
-        properties.put(ToolService.PARAMETER_DESCRIPTION + ".4", needsId
-                ? "待操作记录的唯一ID，" + actionCode + " 操作必须传入。"
-                : "新增操作无需此参数。");
-        if (needsId) {
-            properties.put(ToolService.PARAMETER_REQUIRED + ".4", "true");
-        }
-        if (!needsData) return;
-
-        properties.put(ToolService.PARAMETER_NAME + ".5", DATA);
-        properties.put(ToolService.PARAMETER_DESCRIPTION + ".5", "业务字段集合，JSON 对象字符串，键为字段编码、值为字符串，"
-                + "形如 {\"字段编码\":\"值\"}。字段编码与取值规则须先用获取模块详细信息的工具取得，不得凭猜测填写；"
-                + "只提交该操作允许的字段，多值字段用分隔符拼成一个字符串。");
-        properties.put(ToolService.PARAMETER_REQUIRED + ".5", "true");
-    }
-
-    private String applyBusinessData(RequestImpl request, App app, String modelCode,
-                                     String actionCode, Object dataArg) {
-        if (!DATA_ACTIONS.contains(actionCode)) return null;
-
-        Model model = findModel(app, modelCode);
-        if (model == null) return "模块不存在：" + modelCode;
-        if (!hasAction(model, actionCode)) {
-            return "模块 " + modelCode + " 不支持操作 " + actionCode + "，可用操作：" + actionCodes(model);
-        }
-
-        Map<String, Object> data = parseDataObject(dataArg);
-        if (data == null) {
-            return "参数 " + DATA + " 须是 JSON 对象字符串，形如 {\"字段编码\":\"值\"}。当前值：" + dataArg;
-        }
-        if (data.isEmpty()) return "参数 " + DATA + " 未包含任何字段。";
-
-        boolean forAdd = Add.ACTION_CODE_ADD.equals(actionCode);
-        Map<String, ModelField> allowedFields = allowedFields(model, forAdd);
-        for (Map.Entry<String, Object> entry : data.entrySet()) {
-            ModelField field = allowedFields.get(entry.getKey());
-            if (field == null) {
-                return "字段 " + entry.getKey() + " 不允许在 " + actionCode + " 操作中提交。可用字段："
-                        + describeFields(allowedFields);
+    private void applyToolParameters(String actionCode, int index, Hashtable<String, String> properties) {
+        if (Page.ACTION_CODE_PAGE.equals(actionCode)) {
+            properties.put(ToolService.PARAMETER_NAME + "." + index, Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+            properties.put(ToolService.PARAMETER_DESCRIPTION + "." + index, "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
+            properties.put(ToolService.PARAMETER_REQUIRED + "." + index, "false");
+        } else {
+            if (isDataAction(actionCode)) {
+                properties.put(ToolService.PARAMETER_NAME + "." + index, DATA);
+                properties.put(ToolService.PARAMETER_DESCRIPTION + "." + index, "业务字段集合，JSON 对象字符串，键为字段编码、值为字符串，"
+                        + "形如 {\"字段编码\":\"值\"}。字段编码与取值规则须先用获取模块详细信息的工具取得，不得凭猜测填写；"
+                        + "只提交该操作允许的字段，多值字段用分隔符拼成一个字符串。");
+                properties.put(ToolService.PARAMETER_REQUIRED + "." + index, "true");
             }
-            request.getParameters().put(entry.getKey(), stringify(entry.getValue(), field.separator));
+        }
+    }
+
+    // 返回错误信息，null 表示无错误
+    private String preInvoke(String actionCode, Map<String, Object> toolArgs, RequestImpl request) {
+        if (Page.ACTION_CODE_PAGE.equals(actionCode)) {
+            Object pageNum = toolArgs.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+            if (pageNum == null) return null;
+
+            String value = pageNum instanceof Number ? String.valueOf(((Number) pageNum).intValue()) : pageNum.toString().trim();
+            request.getParameters().put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, value);
+        } else {
+            if (isDataAction(actionCode)) {
+                Map<String, Object> data;
+                try {
+                    data = json.fromJson((String) toolArgs.get(DATA), Map.class);
+                } catch (Exception e) {
+                    return DATA + " 须为 JSON 对象字符串，形如 {\"字段编码\":\"值\"}";
+                }
+                for (Map.Entry<String, Object> entry : data.entrySet()) {
+                    request.getParameters().put(entry.getKey(), stringify(entry.getValue(), ",")); // todo 分割符应动态获取
+                }
+            }
         }
         return null;
-    }
-
-    // 口径与 DefaultAction 的取值、Validation 的校验保持一致：form 类型、本操作可写、非只读非 ID 非文件
-    private static Map<String, ModelField> allowedFields(Model model, boolean forAdd) {
-        Map<String, ModelField> fields = new LinkedHashMap<>();
-        for (ModelField field : model.fields) {
-            if (field.field_type != FieldType.form) continue;
-            if (forAdd ? !field.add : !field.update) continue;
-            if (field.readonly || field.id) continue;
-            if (field.file || field.input_type == InputType.file) continue;
-            fields.put(field.code, field);
-        }
-        return fields;
-    }
-
-    // 拒绝提示里附上字段清单，模型改一次就能对，不必再调一次模块详情
-    private static String describeFields(Map<String, ModelField> fields) {
-        StringBuilder text = new StringBuilder();
-        for (Map.Entry<String, ModelField> entry : fields.entrySet()) {
-            ModelField field = entry.getValue();
-            if (text.length() > 0) text.append("; ");
-
-            text.append(entry.getKey()).append('(').append(fieldName(field));
-            if (field.required) text.append(",必填");
-            if (field.options != null && field.options.length > 0) {
-                text.append(",可选值:").append(String.join("|", field.options));
-            }
-            if (field.min_value != Long.MIN_VALUE || field.max_value != Long.MAX_VALUE) {
-                text.append(",数值:").append(field.min_value == Long.MIN_VALUE ? "不限" : String.valueOf(field.min_value))
-                        .append('~').append(field.max_value == Long.MAX_VALUE ? "不限" : String.valueOf(field.max_value));
-            }
-            if (field.min_length != -1 || field.max_length != Integer.MAX_VALUE) {
-                text.append(",长度:").append(field.min_length).append('~').append(field.max_length);
-            }
-            if (field.pattern != null && !field.pattern.isEmpty()) {
-                text.append(",格式:").append(field.pattern);
-            }
-            if (field.default_value != null && !field.default_value.isEmpty()) {
-                text.append(",默认:").append(field.default_value);
-            }
-            if (field.display != null && !field.display.isEmpty()) {
-                text.append(",仅当 ").append(field.display).append(" 时提交");
-            }
-            text.append(')');
-        }
-        return text.toString();
-    }
-
-    private static String fieldName(ModelField field) {
-        return field.name == null || field.name.length == 0 ? "" : field.name[0];
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> parseDataObject(Object dataArg) {
-        if (dataArg instanceof Map) return (Map<String, Object>) dataArg;
-        if (dataArg == null) return null;
-
-        String text = String.valueOf(dataArg).trim();
-        if (!text.startsWith("{")) return null;
-        try {
-            return json.fromJson(text, Map.class);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     // 多值字段（multiselect、sortable 等）用分隔符拼接，模型常常直接给数组
@@ -324,26 +227,16 @@ public class RegisterActionTools {
         return joined.toString();
     }
 
-    private static Model findModel(App app, String modelCode) {
-        for (Model model : app.models) {
-            if (model.code.equals(modelCode)) return model;
+    private boolean isDataAction(String actionCode) {
+        return Add.ACTION_CODE_ADD.equals(actionCode) || Update.ACTION_CODE_UPDATE.equals(actionCode);
+    }
+
+    // 返回附加信息
+    private String postInvoke(String actionCode, ResponseImpl response) {
+        if (Page.ACTION_CODE_PAGE.equals(actionCode)) {
+            return buildPagingHint(response);
         }
         return null;
-    }
-
-    private static boolean hasAction(Model model, String actionCode) {
-        for (ModelAction action : model.actions) {
-            if (action.code.equals(actionCode)) return true;
-        }
-        return false;
-    }
-
-    private static String actionCodes(Model model) {
-        List<String> codes = new ArrayList<>();
-        for (ModelAction action : model.actions) {
-            codes.add(action.code);
-        }
-        return codes.toString();
     }
 
     private static String buildPagingHint(ResponseImpl response) {

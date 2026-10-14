@@ -34,6 +34,8 @@ public class OAuth2Handler implements HttpHandler {
     private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
 
     private static final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    private static final int CSRF_COOKIE_EXPIRE_SECONDS = 60;
+    private static final String COOKIE_SAME_SITE = "Lax";
 
     @Reference
     private HttpClient httpClient;
@@ -60,8 +62,9 @@ public class OAuth2Handler implements HttpHandler {
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        enabled = configs.getConfig("oauth2_enabled", false);
+        enabled = configs.getOrDefault("oauth2_enabled", false);
         if (!enabled) return;
+
         authorizationEndpoint = configs.notBlank("oauth2_authorize_endpoint");
         clientId = configs.notBlank("oauth2_client_id");
         clientSecret = configs.notBlank("oauth2_client_secret"); // 安全考虑：此处不要解密
@@ -69,8 +72,7 @@ public class OAuth2Handler implements HttpHandler {
         userinfoEndpoint = configs.notBlank("oauth2_userinfo_endpoint");
         usernameField = config.get("oauth2_userinfo_username_field");
         scope = config.get("oauth2_scope");
-        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，
-        // 防止"能通过外部 IdP 认证即获得平台管理权限"
+        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
         grantedRoles = configs.splitList("oauth2_roles");
         String thisServerUrl = configs.notBlank("oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
@@ -90,10 +92,8 @@ public class OAuth2Handler implements HttpHandler {
         if (path.equals(AUTHORIZE_PATH)) {
             String state = UUID.randomUUID().toString().replace("-", ""); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
             // state Cookie 必须 Lax：回调是 IdP 发起的跨站顶级 GET 导航，Strict 不会被携带，登录必然失败
-            response.header("Set-Cookie", CSRF_COOKIE_NAME + "=" + state
-                            + "; Path=" + ROOT_PATH
-                            + "; Max-Age=600; HttpOnly; SameSite=Lax" + tokenService.cookieSecure(request))
-                    .redirect(buildAuthorizationUrl(state));
+            tokenService.sendCookie(CSRF_COOKIE_NAME, state, ROOT_PATH, CSRF_COOKIE_EXPIRE_SECONDS, COOKIE_SAME_SITE, request, response);
+            response.redirect(buildAuthorizationUrl(state));
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
@@ -125,9 +125,8 @@ public class OAuth2Handler implements HttpHandler {
             response.status(400).finish(); // 拦截 csrf 攻击
             return;
         }
-        // state 一次性使用：校验通过立即作废 Cookie，防止 600 秒窗口内被重复提交
-        response.header("Set-Cookie", CSRF_COOKIE_NAME + "=; Path=" + ROOT_PATH
-                + "; Max-Age=0; HttpOnly; SameSite=Lax" + tokenService.cookieSecure(request));
+        // state 一次性使用：校验通过立即作废 Cookie，防止 csrfCookieExpireSeconds 秒窗口内被重复提交
+        tokenService.sendCookie(CSRF_COOKIE_NAME, "", ROOT_PATH, 0, COOKIE_SAME_SITE, request, response);
 
         String code = request.getParameter("code");
         if (code == null) {
@@ -146,9 +145,7 @@ public class OAuth2Handler implements HttpHandler {
 
         String[] roles = grantedRoles.toArray(new String[0]);
         tokenService.sendToken(user, roles, request, response);
-        String[] roles = new String[]{"admin"}; // todo 从本地数据库查询用户角色
-        tokenService.sendToken(request, user, roles, response);
-        response.redirect("/web"); // 管控台前端入口，登录成功后回到此处
+        response.redirect("/web"); // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
     }
 
     private String exchangeCodeForAccessToken(String code, HttpResponse response) throws Exception {

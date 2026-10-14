@@ -7,13 +7,12 @@ import java.util.stream.Collectors;
 
 import io.netty.handler.codec.http.*;
 import org.reactivestreams.Publisher;
-import qingzhou.http.server.auth.AuthResult;
+import qingzhou.common.Configs;
 import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
 import static qingzhou.http.server.impl.Errors.getCause;
-import qingzhou.common.Configs;
 
 /**
  * 请求准入闸门链：方法白名单、路径规范化、路由、认证、body 形态与配额。
@@ -250,15 +249,8 @@ final class RequestGates {
     }
 
     private Publisher<Void> denyUnauthenticated(RequestContext ctx) {
-        AuthResult result = authManager.doAuth(ctx.httpRequest, ctx.entry);
-        if (result != null && result.status() == AuthResult.Status.REJECT) {
-            return ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
-        }
-        // 认证通过时认证器可携带滑动续期的 Set-Cookie
-        if (result != null && result.getSetCookie() != null) {
-            ctx.response.header(HttpHeaderNames.SET_COOKIE, result.getSetCookie());
-        }
-        return null;
+        return authManager.doAuth(ctx.httpRequest, ctx.httpResponse, ctx.entry) ? null
+                : ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
     }
 
     // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500

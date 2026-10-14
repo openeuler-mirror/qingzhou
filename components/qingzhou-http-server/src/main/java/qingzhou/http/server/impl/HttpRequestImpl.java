@@ -77,11 +77,6 @@ public class HttpRequestImpl implements HttpRequest {
         Map<CharSequence, List<Cookie>> allCookies = request.allCookies();
         List<Cookie> cookies = allCookies.get(name);
         return cookies == null || cookies.isEmpty() ? null : cookies.get(0).value();
-        // 未携带该 cookie（乃至整个 Cookie 头）时 get 返回 null，须按无 cookie 处理而非 NPE
-        if (cookies != null && !cookies.isEmpty()) {
-            return cookies.get(0).value();
-        }
-        return null;
     }
 
     @Override

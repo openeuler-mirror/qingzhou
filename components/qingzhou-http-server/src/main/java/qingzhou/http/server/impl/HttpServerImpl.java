@@ -40,12 +40,12 @@ public class HttpServerImpl implements HttpServer {
         int workerThreads = configs.atLeast("worker", 1, Runtime.getRuntime().availableProcessors() * 2);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
         int idleTimeout = configs.atLeast("idle_timeout", 0, 60);
-        String host = configs.getConfig("host", "127.0.0.1");
+        String host = configs.getOrDefault("host", "127.0.0.1");
         int port = configs.port("port");
         int maxKeepAliveRequests = configs.atLeast("max_keep_alive_requests", 1, 100);
         int maxConnections = configs.atLeast("max_connections", 0, 10_000);
-        boolean sslEnabled = configs.getConfig("ssl_enabled", true);
-        boolean allowPlaintext = configs.getConfig("allow_plaintext", false);
+        boolean sslEnabled = configs.getOrDefault("ssl_enabled", true);
+        boolean allowPlaintext = configs.getOrDefault("allow_plaintext", false);
         boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
         if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
             // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认

@@ -41,6 +41,7 @@ final class BodyProcessors {
         Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
                 .onBackpressureBuffer(Queues.<byte[]>get(RESPONSE_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
         HttpResponseImpl httpResponse = new HttpResponseImpl(ctx.response, streamResponse);
+        ctx.httpResponse = httpResponse;
         return ctx.streamRequired ? receiveStream(ctx, httpResponse, streamResponse)
                 : aggregate(ctx, httpResponse, streamResponse);
     }
@@ -85,14 +86,21 @@ final class BodyProcessors {
                             // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
                             httpResponse.finish();
                         },
-                        () -> { // 完成信号：回调异常也必须收尾，否则 sink 不结束、许可与配额无法归还。
+                        () -> { // 完成信号：进入期结束；handler 须自行 finish 收尾
                             ctx.intakeComplete(); // 请求体已读完：进入期结束，长响应（SSE）不再受进入期超时约束
                             bodyFullyRead.set(true); // 请求体已读完：doFinally 据此决定是否需要断开残留连接
-                            // 此处只记录并收尾，不改状态码：onComplete 阶段响应头可能已随流写出，
-                            // 此时置状态会触发 "Status and headers already sent"，应流式 handler 自行在 onError/收尾前定状态
+                            // 由 handler 在 onComplete 内自行 finish 收尾（见 HttpHandler.handle 契约：
+                            // 允许 handler 返回后再由其它线程继续写入并收尾，框架不会代为结束）；
+                            // 此处不得无条件 finish，否则会提前关闭 sink，破坏 handler 的异步响应。
                             Throwable cause = safeRun(streamHandler::onComplete);
-                            if (cause != null) logger.error("http stream handler error", cause);
-                            httpResponse.finish();
+                            if (cause != null) { // onComplete 自身出错：兜底收尾，否则 sink 不结束、许可与配额无法归还
+                                logger.error("http stream handler error", cause);
+                                if (httpResponse.isCommitted()) {
+                                    httpResponse.finish();
+                                } else {
+                                    httpResponse.status(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).finish();
+                                }
+                            }
                         }
                 );
         return ctx.response.sendByteArray(streamResponse.asFlux())
