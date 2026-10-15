@@ -28,6 +28,7 @@ class Validation implements ActionFilter {
     private static final String[] MSG_PORT_INTEGER = {"端口号须是有效的整数", "en:Port number must be a valid integer"};
     private static final String[] MSG_PORT_RANGE = {"端口号须在 1 到 65535 之间", "en:Port number must be between 1 and 65535"};
     private static final String[] MSG_PATTERN_INVALID = {"格式不正确，须匹配规则：%s", "en:Incorrect format, must match pattern: %s"};
+    private static final String[] MSG_OPTION_INVALID = {"取值须是以下选项之一：%s", "en:Value must be one of: %s"};
 
     private final Rule[] rules = {
             new Rule(context -> context.field.id, new PatternValidator("^[a-zA-Z0-9_-]{1,20}$",
@@ -44,6 +45,7 @@ class Validation implements ActionFilter {
                     new String[]{"须是合法的邮箱地址", "en:Must be a valid email address"})),
             new Rule(context -> context.field.host, new Host()),
             new Rule(context -> context.field.port, new Port()),
+            new Rule(context -> context.field.options != null && context.field.options.length > 0, new Option()),
             new Rule(context -> context.field.pattern != null && !context.field.pattern.isEmpty(), new CustomPattern())
     };
 
@@ -233,6 +235,20 @@ class Validation implements ActionFilter {
             } catch (NumberFormatException e) {
                 return i18nService.getI18n(MSG_PORT_INTEGER, context.lang);
             }
+        }
+    }
+
+    class Option implements Validator {
+        @Override
+        public String validate(ValidationContext context) {
+            List<String> options = Arrays.asList(context.field.options);
+            String separator = context.field.separator == null || context.field.separator.isEmpty() ? "," : context.field.separator;
+            for (String value : context.parameter.split(Pattern.quote(separator))) {
+                if (!options.contains(value)) {
+                    return i18nService.getI18n(MSG_OPTION_INVALID, context.lang, String.join(", ", context.field.options));
+                }
+            }
+            return null;
         }
     }
 
