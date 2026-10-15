@@ -178,7 +178,7 @@ public class HttpClientImplTest {
     }
 
     @Test
-    public void errorResponse_sendWithListener_callsOnError() throws Exception {
+    public void errorResponse_sendWithListener_noCallback_bodyReadable() throws Exception {
         AtomicReference<Throwable> error = new AtomicReference<>();
         withServer(exchange -> writeResponse(exchange, 500, "server-error"), url -> {
             HttpClient client = buildHttpClientImpl();
@@ -200,7 +200,7 @@ public class HttpClientImplTest {
             });
 
             Assert.assertEquals(response.getStatus(), 500);
-            Assert.assertNotNull(error.get());
+            Assert.assertNull(error.get(), "非 2xx 由调用方根据 getStatus() 处理，不回调 onError");
             Assert.assertEquals(new String(response.getBody(), StandardCharsets.UTF_8), "server-error");
         });
     }

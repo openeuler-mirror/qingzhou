@@ -90,7 +90,6 @@ class OpenAiChatModel implements ChatModel {
             Response response = httpClient.send(request, httpListener);
             if (response.getStatus() == 200) return;
 
-            response.cancel();
             if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
