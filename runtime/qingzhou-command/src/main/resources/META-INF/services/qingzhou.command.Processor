@@ -5,3 +5,5 @@ qingzhou.command.cmd.AuthPassword
 qingzhou.command.cmd.TotpKey
 qingzhou.command.cmd.CipherPassword
 qingzhou.command.cmd.InitInstance
+qingzhou.command.cmd.Keystore
+qingzhou.command.cmd.Wizard

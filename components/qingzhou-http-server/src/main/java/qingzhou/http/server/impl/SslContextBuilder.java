@@ -32,7 +32,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
             throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile
-                    + ", generate it with bin/gen-keystore.sh");
+                    + ", generate it with bin/qingzhou.sh keystore");
         }
 
         String type = config.get("ssl_keystore_type");

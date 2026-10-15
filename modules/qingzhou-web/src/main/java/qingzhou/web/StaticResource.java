@@ -178,13 +178,12 @@ public class StaticResource implements HttpHandler {
     private String getCacheControl(String extension, String path) {
         if (path.equals(INDEX_FILE)) {
             // 入口 HTML 不长期缓存：发版后老用户若长期缓存 index.html 会一直白屏
-            return "max-age=0, must-revalidate";
+            return "no-cache";
         }
-        if (extension.equals("html") || extension.equals("htm")
-                || imageExtensions.contains(extension)) {
-            return "max-age=2592000, must-revalidate, proxy-revalidate, no-transform"; // 一个月
+        if (extension.equals("html") || extension.equals("htm") || imageExtensions.contains(extension)) {
+            return "max-age=2592000"; // 一个月
         }
-        return "max-age=31536000, must-revalidate, proxy-revalidate, no-transform"; // 一年
+        return "max-age=31536000, immutable"; // 一年，配合构建产物内容 hash 文件名
     }
 
     /**

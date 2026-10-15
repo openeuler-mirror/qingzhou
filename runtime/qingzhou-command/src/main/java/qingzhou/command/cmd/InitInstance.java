@@ -80,9 +80,7 @@ public class InitInstance extends Processor {
         if (password == null) return;
 
         File keystore = new File(instanceDir, "conf/keystore.p12");
-        Files.deleteIfExists(keystore.toPath());
-        if (!keystore.createNewFile()) throw new IllegalStateException("cannot create keystore: " + keystore);
-        chmod600(keystore); // keytool 写入前即收敛权限，避免口令文件短暂可读
+        Files.deleteIfExists(keystore.toPath()); // 不能预创建空文件：JDK8 keytool 对已存在的空文件报错
         genKeystore(keystore, password);
         String props = read(propsFile);
         props = putValue(props, "qingzhou-http-server.ssl_keystore_password", encrypt(password));
@@ -109,7 +107,7 @@ public class InitInstance extends Processor {
         log("admin password updated");
     }
 
-    private void genKeystore(File keystore, String password) throws Exception {
+    static void genKeystore(File keystore, String password) throws Exception {
         List<String> command = Arrays.asList(keytool(), "-genkeypair", "-alias", "qingzhou",
                 "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA", "-validity", "3650",
                 "-storetype", "PKCS12", "-keystore", keystore.getAbsolutePath(),
@@ -146,7 +144,7 @@ public class InitInstance extends Processor {
         }
     }
 
-    private String keytool() {
+    private static String keytool() {
         Path bin = Paths.get(System.getProperty("java.home"), "bin");
         Path keytool = Paths.get(bin.toString(), "keytool");
         if (!keytool.toFile().isFile()) {
@@ -206,18 +204,18 @@ public class InitInstance extends Processor {
         return (String) encrypt.invoke(globalCipher, plain);
     }
 
-    private static void chmod600(File file) {
+    static void chmod600(File file) {
         try {
             Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
         } catch (Exception ignored) { // Windows 等无 POSIX 权限模型的平台跳过
         }
     }
 
-    private static String read(File file) throws IOException {
+    static String read(File file) throws IOException {
         return file.isFile() ? new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8) : "";
     }
 
-    private static void write(File file, String content) throws IOException {
+    static void write(File file, String content) throws IOException {
         File temp = new File(file.getParentFile(), file.getName() + ".tmp"); // 先写临时文件，避免写坏原文件
         Files.write(temp.toPath(), content.getBytes(StandardCharsets.UTF_8));
         chmod600(temp); // 配置可能含密钥/口令，落盘即收敛权限，不留明文窗口
@@ -233,7 +231,7 @@ public class InitInstance extends Processor {
         return null; // 无该配置项返回 null，有但为空返回空串
     }
 
-    private static String putValue(String content, String key, String value) {
+    static String putValue(String content, String key, String value) {
         String[] lines = content.split("\n", -1);
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].trim().startsWith(key + "=")) {

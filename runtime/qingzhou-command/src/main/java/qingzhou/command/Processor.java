@@ -16,7 +16,7 @@ public abstract class Processor {
         return libDir;
     }
 
-    void setLibDir(File libDir) {
+    public void setLibDir(File libDir) {
         this.libDir = libDir;
     }
 

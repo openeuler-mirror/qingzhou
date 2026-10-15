@@ -76,7 +76,6 @@ public class AppInfo implements HttpHandler {
         });
         appMetaInfo.put("menus", menus);
 
-
         List<Map<String, String>> i18ns = new ArrayList<>();
         app.i18ns.forEach(i18n -> {
             Map<String, String> map = new HashMap<>();

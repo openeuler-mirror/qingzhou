@@ -114,14 +114,19 @@ class AppDeployer {
                     throw new IOException("Entry is outside of target dir: " + entry.getName());
                 }
                 if (entry.isDirectory()) {
-                    targetFile.mkdirs();
+                    if (!targetFile.mkdirs() && !targetFile.isDirectory()) {
+                        throw new IOException("cannot create dir: " + targetFile);
+                    }
                 } else {
-                    targetFile.getParentFile().mkdirs();
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        InputStream inputStream = zip.getInputStream(entry);
+                    File parent = targetFile.getParentFile();
+                    if (parent != null && !parent.mkdirs() && !parent.isDirectory()) {
+                        throw new IOException("cannot create parent dir: " + parent);
+                    }
+                    try (OutputStream out = Files.newOutputStream(targetFile.toPath());
+                         InputStream in = zip.getInputStream(entry)) {
                         byte[] buffer = new byte[1024 * 4];
                         int n;
-                        while (-1 != (n = inputStream.read(buffer))) {
+                        while (-1 != (n = in.read(buffer))) {
                             out.write(buffer, 0, n);
                         }
                     }

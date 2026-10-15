@@ -103,7 +103,7 @@ public class ResponseImpl implements Response {
         return actionInvoked;
     }
 
-    public void setActionInvoked(boolean actionFound) {
-        this.actionInvoked = actionFound;
+    public void setActionInvoked(boolean actionInvoked) {
+        this.actionInvoked = actionInvoked;
     }
 }

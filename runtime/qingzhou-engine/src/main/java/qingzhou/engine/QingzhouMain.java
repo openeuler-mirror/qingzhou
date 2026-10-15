@@ -89,7 +89,7 @@ public class QingzhouMain {
                 String instanceName = instanceDir == null ? "<instance>" : new File(instanceDir).getName();
                 System.err.println(key + " is not configured in "
                         + "instances/" + instanceName + "/conf/qingzhou.properties"
-                        + ", run bin/init.sh to initialize the instance");
+                        + ", run bin/qingzhou.sh init to initialize the instance");
                 System.exit(1);
             }
         }

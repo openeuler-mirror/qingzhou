@@ -95,7 +95,7 @@ public class CryptoImpl implements Crypto {
     @Override
     public PairCipher getPairCipher(String publicKey, String privateKey) throws InvalidKeyException {
         if ((publicKey == null || publicKey.isEmpty()) && (privateKey == null || privateKey.isEmpty())) {
-            throw new InvalidKeyException("public_key or private_key is required, generate a pair with bin/gen-pair-key.sh");
+            throw new InvalidKeyException("public_key or private_key is required, generate a pair with bin/qingzhou.sh pair-key");
         }
         return new PairCipherImpl(publicKey, privateKey, base64Coder);
     }
