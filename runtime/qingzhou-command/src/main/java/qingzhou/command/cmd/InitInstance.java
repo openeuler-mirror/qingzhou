@@ -46,7 +46,7 @@ public class InitInstance extends Processor {
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
         try {
             loadCrypto();
-            initKeys();
+            initPairKey();
             initSsl(console);
             initAdminPassword(console);
         } finally {
@@ -55,14 +55,7 @@ public class InitInstance extends Processor {
         log("done, restart the instance to take effect");
     }
 
-    private void initKeys() throws Exception {
-        File secretFile = new File(instanceDir, "conf/secret-key.properties");
-        String secret = read(secretFile);
-        if (isBlank(getValue(secret, "global"))) { // 已存在则静默跳过，避免已签发的令牌失效
-            write(secretFile, putValue(secret, "global", generateKey()));
-            log("cipher key generated");
-        }
-
+    private void initPairKey() throws Exception {
         String props = read(propsFile);
         if (isBlank(getValue(props, "qingzhou-registry.private_key"))) { // 已存在则视为密钥对完整，静默跳过
             String[] pairKey = generatePairKey();
@@ -188,10 +181,6 @@ public class InitInstance extends Processor {
         URL jarUrl = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
         cryptoLoader = new URLClassLoader(new URL[]{jarUrl});
         crypto = cryptoLoader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
-    }
-
-    private String generateKey() throws Exception {
-        return (String) crypto.getClass().getMethod("generateKey").invoke(crypto);
     }
 
     private String[] generatePairKey() throws Exception {

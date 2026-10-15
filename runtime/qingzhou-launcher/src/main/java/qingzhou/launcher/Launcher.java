@@ -19,7 +19,6 @@ public class Launcher {
     private static final String ZIP_FORMAT = ".zip";
 
     private static File homeFile;
-    private static int failedDocsCount = 0;//处理 docs 文件夹文件时的失败次数
 
     public static void main(String[] args) throws Exception {
         initHomeFile(); // 确定主目录
@@ -49,7 +48,7 @@ public class Launcher {
         homeFile = jarParent.getParentFile();
     }
 
-    static void checkLatestZipVersion() throws Exception {
+    static void checkLatestZipVersion() {
         String zipLatestVer = latestVersion(f -> !f.isDirectory()
                 && f.getName().startsWith("version") && f.getName().endsWith(ZIP_FORMAT));
 
@@ -57,32 +56,16 @@ public class Launcher {
         if (!verFile.exists()) return;
 
         File libDir = Paths.get(homeFile.getAbsolutePath(), "lib", "version" + zipLatestVer).toFile();
-        if (!libDir.exists()) {
-            unZipToDir(verFile, libDir);
-        }
+        if (libDir.exists()) return;
 
-        // 在极少的情况下，可能出现解压后的文件有丢失，导致启动失败，手动解压 或 删除解压后的目录以触发重新解压 可解决问题。
-        int fileCountExpected = getZipEntrySize(verFile);
-        if (failedDocsCount > 0) {
-            fileCountExpected = fileCountExpected - failedDocsCount;
-        }
-
-        int fileCountReal = sumFileCount(libDir) - 1;
-        if (fileCountReal < fileCountExpected) {
-            String msg = "The extracted version file may be incomplete and an attempt is being made to re-unzip it...";
-            System.err.println(msg);
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-            // 实际解压出的文件数少于期望的解压文件数量，则重新尝试一次
+        try {
             unZipToDir(verFile, libDir);
-            fileCountReal = sumFileCount(libDir) - 1;
-            if (fileCountReal < fileCountExpected) {
-                msg = "The re-extracted version file may still be incomplete, it is recommended to check the package format of the version file or the JDK's decompression API to troubleshoot related issues.";
-                System.err.println(msg);
-            }
+        } catch (IOException ex) {
+            System.err.println("Failed to unzip " + verFile + ": " + ex
+                    + System.lineSeparator()
+                    + "Please manually unzip it to " + libDir
+                    + ", or delete this directory and restart to trigger re-unzip.");
+            System.exit(1);
         }
     }
 
@@ -144,14 +127,14 @@ public class Launcher {
                             throw new IOException("failed to create directory " + targetFile.getParentFile());
                         }
                     }
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        copyStream(zip.getInputStream(entry), out);
+                    try (OutputStream out = Files.newOutputStream(targetFile.toPath());
+                         InputStream in = zip.getInputStream(entry)) {
+                        copyStream(in, out);
                     } catch (IOException ex) {
                         // 只容错 IO 异常（如部分环境下 docs 中文名解压失败）；
                         // Error 等严重问题不吞，避免掩盖包损坏的真实原因
                         if (parentFile.getName().equals("docs")) {
-                            failedDocsCount++; // 忽略掉这个手册文件，别影响启动流程
-                            System.err.println("failed to extract docs file: " + entry.getName() + ", " + ex.getMessage());
+                            System.err.println("Failed to extract docs file, please manually unzip it if needed: " + entry.getName() + ", " + ex.getMessage());
                         } else {
                             throw ex;
                         }
@@ -159,27 +142,6 @@ public class Launcher {
                 }
             }
         }
-    }
-
-    private static int getZipEntrySize(File zipFile) throws IOException {
-        try (ZipFile zip = new ZipFile(zipFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
-            return zip.size();
-        }
-    }
-
-    private static int sumFileCount(File file) {
-        if (file == null) return 0;
-
-        int fileCount = 1; // 自身
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    fileCount += sumFileCount(f);
-                }
-            }
-        }
-        return fileCount;
     }
 
     private static File newFile(File destDir, ZipEntry entry) throws IOException {

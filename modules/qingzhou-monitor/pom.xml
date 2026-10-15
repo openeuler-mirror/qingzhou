@@ -36,7 +36,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package/>
+                        <Export-Package>qingzhou.monitor</Export-Package>
                         <Import-Package>
                             qingzhou.registry,
                             qingzhou.api,qingzhou.api.action,

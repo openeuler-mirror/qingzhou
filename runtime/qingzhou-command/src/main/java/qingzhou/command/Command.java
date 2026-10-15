@@ -25,17 +25,17 @@ public class Command {
         List<Processor> found = new ArrayList<>();
         for (Processor processor : commands) {
             AcceptStatus acceptStatus = accept(processor, args[0]);
-            if (acceptStatus == AcceptStatus.none) {
+            if (acceptStatus == AcceptStatus.NONE) {
                 continue;
             }
 
-            if (acceptStatus == AcceptStatus.full) {
+            if (acceptStatus == AcceptStatus.FULL) {
                 found.clear();
                 found.add(processor);
                 break;
             }
 
-            if (acceptStatus == AcceptStatus.startsWith) {
+            if (acceptStatus == AcceptStatus.STARTS_WITH) {
                 found.add(processor);
             }
         }
@@ -46,7 +46,7 @@ public class Command {
             String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
             processor.doCommandLine(commandArgs);
         } else {
-            Object[] names = found.stream().map(Processor::name).toArray();
+            String[] names = found.stream().map(Processor::name).toArray(String[]::new);
             System.out.println("Find more than one command: " + Arrays.toString(names));
         }
     }
@@ -99,18 +99,18 @@ public class Command {
         while (cmd.startsWith("-")) {
             cmd = cmd.substring(1);
         }
-        if (cmd.isEmpty()) return AcceptStatus.none; // 纯 "-" 输入剥完为空串：startsWith("") 会模糊命中全部命令
+        if (cmd.isEmpty()) return AcceptStatus.NONE; // 纯 "-" 输入剥完为空串：startsWith("") 会模糊命中全部命令
         boolean equals = Objects.equals(processor.name(), cmd);
         if (equals) {
-            return AcceptStatus.full;
+            return AcceptStatus.FULL;
         }
         if (processor.name().startsWith(cmd)) {
-            return AcceptStatus.startsWith;
+            return AcceptStatus.STARTS_WITH;
         }
-        return AcceptStatus.none;
+        return AcceptStatus.NONE;
     }
 
     private enum AcceptStatus {
-        full, none, startsWith
+        FULL, NONE, STARTS_WITH
     }
 }

@@ -8,7 +8,7 @@ import qingzhou.command.Processor;
 
 public class Wizard extends Processor {
     private final List<Processor> commands = Arrays.asList(
-            new InitInstance(), new CipherKey(), new PairKey(), new TotpKey(),
+            new InitInstance(), new PairKey(), new TotpKey(),
             new AuthPassword(), new CipherPassword(), new Keystore());
 
     @Override

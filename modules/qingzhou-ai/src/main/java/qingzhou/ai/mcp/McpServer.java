@@ -55,7 +55,7 @@ public class McpServer implements HttpHandler {
     public void bindAiSkill(SkillService skill, Map<String, Object> properties) {
         synchronized (this) {
             llmSkills.put(skill, properties);
-            toolsCacheValid = false; // 技能集变更，使工具缓存失效
+            cachedToolMap = null; // 技能集变更，使工具缓存失效
         }
     }
 
@@ -63,26 +63,25 @@ public class McpServer implements HttpHandler {
     public void unbindAiSkill(SkillService skill) {
         synchronized (this) {
             llmSkills.remove(skill);
-            toolsCacheValid = false;
+            cachedToolMap = null;
         }
     }
 
     // 技能转换结果缓存：llmSkills 仅在 DS bind/unbind 时变更，无需每次请求全量重转
-    private volatile Set<Tool> cachedTools;
-    private volatile boolean toolsCacheValid;
+    private volatile Map<String, Tool> cachedToolMap;
 
     private Collection<Tool> llmTools() {
-        if (!toolsCacheValid || cachedTools == null) {
+        if (cachedToolMap == null) {
             synchronized (this) {
-                if (!toolsCacheValid || cachedTools == null) {
-                    cachedTools = LlmConverter.convertSkills(llmSkills, logger).stream()
+                if (cachedToolMap == null) {
+                    Set<Tool> tools = LlmConverter.convertSkills(llmSkills, logger).stream()
                             .flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream())
                             .collect(Collectors.toSet());
-                    toolsCacheValid = true;
+                    cachedToolMap = tools.stream().collect(Collectors.toMap(Tool::name, t -> t, (a, b) -> a));
                 }
             }
         }
-        return cachedTools;
+        return cachedToolMap.values();
     }
 
     @Override
@@ -203,19 +202,14 @@ public class McpServer implements HttpHandler {
             return response;
         }
 
+        String invokeResult;
         boolean isError = true;
-        String invokeResult = null;
         try {
-            boolean found = false;
-            for (Tool tool : llmTools()) {
-                if (tool.name().equals(toolName)) {
-                    invokeResult = tool.invoke(arguments);
-                    isError = false;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
+            Tool tool = cachedToolMap.get(toolName);
+            if (tool != null) {
+                invokeResult = tool.invoke(arguments);
+                isError = false;
+            } else {
                 invokeResult = "Not Found Tool";
             }
         } catch (Throwable e) {

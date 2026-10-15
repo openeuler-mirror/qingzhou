@@ -60,6 +60,7 @@ class AppStubRemoteImpl implements AppStubRemote {
         request.setInstance(Constants.LOCAL_INSTANCE_ID); // 远程到实例后，去本地实例找
         Cipher cipher = crypto.getCipher(keyRotation.getEffectiveKey(instanceInfo.getId(), instanceInfo.getKey()));
 
+        Response response = null;
         try {
             // 处理文件上传：将本地文件上传到远程 agent
             doFileUploads(request, cipher);
@@ -70,7 +71,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
-            Response response = httpClient.send(httpClient.buildRequest(invokeUrl)
+            response = httpClient.send(httpClient.buildRequest(invokeUrl)
                     .method(HttpMethod.POST)
                     .body(encrypted));
             if (response.getStatus() == 200) {
@@ -97,6 +98,9 @@ class AppStubRemoteImpl implements AppStubRemote {
             responseError(request, "remote processing error: " + reason);
         } finally {
             request.setInstance(originTargetName);
+            if (response != null) {
+                response.cancel();
+            }
         }
     }
 
@@ -156,18 +160,22 @@ class AppStubRemoteImpl implements AppStubRemote {
 
                 Response uploadResult = httpClient.send(
                         httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));
-                if (uploadResult.getStatus() != 200) {
-                    String msg = "response code: " + uploadResult.getStatus() + " ";
-                    byte[] body = uploadResult.getBody();
-                    if (body != null) {
-                        msg += new String(body, StandardCharsets.UTF_8);
+                try {
+                    if (uploadResult.getStatus() != 200) {
+                        String msg = "response code: " + uploadResult.getStatus() + " ";
+                        byte[] body = uploadResult.getBody();
+                        if (body != null) {
+                            msg += new String(body, StandardCharsets.UTF_8);
+                        }
+                        throw new IllegalStateException(msg);
+                    } else {
+                        // 上传响应同样绑定请求分片内容（agent 侧 ProcessHandler 以请求明文 SHA-256 作 AAD）
+                        byte[] responseAad = crypto.getMessageDigest().sha256(chunk);
+                        byte[] result = cipher.decrypt(uploadResult.getBody(), responseAad);
+                        fileTempKey = new String(result, StandardCharsets.UTF_8);
                     }
-                    throw new IllegalStateException(msg);
-                } else {
-                    // 上传响应同样绑定请求分片内容（agent 侧 ProcessHandler 以请求明文 SHA-256 作 AAD）
-                    byte[] responseAad = crypto.getMessageDigest().sha256(chunk);
-                    byte[] result = cipher.decrypt(uploadResult.getBody(), responseAad);
-                    fileTempKey = new String(result, StandardCharsets.UTF_8);
+                } finally {
+                    uploadResult.cancel();
                 }
             }
         }

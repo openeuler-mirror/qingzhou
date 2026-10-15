@@ -1,13 +1,13 @@
 package qingzhou.crypto.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.*;
-import java.util.Properties;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -132,27 +132,64 @@ public class CryptoImpl implements Crypto {
     }
 
     private String getSecret() throws IOException {
-        String secret = null;
         String instanceDir = System.getProperty("qingzhou.instance");
         if (instanceDir == null || instanceDir.trim().isEmpty()) {
             // fail-fast 给出可读错误，而非 Paths.get(null) 的裸 NPE 被包装成误导性的 IllegalStateException
             throw new IllegalStateException("system property 'qingzhou.instance' is required to locate the global secret key");
         }
         Path secretFile = Paths.get(instanceDir, "conf", "secret-key.properties");
-        if (secretFile.toFile().exists()) {
-            try (InputStream inputStream = Files.newInputStream(secretFile, StandardOpenOption.READ)) {
-                Properties properties = new Properties();
-                properties.load(inputStream);
-                secret = properties.getProperty("global");
+        String content = secretFile.toFile().isFile()
+                ? new String(Files.readAllBytes(secretFile), StandardCharsets.UTF_8) : "";
+        String secret = getValue(content, "global");
+        if (isBlank(secret)) {
+            secret = generateKey();
+            saveSecret(secretFile, putValue(content, "global", secret)); // 首次使用即持久化，此后令牌与密文始终有效
+            if (logger != null) { // 命令行工具经反射构造本类时无 DS 注入，logger 为 null
+                logger.info("global secret key generated and saved to " + secretFile
+                        + "; copy it to peer nodes so that all cluster members share the same key");
             }
         }
-        if (secret == null || secret.isEmpty()) {
-            // 未配置则随机生成，不适用于生产环境：须让运维可见，否则集群各节点互不相认、重启后令牌全部失效
-            logger.warn("WARNING: global secret key is not configured (conf/secret-key.properties). "
-                    + "A random key is generated for this run: tokens and encrypted configs will not survive restart, "
-                    + "and cluster nodes will not trust each other.");
-            secret = generateKey();
-        }
         return secret;
+    }
+
+    // 先写临时文件再原子替换，避免半写损坏；全局密钥落盘即收敛权限，不留明文窗口
+    private void saveSecret(Path secretFile, String content) throws IOException {
+        Path temp = Paths.get(secretFile.toString() + ".tmp");
+        Files.write(temp, content.getBytes(StandardCharsets.UTF_8));
+        chmod600(temp);
+        Files.move(temp, secretFile, StandardCopyOption.REPLACE_EXISTING);
+        chmod600(secretFile);
+    }
+
+    private void chmod600(Path file) {
+        try {
+            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+        } catch (Exception ignored) { // Windows 等无 POSIX 权限模型的平台跳过
+        }
+    }
+
+    private static String getValue(String content, String key) {
+        for (String line : content.split("\n", -1)) {
+            String trim = line.trim();
+            if (trim.startsWith(key + "=")) return trim.substring(key.length() + 1).trim();
+        }
+        return null; // 无该配置项返回 null，有但为空返回空串
+    }
+
+    private static String putValue(String content, String key, String value) {
+        String[] lines = content.split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith(key + "=")) {
+                // 有该配置项则整行替换，注释原样保留；保留行尾 \r，避免 CRLF 文件被替换后行尾混杂
+                String cr = lines[i].endsWith("\r") ? "\r" : "";
+                lines[i] = key + "=" + value + cr;
+                return String.join("\n", lines);
+            }
+        }
+        return content + (content.isEmpty() || content.endsWith("\n") ? "" : "\n") + key + "=" + value + "\n";
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

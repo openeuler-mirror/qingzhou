@@ -5,10 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -28,7 +26,7 @@ public class Package {
      */
     public static void main(String[] args) throws Exception {
         // 配置参数
-        File mvnTarget = new File(new File("").getAbsolutePath() + File.separator + "target");
+        File mvnTarget = new File("target");
         File buildHome = new File(mvnTarget, "qingzhou");
         boolean devMode = Boolean.getBoolean("DevMode");
         String buildVersion = System.getProperty("BuildVersion"); // maven 插件自动解析
@@ -60,7 +58,11 @@ public class Package {
      * @throws Exception 抛出可能发生的异常。
      */
     private static void generateLibZip(File versionDir, boolean devMode) throws Exception {
-        zipFiles(Objects.requireNonNull(versionDir.listFiles()),
+        File[] versionFiles = versionDir.listFiles();
+        if (versionFiles == null) {
+            throw new IllegalStateException("failed to list version dir: " + versionDir);
+        }
+        zipFiles(versionFiles,
                 new File(versionDir.getParent(),
                         versionDir.getName()
                                 + (devMode ? ("-" + new SimpleDateFormat("MM.dd'T'HH.mm.ss").format(new Date())) : "")

@@ -51,6 +51,10 @@ public class Heartbeat {
     private static volatile String previousKey;
     private static volatile long previousKeyAt;
 
+    // agent 侧保留旧钥的窗口放宽到注册端宽限期的两倍：覆盖"注册端宽限期内仍用旧钥加密"的整个窗口，
+    // 并对两侧时钟偏差 / 网络抖动留余量，避免窗口边缘的解密失败
+    private static final long AGENT_KEY_GRACE_MILLIS_DECRYPT = Constants.AGENT_KEY_GRACE_MILLIS * 2;
+
     /**
      * 宽限期内返回轮换前的旧钥，供 ProcessHandler 解密回退；过期或无轮换返回 null
      */
@@ -58,7 +62,7 @@ public class Heartbeat {
         String key = previousKey;
         if (key == null) return null;
 
-        if (System.currentTimeMillis() - previousKeyAt <= Constants.AGENT_KEY_GRACE_MILLIS * 2) {
+        if (System.currentTimeMillis() - previousKeyAt <= AGENT_KEY_GRACE_MILLIS_DECRYPT) {
             return key;
         } else {
             previousKey = null;

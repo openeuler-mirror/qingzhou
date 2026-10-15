@@ -170,26 +170,26 @@ public class QingzhouMain {
         }, 0, 5, TimeUnit.SECONDS);
     }
 
-    private static volatile Set<String> disabledFeatures; // 启动期一次性解析，避免逐 jar 重复 split
+    // 启动期一次性解析，避免逐 jar 重复 split；构建期即确定，无需 volatile / 懒加载
+    private static final Set<String> disabledFeatures = loadDisabledFeatures();
+
+    private static Set<String> loadDisabledFeatures() {
+        Set<String> features = new HashSet<>();
+        String featuresDisabled = System.getProperty("qingzhou.features.disabled");
+        if (featuresDisabled != null) {
+            for (String check : featuresDisabled.split(",")) {
+                if (!check.trim().isEmpty()) features.add(check.trim());
+            }
+        }
+        return features;
+    }
 
     private static boolean isFeatureDisabled(File file) {
-        Set<String> features = disabledFeatures;
-        if (features == null) {
-            features = new HashSet<>();
-            String featuresDisabled = System.getProperty("qingzhou.features.disabled");
-            if (featuresDisabled != null) {
-                for (String check : featuresDisabled.split(",")) {
-                    if (!check.trim().isEmpty()) features.add(check.trim());
-                }
-            }
-            disabledFeatures = features;
-        }
-
         String name = file.getName();
         if (name.endsWith(".jar")) {
             name = name.substring(0, name.length() - ".jar".length());
         }
-        return features.contains(name);
+        return disabledFeatures.contains(name);
     }
 
     private static Map<String, String> osgiConfig() {
