@@ -2,7 +2,9 @@ package qingzhou.ai.impl;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -208,7 +210,52 @@ public class SseListener implements Listener {
 
     @Override
     public void onToolCall(String toolCallId, String toolName, String args) {
-        sendEvent(SseEvent.of(SseEvent.Type.TOOL_CALL).toolName(toolName));
+        // 补发 args（注入 actionCode 后的 JSON）：前端联动完全由 args 驱动，旧前端忽略该字段
+        sendEvent(SseEvent.of(SseEvent.Type.TOOL_CALL).toolName(toolName).content(enrichActionArgs(toolName, args)));
+    }
+
+    /**
+     * 把 UI 联动动作码并入工具入参 JSON，使前端联动完全由 args 驱动：
+     * - qingzhou_action_<动作码>（RegisterActionTools.TOOL_NAME_PREFIX 命名约定）→ 注入 actionCode=<动作码>
+     * - AppListTool（应用列表查询，未声明 TOOL_NAME 时工具名即组件类名，见 LlmConverter）→ 注入 actionCode=appList
+     * args 非法/非对象时原样透传（此时前端无联动，属正常降级）
+     */
+    private String enrichActionArgs(String toolName, String args) {
+        String actionCode = uiActionOf(toolName);
+        if (actionCode == null) return args;
+        try {
+            Map<String, Object> map = args == null || args.isEmpty() ? new HashMap<>() : json.fromJson(args, HashMap.class);
+            if (map == null) return args;
+            map.put("actionCode", actionCode);
+            return json.toJson(map);
+        } catch (Exception e) {
+            return args;
+        }
+    }
+
+    /**
+     * 工具名 → UI 联动动作码；返回 null 表示无联动。
+     * 同语义的新增工具无需改动（前缀/类名约定覆盖），仅新增语义动作时才需要在此补充分支。
+     * 注意：qingzhou_action_ 前缀须与 RegisterActionTools.TOOL_NAME_PREFIX 保持一致（跨模块各自定义）
+     */
+    private static String uiActionOf(String toolName) {
+        final String prefix = "qingzhou_action_";
+        if (toolName != null && toolName.startsWith(prefix)) {
+            switch (toolName.substring(prefix.length())) {
+                case "page": return "page";
+                case "show": return "show";
+                case "monitor": return "monitor";
+                // 空间切换（非写操作）：联动聚焦到该模型的列表页（空间列表所在），已打开则强制刷新。
+                // currentspace 为纯查询、无状态变化，不联动
+                case "switchspace": return "focus";
+                // 写操作（add/update/delete）不联动：AI 写数据时驱动左侧视图可能与用户当前操作产生数据冲突，联动范围由后端统一控制
+                default: return null;
+            }
+        }
+        // 元数据查询工具（未声明 TOOL_NAME 时工具名即组件类名，见 LlmConverter）
+        if ("AppListTool".equals(toolName)) return "appList";
+        if ("ModelTool".equals(toolName)) return "page";
+        return null;
     }
 
     @Override
