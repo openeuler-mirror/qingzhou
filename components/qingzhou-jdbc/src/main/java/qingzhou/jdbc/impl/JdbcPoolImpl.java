@@ -29,14 +29,12 @@ public class JdbcPoolImpl implements JdbcPool {
     public void activate(Map<String, String> config) throws Exception {
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
+        Map<String, PropertyDescriptor> descriptors = new java.util.HashMap<>();
+        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+            descriptors.put(pd.getName(), pd);
+        }
         for (Map.Entry<String, String> entry : config.entrySet()) {
-            PropertyDescriptor matched = null;
-            for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
-                if (pd.getName().equals(entry.getKey())) {
-                    matched = pd;
-                    break;
-                }
-            }
+            PropertyDescriptor matched = descriptors.get(entry.getKey());
             // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
             if (matched == null || matched.getWriteMethod() == null) {
                 throw new IllegalArgumentException("unknown qingzhou-jdbc config item: " + entry.getKey());

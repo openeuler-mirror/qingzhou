@@ -164,7 +164,9 @@ public class CryptoImpl implements Crypto {
     private void chmod600(Path file) {
         try {
             Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
-        } catch (Exception ignored) { // Windows 等无 POSIX 权限模型的平台跳过
+        } catch (Exception e) {
+            // 权限收紧失败可能导致密钥以宽权限落盘，须留痕（命令行工具经反射构造本类时无 DS 注入，logger 为 null）
+            if (logger != null) logger.warn("failed to restrict file permission: " + file + ", " + e.getMessage());
         }
     }
 

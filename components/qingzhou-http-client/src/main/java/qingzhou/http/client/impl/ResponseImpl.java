@@ -44,7 +44,7 @@ class ResponseImpl implements Response {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(), StandardCharsets.UTF_8))) {
             long received = 0;
             for (String line; !cancelled && (line = reader.readLine()) != null; ) {
-                received += line.length() + 1; // readLine 丢弃换行符，计数补回 1
+                received += line.getBytes(StandardCharsets.UTF_8).length + 1; // 按字节计数（readLine 丢弃换行符，补回 1）：多字节字符下字符数会低估实际内存
                 // 流式路径同样受 maxBodySize 约束：否则服务端一条超长行即可让整行驻留内存
                 if (maxBodySize > 0 && received > maxBodySize) {
                     throw new IOException("streaming response exceeds maxBodySize: " + maxBodySize);

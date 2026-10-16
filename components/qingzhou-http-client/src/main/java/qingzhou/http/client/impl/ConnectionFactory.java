@@ -23,6 +23,7 @@ class ConnectionFactory {
     private volatile SSLSocketFactory trustAllFactory;
     // 自定义信任证书的 SSLSocketFactory 缓存（按证书集内容缓存）：高频内网调用避免每次重建 KeyStore/SSLContext
     private final Map<List<X509Certificate>, SSLSocketFactory> trustFactories = new ConcurrentHashMap<>();
+    private volatile boolean trustAllWarned;
 
     HttpURLConnection getConnection(String url, int connectTimeout, int readTimeout, X509Certificate[] trustedCertificates, boolean trustAll) throws Exception {
         if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is missing");
@@ -47,7 +48,11 @@ class ConnectionFactory {
 
     private void configSsl(HttpsURLConnection httpsConn, X509Certificate[] trustedCertificates, boolean trustAll) throws Exception {
         if (trustAll) {
-            // 信任所有证书且不校验主机名，存在中间人攻击风险
+            // 信任所有证书且不校验主机名，存在中间人攻击风险，仅在受控环境使用
+            if (!trustAllWarned) {
+                trustAllWarned = true;
+                System.err.println("WARNING: trustAllCertificates is enabled, hostname verification is skipped (MITM risk). Use only in controlled environments.");
+            }
             httpsConn.setSSLSocketFactory(getTrustAllFactory());
             httpsConn.setHostnameVerifier((hostname, session) -> true);
         } else if (trustedCertificates != null && trustedCertificates.length > 0) {
@@ -95,6 +100,8 @@ class ConnectionFactory {
         trustManagerFactory.init(keyStore);
 
         SSLSocketFactory factory = newSocketFactory(trustManagerFactory.getTrustManagers());
+        int MAX_TRUST_FACTORIES = 16; // 缓存上限：客户端动态传入不同证书集时防止无界增长
+        if (trustFactories.size() >= MAX_TRUST_FACTORIES) trustFactories.clear(); // 动态证书集场景防无界增长
         SSLSocketFactory prev = trustFactories.putIfAbsent(key, factory);
         return prev != null ? prev : factory;
     }

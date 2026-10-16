@@ -102,7 +102,7 @@ public class Register implements HttpHandler {
                             }
                         }
                     }
-                    toRemove.forEach(s -> ((RegistryImpl) registry).removeRemoteApps(s));
+                    toRemove.forEach(registry::removeRemoteApps);
                 }
             }
         }, interval, interval);
@@ -152,8 +152,7 @@ public class Register implements HttpHandler {
             return;
         }
 
-        RegistryImpl registryImpl = (RegistryImpl) registry;
-        registryImpl.addRemoteInstanceInfo(instanceInfo);
+        registry.addRemoteInstanceInfo(instanceInfo);
 
         String msg;
         if (exists != null) {

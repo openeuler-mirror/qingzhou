@@ -113,14 +113,18 @@ public class TokenService {
     public void revokeToken(HttpRequest request, HttpResponse response) {
         String token = retrieveToken(request);
         if (token != null && !token.isEmpty()) {
-            // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
-            long now = System.currentTimeMillis();
-            for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
-                if (entry.getValue() < now) revokedTokens.remove(entry.getKey());
-            }
+            // 仅吊销真实有效的令牌：伪造令牌不入表，防止未认证请求高频调用灌爆吊销表（内存 DoS）
+            Map<String, Object> validToken = parseToken(token);
+            if (validToken != null) {
+                // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
+                long now = System.currentTimeMillis();
+                for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
+                    if (entry.getValue() < now) revokedTokens.remove(entry.getKey());
+                }
 
-            // 服务端注销
-            revokedTokens.put(token, now + tokenExpireMillis);
+                // 服务端注销
+                revokedTokens.put(token, now + tokenExpireMillis);
+            }
 
             // 通知客户端注销
             sendCookie(TOKEN_COOKIE_NAME, "", "/", 0, cookieSamesite, request, response);
@@ -128,33 +132,39 @@ public class TokenService {
         }
     }
 
+    private Map<String, Object> parseToken(String token) {
+        try {
+            Map<String, Object> map = json.fromJson(tokenCipher.decrypt(token), Map.class);
+            if (map != null && map.get(EXPIRE) instanceof Number) {
+                return map;
+            }
+        } catch (Exception e) {
+            logger.warn("Token verification failed: " + e.getMessage());
+        }
+        return null;
+    }
+
     public Object[] verifyToken(String token, HttpRequest request, HttpResponse response) {
         if (token == null) return null;
         if (revokedTokens.containsKey(token)) return null;
 
-        try {
-            String payload = tokenCipher.decrypt(token);
-            Map<String, Object> map = json.fromJson(payload, Map.class);
-            if (map != null) {
-                String user = (String) map.get(USER);
-                String[] roles = toRoles(map.get(ROLES));
+        Map<String, Object> map = parseToken(token);
+        if (map == null) return null;
 
-                long expiresAt = ((Number) map.get(EXPIRE)).longValue();
-                long left = expiresAt - System.currentTimeMillis();
-                if (left <= 0) return null;
+        if (!(map.get(EXPIRE) instanceof Number)) return null;
+        long expiresAt = ((Number) map.get(EXPIRE)).longValue();
+        long left = expiresAt - System.currentTimeMillis();
+        if (left <= 0) return null;
 
-                // 滑动续期：活跃会话剩余寿命不足一半时重签令牌
-                if (left < tokenExpireMillis / 2) {
-                    sendToken(user, roles, request, response);
-                }
+        String user = (String) map.get(USER);
+        String[] roles = toRoles(map.get(ROLES));
 
-                return new Object[]{user, roles};
-            }
-        } catch (Exception e) {
-            // 校验失败是常见攻击面（伪造/篡改令牌），记录摘要便于审计；不打印令牌本身防止泄露凭据
-            logger.warn("Token verification failed: " + e.getMessage());
+        // 滑动续期：活跃会话剩余寿命不足一半时重签令牌
+        if (left < tokenExpireMillis / 2) {
+            sendToken(user, roles, request, response);
         }
-        return null;
+
+        return new Object[]{user, roles};
     }
 
     private String[] toRoles(Object rolesObj) {

@@ -76,10 +76,10 @@ public class AuthHandler implements HttpHandler {
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
         String path = request.getPath();
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/auth/login 之类误命中
+        boolean isPost = "POST".equals(request.getMethod());
         switch (path) {
             case LOGIN_PATH:
                 // 凭据只允许经 POST 请求体传递
-                boolean isPost = "POST".equals(request.getMethod());
                 if (!isPost || request.getRawUri().contains("?")) { // 防止密码进入 URL/访问日志；
                     response.status(400).finish();
                     return;
@@ -87,6 +87,11 @@ public class AuthHandler implements HttpHandler {
                 login(request, response);
                 break;
             case LOGOUT_PATH:
+                // 登出限定 POST：防跨站 GET 触发登出（logout CSRF）
+                if (!isPost) {
+                    response.status(400).finish();
+                    return;
+                }
                 logout(request, response);
                 break;
             case SESSION_PATH:

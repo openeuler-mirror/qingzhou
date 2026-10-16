@@ -14,7 +14,8 @@ import qingzhou.crypto.ReplayGuardCipher;
  */
 final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     /**
-     * 新格式魔数：与 AES-GCM 随机 IV 首字节的取值分布无交集，误判概率极低
+     * 新格式魔数：AES-GCM 输出首字节随机，仍可能恰好为 0xA7（叠加版本字节后误判概率约 1/65536），
+     * 误判报文会在版本/时间窗/GCM 认证校验中被拒绝，不构成安全或正确性问题
      */
     private static final int MAGIC = 0xA7;
     private static final int VERSION = 1;

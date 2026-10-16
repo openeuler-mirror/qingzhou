@@ -126,8 +126,8 @@ class AppStubRemoteImpl implements AppStubRemote {
             // 项分隔符须与 agent 侧 AgentInvoker.processRequest 的拼接保持一致
             for (String item : value.split(",")) {
                 String path = item.trim();
-                File file = new File(path);
-                if (!file.isFile()) { // 非本次上传的本地临时文件（业务已有文件名），原样传递
+                File file = toUploadTempFile(path);
+                if (file == null) { // 非本次上传的本地临时文件（业务已有文件名），原样传递
                     remotePaths.add(path);
                     continue;
                 }
@@ -136,6 +136,24 @@ class AppStubRemoteImpl implements AppStubRemote {
             }
             String remotePathsStr = String.join(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP, remotePaths); // 将远程路径列表保存到 request
             request.getParameters().put(field, remotePathsStr); // 更新 request 中的参数为远程路径
+        }
+    }
+
+    /**
+     * 仅当路径位于上传临时目录内且真实存在时才视为待上传文件：
+     * 字段值可能来自 URL/JSON 等不可信来源，缺少目录约束会导致任意本地文件被读取并外传
+     */
+    private File toUploadTempFile(String path) {
+        String instanceDir = System.getProperty("qingzhou.instance");
+        if (instanceDir == null) return null;
+        File uploadBase = new File(instanceDir, "temp/qingzhou-upload");
+        File file = new File(path);
+        if (!file.isFile()) return null;
+        try {
+            String canonicalPath = file.getCanonicalPath();
+            return canonicalPath.startsWith(uploadBase.getCanonicalPath() + File.separator) ? file : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 

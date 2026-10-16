@@ -23,12 +23,19 @@ import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus"})
 public class PrometheusEndpoint implements HttpHandler {
+    // 抓取最小采样间隔：远程采集是同步 RPC，实例多时线性变慢，短时间内的重复抓取直接复用缓存
+    private static final long MIN_SCRAPE_INTERVAL_MS = 15_000;
+
     @Reference
     private Registry registry;
     @Reference
     private Logger logger;
-    
+
     private final List<MetricProvider> metricProviders = new CopyOnWriteArrayList<>();
+    // metricName 转换结果缓存：同一 field.code 每次 scrape 的转换结果不变
+    private final Map<String, String> metricNameCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private String cachedBody;
+    private long lastScrapeAt;
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
     protected void bindMetricProvider(MetricProvider provider) {
@@ -41,6 +48,22 @@ public class PrometheusEndpoint implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        String body;
+        synchronized (this) {
+            long now = System.currentTimeMillis();
+            if (cachedBody == null || now - lastScrapeAt >= MIN_SCRAPE_INTERVAL_MS) {
+                cachedBody = render();
+                lastScrapeAt = now;
+            }
+            body = cachedBody;
+        }
+
+        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8")
+                .send(body)
+                .finish();
+    }
+
+    private String render() {
         Map<String, MetricGroup> groups = new LinkedHashMap<>();
 
         for (String appCode : registry.getAllLocalApps()) {
@@ -77,10 +100,7 @@ public class PrometheusEndpoint implements HttpHandler {
                 result.append(line).append('\n');
             }
         }
-
-        httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8")
-                .send(result.toString())
-                .finish();
+        return result.toString();
     }
 
     private void collect(Map<String, MetricGroup> groups, String instanceId, String appCode, AppStub stub) {
@@ -96,7 +116,8 @@ public class PrometheusEndpoint implements HttpHandler {
                            String modelCode, ModelField field, String value) {
         Double number = toDouble(value);
         if (number == null) return;
-        String metricName = "qingzhou_" + field.code.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase().replaceAll("[^a-z0-9_]", "_").replaceFirst("_(count|total)$", "");
+        String metricName = metricNameCache.computeIfAbsent(field.code, code ->
+                "qingzhou_" + code.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase().replaceAll("[^a-z0-9_]", "_").replaceFirst("_(count|total)$", ""));
         MetricGroup group = groups.get(metricName);
         if (group == null) {
             group = new MetricGroup();

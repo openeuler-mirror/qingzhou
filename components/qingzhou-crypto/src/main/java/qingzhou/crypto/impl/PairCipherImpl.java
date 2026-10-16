@@ -79,9 +79,6 @@ class PairCipherImpl implements PairCipher {
     }
 
     private PublicKey convertPublic(String keyAsBase64) throws Exception {
-        if (keyAsBase64 == null) {
-            return null;
-        }
         byte[] pubBytes = base64Coder.decode(keyAsBase64);
         X509EncodedKeySpec encPubKeySpec = new X509EncodedKeySpec(pubBytes);
         return KeyFactory.getInstance(ALG).generatePublic(encPubKeySpec);

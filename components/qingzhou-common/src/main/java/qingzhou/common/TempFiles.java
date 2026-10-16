@@ -7,6 +7,10 @@ import java.io.File;
  * 只做"清空目录"与"按 TTL 清理过期项"，不含任何业务策略（TTL 由调用方给出）。
  */
 public final class TempFiles {
+    // 清理最小间隔：避免每个请求都扫描上传目录（高并发下重复 IO）
+    private static final long CLEAN_MIN_INTERVAL_MILLIS = 60_000;
+    private static volatile long lastCleanAt;
+
     private TempFiles() {
     }
 
@@ -27,9 +31,13 @@ public final class TempFiles {
      * 删除目录下最后修改时间早于 {@code now - ttlMillis} 的子项（递归删除）；目录不存在或无法列举时静默跳过。
      */
     public static void cleanExpired(File dir, long ttlMillis) {
+        long now = System.currentTimeMillis();
+        if (now - lastCleanAt < CLEAN_MIN_INTERVAL_MILLIS) return;
+        lastCleanAt = now;
+
         File[] children = listChildren(dir);
         if (children == null) return;
-        long expireBefore = System.currentTimeMillis() - ttlMillis;
+        long expireBefore = now - ttlMillis;
         for (File child : children) {
             if (child.lastModified() < expireBefore) {
                 deleteRecursively(child);

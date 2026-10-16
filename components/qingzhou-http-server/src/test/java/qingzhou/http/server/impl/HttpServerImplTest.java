@@ -6,6 +6,7 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -213,7 +214,7 @@ public class HttpServerImplTest {
         field.set(target, value);
     }
 
-    private static Map<String, String> sslConfig() {
+    private static Map<String, String> sslConfig() throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("port", "0");
         config.put("ssl_enabled", "true");
@@ -245,9 +246,9 @@ public class HttpServerImplTest {
         return ((InetSocketAddress) disposableServer.address()).getPort();
     }
 
-    private static File keystoreFile() {
+    private static File keystoreFile() throws Exception {
         URL resource = HttpServerImplTest.class.getClassLoader().getResource("test-keystore.p12");
         Assert.assertNotNull(resource, "test-keystore.p12 is missing on the test classpath");
-        return new File(resource.getFile());
+        return Paths.get(resource.toURI()).toFile(); // URL 含空格/中文路径时 getFile() 会解析失败
     }
 }

@@ -25,6 +25,7 @@ public class Launcher {
         checkLatestZipVersion(); // 检查是否需要 解压 升级 版本
         File libDir = getLatestLibDir(); // 获得最新版本
 
+        // 命令类加载器与进程同生命周期：doCommand 可能拉起常驻平台，不得提前关闭
         ClassLoader cmdMainLoader = buildCommandClassLoader(libDir);
         Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.Command");
         Constructor<?> constructor = cmdMainClass.getConstructor(File.class);
@@ -107,6 +108,7 @@ public class Launcher {
         return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
     }
 
+    // 引导模块保持零依赖（先于平台类库加载，不能引用 app-driver 的 FileUtil），故本地保留解压实现
     private static void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
@@ -163,8 +165,6 @@ public class Launcher {
     }
 
     private static boolean isLaterVersion(String v1, String v2) {
-        if (v1 == null || v2 == null) return false;
-
         v1 = v1.trim();
         v2 = v2.trim();
         String[] arr1 = v1.split("\\.");

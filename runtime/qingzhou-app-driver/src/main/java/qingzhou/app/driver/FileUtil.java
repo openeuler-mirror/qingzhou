@@ -5,11 +5,46 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+
+    /**
+     * 解压 zip 到目标目录（防 zip-slip：目录穿越条目直接拒绝）。
+     *
+     * @param overwrite true 覆盖已存在项（如驱动覆盖应用同名类）；false 跳过已存在项（如保留应用自带 MANIFEST）
+     */
+    public static void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
+        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
+            String baseDir = unZipDir.getCanonicalPath() + File.separator;
+            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+                ZipEntry entry = e.nextElement();
+                File targetFile = new File(unZipDir, entry.getName());
+                if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
+                    throw new IOException("Entry is outside of target dir: " + entry.getName());
+                }
+                if (entry.isDirectory()) {
+                    targetFile.mkdirs();
+                } else {
+                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
+                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
+                    if (overwrite || !Files.exists(targetFile.toPath())) {
+                        File parent = targetFile.getParentFile();
+                        if (parent != null) parent.mkdirs();
+                        try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
+                            copyStream(zip.getInputStream(entry), out);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // 压缩一个文件或文件夹
     public static void zipFiles(File srcFile, File zipFile, boolean containsBaseDir) throws IOException {
@@ -87,15 +122,23 @@ public class FileUtil {
             deleteDirectory(file);
         } else {
             if (file.exists() && !file.delete()) {
-                try { // Windows 下文件句柄释放有延迟，等待后重试
-                    Thread.sleep(2000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+                // Windows 下文件句柄释放有延迟，短间隔重试；其它平台立即失败，不空耗
+                if (IS_WINDOWS) {
+                    for (int i = 0; i < 10; i++) {
+                        sleep(200);
+                        if (file.delete()) return;
+                    }
                 }
-                if (!file.delete()) {
-                    throw new IOException("Unable to delete file: " + file);
-                }
+                throw new IOException("Unable to delete file: " + file);
             }
+        }
+    }
+
+    private static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -182,11 +225,7 @@ public class FileUtil {
 
     // Windows 下文件句柄释放有延迟，等待后改用流拷贝重试；失败必须抛出，不能静默跳过导致文件缺失
     private static void copyByStream(File from, File to) throws IOException {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
+        if (IS_WINDOWS) sleep(2000);
         try (InputStream read = new BufferedInputStream(Files.newInputStream(from.toPath()), 32768);
              OutputStream out = Files.newOutputStream(to.toPath())) {
             copyStream(read, out);

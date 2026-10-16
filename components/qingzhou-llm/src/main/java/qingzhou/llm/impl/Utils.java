@@ -13,6 +13,9 @@ import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
 public class Utils {
+    private Utils() {
+    }
+
     public static void println(String msg) {
         System.err.println(msg); // 方便TW等集成，不用 Logger 对象
     }
@@ -29,6 +32,13 @@ public class Utils {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * 瞬时故障状态码：429 限流与 5xx 服务端错误，指数退避后重试有意义
+     */
+    public static boolean isRetryableStatus(int status) {
+        return status == 429 || status >= 500;
     }
 
     /**

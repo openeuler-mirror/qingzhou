@@ -67,6 +67,9 @@ public class Config {
 
     @Activate
     public void init() throws Exception {
+        if (qzInstance == null) {
+            throw new IllegalStateException("system property qingzhou.instance must be set");
+        }
         Path configFile = Paths.get(qzInstance, "conf", "qingzhou.properties");
         String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
         Map<String, String> qzConfig = parse(configText);

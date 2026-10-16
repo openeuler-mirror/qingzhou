@@ -78,8 +78,13 @@ public class AuthManager {
             lockout.recordFailure(host);
         }
 
-        logger.warn("http authentication rejected: " + authResult.getReason());
+        logger.warn("http authentication rejected: " + sanitizeLogText(authResult.getReason()));
         return false;
+    }
+
+    // 认证器可能把用户输入放进 reason，剔除换行防止日志伪造
+    private static String sanitizeLogText(String text) {
+        return text == null ? "" : text.replace("\r", "\\r").replace("\n", "\\n");
     }
 
     private AuthResult authenticate(HttpRequest request, HttpResponse response) {

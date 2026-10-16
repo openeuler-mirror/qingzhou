@@ -165,7 +165,8 @@ public class QingzhouMain {
                     bundle.stop();
                 }
             } catch (Exception e) {
-                e.printStackTrace(System.err); // 捕获并打印，保证任务不被取消
+                // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
+                System.err.println("qz-path-detector task error: " + e.getMessage());
             }
         }, 0, 5, TimeUnit.SECONDS);
     }

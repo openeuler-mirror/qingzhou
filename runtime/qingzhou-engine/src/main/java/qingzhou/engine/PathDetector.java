@@ -2,8 +2,8 @@ package qingzhou.engine;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -15,18 +15,21 @@ import java.util.concurrent.TimeUnit;
 
 // 仅同包 QingzhouMain 使用，不对外暴露
 class PathDetector {
+    // 进程扫描结果短期共享：多个 bundle 同时开启探测时，避免重复拉起 ps/powershell 全量扫描
+    private static final long SCAN_CACHE_MILLIS = 5_000;
+    private static volatile List<String> cachedScanLines;
+    private static volatile long lastScanAt;
+
     private final String featureFiles;
     private final String detectionEnvVars;
-    private String scanRoots;
+    private final String scanRoots;
     private final String processNames;
 
     PathDetector(Dictionary<String, String> attributes) {
         this.featureFiles = attributes.get("Qingzhou-Detection-Feature-Files");
         this.detectionEnvVars = attributes.get("Qingzhou-Detection-Env-Vars");
-        this.scanRoots = attributes.get("Qingzhou-Detection-Scan-Roots");
-        if (this.scanRoots == null) {
-            this.scanRoots = System.getProperty("Qingzhou-Detection-Scan-Roots");
-        }
+        String roots = attributes.get("Qingzhou-Detection-Scan-Roots");
+        this.scanRoots = roots != null ? roots : System.getProperty("Qingzhou-Detection-Scan-Roots");
         this.processNames = attributes.get("Qingzhou-Detection-Process-Names");
     }
 
@@ -91,33 +94,15 @@ class PathDetector {
     private String detectByProcess() {
         if (processNames == null) return null; // 未配置进程名，不做进程探测
 
-        Process process = null;
-        BufferedReader reader = null;
         try {
-            // 1. 构造全平台兼容的极简原生命令
-            String[] cmd;
-            String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-            if (os.contains("win")) {
-                // Windows: 使用 PowerShell 获取所有进程的可执行文件路径（wmic 已在新版 Windows 中被移除）
-                // -ErrorAction SilentlyContinue：访问受保护进程的 Path 会被拒绝，避免这类错误混入输出
-                cmd = new String[]{"powershell", "-NoProfile", "-Command",
-                        "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
-            } else {
-                // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）
-                cmd = new String[]{"sh", "-c", "ps -ww -e -o args="};
-            }
-
-            process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            // 2. 数据探查（processNames 转小写并拆分只需一次，避免在每一行上重复计算）
+            // 数据探查（processNames 转小写并拆分只需一次，避免在每一行上重复计算）
             String[] keywords = processNames.toLowerCase(Locale.ROOT).split(",");
-            return reader.lines()
+            return processLines().stream()
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
                     .map(line -> { // 从行中提取匹配到的目录前缀 (到关键字为止)
-                        // 统一转为小写查找，兼容大小写
-                        String lowerPath = line.toLowerCase();
+                        // 统一转为小写查找，兼容大小写（Locale.ROOT：避免特殊 locale 下关键字匹配失败）
+                        String lowerPath = line.toLowerCase(Locale.ROOT);
                         for (String kw : keywords) {
                             int idx = lowerPath.indexOf(kw);
                             if (idx != -1) {
@@ -126,28 +111,60 @@ class PathDetector {
                         }
                         return null;
                     })
-                    // 验证特征文件是否存在，一旦 true，findFirst 立即中断进程读取
+                    // 验证特征文件是否存在，一旦 true，findFirst 立即中断
                     .filter(this::matchesFeatureFile)
                     .findFirst()
                     .orElse(null);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            // 引导模块先于日志体系启动，只能直写 stderr
+            System.err.println("process detection failed: " + e.getMessage());
             return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ignored) {
-                }
+        }
+    }
+
+    private static List<String> processLines() throws Exception {
+        List<String> cached = cachedScanLines;
+        if (cached != null && System.currentTimeMillis() - lastScanAt < SCAN_CACHE_MILLIS) return cached;
+        synchronized (PathDetector.class) {
+            cached = cachedScanLines;
+            if (cached != null && System.currentTimeMillis() - lastScanAt < SCAN_CACHE_MILLIS) return cached;
+            List<String> lines = runProcessScan();
+            cachedScanLines = lines;
+            lastScanAt = System.currentTimeMillis();
+            return lines;
+        }
+    }
+
+    private static List<String> runProcessScan() throws Exception {
+        // 构造全平台兼容的极简原生命令
+        String[] cmd;
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+        if (os.contains("win")) {
+            // Windows: 使用 PowerShell 获取所有进程的可执行文件路径（wmic 已在新版 Windows 中被移除）
+            // -ErrorAction SilentlyContinue：访问受保护进程的 Path 会被拒绝，避免这类错误混入输出
+            cmd = new String[]{"powershell", "-NoProfile", "-Command",
+                    "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
+        } else {
+            // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）
+            cmd = new String[]{"sh", "-c", "ps -ww -e -o args="};
+        }
+
+        List<String> lines = new ArrayList<>();
+        Process process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
             }
-            if (process != null) {
-                process.destroyForcibly();
-                try {
-                    process.waitFor(5, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+        } finally {
+            process.destroyForcibly();
+            try {
+                process.waitFor(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
+        return lines;
     }
 }

@@ -9,6 +9,7 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +47,7 @@ public final class EtcdConfigSource implements RemoteConfigSource {
     @Override
     public Map<String, String> pull() throws Exception {
         byte[] key = prefix.getBytes(StandardCharsets.UTF_8);
-        byte[] rangeEnd = key.clone();
-        rangeEnd[rangeEnd.length - 1]++;// 前缀扫描上界
+        byte[] rangeEnd = prefixRangeEnd(key);
         String body = "{\"key\":\"" + encode(key) + "\",\"range_end\":\"" + encode(rangeEnd) + "\"}";
 
         Range range = call(body);
@@ -62,8 +62,6 @@ public final class EtcdConfigSource implements RemoteConfigSource {
         }
         return result;
     }
-
-
 
     private Range call(String body) throws Exception {
         if (token == null && username != null && !username.isEmpty()) {
@@ -86,11 +84,27 @@ public final class EtcdConfigSource implements RemoteConfigSource {
         if (token != null) request.header("Authorization", token);
 
         Response response = http.send(request);
-        String text = new String(response.getBody(), StandardCharsets.UTF_8);
-        if (response.getStatus() < 200 || response.getStatus() >= 300) {
-            throw new IllegalStateException("etcd " + path + " failed: http " + response.getStatus() + ", " + text);
+        try {
+            String text = new String(response.getBody(), StandardCharsets.UTF_8);
+            if (response.getStatus() < 200 || response.getStatus() >= 300) {
+                throw new IllegalStateException("etcd " + path + " failed: http " + response.getStatus() + ", " + text);
+            }
+            return text;
+        } finally {
+            response.cancel();
         }
-        return text;
+    }
+
+    /**
+     * 前缀扫描上界：末字节加一；0xFF 无法进位时截断向前借位，全 0xFF 时按 etcd 约定用 \x00 表示无上界
+     */
+    private static byte[] prefixRangeEnd(byte[] key) {
+        int i = key.length - 1;
+        while (i >= 0 && key[i] == (byte) 0xFF) i--;
+        if (i < 0) return new byte[]{0};
+        byte[] rangeEnd = Arrays.copyOf(key, i + 1);
+        rangeEnd[i]++;
+        return rangeEnd;
     }
 
     private static String encode(byte[] bytes) {

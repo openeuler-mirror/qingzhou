@@ -35,8 +35,7 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
                     + ", generate it with bin/qingzhou.sh keystore");
         }
 
-        String type = config.get("ssl_keystore_type");
-        type = (type == null || type.trim().isEmpty()) ? "PKCS12" : type.trim().toUpperCase(Locale.ROOT);
+        String type = configs.getOrDefault("ssl_keystore_type", "PKCS12").trim().toUpperCase(Locale.ROOT);
         if (!"PKCS12".equals(type) && !"JKS".equals(type)) {
             throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
         }

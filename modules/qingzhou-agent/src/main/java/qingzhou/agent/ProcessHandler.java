@@ -23,7 +23,7 @@ class ProcessHandler {
             return;
         }
 
-        InstanceInfo thisInstanceInfo = Heartbeat.thisInstanceInfo;
+        InstanceInfo thisInstanceInfo = Heartbeat.currentInstanceInfo();
         if (thisInstanceInfo == null) {
             httpResponse.status(503).finish();
             return;
@@ -55,7 +55,9 @@ class ProcessHandler {
                         requestData = decrypt(crypto, fallback, requestBody, context);
                         cipher = fallback;
                     }
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    // 回退解密失败与"无旧钥"不可混淆：留痕便于排障轮换窗口期的解密问题
+                    logger.info("fallback key decrypt failed: " + e.getMessage());
                 }
                 if (cipher == null) {
                     throw primaryFailure;

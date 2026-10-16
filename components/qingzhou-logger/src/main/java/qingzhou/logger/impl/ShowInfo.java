@@ -1,9 +1,6 @@
 package qingzhou.logger.impl;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 
 import qingzhou.logger.Logger;
 
@@ -43,37 +40,18 @@ class ShowInfo {
     }
 
     /**
-     * 计算两个时间差（年，月，星期，日，时，分，秒）
+     * 运行总时长展示：按日/时/分/秒拆分（仅用于停机日志，无需日历精度的年月拆解）
      */
     private static String calculateTimeDifference(long startTimeMillis, long endTimeMillis) {
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalDateTime fromDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTimeMillis), zoneId);
-        LocalDateTime toDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(endTimeMillis), zoneId);
+        Duration duration = Duration.ofMillis(Math.max(0, endTimeMillis - startTimeMillis));
+        long days = duration.toDays();
+        long hours = duration.toHours() % 24;
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
 
-        LocalDateTime tempDateTime = fromDateTime;
-
-        long years = tempDateTime.until(toDateTime, ChronoUnit.YEARS);
-        tempDateTime = tempDateTime.plusYears(years);
-
-        long months = tempDateTime.until(toDateTime, ChronoUnit.MONTHS);
-        tempDateTime = tempDateTime.plusMonths(months);
-
-        long days = tempDateTime.until(toDateTime, ChronoUnit.DAYS);
-        tempDateTime = tempDateTime.plusDays(days);
-
-        long hours = tempDateTime.until(toDateTime, ChronoUnit.HOURS);
-        tempDateTime = tempDateTime.plusHours(hours);
-
-        long minutes = tempDateTime.until(toDateTime, ChronoUnit.MINUTES);
-        tempDateTime = tempDateTime.plusMinutes(minutes);
-
-        long seconds = tempDateTime.until(toDateTime, ChronoUnit.SECONDS);
-
-        return (0 == years ? "" : years + " years ")
-                + (0 == months ? "" : months + " months ")
-                + (0 == days ? "" : days + " days ")
-                + (0 == hours ? "" : hours + " hours ")
-                + (0 == minutes ? "" : minutes + " minutes ")
-                + (0 == seconds ? "" : seconds + " seconds");
+        return (days == 0 ? "" : days + " days ")
+                + (hours == 0 ? "" : hours + " hours ")
+                + (minutes == 0 ? "" : minutes + " minutes ")
+                + (seconds == 0 ? "" : seconds + " seconds");
     }
 }

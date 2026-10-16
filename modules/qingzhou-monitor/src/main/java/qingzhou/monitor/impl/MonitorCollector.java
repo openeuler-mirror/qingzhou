@@ -37,6 +37,7 @@ final class MonitorCollector {
             try {
                 stub.invokeApp(request);
             } catch (Throwable ignored) {
+                // 单模型采集失败不终止其余模型；失败模型无数据行，端点侧已有整体 debug 日志
                 continue;
             }
             Object data = request.getResponse().getData();

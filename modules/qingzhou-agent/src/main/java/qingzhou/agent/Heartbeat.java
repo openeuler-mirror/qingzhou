@@ -45,7 +45,14 @@ public class Heartbeat {
     private Timer timer;
     private String qzVersion;
 
-    static volatile InstanceInfo thisInstanceInfo;
+    private static volatile InstanceInfo thisInstanceInfo;
+
+    // 上次构建的各 AppMeta 序列化指纹：心跳比对复用，避免每拍全量重复序列化
+    private volatile List<String> storedFingerprints;
+
+    static InstanceInfo currentInstanceInfo() {
+        return thisInstanceInfo;
+    }
 
     // 轮换前的旧钥：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
     private static volatile String previousKey;
@@ -95,7 +102,7 @@ public class Heartbeat {
 
                     String newKey = crypto.generateKey(); // 更新共享的对称密钥，以保障前向安全！
                     // 带上当前密钥作为持有证明：registry 公钥不保密，仅凭它不足以授权改密钥
-                    String refreshInfos = thisInstanceInfo.getId() + "," + newKey + "," + thisInstanceInfo.getKey();
+                    String refreshInfos = thisInstanceInfo.getId() + Constants.AGENT_REFRESH_TOKEN_SP + newKey + Constants.AGENT_REFRESH_TOKEN_SP + thisInstanceInfo.getKey();
                     String refreshed = send(refreshUrl, refreshInfos.getBytes(StandardCharsets.UTF_8));
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         // 宽限切换：registry 已切新钥，但其 invoke 在宽限期内仍用旧钥加密（本响应也是旧钥密文），
@@ -141,21 +148,20 @@ public class Heartbeat {
     }
 
     private boolean appChanged() throws Exception {
-        InstanceInfo instanceInfo = thisInstanceInfo;
-        if (instanceInfo == null) return true;
+        List<String> stored = storedFingerprints;
+        if (stored == null) return true;
 
-        List<AppMeta> storedAppMetas = new ArrayList<>(instanceInfo.getAppMetas()); // 拷贝后排序，不改动被 Netty 线程读取的共享列表
-        List<AppMeta> currentAppMetas = currentAppMetas();
-        if (storedAppMetas.size() != currentAppMetas.size()) return true;
+        // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
+        return !currentFingerprints().equals(stored);
+    }
 
-        sortByCode(storedAppMetas); // 固定顺序，避免指纹计算错误
-        sortByCode(currentAppMetas); // 固定顺序，避免指纹计算错误
-        for (int i = 0; i < storedAppMetas.size(); i++) {
-            // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
-            if (!json.toJson(storedAppMetas.get(i)).equals(json.toJson(currentAppMetas.get(i)))) return true;
+    // 指纹唯一来源：以 appCode 为键的 TreeMap 派生，两侧排序方式由构造方式直接保证一致
+    private List<String> currentFingerprints() throws Exception {
+        Map<String, String> fingerprints = new TreeMap<>();
+        for (String appCode : registry.getAllLocalApps()) {
+            fingerprints.put(appCode, json.toJson(registry.getLocalApp(appCode).getAppMeta()));
         }
-
-        return false;
+        return new ArrayList<>(fingerprints.values());
     }
 
     private String send(String url, byte[] data) {
@@ -204,7 +210,7 @@ public class Heartbeat {
 
         // 实例部署的应用
         List<AppMeta> currentAppMetas = currentAppMetas();
-        sortByCode(currentAppMetas); // 固定顺序，避免指纹计算错误
+        sortByCode(currentAppMetas); // 固定顺序：保证注册报文与实例 ID 的 MD5 计算稳定
         instanceInfo.getAppMetas().addAll(currentAppMetas);
 
         // 实例版本
@@ -234,7 +240,8 @@ public class Heartbeat {
         // 实例密钥，动态生成的，放在 ID 计算之前，不参与 ID 计算
         instanceInfo.setKey(crypto.generateKey());
 
-        Heartbeat.thisInstanceInfo = instanceInfo;
+        storedFingerprints = currentFingerprints(); // 与 appChanged 同源构建，保证比对口径一致
+        thisInstanceInfo = instanceInfo;
     }
 
     private String ips() throws Exception {

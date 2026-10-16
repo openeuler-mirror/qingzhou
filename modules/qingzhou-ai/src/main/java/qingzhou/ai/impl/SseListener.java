@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.llm.Listener;
+import qingzhou.llm.impl.Utils;
 import qingzhou.logger.Logger;
 
 /**
@@ -79,7 +80,7 @@ public class SseListener implements Listener {
      * 最近一次事件写入时间：sendEvent 线程写、看门狗线程无锁读，须保证可见性
      */
     private volatile long lastEventTime = System.currentTimeMillis();
-    private long startTime;
+    private volatile long startTime;
     private ScheduledFuture<?> watchdogTask;
     private final Object sendLock = new Object();
 
@@ -264,7 +265,7 @@ public class SseListener implements Listener {
             toJson = json.toJson(event.data);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            toJson = e.getMessage();
+            toJson = "serialize event failed: " + Utils.errorMessage(e); // getMessage 可能为 null，兜底固定错误串
         }
         return String.format("event: %s\ndata: %s\n\n", event.type, toJson);
     }

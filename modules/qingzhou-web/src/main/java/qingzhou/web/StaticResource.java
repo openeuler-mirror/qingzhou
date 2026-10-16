@@ -7,11 +7,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Crypto;
@@ -25,19 +25,12 @@ import qingzhou.http.server.HttpResponse;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
     private static final String INDEX_FILE = "/index.html";
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "png", "jpg", "jpeg", "gif", "svg", "ico"));
 
-    @Reference
-    private Crypto crypto;
+    private static final Map<String, String> MIME_TYPES;
 
-    private Set<String> imageExtensions; // 图片扩展名集合
-    private Map<String, String> mimeTypes; // MIME 类型映射
-    private final Map<String, ResourceCache> resourceCacheMap = new ConcurrentHashMap<>(); // 资源缓存
-
-    @Activate
-    public void init() {
-        imageExtensions = new HashSet<>(Arrays.asList(
-                "png", "jpg", "jpeg", "gif", "svg", "ico"));
-
+    static {
         Map<String, String> mimeMap = new HashMap<>();
         mimeMap.put("html", "text/html; charset=UTF-8");
         mimeMap.put("htm", "text/html; charset=UTF-8");
@@ -55,8 +48,13 @@ public class StaticResource implements HttpHandler {
         mimeMap.put("ttf", "font/ttf");
         mimeMap.put("eot", "application/vnd.ms-fontobject");
         mimeMap.put("otf", "font/otf");
-        mimeTypes = Collections.unmodifiableMap(mimeMap);
+        MIME_TYPES = Collections.unmodifiableMap(mimeMap);
     }
+
+    @Reference
+    private Crypto crypto;
+
+    private final Map<String, ResourceCache> resourceCacheMap = new ConcurrentHashMap<>(); // 资源缓存
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -170,7 +168,7 @@ public class StaticResource implements HttpHandler {
         int lastSlash = path.lastIndexOf('/');
         // 点必须位于最后一段文件名内，且不是文件名首字符（排除隐藏文件如 .gitignore）
         if (lastDot > lastSlash + 1) {
-            return path.substring(lastDot + 1).toLowerCase();
+            return path.substring(lastDot + 1).toLowerCase(Locale.ROOT);
         }
         return "";
     }
@@ -180,7 +178,7 @@ public class StaticResource implements HttpHandler {
             // 入口 HTML 不长期缓存：发版后老用户若长期缓存 index.html 会一直白屏
             return "no-cache";
         }
-        if (extension.equals("html") || extension.equals("htm") || imageExtensions.contains(extension)) {
+        if (extension.equals("html") || extension.equals("htm") || IMAGE_EXTENSIONS.contains(extension)) {
             return "max-age=2592000"; // 一个月
         }
         return "max-age=31536000, immutable"; // 一年，配合构建产物内容 hash 文件名
@@ -190,7 +188,7 @@ public class StaticResource implements HttpHandler {
      * 根据文件扩展名获取 Content-Type
      */
     private String getContentType(String extension) {
-        String mimeType = mimeTypes.get(extension);
+        String mimeType = MIME_TYPES.get(extension);
         return mimeType != null ? mimeType : "application/octet-stream";
     }
 

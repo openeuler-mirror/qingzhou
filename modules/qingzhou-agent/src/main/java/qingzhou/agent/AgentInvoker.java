@@ -44,7 +44,7 @@ public class AgentInvoker implements HttpHandler {
 
         Set<File> tempFileList = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
 
-        final String fileSp = ","; // TODO：应引用 ModelField.separator()
+        final String fileSp = ","; // 多值分隔：与 ModelField.separator() 的默认值保持一致（此处无字段注解实例可读取）
         try {
             request.getUploadFileFields().forEach(field -> {
                 String[] keyNames = request.getParameter(field).split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP);

@@ -1,5 +1,6 @@
 package qingzhou.crypto.impl;
 
+import java.lang.reflect.Field;
 import java.security.InvalidKeyException;
 import java.util.HashSet;
 import java.util.Set;
@@ -9,8 +10,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Cipher;
 import qingzhou.logger.impl.LoggerImpl;
-
-import static qingzhou.crypto.impl.Base32CoderImplTest.setField;
 
 public class CryptoImplTest {
     @Test
@@ -25,6 +24,12 @@ public class CryptoImplTest {
     }
 
     private static CryptoImpl crypto;
+
+    private static void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
 
     static CryptoImpl getCryptoImpl() {
         if (crypto == null) {

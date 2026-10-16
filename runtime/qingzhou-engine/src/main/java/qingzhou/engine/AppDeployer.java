@@ -104,6 +104,7 @@ class AppDeployer {
         }
     }
 
+    // 引导模块保持零依赖（不能引用 app-driver 的 FileUtil），故本地保留解压实现
     private void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;

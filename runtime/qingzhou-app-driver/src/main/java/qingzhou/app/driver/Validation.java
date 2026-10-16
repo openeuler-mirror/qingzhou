@@ -263,7 +263,6 @@ class Validation implements ActionFilter {
         public String validate(ValidationContext context) {
             String pattern = context.field.pattern;
             if (pattern.length() > MAX_CUSTOM_PATTERN_LENGTH) {
-                // 限制自定义正则长度：过长的 pattern 易构成灾难性回溯（ReDoS），且通常非合法校验规则
                 return i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);
             }
             if (PATTERN_CACHE.size() >= MAX_PATTERN_CACHE) {

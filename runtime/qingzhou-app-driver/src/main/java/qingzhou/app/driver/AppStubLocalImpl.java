@@ -127,8 +127,8 @@ class AppStubLocalImpl implements AppStubLocal {
     private void systemCall(RequestImpl request) throws Exception {
         SystemCall systemCall = systemCallMap.get(request.getAction());
         if (systemCall == null) return;
-        else request.getResponse().setActionInvoked(true);
 
+        request.getResponse().setActionInvoked(true);
         systemCall.call(request);
     }
 }

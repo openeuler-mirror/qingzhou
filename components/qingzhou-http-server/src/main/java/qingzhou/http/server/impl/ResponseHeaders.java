@@ -23,6 +23,8 @@ final class ResponseHeaders {
 
     ResponseHeaders(Map<String, String> config) {
         Configs configs = new Configs(config);
+        // 前端（qingzhou-web/index.html）使用内联脚本，script-src 须保留 'unsafe-inline'；
+        // 收紧会造成白屏，可通过 csp 配置项按部署形态覆盖
         this.csp = configs.getOrDefault("csp", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
         this.permissionsPolicy = configs.getOrDefault("permissions_policy", "geolocation=(), microphone=(), camera=()");
         this.coop = configs.getOrDefault("coop", "");

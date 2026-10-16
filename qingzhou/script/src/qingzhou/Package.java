@@ -2,6 +2,7 @@ package qingzhou;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
@@ -42,7 +43,7 @@ public class Package {
         File releaseVersionDir = new File(versionDir.getParentFile(), "version" + buildVersion);
         try {
             Files.move(versionDir.toPath(), releaseVersionDir.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        } catch (Exception e) { // 如果原子移动不支持，回退到普通移动
+        } catch (AtomicMoveNotSupportedException e) { // 原子移动不支持时回退到普通移动
             Files.move(versionDir.toPath(), releaseVersionDir.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         generateLibZip(releaseVersionDir, devMode); //生成lib的zip文件

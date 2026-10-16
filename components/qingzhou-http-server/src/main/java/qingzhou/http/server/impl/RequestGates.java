@@ -249,6 +249,8 @@ final class RequestGates {
     }
 
     private Publisher<Void> denyUnauthenticated(RequestContext ctx) {
+        // 401 不附带 WWW-Authenticate 挑战头：平台默认走 Cookie/Bearer 会话认证，
+        // 无条件的 Basic 挑战会让浏览器在 SPA 场景反复弹原生登录框，破坏前端交互
         return authManager.doAuth(ctx.httpRequest, ctx.httpResponse, ctx.entry) ? null
                 : ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
     }

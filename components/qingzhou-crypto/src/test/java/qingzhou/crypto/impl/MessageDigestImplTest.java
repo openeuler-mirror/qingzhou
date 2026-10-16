@@ -82,7 +82,7 @@ public class MessageDigestImplTest {
     @Test
     public void differentAlgorithms_digest_returnDifferentHash() {
         MessageDigestImpl digest = newDigest();
-        String md5 = digest.digest("pwd", "MD5", 0, 1);
+        String md5 = digest.digest("pwd", "SHA-512", 0, 1);
         String sha256 = digest.digest("pwd", "SHA-256", 0, 1);
         Assert.assertNotEquals(md5.split("\\$")[3], sha256.split("\\$")[3]);
         Assert.assertEquals(md5.split("\\$")[3].length(), 32);

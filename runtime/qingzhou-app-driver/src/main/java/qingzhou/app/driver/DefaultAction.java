@@ -77,7 +77,7 @@ public class DefaultAction {
             code = Page.ACTION_CODE_PAGE, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public static void list(Page page, Request request) throws Exception {
+    public static void page(Page page, Request request) throws Exception {
         Map<String, String> query = new HashMap<>();
         for (String search : selectFormFields(request, modelField -> modelField.search)) {
             String parameter = request.getParameter(search);

@@ -116,8 +116,12 @@ public class RegisterActionToolsTest {
 
     private static String applyPageNum(Object pageNum) throws Exception {
         RequestImpl request = new RequestImpl();
-        invokeStatic("applyPageNum", new Class<?>[]{RequestImpl.class, Object.class}, request, pageNum);
-        return request.getParameter("pageNum");
+        Map<String, Object> toolArgs = new HashMap<>();
+        toolArgs.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
+        invokeStatic("preInvoke",
+                new Class<?>[]{String.class, Map.class, RequestImpl.class},
+                qingzhou.api.action.Page.ACTION_CODE_PAGE, toolArgs, request);
+        return request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
     }
 
     private static String buildPagingHint(ResponseImpl response) throws Exception {

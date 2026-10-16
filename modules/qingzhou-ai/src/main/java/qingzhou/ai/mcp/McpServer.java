@@ -84,6 +84,12 @@ public class McpServer implements HttpHandler {
         return cachedToolMap.values();
     }
 
+    private Tool findTool(String toolName) {
+        llmTools(); // 首个请求即 tools/call 时缓存尚未建立，先触发懒加载
+        Map<String, Tool> toolMap = cachedToolMap;
+        return toolMap == null ? null : toolMap.get(toolName);
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         // 解析JSON请求
@@ -205,7 +211,7 @@ public class McpServer implements HttpHandler {
         String invokeResult;
         boolean isError = true;
         try {
-            Tool tool = cachedToolMap.get(toolName);
+            Tool tool = findTool(toolName);
             if (tool != null) {
                 invokeResult = tool.invoke(arguments);
                 isError = false;

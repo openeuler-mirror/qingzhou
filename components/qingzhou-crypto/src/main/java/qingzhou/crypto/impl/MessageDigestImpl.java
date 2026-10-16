@@ -15,6 +15,9 @@ class MessageDigestImpl implements MessageDigest {
     private static final String SALT_SEPARATOR = "$";
     // 迭代数上限：来自被校验串，不设上界会被恶意摘要用超大迭代数拖垮 CPU（CPU DoS）
     private static final int MAX_ITERATIONS = 1_000_000;
+    // 算法白名单：外部可指定算法生成口令摘要，放行 MD5/SHA-1 等弱算法会被用于弱口令存储
+    private static final java.util.Set<String> ALLOWED_ALGORITHMS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "SHA-256", "SHA-384", "SHA-512", "PBKDF2WithHmacSHA256", "PBKDF2WithHmacSHA512"));
 
     private final Base16Coder base16Coder;
 
@@ -29,6 +32,9 @@ class MessageDigestImpl implements MessageDigest {
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
+        if (!ALLOWED_ALGORITHMS.contains(algorithm)) {
+            throw new IllegalArgumentException("digest algorithm not allowed: " + algorithm);
+        }
         byte[] salt = null;
         if (saltLength > 0) {
             salt = new byte[saltLength];

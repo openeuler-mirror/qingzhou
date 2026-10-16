@@ -55,6 +55,10 @@ public class HttpClientImpl implements HttpClient {
         // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException。
         // 拼接结果只用于本次发送，不回写请求对象：同一 Request 可重复 send，且不在线程间共享可变状态
         boolean methodHasBody = req.method != null && req.method != HttpMethod.GET && req.method != HttpMethod.HEAD;
+        if (!methodHasBody && req.body != null) {
+            // 显式拒绝：静默走 getOutputStream() 会在运行期抛 ProtocolException，错误点远离真实原因
+            throw new IllegalStateException(req.method + " does not allow a request body, put parameters into the query string");
+        }
         String requestUrl = req.url;
         if (!methodHasBody && req.body == null && req.params != null) {
             requestUrl = appendQuery(req.url, req.params);
@@ -180,8 +184,11 @@ public class HttpClientImpl implements HttpClient {
         write(output, "\r\n");
     }
 
+    // multipart 字段名/文件名合法性：禁止换行与引号（预编译，多文件上传时免重复编译正则）
+    private static final java.util.regex.Pattern MULTIPART_TOKEN = java.util.regex.Pattern.compile("[^\\r\\n\"]*");
+
     private static String safeToken(String value) {
-        if (value == null || value.isEmpty() || !value.matches("[^\\r\\n\"]*")) {
+        if (value == null || value.isEmpty() || !MULTIPART_TOKEN.matcher(value).matches()) {
             throw new IllegalArgumentException("illegal multipart field: " + value);
         }
         return value;

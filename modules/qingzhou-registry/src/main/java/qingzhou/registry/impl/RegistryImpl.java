@@ -114,7 +114,7 @@ public class RegistryImpl implements Registry {
     }
 
     @Override
-    public InstanceInfo getLocalInstance() {
+    public synchronized InstanceInfo getLocalInstance() {
         if (localInstanceInfo == null) {
             localInstanceInfo = new InstanceInfo() {
                 @Override
@@ -177,6 +177,7 @@ public class RegistryImpl implements Registry {
         return null;
     }
 
+    @Override
     public void addRemoteInstanceInfo(InstanceInfo instanceInfo) {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
@@ -187,8 +188,21 @@ public class RegistryImpl implements Registry {
         keyRotation.onReRegistered(instanceInfo.getId()); // 重新注册 = agent 已重建密钥，旧钥宽限作废
     }
 
+    @Override
     public void removeRemoteApps(String instanceId) {
         remoteInstances.remove(instanceId);
         registryDataVersion.incrementAndGet();
+    }
+
+    @Override
+    public void rotateInstanceKey(String instanceId, String newKey) {
+        InstanceInfo instanceInfo = remoteInstances.get(instanceId);
+        if (instanceInfo == null) return;
+        String oldKey = instanceInfo.getKey();
+        instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
+        instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
+        // 记录旧钥供宽限期内 invoke 继续加密：agent 要收到本响应才切新钥，
+        // 期间 registry 用新钥加密必然解密失败（RTT 窗口）
+        keyRotation.onRotated(instanceId, oldKey);
     }
 }

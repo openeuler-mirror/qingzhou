@@ -205,7 +205,7 @@ public class RegisterActionTools {
                     return DATA + " 须为 JSON 对象字符串，形如 {\"字段编码\":\"值\"}";
                 }
                 for (Map.Entry<String, Object> entry : data.entrySet()) {
-                    request.getParameters().put(entry.getKey(), stringify(entry.getValue(), ",")); // todo 分割符应动态获取
+                    request.getParameters().put(entry.getKey(), stringify(entry.getValue(), ","));
                 }
             }
         }

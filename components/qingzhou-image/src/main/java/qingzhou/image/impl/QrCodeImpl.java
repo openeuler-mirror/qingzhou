@@ -48,11 +48,21 @@ public class QrCodeImpl implements QrCode {
         }
 
         BufferedImage result = new BufferedImage((qr.size + border * 2) * scale, (qr.size + border * 2) * scale, BufferedImage.TYPE_INT_RGB);
-        for (int y = 0; y < result.getHeight(); y++) {
-            for (int x = 0; x < result.getWidth(); x++) {
-                boolean color = qr.getModule(x / scale - border, y / scale - border);
-                result.setRGB(x, y, color ? darkColor : lightColor);
+        // 按模块整块填充而非逐像素绘制：scale 较大时避免 O(像素数) 的逐点 setRGB
+        java.awt.Graphics2D graphics = result.createGraphics();
+        try {
+            graphics.setColor(new java.awt.Color(lightColor));
+            graphics.fillRect(0, 0, result.getWidth(), result.getHeight());
+            graphics.setColor(new java.awt.Color(darkColor));
+            for (int y = 0; y < qr.size; y++) {
+                for (int x = 0; x < qr.size; x++) {
+                    if (qr.getModule(x, y)) {
+                        graphics.fillRect((x + border) * scale, (y + border) * scale, scale, scale);
+                    }
+                }
             }
+        } finally {
+            graphics.dispose();
         }
         return result;
     }

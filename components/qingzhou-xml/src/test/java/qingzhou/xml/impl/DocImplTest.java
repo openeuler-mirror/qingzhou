@@ -70,7 +70,7 @@ public class DocImplTest {
             String xmlns = properties.getProperty("xmlns");
             Assert.assertEquals(xmlns, "http://maven.apache.org/POM/4.0.0");
         } catch (Exception e) {
-            Assert.fail();
+            Assert.fail("unexpected exception", e);
         }
     }
 
