@@ -35,6 +35,9 @@ class MessageDigestImpl implements MessageDigest {
         if (!ALLOWED_ALGORITHMS.contains(algorithm)) {
             throw new IllegalArgumentException("digest algorithm not allowed: " + algorithm);
         }
+        if (saltLength < 0) {
+            throw new IllegalArgumentException("saltLength must not be negative: " + saltLength);
+        }
         byte[] salt = null;
         if (saltLength > 0) {
             salt = new byte[saltLength];

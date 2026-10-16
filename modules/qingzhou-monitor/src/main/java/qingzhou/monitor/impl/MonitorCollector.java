@@ -34,13 +34,14 @@ final class MonitorCollector {
             request.setApp(appCode);
             request.setModel(model.code);
             request.setAction(Monitor.ACTION_CODE_MONITOR);
+            // 响应数据读取纳入单模型粒度兜底：单模型失败（含未设置响应）只丢自身指标，不拖垮同应用其余模型
+            Object data;
             try {
                 stub.invokeApp(request);
+                data = request.getResponse().getData();
             } catch (Throwable ignored) {
-                // 单模型采集失败不终止其余模型；失败模型无数据行，端点侧已有整体 debug 日志
                 continue;
             }
-            Object data = request.getResponse().getData();
             if (!(data instanceof Map)) continue;
 
             Map<String, String> monitorData = (Map<String, String>) data;

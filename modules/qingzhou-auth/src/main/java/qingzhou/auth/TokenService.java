@@ -112,24 +112,21 @@ public class TokenService {
 
     public void revokeToken(HttpRequest request, HttpResponse response) {
         String token = retrieveToken(request);
-        if (token != null && !token.isEmpty()) {
-            // 仅吊销真实有效的令牌：伪造令牌不入表，防止未认证请求高频调用灌爆吊销表（内存 DoS）
-            Map<String, Object> validToken = parseToken(token);
-            if (validToken != null) {
-                // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
-                long now = System.currentTimeMillis();
-                for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
-                    if (entry.getValue() < now) revokedTokens.remove(entry.getKey());
-                }
-
-                // 服务端注销
-                revokedTokens.put(token, now + tokenExpireMillis);
+        // 仅吊销真实有效的令牌：伪造令牌不入表，防止未认证请求高频调用灌爆吊销表（内存 DoS）
+        if (token != null && !token.isEmpty() && parseToken(token) != null) {
+            // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
+            long now = System.currentTimeMillis();
+            for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
+                if (entry.getValue() < now) revokedTokens.remove(entry.getKey());
             }
 
-            // 通知客户端注销
-            sendCookie(TOKEN_COOKIE_NAME, "", "/", 0, cookieSamesite, request, response);
-            response.send("ok").finish();
+            // 服务端注销
+            revokedTokens.put(token, now + tokenExpireMillis);
         }
+
+        // 无条件通知客户端注销并应答：无令牌/伪造令牌的请求同样不能悬空
+        sendCookie(TOKEN_COOKIE_NAME, "", "/", 0, cookieSamesite, request, response);
+        response.send("ok").finish();
     }
 
     private Map<String, Object> parseToken(String token) {
@@ -139,7 +136,8 @@ public class TokenService {
                 return map;
             }
         } catch (Exception e) {
-            logger.warn("Token verification failed: " + e.getMessage());
+            // 校验失败是常见攻击面（伪造/篡改令牌），不打印令牌内容与异常细节，防止日志注入与噪音放大
+            logger.warn("Token verification failed: " + e.getClass().getSimpleName());
         }
         return null;
     }
@@ -151,7 +149,6 @@ public class TokenService {
         Map<String, Object> map = parseToken(token);
         if (map == null) return null;
 
-        if (!(map.get(EXPIRE) instanceof Number)) return null;
         long expiresAt = ((Number) map.get(EXPIRE)).longValue();
         long left = expiresAt - System.currentTimeMillis();
         if (left <= 0) return null;

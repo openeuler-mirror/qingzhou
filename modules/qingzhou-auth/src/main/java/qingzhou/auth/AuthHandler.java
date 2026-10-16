@@ -24,8 +24,7 @@ public class AuthHandler implements HttpHandler {
     private static final String LOGIN_PATH = ROOT_PATH + "/login";
     private static final String LOGOUT_PATH = ROOT_PATH + "/logout";
     private static final String SESSION_PATH = ROOT_PATH + "/session";
-    // 慢哈希成本随凭据长度增长：免认证端点上超长凭据即 CPU 放大攻击，超长直接按无效处理
-    // 凭据长度上限：正常口令远低于此值，超出即视为滥用（慢哈希成本随长度增长）
+    // 凭据长度上限：慢哈希成本随长度增长，免认证端点上超长凭据即 CPU 放大攻击，超长直接按无效处理
     private static final int MAX_CREDENTIAL_CHARS = 1024;
 
     @Reference

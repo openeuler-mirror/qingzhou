@@ -30,7 +30,9 @@ public class FileUtil {
                     throw new IOException("Entry is outside of target dir: " + entry.getName());
                 }
                 if (entry.isDirectory()) {
-                    targetFile.mkdirs();
+                    if (!targetFile.mkdirs() && !targetFile.isDirectory()) {
+                        throw new IOException("cannot create dir: " + targetFile);
+                    }
                 } else {
                     // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
                     // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准

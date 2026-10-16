@@ -44,7 +44,7 @@ public class Launcher {
         ).toString();
         File jarParent = new File(jarPath).getParentFile();
         if (jarParent == null || jarParent.getParentFile() == null) {
-            throw new IllegalStateException("jarPath is not a valid path" + jarPath);
+            throw new IllegalStateException("jarPath is not a valid path: " + jarPath);
         }
         homeFile = jarParent.getParentFile();
     }
@@ -155,7 +155,6 @@ public class Launcher {
     }
 
     private static void copyStream(InputStream input, OutputStream output) throws IOException {
-
         byte[] buffer = new byte[1024 * 4];
         int n;
         while (-1 != (n = input.read(buffer))) {

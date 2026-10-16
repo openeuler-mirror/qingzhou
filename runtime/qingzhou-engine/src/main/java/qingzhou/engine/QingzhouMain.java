@@ -35,7 +35,7 @@ public class QingzhouMain {
 
         File jarParent = new File(jarPath).getParentFile();
         if (jarParent == null || jarParent.getParentFile() == null) {
-            throw new IllegalStateException("jarPath is not a valid path" + jarPath);
+            throw new IllegalStateException("jarPath is not a valid path: " + jarPath);
         }
         String libDir = jarParent.getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");

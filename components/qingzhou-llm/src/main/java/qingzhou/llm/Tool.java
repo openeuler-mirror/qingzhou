@@ -12,7 +12,7 @@ public interface Tool {
         return null;
     }
 
-    String invoke(Map<String, Object> argsMap) throws Throwable;
+    String invoke(Map<String, Object> argsMap) throws Exception;
 
     static Tool of(String name, String description, Parameter[] parameters,
                    Function<Map<String, Object>, String> invoke) {

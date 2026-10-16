@@ -105,7 +105,7 @@ public class SseListener implements Listener {
      * 请求已受理。由 AiChat 在技能匹配等耗时前置工作开始前调用，让客户端立即进入“正在思考”。
      * assistantMessageId 为本轮 AI 回复预生成的落库 id，随 RUN_STARTED 下发供前端回填
      */
-    public void setStarted(String conversationId, String assistantMessageId) {
+    public synchronized void setStarted(String conversationId, String assistantMessageId) { // 与 stopWatchdog 同锁，消除取消竞态窗口
         startTime = System.currentTimeMillis();
         watchdogTask = watchdog().scheduleWithFixedDelay(
                 this::watchdogTick,

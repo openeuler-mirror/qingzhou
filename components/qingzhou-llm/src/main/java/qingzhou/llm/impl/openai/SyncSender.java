@@ -122,7 +122,11 @@ class SyncSender {
                 // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
                 throw new IllegalStateException("API returned no choices: " + Utils.truncate(body, 500));
             }
-            return (Map<String, Object>) choices.get(0).get("message");
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            if (message == null) {
+                throw new IllegalStateException("API response missing message: " + Utils.truncate(body, 500));
+            }
+            return message;
         } finally {
             response.cancel();
         }

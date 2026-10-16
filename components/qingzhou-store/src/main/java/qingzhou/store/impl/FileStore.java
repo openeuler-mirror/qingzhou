@@ -24,6 +24,7 @@ public class FileStore implements Store {
     }
 
     private Path path(String key) {
+        if (key == null || key.isEmpty()) throw new IllegalArgumentException("store key must not be empty");
         Path path = dir.resolve(key).normalize();
         if (!path.startsWith(dir)) throw new IllegalArgumentException("illegal store key: " + key);
         return path;
@@ -31,6 +32,7 @@ public class FileStore implements Store {
 
     @Override
     public void put(String key, String value) {
+        if (value == null) throw new IllegalArgumentException("store value must not be null, key: " + key);
         // 先写临时文件再原子替换：全程不触碰目标，进程崩溃/断电后目标始终是完整的旧值或新值，
         // 不会留下半截内容。临时文件与目标同目录，保证同一文件系统上可做原子移动
         Path path = path(key);

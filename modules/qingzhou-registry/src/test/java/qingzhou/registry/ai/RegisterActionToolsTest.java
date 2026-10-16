@@ -118,7 +118,8 @@ public class RegisterActionToolsTest {
         RequestImpl request = new RequestImpl();
         Map<String, Object> toolArgs = new HashMap<>();
         toolArgs.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
-        invokeStatic("preInvoke",
+        // preInvoke 为实例私有方法：DS 组件可无参构造，PAGE 分支不触碰注入字段
+        invoke(new RegisterActionTools(), "preInvoke",
                 new Class<?>[]{String.class, Map.class, RequestImpl.class},
                 qingzhou.api.action.Page.ACTION_CODE_PAGE, toolArgs, request);
         return request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
@@ -139,8 +140,12 @@ public class RegisterActionToolsTest {
     }
 
     private static Object invokeStatic(String methodName, Class<?>[] parameterTypes, Object... args) throws Exception {
+        return invoke(null, methodName, parameterTypes, args);
+    }
+
+    private static Object invoke(Object target, String methodName, Class<?>[] parameterTypes, Object... args) throws Exception {
         Method method = RegisterActionTools.class.getDeclaredMethod(methodName, parameterTypes);
         method.setAccessible(true);
-        return method.invoke(null, args);
+        return method.invoke(target, args);
     }
 }

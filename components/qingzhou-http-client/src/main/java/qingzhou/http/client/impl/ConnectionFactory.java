@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.*;
 
 class ConnectionFactory {
+    // 缓存上限：客户端动态传入不同证书集时防止无界增长
+    private static final int MAX_TRUST_FACTORIES = 16;
+
     private static final ConnectionFactory instance = new ConnectionFactory();
 
     static ConnectionFactory getInstance() {
@@ -100,7 +103,6 @@ class ConnectionFactory {
         trustManagerFactory.init(keyStore);
 
         SSLSocketFactory factory = newSocketFactory(trustManagerFactory.getTrustManagers());
-        int MAX_TRUST_FACTORIES = 16; // 缓存上限：客户端动态传入不同证书集时防止无界增长
         if (trustFactories.size() >= MAX_TRUST_FACTORIES) trustFactories.clear(); // 动态证书集场景防无界增长
         SSLSocketFactory prev = trustFactories.putIfAbsent(key, factory);
         return prev != null ? prev : factory;

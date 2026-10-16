@@ -135,6 +135,9 @@ class PathDetector {
         }
     }
 
+    // 单次扫描读超时：子进程挂起时强杀，读阻塞随之以流关闭解除，避免唯一探测调度线程被永久卡死
+    private static final long SCAN_READ_TIMEOUT_MILLIS = 10_000;
+
     private static List<String> runProcessScan() throws Exception {
         // 构造全平台兼容的极简原生命令
         String[] cmd;
@@ -151,6 +154,18 @@ class PathDetector {
 
         List<String> lines = new ArrayList<>();
         Process process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+        // 看门狗线程：超时未读完即强杀进程，readLine 因流关闭解除阻塞
+        Thread watchdog = new Thread(() -> {
+            try {
+                Thread.sleep(SCAN_READ_TIMEOUT_MILLIS);
+            } catch (InterruptedException ignored) {
+                return; // 正常读完后被中断取消
+            }
+            process.destroyForcibly();
+        }, "qz-process-scan-watchdog");
+        watchdog.setDaemon(true);
+        watchdog.start();
+
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
@@ -158,6 +173,7 @@ class PathDetector {
                 lines.add(line);
             }
         } finally {
+            watchdog.interrupt(); // 取消看门狗
             process.destroyForcibly();
             try {
                 process.waitFor(5, TimeUnit.SECONDS);

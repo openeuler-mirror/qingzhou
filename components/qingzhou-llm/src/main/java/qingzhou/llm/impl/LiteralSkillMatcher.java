@@ -42,7 +42,7 @@ public class LiteralSkillMatcher implements SkillMatcher {
      */
     private boolean isStronglyRelated(Skill skill, String question) {
         String name = skill.name();
-        if (question.contains(name)) return true;
+        if (!name.isEmpty() && question.contains(name)) return true; // 空名 contains 恒真，会误激活全部候选技能
 
         String description = skill.description();
         if (description.length() > MAX_SCAN_LENGTH) description = description.substring(0, MAX_SCAN_LENGTH);

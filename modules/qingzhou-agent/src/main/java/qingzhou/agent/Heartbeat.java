@@ -54,9 +54,18 @@ public class Heartbeat {
         return thisInstanceInfo;
     }
 
-    // 轮换前的旧钥：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
-    private static volatile String previousKey;
-    private static volatile long previousKeyAt;
+    // 轮换前的旧钥（key+时间戳单引用原子发布）：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
+    private static volatile RotatedKey previousKey;
+
+    private static final class RotatedKey {
+        final String key;
+        final long rotatedAt;
+
+        RotatedKey(String key, long rotatedAt) {
+            this.key = key;
+            this.rotatedAt = rotatedAt;
+        }
+    }
 
     // agent 侧保留旧钥的窗口放宽到注册端宽限期的两倍：覆盖"注册端宽限期内仍用旧钥加密"的整个窗口，
     // 并对两侧时钟偏差 / 网络抖动留余量，避免窗口边缘的解密失败
@@ -66,11 +75,11 @@ public class Heartbeat {
      * 宽限期内返回轮换前的旧钥，供 ProcessHandler 解密回退；过期或无轮换返回 null
      */
     static String decryptKeyFallback() {
-        String key = previousKey;
-        if (key == null) return null;
+        RotatedKey previous = previousKey;
+        if (previous == null) return null;
 
-        if (System.currentTimeMillis() - previousKeyAt <= AGENT_KEY_GRACE_MILLIS_DECRYPT) {
-            return key;
+        if (System.currentTimeMillis() - previous.rotatedAt <= AGENT_KEY_GRACE_MILLIS_DECRYPT) {
+            return previous.key;
         } else {
             previousKey = null;
             return null;
@@ -107,8 +116,7 @@ public class Heartbeat {
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         // 宽限切换：registry 已切新钥，但其 invoke 在宽限期内仍用旧钥加密（本响应也是旧钥密文），
                         // 保留旧钥一段时间令窗口内的报文仍可解密，invoke 不再因轮换必然失败
-                        previousKey = thisInstanceInfo.getKey();
-                        previousKeyAt = System.currentTimeMillis();
+                        previousKey = new RotatedKey(thisInstanceInfo.getKey(), System.currentTimeMillis());
 
                         thisInstanceInfo.setKey(newKey);
                     } else {

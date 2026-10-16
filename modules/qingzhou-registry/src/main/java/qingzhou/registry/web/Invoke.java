@@ -247,10 +247,7 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onComplete() {
-            if (parser == null) {
-                httpResponse.status(400).finish();
-                return;
-            }
+            if (parser == null) return; // onBegin 已对无效请求写过 400/403，不重复响应
 
             try {
                 parser.feed(new byte[0], true);

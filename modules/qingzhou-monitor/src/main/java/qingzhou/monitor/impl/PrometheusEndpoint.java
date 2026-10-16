@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.service.component.annotations.Component;
@@ -33,7 +34,7 @@ public class PrometheusEndpoint implements HttpHandler {
 
     private final List<MetricProvider> metricProviders = new CopyOnWriteArrayList<>();
     // metricName 转换结果缓存：同一 field.code 每次 scrape 的转换结果不变
-    private final Map<String, String> metricNameCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, String> metricNameCache = new ConcurrentHashMap<>();
     private String cachedBody;
     private long lastScrapeAt;
 

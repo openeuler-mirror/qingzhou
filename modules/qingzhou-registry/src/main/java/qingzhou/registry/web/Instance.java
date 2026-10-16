@@ -11,7 +11,6 @@ import qingzhou.http.server.HttpHandler;
         service = {Instance.class, HttpHandler.class})
 public class Instance extends RegistryMetaHandler {
 
-
     private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
         public Object apply(HandlingContext context) {

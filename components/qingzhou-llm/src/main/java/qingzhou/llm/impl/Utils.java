@@ -116,9 +116,9 @@ public class Utils {
 
         try {
             return tool.invoke(args);
-        } catch (Throwable t) {
-            // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型
-            return "Error: " + errorMessage(t);
+        } catch (Exception e) {
+            // 仅回传异常概要，避免把堆栈/内部路径等敏感信息暴露给模型；Error 不吞，属不可恢复错误
+            return "Error: " + errorMessage(e);
         }
     }
 

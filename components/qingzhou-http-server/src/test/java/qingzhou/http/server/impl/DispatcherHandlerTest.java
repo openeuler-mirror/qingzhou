@@ -887,7 +887,7 @@ public class DispatcherHandlerTest {
                     "GET /postOnly HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
 
             Assert.assertTrue(response.startsWith("HTTP/1.1 405"), response);
-            Assert.assertTrue(response.toLowerCase().contains("allow: post"), response);
+            Assert.assertTrue(lower(response).contains("allow: post"), response);
         } finally {
             testServer.server.stop();
         }

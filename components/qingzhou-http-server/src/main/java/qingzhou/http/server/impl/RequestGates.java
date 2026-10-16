@@ -122,7 +122,7 @@ final class RequestGates {
 
     // Origin = scheme://authority[/path]：取 authority 与 Host 精确比较（忽略大小写），
     // 后缀匹配（endsWith("//" + host)）会被 origin=x.evil.com//host 之类的构造绕过。
-    // scheme 默认端口在 Host 缺省而 Origin 显式携带时视为同源
+    // scheme 默认端口在两侧对称剥离：Origin 显式携带而 Host 省略（或反之）不误判跨源
     private static boolean isSameOrigin(String origin, String host) {
         String authority = origin;
         String scheme = "";
@@ -133,12 +133,19 @@ final class RequestGates {
         }
         int pathStart = authority.indexOf('/');
         if (pathStart >= 0) authority = authority.substring(0, pathStart);
-        if ("http".equals(scheme) && authority.endsWith(":80")) {
-            authority = authority.substring(0, authority.length() - 3);
-        } else if ("https".equals(scheme) && authority.endsWith(":443")) {
-            authority = authority.substring(0, authority.length() - 4);
+        if ("http".equals(scheme)) {
+            authority = stripDefaultPort(authority, ":80");
+            host = stripDefaultPort(host, ":80");
+        } else if ("https".equals(scheme)) {
+            authority = stripDefaultPort(authority, ":443");
+            host = stripDefaultPort(host, ":443");
         }
         return host.equalsIgnoreCase(authority);
+    }
+
+    private static String stripDefaultPort(String value, String defaultPortSuffix) {
+        return value != null && value.toLowerCase(Locale.ROOT).endsWith(defaultPortSuffix)
+                ? value.substring(0, value.length() - defaultPortSuffix.length()) : value;
     }
 
     // 405：路由以 HANDLE_METHODS 声明了允许的方法，不在其中的请求在认证前即拒绝，handler 无需各自判断

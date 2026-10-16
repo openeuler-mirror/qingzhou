@@ -55,12 +55,12 @@ public class HttpClientImpl implements HttpClient {
         // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException。
         // 拼接结果只用于本次发送，不回写请求对象：同一 Request 可重复 send，且不在线程间共享可变状态
         boolean methodHasBody = req.method != null && req.method != HttpMethod.GET && req.method != HttpMethod.HEAD;
-        if (!methodHasBody && req.body != null) {
-            // 显式拒绝：静默走 getOutputStream() 会在运行期抛 ProtocolException，错误点远离真实原因
-            throw new IllegalStateException(req.method + " does not allow a request body, put parameters into the query string");
+        if (!methodHasBody && (req.body != null || req.files != null)) {
+            // 显式拒绝：静默走 getOutputStream()/writeMultipart 会在运行期抛 ProtocolException，错误点远离真实原因
+            throw new IllegalStateException(req.method + " does not allow a request body or upload files, put parameters into the query string");
         }
         String requestUrl = req.url;
-        if (!methodHasBody && req.body == null && req.params != null) {
+        if (!methodHasBody && req.params != null) { // 上方已拒绝 body/files，非 body 方法仅剩查询串传参
             requestUrl = appendQuery(req.url, req.params);
         }
 

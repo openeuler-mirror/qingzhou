@@ -67,9 +67,8 @@ class ResponseImpl implements Response {
 
     @Override
     public void cancel() {
-        if (conn == null) return; // 同步响应读完后无待释放资源，取消无意义
         cancelled = true;
-        conn.disconnect();
+        conn.disconnect(); // conn 构造注入恒非空；同步响应读完后再 disconnect 无副作用
     }
 
     @Override

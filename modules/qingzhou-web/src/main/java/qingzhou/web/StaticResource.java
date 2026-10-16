@@ -60,9 +60,10 @@ public class StaticResource implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         String requestPath = httpRequest.getPath();
 
-        // 解码百分号编码（如 %2e%2e、%2f），否则 isPathSafe 会被编码形式的穿越序列绕过
+        // 解码百分号编码（如 %2e%2e、%2f），否则 isPathSafe 会被编码形式的穿越序列绕过；
+        // 先把字面量 + 转义为 %2B：URLDecoder 的 +→空格语义仅适用于 query，路径中的 + 是合法字符
         try {
-            requestPath = URLDecoder.decode(requestPath, StandardCharsets.UTF_8.name());
+            requestPath = URLDecoder.decode(requestPath.replace("+", "%2B"), StandardCharsets.UTF_8.name());
         } catch (Exception e) {
             httpResponse.status(400).finish();
             return;
