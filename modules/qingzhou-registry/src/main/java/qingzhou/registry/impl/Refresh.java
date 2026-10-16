@@ -11,6 +11,7 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.PairCipher;
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -21,7 +22,7 @@ import qingzhou.registry.Registry;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/refresh", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Refresh implements HttpHandler {
-    public static final Object REFRESH_KEY_LOCK = new Object();
+    static final Object REFRESH_KEY_LOCK = new Object();
 
     @Reference
     private Crypto crypto;
@@ -57,7 +58,8 @@ public class Refresh implements HttpHandler {
         String decryptedRequest = Register.decryptRequest(httpRequest, httpResponse, pairCipher);
         if (decryptedRequest == null) return; // decryptRequest 已写入错误响应
 
-        String[] split = decryptedRequest.split(",");
+        // 报文：instanceId + newKey + oldKey
+        String[] split = decryptedRequest.split(Constants.AGENT_REFRESH_TOKEN_SP, 3);
         if (split.length < 3) {
             httpResponse.status(400).finish();
             return;
@@ -84,11 +86,7 @@ public class Refresh implements HttpHandler {
             Cipher cipher = crypto.getCipher(oldKey);
             encrypt = cipher.encrypt(Boolean.TRUE.toString().getBytes(StandardCharsets.UTF_8));
 
-            instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
-            instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
-            // 记录旧钥供宽限期内 invoke 继续加密：agent 要收到本响应才切新钥，
-            // 期间 registry 用新钥加密必然解密失败（RTT 窗口）
-            ((RegistryImpl) registry).keyRotation.onRotated(instanceId, oldKey);
+            registry.rotateInstanceKey(instanceId, newKey);
 
             httpResponse.send(encrypt).finish();
         } catch (Exception e) {

@@ -35,6 +35,8 @@ public class AiChat implements HttpHandler {
             "代码块内部须是一个完整的 ECharts Option 对象，只输出对象本身，不要生成 const/let/var/import/export/function/HTML/JavaScript/Markdown 包裹\n" +
             "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表\n";
 
+    private static final int MAX_QUESTION_CHARS = 10_000;
+
     @Reference
     private Logger logger;
     @Reference
@@ -99,7 +101,6 @@ public class AiChat implements HttpHandler {
     private ChatRequest parseRequest(Map<String, Object> params, HttpRequest httpRequest, HttpResponse httpResponse) {
         // 单次提问字符上限：正常业务提问远低于此值，超出即视为滥用
         String question = ((String) params.get("question")).trim();
-        int MAX_QUESTION_CHARS = 10_000;
         if (question.length() > MAX_QUESTION_CHARS) {
             httpResponse.status(400).finish();
             return null;

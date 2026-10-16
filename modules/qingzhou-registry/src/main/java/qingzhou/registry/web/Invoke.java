@@ -30,6 +30,8 @@ import qingzhou.registry.Registry;
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Invoke implements HttpHandler {
     private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
+    // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
+    private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
 
     @Reference
     private Registry registry;
@@ -48,8 +50,6 @@ public class Invoke implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
-        long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
 
         RequestImpl request = buildRequest(httpRequest);
@@ -247,10 +247,7 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onComplete() {
-            if (parser == null) {
-                httpResponse.status(400).finish();
-                return;
-            }
+            if (parser == null) return; // onBegin 已对无效请求写过 400/403，不重复响应
 
             try {
                 parser.feed(new byte[0], true);

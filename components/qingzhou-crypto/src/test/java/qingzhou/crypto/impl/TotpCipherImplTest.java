@@ -57,7 +57,7 @@ public class TotpCipherImplTest {
     public void previousWindowCode_verifyCode_returnTrue() throws Exception {
         TotpCipherImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / 30_000L;
+        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
         Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step - 1))); // 窗口末尾读到口令、跨窗后才提交
     }
 
@@ -65,7 +65,7 @@ public class TotpCipherImplTest {
     public void nextWindowCode_verifyCode_returnTrue() throws Exception {
         TotpCipherImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / 30_000L;
+        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
         Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step + 1))); // 覆盖服务端时钟偏慢
     }
 
@@ -73,7 +73,7 @@ public class TotpCipherImplTest {
     public void outOfRangeCode_verifyCode_returnFalse() throws Exception {
         TotpCipherImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / 30_000L;
+        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
         Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step - 2)));
         Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step + 2)));
     }

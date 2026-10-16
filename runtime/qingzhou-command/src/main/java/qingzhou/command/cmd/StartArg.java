@@ -95,7 +95,7 @@ public class StartArg extends Processor {
         System.err.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
     }
 
-    private String wrap(String str) { // 兼容启动参数中包含中文空格
+    private String wrap(String str) { // 整体加引号，避免启动参数被 shell 按空白拆分
         // 启动命令由 sh 的 eval 与 bat 的 %startCmd% 直接执行，两种环境的引号转义规则不同，
         // 无法用统一的转义保证安全，故直接拒绝含引号的值，避免静默破坏命令结构。
         if (str.contains("\"")) throw new IllegalStateException("Illegal quote character in start arg: " + str);

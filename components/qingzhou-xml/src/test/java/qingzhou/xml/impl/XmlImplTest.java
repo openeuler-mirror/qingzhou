@@ -39,7 +39,7 @@ public class XmlImplTest {
             Doc doc = xml.parse(file);
             Assert.assertNotNull(doc);
         } catch (Throwable e) {
-            Assert.fail();
+            Assert.fail("unexpected exception", e);
         }
     }
 }

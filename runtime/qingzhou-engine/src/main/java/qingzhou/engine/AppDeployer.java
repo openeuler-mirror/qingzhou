@@ -31,16 +31,14 @@ class AppDeployer {
 
     void deployApps() throws Exception {
         File appCacheDir = Paths.get(instanceDir, "temp", "app-bundle-cache").toFile();
-        if (appCacheDir.exists()) {
-            deleteFile(appCacheDir);
-        }
+        deleteFile(appCacheDir);
         if (!appCacheDir.mkdirs() && !appCacheDir.isDirectory()) {
             throw new IllegalStateException("cannot create app bundle cache dir: " + appCacheDir);
         }
 
-        File[] listFiles = new File(instanceDir, "apps").listFiles();
-        if (listFiles != null) {
-            for (File appFile : listFiles) {
+        File[] appFiles = new File(instanceDir, "apps").listFiles();
+        if (appFiles != null) {
+            for (File appFile : appFiles) {
                 if (appFile.getName().endsWith(".jar")) {
                     File appCache = new File(appCacheDir, appFile.getName());
                     convertBundleJar(appFile, appCache, libDir);
@@ -73,10 +71,10 @@ class AppDeployer {
             Path jsonBundlePath = Paths.get(libDir, "components", "qingzhou-json.jar");
             urls.add(jsonBundlePath.toUri().toURL());
             unZipToDir(jsonBundlePath.toFile(), appCacheDir); // 添加 bundle-converter 依赖的三方库
-            File[] listFiles = appCacheDir.listFiles();
-            if (listFiles == null) throw new IOException("Failed to list: " + appCacheDir);
+            File[] cacheFiles = appCacheDir.listFiles();
+            if (cacheFiles == null) throw new IOException("Failed to list: " + appCacheDir);
 
-            for (File temp : listFiles) {
+            for (File temp : cacheFiles) {
                 if (temp.getName().equals("OSGI-INF")) {
                     File[] embeddedJars = Paths.get(appCacheDir.getAbsolutePath(), "OSGI-INF", "lib").toFile().listFiles();
                     if (embeddedJars == null) throw new IOException("Failed to list OSGI-INF/lib of: " + appCacheDir);
@@ -98,14 +96,15 @@ class AppDeployer {
     }
 
     private void addFiles(List<URL> urls, String... dirs) throws Exception {
-        File[] listFiles = Paths.get(libDir, dirs).toFile().listFiles();
-        if (listFiles != null) {
-            for (File file : listFiles) {
+        File[] libFiles = Paths.get(libDir, dirs).toFile().listFiles();
+        if (libFiles != null) {
+            for (File file : libFiles) {
                 urls.add(file.toURI().toURL());
             }
         }
     }
 
+    // 引导模块保持零依赖（不能引用 app-driver 的 FileUtil），故本地保留解压实现
     private void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;
@@ -116,14 +115,19 @@ class AppDeployer {
                     throw new IOException("Entry is outside of target dir: " + entry.getName());
                 }
                 if (entry.isDirectory()) {
-                    targetFile.mkdirs();
+                    if (!targetFile.mkdirs() && !targetFile.isDirectory()) {
+                        throw new IOException("cannot create dir: " + targetFile);
+                    }
                 } else {
-                    targetFile.getParentFile().mkdirs();
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        InputStream inputStream = zip.getInputStream(entry);
+                    File parent = targetFile.getParentFile();
+                    if (parent != null && !parent.mkdirs() && !parent.isDirectory()) {
+                        throw new IOException("cannot create parent dir: " + parent);
+                    }
+                    try (OutputStream out = Files.newOutputStream(targetFile.toPath());
+                         InputStream in = zip.getInputStream(entry)) {
                         byte[] buffer = new byte[1024 * 4];
                         int n;
-                        while (-1 != (n = inputStream.read(buffer))) {
+                        while (-1 != (n = in.read(buffer))) {
                             out.write(buffer, 0, n);
                         }
                     }

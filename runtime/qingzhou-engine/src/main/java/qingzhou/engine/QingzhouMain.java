@@ -21,6 +21,9 @@ public class QingzhouMain {
     private static Framework osgiFramework;
     private static ScheduledExecutorService scheduledExecutor;
 
+    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
+    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
+
     public static void main(String[] args) throws Exception {
         // 解码 URL 编码的路径
         String jarPath = Paths.get(
@@ -30,7 +33,11 @@ public class QingzhouMain {
                         .toURI()
         ).toString();
 
-        String libDir = new File(jarPath).getParentFile().getParentFile().getAbsolutePath();
+        File jarParent = new File(jarPath).getParentFile();
+        if (jarParent == null || jarParent.getParentFile() == null) {
+            throw new IllegalStateException("jarPath is not a valid path: " + jarPath);
+        }
+        String libDir = jarParent.getParentFile().getAbsolutePath();
         instanceDir = System.getProperty("qingzhou.instance");
         checkRequiredConfigs();
 
@@ -66,9 +73,6 @@ public class QingzhouMain {
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
     }
 
-    // 必需配置清单，缺失（文件缺失、键不存在、值为空白）即禁止启动，引导执行 init 脚本完成系统初始化
-    private static final String[] REQUIRED_CONFIGS = {"qingzhou-auth.password"};
-
     private static void checkRequiredConfigs() {
         File propsFile = instanceDir == null ? null
                 : Paths.get(instanceDir, "conf", "qingzhou.properties").toFile();
@@ -85,7 +89,7 @@ public class QingzhouMain {
                 String instanceName = instanceDir == null ? "<instance>" : new File(instanceDir).getName();
                 System.err.println(key + " is not configured in "
                         + "instances/" + instanceName + "/conf/qingzhou.properties"
-                        + ", run bin/init.sh to initialize the instance");
+                        + ", run bin/qingzhou.sh init to initialize the instance");
                 System.exit(1);
             }
         }
@@ -160,32 +164,33 @@ public class QingzhouMain {
                 } else {
                     bundle.stop();
                 }
-            } catch (Throwable e) {
-                e.printStackTrace(System.err); // 捕获并打印，保证任务不被取消
+            } catch (Exception e) {
+                // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
+                System.err.println("qz-path-detector task error: " + e.getMessage());
             }
         }, 0, 5, TimeUnit.SECONDS);
     }
 
-    private static volatile Set<String> disabledFeatures; // 启动期一次性解析，避免逐 jar 重复 split
+    // 启动期一次性解析，避免逐 jar 重复 split；构建期即确定，无需 volatile / 懒加载
+    private static final Set<String> disabledFeatures = loadDisabledFeatures();
+
+    private static Set<String> loadDisabledFeatures() {
+        Set<String> features = new HashSet<>();
+        String featuresDisabled = System.getProperty("qingzhou.features.disabled");
+        if (featuresDisabled != null) {
+            for (String check : featuresDisabled.split(",")) {
+                if (!check.trim().isEmpty()) features.add(check.trim());
+            }
+        }
+        return features;
+    }
 
     private static boolean isFeatureDisabled(File file) {
-        Set<String> features = disabledFeatures;
-        if (features == null) {
-            features = new HashSet<>();
-            String featuresDisabled = System.getProperty("qingzhou.features.disabled");
-            if (featuresDisabled != null) {
-                for (String check : featuresDisabled.split(",")) {
-                    if (!check.trim().isEmpty()) features.add(check.trim());
-                }
-            }
-            disabledFeatures = features;
-        }
-
         String name = file.getName();
         if (name.endsWith(".jar")) {
             name = name.substring(0, name.length() - ".jar".length());
         }
-        return features.contains(name);
+        return disabledFeatures.contains(name);
     }
 
     private static Map<String, String> osgiConfig() {

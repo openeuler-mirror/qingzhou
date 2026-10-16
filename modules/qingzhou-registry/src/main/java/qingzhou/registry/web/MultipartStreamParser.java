@@ -1,9 +1,6 @@
 package qingzhou.registry.web;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -14,9 +11,9 @@ class MultipartStreamParser {
     private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
     // 文件分片总量上限：与服务端请求体上限对齐，防止认证用户用单个请求写满磁盘
     private static final long MAX_TOTAL_BYTES = 256L * 1024 * 1024;
+    private static final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final byte[] boundaryDelimiter;
-    private final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final File uploadBase;
     private final FieldTypeResolver fieldTypeResolver;
@@ -119,7 +116,7 @@ class MultipartStreamParser {
         return after;
     }
 
-    private int handleHeaders(byte[] data, int pos) {
+    private int handleHeaders(byte[] data, int pos) throws UnsupportedEncodingException {
         int idx = indexOf(data, HEADER_DELIMITER, pos);
         if (idx < 0) {
             headerBuffer.write(data, pos, data.length - pos);
@@ -132,7 +129,7 @@ class MultipartStreamParser {
         String headers;
         if (headerBuffer.size() > 0) {
             headerBuffer.write(data, pos, idx - pos);
-            headers = headerBuffer.toString();
+            headers = headerBuffer.toString("UTF-8");
             headerBuffer.reset();
         } else {
             headers = new String(data, pos, idx - pos, StandardCharsets.UTF_8);
@@ -227,8 +224,6 @@ class MultipartStreamParser {
             }
         }
         uploadFileMap.clear();
-        // 同步清空字段名集合，防止 onComplete 阶段残留字段名与空 uploadFileMap 不一致，
-        // 导致 Invoke.cleanupTempFiles 收集到 null 路径
         uploadFileFields.clear();
         state = State.DONE;
     }

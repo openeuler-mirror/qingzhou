@@ -146,7 +146,10 @@ public class HttpRequestImpl implements HttpRequest {
                 // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
             }
         }
-        return Collections.unmodifiableMap(parsed); // 只读视图：防止调用方篡改已解析的参数
+        // 深只读视图：Map 与内层 List 均不可变，防止调用方篡改已解析的参数
+        Map<String, List<String>> readOnly = new LinkedHashMap<>(parsed.size());
+        parsed.forEach((key, values) -> readOnly.put(key, Collections.unmodifiableList(values)));
+        return Collections.unmodifiableMap(readOnly);
     }
 
     @Override

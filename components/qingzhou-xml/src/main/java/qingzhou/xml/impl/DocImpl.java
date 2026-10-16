@@ -2,10 +2,12 @@ package qingzhou.xml.impl;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -22,7 +24,19 @@ import org.w3c.dom.NodeList;
 import qingzhou.xml.Doc;
 
 class DocImpl implements Doc {
-    private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    private static final TransformerFactory transformerFactory;
+
+    static {
+        TransformerFactory tf = TransformerFactory.newInstance();
+        try {
+            tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            // 与 XmlImpl 一致，禁止 DTD，杜绝 XXE
+            tf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
+        } catch (Exception ignored) {
+        }
+        transformerFactory = tf;
+    }
+
     // XPathFactory 线程安全且创建昂贵，复用一个实例；XPath 仍每次新建（非线程安全）
     private static final XPathFactory xPathFactory = XPathFactory.newInstance();
 
@@ -101,6 +115,10 @@ class DocImpl implements Doc {
         Path parent = target.getParent() != null ? target.getParent() : Paths.get("."); // 相对路径无父目录
         Path temp = Files.createTempFile(parent, file.getName(), ".tmp");
         try {
+            try { // XML 配置可能含敏感信息，落盘即收敛权限（非 POSIX 平台跳过）
+                Files.setPosixFilePermissions(temp, java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+            } catch (UnsupportedOperationException | IOException ignored) {
+            }
             try (FileOutputStream outputStream = new FileOutputStream(temp.toFile())) {
                 transformer.transform(new DOMSource(dom), new StreamResult(outputStream));
             }
@@ -113,23 +131,27 @@ class DocImpl implements Doc {
     }
 
     private Node findNode(String xPath) throws XPathExpressionException {
-        if (xPath == null || xPath.trim().isEmpty())
-            throw new XPathExpressionException("xPath cannot be null or empty");
-
-        Node obj = (Node) newXPath().evaluate(xPath, dom, XPathConstants.NODE);
-        if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
-
-        return obj;
+        return evaluate(xPath, XPathConstants.NODE);
     }
 
     private NodeList findNodeNodeList(String xPath) throws XPathExpressionException {
-        if (xPath == null || xPath.trim().isEmpty())
+        return evaluate(xPath, XPathConstants.NODESET);
+    }
+
+    // XPath 求值公共逻辑：空白校验 → 求值 → 判空报错
+    @SuppressWarnings("unchecked")
+    private <T> T evaluate(String xPath, javax.xml.namespace.QName returnType) throws XPathExpressionException {
+        if (isBlankXPath(xPath))
             throw new XPathExpressionException("xPath cannot be null or empty");
 
-        NodeList obj = (NodeList) newXPath().evaluate(xPath, dom, XPathConstants.NODESET);
-        if (obj == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
+        T result = (T) newXPath().evaluate(xPath, dom, returnType);
+        if (result == null) throw new XPathExpressionException("xPath [" + xPath + "] is invalid");
 
-        return obj;
+        return result;
+    }
+
+    private static boolean isBlankXPath(String xPath) {
+        return xPath == null || xPath.trim().isEmpty();
     }
 
     /**

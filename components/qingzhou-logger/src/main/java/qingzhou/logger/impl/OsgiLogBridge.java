@@ -41,12 +41,14 @@ public class OsgiLogBridge implements LogListener {
         String message = formatMessage(entry);
         Throwable exception = entry.getException();
 
-        switch (entry.getLevel()) {
-            case org.osgi.service.log.LogService.LOG_WARNING:
-                logger.warn(message, exception);
-                break;
+        switch (entry.getLevel()) { // 仅输出 ERROR 和 WARN 级别的日志，不然 INFO 和 DEBUG 日志太多无用信息
             case org.osgi.service.log.LogService.LOG_ERROR:
-                logger.error(message, exception);
+                if (exception != null) logger.error(message, exception);
+                else logger.error(message);
+                break;
+            case org.osgi.service.log.LogService.LOG_WARNING:
+                if (exception != null) logger.warn(message + ": " + exception);
+                else logger.warn(message);
                 break;
         }
     }

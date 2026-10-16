@@ -51,7 +51,7 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
 
     /** */
     public LegacyJavaRuntime() {
-        hasSunReflection = verifySunReflection();
+        hasSunReflection = JDK8;
         stackTraceElementGetter = getStackTraceElementGetter();
     }
 
@@ -151,15 +151,6 @@ public final class LegacyJavaRuntime extends AbstractJavaRuntime {
     @Override
     public TimestampFormatter createTimestampFormatter(final String pattern, final Locale locale) {
         return new LegacyTimestampFormatter(pattern, locale);
-    }
-
-    /**
-     * Checks whether {@link sun.reflect.Reflection#getCallerClass(int)} is available.
-     *
-     * @return {@code true} if available, {@code false} if not
-     */
-    private static boolean verifySunReflection() {
-        return JDK8;
     }
 
     /**

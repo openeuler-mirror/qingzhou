@@ -82,7 +82,7 @@ public class MessageDigestImplTest {
     @Test
     public void differentAlgorithms_digest_returnDifferentHash() {
         MessageDigestImpl digest = newDigest();
-        String md5 = digest.digest("pwd", "MD5", 0, 1);
+        String md5 = digest.digest("pwd", "SHA-512", 0, 1);
         String sha256 = digest.digest("pwd", "SHA-256", 0, 1);
         Assert.assertNotEquals(md5.split("\\$")[3], sha256.split("\\$")[3]);
         Assert.assertEquals(md5.split("\\$")[3].length(), 32);
@@ -150,9 +150,9 @@ public class MessageDigestImplTest {
     public void differentFormats_matches_parseCorrectly() {
         MessageDigestImpl digest = newDigest();
         String[] formats = {
-                digest.digest("pwd", "MD5", 0, 1),     // 空盐格式 MD5$$1$...
-                digest.digest("pwd", "MD5", 8, 5),     // 8 字节盐、迭代 5 次
-                digest.digest("pwd", "SHA-256", 0, 1), // 空盐格式 SHA-256$$1$...
+                digest.digest("pwd", "SHA-512", 0, 1),  // 空盐格式 SHA-512$$1$...
+                digest.digest("pwd", "SHA-512", 8, 5),  // 8 字节盐、迭代 5 次
+                digest.digest("pwd", "SHA-256", 0, 1),  // 空盐格式 SHA-256$$1$...
                 digest.digest("pwd", "SHA-256", 16, 3), // 16 字节盐、迭代 3 次
         };
         for (String format : formats) {

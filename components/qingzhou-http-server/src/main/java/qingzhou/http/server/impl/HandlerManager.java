@@ -91,9 +91,6 @@ public class HandlerManager {
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
         pendingLogs.info(logger, "registered: [" + path + "] by [" + source + "]"
                 + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : ""));
-//        if (isNoAuth) { // 业务逻辑行为，没必要打印免认证日志，不然看起来像是配置有误
-//            pendingLogs.warn(logger, "no-auth route: [" + path + "] is publicly reachable, declared by [" + source + "]");
-//        }
     }
 
     // 注册专用：方法须属框架白名单，非法值在注册期即暴露，避免运行期静默放行

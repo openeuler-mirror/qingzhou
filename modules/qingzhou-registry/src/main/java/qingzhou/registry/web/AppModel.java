@@ -12,21 +12,13 @@ import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;
 import qingzhou.dto.meta.annotation.ModelFieldView;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
-import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
-import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/model",
         service = {AppModel.class, HttpHandler.class})
-public class AppModel implements HttpHandler {
-    @Reference
-    private Registry registry;
+public class AppModel extends RegistryMetaHandler {
     @Reference
     private I18nService i18nService;
-    @Reference
-    private Json json;
 
     private final Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
@@ -96,12 +88,4 @@ public class AppModel implements HttpHandler {
         }
     }
 
-    @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        // 是否已缓存
-        if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
-
-        // 执行
-        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
-    }
 }

@@ -3,7 +3,7 @@ package qingzhou.command;
 import java.io.File;
 import java.util.*;
 
-public class Command { // 由 Launcher 来调用
+public class Command {
     private final File libDir;
 
     public Command(File libDir) {
@@ -17,7 +17,7 @@ public class Command { // 由 Launcher 来调用
             return;
         }
 
-        if (args == null || args.length < 1) {
+        if (args.length < 1) {
             System.out.println("wrong command args. Type [ --help ] for help");
             return;
         }
@@ -25,18 +25,18 @@ public class Command { // 由 Launcher 来调用
         List<Processor> found = new ArrayList<>();
         for (Processor processor : commands) {
             AcceptStatus acceptStatus = accept(processor, args[0]);
-            if (acceptStatus == AcceptStatus.none) {
+            if (acceptStatus == AcceptStatus.NONE) {
                 continue;
             }
 
-            if (acceptStatus == AcceptStatus.full) {
+            if (acceptStatus == AcceptStatus.FULL) {
                 found.clear();
                 found.add(processor);
                 break;
             }
 
-            if (acceptStatus == AcceptStatus.startsWith) {
-                found.add(processor); // 模糊匹配，例如 startsWith
+            if (acceptStatus == AcceptStatus.STARTS_WITH) {
+                found.add(processor);
             }
         }
         if (found.isEmpty()) {
@@ -46,7 +46,7 @@ public class Command { // 由 Launcher 来调用
             String[] commandArgs = Arrays.copyOfRange(args, 1, args.length);
             processor.doCommandLine(commandArgs);
         } else {
-            Object[] names = found.stream().map(Processor::name).toArray();
+            String[] names = found.stream().map(Processor::name).toArray(String[]::new);
             System.out.println("Find more than one command: " + Arrays.toString(names));
         }
     }
@@ -99,18 +99,18 @@ public class Command { // 由 Launcher 来调用
         while (cmd.startsWith("-")) {
             cmd = cmd.substring(1);
         }
-        if (cmd.isEmpty()) return AcceptStatus.none; // 纯 "-" 输入剥完为空串：startsWith("") 会模糊命中全部命令
+        if (cmd.isEmpty()) return AcceptStatus.NONE; // 纯 "-" 输入剥完为空串：startsWith("") 会模糊命中全部命令
         boolean equals = Objects.equals(processor.name(), cmd);
         if (equals) {
-            return AcceptStatus.full;
+            return AcceptStatus.FULL;
         }
         if (processor.name().startsWith(cmd)) {
-            return AcceptStatus.startsWith;
+            return AcceptStatus.STARTS_WITH;
         }
-        return AcceptStatus.none;
+        return AcceptStatus.NONE;
     }
 
     private enum AcceptStatus {
-        full, none, startsWith
+        FULL, NONE, STARTS_WITH
     }
 }

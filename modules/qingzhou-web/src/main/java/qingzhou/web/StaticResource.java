@@ -1,10 +1,17 @@
 package qingzhou.web;
 
 import java.net.URL;
-import java.util.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Crypto;
@@ -18,19 +25,12 @@ import qingzhou.http.server.HttpResponse;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
     private static final String INDEX_FILE = "/index.html";
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
+            "png", "jpg", "jpeg", "gif", "svg", "ico"));
 
-    @Reference
-    private Crypto crypto;
+    private static final Map<String, String> MIME_TYPES;
 
-    private Set<String> imageExtensions; // 图片扩展名集合
-    private Map<String, String> mimeTypes; // MIME 类型映射
-    private final Map<String, ResourceCache> resourceCacheMap = new ConcurrentHashMap<>(); // 资源缓存
-
-    @Activate
-    public void init() {
-        imageExtensions = new HashSet<>(Arrays.asList(
-                "png", "jpg", "jpeg", "gif", "svg", "ico"));
-
+    static {
         Map<String, String> mimeMap = new HashMap<>();
         mimeMap.put("html", "text/html; charset=UTF-8");
         mimeMap.put("htm", "text/html; charset=UTF-8");
@@ -48,12 +48,26 @@ public class StaticResource implements HttpHandler {
         mimeMap.put("ttf", "font/ttf");
         mimeMap.put("eot", "application/vnd.ms-fontobject");
         mimeMap.put("otf", "font/otf");
-        mimeTypes = Collections.unmodifiableMap(mimeMap);
+        MIME_TYPES = Collections.unmodifiableMap(mimeMap);
     }
+
+    @Reference
+    private Crypto crypto;
+
+    private final Map<String, ResourceCache> resourceCacheMap = new ConcurrentHashMap<>(); // 资源缓存
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         String requestPath = httpRequest.getPath();
+
+        // 解码百分号编码（如 %2e%2e、%2f），否则 isPathSafe 会被编码形式的穿越序列绕过；
+        // 先把字面量 + 转义为 %2B：URLDecoder 的 +→空格语义仅适用于 query，路径中的 + 是合法字符
+        try {
+            requestPath = URLDecoder.decode(requestPath.replace("+", "%2B"), StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            httpResponse.status(400).finish();
+            return;
+        }
 
         // 修复：仅当路径恰好是 "/web" 或以 "/web/" 开头时才剥离前缀，
         // 避免把 "/website" 等以 "web" 开头的合法路径误当作带 "/web" 前缀而错误截断
@@ -86,6 +100,9 @@ public class StaticResource implements HttpHandler {
             path = INDEX_FILE;
         }
 
+        // 扩展名只解析一次，供 SPA 回退、Cache-Control 与 Content-Type 共用
+        String extension = getExtension(path);
+
         // 查找资源
         String resourcePath = "/webapp" + path;
         ResourceCache resourceCache = resourceCacheMap.computeIfAbsent(resourcePath, s -> {
@@ -100,7 +117,7 @@ public class StaticResource implements HttpHandler {
             // SPA 应用特性：无扩展名的路径视为前端路由（如 /web/model/xxx），回退到 index.html；
             // 带扩展名的资源（如已被清理的旧 hash .js/.css）必须返回 404，
             // 否则浏览器会把 HTML 当 JS 解析导致模块加载失败
-            if (!path.equals(INDEX_FILE) && getExtension(path).isEmpty()) {
+            if (!path.equals(INDEX_FILE) && extension.isEmpty()) {
                 serveStaticResource(httpRequest, INDEX_FILE, response);
                 return;
             }
@@ -108,8 +125,6 @@ public class StaticResource implements HttpHandler {
             return;
         }
 
-        // 扩展名只解析一次，供 Cache-Control 与 Content-Type 共用
-        String extension = getExtension(path);
         response.header("Cache-Control", getCacheControl(extension, path));
 
         try {
@@ -154,7 +169,7 @@ public class StaticResource implements HttpHandler {
         int lastSlash = path.lastIndexOf('/');
         // 点必须位于最后一段文件名内，且不是文件名首字符（排除隐藏文件如 .gitignore）
         if (lastDot > lastSlash + 1) {
-            return path.substring(lastDot + 1).toLowerCase();
+            return path.substring(lastDot + 1).toLowerCase(Locale.ROOT);
         }
         return "";
     }
@@ -162,20 +177,19 @@ public class StaticResource implements HttpHandler {
     private String getCacheControl(String extension, String path) {
         if (path.equals(INDEX_FILE)) {
             // 入口 HTML 不长期缓存：发版后老用户若长期缓存 index.html 会一直白屏
-            return "max-age=0, must-revalidate";
+            return "no-cache";
         }
-        if (extension.equals("html") || extension.equals("htm")
-                || imageExtensions.contains(extension)) {
-            return "max-age=2592000, must-revalidate, proxy-revalidate, no-transform"; // 一个月
+        if (extension.equals("html") || extension.equals("htm") || IMAGE_EXTENSIONS.contains(extension)) {
+            return "max-age=2592000"; // 一个月
         }
-        return "max-age=31536000, must-revalidate, proxy-revalidate, no-transform"; // 一年
+        return "max-age=31536000, immutable"; // 一年，配合构建产物内容 hash 文件名
     }
 
     /**
      * 根据文件扩展名获取 Content-Type
      */
     private String getContentType(String extension) {
-        String mimeType = mimeTypes.get(extension);
+        String mimeType = MIME_TYPES.get(extension);
         return mimeType != null ? mimeType : "application/octet-stream";
     }
 

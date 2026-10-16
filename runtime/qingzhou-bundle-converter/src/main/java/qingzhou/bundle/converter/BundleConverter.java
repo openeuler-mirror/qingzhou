@@ -12,9 +12,6 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 import javassist.*;
 import org.osgi.framework.Constants;
@@ -35,7 +32,7 @@ public class BundleConverter {
             throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
         }
         try {
-            unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
+            FileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
 
             // 生成注解文件
             if (classPool == null) {
@@ -59,12 +56,8 @@ public class BundleConverter {
 
             // 构建为 bundle jar
             File[] files = appTmpDir.listFiles();
-            try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(targetJar.toPath()))) {
-                if (files != null) {
-                    for (File file : files) {
-                        zipFiles(zos, file, file.getName());
-                    }
-                }
+            if (files != null) {
+                FileUtil.zipFiles(files, targetJar, true);
             }
         } finally {
             // 无论成功或异常都清理临时目录，否则随 UUID 无限累积（磁盘耗尽）
@@ -126,7 +119,7 @@ public class BundleConverter {
             throw new IllegalStateException("app-driver directory not found under: " + libDir);
         }
         for (File driverJarFile : driverJarFiles) {
-            unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
+            FileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
         }
     }
 
@@ -341,49 +334,4 @@ public class BundleConverter {
         }
     }
 
-    // @param overwrite true 时覆盖已存在的目标文件：driver 解压须置于应用之后且覆盖同名类，
-    //                  否则应用 jar 自带的 qingzhou/app/driver/ 同名类会遮蔽真正的驱动实现
-    private void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
-        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
-            String baseDir = unZipDir.getCanonicalPath() + File.separator;
-            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
-                ZipEntry entry = e.nextElement();
-                File targetFile = new File(unZipDir, entry.getName());
-                if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
-                    throw new IOException("Entry is outside of target dir: " + entry.getName());
-                }
-                if (entry.isDirectory()) {
-                    targetFile.mkdirs();
-                } else {
-                    Path targetFilePath = targetFile.toPath();
-                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
-                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
-                    if (overwrite || !Files.exists(targetFilePath)) {
-                        targetFile.getParentFile().mkdirs();
-                        try (OutputStream out = Files.newOutputStream(targetFilePath)) {
-                            FileUtil.copyStream(zip.getInputStream(entry), out);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void zipFiles(ZipOutputStream zos, File srcFile, String toZipName) throws IOException {
-        if (srcFile.isDirectory()) {
-            zos.putNextEntry(new ZipEntry(toZipName + "/"));
-            File[] listFiles = srcFile.listFiles();
-            if (listFiles != null) {
-                for (File sub : listFiles) {
-                    zipFiles(zos, sub, toZipName + "/" + sub.getName());
-                }
-            }
-        } else {
-            ZipEntry zipEntry = new ZipEntry(toZipName);
-            zos.putNextEntry(zipEntry);
-            try (InputStream in = Files.newInputStream(srcFile.toPath())) {
-                FileUtil.copyStream(in, zos);
-            }
-        }
-    }
 }

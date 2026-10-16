@@ -12,7 +12,7 @@ public abstract class Processor {
 
     private File libDir;
 
-    public File getLibDir() {
+    protected File getLibDir() {
         return libDir;
     }
 
@@ -80,7 +80,7 @@ public abstract class Processor {
     // 实例名直接拼进路径，须拒绝任何能逃出 instances 目录的字符，否则可读写其它实例配置/密钥
     private static boolean isSafeInstanceName(String name) {
         if (name == null || name.isEmpty()) return false;
-        return !name.contains("..") && !name.contains("/") && !name.contains("\\") && name.indexOf('\0') < 0;
+        return !name.equals(".") && !name.contains("..") && !name.contains("/") && !name.contains("\\") && name.indexOf('\0') < 0;
     }
 
     @Override

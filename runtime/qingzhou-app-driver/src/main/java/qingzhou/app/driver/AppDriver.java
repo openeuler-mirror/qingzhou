@@ -130,12 +130,9 @@ public class AppDriver implements BundleActivator {
         if (annotationFile == null)
             throw new IllegalStateException("Missing /QZ-INF/annotation.json in bundle: " + context.getBundle().getSymbolicName());
 
-        try (InputStream inputStream = annotationFile.openStream()) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024 * 4];
-            for (int n; (n = inputStream.read(buffer)) != -1; ) {
-                bos.write(buffer, 0, n);
-            }
+        try (InputStream inputStream = annotationFile.openStream();
+             ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            FileUtil.copyStream(inputStream, bos);
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);
             Json jsonService = getService(Json.class, null);
             return jsonService.fromJson(json, App.class);
@@ -180,7 +177,6 @@ public class AppDriver implements BundleActivator {
                 modelBase.setAppContext(appContext);
                 appContext.modelInstances.put(model, modelBase);
 
-
                 // 初始化模块属性
                 model.fields.forEach(modelField -> {
                     try {
@@ -190,8 +186,14 @@ public class AppDriver implements BundleActivator {
                             modelField.default_value = val.toString();
                         }
                     } catch (Throwable e) {
-                        getService(Logger.class, null).warn("failed to parse default value, model: " + model.code
-                                + ", field: " + modelField.code + ", cause: " + e);
+                        String msg = "failed to parse default value, model: " + model.code
+                                + ", field: " + modelField.code + ", cause: " + e;
+                        Logger logger = getService(Logger.class, null);
+                        if (logger != null) {
+                            logger.warn(msg);
+                        } else { // Logger 服务未注册时降级 stderr，不掩盖原始解析异常
+                            System.err.println(msg);
+                        }
                     }
                 });
 

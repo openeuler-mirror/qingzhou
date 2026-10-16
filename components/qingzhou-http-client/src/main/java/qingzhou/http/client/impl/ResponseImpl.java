@@ -11,6 +11,7 @@ import qingzhou.http.client.ResponseListener;
 class ResponseImpl implements Response {
     private final int code;
     private final int maxBodySize;
+    // 仅流式保留：cancel() 需断开底层连接；同步响应读完即终结，无待释放资源
     private final HttpURLConnection conn;
     private final boolean streaming;
 
@@ -19,8 +20,8 @@ class ResponseImpl implements Response {
     private volatile boolean cancelled;
 
     ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
-        this.conn = conn;
         this.maxBodySize = maxBodySize;
+        this.conn = conn;
         this.code = conn.getResponseCode();
 
         if (listener != null && code >= 200 && code < 300) {
@@ -28,25 +29,22 @@ class ResponseImpl implements Response {
             streaming = true;
             executor.execute(() -> readStreaming(listener));
         } else {
-            // 同步模式或非 2xx：一次性读完整响应体，交由调用方根据 getStatus() 处理；传入 listener 时回调 onError
+            // 同步模式或非 2xx：一次性读完整响应体，由调用方根据 getStatus() 处理，不触发任何回调
             streaming = false;
-            result = read(responseStream(code));
-            if (listener != null) {
-                listener.onError(new IOException("HTTP " + code));
-            }
+            result = read(responseStream());
         }
     }
 
-    private InputStream responseStream(int code) throws IOException {
+    private InputStream responseStream() throws IOException {
         InputStream stream = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
         return stream != null ? stream : new ByteArrayInputStream(new byte[0]);
     }
 
     private void readStreaming(ResponseListener listener) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(code), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(), StandardCharsets.UTF_8))) {
             long received = 0;
             for (String line; !cancelled && (line = reader.readLine()) != null; ) {
-                received += line.length() + 1; // readLine 丢弃换行符，计数补回 1
+                received += line.getBytes(StandardCharsets.UTF_8).length + 1; // 按字节计数（readLine 丢弃换行符，补回 1）：多字节字符下字符数会低估实际内存
                 // 流式路径同样受 maxBodySize 约束：否则服务端一条超长行即可让整行驻留内存
                 if (maxBodySize > 0 && received > maxBodySize) {
                     throw new IOException("streaming response exceeds maxBodySize: " + maxBodySize);
@@ -70,7 +68,7 @@ class ResponseImpl implements Response {
     @Override
     public void cancel() {
         cancelled = true;
-        conn.disconnect();
+        conn.disconnect(); // conn 构造注入恒非空；同步响应读完后再 disconnect 无副作用
     }
 
     @Override

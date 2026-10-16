@@ -12,21 +12,13 @@ import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
-import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
-import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/list",
         service = {AppList.class, HttpHandler.class})
-public class AppList implements HttpHandler {
-    @Reference
-    private Registry registry;
+public class AppList extends RegistryMetaHandler {
     @Reference
     private I18nService i18nService;
-    @Reference
-    private Json json;
 
     private final Function<HandlingContext, Object> function = new Function<HandlingContext, Object>() {
         @Override
@@ -41,14 +33,13 @@ public class AppList implements HttpHandler {
             }
             registry.getAllRemoteInstances().forEach(instance -> {
                 InstanceInfo remoteInstance = registry.getRemoteInstance(instance);
-                // 实例可能被健康检查并发移除，应用列表/实例信息均可能为 null
-                List<String> remoteApps = registry.getAllRemoteApps(instance);
-                if (remoteApps == null || remoteInstance == null) return;
-                remoteApps.forEach(appCode -> {
-                    AppStub stub = registry.getRemoteApp(instance, appCode);
-                    if (stub == null || stub.getAppMeta() == null) return;
-                    appBasicInfoList.add(appInfo(remoteInstance, stub.getAppMeta().getApp(), lang));
-                });
+                // 实例可能被健康检查并发移除，实例信息可能为 null
+                if (remoteInstance == null) return;
+                // 直接从 InstanceInfo 取 meta，避免为读元数据组装重量级远程调用桩
+                for (qingzhou.dto.meta.AppMeta appMeta : remoteInstance.getAppMetas()) {
+                    if (appMeta == null || appMeta.getApp() == null) continue;
+                    appBasicInfoList.add(appInfo(remoteInstance, appMeta.getApp(), lang));
+                }
             });
             return appBasicInfoList;
         }
@@ -71,14 +62,5 @@ public class AppList implements HttpHandler {
         appInfo.put("name", i18nService.getI18n(app.name, lang));
         appInfo.put("info", i18nService.getI18n(app.info, lang));
         return appInfo;
-    }
-
-    @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        // 是否已缓存
-        if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
-
-        // 执行
-        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

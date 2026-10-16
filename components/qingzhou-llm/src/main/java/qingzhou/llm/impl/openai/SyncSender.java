@@ -31,7 +31,7 @@ class SyncSender {
 
     String chat(Map<String, Tool> baseTools, String message, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, () -> new OpenAiChatModelBuilder(builder.getBaseUrl(), builder.getApiKey(), builder.getModel(), httpClient, json, crypto));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             List<Object> messages = new ArrayList<>();
@@ -61,8 +61,8 @@ class SyncSender {
             Map<String, Object> msg = requireResponseMessage(response);
             String content = builder.extractText(msg.get("content"));
             return content != null ? content : "";
-        } catch (Throwable t) {
-            Utils.println("Chat failed: " + Utils.errorMessage(t));
+        } catch (Exception e) {
+            Utils.println("Chat failed: " + Utils.errorMessage(e));
             return null;
         }
     }
@@ -81,11 +81,15 @@ class SyncSender {
         }
         int status = response.getStatus();
         if (status != 200) {
-            if ((status == 429 || status >= 500) && attempt < builder.getMaxRetries()) {
-                Utils.sleepBackoff(attempt);
-                return sendSync(messages, toolDefs, attempt + 1);
+            try {
+                if (Utils.isRetryableStatus(status) && attempt < builder.getMaxRetries()) {
+                    Utils.sleepBackoff(attempt);
+                    return sendSync(messages, toolDefs, attempt + 1);
+                }
+                throw new IllegalStateException("API error " + status + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
+            } finally {
+                response.cancel(); // 无论重试还是抛错都释放连接，防止反复 429/5xx 时泄漏
             }
-            throw new IllegalStateException("API error " + status + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
         }
         return response;
     }
@@ -110,13 +114,21 @@ class SyncSender {
     }
 
     private Map<String, Object> requireResponseMessage(Response response) throws Exception {
-        Map<String, Object> data = json.fromJson(new String(response.getBody(), StandardCharsets.UTF_8), Map.class);
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
-        if (choices == null || choices.isEmpty()) {
-            // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
-            throw new IllegalStateException("API returned no choices: "
-                    + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 500));
+        try {
+            String body = new String(response.getBody(), StandardCharsets.UTF_8);
+            Map<String, Object> data = json.fromJson(body, Map.class);
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
+            if (choices == null || choices.isEmpty()) {
+                // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
+                throw new IllegalStateException("API returned no choices: " + Utils.truncate(body, 500));
+            }
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            if (message == null) {
+                throw new IllegalStateException("API response missing message: " + Utils.truncate(body, 500));
+            }
+            return message;
+        } finally {
+            response.cancel();
         }
-        return (Map<String, Object>) choices.get(0).get("message");
     }
 }

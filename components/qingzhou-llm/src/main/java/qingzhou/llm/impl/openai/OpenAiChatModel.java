@@ -15,6 +15,9 @@ import qingzhou.llm.impl.ToolCallInfo;
 import qingzhou.llm.impl.Utils;
 
 class OpenAiChatModel implements ChatModel {
+    // 输出被 max_tokens 等长度上限截断时，明确告知调用方
+    private static final String TRUNCATED_NOTICE = "（输出已达长度上限，内容被截断）";
+
     private final OpenAiChatModelBuilder builder;
     private final HttpClient httpClient;
     private final Json json;
@@ -46,7 +49,7 @@ class OpenAiChatModel implements ChatModel {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
             }
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, () -> new OpenAiChatModelBuilder(builder.getBaseUrl(), builder.getApiKey(), builder.getModel(), httpClient, json, crypto));
+            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             Map<String, Object> systemMessage = builder.buildSystemMessage(activeSkills);
@@ -60,8 +63,8 @@ class OpenAiChatModel implements ChatModel {
             messages.add(userMessage);
             // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
             doChat(messages, toolDefinitions, chatListener, activeTools, 0);
-        } catch (Throwable t) {
-            chatListener.onError(Utils.errorMessage(t));
+        } catch (Exception e) {
+            chatListener.onError(Utils.errorMessage(e));
         }
     }
 
@@ -90,13 +93,12 @@ class OpenAiChatModel implements ChatModel {
             Response response = httpClient.send(request, httpListener);
             if (response.getStatus() == 200) return;
 
-            response.cancel();
-            if ((response.getStatus() == 429 || response.getStatus() >= 500) && attempt < builder.getMaxRetries()) {
+            if (Utils.isRetryableStatus(response.getStatus()) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
                 return;
             }
-            chatListener.onError("API error " + response.getStatus() + ": " + new String(response.getBody(), StandardCharsets.UTF_8));
+            chatListener.onError("API error " + response.getStatus() + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.getMaxRetries()) {
@@ -224,13 +226,12 @@ class OpenAiChatModel implements ChatModel {
                     doChat(messages, toolDefs, chatListener, tools, toolIteration + 1);
                 } else {
                     if ("length".equals(finishReason)) {
-                        // 输出被 max_tokens 等长度上限截断，明确告知调用方
-                        chatListener.onMessage("（输出已达长度上限，内容被截断）");
+                        chatListener.onMessage(TRUNCATED_NOTICE);
                     }
                     chatListener.onComplete();
                 }
-            } catch (Throwable t) {
-                chatListener.onError(Utils.errorMessage(t));
+            } catch (Exception e) {
+                chatListener.onError(Utils.errorMessage(e));
             }
         }
 

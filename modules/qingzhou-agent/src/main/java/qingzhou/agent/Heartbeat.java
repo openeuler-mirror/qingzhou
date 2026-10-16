@@ -45,22 +45,41 @@ public class Heartbeat {
     private Timer timer;
     private String qzVersion;
 
-    static volatile InstanceInfo thisInstanceInfo;
+    private static volatile InstanceInfo thisInstanceInfo;
 
+    // 上次构建的各 AppMeta 序列化指纹：心跳比对复用，避免每拍全量重复序列化
+    private volatile List<String> storedFingerprints;
 
-    // 轮换前的旧钥：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
-    private static volatile String previousKey;
-    private static volatile long previousKeyAt;
+    static InstanceInfo currentInstanceInfo() {
+        return thisInstanceInfo;
+    }
+
+    // 轮换前的旧钥（key+时间戳单引用原子发布）：跨线程读取（Netty 线程处理 agent 请求，Timer 线程轮换密钥）
+    private static volatile RotatedKey previousKey;
+
+    private static final class RotatedKey {
+        final String key;
+        final long rotatedAt;
+
+        RotatedKey(String key, long rotatedAt) {
+            this.key = key;
+            this.rotatedAt = rotatedAt;
+        }
+    }
+
+    // agent 侧保留旧钥的窗口放宽到注册端宽限期的两倍：覆盖"注册端宽限期内仍用旧钥加密"的整个窗口，
+    // 并对两侧时钟偏差 / 网络抖动留余量，避免窗口边缘的解密失败
+    private static final long AGENT_KEY_GRACE_MILLIS_DECRYPT = Constants.AGENT_KEY_GRACE_MILLIS * 2;
 
     /**
      * 宽限期内返回轮换前的旧钥，供 ProcessHandler 解密回退；过期或无轮换返回 null
      */
     static String decryptKeyFallback() {
-        String key = previousKey;
-        if (key == null) return null;
+        RotatedKey previous = previousKey;
+        if (previous == null) return null;
 
-        if (System.currentTimeMillis() - previousKeyAt <= Constants.AGENT_KEY_GRACE_MILLIS * 2) {
-            return key;
+        if (System.currentTimeMillis() - previous.rotatedAt <= AGENT_KEY_GRACE_MILLIS_DECRYPT) {
+            return previous.key;
         } else {
             previousKey = null;
             return null;
@@ -92,13 +111,12 @@ public class Heartbeat {
 
                     String newKey = crypto.generateKey(); // 更新共享的对称密钥，以保障前向安全！
                     // 带上当前密钥作为持有证明：registry 公钥不保密，仅凭它不足以授权改密钥
-                    String refreshInfos = thisInstanceInfo.getId() + "," + newKey + "," + thisInstanceInfo.getKey();
+                    String refreshInfos = thisInstanceInfo.getId() + Constants.AGENT_REFRESH_TOKEN_SP + newKey + Constants.AGENT_REFRESH_TOKEN_SP + thisInstanceInfo.getKey();
                     String refreshed = send(refreshUrl, refreshInfos.getBytes(StandardCharsets.UTF_8));
                     if (Boolean.parseBoolean(refreshed)) { // 服务端已经刷新了密钥
                         // 宽限切换：registry 已切新钥，但其 invoke 在宽限期内仍用旧钥加密（本响应也是旧钥密文），
                         // 保留旧钥一段时间令窗口内的报文仍可解密，invoke 不再因轮换必然失败
-                        previousKey = thisInstanceInfo.getKey();
-                        previousKeyAt = System.currentTimeMillis();
+                        previousKey = new RotatedKey(thisInstanceInfo.getKey(), System.currentTimeMillis());
 
                         thisInstanceInfo.setKey(newKey);
                     } else {
@@ -121,7 +139,7 @@ public class Heartbeat {
                                 currentKeyProof,
                                 json.toJson(thisInstanceInfo));
                         String registration = send(registerUrl, registerData.getBytes(StandardCharsets.UTF_8));
-                        logger.info("registration response: " + registration);
+                        logger.info("instance registered, response length=" + (registration == null ? 0 : registration.length()));
                     }
                 } catch (Exception e) {
                     logger.error("heartbeat service error", e);
@@ -138,29 +156,28 @@ public class Heartbeat {
     }
 
     private boolean appChanged() throws Exception {
-        InstanceInfo instanceInfo = thisInstanceInfo;
-        if (instanceInfo == null) return true;
+        List<String> stored = storedFingerprints;
+        if (stored == null) return true;
 
-        List<AppMeta> storedAppMetas = new ArrayList<>(instanceInfo.getAppMetas()); // 拷贝后排序，不改动被 Netty 线程读取的共享列表
-        List<AppMeta> currentAppMetas = currentAppMetas();
-        if (storedAppMetas.size() != currentAppMetas.size()) return true;
+        // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
+        return !currentFingerprints().equals(stored);
+    }
 
-        Comparator<AppMeta> comparator = Comparator.comparing(o -> o.getApp().code);
-        storedAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
-        currentAppMetas.sort(comparator); // 固定顺序，避免指纹计算错误
-        for (int i = 0; i < storedAppMetas.size(); i++) {
-            // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
-            if (!json.toJson(storedAppMetas.get(i)).equals(json.toJson(currentAppMetas.get(i)))) return true;
+    // 指纹唯一来源：以 appCode 为键的 TreeMap 派生，两侧排序方式由构造方式直接保证一致
+    private List<String> currentFingerprints() throws Exception {
+        Map<String, String> fingerprints = new TreeMap<>();
+        for (String appCode : registry.getAllLocalApps()) {
+            fingerprints.put(appCode, json.toJson(registry.getLocalApp(appCode).getAppMeta()));
         }
-
-        return false;
+        return new ArrayList<>(fingerprints.values());
     }
 
     private String send(String url, byte[] data) {
+        Response response = null;
         try {
             byte[] encrypted = pairCipher.encryptWithPublicKey(data);
             // 显式 POST：请求必须带密文正文，且 registry 侧已限定 POST
-            Response response = httpClient.send(
+            response = httpClient.send(
                     httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
             if (response.getStatus() != 200) {
                 logger.warn("response code error [ " + response.getStatus() + " ] : " + url);
@@ -176,8 +193,15 @@ public class Heartbeat {
             logger.error("failed to connect to the URL: " + url + ", msg: " + e.getMessage());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+        } finally {
+            // 释放底层连接资源，避免每次心跳累积泄漏
+            if (response != null) response.cancel();
         }
         return null;
+    }
+
+    private static void sortByCode(List<AppMeta> list) {
+        list.sort(Comparator.comparing(appMeta -> appMeta.getApp().code));
     }
 
     private List<AppMeta> currentAppMetas() {
@@ -194,7 +218,7 @@ public class Heartbeat {
 
         // 实例部署的应用
         List<AppMeta> currentAppMetas = currentAppMetas();
-        currentAppMetas.sort(Comparator.comparing(appMeta -> appMeta.getApp().code)); // 固定顺序，避免指纹计算错误
+        sortByCode(currentAppMetas); // 固定顺序：保证注册报文与实例 ID 的 MD5 计算稳定
         instanceInfo.getAppMetas().addAll(currentAppMetas);
 
         // 实例版本
@@ -202,7 +226,14 @@ public class Heartbeat {
 
         // 实例端口
         Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-        int serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
+        if (httpServerConfig == null) {
+            throw new IllegalStateException("qingzhou-http-server configuration is missing");
+        }
+        Object portValue = httpServerConfig.get("port");
+        if (portValue == null) {
+            throw new IllegalStateException("qingzhou-http-server configuration is missing 'port'");
+        }
+        int serverPort = Integer.parseInt(String.valueOf(portValue));
         instanceInfo.setPort(serverPort);
 
         boolean sslEnabled = Boolean.parseBoolean(String.valueOf(httpServerConfig.get("ssl_enabled")));
@@ -217,7 +248,8 @@ public class Heartbeat {
         // 实例密钥，动态生成的，放在 ID 计算之前，不参与 ID 计算
         instanceInfo.setKey(crypto.generateKey());
 
-        Heartbeat.thisInstanceInfo = instanceInfo;
+        storedFingerprints = currentFingerprints(); // 与 appChanged 同源构建，保证比对口径一致
+        thisInstanceInfo = instanceInfo;
     }
 
     private String ips() throws Exception {

@@ -52,7 +52,7 @@ class CipherImpl implements Cipher {
         } catch (Exception e) {
             // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级
             logger.warn("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "
-                    + "Use bin/gen-cipher-password.sh to encrypt it.", e);
+                    + "Use bin/qingzhou.sh cipher-password to encrypt it.", e);
             return s;
         }
     }

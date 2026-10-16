@@ -22,6 +22,7 @@ public interface AuthResult {
     }
 
     static AuthResult pass(String user, String[] roles) {
+        String[] copiedRoles = roles == null ? null : roles.clone(); // 防御性拷贝：外部事后修改不影响认证角色
         return new AuthResult() {
             @Override
             public Status status() {
@@ -35,7 +36,7 @@ public interface AuthResult {
 
             @Override
             public String[] getRoles() {
-                return roles;
+                return copiedRoles == null ? null : copiedRoles.clone();
             }
         };
     }

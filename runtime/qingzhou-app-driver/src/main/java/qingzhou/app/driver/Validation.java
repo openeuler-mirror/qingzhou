@@ -253,16 +253,25 @@ class Validation implements ActionFilter {
     }
 
     // 自定义 pattern 按字符串缓存编译结果，避免每次校验都重新编译正则；
-    // 容量有界：pattern 来自应用元数据，超限时整体清空重建，防止缓存无界增长
+    // 容量有界：pattern 来自应用元数据，超限时淘汰半数而非整体清空，防止缓存无界增长与惊群
     private static final int MAX_PATTERN_CACHE = 1000;
+    private static final int MAX_CUSTOM_PATTERN_LENGTH = 256; // 限制自定义正则长度：过长的 pattern 易构成灾难性回溯（ReDoS），且通常非合法校验规则
     private static final ConcurrentHashMap<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
     class CustomPattern implements Validator {
         @Override
         public String validate(ValidationContext context) {
             String pattern = context.field.pattern;
+            if (pattern.length() > MAX_CUSTOM_PATTERN_LENGTH) {
+                return i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);
+            }
             if (PATTERN_CACHE.size() >= MAX_PATTERN_CACHE) {
-                PATTERN_CACHE.clear();
+                // 淘汰部分而非全量清空：避免容量触顶时一次性重编译全部正则（惊群）
+                int toEvict = MAX_PATTERN_CACHE / 2;
+                Iterator<String> it = PATTERN_CACHE.keySet().iterator();
+                while (it.hasNext() && toEvict-- > 0) {
+                    it.remove();
+                }
             }
             Pattern compiled = PATTERN_CACHE.computeIfAbsent(pattern, Pattern::compile);
             return compiled.matcher(context.parameter).matches() ? null : i18nService.getI18n(MSG_PATTERN_INVALID, context.lang, pattern);

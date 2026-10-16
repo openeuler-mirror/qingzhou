@@ -74,14 +74,11 @@ class PairCipherImpl implements PairCipher {
     private static void requireKey(java.security.Key key, String configName) {
         if (key == null) {
             throw new IllegalStateException("this cipher was built without " + configName
-                    + "; regenerate a pair with bin/gen-pair-key.sh and inject it");
+                    + "; regenerate a pair with bin/qingzhou.sh pair-key and inject it");
         }
     }
 
     private PublicKey convertPublic(String keyAsBase64) throws Exception {
-        if (keyAsBase64 == null) {
-            return null;
-        }
         byte[] pubBytes = base64Coder.decode(keyAsBase64);
         X509EncodedKeySpec encPubKeySpec = new X509EncodedKeySpec(pubBytes);
         return KeyFactory.getInstance(ALG).generatePublic(encPubKeySpec);

@@ -100,9 +100,10 @@ Qingzhou（轻舟）还通过自动发现、插件化扩展、统一API规范、
 - bin: 可执行程序目录。
     - start.sh: Linux/Mac 平台启动脚本，可以“空格+实例名”指定要启动的实例（即 instances 目录下的子文件名），默认为 default。
     - start.bat: Windows 平台启动脚本，可以“空格+实例名”指定要启动的实例（即 instances 目录下的子文件名）），默认为 default。
-    - gen-cipher-key.sh: 生成随机的对称加密密钥，用于 qingzhou.crypto.Crypto.getCipher(String key) 服务。
-    - gen-pair-key.sh: 生成随机的非对称公钥和私钥对，用于 qingzhou.crypto.Crypto.getPairCipher(String publicKey, String
-      privateKey) 服务。
+    - qingzhou.sh: 统一命令入口，无参数执行进入交互向导，引导初始化实例安全配置、生成各类密钥口令与 TLS 密钥库；带参数直接执行子命令
+      （bin/qingzhou.sh --help 查看全部子命令），如：pair-key 生成随机的非对称公钥和私钥对（用于
+      qingzhou.crypto.Crypto.getPairCipher(String publicKey, String privateKey)
+      服务）、cipher-password 加密明文口令、keystore 为实例生成自签 TLS 密钥库、init 交互式初始化实例安全配置。
 - instances: 实例数据目录，可根据用途复制多份实例，如：开发实例、测试实例等。
     - default: 默认启动的实例目录。
 - lib: 存放轻舟源码编译后的二进制 *.jar 文件。

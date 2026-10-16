@@ -158,17 +158,27 @@ public class OAuth2Handler implements HttpHandler {
 
         Response tokenResponse = httpClient.send(
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
-        String tokenBodyText = new String(tokenResponse.getBody(), StandardCharsets.UTF_8);
-        Map tokenBody = json.fromJson(tokenBodyText, Map.class);
-        // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
-        if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
-            // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
-            response.status(403).send("token exchange failed").finish();
-            return null;
-        }
+        try {
+            byte[] tokenBodyBytes = tokenResponse.getBody();
+            if (tokenBodyBytes == null) {
+                // 上游未返回响应体：固定文案回浏览器，避免 NPE 且不外泄内部信息
+                response.status(403).send("token exchange failed").finish();
+                return null;
+            }
+            String tokenBodyText = new String(tokenBodyBytes, StandardCharsets.UTF_8);
+            Map tokenBody = json.fromJson(tokenBodyText, Map.class);
+            // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
+            if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
+                // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
+                response.status(403).send("token exchange failed").finish();
+                return null;
+            }
 
-        // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
-        return (String) tokenBody.get("access_token");
+            // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
+            return (String) tokenBody.get("access_token");
+        } finally {
+            tokenResponse.cancel();
+        }
     }
 
     /**
@@ -179,9 +189,13 @@ public class OAuth2Handler implements HttpHandler {
         if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
             Response resp = httpClient.send(httpClient.buildRequest(userinfoEndpoint)
                     .header("Authorization", "Bearer " + accessToken));
-            if (resp.getStatus() == 200) {
-                Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-                return pickUsername(info);
+            try {
+                if (resp.getStatus() == 200) {
+                    Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
+                    return pickUsername(info);
+                }
+            } finally {
+                resp.cancel();
             }
         }
         return null;

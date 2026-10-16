@@ -77,7 +77,7 @@ public class DefaultAction {
             code = Page.ACTION_CODE_PAGE, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public static void list(Page page, Request request) throws Exception {
+    public static void page(Page page, Request request) throws Exception {
         Map<String, String> query = new HashMap<>();
         for (String search : selectFormFields(request, modelField -> modelField.search)) {
             String parameter = request.getParameter(search);
@@ -162,7 +162,7 @@ public class DefaultAction {
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public static void files(DownloadFile downloadFile, Request request) throws Exception {
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        if (response.getData() == null && downloadFile != null) {
+        if (response.getData() == null) {
             Map<String, String> map = new TreeMap<>();
 
             // id 来自 URL path 段且由应用自行拼接目录，框架统一拦截穿越字符（与 download 的 file_names 同一防线）
@@ -198,7 +198,14 @@ public class DefaultAction {
         AppContext appContext = modelBase.getAppContext();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
-        File fileBase = downloadFile.files(request.getId());
+        // id 会直接拼进基准目录，穿越字符在此拦截（与 files 动作同一防线）：
+        // 否则 fileBase 自身可被 ../ 移动，后面对目标文件的基准目录兜底校验随之失效
+        String id = request.getId();
+        if (id != null && hasIllegalPath(id)) {
+            response.error("illegal file name");
+            return;
+        }
+        File fileBase = downloadFile.files(id);
         File tempBase = new File(appContext.getTempDir(), "download");
 
         String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);
@@ -269,6 +276,7 @@ public class DefaultAction {
 
             byte[] block = new byte[1024 * 8];
             int read = raf.read(block);
+            if (read <= 0) return; // 长度检查与读取之间文件被并发截断的兜底
             if (read == block.length) {
                 byteRead = block;
             } else {

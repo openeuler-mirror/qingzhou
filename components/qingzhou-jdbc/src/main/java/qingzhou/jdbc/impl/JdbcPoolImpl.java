@@ -29,14 +29,12 @@ public class JdbcPoolImpl implements JdbcPool {
     public void activate(Map<String, String> config) throws Exception {
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
+        Map<String, PropertyDescriptor> descriptors = new java.util.HashMap<>();
+        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+            descriptors.put(pd.getName(), pd);
+        }
         for (Map.Entry<String, String> entry : config.entrySet()) {
-            PropertyDescriptor matched = null;
-            for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
-                if (pd.getName().equals(entry.getKey())) {
-                    matched = pd;
-                    break;
-                }
-            }
+            PropertyDescriptor matched = descriptors.get(entry.getKey());
             // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
             if (matched == null || matched.getWriteMethod() == null) {
                 throw new IllegalArgumentException("unknown qingzhou-jdbc config item: " + entry.getKey());
@@ -48,13 +46,19 @@ public class JdbcPoolImpl implements JdbcPool {
 
     private Object convert(String key, String value, Class<?> type) {
         try {
+            // dataSource 必须由 init() 注入真实对象；从字符串配置触发 Tomcat DataSource 的 JNDI lookup 是注入入口，fail-closed 拒绝
+            if (type == Object.class) {
+                throw new IllegalArgumentException("config item [" + key + "] cannot be set from a string value");
+            }
             if (type == int.class || type == Integer.class) return Integer.valueOf(value);
             if (type == long.class || type == Long.class) return Long.valueOf(value);
             if (type == short.class || type == Short.class) return Short.valueOf(value);
             if (type == float.class || type == Float.class) return Float.valueOf(value);
             if (type == double.class || type == Double.class) return Double.valueOf(value);
             if (type == boolean.class || type == Boolean.class) {
-                if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) return Boolean.valueOf(value);
+                // 与全局 Configs 的严格大小写策略一致，仅接受小写的 true/false
+                if ("true".equals(value)) return Boolean.TRUE;
+                if ("false".equals(value)) return Boolean.FALSE;
                 throw new IllegalArgumentException("invalid boolean: " + value);
             }
             return value;

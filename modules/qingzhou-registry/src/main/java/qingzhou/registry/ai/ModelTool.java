@@ -31,13 +31,6 @@ public class ModelTool implements ToolService {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        HandlingContext context = name -> {
-            if (toolArgs != null) {
-                Object val = toolArgs.get(name);
-                return val != null ? String.valueOf(val) : null;
-            }
-            return null;
-        };
-        return json.toJson(appModel.getFunction().apply(context));
+        return json.toJson(appModel.getFunction().apply(HandlingContext.of(toolArgs)));
     }
 }

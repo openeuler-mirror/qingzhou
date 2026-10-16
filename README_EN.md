@@ -147,10 +147,14 @@ The directory structure of the Qingzhou binary product package is as follows:
       the instance name (i.e., a subdirectory name under `instances`). The default is `default`.
     - `start.bat`: Startup script for Windows platforms. You can specify the instance to start by appending a space and
       the instance name (i.e., a subdirectory name under `instances`). The default is `default`.
-    - `gen-cipher-key.sh`: Generates a random symmetric encryption key for the service
-      `qingzhou.crypto.Crypto.getCipher(String key)`.
-    - `gen-pair-key.sh`: Generates a random asymmetric public/private key pair for the service
-      `qingzhou.crypto.Crypto.getPairCipher(String publicKey, String privateKey)`.
+    - `qingzhou.sh`: Unified command entry. Run without arguments to enter an interactive wizard that guides you through
+      instance security initialization, key/password generation and the TLS keystore; pass a subcommand to execute
+      directly
+      (run `bin/qingzhou.sh --help` to list all subcommands), e.g.: `pair-key` generates a random asymmetric
+      public/private
+      key pair for the service `qingzhou.crypto.Crypto.getPairCipher(String publicKey, String privateKey)`;
+      `cipher-password` encrypts a plaintext password; `keystore` generates a self-signed TLS keystore for the instance;
+      `init` interactively initializes the instance security configuration.
 - `instances`: Instance data directories. You can create multiple copies for different purposes, e.g., development,
   testing, etc.
     - `default`: The default instance directory used at startup.

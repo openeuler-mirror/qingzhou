@@ -25,6 +25,10 @@ import qingzhou.logger.Logger;
         property = {HttpHandler.HANDLE_PATH + "=" + Constants.AGENT_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         service = {FileUpload.class, HttpHandler.class})
 public class FileUpload implements HttpHandler {
+    // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
+    private static final long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024;
+    private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+    
     @Reference
     private Crypto crypto;
     @Reference
@@ -34,7 +38,11 @@ public class FileUpload implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
+        String instanceDir = config.get("qingzhou.instance");
+        if (instanceDir == null) {
+            throw new IllegalStateException("missing required config: qingzhou.instance");
+        }
+        uploadBase = Paths.get(instanceDir, "temp", "agent-upload").toFile();
         uploadBase.mkdirs();
         TempFiles.cleanDir(uploadBase); // 清历史残留
     }
@@ -46,8 +54,6 @@ public class FileUpload implements HttpHandler {
         byte[] context = uploadKey == null ? null : uploadKey.getBytes(StandardCharsets.UTF_8);
         ProcessHandler.handle(httpRequest, httpResponse, crypto, logger, context,
                 requestData -> {
-                    // 运行期惰性清理：分片上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘
-                    long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
                     TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
                     return processFileUpload(requestData, uploadKey);
                 });
@@ -58,15 +64,10 @@ public class FileUpload implements HttpHandler {
         File tempFile = resolveInUploadBase(uploadId);
         try {
             long total = tempFile.length() + (data == null ? 0 : data.length);
-            long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024; // 单上传总量上限：分片追加若无总量约束，认证后攻击者可持续上传写满磁盘（DoS）
             if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
                 throw new IllegalStateException("upload exceeds size limit: " + uploadId);
             }
-            if (tempFile.exists()) {
-                Files.write(tempFile.toPath(), data, StandardOpenOption.APPEND);
-            } else {
-                Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE);
-            }
+            Files.write(tempFile.toPath(), data, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             // 追加后复核：写入前检查与 APPEND 非原子（TOCTOU），并发分片可越过上限
             if (tempFile.length() > MAX_UPLOAD_BYTES) {
                 throw new IllegalStateException("upload exceeds size limit: " + uploadId);

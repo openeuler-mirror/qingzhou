@@ -28,11 +28,6 @@ public class AppInfoTool implements ToolService {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        if (toolArgs == null) return null;
-        HandlingContext context = name -> {
-            Object val = toolArgs.get(name);
-            return val != null ? String.valueOf(val) : null;
-        };
-        return json.toJson(appInfo.getFunction().apply(context));
+        return json.toJson(appInfo.getFunction().apply(HandlingContext.of(toolArgs)));
     }
 }

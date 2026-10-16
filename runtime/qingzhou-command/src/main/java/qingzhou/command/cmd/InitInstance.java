@@ -46,7 +46,7 @@ public class InitInstance extends Processor {
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
         try {
             loadCrypto();
-            initKeys();
+            initPairKey();
             initSsl(console);
             initAdminPassword(console);
         } finally {
@@ -55,14 +55,7 @@ public class InitInstance extends Processor {
         log("done, restart the instance to take effect");
     }
 
-    private void initKeys() throws Exception {
-        File secretFile = new File(instanceDir, "conf/secret-key.properties");
-        String secret = read(secretFile);
-        if (isBlank(getValue(secret, "global"))) { // 已存在则静默跳过，避免已签发的令牌失效
-            write(secretFile, putValue(secret, "global", generateKey()));
-            log("cipher key generated");
-        }
-
+    private void initPairKey() throws Exception {
         String props = read(propsFile);
         if (isBlank(getValue(props, "qingzhou-registry.private_key"))) { // 已存在则视为密钥对完整，静默跳过
             String[] pairKey = generatePairKey();
@@ -80,9 +73,7 @@ public class InitInstance extends Processor {
         if (password == null) return;
 
         File keystore = new File(instanceDir, "conf/keystore.p12");
-        Files.deleteIfExists(keystore.toPath());
-        if (!keystore.createNewFile()) throw new IllegalStateException("cannot create keystore: " + keystore);
-        chmod600(keystore); // keytool 写入前即收敛权限，避免口令文件短暂可读
+        Files.deleteIfExists(keystore.toPath()); // 不能预创建空文件：JDK8 keytool 对已存在的空文件报错
         genKeystore(keystore, password);
         String props = read(propsFile);
         props = putValue(props, "qingzhou-http-server.ssl_keystore_password", encrypt(password));
@@ -109,7 +100,7 @@ public class InitInstance extends Processor {
         log("admin password updated");
     }
 
-    private void genKeystore(File keystore, String password) throws Exception {
+    static void genKeystore(File keystore, String password) throws Exception {
         List<String> command = Arrays.asList(keytool(), "-genkeypair", "-alias", "qingzhou",
                 "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA", "-validity", "3650",
                 "-storetype", "PKCS12", "-keystore", keystore.getAbsolutePath(),
@@ -146,7 +137,7 @@ public class InitInstance extends Processor {
         }
     }
 
-    private String keytool() {
+    private static String keytool() {
         Path bin = Paths.get(System.getProperty("java.home"), "bin");
         Path keytool = Paths.get(bin.toString(), "keytool");
         if (!keytool.toFile().isFile()) {
@@ -192,10 +183,6 @@ public class InitInstance extends Processor {
         crypto = cryptoLoader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
     }
 
-    private String generateKey() throws Exception {
-        return (String) crypto.getClass().getMethod("generateKey").invoke(crypto);
-    }
-
     private String[] generatePairKey() throws Exception {
         return (String[]) crypto.getClass().getMethod("generatePairKey").invoke(crypto);
     }
@@ -206,18 +193,18 @@ public class InitInstance extends Processor {
         return (String) encrypt.invoke(globalCipher, plain);
     }
 
-    private static void chmod600(File file) {
+    static void chmod600(File file) {
         try {
             Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
         } catch (Exception ignored) { // Windows 等无 POSIX 权限模型的平台跳过
         }
     }
 
-    private static String read(File file) throws IOException {
+    static String read(File file) throws IOException {
         return file.isFile() ? new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8) : "";
     }
 
-    private static void write(File file, String content) throws IOException {
+    static void write(File file, String content) throws IOException {
         File temp = new File(file.getParentFile(), file.getName() + ".tmp"); // 先写临时文件，避免写坏原文件
         Files.write(temp.toPath(), content.getBytes(StandardCharsets.UTF_8));
         chmod600(temp); // 配置可能含密钥/口令，落盘即收敛权限，不留明文窗口
@@ -225,7 +212,7 @@ public class InitInstance extends Processor {
         chmod600(file);
     }
 
-    static String getValue(String content, String key) {
+    private static String getValue(String content, String key) {
         for (String line : content.split("\n", -1)) {
             String trim = line.trim();
             if (trim.startsWith(key + "=")) return trim.substring(key.length() + 1).trim();

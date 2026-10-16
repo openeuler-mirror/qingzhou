@@ -45,6 +45,12 @@ class Base32CoderImpl implements Base32Coder {
         data = data.replace("=", "").toUpperCase();
         if (data.isEmpty()) return new byte[0];
 
+        // 长度无法对应整字节（余数 1/3/6）属非法输入，显式拒绝，绝不静默截断失真
+        int mod = data.length() % 8;
+        if (mod == 1 || mod == 3 || mod == 6) {
+            throw new IllegalArgumentException("illegal Base32 length: " + data.length());
+        }
+
         int byteLen = data.length() * 5 / 8;
         byte[] result = new byte[byteLen];
 

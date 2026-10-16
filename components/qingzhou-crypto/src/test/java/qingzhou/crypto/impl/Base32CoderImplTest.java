@@ -1,6 +1,5 @@
 package qingzhou.crypto.impl;
 
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
@@ -20,12 +19,6 @@ public class Base32CoderImplTest {
 
     private Base32Coder getBase32Coder() {
         return CryptoImplTest.getCryptoImpl().getBase32Coder();
-    }
-
-    static void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 
     // ===================== encode(byte[]) 编码测试 =====================

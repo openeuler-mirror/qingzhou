@@ -18,7 +18,7 @@ public class WebUtil {
     public static final String ACTION_CODE = "actionCode";
     public static final String DATA_ID = "dataId";
 
-    static boolean cached(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
+    static boolean isCacheHit(HttpRequest httpRequest, HttpResponse httpResponse, Registry registry) {
         String cacheKey = httpRequest.getParameter(REQUEST_PARAMETER_NAME_CACHE_KEY);
         if (cacheKey != null) {
             try {

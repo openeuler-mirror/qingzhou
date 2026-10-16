@@ -42,9 +42,8 @@ public class AgentInvoker implements HttpHandler {
     private String processRequest(byte[] data) throws Throwable {
         RequestImpl request = json.fromJson(new String(data, StandardCharsets.UTF_8), RequestImpl.class);
 
-        Set<File> tempFileList = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
+        Set<File> tempFiles = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
 
-        final String fileSp = ","; // TODO：应引用 ModelField.separator()
         try {
             request.getUploadFileFields().forEach(field -> {
                 String[] keyNames = request.getParameter(field).split(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP);
@@ -57,14 +56,13 @@ public class AgentInvoker implements HttpHandler {
                     }
                     File tempFile = resolveInUploadBase(pair[0]);
                     File localFile = resolveInUploadBase(pair[1]);
-                    tempFileList.add(tempFile);
-                    tempFileList.add(localFile);
+                    tempFiles.add(tempFile);
                     if (!tempFile.renameTo(localFile)) { // 重命名失败仍继续会向业务暴露不存在的路径
                         throw new IllegalStateException("failed to rename uploaded temp file: " + tempFile.getName());
                     }
                     paths.add(localFile.getAbsolutePath());
                 }
-                String newPaths = String.join(fileSp, paths);
+                String newPaths = String.join(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP, paths);
                 request.getParameters().put(field, newPaths);
             });
 
@@ -72,7 +70,8 @@ public class AgentInvoker implements HttpHandler {
             if (appStub == null) throw new IllegalArgumentException("business processing error");
             appStub.invokeApp(request);
         } finally {
-            for (File tempFile : tempFileList) tempFile.delete(); // 已被 rename 的文件此处删除无副作用
+            // 仅清理原始临时文件；renameTo 成功后原文件已不存在，delete 为空操作，不会误删业务使用的 localFile
+            for (File tempFile : tempFiles) tempFile.delete();
         }
 
         // 响应数据

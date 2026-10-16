@@ -344,14 +344,8 @@ public class DispatcherHandlerTest {
      * 设读超时避免用例静默挂死；读不到状态行时返回 {@link #NO_STATUS_LINE}。
      */
     private static int statusOfRawRequest(int port, String rawRequest) throws Exception {
-        try (Socket socket = new Socket("localhost", port)) {
-            socket.setSoTimeout(5000);
-            OutputStream out = socket.getOutputStream();
-            out.write(rawRequest.getBytes(StandardCharsets.UTF_8));
-            out.flush();
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        try (Socket socket = new Socket("localhost", port);
+             BufferedReader reader = sendRaw(socket, rawRequest)) {
             String statusLine = reader.readLine();
             return statusLine == null ? NO_STATUS_LINE : Integer.parseInt(statusLine.split(" ")[1]);
         }
@@ -373,19 +367,22 @@ public class DispatcherHandlerTest {
      * 若服务端未关闭连接，readLine 将挂到 SoTimeout 并抛出——该失败本身就是信号。
      */
     private static String rawResponse(int port, String rawRequest) throws Exception {
-        try (Socket socket = new Socket("localhost", port)) {
-            socket.setSoTimeout(5000);
-            OutputStream out = socket.getOutputStream();
-            out.write(rawRequest.getBytes(StandardCharsets.UTF_8));
-            out.flush();
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+        try (Socket socket = new Socket("localhost", port);
+             BufferedReader reader = sendRaw(socket, rawRequest)) {
             StringBuilder response = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) response.append(line).append('\n');
             return response.toString();
         }
+    }
+
+    // 建连后写入原始报文并返回响应读取器：statusOfRawRequest 与 rawResponse 共用
+    private static BufferedReader sendRaw(Socket socket, String rawRequest) throws IOException {
+        socket.setSoTimeout(5000);
+        OutputStream out = socket.getOutputStream();
+        out.write(rawRequest.getBytes(StandardCharsets.UTF_8));
+        out.flush();
+        return new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
     }
 
     // Netty 按传入名原样输出（HttpHeaderNames 为小写），断言统一转小写避免大小写耦合
@@ -890,7 +887,7 @@ public class DispatcherHandlerTest {
                     "GET /postOnly HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
 
             Assert.assertTrue(response.startsWith("HTTP/1.1 405"), response);
-            Assert.assertTrue(response.toLowerCase().contains("allow: post"), response);
+            Assert.assertTrue(lower(response).contains("allow: post"), response);
         } finally {
             testServer.server.stop();
         }

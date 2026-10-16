@@ -11,21 +11,14 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
-import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/info",
         service = {AppInfo.class, HttpHandler.class})
-public class AppInfo implements HttpHandler {
-    @Reference
-    private Registry registry;
+public class AppInfo extends RegistryMetaHandler {
     @Reference
     private I18nService i18nService;
-    @Reference
-    private Json json;
 
     private final Function<HandlingContext, Object> function = (context) -> {
         String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
@@ -76,7 +69,6 @@ public class AppInfo implements HttpHandler {
         });
         appMetaInfo.put("menus", menus);
 
-
         List<Map<String, String>> i18ns = new ArrayList<>();
         app.i18ns.forEach(i18n -> {
             Map<String, String> map = new HashMap<>();
@@ -91,14 +83,5 @@ public class AppInfo implements HttpHandler {
 
     public Function<HandlingContext, Object> getFunction() {
         return function;
-    }
-
-    @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        // 是否已缓存
-        if (WebUtil.cached(httpRequest, httpResponse, registry)) return;
-
-        // 执行
-        WebUtil.sendResult(getFunction(), httpRequest, httpResponse, registry, json);
     }
 }

@@ -2,10 +2,7 @@ package qingzhou.registry.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -258,13 +255,9 @@ public class RegistryImplTest {
     @Test
     public void start_validVersion_propertyParsed() throws Exception {
         RegistryImpl registry = newRegistry();
-        try {
-            registry.start(new HashMap<String, String>() {{
-                put(VERSION_PROPERTY, "1.2.3");
-            }});
-        } finally {
-            System.clearProperty(VERSION_PROPERTY);
-        }
+        Map<String, String> config = new HashMap<>();
+        config.put(VERSION_PROPERTY, "1.2.3");
+        registry.start(config);
 
         Assert.assertEquals(getQzVersion(registry), "1.2.3");
     }

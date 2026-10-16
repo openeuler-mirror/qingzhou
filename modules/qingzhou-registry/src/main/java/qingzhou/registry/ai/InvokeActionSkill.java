@@ -1,5 +1,6 @@
 package qingzhou.registry.ai;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +34,6 @@ public class InvokeActionSkill implements SkillService {
 
     @Override
     public Map<ToolService, Map<String, Object>> tools() {
-        return aiTools;
+        return Collections.unmodifiableMap(aiTools); // 只读视图：外部不得修改内部注册表
     }
 }

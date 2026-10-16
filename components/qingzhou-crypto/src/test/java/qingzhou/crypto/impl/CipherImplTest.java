@@ -45,7 +45,7 @@ public class CipherImplTest {
             Cipher cipher = crypto.getCipher(key);
             testLogicNormal.run(cipher);
         } catch (Throwable e) {
-            Assert.fail();
+            Assert.fail("unexpected exception", e); // 保留原始异常，失败时可定位原因
         }
     }
 

@@ -20,11 +20,6 @@ public class AppListTool implements ToolService {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        HandlingContext context = name -> {
-            if (toolArgs == null) return null;
-            Object val = toolArgs.get(name);
-            return val != null ? String.valueOf(val) : null;
-        };
-        return json.toJson(appList.getFunction().apply(context));
+        return json.toJson(appList.getFunction().apply(HandlingContext.of(toolArgs)));
     }
 }

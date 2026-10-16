@@ -36,6 +36,13 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         this.crypto = crypto;
     }
 
+    /**
+     * 同配置新 builder：技能匹配须用无技能的独立实例，避免共享技能配置导致匹配递归
+     */
+    OpenAiChatModelBuilder newSameConfigBuilder() {
+        return new OpenAiChatModelBuilder(getBaseUrl(), getApiKey(), getModel(), httpClient, json, crypto);
+    }
+
     @Override
     protected ChatModel buildInternal() {
         return new OpenAiChatModel(this, httpClient, json, crypto);
@@ -235,6 +242,13 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         return msg;
     }
 
+    // 非空则先补分隔再追加小节（技能/文档共用）
+    private void appendSection(StringBuilder sysMsg, String header, String content) {
+        if (content == null || content.isEmpty()) return;
+        if (sysMsg.length() > 0) sysMsg.append("\n\n");
+        sysMsg.append(header).append("\n").append(Utils.truncate(content, getMaxDocChars()));
+    }
+
     Map<String, Object> buildToolMessage(String toolId, String toolResult) {
         Map<String, Object> toolResultMsg = new HashMap<>();
         toolResultMsg.put("role", "tool");
@@ -247,23 +261,12 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
         StringBuilder sysMsg = new StringBuilder(getSystemPrompt() != null ? getSystemPrompt() : "");
 
         for (Skill skill : activeSkills) {
-            String msg = skill.instruction();
-            if (msg != null && !msg.isEmpty()) {
-                if (sysMsg.length() > 0) {
-                    sysMsg.append("\n\n");
-                }
-                sysMsg.append("[技能：").append(skill.name()).append("]\n").append(Utils.truncate(msg, getMaxDocChars()));
-            }
+            appendSection(sysMsg, "[技能：" + skill.name() + "]", skill.instruction());
         }
 
         if (getDocs() != null) {
             for (String doc : getDocs()) {
-                if (doc != null && !doc.isEmpty()) {
-                    if (sysMsg.length() > 0) {
-                        sysMsg.append("\n\n");
-                    }
-                    sysMsg.append("[参考文档]\n").append(Utils.truncate(doc, getMaxDocChars()));
-                }
+                appendSection(sysMsg, "[参考文档]", doc);
             }
         }
 
