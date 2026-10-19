@@ -113,12 +113,35 @@ public class Config {
     private void distributeOsgiConfig(Map<String, Map<String, String>> configMap) throws IOException {
         for (Map.Entry<String, Map<String, String>> entry : configMap.entrySet()) {
             String pid = entry.getKey();
-            int i = pid.indexOf("~");// 含 ~ 为工厂配置
-            Configuration configuration = i == -1
-                    ? configAdmin.getConfiguration(pid, null)
-                    : configAdmin.getFactoryConfiguration(pid.substring(0, i), pid.substring(i + 1), null);
+            int i = pid.indexOf("~");
+            boolean isFactory = i != -1;
+            String factoryInstance = isFactory ? pid.substring(i + 1) : null;
 
-            Hashtable<String, String> config = new Hashtable<>(entry.getValue());
+            Configuration configuration = isFactory
+                    ? configAdmin.getFactoryConfiguration(pid.substring(0, i), factoryInstance, null)
+                    : configAdmin.getConfiguration(pid, null);
+
+            Hashtable<String, Object> config = new Hashtable<>();
+            boolean hasRanking = false;
+            for (Map.Entry<String, String> e : entry.getValue().entrySet()) {
+                String key = e.getKey();
+                if ("service.ranking".equals(key)) {
+                    hasRanking = true;
+                    try {
+                        config.put(key, Integer.valueOf(e.getValue()));
+                    } catch (NumberFormatException ignored) {
+                        // 用户写错值时降级为 0，配置错误不应终止启动
+                    }
+                } else {
+                    config.put(key, e.getValue());
+                }
+            }
+            // default 实例约定：工厂配置中实例名为 default 的自动注入高 ranking，
+            // 确保框架内 20+ 处无 target 的 @Reference 稳定选中它；
+            // 用户显式设置的 ranking（包括写错值时降级为 0）不受此默认值覆盖
+            if (isFactory && "default".equals(factoryInstance) && !hasRanking) {
+                config.put("service.ranking", 100);
+            }
             config.put("qingzhou.instance", qzInstance);
             config.put("qingzhou.version", qzVersion);
             configuration.update(config);

@@ -27,20 +27,54 @@ public class LoggerImplTest {
 
     private static final ByteArrayOutputStream OUTPUT = new ByteArrayOutputStream();
     private static final PrintStream OUTPUT_STREAM = new PrintStream(OUTPUT, true);
+    private static final ByteArrayOutputStream ACCESS_OUTPUT = new ByteArrayOutputStream();
+    private static final PrintStream ACCESS_OUTPUT_STREAM = new PrintStream(ACCESS_OUTPUT, true);
     private static final String CUSTOM_WRITER = LoggerImplTest.class.getName() + "$BufferWriter";
+    private static final String ACCESS_WRITER = LoggerImplTest.class.getName() + "$AccessBufferWriter";
 
     /**
-     * 初始化 debug 级别配置，并等待启动 banner 写入后清空缓冲。
+     * 一次性应用「默认 + access」合并配置（模拟生产中多日志器共存），并等待启动 banner 写入后清空缓冲。
      */
     @BeforeClass
     public static void setUp() throws InterruptedException {
-        Map<String, Object> config = new HashMap<>();
-        config.put("level", "debug");
-        config.put("writer", CUSTOM_WRITER);
+        Map<String, Map<String, String>> perTagConfigs = new HashMap<>();
+        Map<String, String> defaultConfig = new HashMap<>();
+        defaultConfig.put("level", "debug");
+        defaultConfig.put("writer", CUSTOM_WRITER);
+        perTagConfigs.put("default", defaultConfig);
+        Map<String, String> accessConfig = new HashMap<>();
+        accessConfig.put("writer", ACCESS_WRITER);
+        perTagConfigs.put("access", accessConfig);
 
+        org.tinylog.configuration.Configuration.replace(LoggerImpl.merge(perTagConfigs));
+        LoggerImpl.applied = true; // 配置已由测试直接应用，init 不再重复 replace（tinylog 冻结后不可变更）
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("service.pid", "qingzhou-logger");
         new LoggerImpl().init(config);
         awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
         clearOutput();
+    }
+
+    /**
+     * 多日志器路由：默认日志进默认 writer，access 日志进 access writer，互不串流。
+     */
+    @Test
+    public void multiLogger_namedLogger_routesToOwnWriter() throws Exception {
+        Map<String, Object> accessProps = new HashMap<>();
+        accessProps.put("service.pid", "qingzhou-logger~access");
+        LoggerImpl accessLogger = new LoggerImpl();
+        accessLogger.init(accessProps);
+
+        clearOutput();
+        clearAccessOutput();
+        new LoggerImpl().info("default-message");
+        accessLogger.info("access-message");
+
+        awaitUntil(() -> outputText().contains("default-message"), "default log was not written");
+        awaitUntil(() -> accessOutputText().contains("access-message"), "access log was not written");
+        Assert.assertFalse(outputText().contains("access-message"), "access log leaked into default writer");
+        Assert.assertFalse(accessOutputText().contains("default-message"), "default log leaked into access writer");
     }
 
     /**
@@ -203,9 +237,21 @@ public class LoggerImplTest {
         }
     }
 
+    private static void clearAccessOutput() {
+        synchronized (ACCESS_OUTPUT) {
+            ACCESS_OUTPUT.reset();
+        }
+    }
+
     private static String outputText() {
         synchronized (OUTPUT) {
             return new String(OUTPUT.toByteArray(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private static String accessOutputText() {
+        synchronized (ACCESS_OUTPUT) {
+            return new String(ACCESS_OUTPUT.toByteArray(), StandardCharsets.UTF_8);
         }
     }
 
@@ -226,8 +272,17 @@ public class LoggerImplTest {
     /**
      * 自定义 tinylog writer，将日志写入测试类控制的静态内存缓冲。
      */
-    public static final class BufferWriter implements Writer {
+    public static class BufferWriter implements Writer {
+        private final ByteArrayOutputStream out;
+        private final PrintStream stream;
+
         public BufferWriter(Map<String, String> configuration) {
+            this(OUTPUT, OUTPUT_STREAM);
+        }
+
+        BufferWriter(ByteArrayOutputStream out, PrintStream stream) {
+            this.out = out;
+            this.stream = stream;
         }
 
         @Override
@@ -237,13 +292,13 @@ public class LoggerImplTest {
 
         @Override
         public void write(LogEntry logEntry) {
-            synchronized (OUTPUT) {
-                OUTPUT_STREAM.print(logEntry.getLevel());
-                OUTPUT_STREAM.print(" | ");
-                OUTPUT_STREAM.println(logEntry.getMessage());
+            synchronized (out) {
+                stream.print(logEntry.getLevel());
+                stream.print(" | ");
+                stream.println(logEntry.getMessage());
                 Throwable exception = logEntry.getException();
                 if (exception != null) {
-                    exception.printStackTrace(OUTPUT_STREAM);
+                    exception.printStackTrace(stream);
                 }
             }
         }
@@ -254,6 +309,15 @@ public class LoggerImplTest {
 
         @Override
         public void close() {
+        }
+    }
+
+    /**
+     * access 命名日志器的测试 writer，写入独立的内存缓冲以验证路由隔离。
+     */
+    public static final class AccessBufferWriter extends BufferWriter {
+        public AccessBufferWriter(Map<String, String> configuration) {
+            super(ACCESS_OUTPUT, ACCESS_OUTPUT_STREAM);
         }
     }
 }
