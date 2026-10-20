@@ -81,15 +81,12 @@ class SyncSender {
         }
         int status = response.getStatus();
         if (status != 200) {
-            try {
-                if (Utils.isRetryableStatus(status) && attempt < builder.getMaxRetries()) {
-                    Utils.sleepBackoff(attempt);
-                    return sendSync(messages, toolDefs, attempt + 1);
-                }
-                throw new IllegalStateException("API error " + status + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
-            } finally {
-                response.cancel(); // 无论重试还是抛错都释放连接，防止反复 429/5xx 时泄漏
+            // 同步响应体已读完并关闭流，连接可直接复用，无需 cancel（cancel 仅用于中止流式响应）
+            if (Utils.isRetryableStatus(status) && attempt < builder.getMaxRetries()) {
+                Utils.sleepBackoff(attempt);
+                return sendSync(messages, toolDefs, attempt + 1);
             }
+            throw new IllegalStateException("API error " + status + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         }
         return response;
     }
@@ -114,21 +111,17 @@ class SyncSender {
     }
 
     private Map<String, Object> requireResponseMessage(Response response) throws Exception {
-        try {
-            String body = new String(response.getBody(), StandardCharsets.UTF_8);
-            Map<String, Object> data = json.fromJson(body, Map.class);
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
-            if (choices == null || choices.isEmpty()) {
-                // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
-                throw new IllegalStateException("API returned no choices: " + Utils.truncate(body, 500));
-            }
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            if (message == null) {
-                throw new IllegalStateException("API response missing message: " + Utils.truncate(body, 500));
-            }
-            return message;
-        } finally {
-            response.cancel();
+        String body = new String(response.getBody(), StandardCharsets.UTF_8);
+        Map<String, Object> data = json.fromJson(body, Map.class);
+        List<Map<String, Object>> choices = (List<Map<String, Object>>) data.get("choices");
+        if (choices == null || choices.isEmpty()) {
+            // 200 但无 choices 属于异常响应（如网关返回了非 OpenAI 格式），并入失败路径而非冒充空回答
+            throw new IllegalStateException("API returned no choices: " + Utils.truncate(body, 500));
         }
+        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+        if (message == null) {
+            throw new IllegalStateException("API response missing message: " + Utils.truncate(body, 500));
+        }
+        return message;
     }
 }

@@ -22,7 +22,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 import qingzhou.registry.web.PermissionChecker;
-import qingzhou.registry.web.WebUtil;
+import qingzhou.registry.web.RequestParameters;
 
 @Component(immediate = true)
 public class RegisterActionTools {
@@ -46,16 +46,16 @@ public class RegisterActionTools {
 
         AtomicInteger p = new AtomicInteger();
         Hashtable<String, String> sharedProperties = new Hashtable<>();
-        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.INSTANCE_ID);
+        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), RequestParameters.INSTANCE_ID);
         sharedProperties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "应用所在的轻舟实例的 ID，每个应用都有所属的轻舟实例，只有先确定实例，才能确定应用。");
 
-        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.APP_CODE);
+        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), RequestParameters.APP_CODE);
         sharedProperties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "应用的唯一编码，该编码在同一个轻舟实例下不会重复。");
 
-        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.MODEL_CODE);
+        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), RequestParameters.MODEL_CODE);
         sharedProperties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "模块的唯一编码，该编码在同一个应用内不会重复。");
 
-        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), WebUtil.DATA_ID);
+        sharedProperties.put(ToolService.PARAMETER_NAME + "." + p.incrementAndGet(), RequestParameters.DATA_ID);
         sharedProperties.put(ToolService.PARAMETER_DESCRIPTION + "." + p.get(), "模块内某条业务数据的唯一ID。如果当前调用的模块同时支持 list 和 show 两种操作，并且用户当前调用的操作不是 list（即为 show 或其他操作），那么此参数为必需参数；否则（即模块不同时具备这两种操作，或当前操作是 list），此参数为非必需参数。");
         sharedProperties.put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
 
@@ -81,9 +81,9 @@ public class RegisterActionTools {
         tools.put(Update.ACTION_CODE_UPDATE, "该接口更新指定模块中已有的一条业务数据，这是会影响真实数据的写操作。"
                 + "只更新 " + DATA + " 中出现的字段，其余字段保持不变。执行前须向用户复述待更新的对象并取得确认。"
                 + "调用前须先用获取模块详细信息的工具取得该模块的更新字段清单与校验规则，禁止凭常识猜测字段编码。"
-                + WebUtil.DATA_ID + " 为可选参数，如果模块支持" + Page.ACTION_CODE_PAGE + "操作，则必需指定，用于指定要更新哪条记录。");
+                + RequestParameters.DATA_ID + " 为可选参数，如果模块支持" + Page.ACTION_CODE_PAGE + "操作，则必需指定，用于指定要更新哪条记录。");
         tools.put(Delete.ACTION_CODE_DELETE, "该接口删除指定模块中的一条业务数据。此操作通常不可恢复，执行前须向用户复述待删除的对象并取得确认。"
-                + WebUtil.DATA_ID + " 为必选参数，用于指定要删除哪条记录。");
+                + RequestParameters.DATA_ID + " 为必选参数，用于指定要删除哪条记录。");
 
         int addIndex = p.incrementAndGet();
         tools.forEach((actionCode, toolDescription) -> {
@@ -111,7 +111,7 @@ public class RegisterActionTools {
                 if (interceptActions.contains(actionCode)) {
                     String[] roles = c.getRoles();
                     AppStub appStub = retrieveAppStub(toolArgs);
-                    String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
+                    String modelCode = (String) toolArgs.get(RequestParameters.MODEL_CODE);
                     // 参数缺失/应用不存在时 fail-closed：拒绝执行而非放行，防止绕过权限模型
                     if (appStub == null || modelCode == null) {
                         return "操作执行失败：无法定位目标应用或模块，请确认参数后重试。";
@@ -128,9 +128,9 @@ public class RegisterActionTools {
 
     private AppStub retrieveAppStub(Map<String, Object> toolArgs) {
         if (toolArgs == null) return null;
-        String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
-        String appCode = (String) toolArgs.get(WebUtil.APP_CODE);
-        String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
+        String instanceId = (String) toolArgs.get(RequestParameters.INSTANCE_ID);
+        String appCode = (String) toolArgs.get(RequestParameters.APP_CODE);
+        String modelCode = (String) toolArgs.get(RequestParameters.MODEL_CODE);
         if (instanceId == null || appCode == null || modelCode == null) return null;
 
         return registry.getAppStub(instanceId, appCode);
@@ -141,15 +141,15 @@ public class RegisterActionTools {
         if (appStub == null) return null;
 
         App app = appStub.getAppMeta().getApp();
-        String instanceId = (String) toolArgs.get(WebUtil.INSTANCE_ID);
-        String modelCode = (String) toolArgs.get(WebUtil.MODEL_CODE);
+        String instanceId = (String) toolArgs.get(RequestParameters.INSTANCE_ID);
+        String modelCode = (String) toolArgs.get(RequestParameters.MODEL_CODE);
 
         RequestImpl request = new RequestImpl();
         request.setInstance(instanceId);
         request.setApp(app.code);
         request.setModel(modelCode);
         request.setAction(actionCode);
-        String dataId = (String) toolArgs.get(WebUtil.DATA_ID);
+        String dataId = (String) toolArgs.get(RequestParameters.DATA_ID);
         if (dataId != null) request.setId(dataId);
 
         String error = preInvoke(actionCode, toolArgs, request);

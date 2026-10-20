@@ -12,18 +12,30 @@ import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;
 import qingzhou.dto.meta.annotation.ModelFieldView;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
+import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/model",
         service = {AppModel.class, HttpHandler.class})
-public class AppModel extends RegistryMetaHandler {
+public class AppModel extends AbstractMetaHandler {
     @Reference
     private I18nService i18nService;
 
-    private final Function<HandlingContext, Object> function = (context) -> {
-        String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
-        String appCode = context.getParameter(WebUtil.APP_CODE);
-        String modelCode = context.getParameter(WebUtil.MODEL_CODE);
+    @Reference
+    protected void setRegistry(Registry registry) {
+        this.registry = registry;
+    }
+
+    @Reference
+    protected void setJson(Json json) {
+        this.json = json;
+    }
+
+    private final Function<RequestParameters, Object> function = (context) -> {
+        String instanceId = context.getParameter(RequestParameters.INSTANCE_ID);
+        String appCode = context.getParameter(RequestParameters.APP_CODE);
+        String modelCode = context.getParameter(RequestParameters.MODEL_CODE);
         if (instanceId == null || appCode == null || modelCode == null) return null;
 
         AppStub appStub = registry.getAppStub(instanceId, appCode);
@@ -41,15 +53,15 @@ public class AppModel extends RegistryMetaHandler {
         return null;
     };
 
-    public Function<HandlingContext, Object> getFunction() {
+    public Function<RequestParameters, Object> getFunction() {
         return function;
     }
 
     private Map<String, Object> modelMetaInfo(I18nService i18nService, Model model, String instanceId, String appCode, String lang) {
         Map<String, Object> modelMetaInfo = new HashMap<>();
-        modelMetaInfo.put(WebUtil.INSTANCE_ID, instanceId);
-        modelMetaInfo.put(WebUtil.APP_CODE, appCode);
-        modelMetaInfo.put(WebUtil.MODEL_CODE, model.code);
+        modelMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);
+        modelMetaInfo.put(RequestParameters.APP_CODE, appCode);
+        modelMetaInfo.put(RequestParameters.MODEL_CODE, model.code);
         modelMetaInfo.put("icon", model.icon);
         modelMetaInfo.put("name", i18nService.getI18n(model.name, lang));
         modelMetaInfo.put("info", i18nService.getI18n(model.info, lang));

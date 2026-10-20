@@ -14,6 +14,9 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+    // 解压上限：条目数与累计解压字节双限，防高压缩比包（zip bomb）写爆磁盘与 inode
+    private static final int MAX_UNZIP_ENTRIES = 100_000;
+    private static final long MAX_UNZIP_BYTES = 512L * 1024 * 1024;
 
     /**
      * 解压 zip 到目标目录（防 zip-slip：目录穿越条目直接拒绝）。
@@ -23,7 +26,12 @@ public class FileUtil {
     public static void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;
+            long totalBytes = 0;
+            int entryCount = 0;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+                if (++entryCount > MAX_UNZIP_ENTRIES) {
+                    throw new IOException("too many entries in: " + srcFile);
+                }
                 ZipEntry entry = e.nextElement();
                 File targetFile = new File(unZipDir, entry.getName());
                 if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
@@ -39,13 +47,28 @@ public class FileUtil {
                     if (overwrite || !Files.exists(targetFile.toPath())) {
                         File parent = targetFile.getParentFile();
                         if (parent != null) parent.mkdirs();
-                        try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                            copyStream(zip.getInputStream(entry), out);
+                        try (InputStream in = zip.getInputStream(entry);
+                             OutputStream out = Files.newOutputStream(targetFile.toPath())) {
+                            totalBytes += copyStreamWithLimit(in, out, MAX_UNZIP_BYTES - totalBytes);
                         }
                     }
                 }
             }
         }
+    }
+
+    // 带累计上限的拷贝：实际写出量超限立即中止（entry.getSize() 可能为 -1，不能作为依据）
+    private static long copyStreamWithLimit(InputStream input, OutputStream output, long maxBytes) throws IOException {
+        byte[] buffer = new byte[1024 * 8];
+        long written = 0;
+        int n;
+        while (-1 != (n = input.read(buffer))) {
+            written += n;
+            if (written > maxBytes) throw new IOException("unzip exceeds max bytes: " + MAX_UNZIP_BYTES);
+            output.write(buffer, 0, n);
+        }
+        output.flush();
+        return written;
     }
 
     // 压缩一个文件或文件夹
@@ -284,9 +307,10 @@ public class FileUtil {
         }
     }
 
-    private static List<String> getExclusionList(File srcDir, File destDir) {
+    private static List<String> getExclusionList(File srcDir, File destDir) throws IOException {
         List<String> exclusionList = null;
-        if (destDir.getAbsolutePath().startsWith(srcDir.getAbsolutePath())) {
+        // 按规范路径 + 目录分隔符比较：直接前缀比较会把 /a/app2 误判为 /a/app 的子目录
+        if (destDir.getCanonicalPath().startsWith(srcDir.getCanonicalPath() + File.separator)) {
             File[] srcFiles = srcDir.listFiles();
             if (srcFiles != null && srcFiles.length > 0) {
                 exclusionList = new ArrayList<>(srcFiles.length);

@@ -35,13 +35,12 @@ public final class WritingThread extends Thread {
     private List<Task> tasks;
 
     /**
-     * @param writers
-     *            Open writers
+     * @param writers Open writers
      */
     WritingThread(final Collection<Writer> writers) {
         this.mutex = new Object();
         this.writers = writers;
-        this.tasks = new ArrayList<Task>();
+        this.tasks = new ArrayList<>();
 
         setName(THREAD_NAME);
         setPriority(Thread.MIN_PRIORITY);
@@ -53,7 +52,7 @@ public final class WritingThread extends Thread {
      */
     @Override
     public void run() {
-        Collection<Writer> writers = new ArrayList<Writer>(1);
+        Collection<Writer> writers = new ArrayList<>(1);
 
         while (true) {
             for (Task task : receiveTasks()) {
@@ -79,10 +78,8 @@ public final class WritingThread extends Thread {
     /**
      * Adds a log entry for writing.
      *
-     * @param writer
-     *            Writer to write given log entry
-     * @param logEntry
-     *            Log entry to write
+     * @param writer   Writer to write given log entry
+     * @param logEntry Log entry to write
      */
     public void add(final Writer writer, final LogEntry logEntry) {
         Task task = new Task(writer, logEntry);
@@ -118,7 +115,7 @@ public final class WritingThread extends Thread {
                 return Collections.emptyList();
             } else {
                 List<Task> currentTasks = tasks;
-                tasks = new ArrayList<Task>();
+                tasks = new ArrayList<>();
                 return currentTasks;
             }
         }
@@ -127,10 +124,8 @@ public final class WritingThread extends Thread {
     /**
      * Writes a log entry.
      *
-     * @param writers
-     *            Mutable collection of used writers
-     * @param task
-     *            Log entry to write
+     * @param writers Mutable collection of used writers
+     * @param task    Log entry to write
      */
     private void write(final Collection<Writer> writers, final Task task) {
         try {
@@ -147,8 +142,7 @@ public final class WritingThread extends Thread {
     /**
      * Flushes a collection of writers.
      *
-     * @param writers
-     *            Writers to flush
+     * @param writers Writers to flush
      */
     private void flush(final Collection<Writer> writers) {
         for (Writer writer : writers) {
@@ -184,16 +178,12 @@ public final class WritingThread extends Thread {
         private final LogEntry logEntry;
 
         /**
-         * @param writer
-         *            Writer for outputting log entry
-         * @param logEntry
-         *            Log entry to write
+         * @param writer   Writer for outputting log entry
+         * @param logEntry Log entry to write
          */
         Task(final Writer writer, final LogEntry logEntry) {
             this.writer = writer;
             this.logEntry = logEntry;
         }
-
     }
-
 }

@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import qingzhou.api.ModelBase;
+import qingzhou.logger.Logger;
 import qingzhou.xml.Doc;
 import qingzhou.xml.Xml;
 
@@ -192,5 +193,10 @@ public class TomcatModelBase extends ModelBase {
             }
         }
         return map;
+    }
+
+    protected void logError(String message, Throwable e) {
+        Logger logger = getAppContext().getService(Logger.class);
+        if (logger != null) logger.error(message, e);
     }
 }

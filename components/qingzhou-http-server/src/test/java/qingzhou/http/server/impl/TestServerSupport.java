@@ -82,14 +82,14 @@ final class TestServerSupport {
 
                     @Override
                     public void onError(Throwable t) {
-                        httpResponse.status(500).finish();
+                        httpResponse.status(500);
                     }
 
                     @Override
                     public void onComplete() {
                         byte[] body = buffer.toByteArray();
                         received.set(body);
-                        httpResponse.send(body).finish();
+                        httpResponse.send(body); // 正常返回后由框架收尾
                     }
                 };
             }

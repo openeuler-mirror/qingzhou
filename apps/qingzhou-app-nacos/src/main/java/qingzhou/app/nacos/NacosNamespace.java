@@ -72,7 +72,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos namespace query failed", e);
         }
         
         return result;
@@ -103,7 +103,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos namespace query failed", e);
         }
         return false;
     }
@@ -133,7 +133,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos namespace query failed", e);
         }
         
         return result;

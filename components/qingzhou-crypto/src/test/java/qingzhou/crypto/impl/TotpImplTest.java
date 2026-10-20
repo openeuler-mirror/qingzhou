@@ -4,22 +4,22 @@ import java.util.regex.Pattern;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.crypto.TotpCipher;
+import qingzhou.crypto.Totp;
 
-public class TotpCipherImplTest {
+public class TotpImplTest {
 
     // Base32 合法字符：大写 A-Z、数字 2-7、填充符 =
     private static final Pattern BASE32_VALID_REGEX = Pattern.compile("^[A-Z2-7=]+$");
 
     // 每个用例独立创建实例，避免共享状态
-    private TotpCipherImpl newTotp() {
-        return new TotpCipherImpl(new Base16CoderImpl(), new Base32CoderImpl());
+    private TotpImpl newTotp() {
+        return new TotpImpl(new Base16CoderImpl(), new Base32CoderImpl());
     }
 
     // ===================== generateKey() =====================
     @Test
     public void multipleCalls_generateKey_returnDifferentKeys() {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         Assert.assertNotEquals(totp.generateKey(), totp.generateKey());
     }
 
@@ -32,7 +32,7 @@ public class TotpCipherImplTest {
     // ===================== getCode(String key) =====================
     @Test
     public void validKey_getCode_returnSixDigitCode() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String code = totp.getCode(totp.generateKey());
         Assert.assertNotNull(code);
         Assert.assertEquals(code.length(), 6);
@@ -40,14 +40,14 @@ public class TotpCipherImplTest {
 
     @Test
     public void sameKeyAndWindow_getCode_returnSameCode() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String key = totp.generateKey();
         Assert.assertEquals(totp.getCode(key), totp.getCode(key));
     }
 
     @Test
     public void generatedCode_getCode_matchSixDigitFormat() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String code = totp.getCode(totp.generateKey());
         Assert.assertTrue(code.matches("\\d{6}"), "验证码不是 6 位数字: " + code);
     }
@@ -55,25 +55,25 @@ public class TotpCipherImplTest {
     // ===================== 内置窗口容忍 =====================
     @Test
     public void previousWindowCode_verifyCode_returnTrue() throws Exception {
-        TotpCipherImpl totp = newTotp();
+        TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
+        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
         Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step - 1))); // 窗口末尾读到口令、跨窗后才提交
     }
 
     @Test
     public void nextWindowCode_verifyCode_returnTrue() throws Exception {
-        TotpCipherImpl totp = newTotp();
+        TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
+        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
         Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step + 1))); // 覆盖服务端时钟偏慢
     }
 
     @Test
     public void outOfRangeCode_verifyCode_returnFalse() throws Exception {
-        TotpCipherImpl totp = newTotp();
+        TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpCipherImpl.STEP_MILLIS;
+        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
         Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step - 2)));
         Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step + 2)));
     }
@@ -81,7 +81,7 @@ public class TotpCipherImplTest {
     // ===================== verifyCode(String key, String code) =====================
     @Test
     public void correctCode_verifyCode_returnTrue() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String key = totp.generateKey();
         String code = totp.getCode(key);
         Assert.assertTrue(totp.verifyCode(key, code));
@@ -89,7 +89,7 @@ public class TotpCipherImplTest {
 
     @Test
     public void wrongCode_verifyCode_returnFalse() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String key = totp.generateKey();
         String code = totp.getCode(key);
         // 翻转最后一位，保证与正确验证码不同
@@ -105,13 +105,13 @@ public class TotpCipherImplTest {
 
     @Test
     public void nullCode_verifyCode_returnFalse() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         Assert.assertFalse(totp.verifyCode(totp.generateKey(), null));
     }
 
     @Test
     public void emptyKeyOrCode_verifyCode_returnFalse() throws Exception {
-        TotpCipher totp = newTotp();
+        Totp totp = newTotp();
         String key = totp.generateKey();
         Assert.assertFalse(totp.verifyCode("", ""));
         Assert.assertFalse(totp.verifyCode(key, ""));

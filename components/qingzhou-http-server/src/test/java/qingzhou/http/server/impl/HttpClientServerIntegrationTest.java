@@ -31,7 +31,9 @@ public class HttpClientServerIntegrationTest {
         synchronized (HttpClientServerIntegrationTest.class) {
             if (sharedClient == null) {
                 HttpClientImpl httpClient = new HttpClientImpl();
-                httpClient.activate();
+                httpClient.init(new HashMap<String, String>() {{
+                    put("allow_ssl_trust_all", "true");
+                }});
                 Runtime.getRuntime().addShutdownHook(new Thread(httpClient::deactivate));
                 sharedClient = httpClient;
             }

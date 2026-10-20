@@ -15,13 +15,15 @@ public interface HttpRequest {
     String getRawUri();
 
     /**
-     * 取同名参数的第一个值。同名参数按「query 在前、表单体在后」合并，
-     * 故该方法返回的是 query 中的值；需要区分来源时应自行拆分处理。
+     * 取同名参数的第一个值。同名参数按「query 在前、表单体在后」合并，同名时返回 query 中的值；
+     * 需要区分来源时应自行拆分处理。
+     * 表单体参数仅聚合请求可用；流式（multipart）请求须在 StreamHandler 中自行解析。
      */
     String getParameter(String name);
 
     /**
      * 全部参数（query 与表单体合并后的只读视图）。同名参数按「query 在前、表单体在后」排列。
+     * 流式（multipart）请求不含表单体部分。
      */
     Map<String, List<String>> getParameters();
 
@@ -43,6 +45,7 @@ public interface HttpRequest {
 
     /**
      * 请求体。返回内部数组，<b>调用方不得修改</b>其内容——参数解析缓存基于同一数组。
+     * 流式（multipart）请求体不进内存，恒返回 null。
      */
     byte[] getBody();
 

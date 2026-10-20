@@ -1,7 +1,9 @@
 package qingzhou.crypto.impl;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.security.InvalidKeyException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +18,7 @@ public class CryptoImplTest {
     public void anyTime_generateKey_mustBe24Chars() {
 
         for (int i = 0; i < 10000; i++) {
-            String key = crypto.generateKey();
+            String key = crypto.generateCipherKey();
             Assert.assertNotNull(key);
             Assert.assertFalse(key.matches(".*\\s.*"));
             Assert.assertEquals(key.length(), 24);
@@ -34,6 +36,12 @@ public class CryptoImplTest {
     static CryptoImpl getCryptoImpl() {
         if (crypto == null) {
             crypto = new CryptoImpl();
+            crypto.init(new HashMap<String, String>() {{
+                put("qingzhou.instance", new File("/tmp").getAbsolutePath());
+                put("qingzhou.version", "1.0");
+                put("qingzhou.http.client.trustAll", "true"); // 测试服务端为自签名证书：显式开启跳过校验
+            }});
+
             try {
                 LoggerImpl logger = new LoggerImpl();
                 setField(crypto, "logger", logger);
@@ -50,7 +58,7 @@ public class CryptoImplTest {
         CryptoImpl crypto = getCryptoImpl();
         int count = 10000;
         for (int i = 0; i < count; i++) {
-            String randomKey = crypto.generateKey();
+            String randomKey = crypto.generateCipherKey();
             boolean added = randomKeys.add(randomKey);
             Assert.assertTrue(added);
         }
@@ -89,7 +97,7 @@ public class CryptoImplTest {
     @Test
     public void use24CharsKey_getCipher_success() {
         CryptoImpl crypto = getCryptoImpl();
-        String key = UUID.randomUUID().toString().replace("-", "").substring(0, 24);
+        String key = crypto.generateCipherKey();
         try {
             Cipher cipher = crypto.getCipher(key);
             Cipher cipher2 = crypto.getCipher(key);
@@ -98,6 +106,18 @@ public class CryptoImplTest {
             Assert.assertNotSame(cipher, cipher2);
         } catch (Throwable e) {
             Assert.fail();
+        }
+    }
+
+    @Test
+    public void notAesKeyLength_getCipher_throwInvalidKeyException() {
+        CryptoImpl crypto = getCryptoImpl();
+        String key = UUID.randomUUID().toString().replace("-", "").substring(0, 24); // 24 字符 Base64 可解出 18 字节
+        try {
+            crypto.getCipher(key);
+            Assert.fail("非 AES 密钥长度应在构造时即被拒绝");
+        } catch (Throwable e) {
+            Assert.assertTrue(e instanceof InvalidKeyException);
         }
     }
 }

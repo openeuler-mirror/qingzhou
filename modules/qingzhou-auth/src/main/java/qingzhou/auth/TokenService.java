@@ -126,7 +126,7 @@ public class TokenService {
 
         // 无条件通知客户端注销并应答：无令牌/伪造令牌的请求同样不能悬空
         sendCookie(TOKEN_COOKIE_NAME, "", "/", 0, cookieSamesite, request, response);
-        response.send("ok").finish();
+        response.send("ok");
     }
 
     private Map<String, Object> parseToken(String token) {

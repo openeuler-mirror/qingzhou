@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -123,33 +124,40 @@ public class HttpRequestImpl implements HttpRequest {
 
     // 先在局部构建完成、再经 volatile 字段整体发布：并发读者只会看到空表或完整表，不会看到半填充表
     private Map<String, List<String>> parseParameters() {
-        Map<String, List<String>> parsed = new LinkedHashMap<>(); // 保序：同名参数按 query 在前、表单体在后排列
-        try {
-            // 与表单体同阈值：query 侧不再依赖框架默认上限（升级即行为漂移）
-            parsed.putAll(new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8, true, MAX_FORM_PARAMS).parameters());
-        } catch (IllegalArgumentException e) {
-            // query 含非法 %xx 转义时按无参数处理，不能让参数解析中断请求
-        }
+        Map<String, List<String>> parsed = new LinkedHashMap<>(decodeParams(request.uri(), true)); // 保序：query 在前、表单体在后
         byte[] body = requestBody;
         if (body != null && body.length > 0 && isFormUrlencoded()) {
-            try {
-                // hasPath=false：表单体整段即 query，无需拼 "/?" 前缀（省掉一次与请求体等长的字符串分配）
-                // 显式限制参数个数：请求体最大 8MB，不限量会被展开成百万条目并放大内存
-                new QueryStringDecoder(new String(body, StandardCharsets.UTF_8),
-                        StandardCharsets.UTF_8, false, MAX_FORM_PARAMS).parameters()
-                        .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
-                            List<String> merged = new ArrayList<>(oldValues);
-                            merged.addAll(newValues);
-                            return merged;
-                        }));
-            } catch (IllegalArgumentException e) {
-                // 请求体声称是表单但实际无法解码（如密文二进制流），忽略即可，不能因此中断请求
-            }
+            // hasPath=false：表单体整段即 query，无需拼 "/?" 前缀（省掉一次与请求体等长的字符串分配）
+            decodeParams(new String(body, StandardCharsets.UTF_8), false)
+                    .forEach((key, values) -> parsed.merge(key, values, (oldValues, newValues) -> {
+                        List<String> merged = new ArrayList<>(oldValues);
+                        merged.addAll(newValues);
+                        return merged;
+                    }));
         }
         // 深只读视图：Map 与内层 List 均不可变，防止调用方篡改已解析的参数
         Map<String, List<String>> readOnly = new LinkedHashMap<>(parsed.size());
         parsed.forEach((key, values) -> readOnly.put(key, Collections.unmodifiableList(values)));
         return Collections.unmodifiableMap(readOnly);
+    }
+
+    // Netty 超限时静默截断（不抛异常），故以「上限+1」为探针解析：参数对数量越界即整体丢弃；
+    // 截断按参数对计数（同名重复亦占额），需累加各 key 的 value 数而非只数 key
+    private static Map<String, List<String>> decodeParams(String raw, boolean hasPath) {
+        try {
+            Map<String, List<String>> params = new QueryStringDecoder(raw, StandardCharsets.UTF_8, hasPath,
+                    MAX_FORM_PARAMS + 1).parameters();
+            int count = 0;
+            for (List<String> values : params.values()) {
+                if ((count += values.size()) > MAX_FORM_PARAMS) {
+                    return Collections.emptyMap();
+                }
+            }
+            return params;
+        } catch (IllegalArgumentException | TooLongFrameException e) {
+            // 非法 %xx 转义或解码器版本差异导致超限抛异常：按无参数处理，不能中断请求
+            return Collections.emptyMap();
+        }
     }
 
     @Override

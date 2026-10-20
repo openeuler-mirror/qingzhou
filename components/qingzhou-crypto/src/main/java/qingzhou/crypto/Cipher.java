@@ -1,6 +1,6 @@
 package qingzhou.crypto;
 
-public interface Cipher {
+public interface Cipher extends AadCipher {
     String PLAIN_PREFIX_MARKER = "plain:";
     int IV_SIZE = 12;
 
@@ -13,14 +13,4 @@ public interface Cipher {
     byte[] encrypt(byte[] s) throws Exception;
 
     byte[] decrypt(byte[] s) throws Exception;
-
-    /**
-     * 带附加认证数据（AAD）的分段加密：用于流式上传，把分片序号等上下文绑定到认证标签。
-     */
-    byte[] encrypt(byte[] s, byte[] aad) throws Exception;
-
-    /**
-     * 带附加认证数据（AAD）解密：aad 必须与加密时一致，否则认证失败。
-     */
-    byte[] decrypt(byte[] s, byte[] aad) throws Exception;
 }

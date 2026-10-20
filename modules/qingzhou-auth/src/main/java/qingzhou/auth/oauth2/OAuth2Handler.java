@@ -83,7 +83,7 @@ public class OAuth2Handler implements HttpHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response) throws Exception {
         if (!enabled) {
-            response.status(404).finish();
+            response.status(404);
             return;
         }
 
@@ -97,7 +97,7 @@ public class OAuth2Handler implements HttpHandler {
         } else if (path.equals(CALLBACK_PATH)) {
             callback(request, response);
         } else {
-            response.status(400).finish();
+            response.status(400);
         }
     }
 
@@ -122,7 +122,7 @@ public class OAuth2Handler implements HttpHandler {
     private void callback(HttpRequest request, HttpResponse response) throws Exception {
         String csrfToken = request.getParameter("state"); // OAUTH2 协议要求 state 必须传递
         if (csrfToken == null || !csrfToken.equals(request.getCookie(CSRF_COOKIE_NAME))) {
-            response.status(400).finish(); // 拦截 csrf 攻击
+            response.status(400); // 拦截 csrf 攻击
             return;
         }
         // state 一次性使用：校验通过立即作废 Cookie，防止 csrfCookieExpireSeconds 秒窗口内被重复提交
@@ -130,7 +130,7 @@ public class OAuth2Handler implements HttpHandler {
 
         String code = request.getParameter("code");
         if (code == null) {
-            response.status(400).finish();
+            response.status(400);
             return;
         }
 
@@ -139,7 +139,7 @@ public class OAuth2Handler implements HttpHandler {
 
         String user = getUserInfoByAccessToken(accessToken);
         if (user == null) {
-            response.status(500).finish();
+            response.status(500);
             return;
         }
 
@@ -162,7 +162,7 @@ public class OAuth2Handler implements HttpHandler {
             byte[] tokenBodyBytes = tokenResponse.getBody();
             if (tokenBodyBytes == null) {
                 // 上游未返回响应体：固定文案回浏览器，避免 NPE 且不外泄内部信息
-                response.status(403).send("token exchange failed").finish();
+                response.status(403).send("token exchange failed");
                 return null;
             }
             String tokenBodyText = new String(tokenBodyBytes, StandardCharsets.UTF_8);
@@ -170,7 +170,7 @@ public class OAuth2Handler implements HttpHandler {
             // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
             if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
                 // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
-                response.status(403).send("token exchange failed").finish();
+                response.status(403).send("token exchange failed");
                 return null;
             }
 

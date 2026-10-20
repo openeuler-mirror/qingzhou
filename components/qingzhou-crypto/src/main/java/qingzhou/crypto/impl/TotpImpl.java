@@ -9,9 +9,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.TotpCipher;
+import qingzhou.crypto.Totp;
 
-class TotpCipherImpl implements TotpCipher {
+class TotpImpl implements Totp {
     // RFC 6238 默认步长 30 秒，主流验证器 App 亦固定此值，不可调整
     static final long STEP_MILLIS = 30_000L; // 包级可见：测试复用，避免硬编码步长
 
@@ -23,7 +23,7 @@ class TotpCipherImpl implements TotpCipher {
     private final Base16Coder base16Coder;
     private final Base32Coder base32Coder;
 
-    TotpCipherImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
+    TotpImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
         this.base16Coder = base16Coder;
         this.base32Coder = base32Coder;
     }

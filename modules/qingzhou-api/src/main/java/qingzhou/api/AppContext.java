@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Properties;
 
 public interface AppContext {
-    String getVersion();
+    String getPlatformVersion();
 
     Properties getProperties();
 

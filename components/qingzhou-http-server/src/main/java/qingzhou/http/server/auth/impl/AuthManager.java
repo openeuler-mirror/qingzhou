@@ -72,13 +72,12 @@ public class AuthManager {
             return true;
         }
 
-        // 仅当请求确实携带了凭据却失败（REJECT）才计入锁定；
-        // 未出示凭据（NO_CREDENTIAL）的匿名访问（NAT 下大量正常请求）不应消耗锁定计数，否则会误锁同 IP 下的全部正常用户；
+        // 仅当请求确实携带了凭据却失败（REJECT）才计入锁定并告警；
+        // 未出示凭据（NO_CREDENTIAL）的匿名访问（NAT 下大量正常请求）不应消耗锁定计数，也不应逐条刷日志，否则会误锁并淹没同 IP 下的全部正常用户
         if (authResult.status() != AuthResult.Status.NO_CREDENTIAL) {
             lockout.recordFailure(host);
+            logger.warn("http authentication rejected: " + sanitizeLogText(authResult.getReason()));
         }
-
-        logger.warn("http authentication rejected: " + sanitizeLogText(authResult.getReason()));
         return false;
     }
 

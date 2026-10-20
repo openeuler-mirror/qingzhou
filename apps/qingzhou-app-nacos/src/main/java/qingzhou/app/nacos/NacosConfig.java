@@ -134,7 +134,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos config query failed", e);
         }
         
         return result;
@@ -196,7 +196,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
             result.put("md5", String.valueOf(configInfo.get("md5")));
             result.put("belongApp", String.valueOf(configInfo.get("appName")));
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos config query failed", e);
         }
         
         return result;

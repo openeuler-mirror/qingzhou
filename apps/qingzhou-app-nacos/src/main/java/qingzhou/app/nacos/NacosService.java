@@ -148,7 +148,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos service query failed", e);
         }
         
         return result;
@@ -213,7 +213,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
                 result.put("healthyCount", String.valueOf(healthyCount));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logError("Nacos service query failed", e);
         }
         
         return result;

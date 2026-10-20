@@ -1,6 +1,5 @@
 package qingzhou.ai.memory;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +25,13 @@ import qingzhou.store.StoreFactory;
 public class ConversationStore {
     private static final Pattern VALID_ID = Pattern.compile("[A-Za-z0-9_-]{1,64}"); // 防路径遍历
     private static final String SUMMARY_MESSAGE_ID = "summary";
+
+    /**
+     * 会话/消息 id 规则：各入口复用同一规则，非法 id 无法落库，须在写入前拒绝
+     */
+    public static boolean isValidId(String id) {
+        return id != null && VALID_ID.matcher(id).matches();
+    }
 
     @Reference
     private Json json;
@@ -166,7 +172,7 @@ public class ConversationStore {
      * 不存在且带标题时创建（首条消息在回答完成后才落库，rename 先到属正常时序）
      */
     synchronized boolean rename(String userId, String conversationId, String title) {
-        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return false;
+        if (!isValidId(conversationId)) return false;
         ConversationRecord record = load(conversationId);
         if (record == null) {
             if (title == null) return false; // 不凭空产生未命名会话
@@ -197,7 +203,7 @@ public class ConversationStore {
      * 删除不更新 updatedAt（删除不该把会话顶到列表最前）；消息删空后连会话一起删，避免零消息空壳
      */
     synchronized boolean removeMessage(String userId, String conversationId, String messageId) {
-        if (messageId == null || !VALID_ID.matcher(messageId).matches()) return false;
+        if (!isValidId(messageId)) return false;
         ConversationRecord record = load(conversationId);
         if (record == null || record.archived || record.userId == null
                 || !record.userId.equals(userId) || record.messages == null) {
@@ -214,7 +220,7 @@ public class ConversationStore {
     }
 
     private void append(String conversationId, String userId, StoredMessage message) {
-        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) {
+        if (!isValidId(conversationId)) {
             logger.warn("invalid conversation id, message skipped");
             return;
         }
@@ -250,7 +256,7 @@ public class ConversationStore {
         synchronized (this) {
             catalog.clear();
             for (String conversationId : kvStore.keys()) {
-                if (!VALID_ID.matcher(conversationId).matches()) continue;
+                if (!isValidId(conversationId)) continue;
                 String value = kvStore.get(conversationId);
                 if (value == null) continue;
                 try {
@@ -281,14 +287,14 @@ public class ConversationStore {
     }
 
     synchronized boolean deleteRecord(String conversationId) {
-        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return false;
+        if (!isValidId(conversationId)) return false;
         kvStore.delete(conversationId);
         catalog.reindex(conversationId, null);
         return true;
     }
 
     synchronized ConversationRecord load(String conversationId) {
-        if (conversationId == null || !VALID_ID.matcher(conversationId).matches()) return null;
+        if (!isValidId(conversationId)) return null;
         String value = kvStore.get(conversationId);
         if (value == null) return null;
         try {
@@ -318,7 +324,24 @@ public class ConversationStore {
         return message;
     }
 
+    // 按字符宽度累加 UTF-8 字节数：量体积无须为每次落库再分配一份全量字节数组
     private static long byteSize(String value) {
-        return value == null ? 0 : value.getBytes(StandardCharsets.UTF_8).length;
+        if (value == null) return 0;
+        long bytes = 0;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c < 0x80) {
+                bytes += 1;
+            } else if (c < 0x800) {
+                bytes += 2;
+            } else if (Character.isHighSurrogate(c) && i + 1 < value.length()
+                    && Character.isLowSurrogate(value.charAt(i + 1))) {
+                bytes += 4;
+                i++; // 代理对占 4 字节，跳过低位的重复计数
+            } else {
+                bytes += 3;
+            }
+        }
+        return bytes;
     }
 }

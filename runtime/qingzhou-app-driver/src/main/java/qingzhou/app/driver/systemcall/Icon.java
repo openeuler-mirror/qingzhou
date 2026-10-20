@@ -14,10 +14,12 @@ import qingzhou.dto.RequestImpl;
 
 public class Icon implements SystemCall {
     private final AppContextImpl appContext;
+    private final String iconPath;
     private volatile String iconCache;
 
-    public Icon(AppContextImpl appContext) {
+    public Icon(AppContextImpl appContext, String iconPath) {
         this.appContext = appContext;
+        this.iconPath = iconPath;
     }
 
     @Override
@@ -41,7 +43,6 @@ public class Icon implements SystemCall {
     }
 
     private String loadIcon() throws Exception {
-        String iconPath = appContext.appMeta.getApp().icon;
         if (iconPath == null) return null;
 
         try (InputStream resource = this.getClass().getResourceAsStream(iconPath)) {

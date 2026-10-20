@@ -25,6 +25,7 @@ import qingzhou.http.server.HttpResponse;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/", HttpHandler.HANDLE_NO_AUTH + "=true"})
 public class StaticResource implements HttpHandler {
     private static final String INDEX_FILE = "/index.html";
+    private static final int MAX_CACHED_RESOURCES = 4096; // 资源缓存的条目上限
     private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList(
             "png", "jpg", "jpeg", "gif", "svg", "ico"));
 
@@ -65,7 +66,7 @@ public class StaticResource implements HttpHandler {
         try {
             requestPath = URLDecoder.decode(requestPath.replace("+", "%2B"), StandardCharsets.UTF_8.name());
         } catch (Exception e) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
 
@@ -76,14 +77,14 @@ public class StaticResource implements HttpHandler {
         } else if (requestPath.startsWith("/web/")) {
             requestPath = requestPath.substring("/web".length());
         } else {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
 
         // 安全修复（路径穿越）：getResource 在目录型 ClassLoader 下会解析 ".."，
         // 形如 /web/../../x 的请求可能读取到 webapp/ 之外的资源，故含非法字符的路径直接拒绝
         if (!isPathSafe(requestPath)) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
 
@@ -104,15 +105,7 @@ public class StaticResource implements HttpHandler {
         String extension = getExtension(path);
 
         // 查找资源
-        String resourcePath = "/webapp" + path;
-        ResourceCache resourceCache = resourceCacheMap.computeIfAbsent(resourcePath, s -> {
-            URL resource = getClass().getResource(s);
-            if (resource == null) {
-                return null;
-            }
-            return new ResourceCache(crypto.getMessageDigest(), crypto.getBase16Coder(),
-                    resource);
-        });
+        ResourceCache resourceCache = loadCache("/webapp" + path);
         if (resourceCache == null) {
             // SPA 应用特性：无扩展名的路径视为前端路由（如 /web/model/xxx），回退到 index.html；
             // 带扩展名的资源（如已被清理的旧 hash .js/.css）必须返回 404，
@@ -121,7 +114,7 @@ public class StaticResource implements HttpHandler {
                 serveStaticResource(httpRequest, INDEX_FILE, response);
                 return;
             }
-            response.status(404).finish();
+            response.status(404);
             return;
         }
 
@@ -129,20 +122,36 @@ public class StaticResource implements HttpHandler {
 
         try {
             String etag = resourceCache.getETag();
-            response.header("ETag", etag) // 返回 ETag（MD5）
-                    .header("Vary", "Accept-Encoding, Accept"); // 返回辅助缓存头
+            // 不声明 Vary：响应既不压缩也不按 Accept 协商（声明 Accept-Encoding 会误导缓存产生无谓分片）
+            response.header("ETag", etag); // ETag（MD5）
 
             // 校验缓存
             boolean isEtagMatch = checkIfNoneMatch(httpRequest, etag);
             if (isEtagMatch) { // 资源未修改 → 直接返回 304
-                response.status(304).finish();
+                response.status(304);
             } else { // 响应资源内容
                 response.contentType(getContentType(extension))
-                        .send(resourceCache.getContent()).finish();
+                        .send(resourceCache.getContent());
             }
         } catch (Exception e) {
-            response.status(500).finish();
+            response.status(500);
         }
+    }
+
+    /**
+     * 资源缓存：未命中的路径不缓存（路径来自请求，缓存未命中会让缓存随任意路径无界增长）；
+     * 命中数量达到上限后同样只服务不缓存，保证内存占用有界
+     */
+    private ResourceCache loadCache(String resourcePath) {
+        ResourceCache cached = resourceCacheMap.get(resourcePath);
+        if (cached != null) return cached;
+
+        URL resource = getClass().getResource(resourcePath);
+        if (resource == null) return null;
+
+        ResourceCache loaded = new ResourceCache(crypto.getMessageDigest(), crypto.getBase16Coder(), resource);
+        if (resourceCacheMap.size() < MAX_CACHED_RESOURCES) resourceCacheMap.put(resourcePath, loaded);
+        return loaded;
     }
 
     /**

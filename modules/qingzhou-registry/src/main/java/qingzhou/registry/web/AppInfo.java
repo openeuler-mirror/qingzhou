@@ -13,16 +13,27 @@ import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
+import qingzhou.registry.Registry;
 
 @Component(property = HttpHandler.HANDLE_PATH + "=/app/info",
         service = {AppInfo.class, HttpHandler.class})
-public class AppInfo extends RegistryMetaHandler {
+public class AppInfo extends AbstractMetaHandler {
     @Reference
     private I18nService i18nService;
 
-    private final Function<HandlingContext, Object> function = (context) -> {
-        String instanceId = context.getParameter(WebUtil.INSTANCE_ID);
-        String appCode = context.getParameter(WebUtil.APP_CODE);
+    @Reference
+    protected void setRegistry(Registry registry) {
+        this.registry = registry;
+    }
+
+    @Reference
+    protected void setJson(Json json) {
+        this.json = json;
+    }
+
+    private final Function<RequestParameters, Object> function = (context) -> {
+        String instanceId = context.getParameter(RequestParameters.INSTANCE_ID);
+        String appCode = context.getParameter(RequestParameters.APP_CODE);
         if (instanceId == null || appCode == null) return null;
 
         AppStub appStub = registry.getAppStub(instanceId, appCode);
@@ -32,8 +43,8 @@ public class AppInfo extends RegistryMetaHandler {
         String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
 
         Map<String, Object> appMetaInfo = new HashMap<>();
-        appMetaInfo.put(WebUtil.INSTANCE_ID, instanceId);
-        appMetaInfo.put(WebUtil.APP_CODE, app.code);
+        appMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);
+        appMetaInfo.put(RequestParameters.APP_CODE, app.code);
         appMetaInfo.put("icon", app.icon);
         appMetaInfo.put("name", i18nService.getI18n(app.name, lang));
         appMetaInfo.put("info", i18nService.getI18n(app.info, lang));
@@ -41,7 +52,7 @@ public class AppInfo extends RegistryMetaHandler {
         List<Map<String, Object>> models = new ArrayList<>();
         app.models.forEach(model -> {
             Map<String, Object> modelBasicInfo = new HashMap<>();
-            modelBasicInfo.put(WebUtil.MODEL_CODE, model.code);
+            modelBasicInfo.put(RequestParameters.MODEL_CODE, model.code);
             modelBasicInfo.put("icon", model.icon);
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
@@ -81,7 +92,7 @@ public class AppInfo extends RegistryMetaHandler {
         return appMetaInfo;
     };
 
-    public Function<HandlingContext, Object> getFunction() {
+    public Function<RequestParameters, Object> getFunction() {
         return function;
     }
 }

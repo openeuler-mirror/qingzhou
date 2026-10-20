@@ -76,29 +76,28 @@ final class BodyProcessors {
                             ctx.intakeComplete(); // 进入期结束：读失败也退出超时管辖
                             Throwable cause = getCause(err);
                             safeRun(() -> streamHandler.onError(cause)); // 回调自身出错不得吞掉下方兜底
-                            // 兜底：handler 若未发响应就返回，响应链永不结束，请求会一直挂到超时
+                            // 兜底：handler 未写响应时补 500，避免以 200 空体掩盖读失败
                             if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
-                                HttpResponseStatus status = statusOf(cause);
-                                httpResponse.status(status.code());
+                                try {
+                                    httpResponse.status(statusOf(cause).code()); // 流式响应头随响应链订阅即已发出，可能不可再改写
+                                } catch (IllegalStateException ignored) {
+                                }
                             }
                             // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
-                            httpResponse.finish();
+                            httpResponse.finish(); // 错误路径由框架强制收尾，async 只豁免正常完成
                         },
-                        () -> { // 完成信号：进入期结束；handler 须自行 finish 收尾
+                        () -> { // 完成信号：进入期结束，回调返回后由框架统一收尾
                             ctx.intakeComplete(); // 请求体已读完：进入期结束，长响应（SSE）不再受进入期超时约束
                             bodyFullyRead.set(true); // 请求体已读完：doFinally 据此决定是否需要断开残留连接
-                            // 由 handler 在 onComplete 内自行 finish 收尾（见 HttpHandler.handle 契约：
-                            // 允许 handler 返回后再由其它线程继续写入并收尾，框架不会代为结束）；
-                            // 此处不得无条件 finish，否则会提前关闭 sink，破坏 handler 的异步响应。
+                            // 回调返回视为同步完成；声明 async() 的 handler 自行 finish，框架不得提前终结
                             Throwable cause = safeRun(streamHandler::onComplete);
-                            if (cause != null) { // onComplete 自身出错：兜底收尾，否则 sink 不结束、许可与配额无法归还
+                            if (cause != null) {
                                 logger.error("http stream handler error", cause);
-                                if (httpResponse.isCommitted()) {
-                                    httpResponse.finish();
-                                } else {
-                                    httpResponse.status(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).finish();
-                                }
+                            }
+                            // 回调返回即收尾；async 由 handler 自行 finish，回调出错时强制收尾
+                            if (cause != null || !httpResponse.isAsync()) {
+                                httpResponse.finish();
                             }
                         }
                 );
@@ -128,9 +127,8 @@ final class BodyProcessors {
                     try {
                         ctx.httpRequest.setRequestBody(bytes);
                         httpHandler.handle(ctx.httpRequest, httpResponse);
-                        // 契约：handler 必须自行调用终态方法收尾；此处不得补 finish，
-                        // 否则「返回后由后台线程继续写」的响应会被提前终结（后续发送 FAIL_TERMINATED）。
-                        // 未收尾属于 handler 的编程错误，请求会挂到 idle_timeout。
+                        // 正常返回即由框架收尾；声明 async() 的响应由 handler 自行 finish
+                        if (!httpResponse.isAsync()) httpResponse.finish();
                     } catch (Throwable e) {
                         Throwable cause = getCause(e);
                         // 客户端中断会让 sink 发射失败，属正常终止：逐条记 ERROR 会被放大为日志洪水

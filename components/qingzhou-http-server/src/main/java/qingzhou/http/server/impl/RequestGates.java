@@ -262,9 +262,10 @@ final class RequestGates {
                 : ctx.respond(HttpResponseStatus.UNAUTHORIZED); // no-store 已由安全头统一设置
     }
 
-    // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500
+    // 415：multipart 必须有 StreamHandler；handler 自身抛出视为 500。
+    // 不限方法：PUT/PATCH 的 multipart 若退化为聚合路径，会把整个上传体读进内存且 handler 无法解析
     private Publisher<Void> denyUnsupportedBody(RequestContext ctx) {
-        if (ctx.request.method() != HttpMethod.POST || !ctx.request.isMultipart()) return null;
+        if (!ctx.request.isMultipart()) return null;
         ctx.streamRequired = true;
         try {
             ctx.streamHandler = ctx.entry.handler.multipartStreamHandler();
