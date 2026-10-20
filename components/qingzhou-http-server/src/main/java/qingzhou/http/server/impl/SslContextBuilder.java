@@ -10,8 +10,9 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
 import io.netty.handler.ssl.SslContext;
-import qingzhou.crypto.Cipher;
 import qingzhou.common.Configs;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.Crypto;
 import qingzhou.logger.Logger;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露
@@ -25,14 +26,13 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
     private SslContextBuilder() {
     }
 
-    static SslContext buildSslContext(Map<String, String> config, Cipher cipher, Logger logger) {
+    static SslContext buildSslContext(Map<String, String> config, Crypto crypto, Logger logger) {
         Configs configs = new Configs(config);
         String keystorePath = configs.notBlank("ssl_keystore_path");
 
         File keystoreFile = new File(keystorePath.trim());
         if (!keystoreFile.isFile()) {
-            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile
-                    + ", generate it with bin/qingzhou.sh keystore");
+            throw new IllegalArgumentException("ssl keystore file does not exist: " + keystoreFile);
         }
 
         String type = configs.getOrDefault("ssl_keystore_type", "PKCS12").trim().toUpperCase(Locale.ROOT);
@@ -40,8 +40,12 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
             throw new IllegalArgumentException("unsupported ssl_keystore_type: " + type + ", only PKCS12 or JKS is supported");
         }
 
-        String password = configs.notBlank("ssl_keystore_password");
-        char[] keyPassword = cipher.tryDecrypt(password.trim(), "qingzhou-http-server.ssl_keystore_password").toCharArray();
+        // 明文口令直接取用，不触达 global 密钥文件：密钥缺失/损坏不应拖垮仅配置明文的部署
+        String password = configs.notBlank("ssl_keystore_password").trim();
+        char[] keyPassword = (password.startsWith(Cipher.PLAIN_PREFIX_MARKER)
+                ? password.substring(Cipher.PLAIN_PREFIX_MARKER.length())
+                : crypto.getGlobalCipher().tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password"))
+                .toCharArray();
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);

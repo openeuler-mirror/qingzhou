@@ -5,8 +5,12 @@ import java.security.InvalidKeyException;
 public interface Crypto {
     /**
      * 随机生成 24 个字符密钥，供 getCipher 方法使用。
+     * 密钥由 SecureRandom 直接产生、不建立在主密钥之上：KDF 不产生熵，派生只会把风险集中到主密钥；
+     * 多节点共享同一密钥由 getGlobalCipher 的密钥文件分发实现。
      */
-    String generateKey();
+    String generateCipherKey();
+
+    byte[] generateCipherAad(String... context);
 
     /**
      * 传入24个字符密钥，获得加解密服务对象。
@@ -19,12 +23,6 @@ public interface Crypto {
 
     Cipher getGlobalCipher();
 
-    String[] generatePairKey();
-
-    PairCipher getPairCipher(String publicKey, String privateKey) throws InvalidKeyException;
-
-    TotpCipher getTotpCipher();
-
     MessageDigest getMessageDigest();
 
     Base64Coder getBase64Coder();
@@ -33,8 +31,15 @@ public interface Crypto {
 
     Base16Coder getBase16Coder();
 
+    Totp getTotp();
+
     /**
      * 请求报文的防重放封装。返回的实例在同一 JVM 内共享，去重状态唯一。
      */
     ReplayGuardCipher getReplayGuardCipher(Cipher cipher);
+
+    /**
+     * 绑定根密钥与作用域的时段报文加解密器。与 {@link #getReplayGuardCipher} 一致，每次返回独立实例。
+     */
+    EpochPacketCipher getEpochPacketCipher(byte[] masterKey, String scopeId);
 }

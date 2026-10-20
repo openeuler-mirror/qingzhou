@@ -3,13 +3,7 @@ package qingzhou.app.redis.store;
 import qingzhou.api.AppContext;
 import qingzhou.app.redis.store.model.AlertRecord;
 import qingzhou.app.redis.store.model.AlertRule;
-import qingzhou.json.Json;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,27 +13,14 @@ public class AlertStore {
     private static final int MAX_RECORDS = 5000;
     private final List<AlertRule> rules = Collections.synchronizedList(new ArrayList<>());
     private final Deque<AlertRecord> records = new ConcurrentLinkedDeque<>();
-    private final AppContext appContext;
-    private final Path storageFile;
+    private final SnapshotFile snapshotFile;
     private final AtomicLong ruleSequence = new AtomicLong(0);
     private final AtomicLong recordSequence = new AtomicLong(0);
 
     public AlertStore(AppContext appContext) {
-        this.appContext = appContext;
-        this.storageFile = getStorageFile();
+        this.snapshotFile = new SnapshotFile(appContext, StoreConstants.ALERTS_FILE);
         loadSnapshot();
     }
-
-    private Path getStorageFile() {
-        File base = appContext.getRoot();
-        File dir = new File(base, StoreConstants.DATA_DIR);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return new File(dir, StoreConstants.ALERTS_FILE).toPath();
-    }
-
-    
 
     public List<AlertRule> listRules() {
         synchronized (rules) {
@@ -124,12 +105,7 @@ public class AlertStore {
             filtered.add(record);
         }
         Collections.reverse(filtered);
-        int start = (pageNum - 1) * pageSize;
-        if (start >= filtered.size()) {
-            return new ArrayList<>();
-        }
-        int end = Math.min(start + pageSize, filtered.size());
-        return filtered.subList(start, end);
+        return AbstractStore.paginate(filtered, pageNum, pageSize);
     }
 
     public int totalRecords(String status) {
@@ -172,53 +148,29 @@ public class AlertStore {
     
 
     public synchronized void saveSnapshot() {
-        try {
-            Json json = appContext.getService(Json.class);
-            if (json == null) {
-                return;
-            }
-            Snapshot snapshot = new Snapshot();
-            synchronized (rules) {
-                snapshot.setRules(new ArrayList<>(rules));
-            }
-            snapshot.setRecords(new ArrayList<>(records));
-            snapshot.setRuleSequence(ruleSequence.get());
-            snapshot.setRecordSequence(recordSequence.get());
-            String data = json.toJson(snapshot);
-            Files.write(storageFile, data.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
+        Snapshot snapshot = new Snapshot();
+        synchronized (rules) {
+            snapshot.setRules(new ArrayList<>(rules));
         }
+        snapshot.setRecords(new ArrayList<>(records));
+        snapshot.setRuleSequence(ruleSequence.get());
+        snapshot.setRecordSequence(recordSequence.get());
+        snapshotFile.save(snapshot);
     }
 
     private synchronized void loadSnapshot() {
-        if (!Files.exists(storageFile)) {
-            return;
+        Snapshot snapshot = snapshotFile.load(Snapshot.class);
+        if (snapshot == null) return;
+        rules.clear();
+        if (snapshot.getRules() != null) {
+            rules.addAll(snapshot.getRules());
         }
-        try (BufferedReader reader = Files.newBufferedReader(storageFile, StandardCharsets.UTF_8)) {
-            Json json = appContext.getService(Json.class);
-            if (json == null) {
-                return;
-            }
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            Snapshot snapshot = json.fromJson(sb.toString(), Snapshot.class);
-            if (snapshot != null) {
-                rules.clear();
-                if (snapshot.getRules() != null) {
-                    rules.addAll(snapshot.getRules());
-                }
-                records.clear();
-                if (snapshot.getRecords() != null) {
-                    records.addAll(snapshot.getRecords());
-                }
-                ruleSequence.set(snapshot.getRuleSequence());
-                recordSequence.set(snapshot.getRecordSequence());
-            }
-        } catch (Exception e) {
+        records.clear();
+        if (snapshot.getRecords() != null) {
+            records.addAll(snapshot.getRecords());
         }
+        ruleSequence.set(snapshot.getRuleSequence());
+        recordSequence.set(snapshot.getRecordSequence());
     }
 
     public static class Snapshot {

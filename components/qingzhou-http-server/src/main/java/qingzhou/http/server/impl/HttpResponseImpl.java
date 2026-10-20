@@ -21,10 +21,16 @@ class HttpResponseImpl implements HttpResponse {
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性
     private volatile boolean committed;
     private volatile boolean cancelled;
+    private volatile boolean async;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
     boolean isCancelled() {
         return cancelled;
+    }
+
+    // 调用方声明由自己异步收尾：框架返回后不得自动 finish
+    boolean isAsync() {
+        return async;
     }
 
     /**
@@ -94,6 +100,12 @@ class HttpResponseImpl implements HttpResponse {
             }
             committed = true;
         }
+        return this;
+    }
+
+    @Override
+    public HttpResponse async() {
+        async = true;
         return this;
     }
 

@@ -1,9 +1,7 @@
 package qingzhou.command;
 
-import java.io.Console;
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -35,28 +33,8 @@ public abstract class Processor {
 
     public abstract void doCommandLine(String[] args) throws Exception;
 
-    protected void log(String msg) {
+    public void log(String msg) {
         System.out.println(msg);
-    }
-
-    // 读取密码：优先取命令行参数以兼容既有脚本（打印告警提醒泄露风险）；无参数时在交互终端下不回显读取，
-    // 避免明文密码出现在 ps 输出中。非交互环境（重定向、后台执行）返回 null，由调用方提示用法，避免阻塞。
-    protected String readPassword(String[] args) {
-        if (args.length > 0 && !args[0].isEmpty()) {
-            log("warning: password passed via command line is visible in 'ps' and shell history, interactive input is recommended");
-            return args[0];
-        }
-
-        Console console = System.console();
-        if (console == null) {
-            return null;
-        }
-
-        char[] password = console.readPassword();
-        if (password == null) return null;
-        String result = new String(password);
-        Arrays.fill(password, '\0'); // char[] 用后清零，减少明文驻留
-        return result;
     }
 
     protected File initInstance(String[] args) {
@@ -68,8 +46,6 @@ public abstract class Processor {
         File instance = Paths.get(getHomeDir().getAbsolutePath(), "instances", instanceName).toFile();
         File configFile = Paths.get(instance.getAbsolutePath(), "conf", "qingzhou.properties").toFile();
         if (configFile.isFile()) {
-            // init 命令依赖全局密钥文件，全局密钥文件解析依赖系统属性
-            System.setProperty("qingzhou.instance", instance.getAbsolutePath());
             return instance;
         } else {
             log("instance does not exist: " + instanceName);

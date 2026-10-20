@@ -15,48 +15,5 @@ package qingzhou.crypto;
  * <p>
  * 去重表由实现全局共享：不同实例（不同密钥）登记到同一张表，容量仅作内存兜底，安全边界是时间窗。
  */
-public interface ReplayGuardCipher {
-    /**
-     * 加密并封装为防重放报文。
-     *
-     * @param context 额外绑定的上下文字节（如上传键），可为 null；须与 {@link #decrypt} 时一致
-     */
-    byte[] encrypt(byte[] data, byte[] context) throws Exception;
-
-    /**
-     * 校验时间窗与去重并解密。
-     * <p>
-     * 报文无效（格式、版本、时间窗）或重放时抛 {@link ReplayGuardException}（可按
-     * {@link ReplayGuardException.Reason} 区分响应码）；解密失败抛 {@link Exception}。
-     * nonce 仅在解密成功后登记，避免被无效请求预先烧掉。
-     *
-     * @param context 须与 {@link #encrypt} 时一致
-     * @return 明文
-     */
-    byte[] decrypt(byte[] packet, byte[] context) throws Exception;
-
-    /**
-     * 防重放校验失败：报文无效、超出时间窗或重放。
-     * <p>
-     * 属于请求方可构造的错误，调用方应映射为 4xx 类响应（如 {@link Reason#REPLAY} → 409，
-     * 其余 → 400），而非 500。
-     */
-    final class ReplayGuardException extends Exception {
-        public enum Reason {
-            INVALID_PACKET,          // 报文格式非法或版本不支持
-            TIMESTAMP_OUT_OF_WINDOW, // 超出时间窗
-            REPLAY                   // 同一报文重复提交
-        }
-
-        private final Reason reason;
-
-        public ReplayGuardException(Reason reason, String message) {
-            super(message);
-            this.reason = reason;
-        }
-
-        public Reason getReason() {
-            return reason;
-        }
-    }
+public interface ReplayGuardCipher extends AadCipher {
 }

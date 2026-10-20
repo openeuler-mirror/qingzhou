@@ -210,7 +210,7 @@ public class TomcatApplications extends TomcatModelBase implements Page {
                     hostConfig = toMap(host);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logError("failed to read Tomcat Host configuration", e);
             }
 
             String appBase = hostConfig.get("appBase");

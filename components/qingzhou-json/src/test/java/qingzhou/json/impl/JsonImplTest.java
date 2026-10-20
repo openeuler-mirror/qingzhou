@@ -221,6 +221,19 @@ public class JsonImplTest {
         Assert.assertEquals(result.getAge(), 10);
     }
 
+    @Test
+    public void transientField_toJsonAndFromJson_notPropagated() throws Exception {
+        Json json = createJsonImpl();
+        TransientBean bean = new TransientBean();
+        bean.setName("kept");
+        bean.setInternal("hidden");
+        Assert.assertFalse(json.toJson(bean).contains("internal"));
+
+        TransientBean restored = json.fromJson("{\"name\":\"kept\",\"internal\":\"injected\"}", TransientBean.class);
+        Assert.assertEquals(restored.getName(), "kept");
+        Assert.assertNull(restored.getInternal());
+    }
+
     // ==================== 内部测试Bean类 ====================
 
     public static class EmptyBean {
@@ -251,6 +264,16 @@ public class JsonImplTest {
         public void setId(int id) { this.id = id; }
         public InnerBean getInner() { return inner; }
         public void setInner(InnerBean inner) { this.inner = inner; }
+    }
+
+    public static class TransientBean {
+        private String name;
+        private transient String internal;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getInternal() { return internal; }
+        public void setInternal(String internal) { this.internal = internal; }
     }
 
     public static class ComplexBean {

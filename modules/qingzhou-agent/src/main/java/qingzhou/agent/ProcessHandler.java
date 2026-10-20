@@ -2,9 +2,8 @@ package qingzhou.agent;
 
 import java.nio.charset.StandardCharsets;
 
-import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
-import qingzhou.crypto.ReplayGuardCipher;
+import qingzhou.crypto.EpochPacketCipher;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -12,60 +11,30 @@ import qingzhou.logger.Logger;
 
 class ProcessHandler {
     /**
-     * @param context AAD 绑定上下文，由调用方按自身契约提供（可为 null）：报文无法被重放到其他绑定上下文。
-     *                本类是各端点共用的传输层，不感知任何具体端点的参数来源
+     * @param aad AAD 绑定上下文，由调用方按自身契约提供（可为 null）：报文无法被重放到其他绑定上下文。
+     *            本类是各端点共用的传输层，不感知任何具体端点的参数来源
      */
     static void handle(HttpRequest httpRequest, HttpResponse httpResponse, Crypto crypto, Logger logger,
-                       byte[] context, ProcessHandlerCallback callback) {
-        byte[] requestBody = httpRequest.getBody();
-        if (requestBody == null || requestBody.length == 0) {
-            httpResponse.status(400).finish();
-            return;
-        }
+                       String aad, ProcessHandlerCallback callback) {
+        byte[] requestBody = httpRequest.getBody(); // 空报文由解密环节按无效报文返回 400
 
         InstanceInfo thisInstanceInfo = Heartbeat.currentInstanceInfo();
         if (thisInstanceInfo == null) {
-            httpResponse.status(503).finish();
+            httpResponse.status(503);
             return;
         }
 
-        Cipher cipher = null;
-        byte[] requestData = null;
+        EpochPacketCipher packetCipher;
+        byte[] requestData;
         try {
-            Cipher primary = crypto.getCipher(thisInstanceInfo.getKey());
-            try {
-                requestData = decrypt(crypto, primary, requestBody, context);
-                cipher = primary;
-            } catch (ReplayGuardCipher.ReplayGuardException e) {
-                // 报文由请求方控制：格式/时间窗回 400，重放回 409（冲突）便于发送方区分「已受理过」
-                if (e.getReason() == ReplayGuardCipher.ReplayGuardException.Reason.REPLAY) {
-                    logger.warn("agent request replayed");
-                    httpResponse.status(409).finish();
-                } else {
-                    logger.warn("invalid agent request: " + e.getMessage());
-                    httpResponse.status(400).finish();
-                }
-                return;
-            } catch (Exception primaryFailure) {
-                // 密钥轮换宽限：registry 宽限期内仍用旧钥加密，回退旧钥重试
-                try {
-                    String fallbackKey = Heartbeat.decryptKeyFallback();
-                    if (fallbackKey != null) {
-                        Cipher fallback = crypto.getCipher(fallbackKey);
-                        requestData = decrypt(crypto, fallback, requestBody, context);
-                        cipher = fallback;
-                    }
-                } catch (Exception e) {
-                    // 回退解密失败与"无旧钥"不可混淆：留痕便于排障轮换窗口期的解密问题
-                    logger.info("fallback key decrypt failed: " + e.getMessage());
-                }
-                if (cipher == null) {
-                    throw primaryFailure;
-                }
-            }
+            // AAD 绑定 域名 + 目标实例 ID（+ 端点上下文）：同域不同 agent 的报文无法互相挪用
+            packetCipher = crypto.getEpochPacketCipher(Heartbeat.rootKey(), thisInstanceInfo.getDomain());
+            requestData = packetCipher.decrypt(requestBody, crypto.generateCipherAad(
+                    thisInstanceInfo.getDomain(), thisInstanceInfo.getId(), aad));
         } catch (Exception e) {
-            logger.error("agent request processing error", e);
-            httpResponse.status(500).finish();
+            // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，避免成为配置状态的判别信号
+            logger.warn("agent request decrypt failed: " + e.getMessage());
+            httpResponse.status(400);
             return;
         }
 
@@ -75,7 +44,7 @@ class ProcessHandler {
             responseData = callback.doProcess(requestData);
         } catch (Throwable e) {
             logger.error("agent business processing error", e);
-            httpResponse.status(500).finish();
+            httpResponse.status(500);
             return;
         }
 
@@ -85,17 +54,13 @@ class ProcessHandler {
             // 响应绑定：以请求明文的 SHA-256 作为响应 GCM 的 AAD，
             // 旧响应无法被重放为对其他请求的有效应答（请求不同则 AAD 不匹配，解密失败）
             byte[] responseAad = crypto.getMessageDigest().sha256(requestData);
-            encrypt = cipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), responseAad);
+            encrypt = packetCipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), responseAad);
         } catch (Exception e) {
             logger.error("agent response encryption error", e);
-            httpResponse.status(500).finish();
+            httpResponse.status(500);
             return;
         }
-        httpResponse.send(encrypt).finish();
-    }
-
-    private static byte[] decrypt(Crypto crypto, Cipher cipher, byte[] requestBody, byte[] context) throws Exception {
-        return crypto.getReplayGuardCipher(cipher).decrypt(requestBody, context);
+        httpResponse.send(encrypt);
     }
 
     interface ProcessHandlerCallback {

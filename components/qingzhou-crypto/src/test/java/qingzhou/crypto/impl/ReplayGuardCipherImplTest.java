@@ -9,14 +9,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import qingzhou.crypto.ReplayGuardCipher;
-import qingzhou.crypto.ReplayGuardCipher.ReplayGuardException.Reason;
 
 public class ReplayGuardCipherImplTest {
     // 每个用例独立密钥与 guard，避免共享去重状态互相干扰
     private ReplayGuardCipher newGuard() {
         try {
             CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
-            return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateKey()));
+            return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateCipherKey()));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -37,8 +36,8 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt(packet, null);
             Assert.fail();
-        } catch (ReplayGuardCipher.ReplayGuardException e) {
-            Assert.assertEquals(e.getReason(), Reason.REPLAY);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(e.getMessage(), "replay detected");
         }
     }
 
@@ -50,20 +49,21 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt(packet, null);
             Assert.fail();
-        } catch (ReplayGuardCipher.ReplayGuardException e) {
-            Assert.assertEquals(e.getReason(), Reason.TIMESTAMP_OUT_OF_WINDOW);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(e.getMessage(), "timestamp out of window");
         }
     }
 
     @Test
     public void wrongContext_decryptFails_andDoesNotBurnNonce() throws Exception {
         ReplayGuardCipher guard = newGuard();
-        byte[] packet = guard.encrypt("payload".getBytes(StandardCharsets.UTF_8), "channel-A".getBytes(StandardCharsets.UTF_8));
+        byte[] packet = guard.encrypt("payload".getBytes(StandardCharsets.UTF_8),
+                "channel-A".getBytes(StandardCharsets.UTF_8));
         try {
             guard.decrypt(packet, "channel-B".getBytes(StandardCharsets.UTF_8));
             Assert.fail();
-        } catch (ReplayGuardCipher.ReplayGuardException e) {
-            Assert.fail("AAD 失配应表现为解密失败而非重放", e);
+        } catch (IllegalArgumentException e) {
+            Assert.fail("AAD 失配应表现为解密失败而非参数错误", e);
         } catch (Exception ignored) {
             // GCM 认证失败
         }
@@ -103,10 +103,10 @@ public class ReplayGuardCipherImplTest {
         try {
             guard.decrypt("not a packet".getBytes(StandardCharsets.UTF_8), null);
             Assert.fail();
-        } catch (ReplayGuardCipher.ReplayGuardException e) {
-            Assert.assertEquals(e.getReason(), Reason.INVALID_PACKET);
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(e.getMessage(), "invalid packet");
         } catch (Exception e) {
-            Assert.fail("非本协议报文应抛 ReplayGuardException", e);
+            Assert.fail("非本协议报文应抛 IllegalArgumentException", e);
         }
     }
 }

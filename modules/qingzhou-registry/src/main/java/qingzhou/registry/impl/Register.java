@@ -1,16 +1,11 @@
 package qingzhou.registry.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.*;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
-import qingzhou.common.NonceRegistry;
-import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
-import qingzhou.crypto.PairCipher;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -23,34 +18,7 @@ import qingzhou.registry.Registry;
 @Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
-    private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册/刷新报文上限
-    /**
-     * 注册报文时间戳允许的时钟偏移：超窗即拒绝，旧报文无法重放
-     */
-    private static final long MAX_CLOCK_SKEW_MILLIS = 2 * 60 * 1000;
-
-    static String decryptRequest(HttpRequest httpRequest, HttpResponse httpResponse, PairCipher pairCipher) {
-        byte[] requestBody = httpRequest.getBody();
-        if (requestBody == null || requestBody.length == 0) {
-            httpResponse.status(400).finish();
-            return null;
-        }
-        // 私钥解密按模长分块，成本随报文线性增长；注册/刷新报文实际仅数 KB，先设硬上限防 CPU DoS
-        if (requestBody.length > MAX_REGISTER_BODY) {
-            httpResponse.status(413).finish();
-            return null;
-        }
-
-        byte[] decrypted;
-        try {
-            decrypted = pairCipher.decryptWithPrivateKey(requestBody);
-        } catch (Exception e) {
-            httpResponse.status(400).send("key auth error").finish();
-            return null;
-        }
-
-        return new String(decrypted, StandardCharsets.UTF_8);
-    }
+    private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册报文上限：AES-GCM 解密廉价，仅防解析前内存消耗
 
     @Reference
     private Logger logger;
@@ -60,50 +28,31 @@ public class Register implements HttpHandler {
     private Registry registry;
     @Reference
     private Json json;
+    @Reference
+    private AgentDomainService agentDomainService;
 
-    private final NonceRegistry nonceRegistry = new NonceRegistry();
-    private PairCipher pairCipher;
-    private byte[] registerToken;
     private Timer timer;
 
     @Activate
     public void start(Map<String, String> config) throws Exception {
         Configs configs = new Configs(config);
-        String privateKey = configs.get("private_key");
-        if (privateKey == null || privateKey.trim().isEmpty()) {
-            logger.warn("'private_key' is not configured, remote instance registration feature is unavailable.");
-            return;
-        }
-        privateKey = crypto.getGlobalCipher().tryDecrypt(privateKey, "qingzhou-registry.private_key");
-        pairCipher = crypto.getPairCipher(null, privateKey);
-
-        String registerTokenConfig = config.get("register_token");
-        if (registerTokenConfig == null || registerTokenConfig.trim().isEmpty()) {
-            logger.warn("'register_token' is not configured, remote instance registration is unavailable.");
-            return;
-        } else {
-            registerToken = registerTokenConfig.trim().getBytes(StandardCharsets.UTF_8);
-        }
-
         long interval = 1000L * configs.atLeast("interval", 1, 6);
         long timeout = 1000L * configs.atLeast("timeout", 5, 12);
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                synchronized (Refresh.REFRESH_KEY_LOCK) {
-                    Set<String> toRemove = new HashSet<>();
-                    for (String next : registry.getAllRemoteInstances()) {
-                        InstanceInfo remoteInstance = registry.getRemoteInstance(next);
-                        if (remoteInstance != null) {
-                            long lastRefreshTime = remoteInstance.getLastRefreshTime();
-                            if (lastRefreshTime + timeout < System.currentTimeMillis()) {
-                                toRemove.add(next);
-                            }
+                Set<String> toRemove = new HashSet<>();
+                for (String next : registry.getAllRemoteInstances()) {
+                    InstanceInfo remoteInstance = registry.getRemoteInstance(next);
+                    if (remoteInstance != null) {
+                        long lastRefreshTime = remoteInstance.getLastRefreshTime();
+                        if (lastRefreshTime + timeout < System.currentTimeMillis()) {
+                            toRemove.add(next);
                         }
                     }
-                    toRemove.forEach(registry::removeRemoteApps);
                 }
+                toRemove.forEach(registry::removeRemoteInstance);
             }
         }, interval, interval);
     }
@@ -117,42 +66,66 @@ public class Register implements HttpHandler {
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        if (pairCipher == null || registerToken == null) {
-            httpResponse.status(500).finish();
+        byte[] requestBody = httpRequest.getBody();
+        if (requestBody == null || requestBody.length == 0) {
+            httpResponse.status(400);
             return;
         }
-        synchronized (Refresh.REFRESH_KEY_LOCK) {
-            handleInternal(httpRequest, httpResponse);
+        if (requestBody.length > MAX_REGISTER_BODY) {
+            httpResponse.status(413);
+            return;
         }
-    }
 
-    private void handleInternal(HttpRequest httpRequest, HttpResponse httpResponse) {
-        String decryptedRequest = decryptRequest(httpRequest, httpResponse, pairCipher);
-        if (decryptedRequest == null) return;
+        // 报文 = domainId(明文首行，路由键) + '\n' + ReplayGuard 报文；domainId 同时作 AAD 绑定，防报文挪域
+        int sep = indexOfLineBreak(requestBody);
+        if (sep < 0) {
+            httpResponse.status(400);
+            return;
+        }
+        String domainId = new String(requestBody, 0, sep, StandardCharsets.UTF_8).trim();
+        byte[] packet = Arrays.copyOfRange(requestBody, sep + 1, requestBody.length);
 
-        // 报文：registerToken + timestamp + nonce + currentKeyProof + InstanceInfoJson
-        String[] parts = decryptedRequest.split(Constants.AGENT_REGISTER_TOKEN_SP, 5);
-        if (!isValid(parts, httpResponse)) return;
+        byte[] master = agentDomainService.master(domainId);
+        if (master == null) {
+            logger.warn("registration for unconfigured agent-domain: " + domainId);
+            httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
+            return;
+        }
+
+        byte[] requestData;
+        try {
+            requestData = crypto.getEpochPacketCipher(master, domainId).decrypt(packet,
+                    domainId.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，不回显配置状态差异
+            logger.warn("registration decrypt failed for domain " + domainId + ": " + e.getMessage());
+            httpResponse.status(400);
+            return;
+        }
 
         InstanceInfo instanceInfo;
         try {
-            instanceInfo = json.fromJson(parts[4], InstanceInfo.class);
+            instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
             instanceInfo.setHost(httpRequest.getRemoteHost());
+            instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
         } catch (Exception e) {
-            httpResponse.status(400).send("data format error").finish();
+            httpResponse.status(400);
             return;
         }
 
-        // 重复注册必须证明持有当前实例密钥：证明 = 用当前密钥加密报文 nonce，GCM 认证通过即证明持钥。
-        // 否则重放的旧注册包会把共享密钥回滚到旧值，并伪造存活时间
+        // 应用变更会重算实例 ID：同一 agent（域 + host + port 相同）的旧记录先移除，避免同一实例双份存在
+        for (String other : registry.getAllRemoteInstances()) {
+            if (other.equals(instanceInfo.getId())) continue;
+            InstanceInfo info = registry.getRemoteInstance(other);
+            if (info != null && domainId.equals(info.getDomain())
+                    && Objects.equals(instanceInfo.getHost(), info.getHost())
+                    && instanceInfo.getPort() == info.getPort()) {
+                registry.removeRemoteInstance(other);
+            }
+        }
+
         InstanceInfo exists = registry.getRemoteInstance(instanceInfo.getId());
-        if (exists != null && !proofMatchesCurrentKey(exists.getKey(), parts[3], parts[2])) {
-            logger.warn("registration rejected: stale registration for instance: " + instanceInfo.getId());
-            httpResponse.status(409).send("stale registration").finish();
-            return;
-        }
-
-        registry.addRemoteInstanceInfo(instanceInfo);
+        registry.addRemoteInstance(instanceInfo);
 
         String msg;
         if (exists != null) {
@@ -165,62 +138,23 @@ public class Register implements HttpHandler {
             }
         }
 
-        String instanceKey = instanceInfo.getKey();
+        // 响应同样按时段封装：agent 按报文时间戳派生密钥即可解开
         try {
-            Cipher cipher = crypto.getCipher(instanceKey);
-            byte[] encrypt = cipher.encrypt(msg.getBytes(StandardCharsets.UTF_8));
-            httpResponse.send(encrypt).finish();
+            byte[] encrypt = crypto.getEpochPacketCipher(master, domainId)
+                    .encrypt(msg.getBytes(StandardCharsets.UTF_8), domainId.getBytes(StandardCharsets.UTF_8));
+            httpResponse.send(encrypt);
         } catch (Exception e) {
-            httpResponse.status(500).finish();
+            httpResponse.status(500);
             logger.error("failed to encrypt registration response", e);
         }
     }
 
-    private boolean isValid(String[] parts, HttpResponse httpResponse) {
-        if (parts.length < 5) {
-            httpResponse.status(400).send("data format error").finish();
-            return false;
+    // domainId 明文首行以 '\n' 结尾；限制首行扫描长度
+    private static int indexOfLineBreak(byte[] body) {
+        int limit = Math.min(body.length, 256);
+        for (int i = 0; i < limit; i++) {
+            if (body[i] == '\n') return i;
         }
-
-        // 注册授权：注册令牌为预共享秘密，须先于任何写入校验；registry 公钥分发给所有 agent、不是秘密，
-        // 仅凭「能用公钥加密」不足以授权注册。令牌校验通过后，新实例与重复注册（替换）均受其保护。
-        boolean isAuthorized = registerToken != null && MessageDigest.isEqual(registerToken, parts[0].getBytes(StandardCharsets.UTF_8));
-        if (!isAuthorized) {
-            httpResponse.status(401).send("register_token error").finish();
-            return false;
-        }
-
-        long timestamp;
-        try {
-            timestamp = Long.parseLong(parts[1]);
-        } catch (NumberFormatException e) {
-            httpResponse.status(400).send("data format error").finish();
-            return false;
-        }
-        // 时间窗：重放旧报文的时间戳必然过期，在任何状态变更之前拒绝
-        if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_CLOCK_SKEW_MILLIS) {
-            httpResponse.status(400).send("stale registration").finish();
-            return false;
-        }
-
-        // nonce 去重：拦截时间窗内的精确重放。登记须先于任何状态变更
-        if (!nonceRegistry.registerIfAbsent(parts[2], timestamp, MAX_CLOCK_SKEW_MILLIS * 2)) {
-            httpResponse.status(409).send("replay").finish();
-            return false;
-        }
-
-        return true;
-    }
-
-    // 重复注册的持有证明：proof = agent 用当前实例密钥加密的报文 nonce。
-    // 用 registry 侧当前密钥解密并比对 nonce，GCM 认证通过即证明请求方持有当前密钥
-    private boolean proofMatchesCurrentKey(String currentKey, String proof, String nonce) {
-        try {
-            Cipher cipher = crypto.getCipher(currentKey);
-            String decrypted = cipher.decrypt(proof);
-            return MessageDigest.isEqual(decrypted.getBytes(StandardCharsets.UTF_8), nonce.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            return false; // 解密失败（密钥不匹配/证明被篡改）一律视为未证明
-        }
+        return -1;
     }
 }

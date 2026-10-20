@@ -68,7 +68,9 @@ class ResponseImpl implements Response {
     @Override
     public void cancel() {
         cancelled = true;
-        conn.disconnect(); // conn 构造注入恒非空；同步响应读完后再 disconnect 无副作用
+        if (streaming) {
+            conn.disconnect(); // 仅流式中止需断开连接；同步响应已读完并关闭流，不 disconnect 以复用 keep-alive 连接
+        }
     }
 
     @Override

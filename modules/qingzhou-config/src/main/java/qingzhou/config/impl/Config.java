@@ -19,16 +19,12 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
-import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 
 @Component
 public class Config {
     @Reference
     private ConfigurationAdmin configAdmin;
-
-    @Reference
-    private volatile HttpClient httpClient;
 
     @Reference
     private volatile Json json;
@@ -67,9 +63,6 @@ public class Config {
 
     @Activate
     public void init() throws Exception {
-        if (qzInstance == null) {
-            throw new IllegalStateException("system property qingzhou.instance must be set");
-        }
         Path configFile = Paths.get(qzInstance, "conf", "qingzhou.properties");
         String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
         Map<String, String> qzConfig = parse(configText);
@@ -77,11 +70,12 @@ public class Config {
         String enabled = qzConfig.get(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
         if (Boolean.parseBoolean(enabled)) { // 开启外部配置中心：远程覆盖本地，缺失保留
             try {
-                RemoteConfigSourceFactory.create(qzConfig, httpClient, json).pull().entrySet().stream()
+                RemoteConfigSourceFactory.create(qzConfig, json).pull().entrySet().stream()
                         .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
                         .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
             } catch (Throwable t) {
-                // 配置错误即终止启动，不兜底，否则业务问题无法及早发现
+                // 配置错误即终止启动，不兜底，否则业务问题无法及早发现。
+                // 不能改为抛异常：DS 激活是异步的，抛出只会留下半启动实例（配置未分发、依赖组件未激活）而进程照旧运行
                 System.err.println("!!! Failed to pull remote configuration. Startup terminated !!! ");
                 t.printStackTrace(System.err);
                 System.exit(1);

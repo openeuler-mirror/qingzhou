@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Configs;
+import qingzhou.common.Hosts;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;
@@ -15,8 +17,6 @@ import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.resources.LoopResources;
-
-import qingzhou.common.Configs;
 
 @Component(immediate = true, configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpServerImpl implements HttpServer {
@@ -46,8 +46,7 @@ public class HttpServerImpl implements HttpServer {
         int maxConnections = configs.atLeast("max_connections", 0, 10_000);
         boolean sslEnabled = configs.getOrDefault("ssl_enabled", true);
         boolean allowPlaintext = configs.getOrDefault("allow_plaintext", false);
-        boolean loopbackOnly = "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
-        if (!sslEnabled && !loopbackOnly && !allowPlaintext) {
+        if (!sslEnabled && !Hosts.isLoopback(host) && !allowPlaintext) {
             // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
             throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
                     + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");
@@ -96,7 +95,7 @@ public class HttpServerImpl implements HttpServer {
 
         try {
             if (sslEnabled) {
-                SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto.getGlobalCipher(), logger);
+                SslContext sslContext = SslContextBuilder.buildSslContext(config, crypto, logger);
                 httpServer = httpServer.secure(spec -> spec.sslContext(sslContext));
             }
             disposableServer = httpServer.bindNow();

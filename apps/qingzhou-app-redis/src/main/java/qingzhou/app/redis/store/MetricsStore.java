@@ -2,13 +2,7 @@ package qingzhou.app.redis.store;
 
 import qingzhou.api.AppContext;
 import qingzhou.app.redis.store.model.MetricPoint;
-import qingzhou.json.Json;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -17,24 +11,13 @@ public class MetricsStore {
 
     private static final int MAX_POINTS_PER_METRIC = 1440;
     private final Map<String, Deque<MetricPoint>> metrics = new ConcurrentHashMap<>();
-    private final AppContext appContext;
-    private final Path storageFile;
+    private final SnapshotFile snapshotFile;
     private volatile long lastSnapshotTime = 0;
     private static final long SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
 
     public MetricsStore(AppContext appContext) {
-        this.appContext = appContext;
-        this.storageFile = getStorageFile();
+        this.snapshotFile = new SnapshotFile(appContext, StoreConstants.METRICS_FILE);
         loadSnapshot();
-    }
-
-    private Path getStorageFile() {
-        File base = appContext.getRoot();
-        File dir = new File(base, StoreConstants.DATA_DIR);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return new File(dir, StoreConstants.METRICS_FILE).toPath();
     }
 
     public void record(String metric, double value) {
@@ -111,52 +94,28 @@ public class MetricsStore {
     }
 
     public synchronized void saveSnapshot() {
-        try {
-            Json json = appContext.getService(Json.class);
-            if (json == null) {
-                return;
-            }
-            Snapshot snapshot = new Snapshot();
-            snapshot.setMetrics(metrics);
-            snapshot.setLastSnapshotTime(System.currentTimeMillis());
-            String data = json.toJson(snapshot);
-            Files.write(storageFile, data.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception ignored) {
-        }
+        Snapshot snapshot = new Snapshot();
+        snapshot.setMetrics(metrics);
+        snapshot.setLastSnapshotTime(System.currentTimeMillis());
+        snapshotFile.save(snapshot);
     }
 
     @SuppressWarnings("unchecked")
     private synchronized void loadSnapshot() {
-        if (!Files.exists(storageFile)) {
-            return;
+        Snapshot snapshot = snapshotFile.load(Snapshot.class);
+        if (snapshot == null || snapshot.getMetrics() == null) return;
+        metrics.clear();
+        for (Map.Entry<String, Deque<MetricPoint>> entry : snapshot.getMetrics().entrySet()) {
+            Deque<MetricPoint> deque = new ConcurrentLinkedDeque<>();
+            for (MetricPoint point : entry.getValue()) {
+                deque.offerLast(point);
+            }
+            while (deque.size() > MAX_POINTS_PER_METRIC) {
+                deque.pollFirst();
+            }
+            metrics.put(entry.getKey(), deque);
         }
-        try (BufferedReader reader = Files.newBufferedReader(storageFile, StandardCharsets.UTF_8)) {
-            Json json = appContext.getService(Json.class);
-            if (json == null) {
-                return;
-            }
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            Snapshot snapshot = json.fromJson(sb.toString(), Snapshot.class);
-            if (snapshot != null && snapshot.getMetrics() != null) {
-                metrics.clear();
-                for (Map.Entry<String, Deque<MetricPoint>> entry : snapshot.getMetrics().entrySet()) {
-                    Deque<MetricPoint> deque = new ConcurrentLinkedDeque<>();
-                    for (MetricPoint point : entry.getValue()) {
-                        deque.offerLast(point);
-                    }
-                    while (deque.size() > MAX_POINTS_PER_METRIC) {
-                        deque.pollFirst();
-                    }
-                    metrics.put(entry.getKey(), deque);
-                }
-                lastSnapshotTime = snapshot.getLastSnapshotTime();
-            }
-        } catch (Exception ignored) {
-        }
+        lastSnapshotTime = snapshot.getLastSnapshotTime();
     }
 
     public static class Snapshot {

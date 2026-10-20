@@ -26,12 +26,16 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/invoke", HttpHandler.HANDLE_METHODS + "=POST"},
-        configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {HttpHandler.HANDLE_PATH + "=/invoke", HttpHandler.HANDLE_METHODS + "=POST"})
 public class Invoke implements HttpHandler {
+    public static final String UPLOAD_TEMP_NAME = "qingzhou-upload";
     private static final String PATH_PREFIX = "/registry/invoke/"; // HANDLE_PATH=/invoke 加上 qingzhou-registry 的 bundle 前缀
     // 运行期惰性清理：上传中断残留的临时文件超过该时限即删除，防止反复失败积压占盘（agent 侧同策略）
     private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
+    // 参数表上限：单个请求体可解析出百万级小参数（每条目数十字节开销），须限数量与单值长度
+    private static final int MAX_PARAMETERS = 1000;
+    private static final int MAX_PARAMETER_CHARS = 1024 * 1024;
 
     @Reference
     private Registry registry;
@@ -44,7 +48,7 @@ public class Invoke implements HttpHandler {
 
     @Activate
     public void init(Map<String, String> config) {
-        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "qingzhou-upload").toFile();
+        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", UPLOAD_TEMP_NAME).toFile();
         TempFiles.cleanDir(uploadBase); // 清历史残留
     }
 
@@ -52,31 +56,49 @@ public class Invoke implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
 
+        Prepared prepared = prepare(httpRequest, httpResponse);
+        if (prepared == null) return;
+
+        try {
+            if (!parseBodyParameters(httpRequest, prepared.request)) {
+                httpResponse.status(400); // 参数规模超限：明确拒绝，不让参数表把内存撑爆
+                return;
+            }
+            prepared.app.invokeApp(prepared.request);
+        } catch (Throwable e) {
+            logger.error("http invoke failed", e);
+            httpResponse.status(500);
+            return;
+        }
+
+        sendResponse(prepared.request, httpResponse);
+    }
+
+    // 聚合与流式共用的请求准备：校验路由/应用/权限；错误分支须提前收尾，流式链路不能等到 onComplete
+    private Prepared prepare(HttpRequest httpRequest, HttpResponse httpResponse) {
         RequestImpl request = buildRequest(httpRequest);
         if (request == null) {
             httpResponse.status(400).finish();
-            return;
+            return null;
         }
 
         AppStub app = registry.getAppStub(request.getInstance(), request.getApp());
-
         if (app == null) {
             httpResponse.status(400).finish();
-            return;
+            return null;
         }
 
-        if (permissionForbidReq(httpRequest, httpResponse, app, request)) return;
+        return permissionForbidReq(httpRequest, httpResponse, app, request) ? null : new Prepared(request, app);
+    }
 
-        try {
-            parseBodyParameters(httpRequest, request);
-            app.invokeApp(request);
-        } catch (Throwable e) {
-            logger.error("http invoke failed", e);
-            httpResponse.status(500).finish();
-            return;
+    private static final class Prepared {
+        final RequestImpl request;
+        final AppStub app;
+
+        Prepared(RequestImpl request, AppStub app) {
+            this.request = request;
+            this.app = app;
         }
-
-        sendResponse(request, httpResponse);
     }
 
     private boolean permissionForbidReq(HttpRequest httpRequest, HttpResponse httpResponse, AppStub appStub, RequestImpl request) {
@@ -115,19 +137,19 @@ public class Invoke implements HttpHandler {
 
         // 添加 URL 里的参数
         httpRequest.getParameters().forEach((k, v) -> {
-            if (v != null && !v.isEmpty()) { // 畸形参数表可能产生空值列表，直接 get(0) 会越界
+            if (v != null && !v.isEmpty() && v.get(0).length() <= MAX_PARAMETER_CHARS) { // 畸形参数表可能产生空值列表，直接 get(0) 会越界
                 request.getParameters().put(k, v.get(0));
             }
         });
         return request;
     }
 
-    // 添加 POST 请求体里的参数
-    private void parseBodyParameters(HttpRequest httpRequest, RequestImpl request) {
-        if (!"POST".equalsIgnoreCase(httpRequest.getMethod())) return;
-        if (httpRequest.getContentType() == null) return;
-        if (httpRequest.getBody() == null) return;
-        if (httpRequest.getBody().length == 0) return;
+    // 添加 POST 请求体里的参数；返回 false 表示参数规模超出上限
+    private boolean parseBodyParameters(HttpRequest httpRequest, RequestImpl request) {
+        if (!"POST".equalsIgnoreCase(httpRequest.getMethod())) return true;
+        if (httpRequest.getContentType() == null) return true;
+        if (httpRequest.getBody() == null) return true;
+        if (httpRequest.getBody().length == 0) return true;
 
         // JSON 参数
         if (httpRequest.getContentType().contains("application/json")) {
@@ -135,16 +157,22 @@ public class Invoke implements HttpHandler {
                 Object parsed = json.fromJson(
                         new String(httpRequest.getBody(), StandardCharsets.UTF_8), Object.class);
                 if (parsed instanceof Map) {
+                    Map<String, String> parameters = request.getParameters();
                     for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet()) {
-                        request.getParameters().put(
-                                String.valueOf(entry.getKey()),
-                                entry.getValue() != null ? String.valueOf(entry.getValue()) : "");
+                        String value = entry.getValue() != null ? String.valueOf(entry.getValue()) : "";
+                        if (parameters.size() >= MAX_PARAMETERS || value.length() > MAX_PARAMETER_CHARS) {
+                            logger.warn("invoke parameters exceed quota, rejected: instance=" + request.getInstance()
+                                    + ", app=" + request.getApp());
+                            return false;
+                        }
+                        parameters.put(String.valueOf(entry.getKey()), value);
                     }
                 }
             } catch (Exception e) {
                 logger.warn("failed to parse json body: " + e.getMessage());
             }
         }
+        return true;
     }
 
     private void sendResponse(RequestImpl request, HttpResponse httpResponse) {
@@ -152,7 +180,7 @@ public class Invoke implements HttpHandler {
         if (!response.isActionInvoked()
                 && response.getData() == null
                 && response.getMsg() == null) {
-            httpResponse.status(404).finish();
+            httpResponse.status(404);
             return;
         }
 
@@ -177,10 +205,10 @@ public class Invoke implements HttpHandler {
                 httpResponse.contentTypeJsonUtf8();
             }
             String json = this.json.toJson(result);
-            httpResponse.send(json).finish();
+            httpResponse.send(json);
         } catch (Exception e) {
             logger.error("failed to serialize invoke response", e);
-            httpResponse.status(500).finish();
+            httpResponse.status(500);
         }
     }
 
@@ -189,8 +217,17 @@ public class Invoke implements HttpHandler {
         return new StreamHandlerImpl();
     }
 
+    // RFC 2046：boundary 为 1~70 个可打印字符，不含空白、引号与反斜杠
+    private static boolean isValidBoundary(String boundary) {
+        if (boundary == null || boundary.isEmpty() || boundary.length() > 70) return false;
+        for (int i = 0; i < boundary.length(); i++) {
+            char c = boundary.charAt(i);
+            if (c <= 0x20 || c > 0x7E || c == '"' || c == '\\') return false;
+        }
+        return true;
+    }
+
     private class StreamHandlerImpl implements StreamHandler {
-        HttpRequest httpRequest;
         HttpResponse httpResponse;
 
         RequestImpl request;
@@ -200,22 +237,13 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onBegin(HttpRequest httpRequest, HttpResponse httpResponse) {
-            this.httpRequest = httpRequest;
             this.httpResponse = httpResponse;
 
-            request = buildRequest(httpRequest);
-            if (request == null) {
-                httpResponse.status(400).finish();
-                return;
-            }
+            Prepared prepared = prepare(httpRequest, httpResponse);
+            if (prepared == null) return;
 
-            app = registry.getAppStub(request.getInstance(), request.getApp());
-            if (app == null) {
-                httpResponse.status(400).finish();
-                return;
-            }
-
-            if (permissionForbidReq(httpRequest, httpResponse, app, request)) return; // 已写入 403
+            request = prepared.request;
+            app = prepared.app;
 
             String boundary = null;
             String contentType = httpRequest.getContentType();
@@ -227,7 +255,7 @@ public class Invoke implements HttpHandler {
                     }
                 }
             }
-            if (boundary == null) {
+            if (!isValidBoundary(boundary)) { // 空/超长/含空白与控制字符的分隔符会破坏解析
                 httpResponse.status(400).finish();
                 return;
             }
@@ -255,7 +283,7 @@ public class Invoke implements HttpHandler {
                 app.invokeApp(request);
             } catch (Throwable e) {
                 logger.error("multipart invoke failed", e);
-                httpResponse.status(500).finish();
+                httpResponse.status(500);
                 return;
             } finally {
                 parser.abort();

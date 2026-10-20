@@ -25,7 +25,9 @@ import qingzhou.http.client.ResponseListener;
 public class HttpClientImplTest {
     static HttpClientImpl buildHttpClientImpl() {
         HttpClientImpl httpClient = new HttpClientImpl();
-        httpClient.activate();
+        httpClient.init(new HashMap<String, String>() {{
+            put("allow_ssl_trust_all", "true");
+        }});
         return httpClient;
     }
 

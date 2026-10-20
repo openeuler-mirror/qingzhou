@@ -96,7 +96,8 @@ public class CaptchaImpl implements Captcha {
             BasicStroke bs = new BasicStroke(3);
             g.setStroke(bs);
             //画出曲线
-            QuadCurve2D.Double curve = new QuadCurve2D.Double(0d, random.nextInt(HEIGHT - 8) + 4, (double) WIDTH / 2, (double) HEIGHT / 2, WIDTH, random.nextInt(WIDTH - 8) + 4);
+            // 终点 y 须以 HEIGHT 为界：误用 WIDTH 会让曲线越出画布
+            QuadCurve2D.Double curve = new QuadCurve2D.Double(0d, random.nextInt(HEIGHT - 8) + 4, (double) WIDTH / 2, (double) HEIGHT / 2, WIDTH, random.nextInt(HEIGHT - 8) + 4);
             g.draw(curve);
         } finally {
             // 必须在 finally 释放，否则绘制中途异常会泄漏原生图形资源

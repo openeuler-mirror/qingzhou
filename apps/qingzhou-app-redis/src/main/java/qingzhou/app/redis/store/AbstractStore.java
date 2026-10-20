@@ -6,7 +6,6 @@ import qingzhou.json.Json;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,23 +19,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 abstract class AbstractStore<T extends StoreEntry> {
     protected final Deque<T> entries = new ConcurrentLinkedDeque<>();
-    protected final AppContext appContext;
-    protected final Path storageFile;
+    protected final SnapshotFile snapshotFile;
     protected final AtomicLong sequence = new AtomicLong(0);
 
     protected AbstractStore(AppContext appContext, String fileName) {
-        this.appContext = appContext;
-        this.storageFile = resolveStorageFile(fileName);
+        this.snapshotFile = new SnapshotFile(appContext, fileName);
         load();
-    }
-
-    private Path resolveStorageFile(String fileName) {
-        File base = appContext.getRoot();
-        File dir = new File(base, StoreConstants.DATA_DIR);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return new File(dir, fileName).toPath();
     }
 
     protected void addEntry(T entry) {
@@ -69,7 +57,7 @@ abstract class AbstractStore<T extends StoreEntry> {
         return list;
     }
 
-    protected List<T> paginate(List<T> list, int pageNum, int pageSize) {
+    static <T> List<T> paginate(List<T> list, int pageNum, int pageSize) {
         int start = (pageNum - 1) * pageSize;
         if (start >= list.size()) return new ArrayList<>();
         int end = Math.min(start + pageSize, list.size());
@@ -85,9 +73,10 @@ abstract class AbstractStore<T extends StoreEntry> {
     }
 
     protected void appendToFile(T entry) {
+        Json json = snapshotFile.json();
+        if (json == null) return;
+        Path storageFile = snapshotFile.path();
         try {
-            Json json = appContext.getService(Json.class);
-            if (json == null) return;
             String line = json.toJson(entry);
             Files.createDirectories(storageFile.getParent());
             try (BufferedWriter writer = Files.newBufferedWriter(storageFile, StandardCharsets.UTF_8,
@@ -96,13 +85,15 @@ abstract class AbstractStore<T extends StoreEntry> {
                 writer.newLine();
             }
         } catch (Exception e) {
+            snapshotFile.warn("failed to append store entry: " + storageFile.getFileName(), e);
         }
     }
 
     protected void loadAppendEntries(Class<T> entryClass) {
+        Path storageFile = snapshotFile.path();
         if (!Files.exists(storageFile)) return;
         try (BufferedReader reader = Files.newBufferedReader(storageFile, StandardCharsets.UTF_8)) {
-            Json json = appContext.getService(Json.class);
+            Json json = snapshotFile.json();
             if (json == null) return;
             String line;
             while ((line = reader.readLine()) != null) {
@@ -114,40 +105,24 @@ abstract class AbstractStore<T extends StoreEntry> {
                         entries.offerLast(entry);
                         restoreSequence(entry.getId());
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
+                    // 单行损坏不影响其余记录
                 }
             }
             while (entries.size() > getMaxSize()) {
                 entries.pollFirst();
             }
         } catch (Exception e) {
+            snapshotFile.warn("failed to load store entries: " + storageFile.getFileName(), e);
         }
     }
 
     protected void saveSnapshot(Object snapshot) {
-        try {
-            Json json = appContext.getService(Json.class);
-            if (json == null) return;
-            String data = json.toJson(snapshot);
-            Files.write(storageFile, data.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-        }
+        snapshotFile.save(snapshot);
     }
 
     protected <S> S loadSnapshot(Class<S> snapshotClass) {
-        if (!Files.exists(storageFile)) return null;
-        try (BufferedReader reader = Files.newBufferedReader(storageFile, StandardCharsets.UTF_8)) {
-            Json json = appContext.getService(Json.class);
-            if (json == null) return null;
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            return json.fromJson(sb.toString(), snapshotClass);
-        } catch (Exception e) {
-            return null;
-        }
+        return snapshotFile.load(snapshotClass);
     }
 
     public Deque<T> getEntries() {

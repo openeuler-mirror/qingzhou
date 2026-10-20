@@ -13,10 +13,11 @@ public interface HttpHandler {
     /**
      * 处理请求。
      * <p>
-     * 本方法只负责「开始」：响应必须由 handler 自己以终态方法收尾（{@link HttpResponse#finish()}、
-     * {@link HttpResponse#redirect(String)}）。未收尾的请求会一直挂到空闲超时，属 handler 的编程错误。
-     * 允许 handler 返回后再由其它线程继续写入并收尾（如 SSE），框架不会代为结束。
-     * 仅当本方法抛出异常时，框架才会自行终止响应。
+     * 正常返回后框架自动收尾响应，无需调用 {@link HttpResponse#finish()}。
+     * 若要在返回后继续写入并收尾（如 SSE），须在返回前调用 {@link HttpResponse#async()}，
+     * 之后由 handler 自行 {@link HttpResponse#finish()}；否则后台写入会因响应已结束而失败。
+     * 未收尾的异步响应会挂到空闲超时，属 handler 的编程错误。
+     * 仅当本方法抛出异常时，框架会强制终止响应。
      */
     void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception;
 

@@ -13,7 +13,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import qingzhou.http.server.impl.HttpRequestImpl;
 import reactor.netty.http.server.HttpServerRequest;
 
 /**
@@ -186,7 +185,7 @@ public class HttpRequestImplTest {
         byte[] second = "second".getBytes(StandardCharsets.UTF_8);
 
         request.setRequestBody(first);
-        Assert.assertEquals(request.getBody(), first); // 返回副本：内容相同但非同一数组
+        Assert.assertEquals(request.getBody(), first); // 返回内部数组引用：调用方不得修改（见 getBody 契约）
 
         request.setRequestBody(second);
         Assert.assertEquals(request.getBody(), second);
@@ -228,6 +227,34 @@ public class HttpRequestImplTest {
         HttpRequestImpl request = newRequest("/path?a=1", "/path", HttpMethod.GET, null, false);
 
         request.getParameters().put("b", Arrays.asList("2"));
+    }
+
+    // ---------- 12. 参数个数超限按无参数处理 ----------
+
+    @Test
+    public void tooManyQueryParams_getParameters_treatedAsNoParams() {
+        HttpRequestImpl request = newRequest(overflowParams("/path?"), "/path", HttpMethod.GET, null, false);
+
+        Assert.assertTrue(request.getParameters().isEmpty());
+        Assert.assertNull(request.getParameter("k0"));
+    }
+
+    @Test
+    public void tooManyFormBodyParams_getParameters_treatedAsNoParams() {
+        HttpRequestImpl request = newRequest("/path", "/path", HttpMethod.POST, formHeaders(), true);
+        request.setRequestBody(overflowParams("").getBytes(StandardCharsets.UTF_8));
+
+        Assert.assertTrue(request.getParameters().isEmpty());
+    }
+
+    // 1001 个参数：恰好越过 MAX_FORM_PARAMS=1000 的阈值，锁定超限按无参数处理的容错行为
+    private String overflowParams(String prefix) {
+        StringBuilder params = new StringBuilder(prefix);
+        for (int i = 0; i < 1001; i++) {
+            if (i > 0) params.append('&');
+            params.append("k").append(i).append("=v");
+        }
+        return params.toString();
     }
 
     // ---------- 桩对象构造 ----------

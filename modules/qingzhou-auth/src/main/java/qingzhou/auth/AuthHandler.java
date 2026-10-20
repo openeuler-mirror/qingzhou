@@ -80,7 +80,7 @@ public class AuthHandler implements HttpHandler {
             case LOGIN_PATH:
                 // 凭据只允许经 POST 请求体传递
                 if (!isPost || request.getRawUri().contains("?")) { // 防止密码进入 URL/访问日志；
-                    response.status(400).finish();
+                    response.status(400);
                     return;
                 }
                 login(request, response);
@@ -88,7 +88,7 @@ public class AuthHandler implements HttpHandler {
             case LOGOUT_PATH:
                 // 登出限定 POST：防跨站 GET 触发登出（logout CSRF）
                 if (!isPost) {
-                    response.status(400).finish();
+                    response.status(400);
                     return;
                 }
                 logout(request, response);
@@ -96,6 +96,8 @@ public class AuthHandler implements HttpHandler {
             case SESSION_PATH:
                 session(request, response);
                 break;
+            default:
+                response.status(404);
         }
     }
 
@@ -103,12 +105,12 @@ public class AuthHandler implements HttpHandler {
         String reqUser = request.getParameter("username");
         String ip = request.getRemoteHost();
         if (reqUser != null && reqUser.length() > 128) {
-            response.status(401).send("invalid username or password").finish();
+            response.status(401).send("invalid username or password");
             return;
         }
         String lockKey = ip + '\0' + (reqUser == null ? "" : reqUser);
         if (lockout.isLocked(lockKey)) {
-            response.status(429).send("too many login failures, try again later").finish();
+            response.status(429).send("too many login failures, try again later");
             return;
         }
 
@@ -116,14 +118,14 @@ public class AuthHandler implements HttpHandler {
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
             lockout.recordFailure(lockKey);
-            response.status(401).send("invalid username or password").finish();
+            response.status(401).send("invalid username or password");
             return;
         }
 
         if (totpEnabled) {
             String code = request.getParameter("code");
             if (code == null || code.isEmpty()) {
-                response.status(401).send("totp code required").finish(); // 请求不完整，不计入失败
+                response.status(401).send("totp code required"); // 请求不完整，不计入失败
                 return;
             }
             if (!verifyCode(code, response)) {
@@ -134,8 +136,6 @@ public class AuthHandler implements HttpHandler {
 
         lockout.clear(lockKey);
         tokenService.sendToken(reqUser, roles, request, response);
-
-        response.finish();
     }
 
     /**
@@ -145,13 +145,13 @@ public class AuthHandler implements HttpHandler {
     private void session(HttpRequest request, HttpResponse response) throws Exception {
         Object[] userRoles = tokenService.verifyToken(tokenService.retrieveToken(request), request, response);
         if (userRoles == null) {
-            response.status(401).finish();
+            response.status(401);
             return;
         }
         Map<String, Object> body = new HashMap<>();
         body.put("username", userRoles[0]);
         body.put("roles", userRoles[1]);
-        response.contentTypeJsonUtf8().send(json.toJson(body)).finish();
+        response.contentTypeJsonUtf8().send(json.toJson(body));
     }
 
     private boolean verifyUserPassword(String reqUser, String reqPass) {
@@ -165,7 +165,7 @@ public class AuthHandler implements HttpHandler {
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (crypto.getTotpCipher().verifyCode(
+            if (crypto.getTotp().verifyCode(
                     crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"),
                     code)) {
                 return true;
@@ -173,7 +173,7 @@ public class AuthHandler implements HttpHandler {
         } catch (Exception e) {
             logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");
         }
-        response.status(401).send("invalid totp code").finish();
+        response.status(401).send("invalid totp code");
         return false;
     }
 

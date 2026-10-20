@@ -11,7 +11,7 @@ import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.MessageDigest;
 
 class MessageDigestImpl implements MessageDigest {
-    private static final SecureRandom random = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
     private static final String SALT_SEPARATOR = "$";
     // 迭代数上限：来自被校验串，不设上界会被恶意摘要用超大迭代数拖垮 CPU（CPU DoS）
     private static final int MAX_ITERATIONS = 1_000_000;
@@ -41,7 +41,7 @@ class MessageDigestImpl implements MessageDigest {
         byte[] salt = null;
         if (saltLength > 0) {
             salt = new byte[saltLength];
-            random.nextBytes(salt);
+            RANDOM.nextBytes(salt);
         }
         return mutate(text, algorithm, salt, iterations);
     }
@@ -57,6 +57,7 @@ class MessageDigestImpl implements MessageDigest {
             if (splitPwd.length != 4) return false; // 格式非法的摘要直接判定不匹配
 
             String algorithm = splitPwd[0];
+            if (!ALLOWED_ALGORITHMS.contains(algorithm)) return false; // 与 digest 同一白名单：MD5/SHA-1 等弱算法摘要不接受校验
             byte[] salt = decode(splitPwd[1]);
             int iterations = Integer.parseInt(splitPwd[2]);
             if (iterations < 1 || iterations > MAX_ITERATIONS) return false;

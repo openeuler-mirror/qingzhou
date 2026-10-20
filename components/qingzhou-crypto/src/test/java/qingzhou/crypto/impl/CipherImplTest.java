@@ -40,7 +40,7 @@ public class CipherImplTest {
 
     void doTest(TestLogicNormal testLogicNormal) {
         CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
-        String key = crypto.generateKey();
+        String key = crypto.generateCipherKey();
         try {
             Cipher cipher = crypto.getCipher(key);
             testLogicNormal.run(cipher);

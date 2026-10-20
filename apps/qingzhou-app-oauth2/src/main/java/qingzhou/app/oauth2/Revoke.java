@@ -3,7 +3,6 @@ package qingzhou.app.oauth2;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
@@ -11,29 +10,13 @@ import qingzhou.json.Json;
 /**
  * 令牌注销端点：撤销访问令牌及其关联的刷新令牌。
  */
-public class Revoke implements HttpHandler {
-    private final Store store;
-    private final Json json;
-
+public class Revoke extends ClientEndpoint {
     public Revoke(Store store, Json json) {
-        this.store = store;
-        this.json = json;
+        super(store, json);
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws Exception {
-        if (!"POST".equals(request.getMethod())) { // 令牌与凭据不得经 GET 进入 URL 与访问日志
-            Reply.methodNotAllowed(response);
-            return;
-        }
-
-        Map<String, String> client = store.authenticateClient(
-                request.getParameter("client_id"), request.getParameter("client_secret"));
-        if (client == null) {
-            Reply.sendError(response, json, "invalid_client", "客户端验证失败");
-            return;
-        }
-
+    protected void process(HttpRequest request, Map<String, String> client, HttpResponse response) throws Exception {
         String token = request.getParameter("token");
         if (Security.isEmpty(token)) {
             token = request.getParameter("access_token");

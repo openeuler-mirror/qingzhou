@@ -30,10 +30,7 @@ public class Package {
         File mvnTarget = new File("target");
         File buildHome = new File(mvnTarget, "qingzhou");
         boolean devMode = Boolean.getBoolean("DevMode");
-        String buildVersion = System.getProperty("BuildVersion"); // maven 插件自动解析
-        if (buildVersion == null || buildVersion.trim().isEmpty()) {
-            throw new IllegalStateException("system property 'BuildVersion' is required");
-        }
+        String buildVersion = System.getProperty("BuildVersion"); // maven 插件自动解析，不会为空
 
         // 构建版本
         File versionDir = new File(buildHome, "lib" + File.separator + "version");

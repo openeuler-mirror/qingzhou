@@ -12,6 +12,9 @@ import qingzhou.image.QrCode;
 
 @Component
 public class QrCodeImpl implements QrCode {
+    // 边长像素上限：scale 由调用方给出，无上界时一次调用即可让图像分配撑爆内存
+    private static final int MAX_IMAGE_DIMENSION = 4096;
+
     @Override
     public byte[] genImage(String qrCode, int scale) throws IOException {
         BufferedImage qrImage = genQrImage(qrCode, scale, 1, 0xFFFFFFFF, 0xFF000000);
@@ -45,6 +48,10 @@ public class QrCodeImpl implements QrCode {
         io.nayuki.qrcodegen.QrCode qr = io.nayuki.qrcodegen.QrCode.encodeSegments(segs, io.nayuki.qrcodegen.QrCode.Ecc.HIGH, io.nayuki.qrcodegen.QrCode.MIN_VERSION, io.nayuki.qrcodegen.QrCode.MAX_VERSION, -1, true);  // Automatic mask
         if (border > Integer.MAX_VALUE / 2 || qr.size + border * 2L > Integer.MAX_VALUE / scale) {
             throw new IllegalArgumentException("QrCode scale or border too large");
+        }
+        long dimension = (qr.size + border * 2L) * scale;
+        if (dimension > MAX_IMAGE_DIMENSION) { // 仅防溢出不足以防内存：超大画布一次分配即可 OOM
+            throw new IllegalArgumentException("QrCode image dimension too large: " + dimension);
         }
 
         BufferedImage result = new BufferedImage((qr.size + border * 2) * scale, (qr.size + border * 2) * scale, BufferedImage.TYPE_INT_RGB);

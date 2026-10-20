@@ -217,14 +217,10 @@ public class RedisUtil {
     public long latencyPing() {
         long start = System.currentTimeMillis();
         try {
-            if (isCluster()) {
-                jedisCluster.ping();
-            } else {
-                execute(jedis -> {
-                    jedis.ping();
-                    return null;
-                });
-            }
+            executeAny(jedis -> {
+                jedis.ping();
+                return null;
+            });
         } catch (Exception e) {
             return -1;
         }
@@ -235,10 +231,7 @@ public class RedisUtil {
 
 
     public Map<String, String> infoSection(String section) {
-        if (isCluster()) {
-            return executeOnFirstClusterNode(jedis -> parseInfo(section, jedis.info(section)));
-        }
-        return execute(jedis -> parseInfo(section, jedis.info(section)));
+        return executeAny(jedis -> parseInfo(section, jedis.info(section)));
     }
 
 
@@ -246,13 +239,7 @@ public class RedisUtil {
 
     public String configGetValue(String key) {
         try {
-            if (isCluster()) {
-                return executeOnFirstClusterNode(jedis -> {
-                    Map<String, String> result = jedis.configGet(key);
-                    return result != null ? result.get(key) : null;
-                });
-            }
-            return execute(jedis -> {
+            return executeAny(jedis -> {
                 Map<String, String> result = jedis.configGet(key);
                 return result != null ? result.get(key) : null;
             });
@@ -308,14 +295,7 @@ public class RedisUtil {
             return result;
         }
         try {
-            if (isCluster()) {
-                executeOnAllClusterNodes(jedis -> collectBigKeys(jedis, sampleSize, result));
-            } else {
-                execute(jedis -> {
-                    collectBigKeys(jedis, sampleSize, result);
-                    return null;
-                });
-            }
+            executeOnAllNodes(jedis -> collectBigKeys(jedis, sampleSize, result));
         } catch (Exception ignored) {
         }
         result.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
@@ -391,11 +371,10 @@ public class RedisUtil {
         long now = System.currentTimeMillis();
         if (now - lastHealthCheckTime > HEALTH_CHECK_INTERVAL) {
             try {
-                if (isCluster()) {
-                    jedisCluster.ping();
-                } else {
-                    execute(jedis -> jedis.ping());
-                }
+                executeAny(jedis -> {
+                    jedis.ping();
+                    return null;
+                });
                 lastHealthCheckTime = now;
                 return true;
             } catch (Exception e) {
@@ -413,6 +392,22 @@ public class RedisUtil {
     public <T> T execute(Function<Jedis, T> function) {
         try (Jedis jedis = getJedis()) {
             return function.apply(jedis);
+        }
+    }
+
+    // 集群走首个非副本节点，单机/哨兵走连接池：屏蔽调用方的模式分支
+    private <T> T executeAny(Function<Jedis, T> function) {
+        return isCluster() ? executeOnFirstClusterNode(function) : execute(function);
+    }
+
+    private void executeOnAllNodes(Consumer<Jedis> consumer) {
+        if (isCluster()) {
+            executeOnAllClusterNodes(consumer);
+        } else {
+            execute(jedis -> {
+                consumer.accept(jedis);
+                return null;
+            });
         }
     }
 
@@ -440,28 +435,23 @@ public class RedisUtil {
 
 
     public void executeOnAllClusterNodes(Consumer<Jedis> consumer) {
-        if (jedisCluster == null) {
-            throw new JedisException("Redis 集群连接未初始化");
-        }
-        Map<String, ConnectionPool> clusterNodes = jedisCluster.getClusterNodes();
-        for (Map.Entry<String, ConnectionPool> entry : clusterNodes.entrySet()) {
-            if (isReplicaNode(entry.getKey())) continue;
-            try (Jedis jedis = new Jedis(entry.getValue().getResource())) {
-                consumer.accept(jedis);
-            } catch (Exception ignored) {
-            }
-        }
+        executeOnClusterNodes(consumer, false);
     }
 
 
 
 
     public void executeOnAllClusterNodesIncludingReplicas(Consumer<Jedis> consumer) {
+        executeOnClusterNodes(consumer, true);
+    }
+
+    private void executeOnClusterNodes(Consumer<Jedis> consumer, boolean includeReplicas) {
         if (jedisCluster == null) {
             throw new JedisException("Redis 集群连接未初始化");
         }
         Map<String, ConnectionPool> clusterNodes = jedisCluster.getClusterNodes();
         for (Map.Entry<String, ConnectionPool> entry : clusterNodes.entrySet()) {
+            if (!includeReplicas && isReplicaNode(entry.getKey())) continue;
             try (Jedis jedis = new Jedis(entry.getValue().getResource())) {
                 consumer.accept(jedis);
             } catch (Exception ignored) {
