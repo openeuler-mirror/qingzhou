@@ -87,6 +87,11 @@ class ResponseImpl implements Response {
         return code;
     }
 
+    @Override
+    public String getHeader(String name) {
+        return conn.getHeaderField(name);
+    }
+
     private byte[] read(InputStream inputStream) throws IOException {
         try (InputStream in = inputStream; ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             int len;

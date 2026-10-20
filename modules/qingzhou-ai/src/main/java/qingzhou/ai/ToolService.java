@@ -11,6 +11,7 @@ public interface ToolService {
     String PARAMETER_NAME = "PARAMETER_NAME";
     String PARAMETER_DESCRIPTION = "PARAMETER_DESCRIPTION";
     String PARAMETER_REQUIRED = "PARAMETER_REQUIRED";
+    String PARAMETER_TYPE = "PARAMETER_TYPE";
 
     String invoke(Map<String, Object> toolArgs) throws Exception;
 }
