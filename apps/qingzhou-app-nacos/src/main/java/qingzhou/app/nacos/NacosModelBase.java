@@ -1,6 +1,7 @@
 package qingzhou.app.nacos;
 
 import qingzhou.api.ModelBase;
+import qingzhou.logger.Logger;
 
 /**
  * Nacos 模型基类
@@ -64,5 +65,10 @@ public abstract class NacosModelBase extends ModelBase {
      */
     protected String getEffectiveNamespaceId(String namespaceId) {
         return isPublicNamespace(namespaceId) ? NacosConstants.EMPTY_NAMESPACE : namespaceId;
+    }
+
+    protected void logError(String message, Throwable e) {
+        Logger logger = getAppContext().getService(Logger.class);
+        if (logger != null) logger.error(message, e);
     }
 }

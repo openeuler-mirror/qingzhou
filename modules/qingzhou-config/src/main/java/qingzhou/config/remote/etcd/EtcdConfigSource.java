@@ -1,47 +1,53 @@
 package qingzhou.config.remote.etcd;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import qingzhou.common.Hosts;
 import qingzhou.config.impl.Config;
 import qingzhou.config.remote.RemoteConfigSource;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Request;
-import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
- * etcd v3 JSON Gateway（HTTP REST）实现：HTTP 与 JSON 均复用框架组件，不引入第三方库。
+ * etcd v3 JSON Gateway（HTTP REST）实现：HTTP 使用 JDK 自带实现、JSON 复用框架组件，不引入第三方库。
  */
 public final class EtcdConfigSource implements RemoteConfigSource {
     private final String endpoint;
     private final String prefix;
     private final String username;
     private final String password;
-    private final int connectTimeout;
-    private final int readTimeout;
-    private final HttpClient http;
+    private final EtcdHttp http;
     private final Json json;
     private String token;
 
     public EtcdConfigSource(String endpoint, String namespace, String username, String password,
-                            int connectTimeout, int readTimeout, HttpClient http, Json json) {
+                            int connectTimeout, int readTimeout, boolean allowInsecureHttp, Json json) {
         this.endpoint = endpoint.replaceAll("/+$", "").replaceAll("(?i)/v3$", "");
+        validateEndpoint(this.endpoint, allowInsecureHttp);
         if (namespace == null || namespace.trim().isEmpty()) {
             throw new IllegalArgumentException("qingzhou-config.remote.namespace must not be empty");
         }
         this.prefix = namespace.trim() + "/";
         this.username = username;
         this.password = password == null ? "" : password;
-        this.connectTimeout = connectTimeout;
-        this.readTimeout = readTimeout;
-        this.http = http;
+        this.http = new EtcdHttp(connectTimeout, readTimeout);
         this.json = json;
+    }
+
+    // 明文 HTTP 会把 etcd 口令与令牌暴露在网络上：非回环端点须显式确认
+    private static void validateEndpoint(String endpoint, boolean allowInsecureHttp) {
+        URL url;
+        try {
+            url = new URL(endpoint);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("invalid etcd endpoint: " + endpoint, e);
+        }
+        if (!allowInsecureHttp && "http".equalsIgnoreCase(url.getProtocol()) && !Hosts.isLoopback(url.getHost())) {
+            throw new IllegalArgumentException("etcd endpoint over plaintext HTTP exposes credentials: " + endpoint
+                    + "; use https, or set qingzhou-config.remote.allow_insecure_http=true to accept the risk");
+        }
     }
 
     @Override
@@ -50,7 +56,13 @@ public final class EtcdConfigSource implements RemoteConfigSource {
         byte[] rangeEnd = prefixRangeEnd(key);
         String body = "{\"key\":\"" + encode(key) + "\",\"range_end\":\"" + encode(rangeEnd) + "\"}";
 
-        Range range = call(body);
+        Range range;
+        try {
+            range = range(body);
+        } catch (TokenExpiredException e) {
+            token = null; // etcd 令牌有 TTL：过期即重认证一次再试，避免配置拉取长期失败
+            range = range(body);
+        }
         Map<String, String> result = new HashMap<>();
         if (range.kvs == null) return result;
 
@@ -63,35 +75,38 @@ public final class EtcdConfigSource implements RemoteConfigSource {
         return result;
     }
 
-    private Range call(String body) throws Exception {
-        if (token == null && username != null && !username.isEmpty()) {
-            AuthRequest auth = new AuthRequest();
-            auth.name = username;
-            auth.password = password;
-            // 交由 Json 服务序列化，避免口令中的引号、反斜杠破坏请求体
-            token = json.fromJson(post("/auth/authenticate", json.toJson(auth)), Auth.class).token;
+    private Range range(String body) throws Exception {
+        authenticateIfNeeded();
+        EtcdHttp.Response response = http.post(endpoint + "/v3/kv/range", token, body);
+        if (response.status == 401 && token != null) throw new TokenExpiredException(response.body);
+        if (response.status < 200 || response.status >= 300) {
+            throw new IllegalStateException("etcd /kv/range failed: http " + response.status + ", " + response.body);
         }
-        return json.fromJson(post("/kv/range", body), Range.class);
+        return json.fromJson(response.body, Range.class);
+    }
+
+    private void authenticateIfNeeded() throws Exception {
+        if (token != null || username == null || username.isEmpty()) return;
+
+        AuthRequest auth = new AuthRequest();
+        auth.name = username;
+        auth.password = password;
+        // 交由 Json 服务序列化，避免口令中的引号、反斜杠破坏请求体
+        token = json.fromJson(post("/auth/authenticate", json.toJson(auth)), Auth.class).token;
     }
 
     private String post(String path, String body) throws Exception {
-        Request request = http.buildRequest(endpoint + "/v3" + path)
-                .method(HttpMethod.POST)
-                .header("Content-Type", "application/json")// 覆盖客户端默认的表单类型
-                .body(body.getBytes(StandardCharsets.UTF_8))
-                .connectTimeout(connectTimeout)
-                .readTimeout(readTimeout);
-        if (token != null) request.header("Authorization", token);
+        EtcdHttp.Response response = http.post(endpoint + "/v3" + path, token, body);
+        if (response.status < 200 || response.status >= 300) {
+            throw new IllegalStateException("etcd " + path + " failed: http " + response.status + ", " + response.body);
+        }
+        return response.body;
+    }
 
-        Response response = http.send(request);
-        try {
-            String text = new String(response.getBody(), StandardCharsets.UTF_8);
-            if (response.getStatus() < 200 || response.getStatus() >= 300) {
-                throw new IllegalStateException("etcd " + path + " failed: http " + response.getStatus() + ", " + text);
-            }
-            return text;
-        } finally {
-            response.cancel();
+    // 仅供 pull 区分"令牌过期可重试"与其它失败
+    private static final class TokenExpiredException extends Exception {
+        TokenExpiredException(String message) {
+            super(message);
         }
     }
 

@@ -5,6 +5,7 @@ import java.util.*;
 
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Request;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatModel;
@@ -124,6 +125,7 @@ public class Utils {
 
     public static Request newLlmRequest(Map<String, Object> llmRequest, boolean stream, ChatModelBuilderBase builder, HttpClient httpClient, Json json, Crypto crypto) throws Exception {
         Request request = httpClient.buildRequest(builder.getBaseUrl())
+                .method(HttpMethod.POST) // 带 JSON 正文的模型接口必须显式 POST，否则会被当作无方法请求而拒绝
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + crypto.getGlobalCipher().tryDecrypt(builder.getApiKey(), "qingzhou-llm.api_key"))
                 .header("Accept", stream ? "text/event-stream" : "application/json");

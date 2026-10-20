@@ -36,8 +36,7 @@ public class PlatformKnowledgeSkill implements SkillService {
         String instance = config.get("qingzhou.instance");
         String version = config.get("qingzhou.version");
         // version 直接拼入路径，须先拒绝穿越序列；instance 缺失或层级不足时用 Path 解析避免 NPE
-        if (instance != null && version != null
-                && !version.contains("..") && !version.contains("/") && !version.contains("\\")) {
+        if (!version.contains("..") && !version.contains("/") && !version.contains("\\")) {
             Path docsDir = Paths.get(instance).resolve("..").resolve("..")
                     .resolve("lib").resolve("version" + version).resolve("docs").normalize();
             int appendedChars = 0;

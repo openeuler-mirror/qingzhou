@@ -145,10 +145,11 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
                             log.put("logType", determineLogType(p.getFileName().toString()));
                             logs.add(log);
                         } catch (IOException e) {
+                            logError("failed to read Tomcat log metadata: " + p, e);
                         }
                     });
         } catch (IOException e) {
-            e.printStackTrace();
+            logError("failed to list Tomcat logs", e);
         }
 
         return logs;

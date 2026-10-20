@@ -9,26 +9,21 @@ public interface Registry {
 
     AppStub getAppStub(String instanceId, String appCode);
 
-    InstanceInfo getLocalInstance();
+    AppStubLocal getLocalApp(String appCode);
 
     List<String> getAllLocalApps();
 
-    AppStubLocal getLocalApp(String appCode);
-
-    List<String> getAllRemoteInstances();
-
-    InstanceInfo getRemoteInstance(String instanceId);
+    AppStubRemote getRemoteApp(String instanceId, String appCode);
 
     List<String> getAllRemoteApps(String instanceId);
 
-    AppStubRemote getRemoteApp(String instanceId, String appCode);
+    InstanceInfo getLocalInstance();
 
-    void addRemoteInstanceInfo(InstanceInfo instanceInfo);
+    InstanceInfo getRemoteInstance(String instanceId);
 
-    void removeRemoteApps(String instanceId);
+    List<String> getAllRemoteInstances();
 
-    /**
-     * 实例密钥轮换：更新共享对称密钥并记录旧钥供宽限期内远程调用继续加密
-     */
-    void rotateInstanceKey(String instanceId, String newKey);
+    void addRemoteInstance(InstanceInfo instanceInfo);
+
+    void removeRemoteInstance(String instanceId);
 }

@@ -11,18 +11,16 @@ import org.testng.annotations.Test;
 import qingzhou.http.client.HttpMethod;
 
 public class RequestImplTest {
-
     @Test
     public void validUrl_constructor_urlInitialized() {
-        RequestImpl request = new RequestImpl("http://localhost:7900/registry/invoke");
+        RequestImpl request = new RequestImpl("http://localhost:7900/registry/invoke", true);
 
         Assert.assertEquals(request.url, "http://localhost:7900/registry/invoke");
     }
 
     @Test
     public void validMethod_method_methodFieldSet() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
-
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         request.method(HttpMethod.POST);
 
         Assert.assertEquals(request.method, HttpMethod.POST);
@@ -30,7 +28,7 @@ public class RequestImplTest {
 
     @Test
     public void singleHeader_header_headersMapContainsEntry() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
 
         request.header("X-Request-Id", "request-123");
 
@@ -41,7 +39,7 @@ public class RequestImplTest {
 
     @Test
     public void duplicateHeader_header_latestValueWins() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
 
         request.header("X-Request-Id", "request-123");
         request.header("X-Request-Id", "request-456");
@@ -52,7 +50,7 @@ public class RequestImplTest {
 
     @Test
     public void bulkHeaders_headers_replacesExistingHeaders() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         request.header("Old-Header", "old-value");
         Map<String, String> newHeaders = new HashMap<>();
         newHeaders.put("New-Header", "new-value");
@@ -66,7 +64,7 @@ public class RequestImplTest {
 
     @Test
     public void paramsMap_params_paramsFieldStored() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         Map<String, String> params = new HashMap<>();
         params.put("name", "qingzhou");
 
@@ -77,7 +75,7 @@ public class RequestImplTest {
 
     @Test
     public void byteArrayBody_body_bodyFieldStored() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         byte[] body = "name=qingzhou".getBytes(StandardCharsets.UTF_8);
 
         request.body(body);
@@ -87,7 +85,7 @@ public class RequestImplTest {
 
     @Test
     public void filesMap_files_filesFieldStored() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         Map<String, List<String>> files = new HashMap<>();
         files.put("upload", Collections.singletonList("/tmp/upload.txt"));
 
@@ -98,7 +96,7 @@ public class RequestImplTest {
 
     @Test
     public void positiveValue_connectTimeout_timeoutFieldSet() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
 
         request.connectTimeout(5000);
 
@@ -107,7 +105,7 @@ public class RequestImplTest {
 
     @Test
     public void positiveValue_readTimeout_timeoutFieldSet() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
 
         request.readTimeout(10000);
 
@@ -116,7 +114,7 @@ public class RequestImplTest {
 
     @Test
     public void negativeValue_maxBodySize_throwsException() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
 
         try {
             request.maxBodySize(-1);
@@ -128,7 +126,7 @@ public class RequestImplTest {
 
     @Test
     public void chainedCalls_setters_returnSameInstance() {
-        RequestImpl request = new RequestImpl("http://localhost:7900");
+        RequestImpl request = new RequestImpl("http://localhost:7900", true);
         Map<String, String> headers = new HashMap<>();
         Map<String, String> params = new HashMap<>();
         Map<String, List<String>> files = new HashMap<>();

@@ -1,6 +1,6 @@
 package qingzhou.crypto;
 
-public interface TotpCipher {
+public interface Totp {
     String generateKey();
 
     String getCode(String key) throws Exception;

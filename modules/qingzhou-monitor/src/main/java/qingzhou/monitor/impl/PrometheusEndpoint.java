@@ -22,7 +22,7 @@ import qingzhou.monitor.MetricProvider;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus"})
+@Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus", HttpHandler.HANDLE_METHODS + "=GET"})
 public class PrometheusEndpoint implements HttpHandler {
     // 抓取最小采样间隔：远程采集是同步 RPC，实例多时线性变慢，短时间内的重复抓取直接复用缓存
     private static final long MIN_SCRAPE_INTERVAL_MS = 15_000;
@@ -60,8 +60,7 @@ public class PrometheusEndpoint implements HttpHandler {
         }
 
         httpResponse.contentType("text/plain; version=0.0.4; charset=utf-8")
-                .send(body)
-                .finish();
+                .send(body);
     }
 
     private String render() {
@@ -156,7 +155,9 @@ public class PrometheusEndpoint implements HttpHandler {
                 .append("{instance=\"").append(escapeLabel(Constants.LOCAL_INSTANCE_ID))
                 .append("\",provider=\"").append(escapeLabel(providerName)).append('"');
         for (Map.Entry<String, String> label : metric.getLabels().entrySet()) {
-            line.append(',').append(label.getKey()).append("=\"").append(escapeLabel(label.getValue())).append('"');
+            String labelKey = sanitizeLabelKey(label.getKey());
+            if (labelKey == null) continue; // 非法标签名会让整段 exposition 解析失败，直接丢弃该标签
+            line.append(',').append(labelKey).append("=\"").append(escapeLabel(label.getValue())).append('"');
         }
         line.append("} ").append(metric.getValue());
 
@@ -175,6 +176,18 @@ public class PrometheusEndpoint implements HttpHandler {
         String sanitized = name == null ? "" : name.trim().replaceAll("[^a-zA-Z0-9_]", "_");
         if (sanitized.isEmpty()) return sanitized;
         return sanitized.startsWith("qingzhou_") ? sanitized : "qingzhou_" + sanitized;
+    }
+
+    // 标签名须符合 [a-zA-Z_][a-zA-Z0-9_]*：provider 给出的 key 不可信，非法即丢弃该标签
+    private static String sanitizeLabelKey(String key) {
+        if (key == null || key.isEmpty()) return null;
+        for (int i = 0; i < key.length(); i++) {
+            char c = key.charAt(i);
+            boolean valid = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+                    || (i > 0 && c >= '0' && c <= '9');
+            if (!valid) return null;
+        }
+        return key;
     }
 
     // 标签值须转义反斜杠/引号/换行，否则可破坏 exposition 格式（label injection）

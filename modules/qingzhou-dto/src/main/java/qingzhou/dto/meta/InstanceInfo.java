@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InstanceInfo {
+    // 以下字段由 registry 在认证通过后写入，不参与 JSON 收发
     private transient long lastRefreshTime;
 
     private String id;
     private String host;
     private int port;
+    private String domain;
     private boolean sslEnabled;
-    private volatile String key;
-    private String version;
+    private String platformVersion;
     private final List<AppMeta> appMetas = new ArrayList<>();
 
     public String getId() {
@@ -38,6 +39,14 @@ public class InstanceInfo {
         this.port = port;
     }
 
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
     public boolean isSslEnabled() {
         return sslEnabled;
     }
@@ -46,20 +55,12 @@ public class InstanceInfo {
         this.sslEnabled = sslEnabled;
     }
 
-    public String getKey() {
-        return key;
+    public String getPlatformVersion() {
+        return platformVersion;
     }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
+    public void setPlatformVersion(String platformVersion) {
+        this.platformVersion = platformVersion;
     }
 
     public List<AppMeta> getAppMetas() {

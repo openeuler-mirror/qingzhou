@@ -13,18 +13,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import qingzhou.http.client.*;
 
-@Component
+@Component(configurationPid = "qingzhou-http-client", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class HttpClientImpl implements HttpClient {
     // 并发流式响应线程上限：超出后直接拒绝（快速失败），避免线程无限增长
     private static final int MAX_STREAM_THREADS = 200;
 
+    private boolean allowSslTrustAll;
     private ExecutorService executor;
 
     @Activate
-    public void activate() {
+    public void init(Map<String, String> config) {
+        allowSslTrustAll = Boolean.parseBoolean(config.get("allow_ssl_trust_all"));
+
         // 有界线程池：每个流式响应独占一个线程直至读毕，无上限会在海量并发流式响应时耗尽线程资源
         executor = new ThreadPoolExecutor(0, MAX_STREAM_THREADS, 60L, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new ThreadFactory() {
@@ -51,6 +55,10 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public Response send(Request request, ResponseListener listener) throws Exception {
+        if (!(request instanceof RequestImpl)) { // 明确报错：强转失败只暴露 ClassCastException，掩盖真实原因（非本实现构建的请求）
+            throw new IllegalArgumentException("unsupported request type: "
+                    + (request == null ? "null" : request.getClass().getName()));
+        }
         RequestImpl req = (RequestImpl) request;
         // GET/HEAD 不允许请求体：参数须拼到查询串，否则 HttpURLConnection 会因写 body 抛 ProtocolException。
         // 拼接结果只用于本次发送，不回写请求对象：同一 Request 可重复 send，且不在线程间共享可变状态
@@ -109,7 +117,7 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public Request buildRequest(String url) {
-        return new RequestImpl(url);
+        return new RequestImpl(url, allowSslTrustAll);
     }
 
     private static byte[] encodeForm(Map<String, String> params) throws UnsupportedEncodingException {

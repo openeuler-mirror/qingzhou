@@ -20,7 +20,9 @@ import qingzhou.registry.AppStubLocal;
 
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;
-    private final List<ActionFilter> filters;
+    private final List<ActionFilter> systemFilters;
+    // 持有实时列表而非构造期快照：应用在启动之后新增的拦截器不应静默失效
+    private final List<ActionFilter> appFilters;
 
     private final Map<String, SystemCall> systemCallMap;
 
@@ -30,14 +32,11 @@ class AppStubLocalImpl implements AppStubLocal {
     AppStubLocalImpl(AppContextImpl appContext) {
         this.appContext = appContext;
 
-        filters = new ArrayList<>();
         I18nService i18nService = appContext.getService(I18nService.class);
-        Validation validation = new Validation(i18nService);
-        filters.add(validation);
-        filters.addAll(appContext.actionFilters); // 应用拦截器：放在系统拦截器之后，最终 action 之前
-        filters.add((request, c) -> invokeAction((RequestImpl) request));
+        systemFilters = Collections.singletonList(new Validation(i18nService));
+        appFilters = appContext.actionFilters; // 应用拦截器：排在系统拦截器之后、最终 action 之前
 
-        systemCallMap = Collections.singletonMap("icon", new Icon(appContext));
+        systemCallMap = Collections.singletonMap("icon", new Icon(appContext, appContext.appMeta.getApp().icon));
     }
 
     @Override
@@ -69,7 +68,14 @@ class AppStubLocalImpl implements AppStubLocal {
 
                             @Override
                             public void doFilter() throws Throwable {
-                                filters.get(index++).doFilter(request, this);
+                                int next = index++;
+                                if (next < systemFilters.size()) {
+                                    systemFilters.get(next).doFilter(request, this);
+                                } else if (next - systemFilters.size() < appFilters.size()) {
+                                    appFilters.get(next - systemFilters.size()).doFilter(request, this);
+                                } else {
+                                    invokeAction(request);
+                                }
                             }
                         };
                         chain.doFilter();

@@ -1,13 +1,15 @@
 package qingzhou.llm.impl;
 
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.Configs;
+import qingzhou.common.Hosts;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
@@ -32,21 +34,13 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
 
     @Activate
     public void init(Map<String, String> config) {
-        baseUrl = config.get("base_url");
-        if (baseUrl == null || baseUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("qingzhou-llm.base_url is missing");
-        }
-        apiKey = config.get("api_key");
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            throw new IllegalArgumentException("qingzhou-llm.api_key is missing"); // 缺失时 fail-fast，而非请求期才以 "Bearer null" 暴露
-        }
-        model = config.get("model");
-        if (model == null || model.trim().isEmpty()) {
-            throw new IllegalArgumentException("qingzhou-llm.model is missing");
-        }
+        Configs configs = new Configs(config);
+        baseUrl = configs.notBlank("base_url");
+        apiKey = configs.notBlank("api_key");
+        model = configs.notBlank("model");
 
         // 安全校验：API Key 不应通过明文 HTTP 传输（本机回环除外）
-        validateBaseUrl(baseUrl);
+        validateBaseUrl(baseUrl, configs.getOrDefault("allow_insecure_http", false));
     }
 
     @Override
@@ -59,11 +53,11 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
         return new ImageAttachment(base64, mimeType);
     }
 
-    private void validateBaseUrl(String baseUrl) {
+    private static void validateBaseUrl(String baseUrl, boolean allowInsecureHttp) {
         URL url;
         try {
             url = new URL(baseUrl);
-        } catch (Exception e) {
+        } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Invalid LLM baseUrl: " + baseUrl, e);
         }
 
@@ -72,17 +66,10 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
         if (!"https".equalsIgnoreCase(scheme) && !"http".equalsIgnoreCase(scheme)) {
             throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
         }
-        if ("http".equalsIgnoreCase(scheme) && !isLoopback(url.getHost())) {
-            Utils.println("The LLM's baseUrl uses the HTTP protocol, which means your apiKey will be exposed on the network. We recommend using the HTTPS protocol.");
+        // 明文 HTTP 会让 apiKey 暴露在网络上：非回环端点须显式确认，避免误配置后静默泄露
+        if ("http".equalsIgnoreCase(scheme) && !Hosts.isLoopback(url.getHost()) && !allowInsecureHttp) {
+            throw new IllegalArgumentException("the LLM baseUrl uses plaintext HTTP, which exposes your apiKey: " + baseUrl
+                    + "; use https, or set qingzhou-llm.allow_insecure_http=true to accept the risk");
         }
-    }
-
-    private boolean isLoopback(String host) {
-        if (host == null) return false;
-        String normalized = host.toLowerCase(Locale.ROOT);
-        // URL.getHost 对 IPv6 字面量返回 "[::1]" 带方括号形式
-        if ("localhost".equals(normalized) || "::1".equals(normalized) || "[::1]".equals(normalized)) return true;
-        // 127.0.0.0/8 整段均为回环，不止 127.0.0.1
-        return normalized.matches("127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }
 }

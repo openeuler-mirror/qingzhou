@@ -99,11 +99,11 @@ public class McpServer implements HttpHandler {
         try {
             requestMap = json.fromJson(body, HashMap.class);
         } catch (Exception e) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
         if (requestMap == null) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
 
@@ -128,9 +128,9 @@ public class McpServer implements HttpHandler {
         // 响应
         try {
             httpResponse.contentTypeJsonUtf8()
-                    .send(json.toJson(response)).finish();
+                    .send(json.toJson(response));
         } catch (Exception e) {
-            httpResponse.status(500).finish();
+            httpResponse.status(500);
             logger.error(e.getMessage(), e);
         }
     }

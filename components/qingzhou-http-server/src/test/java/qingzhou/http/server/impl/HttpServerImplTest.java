@@ -1,17 +1,6 @@
 package qingzhou.http.server.impl;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.net.ConnectException;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
@@ -24,14 +13,18 @@ import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.impl.LoggerImpl;
 import reactor.netty.DisposableServer;
 
+import java.io.File;
+import java.lang.reflect.Field;
+import java.net.ConnectException;
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
 public class HttpServerImplTest {
     private static final String KEYSTORE_PASSWORD = "qingzhou-test";
-
-    @BeforeClass
-    public void init() {
-        System.setProperty("qingzhou.instance", new File("/tmp").getAbsolutePath());
-        System.setProperty("qingzhou.version", "1.0");
-    }
 
     @Test
     public void normal_start_listenHttpService() throws Exception {
@@ -184,6 +177,11 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
         CryptoImpl crypto = new CryptoImpl();
+        crypto.init(new HashMap<String, String>() {{
+            put("qingzhou.instance", new File("/tmp").getAbsolutePath());
+            put("qingzhou.version", "1.0");
+            put("qingzhou.http.client.trustAll", "true"); // 测试服务端为自签名证书：显式开启跳过校验
+        }});
         HandlerManager handlerManager = new HandlerManager();
         DispatcherHandler dispatcherHandler = new DispatcherHandler();
         AuthManager authManager = new AuthManager();

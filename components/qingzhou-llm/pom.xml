@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-json</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
@@ -37,7 +42,9 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.llm,qingzhou.llm.openai</Export-Package>
-                        <Import-Package>qingzhou.json,qingzhou.http.client,qingzhou.crypto</Import-Package>
+                        <Import-Package>
+                            qingzhou.common,qingzhou.json,qingzhou.http.client,qingzhou.crypto
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -25,26 +25,39 @@ final class ConversationQuota {
             }
         }
 
-        while (catalog.activeCount() > limits.maxConversations) {
-            if (!archive(catalog, catalog.oldest(null, false))) break;
+        // 候选各取一次按 updatedAt 的快照并按序处理：原先每淘汰一个都全表扫描，规模大时退化为 O(n²)
+        for (CatalogEntry entry : catalog.sortedByAge(null, false)) {
+            if (catalog.activeCount() <= limits.maxConversations) break;
+            archiveActive(catalog, entry.id);
         }
-        while (catalog.totalBytes() > limits.maxBytes) {
-            // 归档体只剩标题与摘要，价值最低，先出局；活跃体则先归档再考虑删除
-            CatalogEntry victim = catalog.oldest(null, true);
-            if (victim == null) victim = catalog.oldest(null, false);
-            if (victim == null) break;
-            if (!(victim.archived ? store.deleteRecord(victim.id) : archive(catalog, victim))) break;
+        // 归档体只剩标题与摘要，价值最低，先出局；活跃体则先归档再考虑删除
+        for (CatalogEntry entry : catalog.sortedByAge(null, true)) {
+            if (catalog.totalBytes() <= limits.maxBytes) break;
+            if (!store.deleteRecord(entry.id)) break; // 落库失败即退出，避免持锁原地打转
         }
-        while (catalog.archivedCount() > limits.maxArchived) {
-            if (!store.deleteRecord(catalog.oldestId(null, true))) break;
+        for (CatalogEntry entry : catalog.sortedByAge(null, false)) {
+            if (catalog.totalBytes() <= limits.maxBytes) break;
+            if (!archiveActive(catalog, entry.id)) break;
+        }
+        for (CatalogEntry entry : catalog.sortedByAge(null, true)) {
+            if (catalog.archivedCount() <= limits.maxArchived) break;
+            if (!store.deleteRecord(entry.id)) break;
         }
     }
 
     private void enforceUser(ConversationCatalog catalog, String userId) {
         int limit = limits.activeLimit(userId);
-        while (catalog.activeOf(userId) > limit) {
-            if (!archive(catalog, catalog.oldest(userId, false))) break;
+        for (CatalogEntry entry : catalog.sortedByAge(userId, false)) {
+            if (catalog.activeOf(userId) <= limit) break;
+            archiveActive(catalog, entry.id);
         }
+    }
+
+    // 动手前重读实时状态：快照条目已被前一步归档或删除时跳过，不重复处理
+    private boolean archiveActive(ConversationCatalog catalog, String conversationId) {
+        CatalogEntry current = catalog.get(conversationId);
+        if (current == null || current.archived) return true;
+        return archive(catalog, current);
     }
 
     /**

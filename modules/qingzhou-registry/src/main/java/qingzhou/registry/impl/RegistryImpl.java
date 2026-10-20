@@ -1,10 +1,9 @@
 package qingzhou.registry.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -22,22 +21,26 @@ import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.AppStubRemote;
 import qingzhou.registry.Registry;
+import qingzhou.registry.web.Invoke;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegistryImpl implements Registry {
     @Reference
     private ConfigurationAdmin configAdmin;
     @Reference
-    private Logger logger;
+    Logger logger;
     @Reference
-    private Json json;
+    Json json;
     @Reference
-    private HttpClient httpClient;
+    HttpClient httpClient;
     @Reference
-    private Crypto crypto;
+    Crypto crypto;
+    @Reference
+    AgentDomainService agentDomainService;
 
     private final PendingLogs pendingLogs = new PendingLogs();
 
+    Path uploadBase;
     private String qzVersion;
     private InstanceInfo localInstanceInfo;
     // 单调递增的数据版本：用计数器而非毫秒墙钟，避免同一毫秒内的多次变更互相覆盖
@@ -49,11 +52,10 @@ public class RegistryImpl implements Registry {
     private final Map<String, InstanceInfo> remoteInstances = java.util.Collections
             .synchronizedMap(new java.util.LinkedHashMap<>());
 
-    final KeyRotation keyRotation = new KeyRotation(Constants.AGENT_KEY_GRACE_MILLIS);
-
     @Activate
     public void start(Map<String, String> config) {
         qzVersion = config.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
+        uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", Invoke.UPLOAD_TEMP_NAME);
 
         pendingLogs.replay(logger);
     }
@@ -123,20 +125,13 @@ public class RegistryImpl implements Registry {
                 }
             };
             localInstanceInfo.setId(Constants.LOCAL_INSTANCE_ID);
-            localInstanceInfo.setVersion(qzVersion);
+            localInstanceInfo.setPlatformVersion(qzVersion);
             localInstanceInfo.setHost("localhost");
 
             // 实例端口
             try {
                 Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-                if (httpServerConfig == null) {
-                    throw new IllegalStateException("qingzhou-http-server configuration is missing");
-                }
-                Object portValue = httpServerConfig.get("port");
-                if (portValue == null) {
-                    throw new IllegalStateException("qingzhou-http-server configuration is missing 'port'");
-                }
-                localInstanceInfo.setPort(Integer.parseInt(String.valueOf(portValue)));
+                localInstanceInfo.setPort(Integer.parseInt(String.valueOf(httpServerConfig.get("port"))));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -177,38 +172,41 @@ public class RegistryImpl implements Registry {
         if (instanceInfo == null) return null;
         for (AppMeta appMeta : instanceInfo.getAppMetas()) {
             if (appMeta.getApp().code.equals(appCode)) {
-                return new AppStubRemoteImpl(instanceInfo, appMeta, json, httpClient, crypto, logger, keyRotation);
+                return new AppStubRemoteImpl(this, instanceInfo, appMeta);
             }
         }
         return null;
     }
 
     @Override
-    public void addRemoteInstanceInfo(InstanceInfo instanceInfo) {
+    public void addRemoteInstance(InstanceInfo instanceInfo) {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
         // 重复注册同样要填：新对象的 lastRefreshTime 为 0，不填则重注册恢复路径必然被健康检查删除。
         instanceInfo.setLastRefreshTime(System.currentTimeMillis());
-        registryDataVersion.incrementAndGet();
-        remoteInstances.put(instanceInfo.getId(), instanceInfo);
-        keyRotation.onReRegistered(instanceInfo.getId()); // 重新注册 = agent 已重建密钥，旧钥宽限作废
+        InstanceInfo previous = remoteInstances.put(instanceInfo.getId(), instanceInfo);
+        // 心跳即注册：元数据未变时只刷新存活时间，避免 registryDataVersion 每 6 秒自增令前端缓存持续失效
+        if (previous == null || !sameMetadata(previous, instanceInfo)) {
+            registryDataVersion.incrementAndGet();
+        }
+    }
+
+    // 按内容整体比对：应用元数据（图标、模型、接口等）变化同样要触发版本自增，否则前端缓存不刷新
+    private boolean sameMetadata(InstanceInfo a, InstanceInfo b) {
+        try {
+            return Objects.equals(a.getPlatformVersion(), b.getPlatformVersion())
+                    && Objects.equals(a.getHost(), b.getHost())
+                    && a.getPort() == b.getPort()
+                    && a.isSslEnabled() == b.isSslEnabled()
+                    && json.toJson(a.getAppMetas()).equals(json.toJson(b.getAppMetas()));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
-    public void removeRemoteApps(String instanceId) {
+    public void removeRemoteInstance(String instanceId) {
         remoteInstances.remove(instanceId);
         registryDataVersion.incrementAndGet();
-    }
-
-    @Override
-    public void rotateInstanceKey(String instanceId, String newKey) {
-        InstanceInfo instanceInfo = remoteInstances.get(instanceId);
-        if (instanceInfo == null) return;
-        String oldKey = instanceInfo.getKey();
-        instanceInfo.setKey(newKey); // 后续：更新共享的对称密钥，以保障前向安全！
-        instanceInfo.setLastRefreshTime(System.currentTimeMillis()); // 更新刷新时间
-        // 记录旧钥供宽限期内 invoke 继续加密：agent 要收到本响应才切新钥，
-        // 期间 registry 用新钥加密必然解密失败（RTT 窗口）
-        keyRotation.onRotated(instanceId, oldKey);
     }
 }

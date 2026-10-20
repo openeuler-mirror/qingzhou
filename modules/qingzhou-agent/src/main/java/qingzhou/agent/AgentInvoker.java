@@ -42,7 +42,7 @@ public class AgentInvoker implements HttpHandler {
     private String processRequest(byte[] data) throws Throwable {
         RequestImpl request = json.fromJson(new String(data, StandardCharsets.UTF_8), RequestImpl.class);
 
-        Set<File> tempFiles = new HashSet<>(); // 处理前保存的原始临时文件（uploadBase/keyName[0]），防止异常路径残留
+        Set<File> uploadFiles = new HashSet<>(); // 待清理文件：上传原始临时文件 + rename 后的业务文件，Action 返回后统一删除
 
         try {
             request.getUploadFileFields().forEach(field -> {
@@ -56,10 +56,11 @@ public class AgentInvoker implements HttpHandler {
                     }
                     File tempFile = resolveInUploadBase(pair[0]);
                     File localFile = resolveInUploadBase(pair[1]);
-                    tempFiles.add(tempFile);
+                    uploadFiles.add(tempFile);
                     if (!tempFile.renameTo(localFile)) { // 重命名失败仍继续会向业务暴露不存在的路径
                         throw new IllegalStateException("failed to rename uploaded temp file: " + tempFile.getName());
                     }
+                    uploadFiles.add(localFile); // 业务用完即删：Action 返回后在 finally 删除；需长期保留应由 Action 内 move 到业务目录
                     paths.add(localFile.getAbsolutePath());
                 }
                 String newPaths = String.join(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP, paths);
@@ -70,8 +71,13 @@ public class AgentInvoker implements HttpHandler {
             if (appStub == null) throw new IllegalArgumentException("business processing error");
             appStub.invokeApp(request);
         } finally {
-            // 仅清理原始临时文件；renameTo 成功后原文件已不存在，delete 为空操作，不会误删业务使用的 localFile
-            for (File tempFile : tempFiles) tempFile.delete();
+            // 正常/异常路径均执行：原始临时文件 rename 后已不存在，delete 为空操作；
+            // 业务文件用完即删，业务已在 Action 内 move 到自身目录时同样为空操作
+            for (File file : uploadFiles) {
+                if (!file.delete() && file.exists()) {
+                    logger.warn("failed to delete upload file: " + file.getAbsolutePath());
+                }
+            }
         }
 
         // 响应数据

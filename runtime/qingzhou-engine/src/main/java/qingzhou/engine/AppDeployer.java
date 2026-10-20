@@ -147,6 +147,8 @@ class AppDeployer {
                 }
             }
         }
-        file.delete();
+        if (!file.delete()) {
+            System.err.println("failed to delete: " + file.getPath());
+        }
     }
 }

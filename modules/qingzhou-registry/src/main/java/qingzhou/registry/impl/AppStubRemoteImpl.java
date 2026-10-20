@@ -8,39 +8,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import qingzhou.crypto.Cipher;
-import qingzhou.crypto.Crypto;
+import qingzhou.crypto.EpochPacketCipher;
 import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
-import qingzhou.json.Json;
-import qingzhou.logger.Logger;
 import qingzhou.registry.AppStubRemote;
 
 class AppStubRemoteImpl implements AppStubRemote {
+    private final RegistryImpl registry;
     private final InstanceInfo instanceInfo;
     private final AppMeta appMeta;
-    private final Json json;
-    private final HttpClient httpClient;
-    private final Crypto crypto;
-    private final Logger logger;
-    private final KeyRotation keyRotation;
     private final String agentBaseUrl;
 
-    AppStubRemoteImpl(InstanceInfo instanceInfo, AppMeta appMeta, Json json, HttpClient httpClient, Crypto crypto,
-                      Logger logger, KeyRotation keyRotation) {
+    AppStubRemoteImpl(RegistryImpl registry, InstanceInfo instanceInfo, AppMeta appMeta) {
+        this.registry = registry;
         this.instanceInfo = instanceInfo;
         this.appMeta = appMeta;
-        this.json = json;
-        this.httpClient = httpClient;
-        this.crypto = crypto;
-        this.logger = logger;
-        this.keyRotation = keyRotation;
 
         String protocol = instanceInfo.isSslEnabled() ? "https" : "http";
         agentBaseUrl = protocol + "://" + instanceInfo.getHost() + ":" + instanceInfo.getPort() + "/agent";
@@ -52,49 +39,52 @@ class AppStubRemoteImpl implements AppStubRemote {
     }
 
     @Override
-    public void invokeApp(RequestImpl request) throws Throwable {
-        // 不再持全局 REFRESH_KEY_LOCK：持锁跨网络 I/O 会串行化所有远程调用并令健康检查误判实例失联；
-        // 轮换打断进行中调用的问题由两侧密钥宽限解决——registry 宽限期内继续用旧钥加密，
-        // agent 侧保留旧钥解密回退，本调用内加密与响应解密始终用同一把钥
+    public void invokeApp(RequestImpl request) {
         String originTargetName = request.getInstance();
         request.setInstance(Constants.LOCAL_INSTANCE_ID); // 远程到实例后，去本地实例找
-        Cipher cipher = crypto.getCipher(keyRotation.getEffectiveKey(instanceInfo.getId(), instanceInfo.getKey()));
+        String domain = instanceInfo.getDomain();
+        byte[] master = registry.agentDomainService.master(domain);
+        if (master == null) {
+            throw new IllegalStateException("root key not found for agent-domain: " + domain);
+        }
+        EpochPacketCipher packetCipher = registry.crypto.getEpochPacketCipher(master, domain);
+        // AAD 绑定 域名 + 目标实例 ID：同域其它 agent 无法把本请求挪用到自己身上
+        byte[] context = registry.crypto.generateCipherAad(domain, instanceInfo.getId());
 
         Response response = null;
         try {
             // 处理文件上传：将本地文件上传到远程 agent
-            doFileUploads(request, cipher);
+            doFileUploads(request, master);
 
-            byte[] data = json.toJson(request).getBytes(StandardCharsets.UTF_8);
-            // seal 内部生成时间戳与随机数作为 AAD：绑定时效并提供去重键
-            byte[] encrypted = crypto.getReplayGuardCipher(cipher).encrypt(data, null);
+            byte[] data = registry.json.toJson(request).getBytes(StandardCharsets.UTF_8);
+            byte[] encrypted = packetCipher.encrypt(data, context);
 
             String invokeUrl = agentBaseUrl + Constants.AGENT_INVOKE_URI;
 
-            response = httpClient.send(httpClient.buildRequest(invokeUrl)
+            response = registry.httpClient.send(registry.httpClient.buildRequest(invokeUrl)
                     .method(HttpMethod.POST)
                     .body(encrypted));
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
                     // 与 agent 侧 ProcessHandler 的响应绑定对应：以请求明文的 SHA-256 作 AAD，将响应绑定到本次请求，防止响应被替换到其他请求
-                    byte[] responseAad = crypto.getMessageDigest().sha256(data);
-                    byte[] decrypted = cipher.decrypt(responseBody, responseAad);
-                    ResponseImpl result = json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
+                    byte[] responseAad = registry.crypto.getMessageDigest().sha256(data);
+                    byte[] decrypted = packetCipher.decrypt(responseBody, responseAad);
+                    ResponseImpl result = registry.json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class);
                     request.setResponse(result);
                 }
             } else {
                 String errorMsg = "agent request failed [" + response.getStatus() + "]: " + invokeUrl;
-                logger.error(errorMsg);
+                registry.logger.error(errorMsg);
                 byte[] body = response.getBody();
                 if (body != null && body.length > 0) {
-                    logger.error("agent response body: " + new String(body, StandardCharsets.UTF_8));
+                    registry.logger.error("agent response body: " + new String(body, StandardCharsets.UTF_8));
                 }
                 responseError(request, errorMsg);
             }
         } catch (Exception e) {
             String reason = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-            logger.error("remote processing error: " + reason, e);
+            registry.logger.error("remote processing error: " + reason, e);
             responseError(request, "remote processing error: " + reason);
         } finally {
             request.setInstance(originTargetName);
@@ -115,13 +105,9 @@ class AppStubRemoteImpl implements AppStubRemote {
      * 处理文件上传：将本地临时文件上传到远程 agent。
      * 字段值为逗号分隔列表，混合了业务已有文件名（原样传递）与本次上传的本地临时文件（上传后替换为远程键值）
      */
-    private void doFileUploads(RequestImpl request, Cipher cipher) throws Exception {
+    private void doFileUploads(RequestImpl request, byte[] master) throws Exception {
         for (String field : new ArrayList<>(request.getUploadFileFields())) {
             String value = request.getParameter(field);
-            if (value == null || value.isEmpty()) { // 解析中断残留的空字段
-                request.getUploadFileFields().remove(field);
-                continue;
-            }
             List<String> remotePaths = new ArrayList<>();
             // 项分隔符须与 agent 侧 AgentInvoker.processRequest 的拼接保持一致
             for (String item : value.split(",")) {
@@ -131,7 +117,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                     remotePaths.add(path);
                     continue;
                 }
-                String remoteFileTempKey = uploadFileToRemoteAgent(file, cipher);
+                String remoteFileTempKey = uploadFileToRemoteAgent(file, master);
                 remotePaths.add(remoteFileTempKey + Constants.AGENT_UPLOAD_MULTIPLE_FILE_NAME_SP + file.getName());
             }
             String remotePathsStr = String.join(Constants.AGENT_UPLOAD_MULTIPLE_FILE_FIELD_SP, remotePaths); // 将远程路径列表保存到 request
@@ -144,14 +130,11 @@ class AppStubRemoteImpl implements AppStubRemote {
      * 字段值可能来自 URL/JSON 等不可信来源，缺少目录约束会导致任意本地文件被读取并外传
      */
     private File toUploadTempFile(String path) {
-        String instanceDir = System.getProperty("qingzhou.instance");
-        if (instanceDir == null) return null;
-        File uploadBase = new File(instanceDir, "temp/qingzhou-upload");
         File file = new File(path);
         if (!file.isFile()) return null;
         try {
             String canonicalPath = file.getCanonicalPath();
-            return canonicalPath.startsWith(uploadBase.getCanonicalPath() + File.separator) ? file : null;
+            return canonicalPath.startsWith(registry.uploadBase.toFile().getCanonicalPath() + File.separator) ? file : null;
         } catch (Exception e) {
             return null;
         }
@@ -160,7 +143,7 @@ class AppStubRemoteImpl implements AppStubRemote {
     /**
      * 上传单个文件到远程 agent
      */
-    private String uploadFileToRemoteAgent(File file, Cipher cipher) throws Exception {
+    private String uploadFileToRemoteAgent(File file, byte[] master) throws Exception {
         String fileTempKey = "";
         int uploadChunkBytes = 256 * 1024; // 分片大小：过小会导致大文件按 8KB 逐片独立加密 POST（请求数与开销巨大）
         byte[] buffer = new byte[uploadChunkBytes];
@@ -170,14 +153,16 @@ class AppStubRemoteImpl implements AppStubRemote {
                 // 只加密本次实际读到的字节：直接传 buffer 会把上一片的残留字节一起发送，导致远端文件损坏。
                 // 分片以上传键作为绑定上下文：分片无法被重放到其他上传或拼接
                 byte[] chunk = Arrays.copyOf(buffer, bytesRead);
-                byte[] encrypt = crypto.getReplayGuardCipher(cipher).encrypt(chunk,
-                        fileTempKey.getBytes(StandardCharsets.UTF_8));
+                // 每片独立取时并派生密钥：分片可跨时段，长上传不会因密钥过期而失败
+                EpochPacketCipher packetCipher = registry.crypto.getEpochPacketCipher(master, instanceInfo.getDomain());
+                byte[] chunkContext = registry.crypto.generateCipherAad(instanceInfo.getDomain(), instanceInfo.getId(), fileTempKey);
+                byte[] encrypt = packetCipher.encrypt(chunk, chunkContext);
 
                 // 参考：qingzhou.agent.FileUpload 中的 Constants.AGENT_UPLOAD_URI
                 String uploadUrl = agentBaseUrl + Constants.AGENT_UPLOAD_URI + "?" + Constants.AGENT_UPLOAD_FILE_KEY + "=" + fileTempKey;
 
-                Response uploadResult = httpClient.send(
-                        httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));
+                Response uploadResult = registry.httpClient.send(
+                        registry.httpClient.buildRequest(uploadUrl).method(HttpMethod.POST).body(encrypt));
                 try {
                     if (uploadResult.getStatus() != 200) {
                         String msg = "response code: " + uploadResult.getStatus() + " ";
@@ -188,8 +173,8 @@ class AppStubRemoteImpl implements AppStubRemote {
                         throw new IllegalStateException(msg);
                     } else {
                         // 上传响应同样绑定请求分片内容（agent 侧 ProcessHandler 以请求明文 SHA-256 作 AAD）
-                        byte[] responseAad = crypto.getMessageDigest().sha256(chunk);
-                        byte[] result = cipher.decrypt(uploadResult.getBody(), responseAad);
+                        byte[] responseAad = registry.crypto.getMessageDigest().sha256(chunk);
+                        byte[] result = packetCipher.decrypt(uploadResult.getBody(), responseAad);
                         fileTempKey = new String(result, StandardCharsets.UTF_8);
                     }
                 } finally {

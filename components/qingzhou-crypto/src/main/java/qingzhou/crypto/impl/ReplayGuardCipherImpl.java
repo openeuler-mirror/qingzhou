@@ -1,11 +1,10 @@
 package qingzhou.crypto.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 
-import qingzhou.common.NonceRegistry;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.ReplayGuardCipher;
 
@@ -21,7 +20,9 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     private static final int VERSION = 1;
 
     private static final int NONCE_SIZE = 16;
-    private static final int HEADER_SIZE = 1 + 1 + 8 + NONCE_SIZE; // magic+version+timestamp+nonce
+    private static final int TIMESTAMP_OFFSET = 2; // magic + version
+    private static final int TIMESTAMP_END = TIMESTAMP_OFFSET + 8;
+    private static final int HEADER_SIZE = TIMESTAMP_END + NONCE_SIZE; // magic+version+timestamp+nonce
 
     /**
      * 允许的时钟偏移：超出即拒绝
@@ -30,7 +31,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    // 共享登记器：AES 报文（ReplayGuardCipher）与 RSA 注册报文共用同一份去重状态实现
+    // 共享登记器：同一 JVM 内所有方向的报文共用一份去重状态
     private static final NonceRegistry nonceRegistry = new NonceRegistry();
 
     private final Cipher cipher;
@@ -41,53 +42,52 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
 
     @Override
     public byte[] encrypt(byte[] data, byte[] context) throws Exception {
-        if (data == null) return null;
-
         long timestamp = System.currentTimeMillis();
         byte[] nonce = new byte[NONCE_SIZE];
         RANDOM.nextBytes(nonce);
-
         byte[] ciphertext = cipher.encrypt(data, aad(timestamp, nonce, context));
-        return wrap(timestamp, nonce, ciphertext);
-    }
-
-    private byte[] wrap(long timestamp, byte[] nonce, byte[] ciphertext) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(HEADER_SIZE + ciphertext.length);
-        out.write(MAGIC);
-        out.write(VERSION);
-        byte[] timestampBytes = ByteBuffer.allocate(8).putLong(timestamp).array();
-        out.write(timestampBytes, 0, timestampBytes.length);
-        out.write(nonce, 0, nonce.length);
-        out.write(ciphertext, 0, ciphertext.length);
-        return out.toByteArray();
+        ByteBuffer packet = ByteBuffer.allocate(HEADER_SIZE + ciphertext.length);
+        packet.put((byte) MAGIC).put((byte) VERSION).putLong(timestamp).put(nonce).put(ciphertext);
+        return packet.array();
     }
 
     @Override
     public byte[] decrypt(byte[] packet, byte[] context) throws Exception {
-        if (!isWrapped(packet) || packet[1] != VERSION)
-            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.INVALID_PACKET, "invalid packet");
+        if (!isWrapped(packet))
+            throw new IllegalArgumentException("invalid packet");
 
-        ByteBuffer header = ByteBuffer.wrap(packet, 2, 8 + NONCE_SIZE);
-        long timestamp = header.getLong();
-        byte[] nonce = new byte[NONCE_SIZE];
-        header.get(nonce);
-
+        long timestamp = timestampOf(packet);
         if (Math.abs(System.currentTimeMillis() - timestamp) > MAX_CLOCK_SKEW_MILLIS)
-            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.TIMESTAMP_OUT_OF_WINDOW, "timestamp out of window");
+            throw new IllegalArgumentException("timestamp out of window");
 
-        byte[] ciphertext = new byte[packet.length - HEADER_SIZE];
-        System.arraycopy(packet, HEADER_SIZE, ciphertext, 0, ciphertext.length);
+        byte[] ciphertext = Arrays.copyOfRange(packet, HEADER_SIZE, packet.length);
 
-        // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放
+        byte[] nonce = new byte[NONCE_SIZE];
+        ByteBuffer.wrap(packet, TIMESTAMP_END, NONCE_SIZE).get(nonce);
+
         byte[] plaintext = cipher.decrypt(ciphertext, aad(timestamp, nonce, context));
-        if (!registerIfAbsent(nonce, timestamp)) {
-            throw new ReplayGuardCipher.ReplayGuardException(ReplayGuardCipher.ReplayGuardException.Reason.REPLAY, "replay detected");
+        // 放于 cipher.decrypt 之后，先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放
+        if (!registerIfAbsent(nonce)) {
+            throw new IllegalArgumentException("replay detected");
         }
         return plaintext;
     }
 
+    // 魔数与版本共同标识本协议报文：任一不符即按无效报文拒绝，对外统一报错不给区分信息
     private boolean isWrapped(byte[] packet) {
-        return packet != null && packet.length > HEADER_SIZE && (packet[0] & 0xFF) == MAGIC;
+        return packet != null && packet.length > HEADER_SIZE
+                && (packet[0] & 0xFF) == MAGIC && packet[1] == VERSION;
+    }
+
+    /**
+     * 报文自带时间戳（受 GCM AAD 完整性保护）；供同包的时段密码器按时间戳选钥。
+     * 长度不足按无效报文拒绝，避免越界读取。
+     */
+    private long timestampOf(byte[] packet) {
+        if (packet == null || packet.length < TIMESTAMP_END) {
+            throw new IllegalArgumentException("packet too short");
+        }
+        return ByteBuffer.wrap(packet, TIMESTAMP_OFFSET, 8).getLong();
     }
 
     private byte[] aad(long timestamp, byte[] nonce, byte[] context) {
@@ -98,9 +98,9 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     }
 
     // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放。
-    // TTL 取时间窗两倍：过期键先回收，仍超容量时由登记器拒绝而非丢弃窗口内记录
-    private boolean registerIfAbsent(byte[] nonce, long timestamp) {
+    // TTL 取时间窗两倍：自登记时刻起覆盖该报文在时间窗内的全部可受理时段
+    private boolean registerIfAbsent(byte[] nonce) {
         String key = Base64.getEncoder().encodeToString(nonce);
-        return nonceRegistry.registerIfAbsent(key, timestamp, MAX_CLOCK_SKEW_MILLIS * 2);
+        return nonceRegistry.registerIfAbsent(key, MAX_CLOCK_SKEW_MILLIS * 2);
     }
 }

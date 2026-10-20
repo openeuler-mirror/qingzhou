@@ -14,13 +14,13 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-json</artifactId>
+            <artifactId>qingzhou-common</artifactId>
             <version>${revision}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-http-client</artifactId>
+            <artifactId>qingzhou-json</artifactId>
             <version>${revision}</version>
             <scope>provided</scope>
         </dependency>
@@ -34,7 +34,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>org.osgi.service.cm,qingzhou.json,qingzhou.http.client</Import-Package>
+                        <Import-Package>org.osgi.service.cm,qingzhou.common,qingzhou.json</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

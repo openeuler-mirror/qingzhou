@@ -2,7 +2,6 @@ package qingzhou.app.oauth2;
 
 import java.util.Map;
 
-import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
@@ -10,31 +9,16 @@ import qingzhou.json.Json;
 /**
  * 令牌端点：授权码、密码、客户端凭证、刷新令牌四种授予方式。
  */
-public class Token implements HttpHandler {
-    private final Store store;
-    private final Json json;
+public class Token extends ClientEndpoint {
     private final Throttle throttle;
 
     public Token(Store store, Json json, Throttle throttle) {
-        this.store = store;
-        this.json = json;
+        super(store, json);
         this.throttle = throttle;
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws Exception {
-        if (!"POST".equals(request.getMethod())) { // 凭据不得经 GET 进入 URL 与访问日志
-            Reply.methodNotAllowed(response);
-            return;
-        }
-
-        Map<String, String> client = store.authenticateClient(
-                request.getParameter("client_id"), request.getParameter("client_secret"));
-        if (client == null) {
-            Reply.sendError(response, json, "invalid_client", "客户端验证失败");
-            return;
-        }
-
+    protected void process(HttpRequest request, Map<String, String> client, HttpResponse response) throws Exception {
         String grantType = request.getParameter("grant_type");
         if (Security.isEmpty(grantType)) {
             Reply.sendError(response, json, "invalid_request", "缺少 grant_type");

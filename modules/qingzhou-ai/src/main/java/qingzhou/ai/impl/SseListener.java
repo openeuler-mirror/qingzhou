@@ -1,11 +1,6 @@
 package qingzhou.ai.impl;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -139,7 +134,8 @@ public class SseListener implements Listener {
         long idleMs = System.currentTimeMillis() - lastEventTime;
         if (idleMs < HEARTBEAT_INTERVAL_MS) return; // 事件流正常，无需处理
 
-        if (!contentStarted && idleMs >= FIRST_CONTENT_TIMEOUT_MS) {
+        // 首字超时以会话开始时间为基准：心跳同样会刷新 lastEventTime，用 idleMs 判定将永远达不到阈值
+        if (!contentStarted && elapsed >= FIRST_CONTENT_TIMEOUT_MS) {
             // 已受理但长时间没有任何模型内容产出：判定无响应，主动收尾
             finishWithError("MODEL_TIMEOUT", "模型长时间未响应，已终止本次请求，请重试");
             return;
@@ -242,14 +238,19 @@ public class SseListener implements Listener {
         final String prefix = "qingzhou_action_";
         if (toolName != null && toolName.startsWith(prefix)) {
             switch (toolName.substring(prefix.length())) {
-                case "page": return "page";
-                case "show": return "show";
-                case "monitor": return "monitor";
+                case "page":
+                    return "page";
+                case "show":
+                    return "show";
+                case "monitor":
+                    return "monitor";
                 // 空间切换（非写操作）：联动聚焦到该模型的列表页（空间列表所在），已打开则强制刷新。
                 // currentspace 为纯查询、无状态变化，不联动
-                case "switchspace": return "focus";
+                case "switchspace":
+                    return "focus";
                 // 写操作（add/update/delete）不联动：AI 写数据时驱动左侧视图可能与用户当前操作产生数据冲突，联动范围由后端统一控制
-                default: return null;
+                default:
+                    return null;
             }
         }
         // 元数据查询工具（未声明 TOOL_NAME 时工具名即组件类名，见 LlmConverter）

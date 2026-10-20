@@ -225,7 +225,7 @@ public class Connector extends TomcatModelBase implements Page, Show, Add, Updat
                 result.add(c1);
             }
         } catch (Throwable e) {
-            e.printStackTrace();
+            logError("failed to read Tomcat connector configuration", e);
         }
         return result;
     }

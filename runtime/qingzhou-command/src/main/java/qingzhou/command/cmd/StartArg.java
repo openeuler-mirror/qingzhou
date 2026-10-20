@@ -42,7 +42,7 @@ public class StartArg extends Processor {
 
         String javaCmd = Paths.get(System.getProperty("java.home"), "bin", windows ? "java.exe" : "java").toString();
         // 构造启动命令
-        StringBuilder startCmd = new StringBuilder("\"" + javaCmd + "\"");
+        StringBuilder startCmd = new StringBuilder(wrap(javaCmd));
         for (String arg : jvmConfig) {
             startCmd.append(" ").append(arg);
         }
@@ -95,10 +95,16 @@ public class StartArg extends Processor {
         System.err.println(LOG_TIME.format(LocalDateTime.now()) + " >>> " + msg);
     }
 
-    private String wrap(String str) { // 整体加引号，避免启动参数被 shell 按空白拆分
-        // 启动命令由 sh 的 eval 与 bat 的 %startCmd% 直接执行，两种环境的引号转义规则不同，
-        // 无法用统一的转义保证安全，故直接拒绝含引号的值，避免静默破坏命令结构。
-        if (str.contains("\"")) throw new IllegalStateException("Illegal quote character in start arg: " + str);
+    // 整体加引号，避免启动参数被 shell 按空白拆分；启动命令由 sh 的 eval 与 bat 的 %startCmd% 直接执行，
+    // 两种环境的转义规则不同，无法用统一转义保证安全，故直接拒绝会破坏命令结构或可被展开执行的值
+    private String wrap(String str) {
+        String unsafe = windows ? "\"%^!" : "\"$`\\"; // 双引号内仍具特殊语义：sh 的 \ 与 bat 的 %VAR%、^、!
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == '\n' || c == '\r' || unsafe.indexOf(c) >= 0) {
+                throw new IllegalStateException("Illegal character in start arg: " + str);
+            }
+        }
         return "\"" + str + "\"";
     }
 

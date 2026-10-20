@@ -1,6 +1,5 @@
 package qingzhou.config.impl;
 
-import java.io.File;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +12,6 @@ import org.testng.annotations.Test;
 public class ConfigTest {
     @BeforeClass
     public void init() {
-        System.setProperty("qingzhou.instance", new File("/tmp").getAbsolutePath());
         System.setProperty("qingzhou.version", "1.0");
     }
 

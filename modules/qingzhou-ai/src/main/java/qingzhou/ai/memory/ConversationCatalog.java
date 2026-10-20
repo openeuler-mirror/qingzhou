@@ -68,26 +68,22 @@ final class ConversationCatalog {
     }
 
     /**
-     * 最久未写入的会话；userId 为 null 表示不限用户
+     * 按最久未写入升序排列的会话快照；userId 为 null 表示不限用户。调用方按序淘汰，避免逐个反查全表
      */
-    CatalogEntry oldest(String userId, boolean archived) {
-        CatalogEntry found = null;
+    List<CatalogEntry> sortedByAge(String userId, boolean archived) {
+        List<CatalogEntry> found = new ArrayList<>();
         for (CatalogEntry entry : entries.values()) {
             if (entry.archived != archived) continue;
             if (userId != null && !userId.equals(entry.userId)) continue;
-            if (found == null || isOlder(entry, found)) found = entry;
+            found.add(entry);
         }
+        found.sort(ConversationCatalog::compareByAge);
         return found;
     }
 
-    private static boolean isOlder(CatalogEntry candidate, CatalogEntry current) {
-        if (candidate.updatedAt != current.updatedAt) return candidate.updatedAt < current.updatedAt;
-        return candidate.sequence < current.sequence;
-    }
-
-    String oldestId(String userId, boolean archived) {
-        CatalogEntry entry = oldest(userId, archived);
-        return entry == null ? null : entry.id;
+    private static int compareByAge(CatalogEntry a, CatalogEntry b) {
+        if (a.updatedAt != b.updatedAt) return Long.compare(a.updatedAt, b.updatedAt);
+        return Long.compare(a.sequence, b.sequence);
     }
 
     Set<String> userIds() {

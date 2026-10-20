@@ -1,5 +1,8 @@
 package qingzhou.config.impl;
 
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -9,10 +12,9 @@ import java.nio.file.Path;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
-
-/** 测试共用辅助：动态代理桩、DS 字段注入、临时实例目录。 */
+/**
+ * 测试共用辅助：动态代理桩、DS 字段注入、临时实例目录。
+ */
 final class TestSupport {
     private TestSupport() {
     }
@@ -22,7 +24,9 @@ final class TestSupport {
         return (T) Proxy.newProxyInstance(TestSupport.class.getClassLoader(), new Class<?>[]{type}, handler);
     }
 
-    /** 记录 getConfiguration / getFactoryConfiguration 得到的 pid 与 update 写入的属性字典。 */
+    /**
+     * 记录 getConfiguration / getFactoryConfiguration 得到的 pid 与 update 写入的属性字典。
+     */
     static ConfigurationAdmin admin(Map<String, Dictionary<String, Object>> updated) {
         return proxy(ConfigurationAdmin.class, (proxy, method, args) -> {
             if ("getConfiguration".equals(method.getName())) return configuration((String) args[0], updated);
@@ -33,7 +37,9 @@ final class TestSupport {
         });
     }
 
-    /** 写入临时实例目录的 conf/qingzhou.properties，并指定 qingzhou.instance。 */
+    /**
+     * 写入临时实例目录的 conf/qingzhou.properties，并指定 qingzhou.instance。
+     */
     static void instance(String content) throws Exception {
         Path dir = Files.createTempDirectory("qingzhou-instance");
         Path conf = Files.createDirectories(dir.resolve("conf"));
@@ -41,7 +47,9 @@ final class TestSupport {
         System.setProperty("qingzhou.instance", dir.toString());
     }
 
-    /** 反射注入 DS 引用字段（测试不启动 OSGi 容器）。 */
+    /**
+     * 反射注入 DS 引用字段（测试不启动 OSGi 容器）。
+     */
     static void inject(Object target, String fieldName, Object value) {
         try {
             Field field = target.getClass().getDeclaredField(fieldName);

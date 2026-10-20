@@ -8,10 +8,9 @@ import org.testng.annotations.Test;
 import qingzhou.config.remote.RemoteConfigSource;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
 import qingzhou.config.remote.etcd.EtcdConfigSource;
-import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 
-/** 工厂的参数解析与必填校验；HttpClient / Json 以桩注入，不发起真实请求。 */
+/** 工厂的参数解析与必填校验；Json 以桩注入，不发起真实请求。 */
 public class RemoteConfigSourceFactoryTest {
     private static final String ENDPOINT = "http://127.0.0.1:2379";
 
@@ -70,20 +69,10 @@ public class RemoteConfigSourceFactoryTest {
         }
     }
 
-    @Test
-    public void nullHttpClient_create_throwException() {
-        try {
-            RemoteConfigSourceFactory.create(validArgs(), null, json());
-            Assert.fail("HttpClient 为空时应抛出异常");
-        } catch (IllegalStateException e) {
-            Assert.assertTrue(e.getMessage().contains("HttpClient"), e.getMessage());
-        }
-    }
-
     // ---------- 辅助 ----------
 
     private static RemoteConfigSource create(Map<String, String> args) {
-        return RemoteConfigSourceFactory.create(args, http(), json());
+        return RemoteConfigSourceFactory.create(args, json());
     }
 
     private static Map<String, String> validArgs() {
@@ -96,10 +85,6 @@ public class RemoteConfigSourceFactoryTest {
             args.put(RemoteConfigSourceFactory.KEY_PREFIX + keyValues[i], keyValues[i + 1]);
         }
         return args;
-    }
-
-    private static HttpClient http() {
-        return TestSupport.proxy(HttpClient.class, (proxy, method, args) -> null);
     }
 
     private static Json json() {

@@ -63,6 +63,8 @@ public class AiChat implements HttpHandler {
 
     @Deactivate
     public void deactivate() {
+        // 刻意停用即关停共享看门狗：在途会话会失去心跳与首字超时（悬挂到客户端超时），
+        // 但不关停会让空闲线程经 Worker→Executor→线程工厂持有旧 bundle 的类加载器，导致 bundle 更新后泄漏
         SseListener.watchdog().shutdownNow();
     }
 
@@ -70,7 +72,7 @@ public class AiChat implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         Map<String, Object> params = params(httpRequest);
         if (params == null) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return;
         }
         ChatRequest request = parseRequest(params, httpRequest, httpResponse);
@@ -103,7 +105,7 @@ public class AiChat implements HttpHandler {
         // 单次提问字符上限：正常业务提问远低于此值，超出即视为滥用
         String question = ((String) params.get("question")).trim();
         if (question.length() > MAX_QUESTION_CHARS) {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return null;
         }
 
@@ -115,7 +117,7 @@ public class AiChat implements HttpHandler {
         } else if (appValue instanceof String) {
             app = (String) appValue;
         } else {
-            httpResponse.status(400).finish();
+            httpResponse.status(400);
             return null;
         }
         if (!app.isEmpty()) {
@@ -126,25 +128,25 @@ public class AiChat implements HttpHandler {
         Map<String, List<String>> attachments = findAttachments(params);
         for (List<String> items : attachments.values()) {
             if (items.size() > ChatConfig.MAX_ATTACHMENT_FILES) {
-                httpResponse.status(400).finish();
+                httpResponse.status(400);
                 return null;
             }
             for (String content : items) {
                 if (content.length() > ChatConfig.MAX_ATTACHMENT_CHARS) {
-                    httpResponse.status(400).finish();
+                    httpResponse.status(400);
                     return null;
                 }
             }
         }
 
-        // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）：缺失/空串无法落库，直接 400
+        // 会话标识，经 RUN_STARTED 下发（前端以其为权威值）：须与落库侧同一规则，否则回答"成功"而消息被静默丢弃
         String conversationId = null;
         Object conversationIdVal = params.get("conversationId");
         if (conversationIdVal instanceof String) {
             conversationId = ((String) conversationIdVal).trim();
         }
-        if (conversationId == null || conversationId.isEmpty()) {
-            httpResponse.status(400).finish();
+        if (!ConversationStore.isValidId(conversationId)) {
+            httpResponse.status(400);
             return null;
         }
 
@@ -159,7 +161,8 @@ public class AiChat implements HttpHandler {
 
     // SSE 准备与模型调用；受理后的任何前置异常都以事件告知客户端
     private void startChat(ChatRequest request, HttpResponse httpResponse) {
-        // 发出响应前的准备
+        // 模型回调在后台线程写响应，须在返回前声明异步，框架不再自动收尾
+        httpResponse.async();
         httpResponse.contentType("text/event-stream; charset=utf-8")
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache")

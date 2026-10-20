@@ -1,13 +1,5 @@
 package qingzhou.app.driver;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -17,8 +9,17 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.registry.AppStubLocal;
 
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class AppContextImpl implements AppContext {
-    public final AppMeta appMeta;
+    // 应用元数据的对外通道是 AppStubLocal.getAppMeta()：此处收窄为包内可见，避免应用绕过接口直接读实现字段
+    final AppMeta appMeta;
 
     private final AppDriver appDriver;
     private final BundleContext bundleContext;
@@ -30,7 +31,7 @@ public class AppContextImpl implements AppContext {
     final Map<Model, ModelBase> modelInstances = new HashMap<>();
     final Map<String, Method> actionMethods = new HashMap<>();
 
-    private final File instanceFile = new File(Objects.requireNonNull(System.getProperty("qingzhou.instance"), "qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
+    private final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
     private final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
     // 应用启动过程中，可能被调用；运行期读多写少，用 COW 保证请求线程遍历安全
@@ -84,7 +85,7 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public String getVersion() {
+    public String getPlatformVersion() {
         return qzVersion;
     }
 

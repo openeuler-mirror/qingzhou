@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 
 // 仅同包 QingzhouMain 使用，不对外暴露
 class PathDetector {
-    // 进程扫描结果短期共享：多个 bundle 同时开启探测时，避免重复拉起 ps/powershell 全量扫描
-    private static final long SCAN_CACHE_MILLIS = 5_000;
+    // 进程扫描结果共享：全量进程扫描开销大，探测调度为 30 秒一次，缓存须明显长于该周期以免每拍都拉起 ps/powershell
+    private static final long SCAN_CACHE_MILLIS = 30_000;
     private static volatile List<String> cachedScanLines;
     private static volatile long lastScanAt;
 
@@ -148,8 +148,9 @@ class PathDetector {
             cmd = new String[]{"powershell", "-NoProfile", "-Command",
                     "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
         } else {
-            // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）
-            cmd = new String[]{"sh", "-c", "ps -ww -e -o args="};
+            // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）；
+            // 直接 exec 而非经 sh -c：命令无 shell 语法，少依赖一层 shell 更利于裁剪过的基础镜像
+            cmd = new String[]{"ps", "-ww", "-e", "-o", "args="};
         }
 
         List<String> lines = new ArrayList<>();
