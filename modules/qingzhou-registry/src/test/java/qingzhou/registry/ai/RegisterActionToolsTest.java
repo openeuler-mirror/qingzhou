@@ -117,12 +117,12 @@ public class RegisterActionToolsTest {
     private static String applyPageNum(Object pageNum) throws Exception {
         RequestImpl request = new RequestImpl();
         Map<String, Object> toolArgs = new HashMap<>();
-        toolArgs.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
+        toolArgs.put(Constants.WEB_PARAMETER_PAGE_NUM, pageNum);
         // preInvoke 为实例私有方法：DS 组件可无参构造，PAGE 分支不触碰注入字段
         invoke(new RegisterActionTools(), "preInvoke",
                 new Class<?>[]{String.class, Map.class, RequestImpl.class},
                 qingzhou.api.action.Page.ACTION_CODE_PAGE, toolArgs, request);
-        return request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+        return request.getParameter(Constants.WEB_PARAMETER_PAGE_NUM);
     }
 
     private static String buildPagingHint(ResponseImpl response) throws Exception {
@@ -131,9 +131,9 @@ public class RegisterActionToolsTest {
 
     private static ResponseImpl pagedResponse(Object pageNum, Object pageSize, Object totalSize) {
         Map<String, Object> data = new HashMap<>();
-        data.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
-        data.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
-        data.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, totalSize);
+        data.put(Constants.WEB_PARAMETER_PAGE_NUM, pageNum);
+        data.put(Constants.WEB_PARAMETER_PAGE_SIZE, pageSize);
+        data.put(Constants.WEB_PARAMETER_TOTAL_SIZE, totalSize);
         ResponseImpl response = new ResponseImpl();
         response.data(data);
         return response;

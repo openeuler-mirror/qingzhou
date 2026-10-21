@@ -33,7 +33,7 @@ public class AppList extends AbstractMetaHandler {
     }
 
     private final Function<RequestParameters, Object> function = context -> {
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter(Constants.WEB_PARAMETER_LANG);
         List<Map<String, String>> appBasicInfoList = new ArrayList<>();
         for (String localApp : registry.getAllLocalApps()) {
             qingzhou.dto.meta.annotation.App app = localAppMeta(localApp);

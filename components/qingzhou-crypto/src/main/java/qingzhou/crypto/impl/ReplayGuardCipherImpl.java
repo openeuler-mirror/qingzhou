@@ -3,8 +3,8 @@ package qingzhou.crypto.impl;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Base64;
 
+import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.ReplayGuardCipher;
 
@@ -35,9 +35,11 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     private static final NonceRegistry nonceRegistry = new NonceRegistry();
 
     private final Cipher cipher;
+    private final Base64Coder base64Coder;
 
-    ReplayGuardCipherImpl(Cipher cipher) {
+    ReplayGuardCipherImpl(Cipher cipher, Base64Coder base64Coder) {
         this.cipher = cipher;
+        this.base64Coder = base64Coder;
     }
 
     @Override
@@ -100,7 +102,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
     // 先解密后登记：解密失败（如 context 不匹配）不得烧掉 nonce，否则攻击者可抢先令合法报文被判为重放。
     // TTL 取时间窗两倍：自登记时刻起覆盖该报文在时间窗内的全部可受理时段
     private boolean registerIfAbsent(byte[] nonce) {
-        String key = Base64.getEncoder().encodeToString(nonce);
+        String key = base64Coder.encode(nonce);
         return nonceRegistry.registerIfAbsent(key, MAX_CLOCK_SKEW_MILLIS * 2);
     }
 }

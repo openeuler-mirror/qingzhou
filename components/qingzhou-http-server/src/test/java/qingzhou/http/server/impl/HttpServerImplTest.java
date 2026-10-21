@@ -180,7 +180,6 @@ public class HttpServerImplTest {
         crypto.init(new HashMap<String, String>() {{
             put("qingzhou.instance", new File("/tmp").getAbsolutePath());
             put("qingzhou.version", "1.0");
-            put("qingzhou.http.client.trustAll", "true"); // 测试服务端为自签名证书：显式开启跳过校验
         }});
         HandlerManager handlerManager = new HandlerManager();
         DispatcherHandler dispatcherHandler = new DispatcherHandler();

@@ -38,7 +38,7 @@ public class ChatConfig implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         Map<String, Object> data = new HashMap<>();
 
-        String lang = httpRequest.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = httpRequest.getParameter(Constants.WEB_PARAMETER_LANG);
         List<String> prompts = promptSamples.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
         data.put("prompts", prompts);
 

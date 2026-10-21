@@ -29,7 +29,7 @@ class ResponseImpl implements Response {
             streaming = true;
             executor.execute(() -> readStreaming(listener));
         } else {
-            // 同步模式或非 2xx：一次性读完整响应体，由调用方根据 getStatus() 处理，不触发任何回调
+            // 同步模式或非 2xx：一次性读完整响应体，不 disconnect 以复用 keep-alive 连接
             streaming = false;
             result = read(responseStream());
         }
@@ -59,9 +59,8 @@ class ResponseImpl implements Response {
                 listener.onError(t);
             }
         } finally {
-            if (cancelled) {
-                conn.disconnect(); // 被取消时强制断开底层连接
-            }
+            // 最终，不必检测状态，直接关闭长连接？
+            conn.disconnect();
         }
     }
 
@@ -69,7 +68,7 @@ class ResponseImpl implements Response {
     public void cancel() {
         cancelled = true;
         if (streaming) {
-            conn.disconnect(); // 仅流式中止需断开连接；同步响应已读完并关闭流，不 disconnect 以复用 keep-alive 连接
+            conn.disconnect(); // 仅流式中止需断开连接
         }
     }
 

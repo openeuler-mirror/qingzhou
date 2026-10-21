@@ -6,6 +6,8 @@ import java.util.*;
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Crypto;
+import qingzhou.crypto.EpochKeyRotatingCipher;
+import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -13,9 +15,10 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.registry.AgentDomainKeys;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
     private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册报文上限：AES-GCM 解密廉价，仅防解析前内存消耗
@@ -29,7 +32,7 @@ public class Register implements HttpHandler {
     @Reference
     private Json json;
     @Reference
-    private AgentDomainService agentDomainService;
+    private AgentDomainKeys agentDomainKeys;
 
     private Timer timer;
 
@@ -46,7 +49,7 @@ public class Register implements HttpHandler {
                 for (String next : registry.getAllRemoteInstances()) {
                     InstanceInfo remoteInstance = registry.getRemoteInstance(next);
                     if (remoteInstance != null) {
-                        long lastRefreshTime = remoteInstance.getLastRefreshTime();
+                        long lastRefreshTime = remoteInstance.getRefreshTime();
                         if (lastRefreshTime + timeout < System.currentTimeMillis()) {
                             toRemove.add(next);
                         }
@@ -67,94 +70,44 @@ public class Register implements HttpHandler {
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         byte[] requestBody = httpRequest.getBody();
-        if (requestBody == null || requestBody.length == 0) {
-            httpResponse.status(400);
-            return;
-        }
-        if (requestBody.length > MAX_REGISTER_BODY) {
+        if (requestBody == null || requestBody.length == 0 || requestBody.length > MAX_REGISTER_BODY) {
             httpResponse.status(413);
             return;
         }
 
-        // 报文 = domainId(明文首行，路由键) + '\n' + ReplayGuard 报文；domainId 同时作 AAD 绑定，防报文挪域
-        int sep = indexOfLineBreak(requestBody);
-        if (sep < 0) {
-            httpResponse.status(400);
-            return;
-        }
-        String domainId = new String(requestBody, 0, sep, StandardCharsets.UTF_8).trim();
-        byte[] packet = Arrays.copyOfRange(requestBody, sep + 1, requestBody.length);
-
-        byte[] master = agentDomainService.master(domainId);
-        if (master == null) {
-            logger.warn("registration for unconfigured agent-domain: " + domainId);
+        // AAD 绑定，防报文挪域
+        String domainId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
+        String instanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
+        byte[] agentDomainKey;
+        if (domainId == null || instanceId == null || (agentDomainKey = agentDomainKeys.getAgentDomainKey(domainId)) == null) {
+            logger.warn("illegal agent-domain: " + domainId);
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
 
-        byte[] requestData;
-        try {
-            requestData = crypto.getEpochPacketCipher(master, domainId).decrypt(packet,
-                    domainId.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，不回显配置状态差异
-            logger.warn("registration decrypt failed for domain " + domainId + ": " + e.getMessage());
-            httpResponse.status(400);
+        InstanceInfo exists = registry.getRemoteInstance(instanceId);
+        if (exists != null) { // 已存在，只做心跳
+            exists.refreshTime();
+            httpResponse.status(304);
             return;
         }
 
-        InstanceInfo instanceInfo;
         try {
-            instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            byte[] aad = agentDomainKeys.toRegistryAad(instanceId, Constants.REMOTE_REGISTER_URI);
+            EpochKeyRotatingCipher cipher = crypto.getEpochKeyRotatingCipher(agentDomainKey);
+            byte[] requestData = cipher.decrypt(requestBody, aad);
+            InstanceInfo instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            // 成功注册
             instanceInfo.setHost(httpRequest.getRemoteHost());
             instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
-        } catch (Exception e) {
-            httpResponse.status(400);
-            return;
-        }
-
-        // 应用变更会重算实例 ID：同一 agent（域 + host + port 相同）的旧记录先移除，避免同一实例双份存在
-        for (String other : registry.getAllRemoteInstances()) {
-            if (other.equals(instanceInfo.getId())) continue;
-            InstanceInfo info = registry.getRemoteInstance(other);
-            if (info != null && domainId.equals(info.getDomain())
-                    && Objects.equals(instanceInfo.getHost(), info.getHost())
-                    && instanceInfo.getPort() == info.getPort()) {
-                registry.removeRemoteInstance(other);
-            }
-        }
-
-        InstanceInfo exists = registry.getRemoteInstance(instanceInfo.getId());
-        registry.addRemoteInstance(instanceInfo);
-
-        String msg;
-        if (exists != null) {
-            msg = "Redundant.";
-        } else {
+            registry.addRemoteInstance(instanceInfo);
             List<AppMeta> appMetas = instanceInfo.getAppMetas();
-            msg = appMetas.size() + " apps accepted.";
             for (AppMeta appMeta : appMetas) {
                 logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), appMeta.getApp().code));
             }
-        }
-
-        // 响应同样按时段封装：agent 按报文时间戳派生密钥即可解开
-        try {
-            byte[] encrypt = crypto.getEpochPacketCipher(master, domainId)
-                    .encrypt(msg.getBytes(StandardCharsets.UTF_8), domainId.getBytes(StandardCharsets.UTF_8));
-            httpResponse.send(encrypt);
         } catch (Exception e) {
-            httpResponse.status(500);
-            logger.error("failed to encrypt registration response", e);
+            logger.error("failed to parse instance info", e);
+            httpResponse.status(400);
         }
-    }
-
-    // domainId 明文首行以 '\n' 结尾；限制首行扫描长度
-    private static int indexOfLineBreak(byte[] body) {
-        int limit = Math.min(body.length, 256);
-        for (int i = 0; i < limit; i++) {
-            if (body[i] == '\n') return i;
-        }
-        return -1;
     }
 }

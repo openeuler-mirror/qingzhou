@@ -6,11 +6,11 @@ import java.util.List;
 public class InstanceInfo {
     // 以下字段由 registry 在认证通过后写入，不参与 JSON 收发
     private transient long lastRefreshTime;
+    private transient String host;
+    private transient String domain;
 
     private String id;
-    private String host;
     private int port;
-    private String domain;
     private boolean sslEnabled;
     private String platformVersion;
     private final List<AppMeta> appMetas = new ArrayList<>();
@@ -67,11 +67,11 @@ public class InstanceInfo {
         return appMetas;
     }
 
-    public long getLastRefreshTime() {
+    public long getRefreshTime() {
         return lastRefreshTime;
     }
 
-    public void setLastRefreshTime(long lastRefreshTime) {
-        this.lastRefreshTime = lastRefreshTime;
+    public void refreshTime() {
+        this.lastRefreshTime = System.currentTimeMillis();
     }
 }

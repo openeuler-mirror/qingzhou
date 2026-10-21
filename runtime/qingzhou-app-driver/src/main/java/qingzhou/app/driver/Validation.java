@@ -74,7 +74,7 @@ class Validation implements ActionFilter {
 
         // 开始校验
         Map<String, List<String>> validation = new HashMap<>();
-        String langParameter = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String langParameter = request.getParameter(Constants.WEB_PARAMETER_LANG);
         for (ModelField field : validateFields) {
             List<String> errors = new ArrayList<>();
 
@@ -103,7 +103,7 @@ class Validation implements ActionFilter {
         RequestImpl req = (RequestImpl) request;
         Map<String, List<String>> errors = validate(req.getCurrentModelAction(), req);
         if (errors != null && !errors.isEmpty()) {
-            String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+            String langStr = request.getParameter(Constants.WEB_PARAMETER_LANG);
             String msg = i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr);
             request.getResponse()
                     .status(400)

@@ -40,7 +40,7 @@ public class AppInfo extends AbstractMetaHandler {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter(Constants.WEB_PARAMETER_LANG);
 
         Map<String, Object> appMetaInfo = new HashMap<>();
         appMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);

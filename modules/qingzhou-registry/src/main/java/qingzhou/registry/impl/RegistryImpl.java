@@ -3,7 +3,10 @@ package qingzhou.registry.impl;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -17,10 +20,7 @@ import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.logger.util.PendingLogs;
-import qingzhou.registry.AppStub;
-import qingzhou.registry.AppStubLocal;
-import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 import qingzhou.registry.web.Invoke;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -36,7 +36,7 @@ public class RegistryImpl implements Registry {
     @Reference
     Crypto crypto;
     @Reference
-    AgentDomainService agentDomainService;
+    AgentDomainKeys agentDomainKeys;
 
     private final PendingLogs pendingLogs = new PendingLogs();
 
@@ -183,25 +183,9 @@ public class RegistryImpl implements Registry {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
         // 重复注册同样要填：新对象的 lastRefreshTime 为 0，不填则重注册恢复路径必然被健康检查删除。
-        instanceInfo.setLastRefreshTime(System.currentTimeMillis());
-        InstanceInfo previous = remoteInstances.put(instanceInfo.getId(), instanceInfo);
-        // 心跳即注册：元数据未变时只刷新存活时间，避免 registryDataVersion 每 6 秒自增令前端缓存持续失效
-        if (previous == null || !sameMetadata(previous, instanceInfo)) {
-            registryDataVersion.incrementAndGet();
-        }
-    }
-
-    // 按内容整体比对：应用元数据（图标、模型、接口等）变化同样要触发版本自增，否则前端缓存不刷新
-    private boolean sameMetadata(InstanceInfo a, InstanceInfo b) {
-        try {
-            return Objects.equals(a.getPlatformVersion(), b.getPlatformVersion())
-                    && Objects.equals(a.getHost(), b.getHost())
-                    && a.getPort() == b.getPort()
-                    && a.isSslEnabled() == b.isSslEnabled()
-                    && json.toJson(a.getAppMetas()).equals(json.toJson(b.getAppMetas()));
-        } catch (Exception e) {
-            return false;
-        }
+        instanceInfo.refreshTime();
+        remoteInstances.put(instanceInfo.getId(), instanceInfo);
+        registryDataVersion.incrementAndGet();
     }
 
     @Override

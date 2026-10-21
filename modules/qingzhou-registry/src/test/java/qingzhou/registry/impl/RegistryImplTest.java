@@ -114,7 +114,7 @@ public class RegistryImplTest {
         registry.addRemoteInstance(remote);
 
         Assert.assertTrue(registry.getRegistryDataVersion() > before);
-        Assert.assertTrue(remote.getLastRefreshTime() > 0);
+        Assert.assertTrue(remote.getRefreshTime() > 0);
     }
 
     @Test
@@ -133,8 +133,8 @@ public class RegistryImplTest {
         Assert.assertTrue(registry.getRegistryDataVersion() > versionAfterFirst);
         Assert.assertEquals(registry.getRemoteInstance(REMOTE_INSTANCE_ID), second);
         // 重复注册也必须刷新存活时间：否则新对象 lastRefreshTime=0，会被健康检查立即剔除（实例周期性抖动的根因）
-        Assert.assertTrue(second.getLastRefreshTime() > 0);
-        Assert.assertTrue(first.getLastRefreshTime() > 0);
+        Assert.assertTrue(second.getRefreshTime() > 0);
+        Assert.assertTrue(first.getRefreshTime() > 0);
     }
 
     @Test

@@ -87,8 +87,8 @@ public class DefaultAction {
         }
 
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
-        int pageNum = parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM), 1);
-        int pageSize = Math.min(parsePageParam(request.getParameter(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE), 10), 100);
+        int pageNum = parsePageParam(request.getParameter(Constants.WEB_PARAMETER_PAGE_NUM), 1);
+        int pageSize = Math.min(parsePageParam(request.getParameter(Constants.WEB_PARAMETER_PAGE_SIZE), 10), 100);
         List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
@@ -102,10 +102,10 @@ public class DefaultAction {
                 listResult.add(dataMap);
             });
             finalResult.put("data", listResult);
-            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, pageNum);
-            finalResult.put(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE, pageSize);
+            finalResult.put(Constants.WEB_PARAMETER_PAGE_NUM, pageNum);
+            finalResult.put(Constants.WEB_PARAMETER_PAGE_SIZE, pageSize);
             // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
-            finalResult.put(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE, page.totalSize(query));
+            finalResult.put(Constants.WEB_PARAMETER_TOTAL_SIZE, page.totalSize(query));
             response.data(finalResult);
         }
     }

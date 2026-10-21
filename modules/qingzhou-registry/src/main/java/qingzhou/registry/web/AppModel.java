@@ -42,7 +42,7 @@ public class AppModel extends AbstractMetaHandler {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter(Constants.WEB_PARAMETER_LANG);
 
         // 处理结果
         for (Model model : app.models) {

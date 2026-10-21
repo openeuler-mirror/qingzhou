@@ -44,12 +44,12 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public ReplayGuardCipher getReplayGuardCipher(Cipher cipher) {
-        return new ReplayGuardCipherImpl(cipher);
+        return new ReplayGuardCipherImpl(cipher, base64Coder);
     }
 
     @Override
-    public EpochPacketCipher getEpochPacketCipher(byte[] masterKey, String scopeId) {
-        return new EpochPacketCipherImpl(this, masterKey, scopeId);
+    public EpochKeyRotatingCipher getEpochKeyRotatingCipher(byte[] masterKey) {
+        return new EpochKeyRotatingCipherImpl(this, masterKey);
     }
 
     @Override

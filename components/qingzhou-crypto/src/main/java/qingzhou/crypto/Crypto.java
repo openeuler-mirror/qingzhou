@@ -41,5 +41,5 @@ public interface Crypto {
     /**
      * 绑定根密钥与作用域的时段报文加解密器。与 {@link #getReplayGuardCipher} 一致，每次返回独立实例。
      */
-    EpochPacketCipher getEpochPacketCipher(byte[] masterKey, String scopeId);
+    EpochKeyRotatingCipher getEpochKeyRotatingCipher(byte[] masterKey);
 }

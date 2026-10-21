@@ -60,13 +60,13 @@ public class RegisterActionTools {
         sharedProperties.put(ToolService.PARAMETER_REQUIRED + "." + p.get(), "false");
 
         Map<String, String> tools = new HashMap<>();
-        tools.put(Page.ACTION_CODE_PAGE, "该接口返回某个应用模块的业务数据或资源的列表信息。列表数据分页返回，每次调用只返回一页，可通过 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 指定页码。"
+        tools.put(Page.ACTION_CODE_PAGE, "该接口返回某个应用模块的业务数据或资源的列表信息。列表数据分页返回，每次调用只返回一页，可通过 " + Constants.WEB_PARAMETER_PAGE_NUM + " 指定页码。"
                 + "如果返回内容以【分页提示】开头，说明列表共有多页，此时须遵守以下规则："
                 + "1. 即使用户要求列出全部数据，也只查询这一页；用户指定页码前，不要查询其他页，也不要通过猜测编号、逐条调用其他工具等方式获取本页以外的数据。"
                 + "2. 如实列出本页数据，禁止推测或编造其他页的内容；如果用户的问题涉及全部数据（如统计、排序、查找最大值），须说明结论仅基于本页。"
                 + "3. 如果返回内容被截断，如实说明本页有部分数据未能显示，不要推测被截断的内容，也不要为补全而重复调用工具。"
                 + "4. 回复末尾注明“第 X/Y 页”（最后一页注明“已是最后一页”），并提示用户可回复页码（如“第 2 页”或“下一页”）查看其他页；页码超出范围时，告知用户有效的页码范围。"
-                + "5. 用户指定页码后，使用相同的参数并传入 " + Constants.REQUEST_PARAMETER_NAME_PAGE_NUM + " 再次调用本工具。");
+                + "5. 用户指定页码后，使用相同的参数并传入 " + Constants.WEB_PARAMETER_PAGE_NUM + " 再次调用本工具。");
         tools.put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
         tools.put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
 
@@ -174,7 +174,7 @@ public class RegisterActionTools {
 
     private void applyToolParameters(String actionCode, int index, Hashtable<String, String> properties) {
         if (Page.ACTION_CODE_PAGE.equals(actionCode)) {
-            properties.put(ToolService.PARAMETER_NAME + "." + index, Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+            properties.put(ToolService.PARAMETER_NAME + "." + index, Constants.WEB_PARAMETER_PAGE_NUM);
             properties.put(ToolService.PARAMETER_DESCRIPTION + "." + index, "列表页码，从 1 开始，不传则为第 1 页。仅在用户指定要查看某一页时传入。");
             properties.put(ToolService.PARAMETER_REQUIRED + "." + index, "false");
         } else {
@@ -191,11 +191,11 @@ public class RegisterActionTools {
     // 返回错误信息，null 表示无错误
     private String preInvoke(String actionCode, Map<String, Object> toolArgs, RequestImpl request) {
         if (Page.ACTION_CODE_PAGE.equals(actionCode)) {
-            Object pageNum = toolArgs.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
+            Object pageNum = toolArgs.get(Constants.WEB_PARAMETER_PAGE_NUM);
             if (pageNum == null) return null;
 
             String value = pageNum instanceof Number ? String.valueOf(((Number) pageNum).intValue()) : pageNum.toString().trim();
-            request.getParameters().put(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM, value);
+            request.getParameters().put(Constants.WEB_PARAMETER_PAGE_NUM, value);
         } else {
             if (isDataAction(actionCode)) {
                 Map<String, Object> data;
@@ -242,9 +242,9 @@ public class RegisterActionTools {
         if (!response.isSuccess() || !(response.getData() instanceof Map)) return null;
 
         Map<?, ?> data = (Map<?, ?>) response.getData();
-        Object pageNum = data.get(Constants.REQUEST_PARAMETER_NAME_PAGE_NUM);
-        Object pageSize = data.get(Constants.REQUEST_PARAMETER_NAME_PAGE_SIZE);
-        Object totalSize = data.get(Constants.REQUEST_PARAMETER_NAME_TOTAL_SIZE);
+        Object pageNum = data.get(Constants.WEB_PARAMETER_PAGE_NUM);
+        Object pageSize = data.get(Constants.WEB_PARAMETER_PAGE_SIZE);
+        Object totalSize = data.get(Constants.WEB_PARAMETER_TOTAL_SIZE);
         if (!(pageNum instanceof Number && pageSize instanceof Number && totalSize instanceof Number)) return null;
 
         return pagingHint(((Number) pageNum).intValue(), ((Number) pageSize).intValue(), ((Number) totalSize).intValue());
