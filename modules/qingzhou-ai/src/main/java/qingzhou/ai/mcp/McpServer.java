@@ -45,7 +45,7 @@ public class McpServer implements HttpHandler {
         toolsCapability.put("listChanged", false);
         capabilities.put("tools", toolsCapability);
 
-        initializeData.put("protocolVersion", "2024-11-05");
+        initializeData.put("protocolVersion", "2025-03-26");
         initializeData.put("serverInfo", serverInfo);
         initializeData.put("capabilities", capabilities);
     }
