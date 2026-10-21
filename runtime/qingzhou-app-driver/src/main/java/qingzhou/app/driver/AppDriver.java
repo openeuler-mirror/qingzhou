@@ -83,12 +83,16 @@ public class AppDriver implements BundleActivator {
     }
 
     private <T> T loadService(Class<T> serviceType, String name) {
+        // 应用日志优先取专属日志器 qingzhou-logger~app，与框架系统日志分文件
+        boolean appLogger = name == null && Logger.class.isAssignableFrom(serviceType);
+        String lookupName = appLogger ? "app" : name;
+
         ServiceReference<?> serviceReference = null;
-        if (name != null) {
+        if (lookupName != null) {
             try {
                 // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
                 // 其中 *~ 是有意的通配前缀，只转义 name 本身
-                String escapedName = escapeFilterValue(name);
+                String escapedName = escapeFilterValue(lookupName);
                 Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
                         "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
                 if (!serviceReferences.isEmpty()) {
@@ -96,6 +100,10 @@ public class AppDriver implements BundleActivator {
                 }
             } catch (Exception e) {
                 throw new IllegalStateException(e);
+            }
+            // 未配置 qingzhou-logger~app 时回退默认日志器
+            if (appLogger && serviceReference == null) {
+                serviceReference = context.getServiceReference(serviceType);
             }
         } else {
             serviceReference = context.getServiceReference(serviceType);
