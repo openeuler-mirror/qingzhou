@@ -85,22 +85,25 @@ public class Register implements HttpHandler {
             return;
         }
 
-        InstanceInfo exists = registry.getRemoteInstance(instanceId);
-        if (exists != null) { // 已存在，只做心跳
-            exists.refreshTime();
-            httpResponse.status(304);
-            return;
-        }
-
         try {
             byte[] aad = agentDomainKeys.toRegistryAad(instanceId, Constants.REMOTE_REGISTER_URI);
             EpochKeyRotatingCipher cipher = crypto.getEpochKeyRotatingCipher(agentDomainKey);
             byte[] requestData = cipher.decrypt(requestBody, aad);
             InstanceInfo instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
-            // 成功注册
-            instanceInfo.setHost(httpRequest.getRemoteHost());
-            instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
-            registry.addRemoteInstance(instanceInfo);
+            // 解密完成，并解析出 InstanceInfo 则表示认证通过
+
+            InstanceInfo exists = registry.getRemoteInstance(instanceId);
+            if (exists != null) { // 已存在，只做心跳
+                exists.refreshTime();
+                httpResponse.status(304);
+                return;
+            } else {
+                instanceInfo.setHost(httpRequest.getRemoteHost());
+                instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
+                registry.addRemoteInstance(instanceInfo);
+            }
+
+            // 输出注册成功日志
             List<AppMeta> appMetas = instanceInfo.getAppMetas();
             for (AppMeta appMeta : appMetas) {
                 logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), appMeta.getApp().code));
