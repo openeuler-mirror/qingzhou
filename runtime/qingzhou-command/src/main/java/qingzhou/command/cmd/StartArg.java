@@ -1,9 +1,6 @@
 package qingzhou.command.cmd;
 
 import java.io.File;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import qingzhou.command.Processor;
+import qingzhou.config.impl.Config;
 
 public class StartArg extends Processor {
     private File instanceDir;
@@ -29,6 +27,11 @@ public class StartArg extends Processor {
     @Override
     public String info() {
         return "Run the instance. Tip: Put the instance (instance) name at the end of the command.";
+    }
+
+    @Override
+    public String[] classpath() {
+        return new String[]{"modules/qingzhou-config.jar"};
     }
 
     @Override
@@ -136,14 +139,7 @@ public class StartArg extends Processor {
         return false;
     }
 
-    @SuppressWarnings("unchecked") // Config.parse 的返回形态由反射加载的实现保证为 Map<String, String>
     private Map<String, String> parseConfig(Path configFile) throws Exception {
-        URL configJar = Paths.get(getLibDir().getAbsolutePath(), "modules", "qingzhou-config.jar").toUri().toURL();
-        try (URLClassLoader loader = new URLClassLoader(new URL[]{configJar})) {
-            Class<?> configClass = loader.loadClass("qingzhou.config.impl.Config");
-            Method parseConfig = configClass.getMethod("parse", String.class);
-            String configText = new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8);
-            return (Map<String, String>) parseConfig.invoke(null, configText);
-        }
+        return Config.parse(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8));
     }
 }

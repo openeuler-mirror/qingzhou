@@ -3,26 +3,21 @@ package qingzhou.command.cmd.init;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 
 import qingzhou.command.Processor;
+import qingzhou.crypto.impl.CryptoImpl;
 
 public class Init extends Processor {
     private File instanceDir;
     private File propsFile;
     private Console console;
 
-    private URLClassLoader cryptoLoader;
-    private Object crypto;
+    private CryptoImpl crypto;
 
     @Override
     public String name() {
@@ -32,6 +27,11 @@ public class Init extends Processor {
     @Override
     public String info() {
         return "Initialize the instance: global key, admin password and SSL certificate.";
+    }
+
+    @Override
+    public String[] classpath() {
+        return new String[]{"components/qingzhou-crypto.jar"};
     }
 
     @Override
@@ -46,20 +46,13 @@ public class Init extends Processor {
         }
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
 
-        URL cryptoJar = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
-        cryptoLoader = new URLClassLoader(new URL[]{cryptoJar});
-        try {
-            crypto = cryptoLoader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
-            // CryptoImpl 的密钥文件路径由 @Activate 注入，脱离 OSGi 时须显式初始化，否则 getGlobalCipher 读取的路径为空
-            crypto.getClass().getMethod("init", Map.class)
-                    .invoke(crypto, Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
+        crypto = new CryptoImpl();
+        // CryptoImpl 的密钥文件路径由 @Activate 注入，脱离 OSGi 时须显式初始化，否则 getGlobalCipher 读取的路径为空
+        crypto.init(Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
 
-            new GlobalKeyStep().init(this);
-            new AdminPasswordStep().init(this);
-            new SslStep().init(this);
-        } finally {
-            cryptoLoader.close();
-        }
+        new GlobalKeyStep().init(this);
+        new AdminPasswordStep().init(this);
+        new SslStep().init(this);
         log("Done, restart the instance to take effect.");
     }
 
@@ -67,20 +60,16 @@ public class Init extends Processor {
         return new File(instanceDir, "conf/" + name);
     }
 
-    String generateCipherKey() throws Exception {
-        return (String) crypto.getClass().getMethod("generateCipherKey").invoke(crypto);
+    String generateCipherKey() {
+        return crypto.generateCipherKey();
     }
 
-    String digest(String text) throws Exception {
-        Object messageDigest = crypto.getClass().getMethod("getMessageDigest").invoke(crypto);
-        Method digest = cryptoLoader.loadClass("qingzhou.crypto.MessageDigest").getMethod("digest", String.class);
-        return (String) digest.invoke(messageDigest, text);
+    String digest(String text) {
+        return crypto.getMessageDigest().digest(text);
     }
 
     String encrypt(String plain) throws Exception {
-        Object globalCipher = crypto.getClass().getMethod("getGlobalCipher").invoke(crypto);
-        Method encrypt = cryptoLoader.loadClass("qingzhou.crypto.Cipher").getMethod("encrypt", String.class);
-        return (String) encrypt.invoke(globalCipher, plain);
+        return crypto.getGlobalCipher().encrypt(plain);
     }
 
     String readPassword(String prompt) {
