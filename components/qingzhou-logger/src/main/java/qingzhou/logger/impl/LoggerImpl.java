@@ -1,20 +1,12 @@
 package qingzhou.logger.impl;
 
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.logger.Logger;
 
 /**
@@ -25,7 +17,7 @@ import qingzhou.logger.Logger;
  */
 @Component(configurationPid = "qingzhou-logger", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class LoggerImpl implements Logger {
-    private static final String DEFAULT_TAG = "default";
+    private static final String DEFAULT_TAG = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
     private static final Set<String> activePids = ConcurrentHashMap.newKeySet();
     private static final Set<String> appliedTags = ConcurrentHashMap.newKeySet();
     static volatile boolean applied; // tinylog 全局配置仅可 apply 一次，测试可直接置位跳过
@@ -157,7 +149,9 @@ public class LoggerImpl implements Logger {
         return renameWriterName(writerName, tag) + property;
     }
 
-    /** writer 名重命名：writer_file -> writer_<tag>_file，确保以 writer 开头且不冲突 */
+    /**
+     * writer 名重命名：writer_file -> writer_<tag>_file，确保以 writer 开头且不冲突
+     */
     private static String renameWriterName(String writerName, String tag) {
         String suffix = writerName.substring("writer".length());
         if (suffix.startsWith("_")) suffix = suffix.substring(1);
@@ -170,7 +164,7 @@ public class LoggerImpl implements Logger {
             showInfo.deactivate();
         }
 
-        activePids.remove(pid != null ? pid : DEFAULT_TAG);
+        activePids.remove(pid);
         if (activePids.isEmpty()) {
             try {
                 org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();

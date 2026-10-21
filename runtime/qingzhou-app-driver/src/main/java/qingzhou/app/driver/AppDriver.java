@@ -83,9 +83,9 @@ public class AppDriver implements BundleActivator {
     }
 
     private <T> T loadService(Class<T> serviceType, String name) {
-        // 应用日志优先取专属日志器 qingzhou-logger~app，与框架系统日志分文件
-        boolean appLogger = name == null && Logger.class.isAssignableFrom(serviceType);
-        String lookupName = appLogger ? "app" : name;
+        boolean isLoggerService = serviceType == Logger.class;
+        boolean isAppDefaultLoggerService = isLoggerService && name == null;
+        String lookupName = isAppDefaultLoggerService ? "app_default" : name;
 
         ServiceReference<?> serviceReference = null;
         if (lookupName != null) {
@@ -101,17 +101,19 @@ public class AppDriver implements BundleActivator {
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
-            // 未配置 qingzhou-logger~app 时回退默认日志器
-            if (appLogger && serviceReference == null) {
-                serviceReference = context.getServiceReference(serviceType);
-            }
         } else {
             serviceReference = context.getServiceReference(serviceType);
         }
+
+        // 未配置 qingzhou-logger~app 时回退默认日志器
+        if (isAppDefaultLoggerService && serviceReference == null) {
+            serviceReference = context.getServiceReference(serviceType);
+        }
+
         if (serviceReference != null) {
             serviceReferences.add(serviceReference);
             Object service = context.getService(serviceReference);
-            if (service instanceof Logger) {
+            if (isLoggerService) {
                 service = new AppLogger(appMeta.getApp().code, (Logger) service);
             }
             return serviceType.cast(service);

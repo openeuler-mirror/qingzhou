@@ -13,6 +13,12 @@
 
     <dependencies>
         <dependency>
+            <artifactId>qingzhou-common</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.tinylog</groupId>
             <artifactId>tinylog-api</artifactId>
             <version>2.6.2</version>
@@ -44,7 +50,10 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.logger,qingzhou.logger.util</Export-Package>
-                        <Import-Package>org.osgi.framework,org.osgi.service.log,org.osgi.service.cm</Import-Package>
+                        <Import-Package>
+                            qingzhou.common,
+                            org.osgi.framework,org.osgi.service.log,org.osgi.service.cm
+                        </Import-Package>
                         <Embed-Dependency>tinylog-api,tinylog-impl</Embed-Dependency>
                     </instructions>
                 </configuration>

@@ -41,7 +41,7 @@ public class LoggerImplTest {
         Map<String, String> defaultConfig = new HashMap<>();
         defaultConfig.put("level", "debug");
         defaultConfig.put("writer", CUSTOM_WRITER);
-        perTagConfigs.put("default", defaultConfig);
+        perTagConfigs.put(qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE, defaultConfig);
         Map<String, String> accessConfig = new HashMap<>();
         accessConfig.put("writer", ACCESS_WRITER);
         perTagConfigs.put("access", accessConfig);

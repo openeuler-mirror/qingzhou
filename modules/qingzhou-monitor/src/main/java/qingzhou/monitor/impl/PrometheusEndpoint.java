@@ -152,7 +152,7 @@ public class PrometheusEndpoint implements HttpHandler {
         if (metricName.isEmpty()) return;
 
         StringBuilder line = new StringBuilder(metricName)
-                .append("{instance=\"").append(escapeLabel(Constants.LOCAL_INSTANCE_ID))
+                .append("{instance=\"").append(escapeLabel(Constants.LOCAL_INSTANCE_ID)) // todo 远程实例也有 provider ？
                 .append("\",provider=\"").append(escapeLabel(providerName)).append('"');
         for (Map.Entry<String, String> label : metric.getLabels().entrySet()) {
             String labelKey = sanitizeLabelKey(label.getKey());

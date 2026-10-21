@@ -18,6 +18,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.Constants;
 import qingzhou.config.remote.RemoteConfigSourceFactory;
 import qingzhou.json.Json;
 
@@ -107,15 +108,18 @@ public class Config {
     private void distributeOsgiConfig(Map<String, Map<String, String>> configMap) throws IOException {
         for (Map.Entry<String, Map<String, String>> entry : configMap.entrySet()) {
             String pid = entry.getKey();
-            int i = pid.indexOf("~");
-            boolean isFactory = i != -1;
-            String factoryInstance = isFactory ? pid.substring(i + 1) : null;
+
+            String factoryFlag = "~";
+            int factoryIndex = pid.indexOf(factoryFlag);
+            boolean isFactory = factoryIndex != -1;
+            String factoryInstance = isFactory ? pid.substring(factoryIndex + factoryFlag.length()) : null;
 
             Configuration configuration = isFactory
-                    ? configAdmin.getFactoryConfiguration(pid.substring(0, i), factoryInstance, null)
+                    ? configAdmin.getFactoryConfiguration(pid.substring(0, factoryIndex), factoryInstance, null)
                     : configAdmin.getConfiguration(pid, null);
 
             Hashtable<String, Object> config = new Hashtable<>();
+
             boolean hasRanking = false;
             for (Map.Entry<String, String> e : entry.getValue().entrySet()) {
                 String key = e.getKey();
@@ -130,12 +134,14 @@ public class Config {
                     config.put(key, e.getValue());
                 }
             }
+
             // default 实例约定：工厂配置中实例名为 default 的自动注入高 ranking，
-            // 确保框架内 20+ 处无 target 的 @Reference 稳定选中它；
+            // 确保框架内无 target 的 @Reference 稳定选中它，如：@Reference Logger logger;
             // 用户显式设置的 ranking（包括写错值时降级为 0）不受此默认值覆盖
-            if (isFactory && "default".equals(factoryInstance) && !hasRanking) {
+            if (isFactory && !hasRanking && Constants.CONFIG_FACTORY_DEFAULT_INSTANCE.equals(factoryInstance)) {
                 config.put("service.ranking", 100);
             }
+
             config.put("qingzhou.instance", qzInstance);
             config.put("qingzhou.version", qzVersion);
             configuration.update(config);
