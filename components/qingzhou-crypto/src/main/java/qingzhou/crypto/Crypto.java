@@ -21,6 +21,8 @@ public interface Crypto {
      */
     Cipher getCipher(String key) throws InvalidKeyException;
 
+    Cipher getCipher(byte[] key) throws InvalidKeyException;
+
     Cipher getGlobalCipher();
 
     MessageDigest getMessageDigest();

@@ -68,7 +68,7 @@ public class CryptoImplTest {
     public void not24CharsKey_getCipher_throwInvalidKeyException() {
         CryptoImpl crypto = getCryptoImpl();
         try {
-            crypto.getCipher(null);
+            crypto.getCipher((String) null);
             Assert.fail();
         } catch (Throwable e) {
             Assert.assertTrue(e instanceof InvalidKeyException);

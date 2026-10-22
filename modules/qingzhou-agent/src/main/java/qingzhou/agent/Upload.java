@@ -12,6 +12,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
 import qingzhou.common.TempFiles;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.Constants;
@@ -31,6 +32,10 @@ public class Upload extends AbstractAgentHandler {
     private static final long TEMP_FILE_TTL_MILLIS = 24L * 60 * 60 * 1000;
     private static final int MAX_UPLOAD_FILES = 1000;
     private static final long MAX_UPLOAD_TOTAL_BYTES = 4L * 1024 * 1024 * 1024;
+    // 一次上传独占一个目录：分片落在 data，业务落位时改名，同名文件不会互相覆盖
+    private static final String DATA_FILE = "data";
+
+    private File uploadBase;
 
     @Reference
     public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
@@ -47,15 +52,11 @@ public class Upload extends AbstractAgentHandler {
         this.logger = logger;
     }
 
-    private File uploadBase;
-
     @Activate
-    public void init(Map<String, String> config) {
+    public void init(Map<String, String> config) throws IOException {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
-        if (!uploadBase.mkdirs()) {
-            logger.error("failed to mkdirs: " + uploadBase.getAbsolutePath());
-        }
-        TempFiles.cleanDir(uploadBase); // 清历史残留
+        FileUtil.mkdirs(uploadBase);
+        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
     }
 
     @Override
@@ -64,63 +65,106 @@ public class Upload extends AbstractAgentHandler {
     }
 
     @Override
+    protected String[] aadContext(HttpRequest httpRequest) {
+        // 端点名在前、文件键与偏移量在后：后两者是明文控制参数，纳入 AAD 后改道分片或乱序发送都会解密失败
+        return new String[]{aadName(), fileKey(httpRequest), fileOffset(httpRequest)};
+    }
+
+    @Override
     protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable {
-        String key = httpRequest.getParameter(Constants.REMOTE_PARAMETER_FILE_KEY);
-        String uploadId = key != null && !key.isEmpty() ? key : UUID.randomUUID().toString();
-        File tempFile = resolveInUploadBase(uploadId);
-        if (!tempFile.exists()) {
-            enforceUploadDirQuota(); // 仅在新建上传时扫描目录：分片追加不重复付出目录遍历开销
-        }
-        try {
-            long total = tempFile.length() + requestData.length;
-            if (total > MAX_UPLOAD_BYTES) { // 超限即终止并清理，避免磁盘被写满
-                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
-            }
-            Files.write(tempFile.toPath(), requestData, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            // 追加后复核：写入前检查与 APPEND 非原子（TOCTOU），并发分片可越过上限
-            if (tempFile.length() > MAX_UPLOAD_BYTES) {
-                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
-            }
-        } catch (Throwable e) {
-            if (!tempFile.delete()) {
-                logger.error("failed to delete upload file: " + tempFile.getAbsolutePath());
-            }
-            throw e;
+        long offset = Long.parseLong(fileOffset(httpRequest));
+        String uploadId = fileKey(httpRequest);
+        File dir;
+        if (uploadId.isEmpty()) {
+            enforceUploadDirQuota(requestData.length); // 先查配额再建目录：被拒绝时不得继续产生空目录
+            uploadId = UUID.randomUUID().toString();
+            dir = createUploadDir(uploadId);
+        } else {
+            dir = uploadDir(uploadId);
         }
 
+        File data = dataFile(dir);
+        // 偏移量由发送方给出并受 AAD 保护：与已落盘长度不符即丢片或乱序
+        if (data.length() != offset) {
+            throw new IllegalArgumentException("upload chunk out of order");
+        }
+
+        try {
+            if (offset + requestData.length > MAX_UPLOAD_BYTES) {
+                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
+            }
+            Files.write(data.toPath(), requestData, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (Throwable e) {
+            // 中断即丢弃本次上传，避免残留半截文件
+            FileUtil.forceDeleteQuietly(dir);
+            throw e;
+        }
         return uploadId;
     }
 
-    // 上传目录容量兜底：文件数与累积体积双限，超出即拒绝新建上传（已过 TTL 的残留由 cleanExpired 回收）
-    private void enforceUploadDirQuota() {
+    /**
+     * 上传键即目录名：只接受单段名字，不接受任何路径形式，杜绝越界写入。
+     * 只定位已有上传，不创建目录。
+     */
+    File uploadDir(String uploadId) {
+        if (uploadId.isEmpty() || uploadId.contains("..") || uploadId.indexOf('/') >= 0
+                || uploadId.indexOf('\\') >= 0 || uploadId.indexOf(':') >= 0) {
+            throw new IllegalArgumentException("illegal upload id: " + uploadId);
+        }
+        File dir = new File(uploadBase, uploadId);
+        if (!dir.isDirectory()) {
+            throw new IllegalArgumentException("unknown upload id: " + uploadId);
+        }
+        return dir;
+    }
+
+    File dataFile(File uploadDir) {
+        return new File(uploadDir, DATA_FILE);
+    }
+
+    // 上传目录容量兜底：文件数与累积体积双限，超出即拒绝新建上传（过期残留由 cleanExpired 回收）
+    private void enforceUploadDirQuota(long incomingBytes) {
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
 
-        File[] files = uploadBase.listFiles();
-        if (files == null) return;
-        if (files.length >= MAX_UPLOAD_FILES) {
-            throw new IllegalStateException("too many pending uploads: " + files.length);
+        File[] dirs = uploadBase.listFiles();
+        if (dirs == null) return;
+        if (dirs.length >= MAX_UPLOAD_FILES) {
+            throw new IllegalStateException("too many pending uploads: " + dirs.length);
         }
-        long total = 0;
-        for (File file : files) {
-            total += file.length();
+        long total = incomingBytes; // 计入本次待写分片，避免"写前总量"始终低于上限
+        for (File dir : dirs) {
+            for (File child : childrenOf(dir)) {
+                total += child.length();
+            }
         }
         if (total >= MAX_UPLOAD_TOTAL_BYTES) {
             throw new IllegalStateException("upload dir exceeds size limit: " + total);
         }
     }
 
-    // 参数中的路径来自不可信请求，必须限制在上传目录内，否则可越界写入/删除任意文件；
-    // 路径可能是相对名（上传 id），也可能是应用回传的绝对路径（须落在上传目录内）
-    File resolveInUploadBase(String path) {
-        try {
-            File file = new File(path);
-            if (!file.isAbsolute()) file = new File(uploadBase, path);
-            if (file.getCanonicalFile().getPath().startsWith(uploadBase.getCanonicalPath() + File.separator)) {
-                return file;
-            }
-        } catch (IOException e) {
-            // 路径非法
+    private File createUploadDir(String uploadId) {
+        File dir = new File(uploadBase, uploadId);
+        if (!dir.mkdirs()) {
+            throw new IllegalStateException("failed to create upload dir: " + dir.getAbsolutePath());
         }
-        throw new IllegalArgumentException("illegal file path: " + path);
+        return dir;
+    }
+
+    private static File[] childrenOf(File dir) {
+        File[] children = dir.listFiles();
+        return children == null ? new File[0] : children;
+    }
+
+    private static String fileKey(HttpRequest httpRequest) {
+        String key = httpRequest.getParameter(Constants.REMOTE_PARAMETER_FILE_KEY);
+        return key == null ? "" : key;
+    }
+
+    private static String fileOffset(HttpRequest httpRequest) {
+        String offset = httpRequest.getParameter(Constants.REMOTE_PARAMETER_FILE_OFFSET);
+        if (offset == null) {
+            throw new IllegalArgumentException("missing upload offset");
+        }
+        return offset;
     }
 }

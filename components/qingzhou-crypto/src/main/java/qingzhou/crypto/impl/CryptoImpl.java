@@ -77,6 +77,11 @@ public class CryptoImpl implements Crypto {
         } catch (IllegalArgumentException e) {
             throw new InvalidKeyException("key is not valid base64", e);
         }
+        return getCipher(cipherKey);
+    }
+
+    @Override
+    public Cipher getCipher(byte[] cipherKey) throws InvalidKeyException {
         // 24 字符 Base64 可解出 16 至 18 字节，而 AES 只接受 16/24/32 字节：在此拦下，避免用错密钥时延迟到加解密才失败
         if (cipherKey.length != 16 && cipherKey.length != 24 && cipherKey.length != 32) {
             throw new InvalidKeyException("key must decode to 16, 24 or 32 bytes: " + cipherKey.length);

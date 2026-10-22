@@ -3,10 +3,7 @@ package qingzhou.registry.web;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -14,6 +11,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.api.InputType;
 import qingzhou.common.TempFiles;
+import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
@@ -49,7 +47,7 @@ public class Invoke implements HttpHandler {
     @Activate
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", UPLOAD_TEMP_NAME).toFile();
-        TempFiles.cleanDir(uploadBase); // 清历史残留
+        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
     }
 
     @Override
@@ -135,12 +133,17 @@ public class Invoke implements HttpHandler {
             request.setId(rest[4]);
         }
 
-        // 添加 URL 里的参数
-        httpRequest.getParameters().forEach((k, v) -> {
-            if (v != null && !v.isEmpty() && v.get(0).length() <= MAX_PARAMETER_CHARS) { // 畸形参数表可能产生空值列表，直接 get(0) 会越界
-                request.getParameters().put(k, v.get(0));
+        // 添加 URL 里的参数：超长参数明确拒绝，静默丢弃会让业务在缺参状态下继续执行
+        for (Map.Entry<String, List<String>> entry : httpRequest.getParameters().entrySet()) {
+            List<String> values = entry.getValue(); // 畸形参数表可能产生空值列表
+            if (values == null || values.isEmpty()) continue;
+            String value = values.get(0);
+            if (value.length() > MAX_PARAMETER_CHARS) {
+                logger.warn("invoke parameter too long, rejected: " + entry.getKey());
+                return null;
             }
-        });
+            request.getParameters().put(entry.getKey(), value);
+        }
         return request;
     }
 
@@ -169,7 +172,9 @@ public class Invoke implements HttpHandler {
                     }
                 }
             } catch (Exception e) {
+                // 体被声明为 JSON 却解析失败：不得用残缺参数继续调用业务
                 logger.warn("failed to parse json body: " + e.getMessage());
+                return false;
             }
         }
         return true;
@@ -234,6 +239,7 @@ public class Invoke implements HttpHandler {
         AppStub app;
 
         MultipartStreamParser parser;
+        Set<String> fileFields;
 
         @Override
         public void onBegin(HttpRequest httpRequest, HttpResponse httpResponse) {
@@ -299,17 +305,18 @@ public class Invoke implements HttpHandler {
             }
         }
 
+        // 文件字段集按请求算一次：分片解析会逐片回调，不能每片都全量遍历模型字段
         boolean isUploadField(RequestImpl request, String fieldName) {
-            for (Model model : app.getAppMeta().getApp().models) {
-                if (model.code.equals(request.getModel())) {
+            if (fileFields == null) {
+                fileFields = new HashSet<>();
+                for (Model model : app.getAppMeta().getApp().models) {
+                    if (!model.code.equals(request.getModel())) continue;
                     for (ModelField field : model.fields) {
-                        if (field.code.equals(fieldName)) {
-                            return field.input_type == InputType.file;
-                        }
+                        if (field.input_type == InputType.file) fileFields.add(field.code);
                     }
                 }
             }
-            return false;
+            return fileFields.contains(fieldName);
         }
 
         void applyParserResults(MultipartStreamParser parser, RequestImpl request) {
@@ -324,7 +331,7 @@ public class Invoke implements HttpHandler {
                     combined.append(existingText.trim());
                 }
                 for (String path : paths) {
-                    if (combined.length() > 0) combined.append(",");
+                    if (combined.length() > 0) combined.append(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP);
                     combined.append(path);
                 }
                 request.getParameters().put(fieldName, combined.toString());

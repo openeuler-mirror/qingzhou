@@ -1,7 +1,9 @@
 package qingzhou.agent;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -139,11 +141,10 @@ public class Heartbeat {
             byte[] data = json.toJson(instanceInfo).getBytes(StandardCharsets.UTF_8);
             byte[] aad = agentDomainKeys.toRegistryAad(instanceInfo.getId(), Constants.REMOTE_REGISTER_URI);
             byte[] encrypted = cipher.encrypt(data, aad);
-            Response response = httpClient.send(
-                    httpClient.buildRequest(registerUrl + "?"
-                                    + Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + localAgentDomainKey.getLocalAgentDomain() +
-                                    "&" + Constants.REMOTE_PARAMETER_INSTANCE_ID + "=" + instanceInfo.getId())
-                            .method(HttpMethod.POST).body(encrypted));
+            String url = registerUrl + "?"
+                    + Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + encode(localAgentDomainKey.getLocalAgentDomain())
+                    + "&" + Constants.REMOTE_PARAMETER_INSTANCE_ID + "=" + encode(instanceInfo.getId());
+            Response response = httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
 
             if (response.getStatus() == 304) return;
 
@@ -157,5 +158,9 @@ public class Heartbeat {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    private static String encode(String value) throws UnsupportedEncodingException {
+        return URLEncoder.encode(value, "UTF-8"); // Java 8 无 Charset 重载
     }
 }

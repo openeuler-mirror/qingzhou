@@ -85,7 +85,7 @@ final class ReplayGuardCipherImpl implements ReplayGuardCipher {
      * 报文自带时间戳（受 GCM AAD 完整性保护）；供同包的时段密码器按时间戳选钥。
      * 长度不足按无效报文拒绝，避免越界读取。
      */
-    private long timestampOf(byte[] packet) {
+    static long timestampOf(byte[] packet) {
         if (packet == null || packet.length < TIMESTAMP_END) {
             throw new IllegalArgumentException("packet too short");
         }

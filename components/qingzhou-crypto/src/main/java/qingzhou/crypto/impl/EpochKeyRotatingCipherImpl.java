@@ -28,31 +28,37 @@ final class EpochKeyRotatingCipherImpl implements EpochKeyRotatingCipher {
 
     @Override
     public byte[] encrypt(byte[] data, byte[] context) throws Exception {
-        return nowCipher().encrypt(data, context);
+        long epoch = epochIndex(System.currentTimeMillis());
+        byte[] packet = cipherFor(epoch).encrypt(data, context);
+        // 派生密钥期间恰跨时段边界：报文时间戳会落到下一时段，接收方按时间戳选钥必然解不开，按新时段重加密一次
+        if (epochIndex(ReplayGuardCipherImpl.timestampOf(packet)) != epoch) {
+            packet = cipherFor(epochIndex(System.currentTimeMillis())).encrypt(data, context);
+        }
+        return packet;
     }
 
     @Override
     public byte[] decrypt(byte[] packet, byte[] context) throws Exception {
-        return nowCipher().decrypt(packet, context);
+        // 按报文自带时段选钥：用本机当前时段会在双方跨时段边界时必然解密失败
+        return cipherFor(epochIndex(ReplayGuardCipherImpl.timestampOf(packet))).decrypt(packet, context);
     }
 
-    private ReplayGuardCipher nowCipher() throws Exception {
-        return crypto.getReplayGuardCipher(crypto.getCipher(deriveKey()));
+    private ReplayGuardCipher cipherFor(long epoch) throws Exception {
+        return crypto.getReplayGuardCipher(crypto.getCipher(deriveKey(epoch)));
     }
 
     /**
-     * 由时间戳所属时段派生时段密钥。返回 24 字符 Base64（16 字节），恰为
-     * {@link Crypto#getCipher} 要求的密钥格式；info 采用长度前缀编码防拼接歧义。
+     * 由时段索引派生时段密钥。返回 24 字符 Base64（16 字节），恰为
+     * {@link Crypto#getCipher} 要求的密钥格式；info 为 8 字节时段索引。
      */
-    private String deriveKey() {
+    private byte[] deriveKey(long epoch) {
         ByteBuffer info = ByteBuffer.allocate(8);
-        info.putLong(epochIndex());
-        return crypto.getBase64Coder().encode(Hkdf.derive(masterKey, info.array(), 16));
+        info.putLong(epoch);
+        return Hkdf.derive(masterKey, info.array(), 16);
     }
 
-    private long epochIndex() {
-        long timestampMillis = System.currentTimeMillis();
-        return Math.floorDiv(timestampMillis, EPOCH_MILLIS); // TODO 会因为时间差，计算出不同的 index 吗？
+    private long epochIndex(long timestampMillis) {
+        return Math.floorDiv(timestampMillis, EPOCH_MILLIS);
     }
 
     /**

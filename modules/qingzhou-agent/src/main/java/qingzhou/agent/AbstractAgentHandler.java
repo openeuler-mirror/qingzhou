@@ -43,13 +43,13 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         byte[] requestData = null;
         try {
-            byte[] agentAad = agentDomainKeys.toAgentAad(thisInstanceInfo.getId(), aadName());
+            byte[] agentAad = agentDomainKeys.toAgentAad(thisInstanceInfo.getId(), aadContext(httpRequest));
             requestData = agentCipher.decrypt(requestBody, agentAad);
         } catch (Exception e) {
             // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，避免成为配置状态的判别信号
             logger.warn("agent request decrypt failed: " + e.getMessage());
         }
-        if (requestData == null || requestData.length == 0) {
+        if (requestData == null) {
             httpResponse.status(400);
             return;
         }
@@ -58,6 +58,10 @@ abstract class AbstractAgentHandler implements HttpHandler {
         String responseData;
         try {
             responseData = doProcess(requestData, httpRequest);
+        } catch (IllegalArgumentException e) { // 请求数据非法：属调用方问题，不该按服务端故障报 500
+            logger.warn("agent request rejected: " + e.getMessage());
+            httpResponse.status(400);
+            return;
         } catch (Throwable e) {
             logger.error("agent business processing error", e);
             httpResponse.status(500);
@@ -76,6 +80,14 @@ abstract class AbstractAgentHandler implements HttpHandler {
     }
 
     protected abstract String aadName();
+
+    /**
+     * AAD 附加上下文：对明文携带的控制参数（如上传分片的文件键与偏移）做完整性绑定，
+     * 篡改即解密失败。默认只绑定端点名。
+     */
+    protected String[] aadContext(HttpRequest httpRequest) {
+        return new String[]{aadName()};
+    }
 
     protected abstract String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable;
 }

@@ -30,12 +30,14 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
         }
         String prefix = "agent-domain~";
         for (String name : properties.stringPropertyNames()) {
-            if (name.startsWith(prefix)) {
-                String rest = name.substring(prefix.length());
-                int dot = rest.indexOf('.');
-                String domain = rest.substring(0, dot);
-                masters.put(domain, crypto.getBase64Coder().decode(properties.getProperty(name).trim()));
+            if (!name.startsWith(prefix)) continue;
+            String rest = name.substring(prefix.length());
+            int dot = rest.indexOf('.');
+            if (dot <= 0) { // 缺分隔符时的 substring 会越界，配置笔误不得表现为隐晦的运行期异常
+                throw new IllegalArgumentException("invalid key name in secret-key.properties: " + name
+                        + ", expected " + prefix + "<domain>.<item>");
             }
+            masters.put(rest.substring(0, dot), crypto.getBase64Coder().decode(properties.getProperty(name).trim()));
         }
     }
 

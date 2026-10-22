@@ -3,12 +3,11 @@ package qingzhou.agent;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
@@ -52,45 +51,57 @@ public class Invoke extends AbstractAgentHandler {
 
     @Override
     protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable {
+        if (requestData.length == 0) {
+            throw new IllegalArgumentException("empty request");
+        }
         RequestImpl request = json.fromJson(new String(requestData, StandardCharsets.UTF_8), RequestImpl.class);
-        Set<File> uploadFiles = new HashSet<>(); // 待清理文件：上传原始临时文件 + rename 后的业务文件，Action 返回后统一删除
-        try {
-            request.getUploadFileFields().forEach(field -> {
-                String[] keyNames = request.getParameter(field).split(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP);
-                List<String> paths = new ArrayList<>();
-                for (String keyName : keyNames) {
-                    String[] pair = keyName.split(Constants.REMOTE_UPLOAD_TEMP_KEY_FILE_SP);
-                    if (pair.length < 2) { // 业务已有文件名（非本次上传项），原样保留交由应用处理
-                        paths.add(keyName);
-                        continue;
-                    }
-                    File tempKey = upload.resolveInUploadBase(pair[0]);
-                    File tempFile = upload.resolveInUploadBase(pair[1]);
-                    uploadFiles.add(tempKey);
-                    if (!tempKey.renameTo(tempFile)) { // 重命名失败仍继续会向业务暴露不存在的路径
-                        throw new IllegalStateException("failed to rename uploaded temp file: " + tempKey.getName());
-                    }
-                    uploadFiles.add(tempFile); // 业务用完即删：Action 返回后在 finally 删除；需长期保留应由 Action 内 move 到业务目录
-                    paths.add(tempFile.getAbsolutePath());
-                }
-                String newPaths = String.join(",", paths); // TODO 应使用 ModelField 的 separator
-                request.getParameters().put(field, newPaths);
-            });
-
-            AppStubLocal appStub = registry.getLocalApp(request.getApp());
-            if (appStub == null) throw new IllegalArgumentException("business processing error");
-            appStub.invokeApp(request);
-        } finally {
-            // 正常/异常路径均执行：原始临时文件 rename 后已不存在，delete 为空操作；
-            // 业务文件用完即删，业务已在 Action 内 move 到自身目录时同样为空操作
-            for (File file : uploadFiles) {
-                if (!file.delete() && file.exists()) {
-                    logger.warn("failed to delete upload file: " + file.getAbsolutePath());
-                }
-            }
+        AppStubLocal appStub = registry.getLocalApp(request.getApp());
+        if (appStub == null) {
+            throw new IllegalArgumentException("app not found: " + request.getApp());
         }
 
-        // 响应数据
+        List<File> uploadFiles = new ArrayList<>();
+        try {
+            for (String field : request.getUploadFileFields()) {
+                String value = request.getParameter(field);
+                if (value == null) continue;
+
+                List<String> paths = new ArrayList<>();
+                for (String item : value.split(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP)) {
+                    String[] pair = item.split(Constants.REMOTE_UPLOAD_TEMP_KEY_FILE_SP, 2);
+                    if (pair.length < 2) { // 业务已有文件名（非本次上传项），原样保留交由应用处理
+                        paths.add(item);
+                        continue;
+                    }
+
+                    // 每次上传独占目录：落位到原文件名，同名文件之间互不覆盖
+                    File dir = upload.uploadDir(pair[0]);
+                    uploadFiles.add(dir); // 业务用完即删：需长期保留应由 Action 内 move 到业务目录
+                    File source = upload.dataFile(dir);
+                    File target = targetFile(dir, pair[1]);
+                    FileUtil.moveFileOrDirectory(source, target);
+                    paths.add(target.getAbsolutePath());
+                }
+                String newPaths = String.join(",", paths); // TODO 调用应用业务逻辑，应使用 ModelField 约定 separator
+                request.getParameters().put(field, newPaths);
+            }
+
+            appStub.invokeApp(request);
+        } finally {
+            uploadFiles.forEach(FileUtil::forceDeleteQuietly);
+        }
+
         return json.toJson(request.getResponse());
+    }
+
+    /**
+     * 业务落位路径：只取文件名的末段，剥离可能携带的路径；同名冲突已由独占目录隔离。
+     */
+    private File targetFile(File uploadDir, String fileName) {
+        String name = new File(fileName).getName();
+        if (name.isEmpty() || name.equals(".") || name.equals("..")) {
+            throw new IllegalArgumentException("illegal upload file name: " + fileName);
+        }
+        return new File(uploadDir, name);
     }
 }
