@@ -16,13 +16,11 @@
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-common</artifactId>
             <version>${revision}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-json</artifactId>
             <version>${revision}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

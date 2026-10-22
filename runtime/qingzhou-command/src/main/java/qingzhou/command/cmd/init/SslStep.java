@@ -29,7 +29,7 @@ final class SslStep {
             return;
         }
 
-        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.encrypt(password));
+        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.getCrypto().getGlobalCipher().encrypt(password));
         props = Init.putValue(props, "qingzhou-http-server.ssl_enabled", "true");
         init.writeProps(props);
         init.log("SSL certificate generated and https enabled.");

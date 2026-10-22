@@ -9,7 +9,7 @@ final class AdminPasswordStep {
         String password = init.readPassword("New admin password: ");
         if (password == null) return;
 
-        init.writeProps(Init.putValue(props, "qingzhou-auth.password", init.digest(password)));
+        init.writeProps(Init.putValue(props, "qingzhou-auth.password", init.getCrypto().getMessageDigest().digest(password)));
         init.log("Admin password updated.");
     }
 }

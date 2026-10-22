@@ -63,8 +63,9 @@ public class Command {
                 for (String path : classpath) {
                     urls.add(new File(libDir, path).toURI().toURL());
                 }
-                ClassLoader loader = new CommandClassLoader(urls.toArray(new URL[0]));
-                processor = (Processor) loader.loadClass(processor.getClass().getName()).getDeclaredConstructor().newInstance();
+                try (URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]), Processor.class.getClassLoader())) {
+                    processor = (Processor) loader.loadClass(processor.getClass().getName()).getDeclaredConstructor().newInstance();
+                }
             }
             processor.setLibDir(libDir);
             processors.add(processor);
@@ -120,25 +121,6 @@ public class Command {
             return AcceptStatus.STARTS_WITH;
         }
         return AcceptStatus.NONE;
-    }
-
-    static class CommandClassLoader extends URLClassLoader {
-        CommandClassLoader(URL[] urls) {
-            super(urls, Command.class.getClassLoader());
-        }
-
-        @Override
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            if (!name.startsWith("qingzhou.command.cmd.")) {
-                return super.loadClass(name, resolve);
-            }
-            synchronized (getClassLoadingLock(name)) {
-                Class<?> c = findLoadedClass(name);
-                if (c == null) c = findClass(name);
-                if (resolve) resolveClass(c);
-                return c;
-            }
-        }
     }
 
     private enum AcceptStatus {

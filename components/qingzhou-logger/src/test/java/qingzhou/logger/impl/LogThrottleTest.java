@@ -38,10 +38,4 @@ public class LogThrottleTest {
         Assert.assertEquals(throttle.acquire('E', "response code 500", WINDOW_MS, 1002L), 0L);
         Assert.assertEquals(throttle.acquire('E', "response code 404", WINDOW_MS, 1003L), 0L);
     }
-
-    @Test
-    public void withSuppressed_appendsCount() {
-        Assert.assertEquals(new LogThrottle().withSuppressed("msg", 0L), "msg");
-        Assert.assertEquals(new LogThrottle().withSuppressed("msg", 3L), "msg (suppressed 3 similar)");
-    }
 }

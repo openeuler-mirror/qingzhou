@@ -31,7 +31,7 @@ public class StartArg extends Processor {
 
     @Override
     public String[] classpath() {
-        return new String[]{"modules/qingzhou-config.jar"};
+        return new String[]{"modules/qingzhou-config.jar", "components/qingzhou-json.jar"};
     }
 
     @Override
