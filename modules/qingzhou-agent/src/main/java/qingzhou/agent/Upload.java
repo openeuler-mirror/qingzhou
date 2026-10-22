@@ -66,7 +66,7 @@ public class Upload extends AbstractAgentHandler {
 
     @Override
     protected String[] aadContext(HttpRequest httpRequest) {
-        // 端点名在前、文件键与偏移量在后：后两者是明文控制参数，纳入 AAD 后改道分片或乱序发送都会解密失败
+        // 端点名在前、文件键与偏移量在后：后两者是明文控制参数，纳入 AAD 后改道分片或改写偏移即解密失败
         return new String[]{aadName(), fileKey(httpRequest), fileOffset(httpRequest)};
     }
 
@@ -74,19 +74,17 @@ public class Upload extends AbstractAgentHandler {
     protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable {
         long offset = Long.parseLong(fileOffset(httpRequest));
         String uploadId = fileKey(httpRequest);
-        File dir;
-        if (uploadId.isEmpty()) {
-            enforceUploadDirQuota(requestData.length); // 先查配额再建目录：被拒绝时不得继续产生空目录
+        File dir = uploadId.isEmpty() ? null : uploadDir(uploadId);
+        File data = dir == null ? null : dataFile(dir);
+        // 偏移量受 AAD 保护，这里只比对落盘长度：不符即丢片或乱序；空键等价于长度 0
+        if ((data == null ? 0 : data.length()) != offset) {
+            throw new IllegalArgumentException("upload chunk out of order");
+        }
+        if (dir == null) {
+            enforceUploadDirQuota(requestData.length);
             uploadId = UUID.randomUUID().toString();
             dir = createUploadDir(uploadId);
-        } else {
-            dir = uploadDir(uploadId);
-        }
-
-        File data = dataFile(dir);
-        // 偏移量由发送方给出并受 AAD 保护：与已落盘长度不符即丢片或乱序
-        if (data.length() != offset) {
-            throw new IllegalArgumentException("upload chunk out of order");
+            data = dataFile(dir);
         }
 
         try {

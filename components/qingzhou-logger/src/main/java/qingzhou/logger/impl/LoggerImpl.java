@@ -22,6 +22,8 @@ public class LoggerImpl implements Logger {
     private static final Set<String> appliedTags = ConcurrentHashMap.newKeySet();
     static volatile boolean applied; // tinylog 全局配置仅可 apply 一次，测试可直接置位跳过
 
+    private final LogThrottle throttle = new LogThrottle();
+
     @Reference
     private ConfigurationAdmin configAdmin;
 
@@ -211,12 +213,14 @@ public class LoggerImpl implements Logger {
 
     @Override
     public void warn(String msg) {
-        org.tinylog.Logger.tag(tag).warn(msg);
+        long suppressed = throttle.acquire('W', msg);
+        if (suppressed >= 0) org.tinylog.Logger.tag(tag).warn(throttle.withSuppressed(msg, suppressed));
     }
 
     @Override
     public void warn(String msg, Throwable t) {
-        org.tinylog.Logger.tag(tag).warn(t, msg);
+        long suppressed = throttle.acquire('W', msg);
+        if (suppressed >= 0) org.tinylog.Logger.tag(tag).warn(t, throttle.withSuppressed(msg, suppressed));
     }
 
     @Override
@@ -226,11 +230,13 @@ public class LoggerImpl implements Logger {
 
     @Override
     public void error(String msg) {
-        org.tinylog.Logger.tag(tag).error(msg);
+        long suppressed = throttle.acquire('E', msg);
+        if (suppressed >= 0) org.tinylog.Logger.tag(tag).error(throttle.withSuppressed(msg, suppressed));
     }
 
     @Override
     public void error(String msg, Throwable t) {
-        org.tinylog.Logger.tag(tag).error(t, msg);
+        long suppressed = throttle.acquire('E', msg);
+        if (suppressed >= 0) org.tinylog.Logger.tag(tag).error(t, throttle.withSuppressed(msg, suppressed));
     }
 }

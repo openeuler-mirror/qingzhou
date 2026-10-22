@@ -173,6 +173,26 @@ public class LoggerImplTest {
     }
 
     /**
+     * 同一消息在去重窗口内只输出一条，避免高频失败刷屏。
+     */
+    @Test
+    public void warn_sameMessageWithinWindow_logsOnce() throws Exception {
+        clearOutput();
+        LoggerImpl logger = new LoggerImpl();
+        for (int i = 0; i < 3; i++) {
+            logger.warn("dedup-message");
+        }
+
+        awaitUntil(() -> outputText().contains("WARN | dedup-message"), "warn log was not written");
+        Thread.sleep(1200L); // 等异步写线程把整批任务落盘，确认只写了一条
+        int count = 0;
+        for (String line : outputText().split("\\r?\\n")) {
+            if (line.contains("WARN | dedup-message")) count++;
+        }
+        Assert.assertEquals(count, 1, "same message should be logged once within the dedup window");
+    }
+
+    /**
      * 验证指定级别普通日志按配置模板输出。
      */
     private static void assertLogEntry(String level, String message) throws Exception {
