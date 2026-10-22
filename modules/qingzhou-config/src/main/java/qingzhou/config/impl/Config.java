@@ -35,6 +35,8 @@ public class Config {
 
     // 左侧空白裁剪：正则固定，预编译后复用，避免在每一行上重复编译（#34）
     private static final Pattern LEFT_TRIM = Pattern.compile("^[\\s　]+");
+    // 拉取重试次数：吸收配置中心的瞬时抖动
+    private static final int MAX_PULL_ATTEMPTS = 3;
 
     // 在 qingzhou.command.cmd.StartArg 中反射引用
     public static Map<String, String> parse(String text) {
@@ -70,21 +72,33 @@ public class Config {
 
         String enabled = qzConfig.get(RemoteConfigSourceFactory.KEY_PREFIX + "enabled");
         if (Boolean.parseBoolean(enabled)) { // 开启外部配置中心：远程覆盖本地，缺失保留
-            try {
-                RemoteConfigSourceFactory.create(qzConfig, json).pull().entrySet().stream()
-                        .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
-                        .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
-            } catch (Throwable t) {
-                // 配置错误即终止启动，不兜底，否则业务问题无法及早发现。
-                // 不能改为抛异常：DS 激活是异步的，抛出只会留下半启动实例（配置未分发、依赖组件未激活）而进程照旧运行
-                System.err.println("!!! Failed to pull remote configuration. Startup terminated !!! ");
-                t.printStackTrace(System.err);
-                System.exit(1);
-            }
+            pullRemoteConfig(qzConfig);
         }
 
         Map<String, Map<String, String>> osgiConfig = convertToOsgiConfig(qzConfig);
         distributeOsgiConfig(osgiConfig);
+    }
+
+    // 彻底失败仍终止启动：DS 激活是异步的，抛异常只会留下半启动实例（配置未分发、依赖组件未激活）而进程照旧运行
+    private void pullRemoteConfig(Map<String, String> qzConfig) throws InterruptedException {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                RemoteConfigSourceFactory.create(qzConfig, json).pull().entrySet().stream()
+                        .filter(e -> !e.getKey().startsWith(RemoteConfigSourceFactory.KEY_PREFIX))
+                        .forEach(e -> qzConfig.put(e.getKey(), e.getValue()));
+                return;
+            } catch (Throwable t) {
+                if (attempt >= MAX_PULL_ATTEMPTS) {
+                    System.err.println("!!! Failed to pull remote configuration after " + MAX_PULL_ATTEMPTS + " attempts. Startup terminated !!! ");
+                    t.printStackTrace(System.err);
+                    System.exit(1);
+                }
+
+                System.err.println("!!! Failed to pull remote configuration (attempt " + attempt + "/" + MAX_PULL_ATTEMPTS
+                        + "), retrying: " + t.getMessage());
+                Thread.sleep(1000L * attempt); // 1s、2s 线性退避
+            }
+        }
     }
 
     /**

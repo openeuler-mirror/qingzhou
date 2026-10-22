@@ -40,12 +40,20 @@ public final class RemoteConfigSourceFactory {
         return value.isEmpty() ? defaultValue : value;
     }
 
+    // 超时限定 1~60 秒：JDK 的 0 表示无限等待（配置中心不可达时启动永久挂起），过大同样退化为无超时
     private static int millis(Map<String, String> bootstrapArgs, String key, int defaultSeconds) {
         String value = get(bootstrapArgs, key, null);
-        try {
-            return (value == null ? defaultSeconds : Integer.parseInt(value)) * 1000;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(KEY_PREFIX + key + " is not a number: " + value);
+        long seconds = defaultSeconds;
+        if (value != null) {
+            try {
+                seconds = Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(KEY_PREFIX + key + " is not a number: " + value);
+            }
+            if (seconds < 1 || seconds > 60) {
+                throw new IllegalArgumentException(KEY_PREFIX + key + " must be within 1~60 seconds, got: " + value);
+            }
         }
+        return (int) (seconds * 1000L);
     }
 }
