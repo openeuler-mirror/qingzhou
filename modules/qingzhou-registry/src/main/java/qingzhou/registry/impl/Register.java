@@ -23,6 +23,10 @@ import qingzhou.registry.Registry;
 public class Register implements HttpHandler {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
     private static final int MAX_REGISTER_BODY = 1024 * 1024;
+    // 实例标识同时用作注册表键、AAD 上下文与日志字段：限定安全字符集与长度
+    private static final int MAX_INSTANCE_ID_CHARS = 128;
+    // 注册表容量兜底：持有域密钥即可注册任意多伪实例，而单实例元数据最大 1MB
+    private static final int MAX_REMOTE_INSTANCES = 1000;
 
     @Reference
     private Logger logger;
@@ -89,6 +93,11 @@ public class Register implements HttpHandler {
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
+        if (!isValidInstanceId(instanceId)) {
+            logger.warn("illegal instance id: " + forLog(instanceId));
+            httpResponse.status(400);
+            return;
+        }
 
         try {
             byte[] aad = agentDomainKeys.toRegistryAad(instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
@@ -104,19 +113,41 @@ public class Register implements HttpHandler {
                 return;
             }
 
+            if (registry.getAllRemoteInstances().size() >= MAX_REMOTE_INSTANCES) {
+                logger.warn("remote instance quota exceeded: " + MAX_REMOTE_INSTANCES);
+                httpResponse.status(503); // 容量不足：仅拒新实例，已注册实例仍可续期
+                return;
+            }
+
             InstanceInfo instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            if (instanceInfo.getPort() < 1 || instanceInfo.getPort() > 65535) {
+                logger.warn("illegal agent port: " + instanceInfo.getPort());
+                httpResponse.status(400);
+                return;
+            }
             // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
             instanceInfo.setId(instanceId);
             instanceInfo.setHost(httpRequest.getRemoteHost()); // 取 TCP 源地址，不采信报文自报
             instanceInfo.setDomain(domainId); // 由密钥选择确定
             registry.addRemoteInstance(instanceInfo);
             for (AppMeta appMeta : instanceInfo.getAppMetas()) {
-                logger.info(String.format("registration, instance: %s, app: %s", instanceId, appMeta.getApp().code));
+                logger.info(String.format("registration, instance: %s, app: %s", instanceId, forLog(appMeta.getApp().code)));
             }
         } catch (Exception e) {
             logger.error("failed to parse instance info", e);
             httpResponse.status(400);
         }
+    }
+
+    private static boolean isValidInstanceId(String instanceId) {
+        if (instanceId.isEmpty() || instanceId.length() > MAX_INSTANCE_ID_CHARS) return false;
+        for (int i = 0; i < instanceId.length(); i++) {
+            char c = instanceId.charAt(i);
+            boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '-' || c == '_' || c == '.';
+            if (!safe) return false;
+        }
+        return true;
     }
 
     // 参数来自不可信请求：截断并剔除控制字符，避免日志注入

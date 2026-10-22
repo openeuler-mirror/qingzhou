@@ -27,7 +27,7 @@ public class LoggerImpl implements Logger {
     @Reference
     private ConfigurationAdmin configAdmin;
 
-    private String tag = DEFAULT_TAG;
+    private String tag;
     private String pid;
     private ShowInfo showInfo;
 
