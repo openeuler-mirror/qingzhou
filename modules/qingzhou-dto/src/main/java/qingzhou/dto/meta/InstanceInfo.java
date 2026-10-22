@@ -5,7 +5,7 @@ import java.util.List;
 
 public class InstanceInfo {
     // 以下字段由 registry 在认证通过后写入，不参与 JSON 收发
-    private transient long lastRefreshTime;
+    private transient volatile long lastRefreshTime; // 续期写入与健康检查读取跨线程，须保证可见性
     private transient String host;
     private transient String domain;
 

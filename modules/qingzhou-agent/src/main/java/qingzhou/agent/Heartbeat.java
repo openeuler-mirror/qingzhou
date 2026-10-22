@@ -61,6 +61,9 @@ public class Heartbeat {
         qzVersion = configs.get("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
         Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
+        if (httpServerConfig == null) { // 端口是注册与回连的必需项：缺失须快速失败并指明配置项
+            throw new IllegalStateException("missing configuration: qingzhou-http-server");
+        }
         serverPort = Integer.parseInt(String.valueOf(httpServerConfig.get("port")));
         serverSslEnabled = Boolean.parseBoolean(String.valueOf(httpServerConfig.get("ssl_enabled")));
 

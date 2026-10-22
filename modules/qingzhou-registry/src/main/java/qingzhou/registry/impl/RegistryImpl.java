@@ -130,7 +130,11 @@ public class RegistryImpl implements Registry {
             // 实例端口
             try {
                 Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-                localInstanceInfo.setPort(Integer.parseInt(String.valueOf(httpServerConfig.get("port"))));
+                if (httpServerConfig == null) { // 配置缺失不阻断实例列表：端口留空由调用方按未就绪处理
+                    logger.warn("missing configuration: qingzhou-http-server");
+                } else {
+                    localInstanceInfo.setPort(Integer.parseInt(String.valueOf(httpServerConfig.get("port"))));
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
