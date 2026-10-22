@@ -31,6 +31,10 @@ public abstract class Processor {
         return null;
     }
 
+    public String[] classpath() {
+        return new String[0];
+    }
+
     public abstract void doCommandLine(String[] args) throws Exception;
 
     public void log(String msg) {
