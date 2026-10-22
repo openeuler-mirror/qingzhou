@@ -7,7 +7,7 @@ public interface AgentDomainKeys {
 
     byte[] getAgentDomainKey(String agentDomain);
 
-    byte[] toAgentAad(String instanceId, String... reqData);
+    byte[] toAgentAad(String instanceId, String instanceSecret, String[] reqData);
 
     byte[] toRegistryAad(String instanceId, String... reqData);
 }

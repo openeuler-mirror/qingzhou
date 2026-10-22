@@ -10,6 +10,8 @@ public class InstanceInfo {
     private transient String domain;
 
     private String id;
+    // 每实例随机密钥：首次注册时由 agent 上报，作为 center→agent 方向的认证因子；随报文收发但不对外展示
+    private String instanceSecret;
     private int port;
     private boolean sslEnabled;
     private String platformVersion;
@@ -65,6 +67,14 @@ public class InstanceInfo {
 
     public List<AppMeta> getAppMetas() {
         return appMetas;
+    }
+
+    public String getInstanceSecret() {
+        return instanceSecret;
+    }
+
+    public void setInstanceSecret(String instanceSecret) {
+        this.instanceSecret = instanceSecret;
     }
 
     public long getRefreshTime() {

@@ -43,7 +43,8 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         byte[] requestData = null;
         try {
-            byte[] agentAad = agentDomainKeys.toAgentAad(thisInstanceInfo.getId(), aadContext(httpRequest));
+            byte[] agentAad = agentDomainKeys.toAgentAad(thisInstanceInfo.getId(),
+                    thisInstanceInfo.getInstanceSecret(), aadContext(httpRequest));
             requestData = agentCipher.decrypt(requestBody, agentAad);
         } catch (Exception e) {
             // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，避免成为配置状态的判别信号

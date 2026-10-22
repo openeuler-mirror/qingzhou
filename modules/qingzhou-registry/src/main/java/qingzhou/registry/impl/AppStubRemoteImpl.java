@@ -55,7 +55,8 @@ class AppStubRemoteImpl implements AppStubRemote {
             doFileUploads(request, cipher, remoteInstanceId);
 
             byte[] data = registry.json.toJson(request).getBytes(StandardCharsets.UTF_8);
-            byte[] encrypted = cipher.encrypt(data, registry.agentDomainKeys.toAgentAad(remoteInstanceId, qingzhou.registry.Constants.REMOTE_INVOKE_URI));
+            byte[] encrypted = cipher.encrypt(data, registry.agentDomainKeys.toAgentAad(remoteInstanceId,
+                    instanceInfo.getInstanceSecret(), new String[]{qingzhou.registry.Constants.REMOTE_INVOKE_URI}));
             Response response = registry.httpClient.send(registry.httpClient.buildRequest(invokeUrl)
                     .method(HttpMethod.POST)
                     .body(encrypted));
@@ -147,7 +148,8 @@ class AppStubRemoteImpl implements AppStubRemote {
     }
 
     private String sendChunk(String key, long offset, byte[] chunk, EpochKeyRotatingCipher cipher, String remoteInstanceId) throws Exception {
-        byte[] aad = registry.agentDomainKeys.toAgentAad(remoteInstanceId, qingzhou.registry.Constants.REMOTE_UPLOAD_URI, key, String.valueOf(offset));
+        byte[] aad = registry.agentDomainKeys.toAgentAad(remoteInstanceId, instanceInfo.getInstanceSecret(),
+                new String[]{qingzhou.registry.Constants.REMOTE_UPLOAD_URI, key, String.valueOf(offset)});
         byte[] encrypted = cipher.encrypt(chunk, aad);
         String url = uploadUrl + "?" + qingzhou.registry.Constants.REMOTE_PARAMETER_FILE_KEY + "=" + encode(key)
                 + "&" + qingzhou.registry.Constants.REMOTE_PARAMETER_FILE_OFFSET + "=" + offset;

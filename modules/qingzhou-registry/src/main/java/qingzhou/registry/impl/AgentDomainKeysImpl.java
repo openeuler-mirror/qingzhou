@@ -52,8 +52,9 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
     }
 
     @Override
-    public byte[] toAgentAad(String instanceId, String... reqData) {
-        return crypto.generateCipherAad("REGISTRY_AGENT", instanceId, Arrays.toString(reqData));
+    public byte[] toAgentAad(String instanceId, String instanceSecret, String[] reqData) {
+        // 分隔符固定字段边界：裸拼接会让不同 (id, secret) 组合产出相同 AAD
+        return crypto.generateCipherAad("REGISTRY_AGENT", instanceId, "|", instanceSecret, "|", Arrays.toString(reqData));
     }
 
     @Override

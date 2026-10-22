@@ -120,6 +120,8 @@ public class Heartbeat {
         InstanceInfo instanceInfo = new InstanceInfo();
         // 重启 ID 变化，依赖 Registry 的过期清理
         instanceInfo.setId(UUID.randomUUID().toString());
+        // 每实例独立密钥：与实例同生命周期，仅存内存并随注册报文上报，用于 center→agent 方向的身份认证
+        instanceInfo.setInstanceSecret(UUID.randomUUID().toString());
         // 实例版本
         instanceInfo.setPlatformVersion(qzVersion);
         // 实例端口

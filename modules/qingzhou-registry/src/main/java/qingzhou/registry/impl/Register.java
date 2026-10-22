@@ -93,7 +93,7 @@ public class Register implements HttpHandler {
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
-        if (!isValidInstanceId(instanceId)) {
+        if (!isSafeToken(instanceId)) {
             logger.warn("illegal instance id: " + forLog(instanceId));
             httpResponse.status(400);
             return;
@@ -125,6 +125,12 @@ public class Register implements HttpHandler {
                 httpResponse.status(400);
                 return;
             }
+            // 实例密钥是 center→agent 方向的认证因子：缺失即无法安全下发指令，直接拒绝注册
+            if (!isSafeToken(instanceInfo.getInstanceSecret())) {
+                logger.warn("missing or illegal instance secret");
+                httpResponse.status(400);
+                return;
+            }
             // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
             instanceInfo.setId(instanceId);
             instanceInfo.setHost(httpRequest.getRemoteHost()); // 取 TCP 源地址，不采信报文自报
@@ -139,10 +145,10 @@ public class Register implements HttpHandler {
         }
     }
 
-    private static boolean isValidInstanceId(String instanceId) {
-        if (instanceId.isEmpty() || instanceId.length() > MAX_INSTANCE_ID_CHARS) return false;
-        for (int i = 0; i < instanceId.length(); i++) {
-            char c = instanceId.charAt(i);
+    private static boolean isSafeToken(String token) {
+        if (token == null || token.isEmpty() || token.length() > MAX_INSTANCE_ID_CHARS) return false;
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
             boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
                     || c == '-' || c == '_' || c == '.';
             if (!safe) return false;
