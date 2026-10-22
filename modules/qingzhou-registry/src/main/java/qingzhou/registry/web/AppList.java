@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -33,7 +32,7 @@ public class AppList extends AbstractMetaHandler {
     }
 
     private final Function<RequestParameters, Object> function = context -> {
-        String lang = context.getParameter(Constants.WEB_PARAMETER_LANG);
+        String lang = context.getParameter("lang");
         List<Map<String, String>> appBasicInfoList = new ArrayList<>();
         for (String localApp : registry.getAllLocalApps()) {
             qingzhou.dto.meta.annotation.App app = localAppMeta(localApp);

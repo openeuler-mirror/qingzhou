@@ -11,7 +11,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.annotation.ModelField;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -20,6 +19,7 @@ import qingzhou.logger.Logger;
 import qingzhou.monitor.Metric;
 import qingzhou.monitor.MetricProvider;
 import qingzhou.registry.AppStub;
+import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
 @Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus", HttpHandler.HANDLE_METHODS + "=GET"})
@@ -70,7 +70,7 @@ public class PrometheusEndpoint implements HttpHandler {
             AppStub stub = registry.getLocalApp(appCode);
             if (stub == null) continue;
             try {
-                collect(groups, Constants.LOCAL_INSTANCE_ID, appCode, stub);
+                collect(groups, qingzhou.registry.Constants.LOCAL_INSTANCE_ID, appCode, stub);
             } catch (Throwable t) {
                 logger.debug("skip failed local app metric collection: " + appCode, t);
             }

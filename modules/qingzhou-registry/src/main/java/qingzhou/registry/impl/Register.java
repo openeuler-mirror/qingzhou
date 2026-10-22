@@ -7,7 +7,6 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.EpochKeyRotatingCipher;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -16,9 +15,10 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
@@ -81,7 +81,7 @@ public class Register implements HttpHandler {
         }
 
         // AAD 绑定，防报文挪域
-        String domainId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
+        String domainId = httpRequest.getParameter(qingzhou.registry.Constants.REMOTE_PARAMETER_DOMAIN_ID);
         String instanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
         byte[] agentDomainKey;
         if (domainId == null || instanceId == null || (agentDomainKey = agentDomainKeys.getAgentDomainKey(domainId)) == null) {
@@ -91,7 +91,7 @@ public class Register implements HttpHandler {
         }
 
         try {
-            byte[] aad = agentDomainKeys.toRegistryAad(instanceId, Constants.REMOTE_REGISTER_URI);
+            byte[] aad = agentDomainKeys.toRegistryAad(instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             EpochKeyRotatingCipher cipher = crypto.getEpochKeyRotatingCipher(agentDomainKey);
             // 解密成功即认证通过，心跳（绝大多数请求）无需再解析报文
             byte[] requestData = cipher.decrypt(requestBody, aad);

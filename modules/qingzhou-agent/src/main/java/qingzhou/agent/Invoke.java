@@ -9,7 +9,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.FileUtil;
 import qingzhou.crypto.Crypto;
-import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -17,9 +16,10 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
 import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_INVOKE_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_INVOKE_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         service = HttpHandler.class)
 public class Invoke extends AbstractAgentHandler {
     @Reference
@@ -46,7 +46,7 @@ public class Invoke extends AbstractAgentHandler {
 
     @Override
     protected String aadName() {
-        return Constants.REMOTE_INVOKE_URI;
+        return qingzhou.registry.Constants.REMOTE_INVOKE_URI;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class Invoke extends AbstractAgentHandler {
 
                 List<String> paths = new ArrayList<>();
                 for (String item : value.split(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP)) {
-                    String[] pair = item.split(Constants.REMOTE_UPLOAD_TEMP_KEY_FILE_SP, 2);
+                    String[] pair = item.split(qingzhou.registry.Constants.REMOTE_UPLOAD_TEMP_KEY_FILE_SP, 2);
                     if (pair.length < 2) { // 业务已有文件名（非本次上传项），原样保留交由应用处理
                         paths.add(item);
                         continue;

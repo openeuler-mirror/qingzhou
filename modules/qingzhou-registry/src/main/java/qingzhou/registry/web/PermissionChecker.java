@@ -5,10 +5,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.registry.Constants;
 
 public class PermissionChecker {
     public static boolean isAllowed(App targetApp, String targetModel, String targetAction, String[] userRoles) {

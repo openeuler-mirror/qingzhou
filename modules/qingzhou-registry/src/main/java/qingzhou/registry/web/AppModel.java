@@ -6,7 +6,6 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;
@@ -42,7 +41,7 @@ public class AppModel extends AbstractMetaHandler {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
-        String lang = context.getParameter(Constants.WEB_PARAMETER_LANG);
+        String lang = context.getParameter("lang");
 
         // 处理结果
         for (Model model : app.models) {

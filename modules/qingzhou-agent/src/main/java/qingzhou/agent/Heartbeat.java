@@ -11,7 +11,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.crypto.EpochKeyRotatingCipher;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
@@ -20,6 +19,7 @@ import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -66,7 +66,7 @@ public class Heartbeat {
         while (registryUrl.endsWith("/")) {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
-        registerUrl = registryUrl + "/registry" + Constants.REMOTE_REGISTER_URI;
+        registerUrl = registryUrl + "/registry" + qingzhou.registry.Constants.REMOTE_REGISTER_URI;
 
         timer = new Timer("agent-heartbeat");
         timer.schedule(new TimerTask() {
@@ -139,10 +139,10 @@ public class Heartbeat {
             EpochKeyRotatingCipher cipher = localAgentDomainKey.getLocalAgentCipher();
             InstanceInfo instanceInfo = currentInstanceInfo();
             byte[] data = json.toJson(instanceInfo).getBytes(StandardCharsets.UTF_8);
-            byte[] aad = agentDomainKeys.toRegistryAad(instanceInfo.getId(), Constants.REMOTE_REGISTER_URI);
+            byte[] aad = agentDomainKeys.toRegistryAad(instanceInfo.getId(), qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             byte[] encrypted = cipher.encrypt(data, aad);
             String url = registerUrl + "?"
-                    + Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + encode(localAgentDomainKey.getLocalAgentDomain())
+                    + qingzhou.registry.Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + encode(localAgentDomainKey.getLocalAgentDomain())
                     + "&" + Constants.REMOTE_PARAMETER_INSTANCE_ID + "=" + encode(instanceInfo.getId());
             Response response = httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
 

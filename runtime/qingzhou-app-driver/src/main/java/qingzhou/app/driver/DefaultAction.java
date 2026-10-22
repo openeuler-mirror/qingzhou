@@ -11,11 +11,11 @@ import qingzhou.api.*;
 import qingzhou.api.action.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
-import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.registry.Constants;
 
 /**
  * 被 AppStubLocalImpl#invokeAction 方法反射调用
@@ -87,8 +87,8 @@ public class DefaultAction {
         }
 
         String[] showFields = selectFormFields(request, modelField -> modelField.list);
-        int pageNum = parsePageParam(request.getParameter(Constants.WEB_PARAMETER_PAGE_NUM), 1);
-        int pageSize = Math.min(parsePageParam(request.getParameter(Constants.WEB_PARAMETER_PAGE_SIZE), 10), 100);
+        int pageNum = parsePageParam(request.getParameter(Constants.WEB_REQUEST_PARAMETER_PAGE_NUM), 1);
+        int pageSize = Math.min(parsePageParam(request.getParameter("pageSize"), 10), 100);
         List<String[]> listData = page.page(pageNum, pageSize, query, showFields);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null && listData != null) {
@@ -102,10 +102,10 @@ public class DefaultAction {
                 listResult.add(dataMap);
             });
             finalResult.put("data", listResult);
-            finalResult.put(Constants.WEB_PARAMETER_PAGE_NUM, pageNum);
-            finalResult.put(Constants.WEB_PARAMETER_PAGE_SIZE, pageSize);
+            finalResult.put(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM, pageNum);
+            finalResult.put(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE, pageSize);
             // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
-            finalResult.put(Constants.WEB_PARAMETER_TOTAL_SIZE, page.totalSize(query));
+            finalResult.put(Constants.WEB_RESPONSE_PARAMETER_TOTAL_SIZE, page.totalSize(query));
             response.data(finalResult);
         }
     }
@@ -177,12 +177,12 @@ public class DefaultAction {
                 if (files != null) {
                     for (File file : files) {
                         if (file.isFile() && !file.getName().startsWith(".")) {
-                            map.put(file.getName(), String.valueOf(FileUtil.getFileLength(file)));
+                            map.put(file.getName(), String.valueOf(AppFileUtil.getFileLength(file)));
                         }
                     }
                 }
             } else if (fileBase.isFile()) {
-                map.put(fileBase.getName(), String.valueOf(FileUtil.getFileLength(fileBase)));
+                map.put(fileBase.getName(), String.valueOf(AppFileUtil.getFileLength(fileBase)));
             }
 
             response.data(map);
@@ -288,7 +288,7 @@ public class DefaultAction {
             if (offset == raf.length()) {
                 offset = -1L; // 结束
                 if (isTempFile) {
-                    FileUtil.forceDeleteQuietly(toDownloadFile);
+                    AppFileUtil.forceDeleteQuietly(toDownloadFile);
                 }
             }
         }
@@ -396,11 +396,11 @@ public class DefaultAction {
         File tempDir = new File(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
         try {
             for (File file : downloadFiles) {
-                FileUtil.copyFileOrDirectory(file, new File(tempDir, file.getName()));
+                AppFileUtil.copyFileOrDirectory(file, new File(tempDir, file.getName()));
             }
-            FileUtil.zipFiles(tempDir, zipTo, false);
+            AppFileUtil.zipFiles(tempDir, zipTo, false);
         } finally {
-            FileUtil.forceDelete(tempDir);
+            AppFileUtil.forceDelete(tempDir);
         }
         return key;
     }

@@ -1,13 +1,18 @@
 package qingzhou.bundle.converter;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -16,8 +21,8 @@ import java.util.stream.Stream;
 import javassist.*;
 import org.osgi.framework.Constants;
 import qingzhou.api.*;
+import qingzhou.app.driver.AppFileUtil;
 import qingzhou.app.driver.DefaultAction;
-import qingzhou.app.driver.FileUtil;
 import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
@@ -32,7 +37,7 @@ public class BundleConverter {
             throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
         }
         try {
-            FileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
+            AppFileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
 
             // 生成注解文件
             if (classPool == null) {
@@ -57,11 +62,11 @@ public class BundleConverter {
             // 构建为 bundle jar
             File[] files = appTmpDir.listFiles();
             if (files != null) {
-                FileUtil.zipFiles(files, targetJar, true);
+                AppFileUtil.zipFiles(files, targetJar, true);
             }
         } finally {
             // 无论成功或异常都清理临时目录，否则随 UUID 无限累积（磁盘耗尽）
-            FileUtil.forceDeleteQuietly(appTmpDir);
+            AppFileUtil.forceDeleteQuietly(appTmpDir);
         }
     }
 
@@ -91,10 +96,16 @@ public class BundleConverter {
         attributes.putValue(Constants.BUNDLE_SYMBOLICNAME, targetJar.getName().substring(0, targetJar.getName().length() - ".jar".length())); // osgi bundle
         attributes.putValue(Constants.BUNDLE_VERSION_ATTRIBUTE, version); // osgi bundle
         attributes.putValue(Constants.BUNDLE_ACTIVATOR, "qingzhou.app.driver.AppDriver"); // osgi bundle
+
+        // 此处配置的导入须是 qingzhou-app-driver 直接依赖的，并且与 -Dqingzhou.osgi.packages.import.app 配置不冲突
         attributes.putValue(Constants.IMPORT_PACKAGE, "org.osgi.framework,org.osgi.service.cm," + // osgi
-                "qingzhou.registry," +
                 "qingzhou.api,qingzhou.api.action," +
-                "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
+                "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation," +
+                "qingzhou.registry," +
+                "qingzhou.logger," +
+                "qingzhou.json," +
+                "qingzhou.crypto"
+        );
         if (appDynamicPackages == null) {
             String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");
             appDynamicPackages = pkgExtra != null && !pkgExtra.trim().isEmpty() ? pkgExtra.trim() : "";
@@ -119,7 +130,7 @@ public class BundleConverter {
             throw new IllegalStateException("app-driver directory not found under: " + libDir);
         }
         for (File driverJarFile : driverJarFiles) {
-            FileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
+            AppFileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
         }
     }
 

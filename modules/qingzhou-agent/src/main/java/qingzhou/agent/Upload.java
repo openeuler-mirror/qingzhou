@@ -15,14 +15,14 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.FileUtil;
 import qingzhou.common.TempFiles;
 import qingzhou.crypto.Crypto;
-import qingzhou.dto.Constants;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.Constants;
 
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+        property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         service = {Upload.class, HttpHandler.class})
 public class Upload extends AbstractAgentHandler {
     // 单上传总量上限：分片追加若无总量约束，攻击者可持续上传写满磁盘（DoS）
@@ -61,7 +61,7 @@ public class Upload extends AbstractAgentHandler {
 
     @Override
     protected String aadName() {
-        return Constants.REMOTE_UPLOAD_URI;
+        return qingzhou.registry.Constants.REMOTE_UPLOAD_URI;
     }
 
     @Override
@@ -156,7 +156,7 @@ public class Upload extends AbstractAgentHandler {
     }
 
     private static String fileKey(HttpRequest httpRequest) {
-        String key = httpRequest.getParameter(Constants.REMOTE_PARAMETER_FILE_KEY);
+        String key = httpRequest.getParameter(qingzhou.registry.Constants.REMOTE_PARAMETER_FILE_KEY);
         return key == null ? "" : key;
     }
 

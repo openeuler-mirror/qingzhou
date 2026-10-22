@@ -12,7 +12,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-public class FileUtil {
+public class AppFileUtil {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
     // 解压上限：条目数与累计解压字节双限，防高压缩比包（zip bomb）写爆磁盘与 inode
     private static final int MAX_UNZIP_ENTRIES = 100_000;

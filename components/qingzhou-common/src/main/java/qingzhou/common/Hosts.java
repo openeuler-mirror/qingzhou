@@ -12,9 +12,6 @@ public final class Hosts {
     private static final Pattern IPV4_LOOPBACK = Pattern.compile(
             "127\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){2}");
 
-    private Hosts() {
-    }
-
     // URL.getHost 对 IPv6 字面量返回 "[::1]" 带方括号形式
     public static boolean isLoopback(String host) {
         if (host == null) return false;

@@ -142,7 +142,7 @@ public class AppDriver implements BundleActivator {
 
         try (InputStream inputStream = annotationFile.openStream();
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            FileUtil.copyStream(inputStream, bos);
+            AppFileUtil.copyStream(inputStream, bos);
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);
             Json jsonService = getService(Json.class, null);
             return jsonService.fromJson(json, App.class);

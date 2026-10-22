@@ -9,7 +9,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.api.AppContext;
-import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
@@ -18,6 +17,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.AppStubRemote;
+import qingzhou.registry.Constants;
 
 public class RegistryImplTest {
     private static final String VERSION_PROPERTY = "qingzhou.version";
@@ -217,7 +217,7 @@ public class RegistryImplTest {
         AppStubLocal stub = newLocalApp(APP_CODE_1);
         registry.bindApp(stub);
 
-        AppStub result = registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1);
+        AppStub result = registry.getAppStub(qingzhou.registry.Constants.LOCAL_INSTANCE_ID, APP_CODE_1);
 
         Assert.assertNotNull(result);
         Assert.assertTrue(result instanceof AppStubLocal);
@@ -239,7 +239,7 @@ public class RegistryImplTest {
     public void getAppStub_localInstanceIdUnknownCode_returnNull() {
         RegistryImpl registry = newRegistry();
 
-        Assert.assertNull(registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1));
+        Assert.assertNull(registry.getAppStub(qingzhou.registry.Constants.LOCAL_INSTANCE_ID, APP_CODE_1));
     }
 
     @Test

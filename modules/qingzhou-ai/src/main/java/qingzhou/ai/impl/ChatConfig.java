@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -38,7 +37,7 @@ public class ChatConfig implements HttpHandler {
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         Map<String, Object> data = new HashMap<>();
 
-        String lang = httpRequest.getParameter(Constants.WEB_PARAMETER_LANG);
+        String lang = httpRequest.getParameter("lang");
         List<String> prompts = promptSamples.stream().map(i18n -> i18nService.getI18n(i18n, lang)).collect(Collectors.toList());
         data.put("prompts", prompts);
 

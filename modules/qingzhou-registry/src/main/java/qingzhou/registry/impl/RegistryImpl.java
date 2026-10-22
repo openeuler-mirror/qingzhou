@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
@@ -108,7 +107,7 @@ public class RegistryImpl implements Registry {
         if (instanceId == null) {
             return null;
         }
-        if (instanceId.equals(Constants.LOCAL_INSTANCE_ID)) {
+        if (instanceId.equals(qingzhou.registry.Constants.LOCAL_INSTANCE_ID)) {
             return getLocalApp(appCode);
         } else {
             return getRemoteApp(instanceId, appCode);

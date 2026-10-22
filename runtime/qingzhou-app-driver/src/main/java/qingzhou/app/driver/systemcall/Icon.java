@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.app.driver.AppContextImpl;
-import qingzhou.app.driver.FileUtil;
+import qingzhou.app.driver.AppFileUtil;
 import qingzhou.app.driver.SystemCall;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
@@ -48,7 +48,7 @@ public class Icon implements SystemCall {
         try (InputStream resource = this.getClass().getResourceAsStream(iconPath)) {
             if (resource == null) return null;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            FileUtil.copyStream(resource, bos);
+            AppFileUtil.copyStream(resource, bos);
             byte[] bytes = bos.toByteArray();
             Crypto crypto = appContext.getService(Crypto.class);
             Base64Coder base64Coder = crypto.getBase64Coder();
