@@ -96,17 +96,19 @@ public class Register implements HttpHandler {
             // 解密成功即认证通过，心跳（绝大多数请求）无需再解析报文
             byte[] requestData = cipher.decrypt(requestBody, aad);
 
+            // 已存在只续期、不覆盖：域内共享密钥，解密成功仅证明来自本域，不足以据此改写他人实例记录
             InstanceInfo exists = registry.getRemoteInstance(instanceId);
-            if (exists != null) { // 已注册，仅续期
+            if (exists != null) {
                 exists.refreshTime();
                 httpResponse.status(304);
                 return;
             }
 
             InstanceInfo instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
-            instanceInfo.setId(instanceId); // 落表键取 AAD 绑定的 instanceId，不采信报文体内自报
-            instanceInfo.setHost(httpRequest.getRemoteHost());
-            instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
+            // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
+            instanceInfo.setId(instanceId);
+            instanceInfo.setHost(httpRequest.getRemoteHost()); // 取 TCP 源地址，不采信报文自报
+            instanceInfo.setDomain(domainId); // 由密钥选择确定
             registry.addRemoteInstance(instanceInfo);
             for (AppMeta appMeta : instanceInfo.getAppMetas()) {
                 logger.info(String.format("registration, instance: %s, app: %s", instanceId, appMeta.getApp().code));
