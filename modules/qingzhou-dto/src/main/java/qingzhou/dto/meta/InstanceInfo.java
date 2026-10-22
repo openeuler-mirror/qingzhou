@@ -12,6 +12,8 @@ public class InstanceInfo {
     private String id;
     // 每实例随机密钥：首次注册时由 agent 上报，作为 center→agent 方向的认证因子；随报文收发但不对外展示
     private String instanceSecret;
+    // agent 自报的对外可达地址：仅用于反代/NAT 部署，registry 未显式开启信任时忽略
+    private String advertisedHost;
     private int port;
     private boolean sslEnabled;
     private String platformVersion;
@@ -67,6 +69,14 @@ public class InstanceInfo {
 
     public List<AppMeta> getAppMetas() {
         return appMetas;
+    }
+
+    public String getAdvertisedHost() {
+        return advertisedHost;
+    }
+
+    public void setAdvertisedHost(String advertisedHost) {
+        this.advertisedHost = advertisedHost;
     }
 
     public String getInstanceSecret() {

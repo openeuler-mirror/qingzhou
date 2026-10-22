@@ -40,12 +40,15 @@ public class Register implements HttpHandler {
     private AgentDomainKeys agentDomainKeys;
 
     private Timer timer;
+    // 是否采信 agent 自报地址：仅反代/NAT 部署需要，默认关闭以免域内成员把流量导向任意地址
+    private boolean trustAdvertisedHost;
 
     @Activate
     public void start(Map<String, String> config) {
         Configs configs = new Configs(config);
         long interval = 1000L * configs.atLeast("interval", 1, 6);
         long timeout = 1000L * configs.atLeast("timeout", 5, 12);
+        trustAdvertisedHost = configs.getOrDefault("trust_advertised_host", false);
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
@@ -133,7 +136,7 @@ public class Register implements HttpHandler {
             }
             // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
             instanceInfo.setId(instanceId);
-            instanceInfo.setHost(httpRequest.getRemoteHost()); // 取 TCP 源地址，不采信报文自报
+            instanceInfo.setHost(resolveHost(instanceInfo, httpRequest));
             instanceInfo.setDomain(domainId); // 由密钥选择确定
             registry.addRemoteInstance(instanceInfo);
             for (AppMeta appMeta : instanceInfo.getAppMetas()) {
@@ -143,6 +146,31 @@ public class Register implements HttpHandler {
             logger.error("failed to parse instance info", e);
             httpResponse.status(400);
         }
+    }
+
+    // 反代/NAT 下 TCP 对端恒为代理地址：开启信任时改用 agent 自报地址
+    private String resolveHost(InstanceInfo instanceInfo, HttpRequest httpRequest) {
+        String remoteHost = httpRequest.getRemoteHost(); // 默认取 TCP 源地址，不采信报文自报
+        String advertised = instanceInfo.getAdvertisedHost();
+        if (!trustAdvertisedHost || advertised == null) return remoteHost;
+
+        String host = advertised.trim();
+        if (isSafeHost(host)) return host;
+
+        logger.warn("illegal advertised host ignored: " + forLog(advertised));
+        return remoteHost;
+    }
+
+    // 该值会拼进下游 URL：只放行常规主机名/IPv4 字符，杜绝 user@host、路径与查询串注入（IPv6 请用主机名）
+    private static boolean isSafeHost(String host) {
+        if (host.isEmpty() || host.length() > 255) return false;
+        for (int i = 0; i < host.length(); i++) {
+            char c = host.charAt(i);
+            boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '-';
+            if (!safe) return false;
+        }
+        return true;
     }
 
     private static boolean isSafeToken(String token) {

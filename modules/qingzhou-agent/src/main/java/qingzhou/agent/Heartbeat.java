@@ -44,6 +44,8 @@ public class Heartbeat {
     private int serverPort;
     private boolean serverSslEnabled;
     private String registerUrl;
+    // 反代/NAT 部署下本实例的对外可达地址：未配置则由 registry 按连接源地址推断
+    private String advertisedHost;
     private Timer timer;
     private List<String> storedFingerprints;
 
@@ -67,6 +69,7 @@ public class Heartbeat {
             registryUrl = registryUrl.substring(0, registryUrl.length() - 1);
         }
         registerUrl = registryUrl + "/registry" + qingzhou.registry.Constants.REMOTE_REGISTER_URI;
+        advertisedHost = configs.get("advertised_host");
 
         timer = new Timer("agent-heartbeat");
         timer.schedule(new TimerTask() {
@@ -122,6 +125,7 @@ public class Heartbeat {
         instanceInfo.setId(UUID.randomUUID().toString());
         // 每实例独立密钥：与实例同生命周期，仅存内存并随注册报文上报，用于 center→agent 方向的身份认证
         instanceInfo.setInstanceSecret(UUID.randomUUID().toString());
+        instanceInfo.setAdvertisedHost(advertisedHost);
         // 实例版本
         instanceInfo.setPlatformVersion(qzVersion);
         // 实例端口
