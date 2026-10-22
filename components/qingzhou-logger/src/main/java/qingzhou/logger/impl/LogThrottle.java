@@ -37,10 +37,6 @@ final class LogThrottle {
         return window.acquire(now, windowMs);
     }
 
-    String withSuppressed(String msg, long suppressed) {
-        return suppressed > 0 ? msg + " (suppressed " + suppressed + " similar)" : msg;
-    }
-
     private static String fingerprint(String msg) {
         return LONG_DIGITS.matcher(msg.substring(0, Math.min(msg.length(), FINGERPRINT_CHARS))).replaceAll("#");
     }

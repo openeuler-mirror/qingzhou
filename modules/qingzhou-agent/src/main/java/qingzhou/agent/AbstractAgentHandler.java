@@ -71,7 +71,8 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         // 加密响应数据
         try {
-            byte[] agentAad = agentDomainKeys.toRegistryAad(thisInstanceInfo.getId(), aadName());
+            byte[] agentAad = agentDomainKeys.toRegistryResponseAad(thisInstanceInfo.getId(),
+                    thisInstanceInfo.getInstanceSecret(), new String[]{aadName()});
             byte[] encrypt = agentCipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), agentAad);
             httpResponse.send(encrypt);
         } catch (Exception e) {

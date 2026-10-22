@@ -14,6 +14,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
 import qingzhou.crypto.*;
 import qingzhou.logger.Logger;
 
@@ -40,6 +41,10 @@ public class CryptoImpl implements Crypto {
     public void init(Map<String, String> config) {
         globalCipherKeyName = config.getOrDefault("global_cipher_key_name", "global");
         secretKeyFile = Paths.get(config.get("qingzhou.instance"), "conf", "secret-key.properties");
+        // 全局密钥同样是信任根：不合规先告警再收紧；命令行 init 脱离 OSGi 调用时 logger 未注入
+        FileUtil.restrictToOwnerOnly(secretKeyFile.toFile(), msg -> {
+            if (logger != null) logger.warn(msg);
+        });
     }
 
     @Override

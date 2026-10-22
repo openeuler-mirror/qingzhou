@@ -7,8 +7,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 public class FileUtil {
     // 确保创建一个文件夹
@@ -178,6 +182,27 @@ public class FileUtil {
                     copyFileOrDirectory(file, copiedFile);
                 }
             }
+        }
+    }
+
+    /**
+     * 敏感文件（密钥等）权限收紧为仅属主可读写：默认 umask 下同机其它用户可读，暴露即等同泄露。
+     * 非 POSIX 平台无权限模型、或无权限修改时保持原状，由调用方决定是否仅告警。
+     */
+    public static void restrictToOwnerOnly(File file, Consumer<String> warning) {
+        if (file == null || !file.isFile()) return;
+        try {
+            Set<PosixFilePermission> current = Files.getPosixFilePermissions(file.toPath());
+            Set<PosixFilePermission> ownerOnly = PosixFilePermissions.fromString("rw-------");
+            if (current.equals(ownerOnly)) return;
+
+            warning.accept("file permission is " + PosixFilePermissions.toString(current)
+                    + ", tightened to rw-------: " + file);
+            Files.setPosixFilePermissions(file.toPath(), ownerOnly);
+        } catch (UnsupportedOperationException e) {
+            // Windows 等无 POSIX 权限模型的平台：交由文件系统 ACL 控制
+        } catch (IOException e) {
+            warning.accept("failed to tighten file permission to rw-------: " + file + ", " + e.getMessage());
         }
     }
 

@@ -63,7 +63,8 @@ class AppStubRemoteImpl implements AppStubRemote {
             if (response.getStatus() == 200) {
                 byte[] responseBody = response.getBody();
                 if (responseBody != null && responseBody.length > 0) {
-                    byte[] decrypted = cipher.decrypt(responseBody, registry.agentDomainKeys.toRegistryAad(remoteInstanceId, qingzhou.registry.Constants.REMOTE_INVOKE_URI));
+                    byte[] decrypted = cipher.decrypt(responseBody, registry.agentDomainKeys.toRegistryResponseAad(remoteInstanceId,
+                            instanceInfo.getInstanceSecret(), new String[]{qingzhou.registry.Constants.REMOTE_INVOKE_URI}));
                     request.setResponse(registry.json.fromJson(new String(decrypted, StandardCharsets.UTF_8), ResponseImpl.class));
                 }
                 return;
@@ -161,7 +162,8 @@ class AppStubRemoteImpl implements AppStubRemote {
         if (body == null || body.length == 0) {
             throw new IllegalStateException("empty upload response: " + uploadUrl);
         }
-        byte[] decrypted = cipher.decrypt(body, registry.agentDomainKeys.toRegistryAad(remoteInstanceId, qingzhou.registry.Constants.REMOTE_UPLOAD_URI));
+        byte[] decrypted = cipher.decrypt(body, registry.agentDomainKeys.toRegistryResponseAad(remoteInstanceId,
+                instanceInfo.getInstanceSecret(), new String[]{qingzhou.registry.Constants.REMOTE_UPLOAD_URI}));
         return new String(decrypted, StandardCharsets.UTF_8);
     }
 

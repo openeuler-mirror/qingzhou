@@ -11,19 +11,27 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
 import qingzhou.crypto.Crypto;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class AgentDomainKeysImpl implements AgentDomainKeys {
     @Reference
     private Crypto crypto;
+    @Reference
+    private Logger logger;
 
     private final Map<String, byte[]> masters = new HashMap<>();
 
     @Activate
     public void init(Map<String, String> config) throws IOException {
         Path keyFile = Paths.get(config.get("qingzhou.instance"), "conf", "secret-key.properties");
+        // 域密钥是全平台信任根：不合规先告警再收紧；非 OSGi 构造时 logger 未注入
+        FileUtil.restrictToOwnerOnly(keyFile.toFile(), msg -> {
+            if (logger != null) logger.warn(msg);
+        });
         Properties properties = new Properties();
         try (InputStream in = Files.newInputStream(keyFile)) {
             properties.load(in);
@@ -60,5 +68,10 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
     @Override
     public byte[] toRegistryAad(String instanceId, String... reqData) {
         return crypto.generateCipherAad("AGENT_REGISTRY", instanceId, Arrays.toString(reqData));
+    }
+
+    @Override
+    public byte[] toRegistryResponseAad(String instanceId, String instanceSecret, String[] reqData) {
+        return crypto.generateCipherAad("AGENT_REGISTRY", instanceId, "|", instanceSecret, "|", Arrays.toString(reqData));
     }
 }

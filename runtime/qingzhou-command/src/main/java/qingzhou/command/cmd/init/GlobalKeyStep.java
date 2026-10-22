@@ -9,5 +9,6 @@ final class GlobalKeyStep {
         if (Init.hasValue(content, "global")) return; // 已有值则静默跳过
 
         Init.write(secretFile, Init.putValue(content, "global", init.generateCipherKey()));
+        Init.restrictToOwnerOnly(secretFile);
     }
 }

@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
@@ -112,6 +114,14 @@ public class Init extends Processor {
 
     static void write(File file, String content) throws IOException {
         Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // 密钥文件仅属主可读写：默认 umask 下同机其它用户可读，等同泄露全平台信任根
+    static void restrictToOwnerOnly(File file) {
+        try {
+            Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
+        } catch (UnsupportedOperationException | IOException ignored) { // 非 POSIX 平台或无权限修改
+        }
     }
 
     static boolean hasValue(String content, String key) {
