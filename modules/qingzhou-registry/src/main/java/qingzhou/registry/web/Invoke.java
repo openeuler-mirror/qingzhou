@@ -189,11 +189,6 @@ public class Invoke implements HttpHandler {
             return;
         }
 
-        if (response.getStatus() > 0) {
-            httpResponse.status(response.getStatus());
-        }
-        response.getHeaders().forEach(httpResponse::header);
-
         Map<String, Object> result = new HashMap<>();
         result.put("success", response.isSuccess());
         if (response.getData() != null) {
@@ -203,7 +198,13 @@ public class Invoke implements HttpHandler {
             result.put("msg", response.getMsg());
             result.put("msgLevel", response.getMsgLevel());
         }
+        // 状态码与响应头来自远端 agent：非法值在 HttpResponse 侧抛 IAE，须与序列化失败同分支收尾
         try {
+            if (response.getStatus() > 0) {
+                httpResponse.status(response.getStatus());
+            }
+            response.getHeaders().forEach(httpResponse::header);
+
             if (response.getContentType() != null) {
                 httpResponse.contentType(response.getContentType());
             } else {
