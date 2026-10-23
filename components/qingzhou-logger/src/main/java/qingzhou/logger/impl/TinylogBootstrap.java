@@ -13,36 +13,30 @@ import org.osgi.service.cm.ConfigurationAdmin;
 final class TinylogBootstrap {
     static final Set<String> appliedTags = ConcurrentHashMap.newKeySet(); // 非空即表示全局配置已生效
 
-    private TinylogBootstrap() {
-    }
-
-    static synchronized void apply(String tag, Map<String, Object> ownConfig, ConfigurationAdmin configAdmin) {
+    static synchronized void apply(String tag, ConfigurationAdmin configAdmin) {
         if (!appliedTags.isEmpty()) {
-            if (!appliedTags.contains(tag)) {
+            if (!appliedTags.contains(tag))
                 System.err.println("logger '" + tag + "' configured after tinylog initialization, restart required to take effect");
-            }
             return;
         }
-        Map<String, Map<String, String>> perTagConfigs = gather(tag, ownConfig, configAdmin);
+        Map<String, Map<String, String>> perTagConfigs = gather(configAdmin);
         org.tinylog.configuration.Configuration.replace(merge(perTagConfigs));
         appliedTags.addAll(perTagConfigs.keySet()); // 仅在配置真正生效后置位，避免失败后被后续激活静默跳过
     }
 
     // 收集全部日志器配置：tag -> 该日志器的字符串配置（全局项 + writer 项）
-    private static Map<String, Map<String, String>> gather(String tag, Map<String, Object> ownConfig, ConfigurationAdmin configAdmin) {
+    private static Map<String, Map<String, String>> gather(ConfigurationAdmin configAdmin) {
         Map<String, Map<String, String>> result = new HashMap<>();
         try {
             Configuration[] configs = configAdmin.listConfigurations("(service.pid=qingzhou-logger*)");
             if (configs != null) {
                 for (Configuration c : configs) {
-                    result.put(LoggerImpl.parseTag(c.getPid()), toStrings(c.getProperties()));
+                    result.put(LoggerImpl.parseLoggerName(c.getPid()), toStrings(c.getProperties()));
                 }
             }
         } catch (Exception e) {
             System.err.println("failed to list logger configurations: " + e.getMessage());
         }
-        // 兜底：确保自身配置一定参与合并（ConfigAdmin 事件时序异常时不至于丢失当前日志器）
-        result.put(tag, toStrings(new Hashtable<>(ownConfig)));
         return result;
     }
 
@@ -58,40 +52,31 @@ final class TinylogBootstrap {
     }
 
     /**
-     * 合并为 tinylog 全局配置：非 writer 键仅取默认日志器；writer 键合并全部日志器，
-     * 命名日志器的 writer 重命名并附加 tag，实现按 tag 路由到独立文件。
+     * 合并为 tinylog 全局配置：非 writer 键属 tinylog 全局项，仅取默认日志器；writer 键合并全部日志器，
+     * 重命名并附加 tag，实现按 tag 路由到独立文件。
      */
     static Map<String, String> merge(Map<String, Map<String, String>> perTagConfigs) {
         Map<String, String> merged = new HashMap<>();
         merged.put("autoshutdown", "false");
 
-        for (Map.Entry<String, Map<String, String>> entry : perTagConfigs.entrySet()) {
-            String tag = entry.getKey();
-            boolean isDefault = LoggerImpl.DEFAULT_INSTANCE.equals(tag); // todo 为何要对 default 特殊处理？能否移除？
-            for (Map.Entry<String, String> w : entry.getValue().entrySet()) {
-                String key = w.getKey();
-                if (!key.startsWith("writer")) {
-                    if (isDefault) merged.put(key, w.getValue());
-                    continue;
-                }
-                String name = writerNameOf(key);
-                String renamed = isDefault ? name : renameWriterName(name, tag);
-                merged.put(renamed + key.substring(name.length()), w.getValue());
-                merged.put(renamed + ".tag", tag);
-            }
-        }
+        // 全局项无法按 tag 拆分，只认默认日志器，避免取值随遍历顺序漂移
+        perTagConfigs.get(LoggerImpl.DEFAULT_LOGGER).forEach((k, v) -> {
+            if (!k.startsWith("writer")) merged.put(k, v);
+        });
+        perTagConfigs.forEach((tag, config) -> config.forEach((k, v) -> {
+            if (!k.startsWith("writer")) return;
+            int dot = k.indexOf('.');
+            String name = dot == -1 ? k : k.substring(0, dot);
+            String renamed = renameWriterName(name, tag);
+            merged.put(renamed + k.substring(name.length()), v);
+            merged.put(renamed + ".tag", tag);
+        }));
         return merged;
-    }
-
-    private static String writerNameOf(String key) {
-        int dot = key.indexOf('.');
-        return dot == -1 ? key : key.substring(0, dot);
     }
 
     // writer_file -> writer_<tag>_file：确保以 writer 开头且各日志器间不冲突
     private static String renameWriterName(String writerName, String tag) {
         String suffix = writerName.substring("writer".length());
-        if (suffix.startsWith("_")) suffix = suffix.substring(1);
-        return suffix.isEmpty() ? "writer_" + tag : "writer_" + tag + "_" + suffix;
+        return "writer_" + tag + (suffix.isEmpty() || suffix.startsWith("_") ? suffix : "_" + suffix);
     }
 }

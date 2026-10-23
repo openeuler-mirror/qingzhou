@@ -42,6 +42,7 @@ public class AuthHandler implements HttpHandler {
 
     private boolean totpEnabled;
     private String totpSecret;
+    private long lastTotpStep = -1; // 已消费的最大时间步
 
     private FailureLockout lockout;
 
@@ -163,12 +164,19 @@ public class AuthHandler implements HttpHandler {
                 crypto.getMessageDigest().matches(reqPass, passwordDigest);
     }
 
-    private boolean verifyCode(String code, HttpResponse response) {
+    // 同步：时间步的「校验并消费」须原子，避免并发请求重放同一口令
+    private synchronized boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (crypto.getTotp().verifyCode(
+            long step = crypto.getTotp().verifyCodeStep(
                     crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"),
-                    code)) {
-                return true;
+                    code);
+            if (step >= 0) {
+                // 同一（或更早）时间步的验证码只能使用一次：否则截获的验证码可在容忍窗口内重复登录
+                if (step > lastTotpStep) {
+                    lastTotpStep = step;
+                    return true;
+                }
+                logger.warn("totp code replayed");
             }
         } catch (Exception e) {
             logger.error("TOTP authentication failed. Please verify whether the secret key is configured correctly.");

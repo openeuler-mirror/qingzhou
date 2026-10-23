@@ -159,6 +159,8 @@ public class RegisterActionTools {
             appStub.invokeApp(request);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
+            // 不得吞成默认的 success=true：AI 会据此误判业务已写入成功
+            request.getResponse().success(false).message("操作执行失败，请查看服务端日志");
         }
         ResponseImpl response = request.getResponse();
 

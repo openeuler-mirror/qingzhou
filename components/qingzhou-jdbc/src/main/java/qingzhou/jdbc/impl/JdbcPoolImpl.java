@@ -24,9 +24,11 @@ public class JdbcPoolImpl implements JdbcPool {
 
     private PoolProperties poolConfig;
     private DataSource dsPool;
+    private boolean maxIdleConfigured;
 
     @Activate
     public void activate(Map<String, String> config) throws Exception {
+        maxIdleConfigured = config.containsKey("maxIdle");
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
         Map<String, PropertyDescriptor> descriptors = new java.util.HashMap<>();
@@ -90,7 +92,9 @@ public class JdbcPoolImpl implements JdbcPool {
         }
 
         poolConfig.setJmxEnabled(false);
-        poolConfig.setMaxIdle(poolConfig.getMaxActive());
+        if (!maxIdleConfigured) { // 仅在用户未显式配置时对齐，避免静默覆盖 qingzhou-jdbc.maxIdle
+            poolConfig.setMaxIdle(poolConfig.getMaxActive());
+        }
         dsPool = poolConfig.getDataSource() instanceof javax.sql.XADataSource
                 ? new XADataSource(poolConfig) : new DataSource(poolConfig);
         dsPool.createPool();

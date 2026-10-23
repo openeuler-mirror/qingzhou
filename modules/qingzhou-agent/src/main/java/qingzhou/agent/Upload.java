@@ -88,8 +88,9 @@ public class Upload extends AbstractAgentHandler {
         }
 
         try {
+            // 超限由调用方数据量触发：按 IllegalArgumentException 归为 400，不计入服务端故障
             if (offset + requestData.length > MAX_UPLOAD_BYTES) {
-                throw new IllegalStateException("upload exceeds size limit: " + uploadId);
+                throw new IllegalArgumentException("upload exceeds size limit: " + uploadId);
             }
             Files.write(data.toPath(), requestData, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         } catch (Throwable e) {
@@ -127,7 +128,7 @@ public class Upload extends AbstractAgentHandler {
         File[] dirs = uploadBase.listFiles();
         if (dirs == null) return;
         if (dirs.length >= MAX_UPLOAD_FILES) {
-            throw new IllegalStateException("too many pending uploads: " + dirs.length);
+            throw new IllegalArgumentException("too many pending uploads: " + dirs.length);
         }
         long total = incomingBytes; // 计入本次待写分片，避免"写前总量"始终低于上限
         for (File dir : dirs) {
@@ -136,7 +137,7 @@ public class Upload extends AbstractAgentHandler {
             }
         }
         if (total >= MAX_UPLOAD_TOTAL_BYTES) {
-            throw new IllegalStateException("upload dir exceeds size limit: " + total);
+            throw new IllegalArgumentException("upload dir exceeds size limit: " + total);
         }
     }
 

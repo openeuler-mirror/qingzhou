@@ -79,15 +79,12 @@ public class FileUtil {
             Path target = to.toPath();
             try {
                 Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES); // 应用增量更新：COPY_ATTRIBUTES 保留时间戳
-            } catch (IOException e) {
-                if (e instanceof FileSystemException) {
-                    if (e.getMessage() != null && e.getMessage().contains("正在使用")) {
-                        try (FileOutputStream fos = new FileOutputStream(to)) {
-                            try (InputStream read = new BufferedInputStream(Files.newInputStream(source), 32768)) {
-                                copyStream(read, fos);
-                            }
-                        }
-                    }
+            } catch (FileSystemException e) {
+                // 文件被占用（Windows 常见）时退回流复制；复制再失败必须上抛：
+                // 原实现以本地化错误文案判断是否重试，其它失败一律静默返回，调用方会误判复制成功
+                try (FileOutputStream fos = new FileOutputStream(to);
+                     InputStream read = new BufferedInputStream(Files.newInputStream(source), 32768)) {
+                    copyStream(read, fos);
                 }
             }
             copyFileTimes(source, target);

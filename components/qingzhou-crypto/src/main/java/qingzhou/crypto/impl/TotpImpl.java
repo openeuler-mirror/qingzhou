@@ -50,11 +50,17 @@ class TotpImpl implements Totp {
 
     @Override
     public boolean verifyCode(String key, String code) throws Exception {
-        if (key == null || key.isEmpty() || code == null || code.isEmpty()) return false;
+        return verifyCodeStep(key, code) >= 0;
+    }
+
+    @Override
+    public long verifyCodeStep(String key, String code) throws Exception {
+        if (key == null || key.isEmpty() || code == null || code.isEmpty()) return -1;
         long step = System.currentTimeMillis() / STEP_MILLIS; // 基准只取一次，否则校验途中跨窗会漏检真正的当前窗口
-        return isEqual(code, getCode(key, step))
-                || isEqual(code, getCode(key, step - 1)) // 提交延迟只会把口令推向前序窗口
-                || isEqual(code, getCode(key, step + 1)); // 覆盖服务端时钟偏慢的情况
+        if (isEqual(code, getCode(key, step))) return step;
+        if (isEqual(code, getCode(key, step - 1))) return step - 1; // 提交延迟只会把口令推向前序窗口
+        if (isEqual(code, getCode(key, step + 1))) return step + 1; // 覆盖服务端时钟偏慢的情况
+        return -1;
     }
 
     // 常量时间比较，防止时序侧信道推算口令

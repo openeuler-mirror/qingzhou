@@ -7,7 +7,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.EpochKeyRotatingCipher;
-import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
 
 @Component(service = LocalAgentDomainKey.class)
@@ -16,8 +15,6 @@ public class LocalAgentDomainKey {
     private AgentDomainKeys agentDomainKeys;
     @Reference
     private Crypto crypto;
-    @Reference
-    private Logger logger;
 
     private String localAgentDomain;
     private EpochKeyRotatingCipher localAgentCipher;
@@ -30,7 +27,9 @@ public class LocalAgentDomainKey {
             byte[] localAgentDomainKey = agentDomainKeys.getAgentDomainKey(localAgentDomain);
             localAgentCipher = crypto.getEpochKeyRotatingCipher(localAgentDomainKey);
         } else {
-            logger.error("agent domain keys size is not 1");
+            // 密钥数量异常时 agent 的所有端点都会 503、心跳也无法加密：必须 fail-fast 并指明配置文件
+            throw new IllegalStateException("agent domain keys must be exactly 1, but was " + allAgentDomains.size()
+                    + "; check agent-domain~* entries in conf/secret-key.properties");
         }
     }
 

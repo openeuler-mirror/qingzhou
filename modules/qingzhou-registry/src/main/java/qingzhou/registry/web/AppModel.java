@@ -85,7 +85,7 @@ public class AppModel extends AbstractMetaHandler {
                 if (field.getType() == String[].class && fromVal != null) {
                     String[] arr = (String[]) fromVal;
 
-                    if (Arrays.stream(arr).anyMatch(s -> s.startsWith("en:"))) {
+                    if (Arrays.stream(arr).anyMatch(s -> s != null && s.startsWith("en:"))) {
                         // 单值 i18n：整体翻译为一个字符串
                         fromVal = new String[]{i18nService.getI18n(arr, lang)};
                     }
