@@ -10,9 +10,13 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
     // 确保创建一个文件夹
@@ -64,17 +68,6 @@ public class FileUtil {
             if (!to.getParentFile().exists()) {
                 mkdirs(to.getParentFile());
             }
-            //            try (FileOutputStream fos = new FileOutputStream(to)) {
-            //                try (InputStream read = new BufferedInputStream(new FileInputStream(from), 32768)) {
-            //                    copyStream(read, fos);
-            //                }
-            //            }
-
-            // 注释了上面的旧方式，使用新方式：
-            /*
-               Files.copy 使用注意 当第二个参数to.toPath() 对应的文件正在读或写会抛出FileSystemException
-               另一个程序正在使用此文件，进程无法访问。
-             */
             Path source = from.toPath();
             Path target = to.toPath();
             try {
@@ -100,7 +93,119 @@ public class FileUtil {
         output.flush();
     }
 
-    // for #PDMP-5917 手动复制时间戳（确保兼容性），如果 COPY_ATTRIBUTES 不生效，可以显式读取并设置时间戳：
+    // 解压上限：条目数与累计解压字节双限，防高压缩比包（zip bomb）写爆磁盘与 inode
+    private static final int MAX_UNZIP_ENTRIES = 100_000;
+    private static final long MAX_UNZIP_BYTES = 512L * 1024 * 1024;
+
+    /**
+     * 解压 zip 到目标目录（防 zip-slip：目录穿越条目直接拒绝）。
+     *
+     * @param overwrite true 覆盖已存在项（如驱动覆盖应用同名类）；false 跳过已存在项（如保留应用自带 MANIFEST）
+     */
+    public static void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
+        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
+            String baseDir = unZipDir.getCanonicalPath() + File.separator;
+            long totalBytes = 0;
+            int entryCount = 0;
+            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+                if (++entryCount > MAX_UNZIP_ENTRIES) {
+                    throw new IOException("too many entries in: " + srcFile);
+                }
+                ZipEntry entry = e.nextElement();
+                File targetFile = new File(unZipDir, entry.getName());
+                if (!targetFile.getCanonicalPath().startsWith(baseDir)) {
+                    throw new IOException("Entry is outside of target dir: " + entry.getName());
+                }
+                if (entry.isDirectory()) {
+                    if (!targetFile.mkdirs() && !targetFile.isDirectory()) {
+                        throw new IOException("cannot create dir: " + targetFile);
+                    }
+                } else {
+                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
+                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
+                    if (overwrite || !Files.exists(targetFile.toPath())) {
+                        File parent = targetFile.getParentFile();
+                        if (parent != null) parent.mkdirs();
+                        try (InputStream in = zip.getInputStream(entry);
+                             OutputStream out = Files.newOutputStream(targetFile.toPath())) {
+                            totalBytes += copyStreamWithLimit(in, out, MAX_UNZIP_BYTES - totalBytes);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 带累计上限的拷贝：实际写出量超限立即中止（entry.getSize() 可能为 -1，不能作为依据）
+    private static long copyStreamWithLimit(InputStream input, OutputStream output, long maxBytes) throws IOException {
+        byte[] buffer = new byte[1024 * 8];
+        long written = 0;
+        int n;
+        while (-1 != (n = input.read(buffer))) {
+            written += n;
+            if (written > maxBytes) throw new IOException("unzip exceeds max bytes: " + MAX_UNZIP_BYTES);
+            output.write(buffer, 0, n);
+        }
+        output.flush();
+        return written;
+    }
+
+    // 压缩一个文件或文件夹
+    public static void zipFiles(File srcFile, File zipFile, boolean containsBaseDir) throws IOException {
+        zipFiles(new File[]{srcFile}, zipFile, containsBaseDir);
+    }
+
+    // 指定的多个文件压入到一个文件里
+    public static void zipFiles(File[] srcFiles, File zipFile, boolean containsBaseDir) throws IOException {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile.toPath()))) {
+            for (File srcFile : srcFiles) {
+                if (!srcFile.isDirectory() || containsBaseDir) {
+                    zipFile(srcFile, zos, srcFile.getName());
+                } else {
+                    File[] listFiles = srcFile.listFiles();
+                    if (listFiles != null) {
+                        for (File sub : listFiles) {
+                            zipFile(sub, zos, sub.getName());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void zipFile(File srcFile, ZipOutputStream zos, String toZipName) throws IOException {
+        if (srcFile.isDirectory()) {
+            zos.putNextEntry(new ZipEntry(toZipName + "/"));
+            File[] listFiles = srcFile.listFiles();
+            if (listFiles != null) {
+                for (File file : listFiles) {
+                    zipFile(file, zos, toZipName + "/" + file.getName());
+                }
+            }
+        } else {
+            zos.putNextEntry(new ZipEntry(toZipName));
+            try (InputStream in = Files.newInputStream(srcFile.toPath())) {
+                copyStream(in, zos);
+            }
+        }
+    }
+
+    public static long getFileLength(File file) {
+        if (file.isDirectory()) {
+            long length = 0;
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    length += getFileLength(f);
+                }
+            }
+            return length;
+        } else {
+            return file.length();
+        }
+    }
+
+    // COPY_ATTRIBUTES 可能不生效，显式再设一次时间戳兜底：
     public static void copyFileTimes(Path source, Path target) {
         if (source == null || !source.toFile().exists() ||
                 target == null || !target.toFile().exists()) return;
@@ -113,7 +218,7 @@ public class FileUtil {
                             sourceAttrs.creationTime()
                     );
         } catch (IOException e) {
-            // 有时候会出错，没必要打印日志
+            // 时间戳复制失败不致命，忽略
         }
     }
 
@@ -135,23 +240,19 @@ public class FileUtil {
             throw new IOException("Source '" + srcDir + "' and destination '" + destDir + "' are the same");
         }
 
-        // Cater for destination being directory within the source directory (see IO-141)
+        // 目标目录位于源目录内部时需排除自身，避免递归复制自身
         List<String> exclusionList = getExclusionList(srcDir, destDir);
         doCopyDirectory(srcDir, destDir, exclusionList);
     }
 
     private static List<String> getExclusionList(File srcDir, File destDir) throws IOException {
-        List<String> exclusionList = null;
-        if (destDir.getCanonicalPath().startsWith(srcDir.getCanonicalPath())) {
-            File[] srcFiles = srcDir.listFiles();
-            if (srcFiles != null && srcFiles.length > 0) {
-                exclusionList = new ArrayList<>(srcFiles.length);
-                for (File srcFile : srcFiles) {
-                    File copiedFile = new File(destDir, srcFile.getName());
-                    exclusionList.add(copiedFile.getCanonicalPath());
-                }
-            }
+        // 仅当 destDir 位于 srcDir 内部时排除目标目录，避免复制自身导致死循环；
+        // 按规范路径 + 目录分隔符比较：直接前缀比较会把 /a/app2 误判为 /a/app 的子目录
+        if (!destDir.getCanonicalPath().startsWith(srcDir.getCanonicalPath() + File.separator)) {
+            return null;
         }
+        List<String> exclusionList = new ArrayList<>(1);
+        exclusionList.add(destDir.getCanonicalPath());
         return exclusionList;
     }
 
@@ -165,7 +266,7 @@ public class FileUtil {
                 throw new IOException("Destination '" + destDir + "' exists but is not a directory");
             }
         } else {
-            mkdirs(destDir);// 不用判断返回值，有时候返回false,实际是成功的
+            mkdirs(destDir);
         }
         if (!destDir.canWrite()) {
             throw new IOException("Destination '" + destDir + "' cannot be written to");
@@ -218,7 +319,7 @@ public class FileUtil {
         } else {
             if (file.exists() && !file.delete()) {
                 try {
-                    Thread.sleep(2000);// for #ITAIT-4164
+                    Thread.sleep(2000);
                 } catch (InterruptedException ignored) {
                 }
                 if (!file.delete()) {
@@ -267,7 +368,7 @@ public class FileUtil {
                 if (ignoredException) {
                     forceDeleteQuietly(file);
                 } else {
-                    //直接抛出异常，不继续循环了ITAIT-6618
+                    // 直接抛出异常，不继续清理
                     forceDelete(file);
                 }
             }

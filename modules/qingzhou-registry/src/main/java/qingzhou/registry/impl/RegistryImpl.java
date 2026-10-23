@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -45,11 +47,9 @@ public class RegistryImpl implements Registry {
     // 单调递增的数据版本：用计数器而非毫秒墙钟，避免同一毫秒内的多次变更互相覆盖
     private final AtomicLong registryDataVersion = new AtomicLong(System.currentTimeMillis());
 
-    private final Map<String, AppStubLocal> localApps = java.util.Collections
-            .synchronizedMap(new java.util.LinkedHashMap<>());
+    private final Map<String, AppStubLocal> localApps = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    private final Map<String, InstanceInfo> remoteInstances = java.util.Collections
-            .synchronizedMap(new java.util.LinkedHashMap<>());
+    private final Map<String, InstanceInfo> remoteInstances = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Activate
     public void start(Map<String, String> config) {

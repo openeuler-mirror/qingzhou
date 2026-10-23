@@ -82,7 +82,7 @@ public class Invoke extends AbstractAgentHandler {
                     FileUtil.moveFileOrDirectory(source, target);
                     paths.add(target.getAbsolutePath());
                 }
-                String newPaths = String.join(",", paths); // TODO 调用应用业务逻辑，应使用 ModelField 约定 separator
+                String newPaths = String.join(",", paths);
                 request.getParameters().put(field, newPaths);
             }
 

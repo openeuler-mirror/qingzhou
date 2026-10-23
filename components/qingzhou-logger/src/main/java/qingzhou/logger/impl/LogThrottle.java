@@ -2,6 +2,7 @@ package qingzhou.logger.impl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.LongSupplier;
 import java.util.regex.Pattern;
 
 /**
@@ -14,17 +15,25 @@ final class LogThrottle {
     private static final int FINGERPRINT_CHARS = 160;
     private static final Pattern LONG_DIGITS = Pattern.compile("\\d{6,}");
 
+    private final LongSupplier clock;
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
+
+    LogThrottle() {
+        this(System::currentTimeMillis);
+    }
+
+    LogThrottle(LongSupplier clock) {
+        this.clock = clock;
+    }
 
     /**
      * @return -1 表示本次抑制；>=0 表示放行，值为上一窗口被抑制的条数
      */
     long acquire(char level, String msg) {
-        return acquire(level, msg, FAILURE_WINDOW_MS, System.currentTimeMillis());
+        return acquire(level, msg, FAILURE_WINDOW_MS, clock.getAsLong());
     }
 
-    // 时间由调用方传入：便于测试窗口翻页，无需真实等待
-    long acquire(char level, String msg, long windowMs, long now) {
+    private long acquire(char level, String msg, long windowMs, long now) {
         if (msg == null) return 0;
         String key = level + fingerprint(msg);
         Window window = windows.get(key);
@@ -50,7 +59,7 @@ final class LogThrottle {
             this.start = start;
         }
 
-        synchronized long acquire(long now, long windowMs) {
+        private synchronized long acquire(long now, long windowMs) {
             if (now - start >= windowMs) { // 新窗口：放行并带出上一窗口的抑制条数
                 long count = suppressed;
                 start = now;

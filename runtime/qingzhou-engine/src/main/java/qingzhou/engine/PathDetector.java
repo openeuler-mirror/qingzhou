@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 // 仅同包 QingzhouMain 使用，不对外暴露
 class PathDetector {
-    // 进程扫描结果共享：全量进程扫描开销大，探测调度为 30 秒一次，缓存须明显长于该周期以免每拍都拉起 ps/powershell
+    // 进程扫描结果共享：全量进程扫描开销大，探测调度为 5 秒一次（见 PathDetectionScheduler），缓存须明显长于该周期以免每拍都拉起 ps/powershell
     private static final long SCAN_CACHE_MILLIS = 30_000;
     private static volatile List<String> cachedScanLines;
     private static volatile long lastScanAt;

@@ -15,7 +15,7 @@ import qingzhou.crypto.Totp;
 
 class TotpImpl implements Totp {
     // RFC 6238 默认步长 30 秒，主流验证器 App 亦固定此值，不可调整
-    static final long STEP_MILLIS = 30_000L; // 包级可见：测试复用
+    private static final long STEP_MILLIS = 30_000L;
 
     private final SecureRandom RANDOM = new SecureRandom();
     private final Map<String, AtomicLong> consumedWindows = new ConcurrentHashMap<>(); // key -> 已消费的最大窗口序号

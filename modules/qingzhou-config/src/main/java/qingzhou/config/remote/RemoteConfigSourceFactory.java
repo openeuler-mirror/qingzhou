@@ -26,7 +26,7 @@ public final class RemoteConfigSourceFactory {
         }
         return new EtcdConfigSource(endpoints, get(bootstrapArgs, "namespace", null),
                 get(bootstrapArgs, "username", null), get(bootstrapArgs, "password", null),
-                millis(bootstrapArgs, "connect_timeout", 3), millis(bootstrapArgs, "read_timeout", 5),
+                toMillis(bootstrapArgs, "connect_timeout", 3), toMillis(bootstrapArgs, "read_timeout", 5),
                 Boolean.parseBoolean(get(bootstrapArgs, "allow_insecure_http", "false")), json);
     }
 
@@ -41,7 +41,7 @@ public final class RemoteConfigSourceFactory {
     }
 
     // 超时限定 1~60 秒：JDK 的 0 表示无限等待（配置中心不可达时启动永久挂起），过大同样退化为无超时
-    private static int millis(Map<String, String> bootstrapArgs, String key, int defaultSeconds) {
+    private static int toMillis(Map<String, String> bootstrapArgs, String key, int defaultSeconds) {
         String value = get(bootstrapArgs, key, null);
         long seconds = defaultSeconds;
         if (value != null) {

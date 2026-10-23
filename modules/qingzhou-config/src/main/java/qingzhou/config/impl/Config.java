@@ -142,7 +142,7 @@ public class Config {
                     try {
                         config.put(key, Integer.valueOf(e.getValue()));
                     } catch (NumberFormatException ignored) {
-                        // 用户写错值时降级为 0，配置错误不应终止启动
+                        config.put(key, 0); // 写错值降级为 0：配置错误不应终止启动
                     }
                 } else {
                     config.put(key, e.getValue());

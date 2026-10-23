@@ -10,6 +10,9 @@ public class TotpImplTest {
 
     private static final Pattern BASE32_VALID_REGEX = Pattern.compile("^[A-Z2-7=]+$");
 
+    // 与 TotpImpl 的 RFC 6238 步长保持一致（生产侧该值固定不可调）
+    private static final long STEP_MILLIS = 30_000L;
+
     private TotpImpl newTotp() {
         return new TotpImpl(new Base32CoderImpl());
     }
@@ -62,7 +65,7 @@ public class TotpImplTest {
     public void previousWindowCode_verifyCodeWithReplayGuard_returnTrue() throws Exception {
         TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long now = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
+        long now = System.currentTimeMillis() / STEP_MILLIS;
         Assert.assertTrue(totp.verifyCodeWithReplayGuard(key, totp.getCode(key, now - 1))); // 提交延迟会把口令推向前序窗口
     }
 
@@ -70,7 +73,7 @@ public class TotpImplTest {
     public void nextWindowCode_verifyCodeWithReplayGuard_returnTrue() throws Exception {
         TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long now = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
+        long now = System.currentTimeMillis() / STEP_MILLIS;
         Assert.assertTrue(totp.verifyCodeWithReplayGuard(key, totp.getCode(key, now + 1))); // 覆盖服务端时钟偏慢
     }
 
@@ -78,7 +81,7 @@ public class TotpImplTest {
     public void outOfRangeCode_verifyCodeWithReplayGuard_returnFalse() throws Exception {
         TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long now = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
+        long now = System.currentTimeMillis() / STEP_MILLIS;
         Assert.assertFalse(totp.verifyCodeWithReplayGuard(key, totp.getCode(key, now - 100)));
         Assert.assertFalse(totp.verifyCodeWithReplayGuard(key, totp.getCode(key, now + 100)));
     }
@@ -106,7 +109,7 @@ public class TotpImplTest {
     public void sameWindow_verifyCodeWithReplayGuard_onlyAcceptedOnce() throws Exception {
         TotpImpl totp = newTotp();
         String key = totp.generateKey();
-        long window = System.currentTimeMillis() / TotpImpl.STEP_MILLIS; // 固定窗口，避免跨窗导致断言抖动
+        long window = System.currentTimeMillis() / STEP_MILLIS; // 固定窗口，避免跨窗导致断言抖动
         String code = totp.getCode(key, window);
         Assert.assertTrue(totp.verifyCodeWithReplayGuard(key, code));
         Assert.assertFalse(totp.verifyCodeWithReplayGuard(key, code)); // 同窗口重放

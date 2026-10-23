@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.common.FileUtil;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
@@ -177,12 +178,12 @@ public class DefaultAction {
                 if (files != null) {
                     for (File file : files) {
                         if (file.isFile() && !file.getName().startsWith(".")) {
-                            map.put(file.getName(), String.valueOf(AppFileUtil.getFileLength(file)));
+                            map.put(file.getName(), String.valueOf(FileUtil.getFileLength(file)));
                         }
                     }
                 }
             } else if (fileBase.isFile()) {
-                map.put(fileBase.getName(), String.valueOf(AppFileUtil.getFileLength(fileBase)));
+                map.put(fileBase.getName(), String.valueOf(FileUtil.getFileLength(fileBase)));
             }
 
             response.data(map);
@@ -288,7 +289,7 @@ public class DefaultAction {
             if (offset == raf.length()) {
                 offset = -1L; // 结束
                 if (isTempFile) {
-                    AppFileUtil.forceDeleteQuietly(toDownloadFile);
+                    FileUtil.forceDeleteQuietly(toDownloadFile);
                 }
             }
         }
@@ -396,11 +397,11 @@ public class DefaultAction {
         File tempDir = new File(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
         try {
             for (File file : downloadFiles) {
-                AppFileUtil.copyFileOrDirectory(file, new File(tempDir, file.getName()));
+                FileUtil.copyFileOrDirectory(file, new File(tempDir, file.getName()));
             }
-            AppFileUtil.zipFiles(tempDir, zipTo, false);
+            FileUtil.zipFiles(tempDir, zipTo, false);
         } finally {
-            AppFileUtil.forceDelete(tempDir);
+            FileUtil.forceDelete(tempDir);
         }
         return key;
     }

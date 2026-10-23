@@ -19,6 +19,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
 import qingzhou.api.Request;
+import qingzhou.common.FileUtil;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
@@ -142,7 +143,7 @@ public class AppDriver implements BundleActivator {
 
         try (InputStream inputStream = annotationFile.openStream();
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            AppFileUtil.copyStream(inputStream, bos);
+            FileUtil.copyStream(inputStream, bos);
             String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);
             Json jsonService = getService(Json.class, null);
             return jsonService.fromJson(json, App.class);

@@ -59,7 +59,7 @@ class ResponseImpl implements Response {
                 listener.onError(t);
             }
         } finally {
-            // 最终，不必检测状态，直接关闭长连接？
+            // 流式读毕后断开连接，不占用 keep-alive
             conn.disconnect();
         }
     }

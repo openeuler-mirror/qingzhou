@@ -3,39 +3,58 @@ package qingzhou.logger.impl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class LogThrottleTest {
     private static final long WINDOW_MS = 30_000L;
 
+    private static LogThrottle throttleWith(AtomicLong now) {
+        return new LogThrottle(now::get);
+    }
+
     @Test
     public void sameMessageWithinWindow_onlyFirstPasses() {
-        LogThrottle throttle = new LogThrottle();
-        Assert.assertEquals(throttle.acquire('W', "msg", WINDOW_MS, 1000L), 0L);
-        Assert.assertEquals(throttle.acquire('W', "msg", WINDOW_MS, 1001L), -1L);
-        Assert.assertEquals(throttle.acquire('W', "msg", WINDOW_MS, 1002L), -1L);
+        AtomicLong now = new AtomicLong(1000L);
+        LogThrottle throttle = throttleWith(now);
+        Assert.assertEquals(throttle.acquire('W', "msg"), 0L);
+        now.set(1001L);
+        Assert.assertEquals(throttle.acquire('W', "msg"), -1L);
+        now.set(1002L);
+        Assert.assertEquals(throttle.acquire('W', "msg"), -1L);
     }
 
     @Test
     public void newWindow_reportsSuppressedCount() {
-        LogThrottle throttle = new LogThrottle();
-        throttle.acquire('W', "msg", WINDOW_MS, 1000L);
-        throttle.acquire('W', "msg", WINDOW_MS, 1001L);
-        throttle.acquire('W', "msg", WINDOW_MS, 1002L);
-        Assert.assertEquals(throttle.acquire('W', "msg", WINDOW_MS, 1000L + WINDOW_MS), 2L);
+        AtomicLong now = new AtomicLong(1000L);
+        LogThrottle throttle = throttleWith(now);
+        throttle.acquire('W', "msg");
+        now.set(1001L);
+        throttle.acquire('W', "msg");
+        now.set(1002L);
+        throttle.acquire('W', "msg");
+        now.set(1000L + WINDOW_MS);
+        Assert.assertEquals(throttle.acquire('W', "msg"), 2L);
     }
 
     @Test
     public void differentLevel_notSuppressed() {
-        LogThrottle throttle = new LogThrottle();
-        Assert.assertEquals(throttle.acquire('W', "msg", WINDOW_MS, 1000L), 0L);
-        Assert.assertEquals(throttle.acquire('E', "msg", WINDOW_MS, 1001L), 0L);
+        AtomicLong now = new AtomicLong(1000L);
+        LogThrottle throttle = throttleWith(now);
+        Assert.assertEquals(throttle.acquire('W', "msg"), 0L);
+        now.set(1001L);
+        Assert.assertEquals(throttle.acquire('E', "msg"), 0L);
     }
 
     @Test
     public void longNumber_normalized_shortNumberKept() {
-        LogThrottle throttle = new LogThrottle();
-        Assert.assertEquals(throttle.acquire('E', "timeout at 1700000000000", WINDOW_MS, 1000L), 0L);
-        Assert.assertEquals(throttle.acquire('E', "timeout at 1800000000000", WINDOW_MS, 1001L), -1L);
-        Assert.assertEquals(throttle.acquire('E', "response code 500", WINDOW_MS, 1002L), 0L);
-        Assert.assertEquals(throttle.acquire('E', "response code 404", WINDOW_MS, 1003L), 0L);
+        AtomicLong now = new AtomicLong(1000L);
+        LogThrottle throttle = throttleWith(now);
+        Assert.assertEquals(throttle.acquire('E', "timeout at 1700000000000"), 0L);
+        now.set(1001L);
+        Assert.assertEquals(throttle.acquire('E', "timeout at 1800000000000"), -1L);
+        now.set(1002L);
+        Assert.assertEquals(throttle.acquire('E', "response code 500"), 0L);
+        now.set(1003L);
+        Assert.assertEquals(throttle.acquire('E', "response code 404"), 0L);
     }
 }

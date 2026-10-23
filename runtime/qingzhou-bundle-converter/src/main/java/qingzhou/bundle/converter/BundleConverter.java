@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import javassist.*;
 import org.osgi.framework.Constants;
 import qingzhou.api.*;
-import qingzhou.app.driver.AppFileUtil;
+import qingzhou.common.FileUtil;
 import qingzhou.app.driver.DefaultAction;
 import qingzhou.json.impl.JsonImpl;
 
@@ -37,7 +37,7 @@ public class BundleConverter {
             throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
         }
         try {
-            AppFileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
+            FileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
 
             // 生成注解文件
             if (classPool == null) {
@@ -62,11 +62,11 @@ public class BundleConverter {
             // 构建为 bundle jar
             File[] files = appTmpDir.listFiles();
             if (files != null) {
-                AppFileUtil.zipFiles(files, targetJar, true);
+                FileUtil.zipFiles(files, targetJar, true);
             }
         } finally {
             // 无论成功或异常都清理临时目录，否则随 UUID 无限累积（磁盘耗尽）
-            AppFileUtil.forceDeleteQuietly(appTmpDir);
+            FileUtil.forceDeleteQuietly(appTmpDir);
         }
     }
 
@@ -130,7 +130,7 @@ public class BundleConverter {
             throw new IllegalStateException("app-driver directory not found under: " + libDir);
         }
         for (File driverJarFile : driverJarFiles) {
-            AppFileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
+            FileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
         }
     }
 
