@@ -4,6 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -22,6 +25,7 @@ class TotpImpl implements Totp {
 
     private final Base16Coder base16Coder;
     private final Base32Coder base32Coder;
+    private final Map<String, AtomicLong> consumedWindows = new ConcurrentHashMap<>(); // key -> 已消费的最大窗口序号
 
     TotpImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
         this.base16Coder = base16Coder;
@@ -50,11 +54,23 @@ class TotpImpl implements Totp {
 
     @Override
     public boolean verifyCode(String key, String code) throws Exception {
-        return verifyCodeStep(key, code) >= 0;
+        return matchWindow(key, code) >= 0;
     }
 
     @Override
-    public long verifyCodeStep(String key, String code) throws Exception {
+    public boolean verifyCodeWithReplayGuard(String key, String code) throws Exception {
+        long window = matchWindow(key, code);
+        if (window < 0) return false;
+        AtomicLong consumed = consumedWindows.computeIfAbsent(key, k -> new AtomicLong(-1));
+        // 仅接受严格递增的窗口序号；CAS 保证并发下同一窗口只被消费一次
+        for (long max = consumed.get(); window > max; max = consumed.get()) {
+            if (consumed.compareAndSet(max, window)) return true;
+        }
+        return false;
+    }
+
+    // 命中前/当前/后一个时间窗口时返回该窗口序号，-1 表示不匹配。包级可见：测试复用
+    long matchWindow(String key, String code) throws Exception {
         if (key == null || key.isEmpty() || code == null || code.isEmpty()) return -1;
         long step = System.currentTimeMillis() / STEP_MILLIS; // 基准只取一次，否则校验途中跨窗会漏检真正的当前窗口
         if (isEqual(code, getCode(key, step))) return step;

@@ -5,9 +5,9 @@ public interface Totp {
 
     String getCode(String key) throws Exception;
 
-    // 内置容忍前后各 1 个时间窗口
+    // 无状态校验：命中 前/当前/后 一个时间窗口即通过
     boolean verifyCode(String key, String code) throws Exception;
 
-    // 命中的时间步；-1 表示不匹配。调用方据此做一次性消费，避免同一窗口内重放
-    long verifyCodeStep(String key, String code) throws Exception;
+    // 校验并消费：按 key 记录已通过的最大窗口序号，同一（或更早）窗口的口令只能使用一次（防重放）。
+    boolean verifyCodeWithReplayGuard(String key, String code) throws Exception;
 }
