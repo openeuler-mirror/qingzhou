@@ -47,7 +47,7 @@ public class LoggerImplTest {
         perTagConfigs.put("access", accessConfig);
 
         org.tinylog.configuration.Configuration.replace(TinylogBootstrap.merge(perTagConfigs));
-        TinylogBootstrap.applied = true; // 配置已由测试直接应用，init 不再重复 replace（tinylog 冻结后不可变更）
+        TinylogBootstrap.appliedTags.addAll(perTagConfigs.keySet()); // 配置已由测试直接应用，init 不再重复 replace（tinylog 冻结后不可变更）
 
         Map<String, Object> config = new HashMap<>();
         config.put("service.pid", "qingzhou-logger");

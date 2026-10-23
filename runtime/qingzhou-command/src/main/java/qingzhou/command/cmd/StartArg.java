@@ -30,11 +30,6 @@ public class StartArg extends Processor {
     }
 
     @Override
-    public String[] classpath() {
-        return new String[]{"modules/qingzhou-config.jar", "components/qingzhou-json.jar"};
-    }
-
-    @Override
     public void doCommandLine(String[] args) throws Exception {
         instanceDir = initInstance(args);
         if (instanceDir == null) return;

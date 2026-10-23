@@ -30,11 +30,6 @@ public class Init extends Processor {
     }
 
     @Override
-    public String[] classpath() {
-        return new String[]{"components/qingzhou-crypto.jar", "components/qingzhou-common.jar", "components/qingzhou-logger.jar"};
-    }
-
-    @Override
     public void doCommandLine(String[] args) throws Exception {
         instanceDir = initInstance(args);
         if (instanceDir == null) return;

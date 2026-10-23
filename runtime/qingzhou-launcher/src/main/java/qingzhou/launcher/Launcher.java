@@ -17,6 +17,9 @@ import java.util.zip.ZipFile;
 
 public class Launcher {
     private static final String ZIP_FORMAT = ".zip";
+    // 命令类会直接引用 components/modules 中的类型（如 Init 的 Crypto 字段），
+    // 类链接发生在实例化之前，这些 jar 必须与命令 jar 同处一个类加载器
+    private static final String[] COMMAND_LIBS = {"command", "components", "modules"};
 
     private static File homeFile;
 
@@ -99,10 +102,11 @@ public class Launcher {
 
     private static ClassLoader buildCommandClassLoader(File libDir) throws Exception {
         List<URL> urls = new ArrayList<>();
-        File[] commands = new File(libDir, "command").listFiles(f -> f.getName().endsWith(".jar"));
-        if (commands != null) {
-            for (File command : commands) {
-                urls.add(command.toURI().toURL());
+        for (String lib : COMMAND_LIBS) {
+            File[] jars = new File(libDir, lib).listFiles(f -> f.getName().endsWith(".jar"));
+            if (jars == null) continue;
+            for (File jar : jars) {
+                urls.add(jar.toURI().toURL());
             }
         }
         return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());

@@ -22,8 +22,10 @@ public class LoggerImpl implements Logger {
 
     private static final Set<String> activePids = ConcurrentHashMap.newKeySet();
 
+    // 非工厂 pid（如 qingzhou-logger）即单实例默认日志器
     static String parseTag(String pid) {
-        return pid.substring(pid.indexOf('~') + 1);
+        int index = pid.indexOf('~');
+        return index == -1 ? DEFAULT_INSTANCE : pid.substring(index + 1);
     }
 
     private final LogThrottle throttle = new LogThrottle();

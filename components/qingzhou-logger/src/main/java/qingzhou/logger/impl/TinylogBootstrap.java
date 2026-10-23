@@ -11,14 +11,13 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * tinylog 2.6.2 之后配置冻结不可变更，因此运行期新增的日志器配置须重启生效。
  */
 final class TinylogBootstrap {
-    private static final Set<String> appliedTags = ConcurrentHashMap.newKeySet();
-    static boolean applied; // 全局配置仅可 apply 一次，测试可直接置位跳过
+    static final Set<String> appliedTags = ConcurrentHashMap.newKeySet(); // 非空即表示全局配置已生效
 
     private TinylogBootstrap() {
     }
 
     static synchronized void apply(String tag, Map<String, Object> ownConfig, ConfigurationAdmin configAdmin) {
-        if (applied) {
+        if (!appliedTags.isEmpty()) {
             if (!appliedTags.contains(tag)) {
                 System.err.println("logger '" + tag + "' configured after tinylog initialization, restart required to take effect");
             }
@@ -26,8 +25,7 @@ final class TinylogBootstrap {
         }
         Map<String, Map<String, String>> perTagConfigs = gather(tag, ownConfig, configAdmin);
         org.tinylog.configuration.Configuration.replace(merge(perTagConfigs));
-        appliedTags.addAll(perTagConfigs.keySet());
-        applied = true; // 仅在配置真正生效后置位，避免失败后被后续激活静默跳过
+        appliedTags.addAll(perTagConfigs.keySet()); // 仅在配置真正生效后置位，避免失败后被后续激活静默跳过
     }
 
     // 收集全部日志器配置：tag -> 该日志器的字符串配置（全局项 + writer 项）
