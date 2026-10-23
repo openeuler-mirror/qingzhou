@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 import javassist.*;
 import org.osgi.framework.Constants;
 import qingzhou.api.*;
-import qingzhou.common.FileUtil;
 import qingzhou.app.driver.DefaultAction;
+import qingzhou.common.FileUtil;
 import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
@@ -101,6 +101,7 @@ public class BundleConverter {
         attributes.putValue(Constants.IMPORT_PACKAGE, "org.osgi.framework,org.osgi.service.cm," + // osgi
                 "qingzhou.api,qingzhou.api.action," +
                 "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation," +
+                "qingzhou.common," +
                 "qingzhou.registry," +
                 "qingzhou.logger," +
                 "qingzhou.json," +

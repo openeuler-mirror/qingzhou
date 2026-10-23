@@ -43,10 +43,10 @@ final class TinylogBootstrap {
         perTagConfigs.forEach((tag, config) -> config.forEach((k, v) -> {
             if (k.startsWith("writer")) {
                 int dot = k.indexOf('.');
-                String name = dot == -1 ? k : k.substring(0, dot);
-                String renamed = "writer_" + tag + name.substring("writer".length()); // 附加 tag，确保各日志器的 writer 键互不冲突
-                merged.put(renamed + k.substring(name.length()), v);
-                merged.put(renamed + ".tag", tag);
+                String writerName = dot == -1 ? k : k.substring(0, dot);
+                String writerNameForTag = "writer_" + tag + writerName.substring("writer".length()); // 附加 tag，确保各日志器的 writer 键互不冲突
+                merged.put(writerNameForTag + k.substring(writerName.length()), v);
+                merged.put(writerNameForTag + ".tag", tag);
             } else if (tag.equals(LoggerImpl.DEFAULT_LOGGER)) {
                 // 全局项无法按 tag 拆分，只认默认日志器，避免取值随遍历顺序漂移
                 merged.put(k, v);
