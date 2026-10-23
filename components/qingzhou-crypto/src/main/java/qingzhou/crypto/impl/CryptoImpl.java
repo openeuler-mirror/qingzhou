@@ -31,7 +31,7 @@ public class CryptoImpl implements Crypto {
 
     // MD5 / SHA-1 / SHA-256 等哈希值：当你在下载文件时看到的 MD5 校验码（比如 d41d8cd98f00b204e9800998ecf8427e），本质上就是 Base16（十六进制）编码。
     private final MessageDigest messageDigest = new MessageDigestImpl(base16Coder);
-    private final Totp totp = new TotpImpl(base16Coder, base32Coder);
+    private final Totp totp = new TotpImpl(base32Coder);
 
     private Path secretKeyFile;
     private String globalCipherKeyName;
