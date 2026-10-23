@@ -114,6 +114,12 @@ public class AppDriver implements BundleActivator {
         if (serviceReference != null) {
             serviceReferences.add(serviceReference);
             Object service = context.getService(serviceReference);
+            // 服务已注册但对象不可得（如组件激活失败、服务被并发注销）：立即失败，
+            // 避免把 null 包装成 Logger 交给应用，使其在调用处才以 NPE 暴露
+            if (service == null) {
+                throw new IllegalStateException("service object unavailable: " + serviceType.getName()
+                        + (name == null ? "" : "~" + name));
+            }
             if (isLoggerService) {
                 service = new AppLogger(appMeta.getApp().code, (Logger) service);
             }

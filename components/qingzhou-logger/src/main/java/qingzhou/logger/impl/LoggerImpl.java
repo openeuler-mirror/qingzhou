@@ -24,7 +24,14 @@ public class LoggerImpl implements Logger {
     // 非工厂 pid（如 qingzhou-logger）即单实例默认日志器
     static String parseLoggerName(String pid) {
         int index = pid.indexOf('~');
-        return index == -1 ? DEFAULT_LOGGER : pid.substring(index + 1);
+        String name = index == -1 ? DEFAULT_LOGGER : pid.substring(index + 1);
+        // 名称进入 tinylog 的 writer 键与 tag 值，仅允许字母、数字、下划线：
+        // 含 . 会使 writer 键无法被 tinylog 识别而整体失效，含 , @ 空白或值为 - 会使
+        // tag 路由错位，均表现为日志静默丢失，故在配置边界一次性快速失败
+        if (!name.matches("[A-Za-z0-9_]+")) {
+            throw new IllegalArgumentException("Invalid logger name: " + name + " (only letters, digits, and underscores are allowed)");
+        }
+        return name;
     }
 
     private static final Set<String> activePids = ConcurrentHashMap.newKeySet();

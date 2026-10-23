@@ -106,7 +106,16 @@ public class Register implements HttpHandler {
             EpochKeyRotatingCipher cipher = exists == null
                     ? agentDomainKeys.getDomainCipher(domainId)
                     : agentDomainKeys.getInstanceCipher(domainId, exists.getInstanceSecret());
-            byte[] requestData = cipher.decrypt(requestBody, aad);
+            byte[] requestData;
+            try {
+                requestData = cipher.decrypt(requestBody, aad);
+            } catch (Exception e) {
+                // 报文由请求方控制：密钥失配、时间窗、重放等解密失败属调用方问题，按 warn 记录并统一 400，
+                // 不以 error+栈放大不可信输入造成的日志（agent 侧同策略）
+                logger.warn("failed to decrypt registration: " + e.getMessage());
+                httpResponse.status(400);
+                return;
+            }
 
             // 已存在只续期、不覆盖：即使同域成员冒名续期也已被上面的每实例密钥解密拦截
             if (exists != null) {

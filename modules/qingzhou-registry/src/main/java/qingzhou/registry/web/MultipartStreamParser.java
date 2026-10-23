@@ -4,13 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+
+import qingzhou.common.FileUtil;
 
 class MultipartStreamParser {
     private static final int MAX_PART_HEADERS = 8192; // 单个分片的头部上限
@@ -152,7 +150,7 @@ class MultipartStreamParser {
         return pos;
     }
 
-    private int handleHeaders(byte[] data, int pos) {
+    private int handleHeaders(byte[] data, int pos) throws IOException {
         int oldLen = headerLen;
         // 只缓存头部上限所需的字节：多余正文由返回值回退给 content 处理，避免整块复制与 headerBytes 无界扩容
         int appendLen = Math.min(data.length - pos, MAX_PART_HEADERS + HEADER_DELIMITER.length - oldLen);
@@ -277,7 +275,7 @@ class MultipartStreamParser {
         }
     }
 
-    private void parsePartHeaders(String headers) {
+    private void parsePartHeaders(String headers) throws IOException {
         if (++partCount > MAX_TOTAL_PARTS) {
             throw new IllegalStateException("too many multipart parts");
         }
@@ -295,14 +293,10 @@ class MultipartStreamParser {
         if (isFileField) {
             String uploadId = UUID.randomUUID().toString();
             File uploadDir = new File(uploadBase, uploadId);
-            if (!uploadDir.mkdirs()) throw new IllegalStateException(uploadDir.getAbsolutePath());
-            restrictDirPermission(uploadDir);
+            // 上传内容可能含敏感数据：创建即收紧为 0700，避免默认 umask 下同机其它用户列举目录、经文件名泄露内容
+            FileUtil.createOwnerOnlyDir(uploadDir);
             currentTempFile = new File(uploadDir, currentFileName);
-            try {
-                fileStream = createTempFile(currentTempFile.toPath());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            fileStream = FileUtil.newOwnerOnlyFile(currentTempFile.toPath(), StandardOpenOption.CREATE_NEW);
         }
     }
 
@@ -317,25 +311,6 @@ class MultipartStreamParser {
                     || c == '/' || c == '\\' || c == '=' || c == ',';
         }
         if (invalid) throw new IllegalStateException("invalid upload file name");
-    }
-
-    // 上传内容可能含敏感数据：POSIX 平台创建即 0600，避免默认 umask 下同机其它用户可读
-    private static OutputStream createTempFile(Path path) throws IOException {
-        try {
-            return Channels.newOutputStream(Files.newByteChannel(path,
-                    EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"))));
-        } catch (UnsupportedOperationException e) { // Windows 等无 POSIX 权限模型的平台
-            return Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        }
-    }
-
-    // 上传目录同样收紧：默认 umask 下目录可被同机其它用户列举，原始文件名（如"体检报告.pdf"）随之泄露
-    private static void restrictDirPermission(File dir) {
-        try {
-            Files.setPosixFilePermissions(dir.toPath(), PosixFilePermissions.fromString("rwx------"));
-        } catch (IOException | UnsupportedOperationException ignored) { // 非 POSIX 平台保持默认权限
-        }
     }
 
     // 只认 Content-Disposition 行：其它头部出现的 name="..." 不参与字段识别

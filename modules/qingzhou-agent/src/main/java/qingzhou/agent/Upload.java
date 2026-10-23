@@ -2,7 +2,7 @@ package qingzhou.agent;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
@@ -35,6 +35,7 @@ public class Upload extends AbstractAgentHandler {
     private static final String DATA_FILE = "data";
 
     private File uploadBase;
+    private String uploadBasePath; // 上传键边界校验的基准：canonical 绝对路径，避免每次请求重复解析
 
     @Reference
     public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
@@ -50,6 +51,7 @@ public class Upload extends AbstractAgentHandler {
     public void init(Map<String, String> config) throws IOException {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
         FileUtil.mkdirs(uploadBase);
+        uploadBasePath = uploadBase.getCanonicalPath();
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
     }
 
@@ -84,9 +86,12 @@ public class Upload extends AbstractAgentHandler {
         try {
             // 超限由调用方数据量触发：按 IllegalArgumentException 归为 400，不计入服务端故障
             if (offset + requestData.length > MAX_UPLOAD_BYTES) {
-                throw new IllegalArgumentException("upload exceeds size limit: " + uploadId);
+                throw new IllegalArgumentException("upload exceeds size limit");
             }
-            Files.write(data.toPath(), requestData, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            // 分片追加：O_APPEND 下每次写入对文件偏移原子，同键并发分片不会互相覆盖；创建即收紧为 0600
+            try (OutputStream out = FileUtil.newOwnerOnlyFile(data.toPath(), StandardOpenOption.APPEND)) {
+                out.write(requestData);
+            }
         } catch (Throwable e) {
             // 中断即丢弃本次上传，避免残留半截文件
             FileUtil.forceDeleteQuietly(dir);
@@ -96,17 +101,23 @@ public class Upload extends AbstractAgentHandler {
     }
 
     /**
-     * 上传键即目录名：只接受单段名字，不接受任何路径形式，杜绝越界写入。
-     * 只定位已有上传，不创建目录。
+     * 上传键即目录名：以 canonical 包含关系界定边界，".."、"/"、"."、盘符等路径形态一并拒外，
+     * 优于逐字符黑名单。只定位已有上传，不创建目录。
      */
     File uploadDir(String uploadId) {
-        if (uploadId.isEmpty() || uploadId.contains("..") || uploadId.indexOf('/') >= 0
-                || uploadId.indexOf('\\') >= 0 || uploadId.indexOf(':') >= 0) {
-            throw new IllegalArgumentException("illegal upload id: " + uploadId);
+        if (uploadId.isEmpty()) {
+            throw new IllegalArgumentException("illegal upload id");
         }
         File dir = new File(uploadBase, uploadId);
+        try {
+            if (!dir.getCanonicalPath().startsWith(uploadBasePath + File.separator)) {
+                throw new IllegalArgumentException("illegal upload id");
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("illegal upload id", e);
+        }
         if (!dir.isDirectory()) {
-            throw new IllegalArgumentException("unknown upload id: " + uploadId);
+            throw new IllegalArgumentException("unknown upload id");
         }
         return dir;
     }
@@ -135,12 +146,8 @@ public class Upload extends AbstractAgentHandler {
         }
     }
 
-    private File createUploadDir(String uploadId) {
-        File dir = new File(uploadBase, uploadId);
-        if (!dir.mkdirs()) {
-            throw new IllegalStateException("failed to create upload dir: " + dir.getAbsolutePath());
-        }
-        return dir;
+    private File createUploadDir(String uploadId) throws IOException {
+        return FileUtil.createOwnerOnlyDir(new File(uploadBase, uploadId)); // 上传内容可能含敏感数据：目录收紧为 0700
     }
 
     private static File[] childrenOf(File dir) {

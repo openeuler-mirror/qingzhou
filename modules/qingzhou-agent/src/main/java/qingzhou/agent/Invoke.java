@@ -51,7 +51,7 @@ public class Invoke extends AbstractAgentHandler {
         RequestImpl request = json.fromJson(new String(requestData, StandardCharsets.UTF_8), RequestImpl.class);
         AppStubLocal appStub = registry.getLocalApp(request.getApp());
         if (appStub == null) {
-            throw new IllegalArgumentException("app not found: " + request.getApp());
+            throw new IllegalArgumentException("app not found"); // 不回显 app 编码：消息经 AbstractAgentHandler 入日志
         }
 
         List<File> uploadFiles = new ArrayList<>();

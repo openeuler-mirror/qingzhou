@@ -29,24 +29,31 @@ public class LoggerImplTest {
     private static final PrintStream OUTPUT_STREAM = new PrintStream(OUTPUT, true);
     private static final ByteArrayOutputStream ACCESS_OUTPUT = new ByteArrayOutputStream();
     private static final PrintStream ACCESS_OUTPUT_STREAM = new PrintStream(ACCESS_OUTPUT, true);
+    private static final ByteArrayOutputStream APP_DEFAULT_OUTPUT = new ByteArrayOutputStream();
+    private static final PrintStream APP_DEFAULT_OUTPUT_STREAM = new PrintStream(APP_DEFAULT_OUTPUT, true);
     private static final String CUSTOM_WRITER = LoggerImplTest.class.getName() + "$BufferWriter";
     private static final String ACCESS_WRITER = LoggerImplTest.class.getName() + "$AccessBufferWriter";
+    private static final String APP_DEFAULT_WRITER = LoggerImplTest.class.getName() + "$AppDefaultBufferWriter";
 
     /**
      * 一次性应用「默认 + access」合并配置（模拟生产中多日志器共存），并等待启动 banner 写入后清空缓冲。
      */
     @BeforeClass
     public static void setUp() throws Exception {
-        // 测试自持 tinylog 夹具：等价于 TinylogBootstrap 对「默认 + access」的合并产物，
-        // 经 tinylog 公共配置入口注入，不触碰生产引导内部状态（tinylog 冻结后不可变更）
+        // 测试自持 tinylog 夹具：等价于 TinylogBootstrap 对「默认 + access + app_default」的合并产物，
+        // 经 tinylog 公共配置入口注入，不触碰生产引导内部状态（tinylog 冻结后不可变更）。
+        // writer 键格式与生产编码一致：writer_<名称>_<writer 后缀>，名称中的 _ 翻倍转义
+        // （app_default → app__default），与 qingzhou.properties 中的真实命名保持一致
         String defaultTag = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
         Map<String, String> tinylogConfig = new HashMap<>();
         tinylogConfig.put("autoshutdown", "false");
         tinylogConfig.put("level", "debug");
-        tinylogConfig.put("writer_" + defaultTag, CUSTOM_WRITER);
-        tinylogConfig.put("writer_" + defaultTag + ".tag", defaultTag);
-        tinylogConfig.put("writer_access", ACCESS_WRITER);
-        tinylogConfig.put("writer_access.tag", "access");
+        tinylogConfig.put("writer_" + defaultTag + "_", CUSTOM_WRITER);
+        tinylogConfig.put("writer_" + defaultTag + "_.tag", defaultTag);
+        tinylogConfig.put("writer_access_", ACCESS_WRITER);
+        tinylogConfig.put("writer_access_.tag", "access");
+        tinylogConfig.put("writer_app__default_", APP_DEFAULT_WRITER);
+        tinylogConfig.put("writer_app__default_.tag", "app_default");
         org.tinylog.configuration.Configuration.replace(tinylogConfig);
 
         Map<String, Object> config = new HashMap<>();
@@ -57,7 +64,8 @@ public class LoggerImplTest {
     }
 
     /**
-     * 多日志器路由：默认日志进默认 writer，access 日志进 access writer，互不串流。
+     * 多日志器路由：默认、access、app_default 各自只进各自 writer，互不串流。
+     * app_default 名称含下划线（与生产 qingzhou.properties 一致），覆盖 writer 键转义编码。
      */
     @Test
     public void multiLogger_namedLogger_routesToOwnWriter() throws Exception {
@@ -66,15 +74,42 @@ public class LoggerImplTest {
         LoggerImpl accessLogger = new LoggerImpl();
         accessLogger.init(accessProps);
 
+        Map<String, Object> appDefaultProps = new HashMap<>();
+        appDefaultProps.put("service.pid", "qingzhou-logger~app_default");
+        LoggerImpl appDefaultLogger = new LoggerImpl();
+        appDefaultLogger.init(appDefaultProps);
+
+        LoggerImpl defaultLogger = initDefaultLogger();
         clearOutput();
         clearAccessOutput();
-        new LoggerImpl().info("default-message");
+        clearAppDefaultOutput();
+        defaultLogger.info("default-message");
         accessLogger.info("access-message");
+        appDefaultLogger.info("underscore-message");
 
         awaitUntil(() -> outputText().contains("default-message"), "default log was not written");
         awaitUntil(() -> accessOutputText().contains("access-message"), "access log was not written");
+        awaitUntil(() -> appDefaultOutputText().contains("underscore-message"), "app_default log was not written");
         Assert.assertFalse(outputText().contains("access-message"), "access log leaked into default writer");
+        Assert.assertFalse(outputText().contains("underscore-message"), "app_default log leaked into default writer");
         Assert.assertFalse(accessOutputText().contains("default-message"), "default log leaked into access writer");
+        Assert.assertFalse(accessOutputText().contains("underscore-message"), "app_default log leaked into access writer");
+        Assert.assertFalse(appDefaultOutputText().contains("default-message"), "default log leaked into app_default writer");
+        Assert.assertFalse(appDefaultOutputText().contains("access-message"), "access log leaked into app_default writer");
+    }
+
+    /**
+     * 非法日志器名（如含 . ）应在激活时快速失败，避免 writer 键失效导致日志静默丢失。
+     */
+    @Test
+    public void init_illegalLoggerName_failsFast() throws Exception {
+        Map<String, Object> config = new HashMap<>();
+        config.put("service.pid", "qingzhou-logger~app.default");
+        try {
+            new LoggerImpl().init(config);
+            Assert.fail("非法日志器名应在激活时失败");
+        } catch (IllegalArgumentException expected) {
+        }
     }
 
     /**
@@ -146,8 +181,10 @@ public class LoggerImplTest {
      */
     @Test
     public void formattedOutput_infoMessage_matchesTemplate() throws Exception {
+        LoggerImpl logger = initDefaultLogger();
+        awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
         clearOutput();
-        LoggerImpl logger = new LoggerImpl();
+
         logger.info("format-message");
 
         awaitUntil(() -> outputText().contains("INFO | format-message"), "formatted message was not written");
@@ -164,8 +201,8 @@ public class LoggerImplTest {
      * debug 级别下，debug/info/warn/error 四个开关均应处于启用状态。
      */
     @Test
-    public void debugLevel_switchChecks_allLevelsEnabled() {
-        LoggerImpl logger = new LoggerImpl();
+    public void debugLevel_switchChecks_allLevelsEnabled() throws Exception {
+        LoggerImpl logger = initDefaultLogger();
         Assert.assertTrue(logger.isDebugEnabled(), "debug should be enabled");
         Assert.assertTrue(logger.isInfoEnabled(), "info should be enabled");
         Assert.assertTrue(logger.isWarnEnabled(), "warn should be enabled");
@@ -177,8 +214,7 @@ public class LoggerImplTest {
      */
     @Test
     public void warn_sameMessageWithinWindow_logsOnce() throws Exception {
-        clearOutput();
-        LoggerImpl logger = new LoggerImpl();
+        LoggerImpl logger = initDefaultLogger();
         for (int i = 0; i < 3; i++) {
             logger.warn("dedup-message");
         }
@@ -224,11 +260,23 @@ public class LoggerImplTest {
     }
 
     /**
+     * 经公开 init 入口激活的默认日志器实例（pid qingzhou-logger）：tinylog 与 throttle
+     * 仅在 init 之后可用，直接 new 出来调用会 NPE。
+     */
+    private static LoggerImpl initDefaultLogger() throws Exception {
+        LoggerImpl logger = new LoggerImpl();
+        Map<String, Object> config = new HashMap<>();
+        config.put("service.pid", "qingzhou-logger");
+        logger.init(config);
+        return logger;
+    }
+
+    /**
      * 验证指定级别普通日志按配置模板输出。
      */
     private static void assertLogEntry(String level, String message) throws Exception {
         clearOutput();
-        LoggerImpl logger = new LoggerImpl();
+        LoggerImpl logger = initDefaultLogger();
         invoke(logger, level, message);
         String expected = level.toUpperCase() + " | " + message;
         awaitUntil(() -> outputText().contains(expected), level + " log was not written");
@@ -239,7 +287,7 @@ public class LoggerImplTest {
      */
     private static void assertThrowableLog(String level, String message) throws Exception {
         clearOutput();
-        LoggerImpl logger = new LoggerImpl();
+        LoggerImpl logger = initDefaultLogger();
         RuntimeException exception = new RuntimeException(message + "-stack-detail");
         invoke(logger, level, message, exception);
 
@@ -294,6 +342,12 @@ public class LoggerImplTest {
         }
     }
 
+    private static void clearAppDefaultOutput() {
+        synchronized (APP_DEFAULT_OUTPUT) {
+            APP_DEFAULT_OUTPUT.reset();
+        }
+    }
+
     private static String outputText() {
         synchronized (OUTPUT) {
             return new String(OUTPUT.toByteArray(), StandardCharsets.UTF_8);
@@ -303,6 +357,12 @@ public class LoggerImplTest {
     private static String accessOutputText() {
         synchronized (ACCESS_OUTPUT) {
             return new String(ACCESS_OUTPUT.toByteArray(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private static String appDefaultOutputText() {
+        synchronized (APP_DEFAULT_OUTPUT) {
+            return new String(APP_DEFAULT_OUTPUT.toByteArray(), StandardCharsets.UTF_8);
         }
     }
 
@@ -369,6 +429,15 @@ public class LoggerImplTest {
     public static final class AccessBufferWriter extends BufferWriter {
         public AccessBufferWriter(Map<String, String> configuration) {
             super(ACCESS_OUTPUT, ACCESS_OUTPUT_STREAM);
+        }
+    }
+
+    /**
+     * app_default（名称含下划线）的测试 writer，验证转义后的 writer 键仍能正确路由。
+     */
+    public static final class AppDefaultBufferWriter extends BufferWriter {
+        public AppDefaultBufferWriter(Map<String, String> configuration) {
+            super(APP_DEFAULT_OUTPUT, APP_DEFAULT_OUTPUT_STREAM);
         }
     }
 }

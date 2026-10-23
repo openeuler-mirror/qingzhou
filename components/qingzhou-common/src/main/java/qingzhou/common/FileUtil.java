@@ -1,15 +1,18 @@
 package qingzhou.common;
 
 import java.io.*;
+import java.nio.channels.Channels;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -302,6 +305,39 @@ public class FileUtil {
         } catch (IOException e) {
             warning.accept("failed to tighten file permission to rw-------: " + file + ", " + e.getMessage());
         }
+    }
+
+    /**
+     * 敏感文件（上传内容等）：POSIX 平台创建即 rw-------，避免默认 umask 下同机其它用户可读；
+     * 非 POSIX 平台无权限模型，保持默认权限交由文件系统 ACL 控制。
+     *
+     * @param extraOptions 追加的打开选项，如 {@link StandardOpenOption#CREATE_NEW}、{@link StandardOpenOption#APPEND}
+     */
+    public static OutputStream newOwnerOnlyFile(Path path, StandardOpenOption... extraOptions) throws IOException {
+        EnumSet<StandardOpenOption> options = EnumSet.of(StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        for (StandardOpenOption extra : extraOptions) {
+            if (extra == StandardOpenOption.CREATE_NEW) options.remove(StandardOpenOption.CREATE); // 二者并存语义冲突
+            options.add(extra);
+        }
+        try {
+            return Channels.newOutputStream(Files.newByteChannel(path, options,
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"))));
+        } catch (UnsupportedOperationException e) { // Windows 等无 POSIX 权限模型的平台
+            return Files.newOutputStream(path, options.toArray(new StandardOpenOption[0]));
+        }
+    }
+
+    /**
+     * 上传/临时目录：POSIX 平台收紧为 rwx------，默认 umask 下目录可被同机其它用户列举，
+     * 其中的原始文件名（如"体检报告.pdf"）随之泄露。
+     */
+    public static File createOwnerOnlyDir(File dir) throws IOException {
+        mkdirs(dir);
+        try {
+            Files.setPosixFilePermissions(dir.toPath(), PosixFilePermissions.fromString("rwx------"));
+        } catch (UnsupportedOperationException ignored) { // 非 POSIX 平台无权限模型
+        }
+        return dir;
     }
 
     // 删除 文件 或 文件夹，若失败也不抛异常
