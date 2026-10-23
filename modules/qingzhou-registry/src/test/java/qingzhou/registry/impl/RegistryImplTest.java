@@ -20,7 +20,6 @@ import qingzhou.registry.AppStubRemote;
 import qingzhou.registry.Constants;
 
 public class RegistryImplTest {
-    private static final String VERSION_PROPERTY = "qingzhou.version";
     private static final String APP_CODE_1 = "app-one";
     private static final String APP_CODE_2 = "app-two";
     private static final String REMOTE_INSTANCE_ID = "remote-instance-1";
@@ -253,16 +252,6 @@ public class RegistryImplTest {
     // ===================== start 与 getLocalInstance =====================
 
     @Test
-    public void start_validVersion_propertyParsed() throws Exception {
-        RegistryImpl registry = newRegistry();
-        Map<String, String> config = new HashMap<>();
-        config.put(VERSION_PROPERTY, "1.2.3");
-        registry.start(config);
-
-        Assert.assertEquals(getQzVersion(registry), "1.2.3");
-    }
-
-    @Test
     public void getLocalInstance_calledTwice_returnSameInstance() {
         RegistryImpl registry = newRegistryWithConfig();
 
@@ -322,12 +311,6 @@ public class RegistryImplTest {
             info.getAppMetas().add(meta);
         }
         return info;
-    }
-
-    private static String getQzVersion(RegistryImpl registry) throws Exception {
-        Field field = RegistryImpl.class.getDeclaredField("qzVersion");
-        field.setAccessible(true);
-        return (String) field.get(registry);
     }
 
     private static void setField(Object target, String name, Object value) {

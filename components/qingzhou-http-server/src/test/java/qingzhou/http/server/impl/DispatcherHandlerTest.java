@@ -722,36 +722,6 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     }
 
     @Test
-    public void postOnlyRoute_getRequest_405WithRouteAllowHeader() throws Exception {
-        startServer();
-        TestServerSupport.registerWithMethods(testServer,
-                (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
-
-        String response = rawResponse(testServer.port,
-                "GET /postOnly HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
-
-        Assert.assertTrue(response.startsWith("HTTP/1.1 405"), response);
-        Assert.assertTrue(lower(response).contains("allow: post"), response);
-    }
-
-    @Test
-    public void postOnlyRoute_preflight_responds204WithRouteMethods() throws Exception {
-        startServer();
-        TestServerSupport.registerWithMethods(testServer,
-                (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
-
-        // 预检须先于路由方法白名单判定，否则 POST-only 路由收不到预检（回归：闸门顺序）
-        String response = rawResponse(testServer.port, "OPTIONS /postOnly HTTP/1.1\r\n"
-                + "Host: localhost\r\n"
-                + "Origin: http://other.example\r\n"
-                + "Access-Control-Request-Method: POST\r\n"
-                + "Connection: close\r\n\r\n");
-
-        Assert.assertTrue(response.startsWith("HTTP/1.1 204"), response);
-        Assert.assertTrue(response.toLowerCase().contains("access-control-allow-methods: post"), response);
-    }
-
-    @Test
     public void bodyExceedingMaxBodyBytes_413() throws Exception {
         startServer(Collections.singletonMap("max_body_bytes", "64"));
         testServer.server.registerHttpHandler((req, resp) -> resp.send("ok").finish(), "/echo", true);

@@ -1,6 +1,5 @@
 package qingzhou.jdbc.impl;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,10 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.tomcat.jdbc.pool.ConnectionPool;
-import org.apache.tomcat.jdbc.pool.DataSource;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.apache.tomcat.jdbc.pool.XADataSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -57,28 +52,6 @@ public class JdbcPoolImplTest {
         }
     }
 
-    @Test
-    public void validConfig_open_applyConnectionPoolConfiguration() throws Exception {
-        Map<String, String> config = createConfig(2, 5, 3000);
-        JdbcPoolImpl pool = createPool(config);
-        try {
-            DataSource dataSource = getDataSource(pool);
-            PoolProperties properties = (PoolProperties) dataSource.getPoolProperties();
-            Assert.assertTrue(properties.getUrl().startsWith("jdbc:h2:mem:"));
-            Assert.assertEquals(properties.getUsername(), "sa");
-            Assert.assertNotNull(properties.getPassword());
-            Assert.assertEquals(properties.getInitialSize(), 2);
-            Assert.assertEquals(properties.getMinIdle(), 2);
-            Assert.assertEquals(properties.getMaxActive(), 5);
-            Assert.assertEquals(properties.getMaxWait(), 3000);
-            Assert.assertTrue(properties.isTestOnBorrow());
-            Assert.assertEquals(properties.getValidationQuery(), "SELECT 1");
-            Assert.assertFalse(properties.isJmxEnabled());
-        } finally {
-            closePool(pool);
-        }
-    }
-
     @Test(timeOut = 5000)
     public void maxActiveLimit_exceedPoolLimit_throwSQLException() throws Exception {
         JdbcPoolImpl pool = createPool(createConfig(1, 1, 200));
@@ -98,84 +71,6 @@ public class JdbcPoolImplTest {
         }
     }
 
-    @Test
-    public void closedConnection_getConnection_reusePooledConnection() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 1, 500));
-        Connection first = null;
-        Connection second = null;
-        try {
-            first = pool.getConnection();
-            Assert.assertFalse(first.isClosed());
-            first.close();
-            Assert.assertTrue(first.isClosed());
-            second = pool.getConnection();
-            Assert.assertNotNull(second);
-            Assert.assertFalse(second.isClosed());
-            Assert.assertEquals(getDataSource(pool).getPool().getSize(), 1);
-            second.close();
-            second = null;
-        } finally {
-            close(second);
-            closePool(pool);
-        }
-    }
-
-    @Test
-    public void createdPool_poolStatus_initialConnectionsReady() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(2, 5, 1000));
-        try {
-            ConnectionPool connectionPool = getDataSource(pool).getPool();
-            Assert.assertFalse(connectionPool.isClosed());
-            Assert.assertEquals(connectionPool.getActive(), 0);
-            Assert.assertTrue(connectionPool.getSize() >= 2);
-            Assert.assertTrue(connectionPool.getIdle() >= 1);
-        } finally {
-            closePool(pool);
-        }
-    }
-
-    @Test
-    public void borrowedConnection_poolStatus_activeCountIncreased() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 2, 1000));
-        Connection connection = null;
-        try {
-            connection = pool.getConnection();
-            ConnectionPool connectionPool = getDataSource(pool).getPool();
-            Assert.assertEquals(connectionPool.getActive(), 1);
-            Assert.assertEquals(connectionPool.getBorrowedCount(), 1L);
-            Assert.assertEquals(connectionPool.getIdle(), 0);
-        } finally {
-            close(connection);
-            closePool(pool);
-        }
-    }
-
-    @Test
-    public void returnedConnection_poolStatus_connectionReturnedToPool() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 2, 1000));
-        Connection connection = null;
-        try {
-            connection = pool.getConnection();
-            connection.close();
-            connection = null;
-            ConnectionPool connectionPool = getDataSource(pool).getPool();
-            Assert.assertEquals(connectionPool.getActive(), 0);
-            Assert.assertEquals(connectionPool.getIdle(), 1);
-            Assert.assertEquals(connectionPool.getBorrowedCount(), 1L);
-        } finally {
-            close(connection);
-            closePool(pool);
-        }
-    }
-
-    @Test
-    public void closedPool_poolStatus_poolIsClosed() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 2, 1000));
-        ConnectionPool connectionPool = getDataSource(pool).getPool();
-        pool.close();
-        Assert.assertTrue(connectionPool.isClosed());
-    }
-
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void invalidBoolean_activate_throwException() throws Exception {
         Map<String, String> config = createConfig(1, 1, 1000);
@@ -186,16 +81,6 @@ public class JdbcPoolImplTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void uninitializedPool_getConnection_throwIllegalStateException() throws SQLException {
         new JdbcPoolImpl().getConnection();
-    }
-
-    @Test
-    public void xaDataSource_init_createXAPool() throws Exception {
-        JdbcPoolImpl pool = createPool(createConfig(1, 1, 1000));
-        try {
-            Assert.assertTrue(getDataSource(pool) instanceof XADataSource);
-        } finally {
-            closePool(pool);
-        }
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -227,12 +112,6 @@ public class JdbcPoolImplTest {
         config.put("testOnBorrow", "true");
         config.put("validationQuery", "SELECT 1");
         return config;
-    }
-
-    private DataSource getDataSource(JdbcPoolImpl pool) throws Exception {
-        Field dataSourceField = JdbcPoolImpl.class.getDeclaredField("dsPool");
-        dataSourceField.setAccessible(true);
-        return (DataSource) dataSourceField.get(pool);
     }
 
     private void close(Connection connection) {

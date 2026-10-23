@@ -36,7 +36,7 @@ public class LoggerImplTest {
      * 一次性应用「默认 + access」合并配置（模拟生产中多日志器共存），并等待启动 banner 写入后清空缓冲。
      */
     @BeforeClass
-    public static void setUp() throws InterruptedException {
+    public static void setUp() throws Exception {
         // 测试自持 tinylog 夹具：等价于 TinylogBootstrap 对「默认 + access」的合并产物，
         // 经 tinylog 公共配置入口注入，不触碰生产引导内部状态（tinylog 冻结后不可变更）
         String defaultTag = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
