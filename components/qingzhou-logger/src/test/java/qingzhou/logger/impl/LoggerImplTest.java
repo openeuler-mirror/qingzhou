@@ -37,17 +37,17 @@ public class LoggerImplTest {
      */
     @BeforeClass
     public static void setUp() throws InterruptedException {
-        Map<String, Map<String, String>> perTagConfigs = new HashMap<>();
-        Map<String, String> defaultConfig = new HashMap<>();
-        defaultConfig.put("level", "debug");
-        defaultConfig.put("writer", CUSTOM_WRITER);
-        perTagConfigs.put(qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE, defaultConfig);
-        Map<String, String> accessConfig = new HashMap<>();
-        accessConfig.put("writer", ACCESS_WRITER);
-        perTagConfigs.put("access", accessConfig);
-
-        org.tinylog.configuration.Configuration.replace(TinylogBootstrap.merge(perTagConfigs));
-        TinylogBootstrap.appliedTags.addAll(perTagConfigs.keySet()); // 配置已由测试直接应用，init 不再重复 replace（tinylog 冻结后不可变更）
+        // 测试自持 tinylog 夹具：等价于 TinylogBootstrap 对「默认 + access」的合并产物，
+        // 经 tinylog 公共配置入口注入，不触碰生产引导内部状态（tinylog 冻结后不可变更）
+        String defaultTag = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
+        Map<String, String> tinylogConfig = new HashMap<>();
+        tinylogConfig.put("autoshutdown", "false");
+        tinylogConfig.put("level", "debug");
+        tinylogConfig.put("writer_" + defaultTag, CUSTOM_WRITER);
+        tinylogConfig.put("writer_" + defaultTag + ".tag", defaultTag);
+        tinylogConfig.put("writer_access", ACCESS_WRITER);
+        tinylogConfig.put("writer_access.tag", "access");
+        org.tinylog.configuration.Configuration.replace(tinylogConfig);
 
         Map<String, Object> config = new HashMap<>();
         config.put("service.pid", "qingzhou-logger");
@@ -190,6 +190,37 @@ public class LoggerImplTest {
             if (line.contains("WARN | dedup-message")) count++;
         }
         Assert.assertEquals(count, 1, "same message should be logged once within the dedup window");
+    }
+
+    /**
+     * 限流窗口（经外部配置 throttle_window_ms 调小）翻页后应重新放行，并带出上一窗口被抑制的条数。
+     */
+    @Test
+    public void warn_afterThrottleWindow_logsAgainWithSuppressedCount() throws Exception {
+        Map<String, Object> config = new HashMap<>();
+        config.put("service.pid", "qingzhou-logger");
+        config.put("throttle_window_ms", "200");
+        LoggerImpl logger = new LoggerImpl();
+        logger.init(config);
+        awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
+        clearOutput();
+
+        logger.warn("throttle-rollover-message");
+        logger.warn("throttle-rollover-message"); // 窗口内第二条：仅计数
+        awaitUntil(() -> countLines("throttle-rollover-message") == 1, "窗口内重复消息应被抑制为一条");
+
+        Thread.sleep(300); // 跨过限流窗口
+        logger.warn("throttle-rollover-message");
+        awaitUntil(() -> outputText().contains("throttle-rollover-message (suppressed 1 similar)"),
+                "窗口翻页后应重新放行并带出抑制条数");
+    }
+
+    private static int countLines(String fragment) {
+        int count = 0;
+        for (String line : outputText().split("\\r?\\n")) {
+            if (line.contains(fragment)) count++;
+        }
+        return count;
     }
 
     /**

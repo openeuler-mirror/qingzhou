@@ -8,7 +8,6 @@ import java.util.List;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.FileUtil;
-import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -32,11 +31,6 @@ public class Invoke extends AbstractAgentHandler {
     @Reference
     public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
         this.agentDomainKeys = agentDomainKeys;
-    }
-
-    @Reference
-    public void setCrypto(Crypto crypto) {
-        this.crypto = crypto;
     }
 
     @Reference

@@ -5,7 +5,6 @@ import java.util.*;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
-import qingzhou.crypto.Crypto;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
@@ -30,8 +29,6 @@ public class Register implements HttpHandler {
 
     @Reference
     private Logger logger;
-    @Reference
-    private Crypto crypto;
     @Reference
     private Registry registry;
     @Reference
@@ -90,8 +87,7 @@ public class Register implements HttpHandler {
         // AAD 绑定，防报文挪域
         String domainId = httpRequest.getParameter(qingzhou.registry.Constants.REMOTE_PARAMETER_DOMAIN_ID);
         String instanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
-        byte[] agentDomainKey;
-        if (domainId == null || instanceId == null || (agentDomainKey = agentDomainKeys.getAgentDomainKey(domainId)) == null) {
+        if (domainId == null || instanceId == null || !agentDomainKeys.getAllAgentDomains().contains(domainId)) {
             logger.warn("illegal agent-domain: " + forLog(domainId));
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
@@ -104,12 +100,15 @@ public class Register implements HttpHandler {
 
         try {
             byte[] aad = agentDomainKeys.toRegistryAad(instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
-            EpochKeyRotatingCipher cipher = crypto.getEpochKeyRotatingCipher(agentDomainKey);
-            // 解密成功即认证通过，心跳（绝大多数请求）无需再解析报文
+            // 已注册实例的续期用每实例密钥解密：仅真实实例可刷新自身，同域其他 agent 无法冒名续期；
+            // 新实例首注册用域密钥解密（首注册时中心尚无该实例密钥，必须靠域密钥才能取得它）
+            InstanceInfo exists = registry.getRemoteInstance(instanceId);
+            EpochKeyRotatingCipher cipher = exists == null
+                    ? agentDomainKeys.getDomainCipher(domainId)
+                    : agentDomainKeys.getInstanceCipher(domainId, exists.getInstanceSecret());
             byte[] requestData = cipher.decrypt(requestBody, aad);
 
-            // 已存在只续期、不覆盖：域内共享密钥，解密成功仅证明来自本域，不足以据此改写他人实例记录
-            InstanceInfo exists = registry.getRemoteInstance(instanceId);
+            // 已存在只续期、不覆盖：即使同域成员冒名续期也已被上面的每实例密钥解密拦截
             if (exists != null) {
                 exists.refreshTime();
                 httpResponse.status(304);

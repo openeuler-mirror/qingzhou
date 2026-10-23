@@ -14,7 +14,6 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.FileUtil;
 import qingzhou.common.TempFiles;
-import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
@@ -40,11 +39,6 @@ public class Upload extends AbstractAgentHandler {
     @Reference
     public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
         this.agentDomainKeys = agentDomainKeys;
-    }
-
-    @Reference
-    public void setCrypto(Crypto crypto) {
-        this.crypto = crypto;
     }
 
     @Reference

@@ -10,7 +10,9 @@ public class InstanceInfo {
     private transient String domain;
 
     private String id;
-    // 每实例随机密钥：首次注册时由 agent 上报，作为 center→agent 方向的认证因子；随报文收发但不对外展示
+    // 每实例随机密钥：agent 生成、仅随首次注册报文上报一次（已登记后心跳不再携带）。
+    // 用于派生每实例加密密钥（见 AgentDomainKeys#getInstanceCipher），而非仅作 AAD 绑定；
+    // 随注册报文序列化，但不得出现在注册之外的任何 JSON 输出中
     private String instanceSecret;
     // agent 自报的对外可达地址：仅用于反代/NAT 部署，registry 未显式开启信任时忽略
     private String advertisedHost;

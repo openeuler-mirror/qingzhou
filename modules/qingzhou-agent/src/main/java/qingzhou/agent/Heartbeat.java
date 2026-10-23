@@ -48,6 +48,10 @@ public class Heartbeat {
     private String advertisedHost;
     private Timer timer;
     private List<String> storedFingerprints;
+    // 是否已被中心登记（当前 instanceId + secret 已上报且中心返回 200/304）
+    private boolean registered;
+    // 已注册后的最小心跳载荷：中心对已存在实例仅续期(304)、不解析 body，故无需携带 InstanceInfo/instanceSecret
+    private static final byte[] HEARTBEAT_BODY = "{}".getBytes(StandardCharsets.UTF_8);
 
     private static volatile InstanceInfo thisInstanceInfo;
 
@@ -126,7 +130,8 @@ public class Heartbeat {
         InstanceInfo instanceInfo = new InstanceInfo();
         // 重启 ID 变化，依赖 Registry 的过期清理
         instanceInfo.setId(UUID.randomUUID().toString());
-        // 每实例独立密钥：与实例同生命周期，仅存内存并随注册报文上报，用于 center→agent 方向的身份认证
+        // 每实例独立密钥：与实例同生命周期，仅存内存并随首次注册上报；用于派生每实例密钥
+        // （center→agent 报文加密 + 心跳续期认证），仅真实实例可凭它刷新自身
         instanceInfo.setInstanceSecret(UUID.randomUUID().toString());
         instanceInfo.setAdvertisedHost(advertisedHost);
         // 实例版本
@@ -139,15 +144,20 @@ public class Heartbeat {
         instanceInfo.getAppMetas().addAll(appMetas);
 
         thisInstanceInfo = instanceInfo;
+        registered = false; // 新 id + 新 secret，需重新完整注册
 
         storedFingerprints = fingerprints(appMetas); // 与 appChanged 同源构建，保证比对口径一致
     }
 
     private void send() {
         try {
-            EpochKeyRotatingCipher cipher = localAgentDomainKey.getLocalAgentCipher();
             InstanceInfo instanceInfo = currentInstanceInfo();
-            byte[] data = json.toJson(instanceInfo).getBytes(StandardCharsets.UTF_8);
+            // 已登记后：续期报文改用每实例密钥加密（仅真实实例可刷新自身），且不再序列化 InstanceInfo
+            // （含 instanceSecret）——既缩小 secret 暴露窗口，又防止同域其他 agent 冒名续期
+            byte[] data = registered ? HEARTBEAT_BODY : json.toJson(instanceInfo).getBytes(StandardCharsets.UTF_8);
+            EpochKeyRotatingCipher cipher = registered
+                    ? localAgentDomainKey.getInstanceCipher(instanceInfo.getInstanceSecret())
+                    : localAgentDomainKey.getLocalAgentCipher();
             byte[] aad = agentDomainKeys.toRegistryAad(instanceInfo.getId(), qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             byte[] encrypted = cipher.encrypt(data, aad);
             String url = registerUrl + "?"
@@ -155,12 +165,22 @@ public class Heartbeat {
                     + "&" + Constants.REMOTE_PARAMETER_INSTANCE_ID + "=" + encode(instanceInfo.getId());
             Response response = httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
 
-            if (response.getStatus() == 304) return;
+            if (response.getStatus() == 304) {
+                registered = true;
+                return;
+            }
 
             if (response.getStatus() == 200) {
-                logger.info(instanceInfo.getAppMetas().size() + " apps registered");
+                if (registered) { // 发的最小载荷却被当新实例登记（中心重启）：登记信息不完整，需重发完整信息
+                    logger.warn("unexpected 200 on minimal heartbeat, will resend full registration");
+                    registered = false;
+                } else {
+                    logger.info(instanceInfo.getAppMetas().size() + " apps registered");
+                    registered = true;
+                }
             } else {
                 logger.error("response code error [ " + response.getStatus() + " ] : " + registerUrl);
+                registered = false;
             }
         } catch (ConnectException e) {
             logger.error("failed to connect to the URL: " + registerUrl + ", msg: " + e.getMessage());

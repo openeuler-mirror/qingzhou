@@ -19,6 +19,7 @@ import qingzhou.logger.Logger;
 @Component(configurationPid = "qingzhou-logger", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class LoggerImpl implements Logger {
     static final String DEFAULT_LOGGER = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
+    private static final long DEFAULT_THROTTLE_WINDOW_MS = 30_000L; // 同一失败消息的聚合窗口默认值
 
     // 非工厂 pid（如 qingzhou-logger）即单实例默认日志器
     static String parseLoggerName(String pid) {
@@ -29,7 +30,7 @@ public class LoggerImpl implements Logger {
     private static final Set<String> activePids = ConcurrentHashMap.newKeySet();
 
     private org.tinylog.TaggedLogger tinylog;
-    private final LogThrottle throttle = new LogThrottle();
+    private LogThrottle throttle;
 
     @Reference
     private ConfigurationAdmin configAdmin;
@@ -38,9 +39,10 @@ public class LoggerImpl implements Logger {
     private ShowInfo showInfo;
 
     @Activate
-    public void init(Map<String, Object> config) {
+    public void init(Map<String, Object> config) throws Exception {
         pid = (String) config.get(Constants.SERVICE_PID);
         activePids.add(pid);
+        throttle = new LogThrottle(throttleWindow(config));
 
         String loggerName = parseLoggerName(pid);
 
@@ -53,9 +55,15 @@ public class LoggerImpl implements Logger {
         }
     }
 
-    private void initTinylog(String loggerName) {
+    // 聚合窗口可经外部配置（throttle_window_ms）调整，未配置取默认 30 秒
+    private static long throttleWindow(Map<String, Object> config) {
+        Object value = config.get("throttle_window_ms");
+        return value == null ? DEFAULT_THROTTLE_WINDOW_MS : Long.parseLong(value.toString().trim());
+    }
+
+    private void initTinylog(String loggerName) throws Exception {
         // 先 apply 再触碰 org.tinylog.Logger：其类初始化会加载 provider 并冻结配置
-        TinylogBootstrap.apply(loggerName, configAdmin);
+        TinylogBootstrap.apply(configAdmin);
         tinylog = org.tinylog.Logger.tag(loggerName);
     }
 

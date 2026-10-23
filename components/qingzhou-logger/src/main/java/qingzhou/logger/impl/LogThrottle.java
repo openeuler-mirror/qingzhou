@@ -2,7 +2,6 @@ package qingzhou.logger.impl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongSupplier;
 import java.util.regex.Pattern;
 
 /**
@@ -10,31 +9,23 @@ import java.util.regex.Pattern;
  * 指纹只归一化长数字（时间戳、长 id），状态码与端口等短数字保留，避免语义不同的日志被合并。
  */
 final class LogThrottle {
-    private static final long FAILURE_WINDOW_MS = 30_000L; // 同一失败消息的聚合窗口
     private static final int MAX_KEYS = 2048; // 消息发散时重置，防 map 无界
     private static final int FINGERPRINT_CHARS = 160;
     private static final Pattern LONG_DIGITS = Pattern.compile("\\d{6,}");
 
-    private final LongSupplier clock;
+    private final long windowMs; // 同一失败消息的聚合窗口
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
 
-    LogThrottle() {
-        this(System::currentTimeMillis);
-    }
-
-    LogThrottle(LongSupplier clock) {
-        this.clock = clock;
+    LogThrottle(long windowMs) {
+        this.windowMs = windowMs;
     }
 
     /**
      * @return -1 表示本次抑制；>=0 表示放行，值为上一窗口被抑制的条数
      */
     long acquire(char level, String msg) {
-        return acquire(level, msg, FAILURE_WINDOW_MS, clock.getAsLong());
-    }
-
-    private long acquire(char level, String msg, long windowMs, long now) {
         if (msg == null) return 0;
+        long now = System.currentTimeMillis();
         String key = level + fingerprint(msg);
         Window window = windows.get(key);
         if (window == null) {

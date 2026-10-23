@@ -3,7 +3,6 @@ package qingzhou.agent;
 import java.nio.charset.StandardCharsets;
 
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.crypto.Crypto;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -14,7 +13,6 @@ import qingzhou.registry.AgentDomainKeys;
 
 abstract class AbstractAgentHandler implements HttpHandler {
     protected AgentDomainKeys agentDomainKeys;
-    protected Crypto crypto;
     protected Logger logger;
 
     @Reference
@@ -29,7 +27,7 @@ abstract class AbstractAgentHandler implements HttpHandler {
             return;
         }
 
-        EpochKeyRotatingCipher agentCipher = localAgentDomainKey.getLocalAgentCipher();
+        EpochKeyRotatingCipher agentCipher = localAgentDomainKey.getInstanceCipher(thisInstanceInfo.getInstanceSecret());
         if (agentCipher == null) {
             httpResponse.status(503);
             return;

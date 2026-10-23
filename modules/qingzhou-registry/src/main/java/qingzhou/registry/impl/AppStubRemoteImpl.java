@@ -47,8 +47,7 @@ class AppStubRemoteImpl implements AppStubRemote {
 
     @Override
     public void invokeApp(RequestImpl request) {
-        byte[] agentDomainKey = registry.agentDomainKeys.getAgentDomainKey(instanceInfo.getDomain());
-        EpochKeyRotatingCipher cipher = registry.crypto.getEpochKeyRotatingCipher(agentDomainKey);
+        EpochKeyRotatingCipher cipher = registry.agentDomainKeys.getInstanceCipher(instanceInfo.getDomain(), instanceInfo.getInstanceSecret());
         String remoteInstanceId = request.getInstance();
 
         try {
