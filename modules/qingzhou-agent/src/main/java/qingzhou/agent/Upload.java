@@ -74,51 +74,32 @@ public class Upload extends AbstractAgentHandler {
     }
 
     @Override
-    protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable { // try catch 整体可以简化 todo
+    protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable {
+        // 参数合法性检查
         long offset = Long.parseLong(fileOffset(httpRequest));
         String uploadId = fileKey(httpRequest);
         File dir = uploadId.isEmpty() ? null : uploadDir(uploadId);
         File data = dir == null ? null : dataFile(dir);
-        // 偏移量受 AAD 保护，这里只比对落盘长度：不符即丢片或乱序；空键等价于长度 0
+        // 参数合法性：偏移量受 AAD 保护，须与落盘长度一致，否则丢片或乱序；空键等价于长度 0
         if ((data == null ? 0 : data.length()) != offset) {
             throw new IllegalArgumentException("upload chunk out of order");
         }
+
         boolean newUpload = dir == null;
         if (newUpload) {
             cleanExpiredUploadDirs(); // 新建低频清理过期目录，回调同步配额计数
-            if (pendingDirs.get() >= MAX_UPLOAD_FILES) {
-                throw new IllegalArgumentException("too many pending uploads");
-            }
             uploadId = UUID.randomUUID().toString();
             dir = createUploadDir(uploadId);
             data = dataFile(dir);
-            pendingDirs.incrementAndGet();
-        }
-        // 原子预留本次分片字节：addAndGet 原子判超限，消除并发余量；新建已建目录，超限需回退目录计数并删除
-        if (pendingBytes.addAndGet(requestData.length) > MAX_UPLOAD_TOTAL_BYTES) {
-            pendingBytes.addAndGet(-requestData.length);
-            if (newUpload) {
-                pendingDirs.decrementAndGet();
-                FileUtil.forceDeleteQuietly(dir);
-            }
-            throw new IllegalArgumentException("upload dir exceeds size limit");
         }
 
-        try {
-            // 超限由调用方数据量触发：按 IllegalArgumentException 归为 400，不计入服务端故障
-            if (offset + requestData.length > MAX_UPLOAD_BYTES) {
-                throw new IllegalArgumentException("upload exceeds size limit");
-            }
+        // 配额预留：目录数/单文件/聚合总量原子判超限，失败即回退并删目录；句柄在写入失败时经 try-with-resources 自动回退
+        try (QuotaReservation reservation = reserveQuota(requestData.length, offset, newUpload, dir)) {
             // 分片追加：O_APPEND 下每次写入对文件偏移原子，同键并发分片不会互相覆盖；创建即收紧为 0600
             try (OutputStream out = FileUtil.newOwnerOnlyFile(data.toPath(), StandardOpenOption.APPEND)) {
                 out.write(requestData);
             }
-        } catch (Throwable e) {
-            // 中断即丢弃本次上传，避免残留半截文件；回退本次预留与目录已计入字节、目录数
-            pendingBytes.addAndGet(-requestData.length - offset); // todo 审查此处的 - offset
-            pendingDirs.decrementAndGet();
-            FileUtil.forceDeleteQuietly(dir);
-            throw e;
+            reservation.commit();
         }
         return uploadId;
     }
@@ -147,6 +128,51 @@ public class Upload extends AbstractAgentHandler {
 
     File dataFile(File uploadDir) {
         return new File(uploadDir, DATA_FILE);
+    }
+
+    // 配额预留：目录数、单文件、聚合总量三项原子判超限，失败即回退并删目录；成功返回可自动回退的句柄
+    private QuotaReservation reserveQuota(long len, long offset, boolean newUpload, File dir) {
+        if (newUpload && pendingDirs.incrementAndGet() > MAX_UPLOAD_FILES) {
+            rollback(0, dir);
+            throw new IllegalArgumentException("too many pending uploads");
+        }
+        if (offset + len > MAX_UPLOAD_BYTES) {
+            rollback(offset, dir);
+            throw new IllegalArgumentException("upload exceeds size limit");
+        }
+        if (pendingBytes.addAndGet(len) > MAX_UPLOAD_TOTAL_BYTES) {
+            rollback(len + offset, dir);
+            throw new IllegalArgumentException("upload dir exceeds size limit");
+        }
+        return new QuotaReservation(len + offset, dir);
+    }
+
+    // 回退配额并删除目录：删除路径统一入口，保证计数与磁盘占用一致
+    private void rollback(long bytes, File dir) {
+        pendingBytes.addAndGet(-bytes);
+        pendingDirs.decrementAndGet();
+        FileUtil.forceDeleteQuietly(dir);
+    }
+
+    // 配额预留句柄：未 commit 即回退预留并删除目录（try-with-resources 自动调用 close）
+    private final class QuotaReservation implements AutoCloseable {
+        private final long bytes;
+        private final File dir;
+        private boolean committed;
+
+        QuotaReservation(long bytes, File dir) {
+            this.bytes = bytes;
+            this.dir = dir;
+        }
+
+        void commit() {
+            committed = true;
+        }
+
+        @Override
+        public void close() {
+            if (!committed) rollback(bytes, dir);
+        }
     }
 
     // 释放上传目录：扣减配额计数并删除（业务处理完调用）

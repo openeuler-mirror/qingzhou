@@ -57,8 +57,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         // 逐来源并发上限：全局额度无来源维度，单 IP 洪水即可耗尽；0 表示不启用
         SourceLimiter sourceLimiter = new SourceLimiter(
                 configs.atLeast("max_concurrent_per_source", 0, 64),
-                configs.atLeast("max_tracked_sources", 1, 10_000),
-                configs.atLeast("source_idle_seconds", 1, 300));
+                configs.atLeast("max_tracked_sources", 1, 10_000));
         // 请求进入期（准入到请求体读完）总时长上限：慢速滴漏请求被 idle_timeout 漏掉
         // （每秒 1 字节连接永远"活跃"），却可长期占住并发许可。0 表示不启用
         int intakeTimeoutSeconds = configs.atLeast("request_timeout_seconds", 0, 10);
