@@ -130,7 +130,15 @@ public class Register implements HttpHandler {
                 return;
             }
 
-            InstanceInfo instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            InstanceInfo instanceInfo;
+            try {
+                instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            } catch (Exception e) {
+                // 解密后报文的解析异常不得外泄：Jackson 异常消息携带报文原文（含 instanceSecret），只记类型
+                logger.warn("invalid registration payload: " + e.getClass().getSimpleName());
+                httpResponse.status(400);
+                return;
+            }
             if (instanceInfo.getPort() < 1 || instanceInfo.getPort() > 65535) {
                 logger.warn("illegal agent port: " + instanceInfo.getPort());
                 httpResponse.status(400);

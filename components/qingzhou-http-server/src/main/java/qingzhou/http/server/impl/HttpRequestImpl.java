@@ -59,6 +59,7 @@ public class HttpRequestImpl implements HttpRequest {
     @Override
     public String getRemoteHost() {
         InetSocketAddress address = request.remoteAddress();
+        // 契约适配：连接尚未完全建立时 remoteAddress 可为 null，锁定/限流按固定兜底键归并
         return address != null ? address.getHostString() : "unknown";
     }
 

@@ -1,13 +1,5 @@
 package qingzhou.agent;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
-import java.util.UUID;
-
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -19,6 +11,16 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AgentDomainKeys;
 import qingzhou.registry.Constants;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
@@ -37,6 +39,10 @@ public class Upload extends AbstractAgentHandler {
     private File uploadBase;
     private String uploadBasePath; // 上传键边界校验的基准：canonical 绝对路径，避免每次请求重复解析
 
+    // 聚合配额增量计数：写入路径 O(1) 判超限，无需逐片扫描目录；增删目录时同步增减
+    private final AtomicInteger pendingDirs = new AtomicInteger();
+    private final AtomicLong pendingBytes = new AtomicLong();
+
     @Reference
     public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
         this.agentDomainKeys = agentDomainKeys;
@@ -53,6 +59,7 @@ public class Upload extends AbstractAgentHandler {
         FileUtil.mkdirs(uploadBase);
         uploadBasePath = uploadBase.getCanonicalPath();
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
+        recount(); // 清理后初始化配额计数，避免重启后计数虚低
     }
 
     @Override
@@ -67,7 +74,7 @@ public class Upload extends AbstractAgentHandler {
     }
 
     @Override
-    protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable {
+    protected String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable { // try catch 整体可以简化 todo
         long offset = Long.parseLong(fileOffset(httpRequest));
         String uploadId = fileKey(httpRequest);
         File dir = uploadId.isEmpty() ? null : uploadDir(uploadId);
@@ -76,11 +83,25 @@ public class Upload extends AbstractAgentHandler {
         if ((data == null ? 0 : data.length()) != offset) {
             throw new IllegalArgumentException("upload chunk out of order");
         }
-        if (dir == null) {
-            enforceUploadDirQuota(requestData.length);
+        boolean newUpload = dir == null;
+        if (newUpload) {
+            cleanExpiredUploadDirs(); // 新建低频清理过期目录，回调同步配额计数
+            if (pendingDirs.get() >= MAX_UPLOAD_FILES) {
+                throw new IllegalArgumentException("too many pending uploads");
+            }
             uploadId = UUID.randomUUID().toString();
             dir = createUploadDir(uploadId);
             data = dataFile(dir);
+            pendingDirs.incrementAndGet();
+        }
+        // 原子预留本次分片字节：addAndGet 原子判超限，消除并发余量；新建已建目录，超限需回退目录计数并删除
+        if (pendingBytes.addAndGet(requestData.length) > MAX_UPLOAD_TOTAL_BYTES) {
+            pendingBytes.addAndGet(-requestData.length);
+            if (newUpload) {
+                pendingDirs.decrementAndGet();
+                FileUtil.forceDeleteQuietly(dir);
+            }
+            throw new IllegalArgumentException("upload dir exceeds size limit");
         }
 
         try {
@@ -93,7 +114,9 @@ public class Upload extends AbstractAgentHandler {
                 out.write(requestData);
             }
         } catch (Throwable e) {
-            // 中断即丢弃本次上传，避免残留半截文件
+            // 中断即丢弃本次上传，避免残留半截文件；回退本次预留与目录已计入字节、目录数
+            pendingBytes.addAndGet(-requestData.length - offset); // todo 审查此处的 - offset
+            pendingDirs.decrementAndGet();
             FileUtil.forceDeleteQuietly(dir);
             throw e;
         }
@@ -126,24 +149,41 @@ public class Upload extends AbstractAgentHandler {
         return new File(uploadDir, DATA_FILE);
     }
 
-    // 上传目录容量兜底：文件数与累积体积双限，超出即拒绝新建上传（过期残留由 cleanExpired 回收）
-    private void enforceUploadDirQuota(long incomingBytes) {
-        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
+    // 释放上传目录：扣减配额计数并删除（业务处理完调用）
+    void release(File dir) {
+        deductQuota(dir);
+        FileUtil.forceDeleteQuietly(dir);
+    }
 
-        File[] dirs = uploadBase.listFiles();
-        if (dirs == null) return;
-        if (dirs.length >= MAX_UPLOAD_FILES) {
-            throw new IllegalArgumentException("too many pending uploads: " + dirs.length);
+    // 新建上传低频清理过期目录：TempFiles 内置节流，删除前经回调扣减配额计数
+    private void cleanExpiredUploadDirs() {
+        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS, this::deductQuota);
+    }
+
+    // 目录配额计数扣减：删除前调用，保持计数与磁盘占用一致
+    private void deductQuota(File dir) {
+        pendingBytes.addAndGet(-sizeOf(dir));
+        pendingDirs.decrementAndGet();
+    }
+
+    // 激活时全量重算计数，避免重启后配额计数虚低
+    private void recount() {
+        long total = 0;
+        int dirs = 0;
+        for (File dir : childrenOf(uploadBase)) {
+            dirs++;
+            total += sizeOf(dir);
         }
-        long total = incomingBytes; // 计入本次待写分片，避免"写前总量"始终低于上限
-        for (File dir : dirs) {
-            for (File child : childrenOf(dir)) {
-                total += child.length();
-            }
+        pendingBytes.set(total);
+        pendingDirs.set(dirs);
+    }
+
+    private static long sizeOf(File dir) {
+        long total = 0;
+        for (File child : childrenOf(dir)) {
+            total += child.length();
         }
-        if (total >= MAX_UPLOAD_TOTAL_BYTES) {
-            throw new IllegalArgumentException("upload dir exceeds size limit: " + total);
-        }
+        return total;
     }
 
     private File createUploadDir(String uploadId) throws IOException {

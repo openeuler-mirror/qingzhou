@@ -2,6 +2,7 @@ package qingzhou.http.server.impl;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.osgi.framework.Constants;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.client.HttpClient;
@@ -159,6 +160,11 @@ public class HttpServerImplTest {
     static HttpServerImpl buildHttpServer(Map<String, String> config) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
+        // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE；
+        // 非默认日志器名（~test）跳过启动 banner，避免每个用例刷屏
+        Map<String, Object> loggerConfig = new HashMap<>();
+        loggerConfig.put(Constants.SERVICE_PID, "qingzhou-logger~test");
+        logger.init(loggerConfig);
         CryptoImpl crypto = new CryptoImpl();
         crypto.init(new HashMap<String, String>() {{
             put("qingzhou.instance", new File("/tmp").getAbsolutePath());

@@ -13,6 +13,10 @@ public interface HttpHandler {
     /**
      * 处理请求。
      * <p>
+     * 实现须为非阻塞：本方法运行于网络 IO 线程，阻塞（同步 IO、慢计算、睡眠）会拖垮
+     * 同一 IO 线程上的全部连接；耗时处理应转交业务线程，并经 {@link HttpResponse#async()}
+     * 声明后由业务线程写响应。
+     * <p>
      * 正常返回后框架自动收尾响应，无需调用 {@link HttpResponse#finish()}。
      * 若要在返回后继续写入并收尾（如 SSE），须在返回前调用 {@link HttpResponse#async()}，
      * 之后由 handler 自行 {@link HttpResponse#finish()}；否则后台写入会因响应已结束而失败。

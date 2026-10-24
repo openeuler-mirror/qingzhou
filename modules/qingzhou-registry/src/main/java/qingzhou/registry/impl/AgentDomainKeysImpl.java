@@ -47,13 +47,19 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
                 throw new IllegalArgumentException("invalid key name in secret-key.properties: " + name
                         + ", expected " + prefix + "<domain>.<item>");
             }
-            masters.put(rest.substring(0, dot), crypto.getBase64Coder().decode(properties.getProperty(name).trim()));
+            byte[] domainKey = crypto.getBase64Coder().decode(properties.getProperty(name).trim());
+            // 域根密钥是全平台信任根：HKDF 无法补救低熵 IKM，至少 16 字节随机，激活即校验
+            if (domainKey.length < 16) {
+                throw new IllegalArgumentException("agent domain key too short (>=16 bytes): " + name);
+            }
+            masters.put(rest.substring(0, dot), domainKey);
         }
     }
 
     @Override
     public Set<String> getAllAgentDomains() {
-        return masters.keySet();
+        // 不可变视图：外部不得增删信任根表；masters 仅在激活期写入，运行期只读
+        return Collections.unmodifiableSet(masters.keySet());
     }
 
     @Override

@@ -3,6 +3,7 @@ package qingzhou.common;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * 临时目录清理工具：平台各模块上传、缓存残留文件的清理入口。
@@ -18,6 +19,13 @@ public final class TempFiles {
      * 删除目录下最后修改时间早于 {@code now - ttlMillis} 的子项（递归删除）；目录不存在或无法列举时静默跳过。
      */
     public static void cleanExpired(File dir, long ttlMillis) {
+        cleanExpired(dir, ttlMillis, null);
+    }
+
+    /**
+     * 同上，但在删除每个过期子项前回调 {@code beforeDelete}（用于调用方同步自身计数）。
+     */
+    public static void cleanExpired(File dir, long ttlMillis, Consumer<File> beforeDelete) {
         if (dir == null) return;
 
         long now = System.currentTimeMillis();
@@ -31,6 +39,7 @@ public final class TempFiles {
         long expireBefore = now - ttlMillis;
         for (File child : children) {
             if (child.lastModified() < expireBefore) {
+                if (beforeDelete != null) beforeDelete.accept(child);
                 FileUtil.forceDeleteQuietly(child);
             }
         }

@@ -48,7 +48,13 @@ public class Invoke extends AbstractAgentHandler {
         if (requestData.length == 0) {
             throw new IllegalArgumentException("empty request");
         }
-        RequestImpl request = json.fromJson(new String(requestData, StandardCharsets.UTF_8), RequestImpl.class);
+        RequestImpl request;
+        try {
+            request = json.fromJson(new String(requestData, StandardCharsets.UTF_8), RequestImpl.class);
+        } catch (Exception e) {
+            // 解密后报文的解析异常不得外泄：Jackson 异常消息携带请求明文，只透出类型；按调用方错误回 400
+            throw new IllegalArgumentException("invalid invoke payload: " + e.getClass().getSimpleName());
+        }
         AppStubLocal appStub = registry.getLocalApp(request.getApp());
         if (appStub == null) {
             throw new IllegalArgumentException("app not found"); // 不回显 app 编码：消息经 AbstractAgentHandler 入日志
@@ -82,7 +88,7 @@ public class Invoke extends AbstractAgentHandler {
 
             appStub.invokeApp(request);
         } finally {
-            uploadFiles.forEach(FileUtil::forceDeleteQuietly);
+            uploadFiles.forEach(upload::release);
         }
 
         return json.toJson(request.getResponse());

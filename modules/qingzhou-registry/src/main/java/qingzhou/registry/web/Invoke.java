@@ -104,9 +104,9 @@ public class Invoke implements HttpHandler {
         if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
             return false;
         } else {
-            logger.warn("forbidden: app=" + request.getApp() + ", model=" + request.getModel()
-                    + ", action=" + request.getAction() + ", user=" + httpRequest.getPrincipal()
-                    + ", host=" + httpRequest.getRemoteHost());
+            logger.warn("forbidden: app=" + forLog(request.getApp()) + ", model=" + forLog(request.getModel())
+                    + ", action=" + forLog(request.getAction()) + ", user=" + forLog(httpRequest.getPrincipal())
+                    + ", host=" + forLog(httpRequest.getRemoteHost()));
             httpResponse.status(403).send("Forbidden").finish();
             return true;
         }
@@ -139,7 +139,7 @@ public class Invoke implements HttpHandler {
             if (values == null || values.isEmpty()) continue;
             String value = values.get(0);
             if (value.length() > MAX_PARAMETER_CHARS) {
-                logger.warn("invoke parameter too long, rejected: " + entry.getKey());
+                logger.warn("invoke parameter too long, rejected: " + forLog(entry.getKey()));
                 return null;
             }
             request.getParameters().put(entry.getKey(), value);
@@ -164,8 +164,8 @@ public class Invoke implements HttpHandler {
                     for (Map.Entry<?, ?> entry : ((Map<?, ?>) parsed).entrySet()) {
                         String value = entry.getValue() != null ? String.valueOf(entry.getValue()) : "";
                         if (parameters.size() >= MAX_PARAMETERS || value.length() > MAX_PARAMETER_CHARS) {
-                            logger.warn("invoke parameters exceed quota, rejected: instance=" + request.getInstance()
-                                    + ", app=" + request.getApp());
+                            logger.warn("invoke parameters exceed quota, rejected: instance=" + forLog(request.getInstance())
+                                    + ", app=" + forLog(request.getApp()));
                             return false;
                         }
                         parameters.put(String.valueOf(entry.getKey()), value);
@@ -203,7 +203,9 @@ public class Invoke implements HttpHandler {
             if (response.getStatus() > 0) {
                 httpResponse.status(response.getStatus());
             }
-            response.getHeaders().forEach(httpResponse::header);
+            response.getHeaders().forEach((name, value) -> {
+                if (isPassthroughHeader(name)) httpResponse.header(name, value);
+            });
 
             if (response.getContentType() != null) {
                 httpResponse.contentType(response.getContentType());
@@ -231,6 +233,19 @@ public class Invoke implements HttpHandler {
             if (c <= 0x20 || c > 0x7E || c == '"' || c == '\\') return false;
         }
         return true;
+    }
+
+    // 请求来源字段不可信：URL 段与参数名可经 %0A 携带换行，入日志前剔除控制字符
+    private static String forLog(String value) {
+        return value == null ? "null" : value.replaceAll("\\p{Cntrl}", "?");
+    }
+
+    // 远端响应头透传前须剔除：长度类与 hop-by-hop 头会破坏中心侧 HTTP 响应分帧；content-type 由下方显式设置
+    private static final Set<String> BLOCKED_PASSTHROUGH_HEADERS = new HashSet<>(Arrays.asList(
+            "content-length", "transfer-encoding", "connection", "keep-alive", "content-type"));
+
+    private static boolean isPassthroughHeader(String name) {
+        return name != null && !BLOCKED_PASSTHROUGH_HEADERS.contains(name.toLowerCase(Locale.ROOT));
     }
 
     private class StreamHandlerImpl implements StreamHandler {

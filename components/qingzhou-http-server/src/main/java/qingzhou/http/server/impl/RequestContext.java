@@ -33,6 +33,8 @@ final class RequestContext {
     volatile boolean streamRequired;
     volatile boolean streamPermitHeld; // 流式分支已取得的并发许可
     volatile long reservedBytes; // 聚合分支已预留的内存配额（long 需防 32 位字撕裂）
+    // 逐源并发许可：须归还到取得许可时的限制器实例，热更新重建不得串代
+    volatile SourceReservation sourceReservation;
 
     // 请求进入期超时任务（防 Slowloris）：只覆盖「准入 → 请求体读完」，不覆盖 handler 执行期（SSE 等长响应合法）
     volatile ScheduledFuture<?> intakeTimeout;
@@ -61,5 +63,16 @@ final class RequestContext {
         return response.status(status)
                 .header(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
                 .send();
+    }
+
+    // 逐源许可随请求传递：释放时回到取得许可的限制器实例，与信号量快照同思路
+    static final class SourceReservation {
+        final SourceLimiter limiter;
+        final String key;
+
+        SourceReservation(SourceLimiter limiter, String key) {
+            this.limiter = limiter;
+            this.key = key;
+        }
     }
 }

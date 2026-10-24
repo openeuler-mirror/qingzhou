@@ -21,6 +21,20 @@ final class EpochKeyRotatingCipherImpl implements EpochKeyRotatingCipher {
     private final Crypto crypto;
     private final byte[] masterKey;
 
+    // 时段密码器单槽缓存：时段 10 分钟才变，合法流量恒落在当前时段；
+    // 不用无界 Map——解密按报文自带时间戳选钥，伪造报文可用任意时间戳制造大量时段导致内存膨胀
+    private volatile CipherSlot cipherSlot;
+
+    private static final class CipherSlot {
+        final long epoch;
+        final ReplayGuardCipher cipher;
+
+        CipherSlot(long epoch, ReplayGuardCipher cipher) {
+            this.epoch = epoch;
+            this.cipher = cipher;
+        }
+    }
+
     EpochKeyRotatingCipherImpl(Crypto crypto, byte[] masterKey) {
         this.crypto = crypto;
         this.masterKey = masterKey;
@@ -44,7 +58,12 @@ final class EpochKeyRotatingCipherImpl implements EpochKeyRotatingCipher {
     }
 
     private ReplayGuardCipher cipherFor(long epoch) throws Exception {
-        return crypto.getReplayGuardCipher(crypto.getCipher(deriveKey(epoch)));
+        CipherSlot slot = cipherSlot;
+        if (slot != null && slot.epoch == epoch) return slot.cipher;
+        // 不可变槽整体经 volatile 发布：避免 epoch 与 cipher 分两字段写时被并发读到错配组合
+        CipherSlot fresh = new CipherSlot(epoch, crypto.getReplayGuardCipher(crypto.getCipher(deriveKey(epoch))));
+        cipherSlot = fresh;
+        return fresh.cipher;
     }
 
     /**

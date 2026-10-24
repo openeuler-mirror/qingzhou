@@ -20,6 +20,7 @@ final class ResponseHeaders {
     private final String corp;
     private final List<String> corsAllowedOrigins; // 允许的跨域来源；空表示不开放跨域
     private final boolean hstsPreload;
+    private final long hstsMaxAge; // HSTS 有效期：部署形态（含内网/预发布）不同，收敛周期应可配
 
     ResponseHeaders(Map<String, String> config) {
         Configs configs = new Configs(config);
@@ -31,6 +32,7 @@ final class ResponseHeaders {
         this.corp = configs.getOrDefault("corp", "");
         this.corsAllowedOrigins = configs.splitList("cors_allowed_origins");
         this.hstsPreload = configs.getOrDefault("hsts_preload", false);
+        this.hstsMaxAge = configs.atLeast("hsts_max_age", 0, 31536000);
     }
 
     // 须在任何 return 之前调用：400/401/404/413/503 等分支同样需要安全头
@@ -49,7 +51,7 @@ final class ResponseHeaders {
         if (!corp.isEmpty()) response.header("Cross-Origin-Resource-Policy", corp);
         boolean isTls = "https".equals(request.scheme());
         if (isTls) response.header("Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains" + (hstsPreload ? "; preload" : ""));
+                "max-age=" + hstsMaxAge + "; includeSubDomains" + (hstsPreload ? "; preload" : ""));
         applyCors(request, response);
     }
 
