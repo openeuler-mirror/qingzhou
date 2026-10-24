@@ -41,17 +41,20 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         }
 
         // 明文口令直接取用，不触达 global 密钥文件：密钥缺失/损坏不应拖垮仅配置明文的部署
-        String password = configs.notBlank("ssl_keystore_password");
+        String keystorePassword = configs.notBlank("ssl_keystore_password");
         // key 口令缺省与 keystore 口令一致（最常见形态）；独立配置时同样支持 plain: 前缀与密文
         String configuredKeyPassword = configs.get("ssl_key_password");
         boolean hasKeyPassword = configuredKeyPassword != null && !configuredKeyPassword.trim().isEmpty();
-        char[] keyPassword = resolvePassword(
-                hasKeyPassword ? configuredKeyPassword : password,
-                "qingzhou-http-server." + (hasKeyPassword ? "ssl_key_password" : "ssl_keystore_password"), crypto);
+        // 两个口令用途不同：KeyStore.load 校验库口令，KeyManagerFactory.init 解私钥用 key 口令。
+        // 独立配置时若统一用 key 口令去 load，会因库口令不匹配而加载失败，故必须分别解析
+        char[] storePassword = resolvePassword(keystorePassword, "qingzhou-http-server.ssl_keystore_password", crypto);
+        char[] keyPassword = hasKeyPassword
+                ? resolvePassword(configuredKeyPassword, "qingzhou-http-server.ssl_key_password", crypto)
+                : storePassword;
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
-            keyStore.load(in, keyPassword);
+            keyStore.load(in, storePassword);
 
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keyPassword);
@@ -63,7 +66,8 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
         } finally {
-            Arrays.fill(keyPassword, '\0');
+            Arrays.fill(storePassword, '\0');
+            if (keyPassword != storePassword) Arrays.fill(keyPassword, '\0');
         }
     }
 
