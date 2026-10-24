@@ -99,7 +99,7 @@ public class Register implements HttpHandler {
         }
 
         try {
-            byte[] aad = agentDomainKeys.toRegistryAad(instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
+            byte[] aad = agentDomainKeys.toRegistryAad(domainId, instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             // 已注册实例的续期用每实例密钥解密：仅真实实例可刷新自身，同域其他 agent 无法冒名续期；
             // 新实例首注册用域密钥解密（首注册时中心尚无该实例密钥，必须靠域密钥才能取得它）
             InstanceInfo exists = registry.getRemoteInstance(instanceId);

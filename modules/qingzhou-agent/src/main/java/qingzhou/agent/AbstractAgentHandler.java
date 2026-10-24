@@ -41,7 +41,7 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         byte[] requestData = null;
         try {
-            byte[] agentAad = agentDomainKeys.toAgentAad(thisInstanceInfo.getId(),
+            byte[] agentAad = agentDomainKeys.toAgentAad(localAgentDomainKey.getLocalAgentDomain(), thisInstanceInfo.getId(),
                     thisInstanceInfo.getInstanceSecret(), aadContext(httpRequest));
             requestData = agentCipher.decrypt(requestBody, agentAad);
         } catch (Exception e) {
@@ -69,7 +69,7 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         // 加密响应数据
         try {
-            byte[] agentAad = agentDomainKeys.toRegistryResponseAad(thisInstanceInfo.getId(),
+            byte[] agentAad = agentDomainKeys.toRegistryResponseAad(localAgentDomainKey.getLocalAgentDomain(), thisInstanceInfo.getId(),
                     thisInstanceInfo.getInstanceSecret(), new String[]{aadName()});
             byte[] encrypt = agentCipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), agentAad);
             httpResponse.send(encrypt);

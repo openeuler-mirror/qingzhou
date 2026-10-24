@@ -12,6 +12,7 @@ import qingzhou.crypto.EpochKeyRotatingCipher;
  * 用于注册后的双向报文。未捕获该实例注册报文的同域成员推不出每实例密钥，无法解密/篡改其注册后报文。
  * <p>
  * 方向隔离：center→agent 用 "REGISTRY_AGENT"、agent→center 用 "AGENT_REGISTRY" 前缀，防方向混淆。
+ * 域隔离：AAD 绑定 agentDomain，防跨域搬移（即使两域误配相同密钥，AAD 也对不上）。
  * <p>
  * 残余边界：首次注册报文仍用 domain key 加密，捕获到它的同域成员可窃取 instanceSecret 并派生每实例密钥。
  * 因此本方案满足「无密钥的外部客户端不可读/改」，但「同域实例互不可读/改」仅对未捕获引导报文的成员成立，
@@ -26,10 +27,10 @@ public interface AgentDomainKeys {
     // 每实例密钥时段密码器：用于注册后双向报文的加解密
     EpochKeyRotatingCipher getInstanceCipher(String agentDomain, String instanceSecret);
 
-    byte[] toAgentAad(String instanceId, String instanceSecret, String[] reqData);
+    byte[] toAgentAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData);
 
-    byte[] toRegistryAad(String instanceId, String... reqData);
+    byte[] toRegistryAad(String agentDomain, String instanceId, String... reqData);
 
     // 响应方向：此时代中心已持有实例密钥，可绑定；注册请求方向不绑定（首注册时尚无密钥）
-    byte[] toRegistryResponseAad(String instanceId, String instanceSecret, String[] reqData);
+    byte[] toRegistryResponseAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData);
 }

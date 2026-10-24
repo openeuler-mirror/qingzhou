@@ -67,13 +67,12 @@ final class EpochKeyRotatingCipherImpl implements EpochKeyRotatingCipher {
     }
 
     /**
-     * 由时段索引派生时段密钥。返回 24 字符 Base64（16 字节），恰为
-     * {@link Crypto#getCipher} 要求的密钥格式；info 为 8 字节时段索引。
+     * 由时段索引派生时段密钥，输出 32 字节（AES-256）：Grover 攻击下仍保 128 位安全，满足后量子强度；info 为 8 字节时段索引。
      */
     private byte[] deriveKey(long epoch) {
         ByteBuffer info = ByteBuffer.allocate(8);
         info.putLong(epoch);
-        return Hkdf.derive(masterKey, info.array(), 16);
+        return Hkdf.derive(masterKey, info.array(), 32);
     }
 
     private long epochIndex(long timestampMillis) {

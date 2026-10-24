@@ -48,9 +48,9 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
                         + ", expected " + prefix + "<domain>.<item>");
             }
             byte[] domainKey = crypto.getBase64Coder().decode(properties.getProperty(name).trim());
-            // 域根密钥是全平台信任根：HKDF 无法补救低熵 IKM，至少 16 字节随机，激活即校验
-            if (domainKey.length < 16) {
-                throw new IllegalArgumentException("agent domain key too short (>=16 bytes): " + name);
+            // 域根密钥是全平台信任根：HKDF 无法补救低熵 IKM，至少 32 字节（256 位）以满足后量子强度，激活即校验
+            if (domainKey.length < 32) {
+                throw new IllegalArgumentException("agent domain key too short (>=32 bytes): " + name);
             }
             masters.put(rest.substring(0, dot), domainKey);
         }
@@ -90,25 +90,26 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
     }
 
     @Override
-    public byte[] toAgentAad(String instanceId, String instanceSecret, String[] reqData) {
-        return frame("REGISTRY_AGENT", instanceId, instanceSecret, reqData);
+    public byte[] toAgentAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
+        return frame("REGISTRY_AGENT", agentDomain, instanceId, instanceSecret, reqData);
     }
 
     @Override
-    public byte[] toRegistryAad(String instanceId, String... reqData) {
-        return frame("AGENT_REGISTRY", instanceId, null, reqData);
+    public byte[] toRegistryAad(String agentDomain, String instanceId, String... reqData) {
+        return frame("AGENT_REGISTRY", agentDomain, instanceId, null, reqData);
     }
 
     @Override
-    public byte[] toRegistryResponseAad(String instanceId, String instanceSecret, String[] reqData) {
-        return frame("AGENT_REGISTRY", instanceId, instanceSecret, reqData);
+    public byte[] toRegistryResponseAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
+        return frame("AGENT_REGISTRY", agentDomain, instanceId, instanceSecret, reqData);
     }
 
     // 长度前缀分帧：每个字段先写长度再写内容，字段与数组边界均无歧义，
-    // 杜绝不同 (tag, instanceId, instanceSecret, reqData) 组合拼接出相同 AAD（如 ["a,b"] 与 ["a","b"]）
-    private byte[] frame(String tag, String instanceId, String instanceSecret, String[] reqData) {
+    // 杜绝不同 (tag, agentDomain, instanceId, instanceSecret, reqData) 组合拼接出相同 AAD（如 ["a,b"] 与 ["a","b"]）
+    private byte[] frame(String tag, String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
         StringBuilder sb = new StringBuilder();
         append(sb, tag);
+        append(sb, agentDomain);
         append(sb, instanceId);
         append(sb, instanceSecret);
         sb.append(reqData.length).append(':');

@@ -158,7 +158,7 @@ public class Heartbeat {
             EpochKeyRotatingCipher cipher = registered
                     ? localAgentDomainKey.getInstanceCipher(instanceInfo.getInstanceSecret())
                     : localAgentDomainKey.getLocalAgentCipher();
-            byte[] aad = agentDomainKeys.toRegistryAad(instanceInfo.getId(), qingzhou.registry.Constants.REMOTE_REGISTER_URI);
+            byte[] aad = agentDomainKeys.toRegistryAad(localAgentDomainKey.getLocalAgentDomain(), instanceInfo.getId(), qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             byte[] encrypted = cipher.encrypt(data, aad);
             String url = registerUrl + "?"
                     + qingzhou.registry.Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + encode(localAgentDomainKey.getLocalAgentDomain())

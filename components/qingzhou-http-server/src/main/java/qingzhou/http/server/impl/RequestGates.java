@@ -118,7 +118,7 @@ final class RequestGates {
         // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
         if (origin == null) return null;
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
-        if (host != null && !host.isEmpty() && isSameOrigin(origin, host)) return null;
+        if (host != null && !host.isEmpty() && isSameOrigin(origin, host, ctx.request.scheme())) return null;
         // 跨站写仅认精确列举的来源：白名单含 "*" 时通配语义只作用于 ResponseHeaders 的 CORS 读响应，
         // 不在此放行——否则通配 CORS 与 CSRF 防线叠加，Cookie 认证下同站跨源可借自动附加的 Cookie 完成写操作
         if (corsAllowedOrigins.contains(origin)) return null;
@@ -128,14 +128,15 @@ final class RequestGates {
     // Origin = scheme://authority[/path]：取 authority 与 Host 精确比较（忽略大小写），
     // 后缀匹配（endsWith("//" + host)）会被 origin=x.evil.com//host 之类的构造绕过。
     // scheme 默认端口在两侧对称剥离：Origin 显式携带而 Host 省略（或反之）不误判跨源
-    private static boolean isSameOrigin(String origin, String host) {
-        String authority = origin;
-        String scheme = "";
+    private static boolean isSameOrigin(String origin, String host, String connectionScheme) {
         int schemeEnd = origin.indexOf("://");
-        if (schemeEnd >= 0) {
-            scheme = origin.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
-            authority = origin.substring(schemeEnd + 3);
-        }
+        // 畸形 Origin 缺 scheme 无法构成合法同源，按非同源拒绝，避免被当作裸 authority 放行
+        if (schemeEnd < 0) return false;
+        String scheme = origin.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
+        // 源三要素含 scheme：连接为 https 时 Origin 必须同为 https，否则 http 明文镜像页面可借同 host
+        // 发跨 scheme 写请求绕过 CSRF；连接为 http（可能经 TLS 反代，Origin=https 属合法）时不做 scheme 比较
+        if ("https".equals(connectionScheme) && !"https".equals(scheme)) return false;
+        String authority = origin.substring(schemeEnd + 3);
         int pathStart = authority.indexOf('/');
         if (pathStart >= 0) authority = authority.substring(0, pathStart);
         if ("http".equals(scheme)) {
