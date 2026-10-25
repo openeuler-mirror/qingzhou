@@ -171,8 +171,9 @@ public class Register implements HttpHandler {
             byte[] responseAad = agentDomainService.responseAad(aad);
             httpResponse.send(cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad));
         } catch (Exception e) {
-            logger.error("failed to parse instance info", e);
-            httpResponse.status(400);
+            // 兜底仅剩内部错误（落表/加密/发送）：解密、解析、参数校验均已在各自分支内以 400 收敛
+            logger.error("failed to finalize registration", e);
+            httpResponse.status(500);
         }
     }
 

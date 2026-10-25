@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -42,6 +43,8 @@ public class Upload extends AbstractAgentHandler {
     // 聚合配额增量计数：写入路径 O(1) 判超限，无需逐片扫描目录；增删目录时同步增减
     private final AtomicInteger pendingDirs = new AtomicInteger();
     private final AtomicLong pendingBytes = new AtomicLong();
+    // 每个上传目录累计预留的字节数：release 按此扣减而非 sizeOf——文件被业务 move 走后 sizeOf 为 0，会导致配额虚高
+    private final Map<String, Long> reservedBytes = new ConcurrentHashMap<>();
 
     @Reference
     public void setAgentDomainKeys(AgentDomainService agentDomainService) {
@@ -154,6 +157,7 @@ public class Upload extends AbstractAgentHandler {
             rollback(len + offset, dir);
             throw new IllegalArgumentException("upload dir exceeds size limit");
         }
+        reservedBytes.merge(dir.getName(), len, Long::sum); // 三项超限判断均通过后记录，回退路径靠 remove 清理
         return new QuotaReservation(len + offset, dir);
     }
 
@@ -161,6 +165,7 @@ public class Upload extends AbstractAgentHandler {
     private void rollback(long bytes, File dir) {
         pendingBytes.addAndGet(-bytes);
         pendingDirs.decrementAndGet();
+        reservedBytes.remove(dir.getName());
         FileUtil.forceDeleteQuietly(dir);
     }
 
@@ -196,19 +201,23 @@ public class Upload extends AbstractAgentHandler {
         TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS, this::deductQuota);
     }
 
-    // 目录配额计数扣减：删除前调用，保持计数与磁盘占用一致
+    // 目录配额计数扣减：删除前调用，按预留字节扣减（文件可能已被业务 move 走，sizeOf 会少算）
     private void deductQuota(File dir) {
-        pendingBytes.addAndGet(-sizeOf(dir));
+        Long reserved = reservedBytes.remove(dir.getName());
+        pendingBytes.addAndGet(-(reserved == null ? 0 : reserved));
         pendingDirs.decrementAndGet();
     }
 
-    // 激活时全量重算计数，避免重启后配额计数虚低
+    // 激活时全量重算计数，避免重启后配额计数虚低；重启后按磁盘现状初始化预留字节，运行期再恢复累计语义
     private void recount() {
+        reservedBytes.clear();
         long total = 0;
         int dirs = 0;
         for (File dir : childrenOf(uploadBase)) {
+            long bytes = sizeOf(dir);
             dirs++;
-            total += sizeOf(dir);
+            total += bytes;
+            reservedBytes.put(dir.getName(), bytes);
         }
         pendingBytes.set(total);
         pendingDirs.set(dirs);
