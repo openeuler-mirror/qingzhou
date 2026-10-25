@@ -70,7 +70,7 @@ public class PrometheusEndpoint implements HttpHandler {
             AppStub stub = registry.getLocalApp(appCode);
             if (stub == null) continue;
             try {
-                collect(groups, qingzhou.registry.Constants.LOCAL_INSTANCE_ID, appCode, stub);
+                collect(groups, Constants.LOCAL_INSTANCE_ID, appCode, stub);
             } catch (Throwable t) {
                 logger.debug("skip failed local app metric collection: " + appCode, t);
             }

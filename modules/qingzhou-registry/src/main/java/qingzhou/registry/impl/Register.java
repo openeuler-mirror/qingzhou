@@ -13,11 +13,11 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
@@ -34,7 +34,7 @@ public class Register implements HttpHandler {
     @Reference
     private Json json;
     @Reference
-    private AgentDomainKeys agentDomainKeys;
+    private AgentDomainService agentDomainService;
 
     private Timer timer;
     // 是否采信 agent 自报地址：仅反代/NAT 部署需要，默认关闭以免域内成员把流量导向任意地址
@@ -85,29 +85,30 @@ public class Register implements HttpHandler {
         }
 
         // AAD 绑定，防报文挪域
-        String domainId = httpRequest.getParameter(qingzhou.registry.Constants.REMOTE_PARAMETER_DOMAIN_ID);
-        String instanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
-        if (domainId == null || instanceId == null || !agentDomainKeys.getAllAgentDomains().contains(domainId)) {
+        String domainId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
+        if (domainId == null || !agentDomainService.getAllAgentDomains().contains(domainId)) {
             logger.warn("illegal agent-domain: " + forLog(domainId));
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
-        if (!isSafeToken(instanceId)) {
-            logger.warn("illegal instance id: " + forLog(instanceId));
-            httpResponse.status(400);
-            return;
+
+        // 无 instanceId 时为新实例，有则为续期
+        String guessInstanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
+        InstanceInfo exists = null;
+        if (guessInstanceId != null) {
+            exists = registry.getRemoteInstance(guessInstanceId);
         }
 
         try {
-            byte[] aad = agentDomainKeys.toRegistryAad(domainId, instanceId, qingzhou.registry.Constants.REMOTE_REGISTER_URI);
             // 已注册实例的续期用每实例密钥解密：仅真实实例可刷新自身，同域其他 agent 无法冒名续期；
             // 新实例首注册用域密钥解密（首注册时中心尚无该实例密钥，必须靠域密钥才能取得它）
-            InstanceInfo exists = registry.getRemoteInstance(instanceId);
             EpochKeyRotatingCipher cipher = exists == null
-                    ? agentDomainKeys.getDomainCipher(domainId)
-                    : agentDomainKeys.getInstanceCipher(domainId, exists.getInstanceSecret());
+                    ? agentDomainService.getDomainCipher(domainId)
+                    : agentDomainService.getInstanceCipher(domainId, exists.getInstanceSecret());
             byte[] requestData;
+            byte[] aad;
             try {
+                aad = agentDomainService.aadForRegistry(domainId, guessInstanceId);
                 requestData = cipher.decrypt(requestBody, aad);
             } catch (Exception e) {
                 // 报文由请求方控制：密钥失配、时间窗、重放等解密失败属调用方问题，按 warn 记录并统一 400，
@@ -150,30 +151,39 @@ public class Register implements HttpHandler {
                 httpResponse.status(400);
                 return;
             }
-            // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
-            instanceInfo.setId(instanceId);
-            instanceInfo.setHost(resolveHost(instanceInfo, httpRequest));
-            instanceInfo.setDomain(domainId); // 由密钥选择确定
-            registry.addRemoteInstance(instanceInfo);
-            for (AppMeta appMeta : instanceInfo.getAppMetas()) {
-                logger.info(String.format("registration, instance: %s, app: %s", instanceId, forLog(appMeta.getApp().code)));
-            }
+
+            String registeredInstanceId = UUID.randomUUID().toString();
+            byte[] responseAad = agentDomainService.responseAad(aad);
+            byte[] encrypt = cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad);
+            httpResponse.send(encrypt);
+            // 到这里，表示注册成功
+            addRemoteInstance(instanceInfo, domainId, registeredInstanceId, httpRequest); // todo 应该在http确认响应成功后回调？
         } catch (Exception e) {
             logger.error("failed to parse instance info", e);
             httpResponse.status(400);
         }
     }
 
-    // 反代/NAT 下 TCP 对端恒为代理地址：开启信任时改用 agent 自报地址
-    private String resolveHost(InstanceInfo instanceInfo, HttpRequest httpRequest) {
-        String remoteHost = httpRequest.getRemoteHost(); // 默认取 TCP 源地址，不采信报文自报
-        String advertised = instanceInfo.getAdvertisedHost();
-        if (!trustAdvertisedHost || advertised == null) return remoteHost;
+    private void addRemoteInstance(InstanceInfo instanceInfo, String domainId, String instanceId, HttpRequest httpRequest) {
+        // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
+        instanceInfo.setDomain(domainId); // 由密钥选择确定
+        instanceInfo.setId(instanceId);
+        instanceInfo.setHost(resolveHost(
+                httpRequest.getRemoteHost(), instanceInfo.getHost()));
+        registry.addRemoteInstance(instanceInfo);
+        for (AppMeta appMeta : instanceInfo.getAppMetas()) {
+            logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), forLog(appMeta.getApp().code)));
+        }
+    }
 
-        String host = advertised.trim();
+    // 反代/NAT 下 TCP 对端恒为代理地址：开启信任时改用 agent 自报地址
+    private String resolveHost(String remoteHost, String advertisedHost) {
+        if (advertisedHost == null || !trustAdvertisedHost) return remoteHost;
+
+        String host = advertisedHost.trim();
         if (isSafeHost(host)) return host;
 
-        logger.warn("illegal advertised host ignored: " + forLog(advertised));
+        logger.warn("illegal advertised host ignored: " + forLog(advertisedHost));
         return remoteHost;
     }
 

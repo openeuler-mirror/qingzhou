@@ -3,12 +3,7 @@ package qingzhou.registry.impl;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -34,7 +29,7 @@ public class RegistryImpl implements Registry {
     @Reference
     HttpClient httpClient;
     @Reference
-    AgentDomainKeys agentDomainKeys;
+    AgentDomainService agentDomainService;
 
     private final PendingLogs pendingLogs = new PendingLogs();
 
@@ -104,7 +99,7 @@ public class RegistryImpl implements Registry {
         if (instanceId == null) {
             return null;
         }
-        if (instanceId.equals(qingzhou.registry.Constants.LOCAL_INSTANCE_ID)) {
+        if (instanceId.equals(Constants.LOCAL_INSTANCE_ID)) {
             return getLocalApp(appCode);
         } else {
             return getRemoteApp(instanceId, appCode);

@@ -1,17 +1,5 @@
 package qingzhou.agent;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
-import qingzhou.common.FileUtil;
-import qingzhou.common.TempFiles;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.logger.Logger;
-import qingzhou.registry.AgentDomainKeys;
-import qingzhou.registry.Constants;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,8 +10,20 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
+import qingzhou.common.TempFiles;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.logger.Logger;
+import qingzhou.registry.AgentDomainService;
+import qingzhou.registry.Constants;
+
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=" + qingzhou.registry.Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+        property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         service = {Upload.class, HttpHandler.class})
 public class Upload extends AbstractAgentHandler {
     // 单上传总量上限：分片追加若无总量约束，攻击者可持续上传写满磁盘（DoS）
@@ -44,13 +44,23 @@ public class Upload extends AbstractAgentHandler {
     private final AtomicLong pendingBytes = new AtomicLong();
 
     @Reference
-    public void setAgentDomainKeys(AgentDomainKeys agentDomainKeys) {
-        this.agentDomainKeys = agentDomainKeys;
+    public void setAgentDomainKeys(AgentDomainService agentDomainService) {
+        this.agentDomainService = agentDomainService;
     }
 
     @Reference
     public void setLogger(Logger logger) {
         this.logger = logger;
+    }
+
+    @Reference
+    public void setAgentCipherManager(AgentCipherManager agentCipherManager) {
+        this.agentCipherManager = agentCipherManager;
+    }
+
+    @Reference
+    public void setAgentInstanceManager(AgentInstanceManager agentInstanceManager) {
+        this.agentInstanceManager = agentInstanceManager;
     }
 
     @Activate
@@ -63,14 +73,14 @@ public class Upload extends AbstractAgentHandler {
     }
 
     @Override
-    protected String aadName() {
-        return qingzhou.registry.Constants.REMOTE_UPLOAD_URI;
+    protected String uriName() {
+        return Constants.REMOTE_UPLOAD_URI;
     }
 
     @Override
     protected String[] aadContext(HttpRequest httpRequest) {
         // 端点名在前、文件键与偏移量在后：后两者是明文控制参数，纳入 AAD 后改道分片或改写偏移即解密失败
-        return new String[]{aadName(), fileKey(httpRequest), fileOffset(httpRequest)};
+        return new String[]{fileKey(httpRequest), fileOffset(httpRequest)};
     }
 
     @Override
@@ -222,7 +232,7 @@ public class Upload extends AbstractAgentHandler {
     }
 
     private static String fileKey(HttpRequest httpRequest) {
-        String key = httpRequest.getParameter(qingzhou.registry.Constants.REMOTE_PARAMETER_FILE_KEY);
+        String key = httpRequest.getParameter(Constants.REMOTE_PARAMETER_FILE_KEY);
         return key == null ? "" : key;
     }
 

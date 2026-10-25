@@ -2,7 +2,9 @@ package qingzhou.registry.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -216,7 +218,7 @@ public class RegistryImplTest {
         AppStubLocal stub = newLocalApp(APP_CODE_1);
         registry.bindApp(stub);
 
-        AppStub result = registry.getAppStub(qingzhou.registry.Constants.LOCAL_INSTANCE_ID, APP_CODE_1);
+        AppStub result = registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1);
 
         Assert.assertNotNull(result);
         Assert.assertTrue(result instanceof AppStubLocal);
@@ -238,7 +240,7 @@ public class RegistryImplTest {
     public void getAppStub_localInstanceIdUnknownCode_returnNull() {
         RegistryImpl registry = newRegistry();
 
-        Assert.assertNull(registry.getAppStub(qingzhou.registry.Constants.LOCAL_INSTANCE_ID, APP_CODE_1));
+        Assert.assertNull(registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1));
     }
 
     @Test

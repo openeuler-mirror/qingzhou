@@ -5,9 +5,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
+import qingzhou.common.Constants;
 import qingzhou.logger.Logger;
 
 /**
@@ -18,7 +18,7 @@ import qingzhou.logger.Logger;
  */
 @Component(configurationPid = "qingzhou-logger", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class LoggerImpl implements Logger {
-    static final String DEFAULT_LOGGER = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
+    static final String DEFAULT_LOGGER = Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
     private static final long DEFAULT_THROTTLE_WINDOW_MS = 30_000L; // 同一失败消息的聚合窗口默认值
 
     // 非工厂 pid（如 qingzhou-logger）即单实例默认日志器
@@ -47,7 +47,7 @@ public class LoggerImpl implements Logger {
 
     @Activate
     public void init(Map<String, Object> config) throws Exception {
-        pid = (String) config.get(Constants.SERVICE_PID);
+        pid = (String) config.get(org.osgi.framework.Constants.SERVICE_PID);
         activePids.add(pid);
         throttle = new LogThrottle(throttleWindow(config));
 

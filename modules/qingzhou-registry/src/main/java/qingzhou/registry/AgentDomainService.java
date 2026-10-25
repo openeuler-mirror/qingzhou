@@ -18,7 +18,7 @@ import qingzhou.crypto.EpochKeyRotatingCipher;
  * 因此本方案满足「无密钥的外部客户端不可读/改」，但「同域实例互不可读/改」仅对未捕获引导报文的成员成立，
  * 非彻底满足——彻底隔离需引入非对称（中心密钥对，令注册只对中心可见）。
  */
-public interface AgentDomainKeys {
+public interface AgentDomainService {
     Set<String> getAllAgentDomains();
 
     // 域密钥时段密码器：用于首注册（引导）报文的加解密
@@ -27,10 +27,9 @@ public interface AgentDomainKeys {
     // 每实例密钥时段密码器：用于注册后双向报文的加解密
     EpochKeyRotatingCipher getInstanceCipher(String agentDomain, String instanceSecret);
 
-    byte[] toAgentAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData);
+    byte[] aadForRegistry(String agentDomain, String instanceId);
 
-    byte[] toRegistryAad(String agentDomain, String instanceId, String... reqData);
+    byte[] aadForAgent(String instanceId, String uri, String... extAad);
 
-    // 响应方向：此时代中心已持有实例密钥，可绑定；注册请求方向不绑定（首注册时尚无密钥）
-    byte[] toRegistryResponseAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData);
+    byte[] responseAad(byte[] requestAad);
 }

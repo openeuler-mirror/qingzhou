@@ -16,10 +16,11 @@ import qingzhou.common.FileUtil;
 import qingzhou.crypto.Crypto;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.AgentDomainService;
+import qingzhou.registry.Constants;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class AgentDomainKeysImpl implements AgentDomainKeys {
+public class AgentDomainServiceImpl implements AgentDomainService {
     @Reference
     private Crypto crypto;
     @Reference
@@ -90,35 +91,39 @@ public class AgentDomainKeysImpl implements AgentDomainKeys {
     }
 
     @Override
-    public byte[] toAgentAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
-        return frame("REGISTRY_AGENT", agentDomain, instanceId, instanceSecret, reqData);
+    public byte[] aadForRegistry(String agentDomain, String instanceId) {
+        return frame(new String[]{Constants.REMOTE_REGISTER_URI, agentDomain, instanceId}, null);
     }
 
     @Override
-    public byte[] toRegistryAad(String agentDomain, String instanceId, String... reqData) {
-        return frame("AGENT_REGISTRY", agentDomain, instanceId, null, reqData);
+    public byte[] aadForAgent(String instanceId, String uri, String... extAad) {
+        String[] arr;
+        if (extAad != null && extAad.length > 0) {
+            arr = new String[extAad.length + 2];
+            System.arraycopy(extAad, 0, arr, 0, extAad.length);
+            arr[extAad.length] = uri;
+            arr[extAad.length + 1] = instanceId;
+        } else {
+            arr = new String[]{uri, instanceId};
+        }
+        return frame(arr, null);
     }
 
     @Override
-    public byte[] toRegistryResponseAad(String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
-        return frame("AGENT_REGISTRY", agentDomain, instanceId, instanceSecret, reqData);
+    public byte[] responseAad(byte[] requestAad) {
+        return frame(new String[]{"isResponse"}, requestAad);
     }
 
     // 长度前缀分帧：每个字段先写长度再写内容，字段与数组边界均无歧义，
-    // 杜绝不同 (tag, agentDomain, instanceId, instanceSecret, reqData) 组合拼接出相同 AAD（如 ["a,b"] 与 ["a","b"]）
-    private byte[] frame(String tag, String agentDomain, String instanceId, String instanceSecret, String[] reqData) {
-        StringBuilder sb = new StringBuilder();
-        append(sb, tag);
-        append(sb, agentDomain);
-        append(sb, instanceId);
-        append(sb, instanceSecret);
-        sb.append(reqData.length).append(':');
-        for (String item : reqData) append(sb, item);
-        return crypto.generateCipherAad(sb.toString());
-    }
-
-    private static void append(StringBuilder sb, String field) {
-        sb.append(field == null ? -1 : field.length()).append(':');
-        if (field != null) sb.append(field);
+    // 杜绝不同 (tag, agentDomain, instanceId, instanceSecret, reqData, requestNonce) 组合拼接出相同 AAD（如 ["a,b"] 与 ["a","b"]）
+    private byte[] frame(String[] labels, byte[] tags) {
+        String[] toAad = labels;
+        if (tags != null && tags.length > 0) {
+            String[] merged = new String[labels.length + 1];
+            System.arraycopy(labels, 0, merged, 0, labels.length);
+            merged[labels.length] = crypto.getBase64Coder().encode(tags);
+            toAad = merged;
+        }
+        return crypto.generateCipherAad(toAad);
     }
 }

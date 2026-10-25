@@ -2,33 +2,31 @@ package qingzhou.agent;
 
 import java.nio.charset.StandardCharsets;
 
-import org.osgi.service.component.annotations.Reference;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AgentDomainKeys;
+import qingzhou.registry.AgentDomainService;
 
 abstract class AbstractAgentHandler implements HttpHandler {
-    protected AgentDomainKeys agentDomainKeys;
     protected Logger logger;
-
-    @Reference
-    private LocalAgentDomainKey localAgentDomainKey;
+    protected AgentDomainService agentDomainService;
+    protected AgentCipherManager agentCipherManager;
+    protected AgentInstanceManager agentInstanceManager;
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        InstanceInfo thisInstanceInfo = Heartbeat.currentInstanceInfo();
-        if (thisInstanceInfo == null) {
+        InstanceInfo cachedInstance = agentInstanceManager.getCachedInstance();
+        if (cachedInstance == null) {
             logger.error("agent instance info is not initialized");
             httpResponse.status(503); // 内部环境未准备好，服务器问题：503
             return;
         }
 
-        EpochKeyRotatingCipher agentCipher = localAgentDomainKey.getInstanceCipher(thisInstanceInfo.getInstanceSecret());
-        if (agentCipher == null) {
+        EpochKeyRotatingCipher instanceCipher = agentCipherManager.getInstanceCipher();
+        if (instanceCipher == null) {
             httpResponse.status(503);
             return;
         }
@@ -40,10 +38,10 @@ abstract class AbstractAgentHandler implements HttpHandler {
         }
 
         byte[] requestData = null;
+        byte[] agentAad = null;
         try {
-            byte[] agentAad = agentDomainKeys.toAgentAad(localAgentDomainKey.getLocalAgentDomain(), thisInstanceInfo.getId(),
-                    thisInstanceInfo.getInstanceSecret(), aadContext(httpRequest));
-            requestData = agentCipher.decrypt(requestBody, agentAad);
+            agentAad = agentDomainService.aadForAgent(cachedInstance.getId(), uriName(), aadContext(httpRequest));
+            requestData = instanceCipher.decrypt(requestBody, agentAad);
         } catch (Exception e) {
             // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，避免成为配置状态的判别信号
             logger.warn("agent request decrypt failed: " + e.getMessage());
@@ -69,9 +67,8 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
         // 加密响应数据
         try {
-            byte[] agentAad = agentDomainKeys.toRegistryResponseAad(localAgentDomainKey.getLocalAgentDomain(), thisInstanceInfo.getId(),
-                    thisInstanceInfo.getInstanceSecret(), new String[]{aadName()});
-            byte[] encrypt = agentCipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), agentAad);
+            byte[] responseAad = agentDomainService.responseAad(agentAad);
+            byte[] encrypt = instanceCipher.encrypt(responseData.getBytes(StandardCharsets.UTF_8), responseAad);
             httpResponse.send(encrypt);
         } catch (Exception e) {
             logger.error("agent response encryption error", e);
@@ -79,14 +76,14 @@ abstract class AbstractAgentHandler implements HttpHandler {
         }
     }
 
-    protected abstract String aadName();
+    protected abstract String uriName();
 
     /**
      * AAD 附加上下文：对明文携带的控制参数（如上传分片的文件键与偏移）做完整性绑定，
      * 篡改即解密失败。默认只绑定端点名。
      */
     protected String[] aadContext(HttpRequest httpRequest) {
-        return new String[]{aadName()};
+        return null;
     }
 
     protected abstract String doProcess(byte[] requestData, HttpRequest httpRequest) throws Throwable;

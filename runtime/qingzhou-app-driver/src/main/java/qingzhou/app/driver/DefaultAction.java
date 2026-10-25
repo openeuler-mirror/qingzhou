@@ -103,8 +103,8 @@ public class DefaultAction {
                 listResult.add(dataMap);
             });
             finalResult.put("data", listResult);
-            finalResult.put(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM, pageNum);
-            finalResult.put(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE, pageSize);
+            finalResult.put(Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM, pageNum);
+            finalResult.put(Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE, pageSize);
             // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
             finalResult.put(Constants.WEB_RESPONSE_PARAMETER_TOTAL_SIZE, page.totalSize(query));
             response.data(finalResult);

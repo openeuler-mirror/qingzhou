@@ -66,8 +66,19 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public byte[] generateCipherAad(String... context) {
-        if (context == null || context.length == 0) return null;
-        return String.join("", context).getBytes(StandardCharsets.UTF_8);
+        if (context == null || context.length == 0) return new byte[0];
+
+        StringBuilder sb = new StringBuilder();
+        for (String field : context) {
+            append(sb, field);
+        }
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private void append(StringBuilder sb, String field) {
+        sb.append(field == null ? -1 : field.length())
+                .append(':');
+        if (field != null) sb.append(field);
     }
 
     @Override

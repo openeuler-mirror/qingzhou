@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 import org.tinylog.core.LogEntry;
 import org.tinylog.core.LogEntryValue;
 import org.tinylog.writers.Writer;
+import qingzhou.common.Constants;
 
 /**
  * 覆盖 LoggerImpl 在 debug 级别下的常用日志 API。
@@ -44,7 +45,18 @@ public class LoggerImplTest {
         // 经 tinylog 公共配置入口注入，不触碰生产引导内部状态（tinylog 冻结后不可变更）。
         // writer 键格式与生产编码一致：writer_<名称>_<writer 后缀>，名称中的 _ 翻倍转义
         // （app_default → app__default），与 qingzhou.properties 中的真实命名保持一致
-        String defaultTag = qingzhou.common.Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
+        Map<String, String> tinylogConfig = getTinylogConfig();
+        org.tinylog.configuration.Configuration.replace(tinylogConfig);
+
+        Map<String, Object> config = new HashMap<>();
+        config.put("service.pid", "qingzhou-logger");
+        new LoggerImpl().init(config);
+        awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
+        clearOutput();
+    }
+
+    private static Map<String, String> getTinylogConfig() {
+        String defaultTag = Constants.CONFIG_FACTORY_DEFAULT_INSTANCE;
         Map<String, String> tinylogConfig = new HashMap<>();
         tinylogConfig.put("autoshutdown", "false");
         tinylogConfig.put("level", "debug");
@@ -54,13 +66,7 @@ public class LoggerImplTest {
         tinylogConfig.put("writer_access_.tag", "access");
         tinylogConfig.put("writer_app__default_", APP_DEFAULT_WRITER);
         tinylogConfig.put("writer_app__default_.tag", "app_default");
-        org.tinylog.configuration.Configuration.replace(tinylogConfig);
-
-        Map<String, Object> config = new HashMap<>();
-        config.put("service.pid", "qingzhou-logger");
-        new LoggerImpl().init(config);
-        awaitUntil(() -> outputText().contains("'~~"), "startup banner was not written");
-        clearOutput();
+        return tinylogConfig;
     }
 
     /**

@@ -244,8 +244,8 @@ public class RegisterActionTools {
         if (!response.isSuccess() || !(response.getData() instanceof Map)) return null;
 
         Map<?, ?> data = (Map<?, ?>) response.getData();
-        Object pageNum = data.get(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM);
-        Object pageSize = data.get(qingzhou.registry.Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE);
+        Object pageNum = data.get(Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM);
+        Object pageSize = data.get(Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE);
         Object totalSize = data.get(Constants.WEB_RESPONSE_PARAMETER_TOTAL_SIZE);
         if (!(pageNum instanceof Number && pageSize instanceof Number && totalSize instanceof Number)) return null;
 

@@ -6,16 +6,15 @@ import java.util.List;
 public class InstanceInfo {
     // 以下字段由 registry 在认证通过后写入，不参与 JSON 收发
     private transient volatile long lastRefreshTime; // 续期写入与健康检查读取跨线程，须保证可见性
-    private transient String host;
     private transient String domain;
+    private transient String id; // agent注册不带，由registry生成返回
 
-    private String id;
     // 每实例随机密钥：agent 生成、仅随首次注册报文上报一次（已登记后心跳不再携带）。
-    // 用于派生每实例加密密钥（见 AgentDomainKeys#getInstanceCipher），而非仅作 AAD 绑定；
-    // 随注册报文序列化，但不得出现在注册之外的任何 JSON 输出中
+    // 用于派生每实例加密密钥（见 AgentDomainKeys#getInstanceCipher）；
     private String instanceSecret;
+
     // agent 自报的对外可达地址：仅用于反代/NAT 部署，registry 未显式开启信任时忽略
-    private String advertisedHost;
+    private String host;
     private int port;
     private boolean sslEnabled;
     private String platformVersion;
@@ -71,14 +70,6 @@ public class InstanceInfo {
 
     public List<AppMeta> getAppMetas() {
         return appMetas;
-    }
-
-    public String getAdvertisedHost() {
-        return advertisedHost;
-    }
-
-    public void setAdvertisedHost(String advertisedHost) {
-        this.advertisedHost = advertisedHost;
     }
 
     public String getInstanceSecret() {

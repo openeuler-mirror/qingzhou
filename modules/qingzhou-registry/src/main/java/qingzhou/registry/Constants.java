@@ -13,10 +13,10 @@ public interface Constants {
     String REMOTE_REGISTER_URI = "/register";
     String REMOTE_INVOKE_URI = "/invoke";
     String REMOTE_UPLOAD_URI = "/upload";
-    String REMOTE_PARAMETER_DOMAIN_ID = "domainId";
-    String REMOTE_PARAMETER_INSTANCE_ID = "instanceId";
-    String REMOTE_PARAMETER_FILE_KEY = "fileKey";
-    String REMOTE_PARAMETER_FILE_OFFSET = "offset";
+    String REMOTE_PARAMETER_DOMAIN_ID = "d";
+    String REMOTE_PARAMETER_INSTANCE_ID = "i";
+    String REMOTE_PARAMETER_FILE_KEY = "f";
+    String REMOTE_PARAMETER_FILE_OFFSET = "o";
     String REMOTE_UPLOAD_TEMP_KEY_FILE_SP = "=";
     String REMOTE_UPLOAD_MULTIPLE_FILE_SP = ",";
 }
