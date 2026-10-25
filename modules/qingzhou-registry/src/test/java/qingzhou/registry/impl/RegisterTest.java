@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.crypto.impl.CryptoImpl;
+import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -100,7 +101,7 @@ public class RegisterTest {
     public void renewal_withInstanceKey_refreshesWithoutNewRegistration() throws Exception {
         InstanceInfo registered = registerNewInstance();
         long before = registered.getRefreshTime();
-        Thread.sleep(5);
+        Thread.sleep(50); // 大于 Windows 时钟粒度，避免两次刷新落在同一刻度上
 
         CapturedResponse response = handle(registered.getId(),
                 renewalBody(registered.getId(), registered.getInstanceSecret()));
@@ -132,6 +133,18 @@ public class RegisterTest {
         CapturedResponse response = handle(illegalId, body);
 
         // 该值同时用作注册表键与 AAD 上下文：边界层须在解密与落表前拒绝
+        Assert.assertEquals(response.status, 400);
+        Assert.assertTrue(registry.getAllRemoteInstances().isEmpty());
+    }
+
+    @Test
+    public void firstRegistration_withIllegalAppMeta_isRejectedBeforeRegistration() throws Exception {
+        InstanceInfo agentSide = newInstanceInfo();
+        agentSide.getAppMetas().add(new AppMeta()); // app 为 null 的应用元数据
+
+        CapturedResponse response = handle(null, firstRegistrationBody(agentSide));
+
+        // 畸形元数据不得落表：否则实例一旦注册，远端路由将持续 NPE
         Assert.assertEquals(response.status, 400);
         Assert.assertTrue(registry.getAllRemoteInstances().isEmpty());
     }

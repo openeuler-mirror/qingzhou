@@ -80,7 +80,7 @@ abstract class AbstractAgentHandler implements HttpHandler {
 
     /**
      * AAD 附加上下文：对明文携带的控制参数（如上传分片的文件键与偏移）做完整性绑定，
-     * 篡改即解密失败。默认只绑定端点名。
+     * 篡改即解密失败。默认不附加控制参数（基座 AAD 仍绑端点与实例）。
      */
     protected String[] aadContext(HttpRequest httpRequest) {
         return null;

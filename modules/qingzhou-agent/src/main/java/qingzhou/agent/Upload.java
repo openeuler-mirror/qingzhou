@@ -79,7 +79,7 @@ public class Upload extends AbstractAgentHandler {
 
     @Override
     protected String[] aadContext(HttpRequest httpRequest) {
-        // 端点名在前、文件键与偏移量在后：后两者是明文控制参数，纳入 AAD 后改道分片或改写偏移即解密失败
+        // 文件键与偏移量是明文控制参数，纳入 AAD（与端点、实例一并认证）：改道分片或改写偏移即解密失败
         return new String[]{fileKey(httpRequest), fileOffset(httpRequest)};
     }
 

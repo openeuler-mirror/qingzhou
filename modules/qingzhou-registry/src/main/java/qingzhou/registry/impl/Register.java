@@ -153,6 +153,16 @@ public class Register implements HttpHandler {
                 httpResponse.status(400);
                 return;
             }
+            // 应用编码是远端路由键（getRemoteApp 按其匹配）并直接进入日志：解密只保证完整性不保证内容，
+            // 畸形元数据须在落表前拒绝；编码字符集不做限定，兼容既有非 ASCII 应用编码
+            for (AppMeta appMeta : instanceInfo.getAppMetas()) {
+                if (appMeta == null || appMeta.getApp() == null
+                        || appMeta.getApp().code == null || appMeta.getApp().code.isEmpty()) {
+                    logger.warn("illegal app meta in registration payload");
+                    httpResponse.status(400);
+                    return;
+                }
+            }
 
             // 先落表再响应：响应丢失仅让 agent 下一周期重注册（旧条目按超时淘汰）；
             // 反之若先响应，落表失败会让 agent 在下一周期内处于"自认为已注册"的错误状态

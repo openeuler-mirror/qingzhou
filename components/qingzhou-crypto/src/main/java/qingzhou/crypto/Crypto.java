@@ -10,6 +10,10 @@ public interface Crypto {
      */
     String generateCipherKey();
 
+    /**
+     * 将多个上下文串分帧为 AAD：每段以「长度:内容」编码（null 记为 -1），字段边界无歧义，
+     * 避免 ["a,b"] 与 ["a","b"] 拼出同一 AAD。
+     */
     byte[] generateCipherAad(String... context);
 
     /**
