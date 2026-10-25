@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -120,7 +121,7 @@ public class Heartbeat {
             // 已登记后：续期报文不再序列化 InstanceInfo，且用每实例密钥加密
             // ——既缩小 InstanceInfo.instanceSecret 暴露窗口，又防止同域其他 agent 冒名续期
             return new Payload(agentCipherManager.getInstanceCipher(),
-                    "{\"id\":\"" + cachedInstance.getId() + "\"}",
+                    json.toJson(Collections.singletonMap("id", cachedInstance.getId())),
                     agentDomainService.aadForRegistry(agentCipherManager.getAgentDomain(), cachedInstance.getId()),
                     Constants.REMOTE_PARAMETER_INSTANCE_ID + "=" + encode(cachedInstance.getId()));
         } else {
