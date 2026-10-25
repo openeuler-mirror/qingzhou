@@ -22,8 +22,8 @@ import qingzhou.registry.Registry;
 public class Register implements HttpHandler {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
     private static final int MAX_REGISTER_BODY = 1024 * 1024;
-    // 实例标识同时用作注册表键、AAD 上下文与日志字段：限定安全字符集与长度
-    private static final int MAX_INSTANCE_ID_CHARS = 128;
+    // 实例 ID 与实例密钥都是契约级令牌（分别作注册表键/AAD 上下文、每实例密钥派生输入）：限定安全字符集与长度
+    private static final int MAX_TOKEN_CHARS = 128;
     // 注册表容量兜底：持有域密钥即可注册任意多伪实例，而单实例元数据最大 1MB
     private static final int MAX_REMOTE_INSTANCES = 1000;
 
@@ -92,12 +92,14 @@ public class Register implements HttpHandler {
             return;
         }
 
-        // 无 instanceId 时为新实例，有则为续期
-        String guessInstanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
-        InstanceInfo exists = null;
-        if (guessInstanceId != null) {
-            exists = registry.getRemoteInstance(guessInstanceId);
+        // 无 instanceId 时为新实例，有则为续期。该值同时用作注册表键与 AAD 上下文，须在边界层校验
+        String renewInstanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
+        if (renewInstanceId != null && isInvalidToken(renewInstanceId)) {
+            logger.warn("illegal instance id: " + forLog(renewInstanceId));
+            httpResponse.status(400);
+            return;
         }
+        InstanceInfo exists = renewInstanceId == null ? null : registry.getRemoteInstance(renewInstanceId);
 
         try {
             // 已注册实例的续期用每实例密钥解密：仅真实实例可刷新自身，同域其他 agent 无法冒名续期；
@@ -108,7 +110,7 @@ public class Register implements HttpHandler {
             byte[] requestData;
             byte[] aad;
             try {
-                aad = agentDomainService.aadForRegistry(domainId, guessInstanceId);
+                aad = agentDomainService.aadForRegistry(domainId, renewInstanceId);
                 requestData = cipher.decrypt(requestBody, aad);
             } catch (Exception e) {
                 // 报文由请求方控制：密钥失配、时间窗、重放等解密失败属调用方问题，按 warn 记录并统一 400，
@@ -146,18 +148,18 @@ public class Register implements HttpHandler {
                 return;
             }
             // 实例密钥是 center→agent 方向的认证因子：缺失即无法安全下发指令，直接拒绝注册
-            if (!isSafeToken(instanceInfo.getInstanceSecret())) {
+            if (isInvalidToken(instanceInfo.getInstanceSecret())) {
                 logger.warn("missing or illegal instance secret");
                 httpResponse.status(400);
                 return;
             }
 
+            // 先落表再响应：响应丢失仅让 agent 下一周期重注册（旧条目按超时淘汰）；
+            // 反之若先响应，落表失败会让 agent 在下一周期内处于"自认为已注册"的错误状态
             String registeredInstanceId = UUID.randomUUID().toString();
+            addRemoteInstance(instanceInfo, domainId, registeredInstanceId, httpRequest);
             byte[] responseAad = agentDomainService.responseAad(aad);
-            byte[] encrypt = cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad);
-            httpResponse.send(encrypt);
-            // 到这里，表示注册成功
-            addRemoteInstance(instanceInfo, domainId, registeredInstanceId, httpRequest); // todo 应该在http确认响应成功后回调？
+            httpResponse.send(cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad));
         } catch (Exception e) {
             logger.error("failed to parse instance info", e);
             httpResponse.status(400);
@@ -199,15 +201,15 @@ public class Register implements HttpHandler {
         return true;
     }
 
-    private static boolean isSafeToken(String token) {
-        if (token == null || token.isEmpty() || token.length() > MAX_INSTANCE_ID_CHARS) return false;
+    private static boolean isInvalidToken(String token) {
+        if (token == null || token.isEmpty() || token.length() > MAX_TOKEN_CHARS) return true;
         for (int i = 0; i < token.length(); i++) {
             char c = token.charAt(i);
             boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
                     || c == '-' || c == '_' || c == '.';
-            if (!safe) return false;
+            if (!safe) return true;
         }
-        return true;
+        return false;
     }
 
     // 参数来自不可信请求：截断并剔除控制字符，避免日志注入

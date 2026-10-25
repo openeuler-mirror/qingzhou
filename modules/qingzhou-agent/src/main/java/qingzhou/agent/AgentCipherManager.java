@@ -18,7 +18,9 @@ public class AgentCipherManager {
 
     private String agentDomain;
     private EpochKeyRotatingCipher agentCipher;
-    private EpochKeyRotatingCipher instanceCipher;
+    // 实例密钥器绑定当前 instanceSecret：应用变更会换新 secret 并重注册，
+    // 缓存不随 secret 失效会让续期与 center→agent 报文全部解密失败（实例周期性抖动）
+    private volatile InstanceCipher instanceCipher;
 
     @Activate
     public void init() {
@@ -45,12 +47,26 @@ public class AgentCipherManager {
 
     // 每实例密钥：由域密钥 + 实例密钥派生，仅 center 与该实例可计算，同域其他 agent 无法解密其注册后报文
     EpochKeyRotatingCipher getInstanceCipher() {
-        if (instanceCipher == null) {
-            InstanceInfo cachedInstance = agentInstanceManager.getCachedInstance();
-            if (cachedInstance != null) {
-                instanceCipher = agentDomainService.getInstanceCipher(agentDomain, cachedInstance.getInstanceSecret());
-            }
+        InstanceInfo cachedInstance = agentInstanceManager.getCachedInstance();
+        if (cachedInstance == null) return null;
+        String secret = cachedInstance.getInstanceSecret();
+
+        InstanceCipher cached = instanceCipher;
+        if (cached == null || !cached.secret.equals(secret)) {
+            // 不可变槽整体经 volatile 发布：避免 secret 与密码器被并发读到错配组合
+            cached = new InstanceCipher(secret, agentDomainService.getInstanceCipher(agentDomain, secret));
+            instanceCipher = cached;
         }
-        return instanceCipher;
+        return cached.cipher;
+    }
+
+    private static final class InstanceCipher {
+        final String secret;
+        final EpochKeyRotatingCipher cipher;
+
+        InstanceCipher(String secret, EpochKeyRotatingCipher cipher) {
+            this.secret = secret;
+            this.cipher = cipher;
+        }
     }
 }

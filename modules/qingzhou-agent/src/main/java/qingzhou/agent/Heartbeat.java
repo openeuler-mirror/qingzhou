@@ -89,22 +89,20 @@ public class Heartbeat {
                 return;
             }
 
-            if (response.getStatus() == 200) {
-                if (registered) { // 发的最小载荷却被当新实例登记（中心重启）：登记信息不完整，需重发完整信息
-                    logger.warn("unexpected 200 on minimal heartbeat, will resend full registration");
-                    registered = false;
-                } else {
-                    InstanceInfo cachedInstance = agentInstanceManager.getCachedInstance();
-                    byte[] responseAad = agentDomainService.responseAad(payload.aad);
-                    byte[] registeredInstanceId = payload.cipher.decrypt(response.getBody(), responseAad);
-                    cachedInstance.setId(new String(registeredInstanceId, StandardCharsets.UTF_8));
-                    registered = true;
-                    logger.info(cachedInstance.getAppMetas().size() + " apps registered");
-                }
-            } else {
+            // 200 只对应新实例登记（续期成功恒为 304）：最小心跳在实例已失效时会被解密拒绝回 400，
+            // 走下面的失败分支重置 registered，下一个周期重发完整注册
+            if (response.getStatus() != 200) {
                 logger.error("response code error [ " + response.getStatus() + " ] : " + registerUrl);
                 registered = false;
+                return;
             }
+
+            InstanceInfo cachedInstance = agentInstanceManager.getCachedInstance();
+            byte[] responseAad = agentDomainService.responseAad(payload.aad);
+            byte[] registeredInstanceId = payload.cipher.decrypt(response.getBody(), responseAad);
+            cachedInstance.setId(new String(registeredInstanceId, StandardCharsets.UTF_8));
+            registered = true;
+            logger.info(cachedInstance.getAppMetas().size() + " apps registered");
         } catch (ConnectException e) {
             logger.error("failed to connect to the URL: " + registerUrl + ", msg: " + e.getMessage());
         } catch (Exception e) {

@@ -240,9 +240,11 @@ public class Invoke implements HttpHandler {
         return value == null ? "null" : value.replaceAll("\\p{Cntrl}", "?");
     }
 
-    // 远端响应头透传前须剔除：长度类与 hop-by-hop 头会破坏中心侧 HTTP 响应分帧；content-type 由下方显式设置
+    // 远端响应头透传前须剔除：长度类与 hop-by-hop 头会破坏中心侧 HTTP 响应分帧；content-type 由下方显式设置；
+    // set-cookie 属中心域的会话凭据，不得由远端实例写入
     private static final Set<String> BLOCKED_PASSTHROUGH_HEADERS = new HashSet<>(Arrays.asList(
-            "content-length", "transfer-encoding", "connection", "keep-alive", "content-type"));
+            "content-length", "transfer-encoding", "connection", "keep-alive", "content-type",
+            "set-cookie", "set-cookie2"));
 
     private static boolean isPassthroughHeader(String name) {
         return name != null && !BLOCKED_PASSTHROUGH_HEADERS.contains(name.toLowerCase(Locale.ROOT));

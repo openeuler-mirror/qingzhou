@@ -31,7 +31,7 @@ abstract class AbstractAgentHandler implements HttpHandler {
             return;
         }
 
-        byte[] requestBody = httpRequest.getBody(); // 空报文由解密环节按无效报文返回 400
+        byte[] requestBody = httpRequest.getBody(); // 空报文直接 400：不入解密环节，避免不可信输入刷出的噪声告警
         if (requestBody == null || requestBody.length == 0) {
             httpResponse.status(400);
             return;

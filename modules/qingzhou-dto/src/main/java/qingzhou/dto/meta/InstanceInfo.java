@@ -10,7 +10,7 @@ public class InstanceInfo {
     private transient String id; // agent注册不带，由registry生成返回
 
     // 每实例随机密钥：agent 生成、仅随首次注册报文上报一次（已登记后心跳不再携带）。
-    // 用于派生每实例加密密钥（见 AgentDomainKeys#getInstanceCipher）；
+    // 用于派生每实例加密密钥（见 AgentDomainService#getInstanceCipher）；
     private String instanceSecret;
 
     // agent 自报的对外可达地址：仅用于反代/NAT 部署，registry 未显式开启信任时忽略

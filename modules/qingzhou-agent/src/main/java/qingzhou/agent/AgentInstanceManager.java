@@ -60,7 +60,7 @@ public class AgentInstanceManager {
         // 实例端口
         instanceInfo.setPort(serverPort);
         instanceInfo.setSslEnabled(serverSslEnabled);
-        // 实例部署的应用（已按 appCode 排序，保证注册报文与实例 ID 的 MD5 计算稳定）
+        // 实例部署的应用（按 appCode 排序，保证注册报文与指纹比对的稳定性）
         List<AppMeta> appMetas = currentAppMetas();
         instanceInfo.getAppMetas().addAll(appMetas);
 
