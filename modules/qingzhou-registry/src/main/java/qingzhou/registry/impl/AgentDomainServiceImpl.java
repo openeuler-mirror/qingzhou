@@ -81,13 +81,10 @@ public class AgentDomainServiceImpl implements AgentDomainService {
         return domainKey;
     }
 
-    // 由域密钥与实例密钥派生每实例主密钥：域密钥(定长)与实例密钥(定长 UUID)拼接无歧义，SHA-256 作 KDF 足够
+    // 由域密钥与实例密钥派生每实例主密钥：HKDF(域密钥, "instance-key:"+实例密钥)，info 前缀区分用途、
+    // 实例密钥绑定实例，与时段密钥派生（info=时段索引）互不碰撞；持有实例密钥推不出域密钥
     private byte[] deriveInstanceKey(byte[] domainKey, String instanceSecret) {
-        byte[] secret = instanceSecret.getBytes(StandardCharsets.UTF_8);
-        byte[] mix = new byte[domainKey.length + secret.length];
-        System.arraycopy(domainKey, 0, mix, 0, domainKey.length);
-        System.arraycopy(secret, 0, mix, domainKey.length, secret.length);
-        return crypto.getMessageDigest().sha256(mix);
+        return crypto.deriveKey(domainKey, ("instance-key:" + instanceSecret).getBytes(StandardCharsets.UTF_8), 32);
     }
 
     @Override

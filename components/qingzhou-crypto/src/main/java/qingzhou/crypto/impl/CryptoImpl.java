@@ -58,6 +58,11 @@ public class CryptoImpl implements Crypto {
     }
 
     @Override
+    public byte[] deriveKey(byte[] masterKey, byte[] info, int length) {
+        return Hkdf.derive(masterKey, info, length);
+    }
+
+    @Override
     public String generateCipherKey() {
         byte[] key = new byte[16];
         RANDOM.nextBytes(key);

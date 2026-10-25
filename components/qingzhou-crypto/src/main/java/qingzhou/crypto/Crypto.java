@@ -48,4 +48,10 @@ public interface Crypto {
      * 绑定根密钥与作用域的时段报文加解密器。与 {@link #getReplayGuardCipher} 一致，每次返回独立实例。
      */
     EpochKeyRotatingCipher getEpochKeyRotatingCipher(byte[] masterKey);
+
+    /**
+     * 从高熵根密钥经 HKDF 单向派生子密钥：{@code info} 区分作用域（时段、实例、用途等），
+     * 不同 info 的派生结果互相独立。根密钥须为高熵随机值（不可为口令）。
+     */
+    byte[] deriveKey(byte[] masterKey, byte[] info, int length);
 }
