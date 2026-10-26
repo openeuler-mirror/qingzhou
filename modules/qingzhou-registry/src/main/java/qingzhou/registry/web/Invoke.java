@@ -173,7 +173,8 @@ public class Invoke implements HttpHandler {
                 }
             } catch (Exception e) {
                 // 体被声明为 JSON 却解析失败：不得用残缺参数继续调用业务
-                logger.warn("failed to parse json body: " + e.getMessage());
+                logger.warn("failed to parse json body: " + e.getClass().getSimpleName()
+                        + ", body length=" + httpRequest.getBody().length);
                 return false;
             }
         }

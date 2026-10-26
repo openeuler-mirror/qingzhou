@@ -221,7 +221,8 @@ public class FileUtil {
                             sourceAttrs.creationTime()
                     );
         } catch (IOException e) {
-            // 时间戳复制失败不致命，忽略
+            // 时间戳复制失败不致命，留痕不阻断
+            System.err.println("WARN: failed to copy file times to " + target + ": " + e);
         }
     }
 
@@ -357,6 +358,7 @@ public class FileUtil {
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt(); // 恢复中断位，交由调用链感知停机信号
                 }
                 if (!file.delete()) {
                     throw new IOException("Unable to delete file: " + file);
