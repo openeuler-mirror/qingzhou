@@ -5,9 +5,15 @@ public interface Parameter {
 
     String description();
 
+    String type();
+
     boolean required();
 
     static Parameter of(String name, String description, boolean required) {
+        return of(name, description, "string", required);
+    }
+
+    static Parameter of(String name, String description, String type, boolean required) {
         return new Parameter() {
             @Override
             public String name() {
@@ -17,6 +23,11 @@ public interface Parameter {
             @Override
             public String description() {
                 return description;
+            }
+
+            @Override
+            public String type() {
+                return type;
             }
 
             @Override

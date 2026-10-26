@@ -33,12 +33,22 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <artifactId>qingzhou-http-client</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-http-server</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <artifactId>qingzhou-json</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -58,12 +68,16 @@
                     <instructions>
                         <Export-Package>qingzhou.ai</Export-Package>
                         <Import-Package>
+                            org.osgi.framework,org.osgi.service.component,
+                            org.osgi.service.cm,
                             qingzhou.common,
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,
+                            qingzhou.http.client,
                             qingzhou.http.server,
                             qingzhou.logger,
                             qingzhou.json,
+                            qingzhou.crypto,
                             qingzhou.llm,qingzhou.llm.openai,
                             qingzhou.store
                         </Import-Package>

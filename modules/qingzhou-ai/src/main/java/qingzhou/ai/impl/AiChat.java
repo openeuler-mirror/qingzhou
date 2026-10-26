@@ -182,6 +182,7 @@ public class AiChat implements HttpHandler {
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(request.refDocs)
                     .skills(skills)
+                    .maxToolResultChars(20480)
                     .enableThinking(true)
                     .interceptor((toolName, argsMap) -> interceptToolInvocation.intercept(toolName, argsMap, request.userId, request.userRoles))
                     .maxDocChars(maxRefChars)

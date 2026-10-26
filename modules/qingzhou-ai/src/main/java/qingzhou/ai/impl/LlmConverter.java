@@ -107,7 +107,7 @@ public final class LlmConverter {
         Map<String, Map<String, String>> params = new LinkedHashMap<>();
 
         toolProp.forEach((key, value) -> Stream.of(
-                ToolService.PARAMETER_NAME, ToolService.PARAMETER_DESCRIPTION, ToolService.PARAMETER_REQUIRED).forEach(flag -> {
+                ToolService.PARAMETER_NAME, ToolService.PARAMETER_DESCRIPTION, ToolService.PARAMETER_REQUIRED, ToolService.PARAMETER_TYPE).forEach(flag -> {
             if (key.startsWith(flag)) {
                 String keyPrefix = "";
                 int i = key.indexOf(".");
@@ -123,6 +123,7 @@ public final class LlmConverter {
                 .map(map -> Parameter.of(
                         map.get(ToolService.PARAMETER_NAME),
                         map.get(ToolService.PARAMETER_DESCRIPTION),
+                        map.get(ToolService.PARAMETER_TYPE),
                         Boolean.parseBoolean(map.getOrDefault(ToolService.PARAMETER_REQUIRED, "true"))))
                 .toArray(Parameter[]::new);
     }
