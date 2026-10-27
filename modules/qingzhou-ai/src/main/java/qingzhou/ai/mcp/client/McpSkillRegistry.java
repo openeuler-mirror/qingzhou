@@ -1,28 +1,27 @@
 package qingzhou.ai.mcp.client;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-
 /**
  * 按 mcp.json 动态注册技能：每个 type=http 的 MCP Server 注册为一个 SkillService。
  */
-@Component(immediate = true, configurationPid = "qingzhou-mcp", configurationPolicy = ConfigurationPolicy.OPTIONAL)
+@Component(immediate = true)
 public class McpSkillRegistry {
-    private static final String CACHE_SECONDS = "cache_seconds";
-    private static final long DEFAULT_CACHE_SECONDS = 3600;
-
     @Reference
     private HttpClient httpClient;
     @Reference
@@ -36,13 +35,12 @@ public class McpSkillRegistry {
     private final List<McpSkillService> skills = new ArrayList<>();
 
     @Activate
-    public void init(ComponentContext context, Map<String, ?> config) {
-        long cacheMillis = cacheSeconds(config) * 1000;
+    public void init(ComponentContext context) {
         BundleContext bundleContext = context.getBundleContext();
 
         for (McpConfig server : McpConfig.load(json, crypto, logger)) {
             McpClient client = new McpClient(server, httpClient, json, logger);
-            McpSkillService skill = new McpSkillService(server, client, logger, cacheMillis);
+            McpSkillService skill = new McpSkillService(server, client, logger);
             skills.add(skill);
 
             Hashtable<String, Object> properties = new Hashtable<>();
@@ -73,19 +71,5 @@ public class McpSkillRegistry {
         }
         registrations.clear();
         skills.clear();
-    }
-
-    private long cacheSeconds(Map<String, ?> config) {
-        if (config == null) return DEFAULT_CACHE_SECONDS;
-
-        Object value = config.get(CACHE_SECONDS);
-        if (value == null) return DEFAULT_CACHE_SECONDS;
-
-        try {
-            return Long.parseLong(String.valueOf(value).trim());
-        } catch (NumberFormatException e) {
-            logger.warn("invalid " + CACHE_SECONDS + " [" + value + "], using default " + DEFAULT_CACHE_SECONDS);
-            return DEFAULT_CACHE_SECONDS;
-        }
     }
 }

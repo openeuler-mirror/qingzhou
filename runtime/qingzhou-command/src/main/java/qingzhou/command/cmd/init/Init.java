@@ -26,7 +26,7 @@ public class Init extends Processor {
 
     @Override
     public String info() {
-        return "Initialize the instance: global key, admin password and SSL certificate.";
+        return "Initialize the instance: global key, admin password, TOTP and SSL certificate.";
     }
 
     @Override
@@ -47,6 +47,7 @@ public class Init extends Processor {
 
         new GlobalKeyStep().init(this);
         new AdminPasswordStep().init(this);
+        new TotpStep().init(this);
         new SslStep().init(this);
         log("Done, restart the instance to take effect.");
     }
@@ -80,8 +81,12 @@ public class Init extends Processor {
         }
     }
 
+    String readLine(String prompt) {
+        return console.readLine(prompt);
+    }
+
     boolean noConfirm(String prompt) {
-        String answer = console.readLine(prompt);
+        String answer = readLine(prompt);
         return answer == null || !answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
     }
 

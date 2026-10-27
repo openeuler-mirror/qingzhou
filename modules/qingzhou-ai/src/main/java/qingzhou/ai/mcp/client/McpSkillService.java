@@ -1,30 +1,26 @@
 package qingzhou.ai.mcp.client;
 
-import qingzhou.ai.SkillService;
-import qingzhou.ai.ToolService;
-import qingzhou.logger.Logger;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class McpSkillService implements SkillService {
-    private static final long RETRY_BACKOFF_MILLIS = 60_000;
+import qingzhou.ai.SkillService;
+import qingzhou.ai.ToolService;
+import qingzhou.logger.Logger;
 
+final class McpSkillService implements SkillService {
     private final McpConfig config;
     private final McpClient client;
     private final Logger logger;
-    private final long cacheMillis;
 
     private final Object refreshLock = new Object();
     private volatile CachedTools cached;
 
-    McpSkillService(McpConfig config, McpClient client, Logger logger, long cacheMillis) {
+    McpSkillService(McpConfig config, McpClient client, Logger logger) {
         this.config = config;
         this.client = client;
         this.logger = logger;
-        this.cacheMillis = cacheMillis;
     }
 
     @Override
@@ -37,27 +33,25 @@ final class McpSkillService implements SkillService {
 
     private boolean isExpired() {
         CachedTools snapshot = cached;
-        return snapshot == null || System.currentTimeMillis() >= snapshot.nextRefreshAt;
+        return snapshot == null;
     }
 
     private void refresh() {
         synchronized (refreshLock) {
             CachedTools snapshot = cached;
-            if (snapshot != null && System.currentTimeMillis() < snapshot.nextRefreshAt) return;
+            if (snapshot != null) return;
 
             try {
-                cached = build(client.listTools(), System.currentTimeMillis() + cacheMillis);
+                cached = build(client.listTools());
             } catch (Exception e) {
                 // 保留旧缓存并进入退避期：故障 Server 不应让每轮对话都卡在连接超时上
                 logger.warn("failed to load tools of mcp server [" + config.id + "]: " + e.getMessage());
-                long retryAt = System.currentTimeMillis() + RETRY_BACKOFF_MILLIS;
-                cached = snapshot == null ? new CachedTools(Collections.emptyMap(), retryAt)
-                        : new CachedTools(snapshot.tools, retryAt);
+                cached = new CachedTools(Collections.emptyMap());
             }
         }
     }
 
-    private CachedTools build(List<Map<String, Object>> tools, long nextRefreshAt) {
+    private CachedTools build(List<Map<String, Object>> tools) {
         Map<ToolService, Map<String, Object>> declared = new HashMap<>();
         for (Map<String, Object> tool : tools) {
             String remote = text(tool.get("name"));
@@ -67,7 +61,7 @@ final class McpSkillService implements SkillService {
             Map<String, Object> properties = McpToolConverter.properties(exposed, text(tool.get("description")), tool.get("inputSchema"));
             declared.put(toolArgs -> client.callTool(remote, toolArgs), properties);
         }
-        return new CachedTools(declared, nextRefreshAt);
+        return new CachedTools(declared);
     }
 
     private static String text(Object value) {
@@ -76,11 +70,9 @@ final class McpSkillService implements SkillService {
 
     private static final class CachedTools {
         final Map<ToolService, Map<String, Object>> tools;
-        final long nextRefreshAt;
 
-        CachedTools(Map<ToolService, Map<String, Object>> tools, long nextRefreshAt) {
+        CachedTools(Map<ToolService, Map<String, Object>> tools) {
             this.tools = tools;
-            this.nextRefreshAt = nextRefreshAt;
         }
     }
 }

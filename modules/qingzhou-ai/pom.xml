@@ -68,6 +68,7 @@
                     <instructions>
                         <Export-Package>qingzhou.ai</Export-Package>
                         <Import-Package>
+                            org.osgi.service.component,
                             qingzhou.common,
                             qingzhou.api,qingzhou.api.action,
                             qingzhou.dto,

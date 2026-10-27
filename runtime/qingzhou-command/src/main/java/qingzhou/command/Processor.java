@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public abstract class Processor {
-    protected static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+    public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
 
     private File libDir;
 

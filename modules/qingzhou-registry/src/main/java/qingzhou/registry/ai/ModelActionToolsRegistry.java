@@ -25,7 +25,7 @@ import qingzhou.registry.web.PermissionChecker;
 import qingzhou.registry.web.RequestParameters;
 
 @Component(immediate = true)
-public class RegisterActionTools {
+public class ModelActionToolsRegistry {
     // 业务字段集合：写操作的字段清单依模型而定，无法静态声明，故收敛为一个 JSON 对象字符串参数
     private static final String DATA = "data";
     private static final String TOOL_NAME_PREFIX = "qingzhou_action_";
@@ -92,7 +92,7 @@ public class RegisterActionTools {
             properties.put(ToolService.PARENT_SKILL, InvokeActionSkill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, TOOL_NAME_PREFIX + actionCode);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
-            ToolService systemToolService = toolArgs -> RegisterActionTools.this.invokeActionTool(actionCode, toolArgs);
+            ToolService systemToolService = toolArgs -> ModelActionToolsRegistry.this.invokeActionTool(actionCode, toolArgs);
             registrations.add(bundleContext.registerService(ToolService.class, systemToolService, properties));
         });
 

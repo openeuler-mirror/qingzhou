@@ -3,6 +3,8 @@ package qingzhou.image;
 import java.io.IOException;
 
 public interface QrCode {
-    // scale: 小格子的大小，根据 text 内容多少和需要显示的二维码大小来选值，一般为 10
-    byte[] genImage(String text, int scale) throws IOException;
+    byte[] genImage(String text) throws IOException;
+
+    // 终端文本图形：ANSI 黑底白块与半块字符拼合，供命令行直接输出给手机扫描
+    String genText(String text);
 }
