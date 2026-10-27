@@ -19,14 +19,17 @@ if not exist "%instanceDir%" (
     exit /b 1
 )
 
-rem java 启动参数
-for /f "delims=" %%i in ('java -jar "%qingzhou_home%\bin\qingzhou-launcher.jar" start-arg "%runInstance%" 2^>^&1') do set startCmd=%%i
-
-rem 判断返回码，给出错误提示信息
-if %errorlevel% neq 0 (
-    echo !startCmd!
-    exit /b %errorlevel%
+rem java 启动参数走 stdout 单独捕获：stderr 是 launcher 的告警通道（如 Windows 下临时目录删不掉），
+rem 合并会把告警当成启动命令执行；for /f 还会丢失退出码，故用临时文件传递
+set "startArgFile=%TEMP%\qingzhou-start-arg-%RANDOM%.txt"
+java -jar "%qingzhou_home%\bin\qingzhou-launcher.jar" start-arg "%runInstance%" > "%startArgFile%"
+if errorlevel 1 (
+    type "%startArgFile%"
+    del "%startArgFile%"
+    exit /b 1
 )
+set /p startCmd=<"%startArgFile%"
+del "%startArgFile%"
 
 rem 设置工作目录，保障 qingzhou.json 里的 logs/jvm/jvm.log 能识别准确
 cd /d "%instanceDir%"

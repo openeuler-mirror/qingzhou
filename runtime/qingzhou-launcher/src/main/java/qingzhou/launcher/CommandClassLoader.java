@@ -36,11 +36,17 @@ class CommandClassLoader {
                 }
             }
         }
-        // 解压目录只在本次进程内有效：正常退出即删，崩溃或强杀遗留的由下次启动回收
+        URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
+        // 解压目录只在本次进程内有效：正常退出即删，崩溃或强杀遗留的由下次启动回收。
+        // Windows 下 jar 被类加载器占用时删不掉，须先关闭加载器释放句柄，否则每次退出都残留并刷错误日志
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                loader.close();
+            } catch (IOException ignored) { // 关闭失败不影响退出，随后的删除会输出失败位置
+            }
             if (embedDir != null) deleteRecursively(embedDir);
         }));
-        return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
+        return loader;
     }
 
     // 内嵌 jar 只被 OSGi 的 Bundle-ClassPath 识别，普通类路径看不到其中的类：

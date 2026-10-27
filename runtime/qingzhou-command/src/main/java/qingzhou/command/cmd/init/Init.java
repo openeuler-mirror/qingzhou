@@ -60,24 +60,25 @@ public class Init extends Processor {
         return new File(instanceDir, "conf/" + name);
     }
 
+    // 口令不回显、输错无法自查：为空或不一致即重新输入，返回时必已确认一致；Ctrl+C 退出
     String readPassword(String prompt) {
-        char[] password = null;
-        char[] confirm = null;
-        try {
-            password = console.readPassword(prompt);
-            if (password == null || password.length == 0) return null; // 空口令视为跳过
+        while (true) {
+            char[] password = console.readPassword(prompt);
+            char[] confirm = console.readPassword("Confirm password: ");
+            // 终端关闭（EOF）时继续循环只会刷屏，直接终止
+            if (password == null || confirm == null) throw new IllegalStateException("no input, aborted");
 
-            confirm = console.readPassword("Confirm password: ");
-            boolean matched = confirm != null && Arrays.equals(password, confirm);
-            if (!matched) {
-                log("Passwords do not match, skipped.");
-                return null;
+            try {
+                if (password.length == 0) {
+                    log("Password cannot be empty.");
+                    continue;
+                }
+                if (Arrays.equals(password, confirm)) return new String(password);
+                log("Passwords do not match, please try again.");
+            } finally {
+                Arrays.fill(password, '\0');
+                Arrays.fill(confirm, '\0');
             }
-
-            return new String(password);
-        } finally {
-            if (password != null) Arrays.fill(password, '\0');
-            if (confirm != null) Arrays.fill(confirm, '\0');
         }
     }
 
