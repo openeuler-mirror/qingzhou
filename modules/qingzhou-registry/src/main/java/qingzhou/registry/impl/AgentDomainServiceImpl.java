@@ -1,0 +1,126 @@
+package qingzhou.registry.impl;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import qingzhou.common.FileUtil;
+import qingzhou.crypto.Crypto;
+import qingzhou.crypto.EpochKeyRotatingCipher;
+import qingzhou.logger.Logger;
+import qingzhou.registry.AgentDomainService;
+import qingzhou.registry.Constants;
+
+@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class AgentDomainServiceImpl implements AgentDomainService {
+    @Reference
+    private Crypto crypto;
+    @Reference
+    private Logger logger;
+
+    private final Map<String, byte[]> masters = new HashMap<>();
+
+    @Activate
+    public void init(Map<String, String> config) throws IOException {
+        Path keyFile = Paths.get(config.get("qingzhou.instance"), "conf", "secret-key.properties");
+        // 域密钥是全平台信任根：不合规先告警再收紧；非 OSGi 构造时 logger 未注入
+        FileUtil.restrictToOwnerOnly(keyFile.toFile(), msg -> {
+            if (logger != null) logger.warn(msg);
+        });
+        Properties properties = new Properties();
+        try (InputStream in = Files.newInputStream(keyFile)) {
+            properties.load(in);
+        }
+        String prefix = "agent-domain~";
+        for (String name : properties.stringPropertyNames()) {
+            if (!name.startsWith(prefix)) continue;
+            String rest = name.substring(prefix.length());
+            int dot = rest.indexOf('.');
+            if (dot <= 0) { // 缺分隔符时的 substring 会越界，配置笔误不得表现为隐晦的运行期异常
+                throw new IllegalArgumentException("invalid key name in secret-key.properties: " + name
+                        + ", expected " + prefix + "<domain>.<item>");
+            }
+            byte[] domainKey = crypto.getBase64Coder().decode(properties.getProperty(name).trim());
+            // 域根密钥是全平台信任根：HKDF 无法补救低熵 IKM，至少 32 字节（256 位）以满足后量子强度，激活即校验
+            if (domainKey.length < 32) {
+                throw new IllegalArgumentException("agent domain key too short (>=32 bytes): " + name);
+            }
+            masters.put(rest.substring(0, dot), domainKey);
+        }
+    }
+
+    @Override
+    public Set<String> getAllAgentDomains() {
+        // 不可变视图：外部不得增删信任根表；masters 仅在激活期写入，运行期只读
+        return Collections.unmodifiableSet(masters.keySet());
+    }
+
+    @Override
+    public EpochKeyRotatingCipher getDomainCipher(String agentDomain) {
+        return crypto.getEpochKeyRotatingCipher(requireDomainKey(agentDomain));
+    }
+
+    @Override
+    public EpochKeyRotatingCipher getInstanceCipher(String agentDomain, String instanceSecret) {
+        return crypto.getEpochKeyRotatingCipher(deriveInstanceKey(requireDomainKey(agentDomain), instanceSecret));
+    }
+
+    private byte[] requireDomainKey(String agentDomain) {
+        byte[] domainKey = masters.get(agentDomain);
+        if (domainKey == null) { // 未知域名：fail-fast，避免 NPE 掩盖配置/调用错误
+            throw new IllegalArgumentException("unknown agent domain: " + agentDomain);
+        }
+        return domainKey;
+    }
+
+    // 由域密钥与实例密钥派生每实例主密钥：HKDF(域密钥, "instance-key:"+实例密钥)，info 前缀区分用途、
+    // 实例密钥绑定实例，与时段密钥派生（info=时段索引）互不碰撞；持有实例密钥推不出域密钥
+    private byte[] deriveInstanceKey(byte[] domainKey, String instanceSecret) {
+        return crypto.deriveKey(domainKey, ("instance-key:" + instanceSecret).getBytes(StandardCharsets.UTF_8), 32);
+    }
+
+    @Override
+    public byte[] aadForRegistry(String agentDomain, String instanceId) {
+        return frame(new String[]{Constants.REMOTE_REGISTER_URI, agentDomain, instanceId}, null);
+    }
+
+    @Override
+    public byte[] aadForAgent(String instanceId, String uri, String... extAad) {
+        String[] arr;
+        if (extAad != null && extAad.length > 0) {
+            arr = new String[extAad.length + 2];
+            System.arraycopy(extAad, 0, arr, 0, extAad.length);
+            arr[extAad.length] = uri;
+            arr[extAad.length + 1] = instanceId;
+        } else {
+            arr = new String[]{uri, instanceId};
+        }
+        return frame(arr, null);
+    }
+
+    @Override
+    public byte[] responseAad(byte[] requestAad) {
+        return frame(new String[]{"isResponse"}, requestAad);
+    }
+
+    // 长度前缀分帧：每个字段先写长度再写内容，字段与数组边界均无歧义，
+    // 杜绝不同 (tag, agentDomain, instanceId, instanceSecret, reqData, requestNonce) 组合拼接出相同 AAD（如 ["a,b"] 与 ["a","b"]）
+    private byte[] frame(String[] labels, byte[] tags) {
+        String[] toAad = labels;
+        if (tags != null && tags.length > 0) {
+            String[] merged = new String[labels.length + 1];
+            System.arraycopy(labels, 0, merged, 0, labels.length);
+            merged[labels.length] = crypto.getBase64Coder().encode(tags);
+            toAad = merged;
+        }
+        return crypto.generateCipherAad(toAad);
+    }
+}

@@ -264,7 +264,7 @@ public class ConversationStore {
                     if (record == null) continue;
                     catalog.reindex(conversationId, new CatalogEntry(conversationId, record, byteSize(value)));
                 } catch (Throwable t) {
-                    logger.warn("failed to parse conversation: " + t.getMessage());
+                    logger.warn("failed to parse conversation " + conversationId + ": " + t.getClass().getSimpleName());
                 }
             }
         }
@@ -300,7 +300,7 @@ public class ConversationStore {
         try {
             return json.fromJson(value, ConversationRecord.class);
         } catch (Throwable t) {
-            logger.warn("failed to parse conversation: " + t.getMessage());
+            logger.warn("failed to parse conversation " + conversationId + ": " + t.getClass().getSimpleName());
             return null;
         }
     }

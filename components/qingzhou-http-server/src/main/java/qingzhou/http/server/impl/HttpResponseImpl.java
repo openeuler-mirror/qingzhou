@@ -6,16 +6,24 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpResponse;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.netty.http.server.HttpServerResponse;
 
 class HttpResponseImpl implements HttpResponse {
     private final HttpServerResponse response;
     private final Sinks.Many<byte[]> streamResponse;
+    private final Sinks.Empty<Void> firstOutputSignal = Sinks.empty();
 
     HttpResponseImpl(HttpServerResponse response, Sinks.Many<byte[]> streamResponse) {
         this.response = response;
         this.streamResponse = streamResponse;
+    }
+
+    // 流式链路须等首个响应内容产出后才订阅写链：订阅即发送状态行与响应头，
+    // 提前订阅会让 handler 在 onComplete 里设置的 status/header/contentType 全部失效
+    Mono<Void> firstOutput() {
+        return firstOutputSignal.asMono();
     }
 
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性
@@ -99,6 +107,7 @@ class HttpResponseImpl implements HttpResponse {
                 throw new IllegalStateException("cannot emit response body: " + result);
             }
             committed = true;
+            firstOutputSignal.tryEmitEmpty();
         }
         return this;
     }
@@ -113,14 +122,16 @@ class HttpResponseImpl implements HttpResponse {
     public void finish() {
         committed = true;
         streamResponse.tryEmitComplete(); // 已取消或已结束时忽略，重复调用无副作用
+        firstOutputSignal.tryEmitEmpty();
     }
 
     @Override
     public void redirect(String url) {
         // 双防线：CRLF 防响应头注入；仅允许站内相对地址防开放重定向（放行进站外绝对地址即构成开放重定向）。
         // 相对地址须排除 "//host"（协议相对）与任何反斜杠：WHATWG 解析把 \ 规范化为 /，
-        // "/\evil.com" 会被浏览器当作协议相对地址跳到外站
-        boolean validTarget = url != null && !url.isEmpty() && url.indexOf('\\') < 0
+        // "/\evil.com" 会被浏览器当作协议相对地址跳到外站。
+        // TAB 同样必须拦截：WHATWG 解析会先移除 URL 中的制表符，"/\t/evil.com" 会被还原成 "//evil.com"
+        boolean validTarget = url != null && !url.isEmpty() && url.indexOf('\\') < 0 && url.indexOf('\t') < 0
                 && url.startsWith("/") && !url.startsWith("//");
         if (!validTarget || hasBreak(url)) throw new IllegalArgumentException("invalid redirect url");
         response.status(HttpResponseStatus.FOUND)

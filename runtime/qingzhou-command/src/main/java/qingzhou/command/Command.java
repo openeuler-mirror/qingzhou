@@ -1,8 +1,6 @@
 package qingzhou.command;
 
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 
 public class Command {
@@ -53,19 +51,9 @@ public class Command {
         }
     }
 
-    private List<Processor> listCommands() throws Exception {
+    private List<Processor> listCommands() {
         List<Processor> processors = new ArrayList<>();
         for (Processor processor : ServiceLoader.load(Processor.class, Processor.class.getClassLoader())) {
-            String[] classpath = processor.classpath();
-            if (classpath.length > 0) {
-                List<URL> urls = new ArrayList<>();
-                urls.add(processor.getClass().getProtectionDomain().getCodeSource().getLocation());
-                for (String path : classpath) {
-                    urls.add(new File(libDir, path).toURI().toURL());
-                }
-                ClassLoader loader = new CommandClassLoader(urls.toArray(new URL[0]));
-                processor = (Processor) loader.loadClass(processor.getClass().getName()).getDeclaredConstructor().newInstance();
-            }
             processor.setLibDir(libDir);
             processors.add(processor);
         }
@@ -120,25 +108,6 @@ public class Command {
             return AcceptStatus.STARTS_WITH;
         }
         return AcceptStatus.NONE;
-    }
-
-    static class CommandClassLoader extends URLClassLoader {
-        CommandClassLoader(URL[] urls) {
-            super(urls, Command.class.getClassLoader());
-        }
-
-        @Override
-        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            if (!name.startsWith("qingzhou.command.cmd.")) {
-                return super.loadClass(name, resolve);
-            }
-            synchronized (getClassLoadingLock(name)) {
-                Class<?> c = findLoadedClass(name);
-                if (c == null) c = findClass(name);
-                if (resolve) resolveClass(c);
-                return c;
-            }
-        }
     }
 
     private enum AcceptStatus {

@@ -258,7 +258,8 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
         }
 
         // 只允许搬移上传目录内的临时文件：否则 attachment 可指向任意本地路径并被搬走/外带
-        File uploadBase = new File(getAppContext().getTempDir(), "qingzhou-upload");
+        // 本地实例落盘在 temp/qingzhou-upload，agent 侧落盘在 temp/agent-upload，统一以实例 temp 为界
+        File uploadBase = new File(getAppContext().getRoot(), "temp");
         String uploadBasePath = uploadBase.getCanonicalPath();
 
         // attachment 可能是逗号分隔的混合值：已有文件名 + 临时文件路径

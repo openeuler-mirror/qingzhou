@@ -13,6 +13,9 @@ import java.nio.charset.StandardCharsets;
  * 避免为配置拉取引入 HTTP 组件依赖。
  */
 final class EtcdHttp {
+    // 响应体上限：被控或异常的 etcd 返回超大响应会一次性撑爆堆内存
+    private static final int MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
+
     static final class Response {
         final int status;
         final String body;
@@ -56,7 +59,12 @@ final class EtcdHttp {
     private static String read(InputStream in) throws IOException {
         try (InputStream input = in; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[1024 * 4];
+            int total = 0;
             for (int n; (n = input.read(buffer)) != -1; ) {
+                total += n;
+                if (total > MAX_RESPONSE_BYTES) {
+                    throw new IOException("etcd response exceeds " + MAX_RESPONSE_BYTES + " bytes");
+                }
                 out.write(buffer, 0, n);
             }
             return new String(out.toByteArray(), StandardCharsets.UTF_8);

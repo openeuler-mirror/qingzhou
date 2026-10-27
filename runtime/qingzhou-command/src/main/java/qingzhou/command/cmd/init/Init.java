@@ -10,14 +10,14 @@ import java.util.Collections;
 import java.util.Locale;
 
 import qingzhou.command.Processor;
+import qingzhou.crypto.Crypto;
 import qingzhou.crypto.impl.CryptoImpl;
 
 public class Init extends Processor {
     private File instanceDir;
     private File propsFile;
     private Console console;
-
-    private CryptoImpl crypto;
+    private Crypto crypto;
 
     @Override
     public String name() {
@@ -26,12 +26,7 @@ public class Init extends Processor {
 
     @Override
     public String info() {
-        return "Initialize the instance: global key, admin password and SSL certificate.";
-    }
-
-    @Override
-    public String[] classpath() {
-        return new String[]{"components/qingzhou-crypto.jar"};
+        return "Initialize the instance: global key, admin password, TOTP and SSL certificate.";
     }
 
     @Override
@@ -46,30 +41,23 @@ public class Init extends Processor {
         }
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
 
-        crypto = new CryptoImpl();
-        // CryptoImpl 的密钥文件路径由 @Activate 注入，脱离 OSGi 时须显式初始化，否则 getGlobalCipher 读取的路径为空
-        crypto.init(Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
+        crypto = new CryptoImpl() {{
+            init(Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
+        }};
 
         new GlobalKeyStep().init(this);
         new AdminPasswordStep().init(this);
+        new TotpStep().init(this);
         new SslStep().init(this);
         log("Done, restart the instance to take effect.");
     }
 
+    Crypto getCrypto() {
+        return crypto;
+    }
+
     File confFile(String name) {
         return new File(instanceDir, "conf/" + name);
-    }
-
-    String generateCipherKey() {
-        return crypto.generateCipherKey();
-    }
-
-    String digest(String text) {
-        return crypto.getMessageDigest().digest(text);
-    }
-
-    String encrypt(String plain) throws Exception {
-        return crypto.getGlobalCipher().encrypt(plain);
     }
 
     String readPassword(String prompt) {
@@ -93,8 +81,12 @@ public class Init extends Processor {
         }
     }
 
+    String readLine(String prompt) {
+        return console.readLine(prompt);
+    }
+
     boolean noConfirm(String prompt) {
-        String answer = console.readLine(prompt);
+        String answer = readLine(prompt);
         return answer == null || !answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
     }
 

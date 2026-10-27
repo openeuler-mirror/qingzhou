@@ -16,7 +16,8 @@ final class SslStep {
     void init(Init init) throws Exception {
         String props = init.readProps();
         if (Init.hasValue(props, "qingzhou-http-server.ssl_keystore_password")) return; // 已有值则静默跳过
-        if (init.noConfirm("Generate the SSL certificate conf/keystore.p12 and enable https? [y/N] ")) return;
+        if (init.noConfirm("Generate the SSL certificate conf/keystore.p12 and enable https? (recommended) [y/N] "))
+            return;
 
         String password = init.readPassword("New keystore password: ");
         if (password == null) return;
@@ -29,7 +30,7 @@ final class SslStep {
             return;
         }
 
-        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.encrypt(password));
+        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.getCrypto().getGlobalCipher().encrypt(password));
         props = Init.putValue(props, "qingzhou-http-server.ssl_enabled", "true");
         init.writeProps(props);
         init.log("SSL certificate generated and https enabled.");

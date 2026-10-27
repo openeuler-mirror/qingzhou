@@ -137,6 +137,7 @@ public class HandlerManager {
         });
         if (removedPaths.isEmpty()) return;
 
+        // OSGi 契约适配：unbind 在组件停用期同样触发，此时字段注入的 logger 可能已被置空
         if (logger != null) logger.info("unregistered: " + removedPaths);
     }
 

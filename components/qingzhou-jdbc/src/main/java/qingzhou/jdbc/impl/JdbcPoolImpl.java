@@ -85,12 +85,11 @@ public class JdbcPoolImpl implements JdbcPool {
             }
         }
         String password = poolConfig.getPassword();
-        if (password != null && !password.trim().isEmpty()) {
-            poolConfig.setPassword(crypto.getGlobalCipher().tryDecrypt(password.trim(), "qingzhou-jdbc.password"));
+        if (password != null && !password.isEmpty()) {
+            poolConfig.setPassword(crypto.getGlobalCipher().tryDecrypt(password, "qingzhou-jdbc.password"));
         }
 
         poolConfig.setJmxEnabled(false);
-        poolConfig.setMaxIdle(poolConfig.getMaxActive());
         dsPool = poolConfig.getDataSource() instanceof javax.sql.XADataSource
                 ? new XADataSource(poolConfig) : new DataSource(poolConfig);
         dsPool.createPool();

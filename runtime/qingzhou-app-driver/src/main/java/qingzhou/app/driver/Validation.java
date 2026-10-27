@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import qingzhou.api.*;
 import qingzhou.api.action.Add;
 import qingzhou.api.action.Update;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.annotation.ModelAction;
@@ -74,7 +73,7 @@ class Validation implements ActionFilter {
 
         // 开始校验
         Map<String, List<String>> validation = new HashMap<>();
-        String langParameter = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String langParameter = request.getParameter("lang");
         for (ModelField field : validateFields) {
             List<String> errors = new ArrayList<>();
 
@@ -103,7 +102,7 @@ class Validation implements ActionFilter {
         RequestImpl req = (RequestImpl) request;
         Map<String, List<String>> errors = validate(req.getCurrentModelAction(), req);
         if (errors != null && !errors.isEmpty()) {
-            String langStr = request.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+            String langStr = request.getParameter("lang");
             String msg = i18nService.getI18n(MSG_DATA_VALIDATION_FAILED, langStr);
             request.getResponse()
                     .status(400)

@@ -30,11 +30,6 @@ public class StartArg extends Processor {
     }
 
     @Override
-    public String[] classpath() {
-        return new String[]{"modules/qingzhou-config.jar"};
-    }
-
-    @Override
     public void doCommandLine(String[] args) throws Exception {
         instanceDir = initInstance(args);
         if (instanceDir == null) return;
@@ -43,7 +38,7 @@ public class StartArg extends Processor {
         Map<String, String> properties = parseConfig(configFile);
         List<String> jvmConfig = getJvmArgs(properties);
 
-        String javaCmd = Paths.get(System.getProperty("java.home"), "bin", windows ? "java.exe" : "java").toString();
+        String javaCmd = Paths.get(System.getProperty("java.home"), "bin", IS_WINDOWS ? "java.exe" : "java").toString();
         // 构造启动命令
         StringBuilder startCmd = new StringBuilder(wrap(javaCmd));
         for (String arg : jvmConfig) {
@@ -68,7 +63,7 @@ public class StartArg extends Processor {
                 }
                 // jvm.arg 经 sh 的 eval 执行，`$()`/反引号等会被 shell 展开构成命令注入；
                 // 引号会破坏 eval 的命令结构；Windows 下 bat 的 %VAR% 展开构成环境变量注入，一并拒绝
-                if (containsShellMeta(s) || s.contains("\"") || (windows && s.contains("%"))) {
+                if (containsShellMeta(s) || s.contains("\"") || (IS_WINDOWS && s.contains("%"))) {
                     logStartInfo("ignore jvm arg with unsafe characters: " + s);
                     continue;
                 }
@@ -101,7 +96,7 @@ public class StartArg extends Processor {
     // 整体加引号，避免启动参数被 shell 按空白拆分；启动命令由 sh 的 eval 与 bat 的 %startCmd% 直接执行，
     // 两种环境的转义规则不同，无法用统一转义保证安全，故直接拒绝会破坏命令结构或可被展开执行的值
     private String wrap(String str) {
-        String unsafe = windows ? "\"%^!" : "\"$`\\"; // 双引号内仍具特殊语义：sh 的 \ 与 bat 的 %VAR%、^、!
+        String unsafe = IS_WINDOWS ? "\"%^!" : "\"$`\\"; // 双引号内仍具特殊语义：sh 的 \ 与 bat 的 %VAR%、^、!
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             if (c == '\n' || c == '\r' || unsafe.indexOf(c) >= 0) {

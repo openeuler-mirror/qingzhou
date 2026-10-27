@@ -3,6 +3,8 @@ package qingzhou.crypto.impl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import qingzhou.crypto.MessageDigest;
+
 public class MessageDigestImplTest {
 
     // Base16CoderImpl 输出大写十六进制，标准哈希值需用大写
@@ -12,8 +14,8 @@ public class MessageDigestImplTest {
     private static final String SHA256_EMPTY = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855";
 
     // 每个用例独立创建实例，避免共享状态
-    private MessageDigestImpl newDigest() {
-        return new MessageDigestImpl(new Base16CoderImpl());
+    private MessageDigest newDigest() {
+        return new CryptoImpl().getMessageDigest();
     }
 
     // ===================== md5(String) =====================
@@ -43,7 +45,7 @@ public class MessageDigestImplTest {
 
     @Test
     public void sameInput_md5_returnSameOutput() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         Assert.assertEquals(digest.md5("qingzhou"), digest.md5("qingzhou"));
     }
 
@@ -74,14 +76,14 @@ public class MessageDigestImplTest {
 
     @Test
     public void sameInput_sha256_returnSameOutput() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         Assert.assertEquals(digest.sha256("qingzhou"), digest.sha256("qingzhou"));
     }
 
     // ===================== digest(text, algorithm, saltLength, iterations) =====================
     @Test
     public void differentAlgorithms_digest_returnDifferentHash() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String sha512 = digest.digest("pwd", "SHA-512", 0, 1);
         String sha256 = digest.digest("pwd", "SHA-256", 0, 1);
         Assert.assertNotEquals(sha512.split("\\$")[3], sha256.split("\\$")[3]);
@@ -91,7 +93,7 @@ public class MessageDigestImplTest {
 
     @Test
     public void differentSaltLength_digest_changeSaltSegment() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String noSalt = digest.digest("pwd", "SHA-256", 0, 1);
         String salt8 = digest.digest("pwd", "SHA-256", 8, 1);
         String salt16 = digest.digest("pwd", "SHA-256", 16, 1);
@@ -103,7 +105,7 @@ public class MessageDigestImplTest {
 
     @Test
     public void differentIterations_digest_returnDifferentHash() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String iter1 = digest.digest("pwd", "SHA-256", 0, 1);
         String iter2 = digest.digest("pwd", "SHA-256", 0, 2);
         String iter3 = digest.digest("pwd", "SHA-256", 0, 3);
@@ -126,21 +128,21 @@ public class MessageDigestImplTest {
     // ===================== matches(text, msgDigest) =====================
     @Test
     public void correctPassword_matches_returnTrue() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String result = digest.digest("pwd", "SHA-256", 8, 2);
         Assert.assertTrue(digest.matches("pwd", result));
     }
 
     @Test
     public void wrongPassword_matches_returnFalse() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String result = digest.digest("pwd", "SHA-256", 8, 2);
         Assert.assertFalse(digest.matches("wrong", result));
     }
 
     @Test
     public void nullInput_matches_returnFalse() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String result = digest.digest("pwd", "SHA-256", 8, 2);
         Assert.assertFalse(digest.matches(null, result));
         Assert.assertFalse(digest.matches("pwd", null));
@@ -148,7 +150,7 @@ public class MessageDigestImplTest {
 
     @Test
     public void differentFormats_matches_parseCorrectly() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         String[] formats = {
                 digest.digest("pwd", "SHA-512", 0, 1),  // 空盐格式 SHA-512$$1$...
                 digest.digest("pwd", "SHA-512", 8, 5),  // 8 字节盐、迭代 5 次
@@ -163,7 +165,7 @@ public class MessageDigestImplTest {
     // 畸形摘要（段数合法但内容非法）必须按不匹配处理：登录回 401 而非 500
     @Test
     public void malformedDigest_matches_returnFalseInsteadOfThrowing() {
-        MessageDigestImpl digest = newDigest();
+        MessageDigest digest = newDigest();
         Assert.assertFalse(digest.matches("pwd", "SHA-256$ZZ$notanumber$ABCD"));
         Assert.assertFalse(digest.matches("pwd", "SHA-256$ABCD$99999999999999$ABCD"));
     }

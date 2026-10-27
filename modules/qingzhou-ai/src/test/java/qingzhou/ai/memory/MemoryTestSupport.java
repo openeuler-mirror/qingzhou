@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.json.Json;
 import qingzhou.json.impl.JsonImpl;
 import qingzhou.logger.Logger;
-import qingzhou.store.Store;
 import qingzhou.store.impl.StoreFactoryImpl;
 
 /**
@@ -53,26 +51,6 @@ final class MemoryTestSupport {
     static void shutdownAll() {
         for (ConversationStore store : CREATED) store.destroy();
         CREATED.clear();
-    }
-
-    @SuppressWarnings("unchecked")
-    static Map<String, Object> recordOf(ConversationStore store, String conversationId) throws Exception {
-        Json json = (Json) fieldOf(store, "json");
-        return (Map<String, Object>) json.fromJson(kvOf(store).get(conversationId), HashMap.class);
-    }
-
-    static Store kvOf(ConversationStore store) throws Exception {
-        return (Store) fieldOf(store, "kvStore");
-    }
-
-    static ConversationCompactor compactorOf(ConversationStore store) throws Exception {
-        return (ConversationCompactor) fieldOf(store, "compactor");
-    }
-
-    static Object fieldOf(Object target, String fieldName) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        return field.get(target);
     }
 
     static void setField(Object target, String fieldName, Object value) throws Exception {

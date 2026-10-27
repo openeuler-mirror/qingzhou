@@ -10,6 +10,10 @@ public interface Crypto {
      */
     String generateCipherKey();
 
+    /**
+     * 将多个上下文串分帧为 AAD：每段以「长度:内容」编码（null 记为 -1），字段边界无歧义，
+     * 避免 ["a,b"] 与 ["a","b"] 拼出同一 AAD。
+     */
     byte[] generateCipherAad(String... context);
 
     /**
@@ -20,6 +24,8 @@ public interface Crypto {
      * @throws InvalidKeyException when 密钥不正确。
      */
     Cipher getCipher(String key) throws InvalidKeyException;
+
+    Cipher getCipher(byte[] key) throws InvalidKeyException;
 
     Cipher getGlobalCipher();
 
@@ -41,5 +47,11 @@ public interface Crypto {
     /**
      * 绑定根密钥与作用域的时段报文加解密器。与 {@link #getReplayGuardCipher} 一致，每次返回独立实例。
      */
-    EpochPacketCipher getEpochPacketCipher(byte[] masterKey, String scopeId);
+    EpochKeyRotatingCipher getEpochKeyRotatingCipher(byte[] masterKey);
+
+    /**
+     * 从高熵根密钥经 HKDF 单向派生子密钥：{@code info} 区分作用域（时段、实例、用途等），
+     * 不同 info 的派生结果互相独立。根密钥须为高熵随机值（不可为口令）。
+     */
+    byte[] deriveKey(byte[] masterKey, byte[] info, int length);
 }

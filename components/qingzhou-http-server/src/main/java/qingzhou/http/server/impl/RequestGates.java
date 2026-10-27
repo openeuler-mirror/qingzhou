@@ -28,10 +28,12 @@ final class RequestGates {
             .collect(Collectors.joining(", "));
     private static final long UNKNOWN_BODY_SIZE = -1; // chunked：长度未知
     private static final long INVALID_BODY_SIZE = -2; // 非法 Content-Length 或与 Transfer-Encoding 并存
+    private static final int MAX_DECODE_PASSES = 4; // 路径解码层数上限：超出后交由下方危险编码与规范化兜底
 
     private final AuthManager authManager;
     private final HandlerManager handlerManager;
     private final Logger logger;
+    private final SourceLimiter sourceLimiter; // 逐来源并发限制：0 并发配置表示不启用
     // 全局聚合配额计数：由主类持有并跨配置更新共享，热更新重建本类时在途预留仍归还到同一计数
     private final AtomicLong aggregatedBytes;
     private final long maxStreamBytes; // 流式上传总量上限
@@ -40,13 +42,14 @@ final class RequestGates {
     private final Set<String> corsAllowedOrigins; // 显式允许的跨域来源，跨站写请求据此放行
     private final List<RequestGate> gates;
 
-    RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, AuthManager authManager, HandlerManager handlerManager,
+    RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, SourceLimiter sourceLimiter, AuthManager authManager, HandlerManager handlerManager,
                  Logger logger, AtomicLong aggregatedBytes) {
         Configs configs = new Configs(config);
         this.authManager = authManager;
         this.handlerManager = handlerManager;
         this.logger = logger;
         this.aggregatedBytes = aggregatedBytes;
+        this.sourceLimiter = sourceLimiter;
         this.maxStreamBytes = maxStreamBytes;
         this.maxBodyBytes = maxBodyBytes;
         this.maxAggregatedBytes = configs.atLeast("max_aggregated_bytes", 1L, 64L * 1024 * 1024);
@@ -62,6 +65,7 @@ final class RequestGates {
                 this::denyUnroutedPath,     // 404
                 this::denyPreflight,        // 204：预检免认证但须已路由；须排在方法白名单之前，否则 POST-only 路由收不到预检
                 this::denyMethodNotAllowedByHandler, // 405：路由声明的方法白名单，认证前即拒绝
+                this::denySourceExhausted,  // 503：单来源在途请求上限；须在认证前拦截，否则未认证洪水不受限即可堆满全局并发额度
                 this::denyUnauthenticated,  // 401
                 this::denyCrossSiteWrite,   // 403：Cookie 凭据会随跨站请求自动附加，SameSite 挡不住同站跨源
                 this::denyUnsupportedBody,  // 415
@@ -114,23 +118,25 @@ final class RequestGates {
         // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
         if (origin == null) return null;
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
-        if (host != null && !host.isEmpty() && isSameOrigin(origin, host)) return null;
-        // 与 ResponseHeaders 同一白名单语义："*" 表示放开全部来源
-        if (corsAllowedOrigins.contains("*") || corsAllowedOrigins.contains(origin)) return null;
+        if (host != null && !host.isEmpty() && isSameOrigin(origin, host, ctx.request.scheme())) return null;
+        // 跨站写仅认精确列举的来源：白名单含 "*" 时通配语义只作用于 ResponseHeaders 的 CORS 读响应，
+        // 不在此放行——否则通配 CORS 与 CSRF 防线叠加，Cookie 认证下同站跨源可借自动附加的 Cookie 完成写操作
+        if (corsAllowedOrigins.contains(origin)) return null;
         return ctx.respond(HttpResponseStatus.FORBIDDEN);
     }
 
     // Origin = scheme://authority[/path]：取 authority 与 Host 精确比较（忽略大小写），
     // 后缀匹配（endsWith("//" + host)）会被 origin=x.evil.com//host 之类的构造绕过。
     // scheme 默认端口在两侧对称剥离：Origin 显式携带而 Host 省略（或反之）不误判跨源
-    private static boolean isSameOrigin(String origin, String host) {
-        String authority = origin;
-        String scheme = "";
+    private static boolean isSameOrigin(String origin, String host, String connectionScheme) {
         int schemeEnd = origin.indexOf("://");
-        if (schemeEnd >= 0) {
-            scheme = origin.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
-            authority = origin.substring(schemeEnd + 3);
-        }
+        // 畸形 Origin 缺 scheme 无法构成合法同源，按非同源拒绝，避免被当作裸 authority 放行
+        if (schemeEnd < 0) return false;
+        String scheme = origin.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
+        // 源三要素含 scheme：连接为 https 时 Origin 必须同为 https，否则 http 明文镜像页面可借同 host
+        // 发跨 scheme 写请求绕过 CSRF；连接为 http（可能经 TLS 反代，Origin=https 属合法）时不做 scheme 比较
+        if ("https".equals(connectionScheme) && !"https".equals(scheme)) return false;
+        String authority = origin.substring(schemeEnd + 3);
         int pathStart = authority.indexOf('/');
         if (pathStart >= 0) authority = authority.substring(0, pathStart);
         if ("http".equals(scheme)) {
@@ -211,8 +217,9 @@ final class RequestGates {
 
         String path;
         try {
-            // 只解码 %XX：URLDecoder 会把路径中的 '+' 解成空格，改写请求语义
-            path = QueryStringDecoder.decodeComponent(rawPath, StandardCharsets.UTF_8);
+            // 递归解码至稳定：仅解一层时 %252e 等三层编码仍以编码形态进入 ctx.path，
+            // 下游 handler 若二次解码即还原为穿越段；首层解码失败按非法 URI 拒绝
+            path = decodeUntilStable(rawPath);
         } catch (Exception e) {
             return ctx.respond(HttpResponseStatus.BAD_REQUEST);
         }
@@ -223,6 +230,26 @@ final class RequestGates {
         ctx.path = path;
         ctx.httpRequest = new HttpRequestImpl(ctx.request, path);
         return null;
+    }
+
+    /**
+     * 路径解码：反复解码直到结果稳定，从机制上消除「下游二次解码才现形」的多层编码穿越
+     * （%252e -> %2e -> .）。无法继续解码（如文件名经一次解码后以裸 % 结尾）时保持现值，
+     * 单独 % 无危害；达到层数上限的残留交由 hasDangerousEncoding 与 normalize 兜底。
+     */
+    private static String decodeUntilStable(String rawPath) {
+        String current = QueryStringDecoder.decodeComponent(rawPath, StandardCharsets.UTF_8);
+        for (int pass = 1; pass < MAX_DECODE_PASSES; pass++) {
+            String decoded;
+            try {
+                decoded = QueryStringDecoder.decodeComponent(current, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                return current;
+            }
+            if (decoded.equals(current)) return current;
+            current = decoded;
+        }
+        return current;
     }
 
     /**
@@ -243,7 +270,7 @@ final class RequestGates {
         return normalized.length() == 0 ? "/" : normalized.toString();
     }
 
-    // 一次解码后仍残留 . / \ NUL 的编码形态，说明原始路径被多层编码（如 %252e%252e、%252f），
+    // 超过解码层数上限仍残留 . / \ NUL 编码形态（4 层以上多层编码攻击），
     // 各 handler 的穿越防护未必覆盖得住；只拦危险编码，避免误拒文件名含 % 的合法路径
     private static boolean hasDangerousEncoding(String path) {
         String upper = path.toUpperCase(Locale.ROOT);
@@ -299,6 +326,18 @@ final class RequestGates {
     private Publisher<Void> denyExhaustedMemory(RequestContext ctx) {
         ctx.reservedBytes = ctx.streamRequired ? 0 : reserveAggregation(ctx.request);
         return ctx.reservedBytes < 0 ? ctx.respond(HttpResponseStatus.SERVICE_UNAVAILABLE) : null;
+    }
+
+    // 503：单来源在途请求上限。全局配额无来源维度，单 IP 的慢速/并发请求即可耗尽之；
+    // 取得的许可记入 ctx，由 DispatcherHandler.release 统一归还，与信号量同思路
+    private Publisher<Void> denySourceExhausted(RequestContext ctx) {
+        if (!sourceLimiter.isEnabled()) return null;
+        String host = ctx.httpRequest.getRemoteHost();
+        if (sourceLimiter.tryAcquire(host)) {
+            ctx.sourceReservation = new RequestContext.SourceReservation(sourceLimiter, host);
+            return null;
+        }
+        return ctx.respond(HttpResponseStatus.SERVICE_UNAVAILABLE);
     }
 
     // 返回预留的字节数；-1 表示在途聚合总量已达上限

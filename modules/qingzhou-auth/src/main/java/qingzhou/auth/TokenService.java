@@ -116,9 +116,7 @@ public class TokenService {
         if (token != null && !token.isEmpty() && parseToken(token) != null) {
             // 令牌最长存活 tokenExpireMillis，吊销记录超过该时限即失去拦截意义，按需惰性清理
             long now = System.currentTimeMillis();
-            for (Map.Entry<String, Long> entry : revokedTokens.entrySet()) {
-                if (entry.getValue() < now) revokedTokens.remove(entry.getKey());
-            }
+            revokedTokens.entrySet().removeIf(entry -> entry.getValue() < now);
 
             // 服务端注销
             revokedTokens.put(token, now + tokenExpireMillis);

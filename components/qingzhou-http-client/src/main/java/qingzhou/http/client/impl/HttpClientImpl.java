@@ -27,7 +27,15 @@ public class HttpClientImpl implements HttpClient {
 
     @Activate
     public void init(Map<String, String> config) {
-        allowSslTrustAll = Boolean.parseBoolean(config.get("allow_ssl_trust_all"));
+        // 与 Configs 的严格布尔策略一致：非 true/false 一律报错，避免拼写/大小写误配导致静默失效
+        String trustAll = config.get("allow_ssl_trust_all");
+        if (trustAll == null || trustAll.trim().isEmpty() || "false".equals(trustAll.trim())) {
+            allowSslTrustAll = false;
+        } else if ("true".equals(trustAll.trim())) {
+            allowSslTrustAll = true;
+        } else {
+            throw new IllegalArgumentException("qingzhou-http-client.allow_ssl_trust_all must be 'true' or 'false', got: " + trustAll);
+        }
 
         // 有界线程池：每个流式响应独占一个线程直至读毕，无上限会在海量并发流式响应时耗尽线程资源
         executor = new ThreadPoolExecutor(0, MAX_STREAM_THREADS, 60L, TimeUnit.SECONDS,

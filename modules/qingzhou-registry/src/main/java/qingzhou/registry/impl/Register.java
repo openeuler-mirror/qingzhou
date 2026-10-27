@@ -5,7 +5,7 @@ import java.util.*;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
-import qingzhou.crypto.Crypto;
+import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
@@ -13,17 +13,22 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.registry.AgentDomainService;
+import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/register", HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
         configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class Register implements HttpHandler {
-    private static final int MAX_REGISTER_BODY = 16 * 1024; // 注册报文上限：AES-GCM 解密廉价，仅防解析前内存消耗
+    // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
+    private static final int MAX_REGISTER_BODY = 1024 * 1024;
+    // 实例 ID 与实例密钥都是契约级令牌（分别作注册表键/AAD 上下文、每实例密钥派生输入）：限定安全字符集与长度
+    private static final int MAX_TOKEN_CHARS = 128;
+    // 注册表容量兜底：持有域密钥即可注册任意多伪实例，而单实例元数据最大 1MB
+    private static final int MAX_REMOTE_INSTANCES = 1000;
 
     @Reference
     private Logger logger;
-    @Reference
-    private Crypto crypto;
     @Reference
     private Registry registry;
     @Reference
@@ -32,12 +37,15 @@ public class Register implements HttpHandler {
     private AgentDomainService agentDomainService;
 
     private Timer timer;
+    // 是否采信 agent 自报地址：仅反代/NAT 部署需要，默认关闭以免域内成员把流量导向任意地址
+    private boolean trustAdvertisedHost;
 
     @Activate
-    public void start(Map<String, String> config) throws Exception {
+    public void start(Map<String, String> config) {
         Configs configs = new Configs(config);
         long interval = 1000L * configs.atLeast("interval", 1, 6);
         long timeout = 1000L * configs.atLeast("timeout", 5, 12);
+        trustAdvertisedHost = configs.getOrDefault("trust_advertised_host", false);
         timer = new Timer("registry-health-check");
         timer.schedule(new TimerTask() {
             @Override
@@ -46,7 +54,7 @@ public class Register implements HttpHandler {
                 for (String next : registry.getAllRemoteInstances()) {
                     InstanceInfo remoteInstance = registry.getRemoteInstance(next);
                     if (remoteInstance != null) {
-                        long lastRefreshTime = remoteInstance.getLastRefreshTime();
+                        long lastRefreshTime = remoteInstance.getRefreshTime();
                         if (lastRefreshTime + timeout < System.currentTimeMillis()) {
                             toRemove.add(next);
                         }
@@ -76,85 +84,149 @@ public class Register implements HttpHandler {
             return;
         }
 
-        // 报文 = domainId(明文首行，路由键) + '\n' + ReplayGuard 报文；domainId 同时作 AAD 绑定，防报文挪域
-        int sep = indexOfLineBreak(requestBody);
-        if (sep < 0) {
-            httpResponse.status(400);
-            return;
-        }
-        String domainId = new String(requestBody, 0, sep, StandardCharsets.UTF_8).trim();
-        byte[] packet = Arrays.copyOfRange(requestBody, sep + 1, requestBody.length);
-
-        byte[] master = agentDomainService.master(domainId);
-        if (master == null) {
-            logger.warn("registration for unconfigured agent-domain: " + domainId);
+        // AAD 绑定，防报文挪域
+        String domainId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
+        if (domainId == null || !agentDomainService.getAllAgentDomains().contains(domainId)) {
+            logger.warn("illegal agent-domain: " + forLog(domainId));
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
 
-        byte[] requestData;
-        try {
-            requestData = crypto.getEpochPacketCipher(master, domainId).decrypt(packet,
-                    domainId.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            // 报文由请求方控制：格式、时间窗、重放与密钥失配一律 400，不回显配置状态差异
-            logger.warn("registration decrypt failed for domain " + domainId + ": " + e.getMessage());
+        // 无 instanceId 时为新实例，有则为续期。该值同时用作注册表键与 AAD 上下文，须在边界层校验
+        String renewInstanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
+        if (renewInstanceId != null && isInvalidToken(renewInstanceId)) {
+            logger.warn("illegal instance id: " + forLog(renewInstanceId));
             httpResponse.status(400);
             return;
         }
+        InstanceInfo exists = renewInstanceId == null ? null : registry.getRemoteInstance(renewInstanceId);
 
-        InstanceInfo instanceInfo;
         try {
-            instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
-            instanceInfo.setHost(httpRequest.getRemoteHost());
-            instanceInfo.setDomain(domainId); // 以路由键为准，不信任报文体内自报
-        } catch (Exception e) {
-            httpResponse.status(400);
-            return;
-        }
-
-        // 应用变更会重算实例 ID：同一 agent（域 + host + port 相同）的旧记录先移除，避免同一实例双份存在
-        for (String other : registry.getAllRemoteInstances()) {
-            if (other.equals(instanceInfo.getId())) continue;
-            InstanceInfo info = registry.getRemoteInstance(other);
-            if (info != null && domainId.equals(info.getDomain())
-                    && Objects.equals(instanceInfo.getHost(), info.getHost())
-                    && instanceInfo.getPort() == info.getPort()) {
-                registry.removeRemoteInstance(other);
+            // 已注册实例的续期用每实例密钥解密：仅真实实例可刷新自身，同域其他 agent 无法冒名续期；
+            // 新实例首注册用域密钥解密（首注册时中心尚无该实例密钥，必须靠域密钥才能取得它）
+            EpochKeyRotatingCipher cipher = exists == null
+                    ? agentDomainService.getDomainCipher(domainId)
+                    : agentDomainService.getInstanceCipher(domainId, exists.getInstanceSecret());
+            byte[] requestData;
+            byte[] aad;
+            try {
+                aad = agentDomainService.aadForRegistry(domainId, renewInstanceId);
+                requestData = cipher.decrypt(requestBody, aad);
+            } catch (Exception e) {
+                // 报文由请求方控制：密钥失配、时间窗、重放等解密失败属调用方问题，按 warn 记录并统一 400，
+                // 不以 error+栈放大不可信输入造成的日志（agent 侧同策略）
+                logger.warn("failed to decrypt registration: " + e.getMessage());
+                httpResponse.status(400);
+                return;
             }
-        }
 
-        InstanceInfo exists = registry.getRemoteInstance(instanceInfo.getId());
-        registry.addRemoteInstance(instanceInfo);
-
-        String msg;
-        if (exists != null) {
-            msg = "Redundant.";
-        } else {
-            List<AppMeta> appMetas = instanceInfo.getAppMetas();
-            msg = appMetas.size() + " apps accepted.";
-            for (AppMeta appMeta : appMetas) {
-                logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), appMeta.getApp().code));
+            // 已存在只续期、不覆盖：即使同域成员冒名续期也已被上面的每实例密钥解密拦截
+            if (exists != null) {
+                exists.refreshTime();
+                httpResponse.status(304);
+                return;
             }
-        }
 
-        // 响应同样按时段封装：agent 按报文时间戳派生密钥即可解开
-        try {
-            byte[] encrypt = crypto.getEpochPacketCipher(master, domainId)
-                    .encrypt(msg.getBytes(StandardCharsets.UTF_8), domainId.getBytes(StandardCharsets.UTF_8));
-            httpResponse.send(encrypt);
+            if (registry.getAllRemoteInstances().size() >= MAX_REMOTE_INSTANCES) {
+                logger.warn("remote instance quota exceeded: " + MAX_REMOTE_INSTANCES);
+                httpResponse.status(503); // 容量不足：仅拒新实例，已注册实例仍可续期
+                return;
+            }
+
+            InstanceInfo instanceInfo;
+            try {
+                instanceInfo = json.fromJson(new String(requestData, StandardCharsets.UTF_8), InstanceInfo.class);
+            } catch (Exception e) {
+                // 解密后报文的解析异常不得外泄：Jackson 异常消息携带报文原文（含 instanceSecret），只记类型
+                logger.warn("invalid registration payload: " + e.getClass().getSimpleName());
+                httpResponse.status(400);
+                return;
+            }
+            if (instanceInfo.getPort() < 1 || instanceInfo.getPort() > 65535) {
+                logger.warn("illegal agent port: " + instanceInfo.getPort());
+                httpResponse.status(400);
+                return;
+            }
+            // 实例密钥是 center→agent 方向的认证因子：缺失即无法安全下发指令，直接拒绝注册
+            if (isInvalidToken(instanceInfo.getInstanceSecret())) {
+                logger.warn("missing or illegal instance secret");
+                httpResponse.status(400);
+                return;
+            }
+            // 应用编码是远端路由键（getRemoteApp 按其匹配）并直接进入日志：解密只保证完整性不保证内容，
+            // 畸形元数据须在落表前拒绝；编码字符集不做限定，兼容既有非 ASCII 应用编码
+            for (AppMeta appMeta : instanceInfo.getAppMetas()) {
+                if (appMeta == null || appMeta.getApp() == null
+                        || appMeta.getApp().code == null || appMeta.getApp().code.isEmpty()) {
+                    logger.warn("illegal app meta in registration payload");
+                    httpResponse.status(400);
+                    return;
+                }
+            }
+
+            // 先落表再响应：响应丢失仅让 agent 下一周期重注册（旧条目按超时淘汰）；
+            // 反之若先响应，落表失败会让 agent 在下一周期内处于"自认为已注册"的错误状态
+            String registeredInstanceId = UUID.randomUUID().toString();
+            addRemoteInstance(instanceInfo, domainId, registeredInstanceId, httpRequest);
+            byte[] responseAad = agentDomainService.responseAad(aad);
+            httpResponse.send(cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad));
         } catch (Exception e) {
+            // 兜底仅剩内部错误（落表/加密/发送）：解密、解析、参数校验均已在各自分支内以 400 收敛
+            logger.error("failed to finalize registration", e);
             httpResponse.status(500);
-            logger.error("failed to encrypt registration response", e);
         }
     }
 
-    // domainId 明文首行以 '\n' 结尾；限制首行扫描长度
-    private static int indexOfLineBreak(byte[] body) {
-        int limit = Math.min(body.length, 256);
-        for (int i = 0; i < limit; i++) {
-            if (body[i] == '\n') return i;
+    private void addRemoteInstance(InstanceInfo instanceInfo, String domainId, String instanceId, HttpRequest httpRequest) {
+        // 落表键必须与上面的查询键同为 AAD 绑定值：否则可用新 id 注册、体内自报他人 id 绕过 exists 检查
+        instanceInfo.setDomain(domainId); // 由密钥选择确定
+        instanceInfo.setId(instanceId);
+        instanceInfo.setHost(resolveHost(
+                httpRequest.getRemoteHost(), instanceInfo.getHost()));
+        registry.addRemoteInstance(instanceInfo);
+        for (AppMeta appMeta : instanceInfo.getAppMetas()) {
+            logger.info(String.format("registration, instance: %s, app: %s", instanceInfo.getId(), forLog(appMeta.getApp().code)));
         }
-        return -1;
+    }
+
+    // 反代/NAT 下 TCP 对端恒为代理地址：开启信任时改用 agent 自报地址
+    private String resolveHost(String remoteHost, String advertisedHost) {
+        if (advertisedHost == null || !trustAdvertisedHost) return remoteHost;
+
+        String host = advertisedHost.trim();
+        if (isSafeHost(host)) return host;
+
+        logger.warn("illegal advertised host ignored: " + forLog(advertisedHost));
+        return remoteHost;
+    }
+
+    // 该值会拼进下游 URL：只放行常规主机名/IPv4 字符，杜绝 user@host、路径与查询串注入（IPv6 请用主机名）
+    private static boolean isSafeHost(String host) {
+        if (host.isEmpty() || host.length() > 255) return false;
+        for (int i = 0; i < host.length(); i++) {
+            char c = host.charAt(i);
+            boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '-';
+            if (!safe) return false;
+        }
+        return true;
+    }
+
+    private static boolean isInvalidToken(String token) {
+        if (token == null || token.isEmpty() || token.length() > MAX_TOKEN_CHARS) return true;
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            boolean safe = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '-' || c == '_' || c == '.';
+            if (!safe) return true;
+        }
+        return false;
+    }
+
+    // 参数来自不可信请求：截断并剔除控制字符，避免日志注入
+    private static String forLog(String value) {
+        if (value == null) return "null";
+        String text = value.length() > 64 ? value.substring(0, 64) : value;
+        return text.replaceAll("\\p{Cntrl}", "?");
     }
 }

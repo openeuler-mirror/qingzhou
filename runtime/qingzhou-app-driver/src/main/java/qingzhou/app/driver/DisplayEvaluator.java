@@ -63,12 +63,13 @@ public final class DisplayEvaluator {
     private static boolean evaluateAtomicCondition(String condition, Map<String, String> data) {
         AtomicCondition parsed = parseAtomicCondition(condition);
         String rawValue = data.get(parsed.fieldCode);
+        String normalized = rawValue == null ? "" : rawValue;
 
         switch (parsed.type) {
             case NE:
-                return !normalizeValue(rawValue).equals(parsed.expectedValue);
+                return !normalized.equals(parsed.expectedValue);
             case EQ:
-                return normalizeValue(rawValue).equals(parsed.expectedValue);
+                return normalized.equals(parsed.expectedValue);
             case NOT:
                 return !isTruthy(rawValue);
             case TRUTHY:
@@ -106,14 +107,6 @@ public final class DisplayEvaluator {
                     null
             );
         }
-    }
-
-    private static String normalizeValue(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value;
     }
 
     // 数据源恒为 Map<String, String>，故只需判断字符串非空

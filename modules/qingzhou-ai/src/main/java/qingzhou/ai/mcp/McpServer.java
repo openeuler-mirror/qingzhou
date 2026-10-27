@@ -112,7 +112,8 @@ public class McpServer implements HttpHandler {
         response.put("jsonrpc", "2.0");
         response.put("id", requestMap.get("id"));
 
-        String requestMethod = (String) requestMap.get("method");
+        Object methodValue = requestMap.get("method");
+        String requestMethod = methodValue instanceof String ? (String) methodValue : null; // 非字符串按未知方法处理，避免 CCE
         if ("initialize".equals(requestMethod)) {
             response.put("result", new HashMap<>(initializeData));
         } else if ("tools/list".equals(requestMethod)) {

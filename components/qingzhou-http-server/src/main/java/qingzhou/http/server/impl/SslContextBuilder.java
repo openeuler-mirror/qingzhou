@@ -1,19 +1,19 @@
 package qingzhou.http.server.impl;
 
+import io.netty.handler.ssl.SslContext;
+import qingzhou.common.Configs;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.Crypto;
+import qingzhou.logger.Logger;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-
-import io.netty.handler.ssl.SslContext;
-import qingzhou.common.Configs;
-import qingzhou.crypto.Cipher;
-import qingzhou.crypto.Crypto;
-import qingzhou.logger.Logger;
 
 final class SslContextBuilder { // 仅本包使用，不对外暴露
     // 不指定时继承 JDK 默认，部分环境仍会启用 TLSv1.0/1.1 与 3DES 等弱套件，故显式收敛
@@ -41,15 +41,20 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         }
 
         // 明文口令直接取用，不触达 global 密钥文件：密钥缺失/损坏不应拖垮仅配置明文的部署
-        String password = configs.notBlank("ssl_keystore_password").trim();
-        char[] keyPassword = (password.startsWith(Cipher.PLAIN_PREFIX_MARKER)
-                ? password.substring(Cipher.PLAIN_PREFIX_MARKER.length())
-                : crypto.getGlobalCipher().tryDecrypt(password, "qingzhou-http-server.ssl_keystore_password"))
-                .toCharArray();
+        String keystorePassword = configs.notBlank("ssl_keystore_password");
+        // key 口令缺省与 keystore 口令一致（最常见形态）；独立配置时同样支持 plain: 前缀与密文
+        String configuredKeyPassword = configs.get("ssl_key_password");
+        boolean hasKeyPassword = configuredKeyPassword != null && !configuredKeyPassword.trim().isEmpty();
+        // 两个口令用途不同：KeyStore.load 校验库口令，KeyManagerFactory.init 解私钥用 key 口令。
+        // 独立配置时若统一用 key 口令去 load，会因库口令不匹配而加载失败，故必须分别解析
+        char[] storePassword = resolvePassword(keystorePassword, "qingzhou-http-server.ssl_keystore_password", crypto);
+        char[] keyPassword = hasKeyPassword
+                ? resolvePassword(configuredKeyPassword, "qingzhou-http-server.ssl_key_password", crypto)
+                : storePassword;
 
         try (InputStream in = Files.newInputStream(keystoreFile.toPath())) {
             KeyStore keyStore = KeyStore.getInstance(type);
-            keyStore.load(in, keyPassword);
+            keyStore.load(in, storePassword);
 
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keyStore, keyPassword);
@@ -61,8 +66,20 @@ final class SslContextBuilder { // 仅本包使用，不对外暴露
         } catch (Exception e) {
             throw new IllegalStateException("failed to load ssl keystore: " + keystoreFile, e);
         } finally {
-            Arrays.fill(keyPassword, '\0');
+            Arrays.fill(storePassword, '\0');
+            if (keyPassword != storePassword) Arrays.fill(keyPassword, '\0');
         }
+    }
+
+    // 口令解析：plain: 前缀显式声明明文，否则按密文解密；两种来源（keystore/key）共用同一逻辑
+    private static char[] resolvePassword(String configured, String configName, Crypto crypto) {
+        String text = configured.trim();
+        if (text.startsWith(Cipher.PLAIN_PREFIX_MARKER)) {
+            text = text.substring(Cipher.PLAIN_PREFIX_MARKER.length());
+        } else {
+            text = crypto.getGlobalCipher().tryDecrypt(text, configName);
+        }
+        return text.toCharArray();
     }
 
     // 逐个比对 JDK 支持清单：EC 证书下 RSA 套件会被全过滤，空套件会导致握手失败，故全不匹配时回退默认并告警

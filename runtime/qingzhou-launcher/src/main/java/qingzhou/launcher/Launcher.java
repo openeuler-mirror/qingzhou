@@ -4,20 +4,15 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Launcher {
     private static final String ZIP_FORMAT = ".zip";
-
     private static File homeFile;
 
     public static void main(String[] args) throws Exception {
@@ -26,7 +21,7 @@ public class Launcher {
         File libDir = getLatestLibDir(); // 获得最新版本
 
         // 命令类加载器与进程同生命周期：doCommand 可能拉起常驻平台，不得提前关闭
-        ClassLoader cmdMainLoader = buildCommandClassLoader(libDir);
+        ClassLoader cmdMainLoader = CommandClassLoader.build(libDir);
         Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.Command");
         Constructor<?> constructor = cmdMainClass.getConstructor(File.class);
         Object newInstance = constructor.newInstance(libDir);
@@ -97,17 +92,6 @@ public class Launcher {
         return latest;
     }
 
-    private static ClassLoader buildCommandClassLoader(File libDir) throws Exception {
-        List<URL> urls = new ArrayList<>();
-        File[] commands = new File(libDir, "command").listFiles(f -> f.getName().endsWith(".jar"));
-        if (commands != null) {
-            for (File command : commands) {
-                urls.add(command.toURI().toURL());
-            }
-        }
-        return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
-    }
-
     // 引导模块保持零依赖（先于平台类库加载，不能引用 app-driver 的 FileUtil），故本地保留解压实现
     private static void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
@@ -146,7 +130,7 @@ public class Launcher {
         }
     }
 
-    private static File newFile(File destDir, ZipEntry entry) throws IOException {
+    static File newFile(File destDir, ZipEntry entry) throws IOException {
         File destFile = new File(destDir, entry.getName());
         if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath() + File.separator)) {
             throw new IOException("Entry is outside of target dir:" + entry.getName()); // 防止压缩包解压目录穿越风险
@@ -154,7 +138,7 @@ public class Launcher {
         return destFile;
     }
 
-    private static void copyStream(InputStream input, OutputStream output) throws IOException {
+    static void copyStream(InputStream input, OutputStream output) throws IOException {
         byte[] buffer = new byte[1024 * 4];
         int n;
         while (-1 != (n = input.read(buffer))) {

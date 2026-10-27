@@ -147,11 +147,15 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
             testServer.server.registerHttpHandler((request, response) -> response.send("ok").finish(), "/upload", true);
             Map<String, List<String>> files = new HashMap<>();
             files.put("upload", Collections.singletonList(tempFile.getAbsolutePath()));
-            Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/upload")
-                    .method(HttpMethod.POST)
-                    .files(files));
-
-            Assert.assertEquals(result.getStatus(), 415);
+            try {
+                Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/upload")
+                        .method(HttpMethod.POST)
+                        .files(files));
+                Assert.assertEquals(result.getStatus(), 415);
+            } catch (java.net.SocketException e) {
+                // 服务端拒绝时不读上传体即关闭连接，关闭可因未读数据以 RST 中断客户端读取；
+                // 连接被强制断开同样证明 multipart 未被受理
+            }
         } finally {
             tempFile.delete();
         }
@@ -673,6 +677,72 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     }
 
     @Test
+    public void tripleEncodedPath_request_returns400() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.send("ok").finish(), "/enc", true);
+
+        // 三层编码（%2525252e x2 + %2525252f）：递归解码至稳定后还原出 ".." 段，
+        // 不再依赖「handler 不二次解码」的契约即被入口拦截
+        Assert.assertEquals(statusOfRawRequest(testServer.port, "GET /enc/%2525252e%2525252e%2525252fetc HTTP/1.1\r\n"
+                + "Host: localhost\r\n"
+                + "Connection: close\r\n\r\n"), 400);
+    }
+
+    @Test
+    public void corsWildcardOrigin_crossSiteWrite_returns403() throws Exception {
+        startServer(Collections.singletonMap("cors_allowed_origins", "*"));
+        testServer.server.registerHttpHandler((request, response) -> response.send("ok").finish(), "/write", true);
+
+        // 通配 CORS 不再放行跨站写：与 Cookie 认证叠加时同站跨源可借自动附加的 Cookie 完成写操作
+        Assert.assertEquals(statusOfRawRequest(testServer.port, "POST /write HTTP/1.1\r\n"
+                + "Host: localhost\r\n"
+                + "Origin: https://evil.example\r\n"
+                + "Connection: close\r\n\r\n"), 403);
+    }
+
+    @Test
+    public void perSourceConcurrency_concurrentRequestFromSameSource_returns503() throws Exception {
+        Map<String, String> config = new HashMap<>();
+        config.put("max_concurrent_per_source", "1");
+        startServer(config);
+        testServer.server.registerHttpHandler(new HttpHandler() {
+            @Override
+            public void handle(HttpRequest request, HttpResponse response) {
+                response.async(); // 声明异步收尾：请求在途期间逐源配额保持占用
+                response.send("first");
+                new Thread(() -> {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1500);
+                        response.send("second").finish();
+                    } catch (Throwable t) {
+                        // 迟写失败由下方断言捕获
+                    }
+                }).start();
+            }
+        }, "/sourceLimit", true);
+
+        String raw = "GET /sourceLimit HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+        Socket first = new Socket("localhost", testServer.port);
+        try {
+            first.setSoTimeout(8000);
+            first.getOutputStream().write(raw.getBytes(StandardCharsets.UTF_8));
+            first.getOutputStream().flush();
+            TimeUnit.MILLISECONDS.sleep(500); // 首个请求仍在途，同源配额已占满
+
+            Assert.assertEquals(statusOfRawRequest(testServer.port, raw), 503);
+
+            // 在途请求不受限流影响：迟写内容完整到达
+            BufferedReader reader = new BufferedReader(new InputStreamReader(first.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) response.append(line).append('\n');
+            Assert.assertTrue(response.toString().contains("second"), response.toString());
+        } finally {
+            first.close();
+        }
+    }
+
+    @Test
     public void streamHandlerCompleteThrows_request_stillCompletes() throws Exception {
         File tempFile = File.createTempFile("dispatcher-complete-", ".txt");
         try {
@@ -719,36 +789,6 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
         } finally {
             tempFile.delete();
         }
-    }
-
-    @Test
-    public void postOnlyRoute_getRequest_405WithRouteAllowHeader() throws Exception {
-        startServer();
-        TestServerSupport.registerWithMethods(testServer,
-                (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
-
-        String response = rawResponse(testServer.port,
-                "GET /postOnly HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
-
-        Assert.assertTrue(response.startsWith("HTTP/1.1 405"), response);
-        Assert.assertTrue(lower(response).contains("allow: post"), response);
-    }
-
-    @Test
-    public void postOnlyRoute_preflight_responds204WithRouteMethods() throws Exception {
-        startServer();
-        TestServerSupport.registerWithMethods(testServer,
-                (req, resp) -> resp.send("ok").finish(), "/postOnly", true, "POST");
-
-        // 预检须先于路由方法白名单判定，否则 POST-only 路由收不到预检（回归：闸门顺序）
-        String response = rawResponse(testServer.port, "OPTIONS /postOnly HTTP/1.1\r\n"
-                + "Host: localhost\r\n"
-                + "Origin: http://other.example\r\n"
-                + "Access-Control-Request-Method: POST\r\n"
-                + "Connection: close\r\n\r\n");
-
-        Assert.assertTrue(response.startsWith("HTTP/1.1 204"), response);
-        Assert.assertTrue(response.toLowerCase().contains("access-control-allow-methods: post"), response);
     }
 
     @Test

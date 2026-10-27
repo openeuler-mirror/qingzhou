@@ -165,9 +165,8 @@ public class AuthHandler implements HttpHandler {
 
     private boolean verifyCode(String code, HttpResponse response) {
         try {
-            if (crypto.getTotp().verifyCode(
-                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"),
-                    code)) {
+            if (crypto.getTotp().verifyCodeWithReplayGuard(
+                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"), code)) {
                 return true;
             }
         } catch (Exception e) {

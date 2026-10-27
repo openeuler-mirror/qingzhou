@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public abstract class Processor {
-    protected final boolean windows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+    public static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
 
     private File libDir;
 
@@ -29,10 +29,6 @@ public abstract class Processor {
 
     public String[] supportedArgs() {
         return null;
-    }
-
-    public String[] classpath() {
-        return new String[0];
     }
 
     public abstract void doCommandLine(String[] args) throws Exception;

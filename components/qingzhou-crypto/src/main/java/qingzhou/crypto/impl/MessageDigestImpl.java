@@ -38,6 +38,9 @@ class MessageDigestImpl implements MessageDigest {
         if (saltLength < 0) {
             throw new IllegalArgumentException("saltLength must not be negative: " + saltLength);
         }
+        if (iterations < 1 || iterations > MAX_ITERATIONS) { // 与校验侧同一上界：生成侧同样不得被超大迭代数拖垮
+            throw new IllegalArgumentException("iterations must be within 1~" + MAX_ITERATIONS + ": " + iterations);
+        }
         byte[] salt = null;
         if (saltLength > 0) {
             salt = new byte[saltLength];

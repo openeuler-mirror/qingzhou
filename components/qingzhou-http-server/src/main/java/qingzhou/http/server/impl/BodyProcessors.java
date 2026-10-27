@@ -79,10 +79,7 @@ final class BodyProcessors {
                             // 兜底：handler 未写响应时补 500，避免以 200 空体掩盖读失败
                             if (!httpResponse.isCommitted()) {
                                 logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
-                                try {
-                                    httpResponse.status(statusOf(cause).code()); // 流式响应头随响应链订阅即已发出，可能不可再改写
-                                } catch (IllegalStateException ignored) {
-                                }
+                                httpResponse.status(statusOf(cause).code()); // 未产出响应内容，写链尚未订阅，状态码仍可设置
                             }
                             // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
                             httpResponse.finish(); // 错误路径由框架强制收尾，async 只豁免正常完成
@@ -101,8 +98,8 @@ final class BodyProcessors {
                             }
                         }
                 );
-        return ctx.response.sendByteArray(streamResponse.asFlux())
-                .then()
+        return httpResponse.firstOutput()
+                .then(Mono.defer(() -> ctx.response.sendByteArray(streamResponse.asFlux()).then()))
                 .doFinally(signal -> {
                     // 响应结束即停止读请求体：handler 在 onBegin 中就结束响应时，否则会继续读到 maxStreamBytes
                     receiveDisposable.dispose();

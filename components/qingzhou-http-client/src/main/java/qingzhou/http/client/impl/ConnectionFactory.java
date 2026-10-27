@@ -103,7 +103,14 @@ class ConnectionFactory {
         trustManagerFactory.init(keyStore);
 
         SSLSocketFactory factory = newSocketFactory(trustManagerFactory.getTrustManagers());
-        if (trustFactories.size() >= MAX_TRUST_FACTORIES) trustFactories.clear(); // 动态证书集场景防无界增长
+        if (trustFactories.size() >= MAX_TRUST_FACTORIES) {
+            // 动态证书集场景防无界增长：按遍历序淘汰部分条目而非 clear 全表，避免在途连接的工厂集体失效重建
+            int remove = trustFactories.size() / 4;
+            for (List<X509Certificate> stale : trustFactories.keySet()) {
+                if (remove-- <= 0) break;
+                trustFactories.remove(stale);
+            }
+        }
         SSLSocketFactory prev = trustFactories.putIfAbsent(key, factory);
         return prev != null ? prev : factory;
     }

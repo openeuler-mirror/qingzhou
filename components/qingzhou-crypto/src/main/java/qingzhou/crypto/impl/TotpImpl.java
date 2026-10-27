@@ -4,27 +4,25 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import qingzhou.crypto.Base16Coder;
 import qingzhou.crypto.Base32Coder;
 import qingzhou.crypto.Totp;
 
 class TotpImpl implements Totp {
     // RFC 6238 默认步长 30 秒，主流验证器 App 亦固定此值，不可调整
-    static final long STEP_MILLIS = 30_000L; // 包级可见：测试复用，避免硬编码步长
+    private static final long STEP_MILLIS = 30_000L;
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final int[] DIGITS_POWER
-            // 0 1  2   3    4     5      6       7        8
-            = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+    private final SecureRandom RANDOM = new SecureRandom();
+    private final Map<String, AtomicLong> consumedWindows = new ConcurrentHashMap<>(); // key -> 已消费的最大窗口序号
 
-    private final Base16Coder base16Coder;
     private final Base32Coder base32Coder;
 
-    TotpImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
-        this.base16Coder = base16Coder;
+    TotpImpl(Base32Coder base32Coder) {
         this.base32Coder = base32Coder;
     }
 
@@ -41,71 +39,59 @@ class TotpImpl implements Totp {
         return getCode(key, System.currentTimeMillis() / STEP_MILLIS);
     }
 
-    /**
-     * @param step 绝对时间窗口序号，而非相对偏移量。
-     */
-    String getCode(String key, long step) throws Exception {
-        return generateTOTP(base32Coder.decode(key), Long.toHexString(step).toUpperCase());
+    String getCode(String key, long window) throws Exception {
+        return generateTOTP(base32Coder.decode(key), window);
     }
 
     @Override
-    public boolean verifyCode(String key, String code) throws Exception {
-        if (key == null || key.isEmpty() || code == null || code.isEmpty()) return false;
-        long step = System.currentTimeMillis() / STEP_MILLIS; // 基准只取一次，否则校验途中跨窗会漏检真正的当前窗口
-        return isEqual(code, getCode(key, step))
-                || isEqual(code, getCode(key, step - 1)) // 提交延迟只会把口令推向前序窗口
-                || isEqual(code, getCode(key, step + 1)); // 覆盖服务端时钟偏慢的情况
+    public boolean verifyCodeWithReplayGuard(String key, String code) throws Exception {
+        long window = matchWindow(key, code);
+        if (window < 0) return false;
+        AtomicLong consumed = consumedWindows.computeIfAbsent(key, k -> new AtomicLong(-1));
+        // 旧值小于当前窗口即为首次消费；相等/更早即重放。getAndAccumulate 原子
+        return window > consumed.getAndAccumulate(window, Math::max);
+    }
+
+    // 命中前/当前/后一个时间窗口时返回该窗口序号，-1 表示不匹配
+    private long matchWindow(String key, String code) throws Exception {
+        if (key == null || key.isEmpty() || code == null || code.isEmpty()) return -1;
+        byte[] secret = base32Coder.decode(key);
+        long window = System.currentTimeMillis() / STEP_MILLIS; // 基准只取一次，避免校验途中跨窗漏检当前窗口
+        // 三个窗口都计算并比较（不早退），执行路径恒定，避免泄露命中的窗口位置
+        long matched = -1;
+        for (long w = window - 1; w <= window + 1; w++) {
+            if (isEqual(code, generateTOTP(secret, w))) matched = w;
+        }
+        return matched;
     }
 
     // 常量时间比较，防止时序侧信道推算口令
-    private static boolean isEqual(String expected, String actual) {
+    private boolean isEqual(String expected, String actual) {
         return java.security.MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
                 actual.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * 按 RFC 4226（HOTP）计算口令，时间计数器左补零至 16 位十六进制（即 8 字节）后参与 HMAC。
-     */
-    private String generateTOTP(byte[] key, String time) throws Exception {
-        StringBuilder timeBuilder = new StringBuilder(time);
-        while (timeBuilder.length() < 16) {
-            timeBuilder.insert(0, "0");
+    // RFC 4226（HOTP）：时间计数器编码为 8 字节大端后参与 HMAC-SHA1
+    private String generateTOTP(byte[] key, long window) throws Exception {
+        byte[] counter = new byte[8];
+        for (int i = counter.length - 1; i >= 0; i--) {
+            counter[i] = (byte) window;
+            window >>>= 8;
         }
-        time = timeBuilder.toString();
-
-        byte[] msg = base16Coder.decode(time);
-        byte[] hash = hMac(key, msg);
-
-        return computeCode(hash);
+        return computeCode(hMac(key, counter));
     }
 
-    /**
-     * RFC 4226 定义的动态口令截断：取哈希最后一个字节的低 4 位作为偏移量，
-     * 从该位置取 4 字节、屏蔽符号位后对 10 的位数次幂取模，左侧补零至固定位数。
-     */
+    // RFC 4226 动态口令截断：取哈希末字节低 4 位为偏移，取 4 字节屏蔽符号位后对 10^6 取模并补零至 6 位
     private String computeCode(byte[] hash) {
-        int lenOfDigits = 6;
-
         int offset = hash[hash.length - 1] & 0xf;
-        int binary =
-                ((hash[offset] & 0x7f) << 24) |
-                        ((hash[offset + 1] & 0xff) << 16) |
-                        ((hash[offset + 2] & 0xff) << 8) |
-                        (hash[offset + 3] & 0xff);
-        int otp = binary % DIGITS_POWER[lenOfDigits];
-
-        StringBuilder result = new StringBuilder(Integer.toString(otp));
-        while (result.length() < lenOfDigits) {
-            result.insert(0, "0");
-        }
-        return result.toString();
+        int binary = ((hash[offset] & 0x7f) << 24)
+                | ((hash[offset + 1] & 0xff) << 16)
+                | ((hash[offset + 2] & 0xff) << 8)
+                | (hash[offset + 3] & 0xff);
+        return String.format("%06d", binary % 1_000_000);
     }
 
-    /**
-     * 固定使用 HmacSHA1：RFC 6238 规定 TOTP 默认算法为 SHA1，
-     * 而 otpauth:// URI 未声明 algorithm 时，Google Authenticator、Microsoft Authenticator、1Password、Authy 一律按 SHA1 计算。
-     * 改用 SHA256 将导致这些验证器生成的口令全部校验失败。
-     */
+    // HmacSHA1 固定：RFC 6238 默认算法；otpauth:// 未声明 algorithm 时各验证器一律按 SHA1 计算
     private byte[] hMac(byte[] key, byte[] text) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac hmac = Mac.getInstance("HmacSHA1");
         hmac.init(new SecretKeySpec(key, "RAW"));

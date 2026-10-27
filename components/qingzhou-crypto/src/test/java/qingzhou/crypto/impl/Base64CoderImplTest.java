@@ -2,6 +2,8 @@ package qingzhou.crypto.impl;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import qingzhou.crypto.Base64Coder;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
@@ -14,13 +16,13 @@ public class Base64CoderImplTest {
     // ===================== encode(byte[]) 编码测试 =====================
     @Test
     public void dataNull_encode_returnNull() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         Assert.assertNull(coder.encode(null));
     }
 
     @Test
     public void dataEmptyByteArray_encode_returnEmptyString() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] emptyBytes = new byte[0];
         String result = coder.encode(emptyBytes);
         Assert.assertEquals(result, "");
@@ -28,7 +30,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataNormalByteArray_encode_returnStandardBase64() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] sourceData = "test".getBytes(StandardCharsets.UTF_8);
         String encodeResult = coder.encode(sourceData);
         Assert.assertEquals(encodeResult, TEST_BASE64);
@@ -36,7 +38,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataSingleByte_encode_returnValidBase64() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] sourceData = new byte[]{0x66};  // 单字节 'f'
         String encodeResult = coder.encode(sourceData);
         Assert.assertEquals(encodeResult, "Zg==");
@@ -46,7 +48,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encode_onlyValidBase64Char() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[][] testDatas = {
             "Hello".getBytes(StandardCharsets.UTF_8),
             "Base64".getBytes(StandardCharsets.UTF_8),
@@ -64,7 +66,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataBinaryBytes_encode_returnValidBase64() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         // 全部256种字节值，验证编码结果始终符合Base64标准
         byte[] allBytes = new byte[256];
         for (int i = 0; i < 256; i++) {
@@ -80,20 +82,20 @@ public class Base64CoderImplTest {
     // ===================== decode(String) 解码测试 =====================
     @Test
     public void dataNull_decode_returnNull() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         Assert.assertNull(coder.decode((String) null));
     }
 
     @Test
     public void dataEmptyString_decode_returnEmptyByteArray() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] result = coder.decode("");
         Assert.assertEquals(result.length, 0);
     }
 
     @Test
     public void dataStandardBase64Str_decode_restoreSourceText() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] decodeBytes = coder.decode(TEST_BASE64);
         String realText = new String(decodeBytes, StandardCharsets.UTF_8);
         Assert.assertEquals(realText, "test");
@@ -101,7 +103,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataEncodeThenDecode_decode_restoreOriginalBytes() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[] originBytes = "Java Base64 Crypto Demo".getBytes(StandardCharsets.UTF_8);
         String encodeStr = coder.encode(originBytes);
         byte[] decodeBytes = coder.decode(encodeStr);
@@ -110,7 +112,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encodeThenDecode_restoreOriginalBytes() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         byte[][] testDatas = {
             new byte[0],
             new byte[]{0x00},
@@ -130,7 +132,7 @@ public class Base64CoderImplTest {
 
     @Test
     public void dataPaddingOnlyStr_decode_throwIllegalArgument() {
-        Base64CoderImpl coder = new Base64CoderImpl();
+        Base64Coder coder = new CryptoImpl().getBase64Coder();
         try {
             coder.decode("====");
             Assert.fail("纯填充不是有效 Base64，应显式失败");

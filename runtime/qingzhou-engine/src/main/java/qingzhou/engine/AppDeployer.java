@@ -67,6 +67,8 @@ class AppDeployer {
 
             urls.add(Paths.get(libDir, "modules", "qingzhou-api.jar").toUri().toURL());
             urls.add(Paths.get(libDir, "modules", "qingzhou-dto.jar").toUri().toURL());
+            // bundle-converter 经 FileUtil 引用 qingzhou.common，须纳入类加载路径
+            urls.add(Paths.get(libDir, "components", "qingzhou-common.jar").toUri().toURL());
 
             Path jsonBundlePath = Paths.get(libDir, "components", "qingzhou-json.jar");
             urls.add(jsonBundlePath.toUri().toURL());
