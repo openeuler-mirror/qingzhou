@@ -20,8 +20,6 @@ final class SslStep {
             return;
 
         String password = init.readPassword("New keystore password: ");
-        if (password == null) return;
-
         File keystore = init.confFile("keystore.p12");
         Files.deleteIfExists(keystore.toPath()); // 不能预创建空文件：JDK8 keytool 对已存在的空文件报错
         boolean success = genKeystore(keystore, password, init);
