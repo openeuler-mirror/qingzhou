@@ -31,5 +31,12 @@ public interface HttpResponse {
      */
     void finish();
 
+    /**
+     * 客户端是否已断开连接（订阅方取消）。长耗时任务据此主动终止，避免空转。
+     */
+    default boolean isCancelled() {
+        return false;
+    }
+
     void redirect(String url);
 }

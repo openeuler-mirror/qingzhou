@@ -48,6 +48,10 @@ class OpenAiChatModel implements ChatModel {
             if (builder.getSkills() != null && !builder.getSkills().isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
                 chatListener.onSkillMatching();
+                if (chatListener.isCancelled()) { // 客户端已断开：跳过同步技能匹配，收尾后不再发起请求
+                    chatListener.onComplete();
+                    return;
+                }
             }
             List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
@@ -91,6 +95,7 @@ class OpenAiChatModel implements ChatModel {
         try {
             Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json, crypto);
             Response response = httpClient.send(request, httpListener);
+            httpListener.attach(response); // 交由监听器持有：取消时用于断开底层连接
             if (response.getStatus() == 200) return;
 
             if (Utils.isRetryableStatus(response.getStatus()) && attempt < builder.getMaxRetries()) {
@@ -116,6 +121,8 @@ class OpenAiChatModel implements ChatModel {
         private final Listener chatListener;
         private final Map<String, Tool> tools;
         private final int toolIteration;
+        // 本轮响应句柄：取消时断开底层连接、停止拉取
+        private volatile Response response;
 
         private final StringBuilder content = new StringBuilder();
         private final StringBuilder reasoningContent = new StringBuilder();
@@ -134,8 +141,20 @@ class OpenAiChatModel implements ChatModel {
             this.toolIteration = toolIteration;
         }
 
+        void attach(Response response) {
+            this.response = response;
+        }
+
+        // 客户端已取消：切断本轮连接；返回 true 表示调用方须终止本轮处理
+        private boolean abortIfCancelled() {
+            if (!chatListener.isCancelled()) return false;
+            if (response != null) response.cancel();
+            return true;
+        }
+
         @Override
         public void onBody(String line) {
+            if (abortIfCancelled()) return;
             if (line == null || !line.startsWith("data:")) return;
 
             String data = line.substring(5).trim();
@@ -205,6 +224,10 @@ class OpenAiChatModel implements ChatModel {
 
         @Override
         public void onComplete() {
+            if (abortIfCancelled()) { // 已取消：不再执行工具与下一轮，仅让调用方收尾（落库已生成内容）
+                chatListener.onComplete();
+                return;
+            }
             try {
                 if (usage != null) {
                     chatListener.onUsage(
@@ -237,6 +260,7 @@ class OpenAiChatModel implements ChatModel {
 
         @Override
         public void onError(Throwable t) {
+            if (abortIfCancelled()) return; // 主动停止而非网络抖动：不得静默重发
             // 流式读取中断（如网络抖动）：若尚未输出任何内容（无正文、无工具调用），静默重发一次
             if (!streamRetried && content.length() == 0 && toolCalls.isEmpty()) {
                 streamRetried = true;

@@ -36,4 +36,11 @@ public interface Listener {
      */
     default void onStillActive() {
     }
+
+    /**
+     * 客户端是否已取消本轮生成：实现方在连接断开时置位，模型实现据此停止拉取与后续轮次
+     */
+    default boolean isCancelled() {
+        return false;
+    }
 }

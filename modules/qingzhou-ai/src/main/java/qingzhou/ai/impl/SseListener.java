@@ -70,6 +70,10 @@ public class SseListener implements Listener {
      */
     private volatile boolean finished = false;
     /**
+     * 客户端已断开：置位后模型侧停止拉取（见 Listener#isCancelled）
+     */
+    private volatile boolean cancelled = false;
+    /**
      * 是否已产生过内容类事件（用于首字超时判定）；由看门狗线程无锁读取，须保证可见性
      */
     private volatile boolean contentStarted = false;
@@ -124,6 +128,13 @@ public class SseListener implements Listener {
             return;
         }
 
+        // 客户端已断开且模型侧可能不再回调：主动收尾，回收心跳与响应对象（正文已由取消路径落库）
+        if (cancelled) {
+            finished = true;
+            stopWatchdog();
+            return;
+        }
+
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed >= HARD_TIMEOUT_MS) {
             // 会话总时长硬上限：无论是否已出内容、连接是否仍存活，都主动收尾并自取消，兜底回收看门狗，杜绝“已出内容后模型静默 + 客户端长连接不关”的无限心跳空转
@@ -167,11 +178,21 @@ public class SseListener implements Listener {
      */
     private void sendEvent(SseEvent event) {
         synchronized (sendLock) {
-            if (finished) return;
+            if (finished || cancelled) return;
             if (CONTENT_EVENT_TYPES.contains(event.type)) contentStarted = true;
             lastEventTime = System.currentTimeMillis();
-            httpResponse.send(toSseText(event));
+            try {
+                httpResponse.send(toSseText(event));
+            } catch (IllegalStateException e) {
+                if (!httpResponse.isCancelled()) throw e; // 背压满等异常保持原有上抛行为
+                cancelled = true; // 客户端断开：通知模型停止拉取
+            }
         }
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
     }
 
     private void finishWithError(String code, String error) {
@@ -297,7 +318,8 @@ public class SseListener implements Listener {
                 // 客户端已断开连接，无法发送结束事件，忽略
             }
         }
-        if (completeAction != null) {
+        // 客户端在首字前即断开：无内容可落库，跳过以免留下空回答
+        if (completeAction != null && (!cancelled || allContent.length() > 0)) {
             try {
                 completeAction.run();
             } catch (Throwable t) {
