@@ -19,7 +19,7 @@ final class SslStep {
         if (init.noConfirm("Generate the SSL certificate conf/keystore.p12 and enable https? (recommended) [y/N] "))
             return;
 
-        String password = init.readPassword("New keystore password: ");
+        String password = init.readPassword("Input keystore password: ");
         File keystore = init.confFile("keystore.p12");
         Files.deleteIfExists(keystore.toPath()); // 不能预创建空文件：JDK8 keytool 对已存在的空文件报错
         boolean success = genKeystore(keystore, password, init);
