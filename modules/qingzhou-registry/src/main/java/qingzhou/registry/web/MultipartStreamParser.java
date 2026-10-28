@@ -40,7 +40,6 @@ class MultipartStreamParser {
     private int suffixLen;
 
     private int partCount;
-    private long totalBytes;
     private long totalTextBytes;
     private String currentFieldName;
     private boolean isFileField;
@@ -68,11 +67,6 @@ class MultipartStreamParser {
 
     void feed(byte[] data, boolean isLast) throws IOException {
         if (state == State.DONE) return;
-
-        totalBytes += data.length;
-        if (totalBytes > MAX_TOTAL_BYTES) {
-            throw new IllegalStateException("multipart body too large");
-        }
 
         byte[] searchArea;
         if (leftoverLen > 0) {
