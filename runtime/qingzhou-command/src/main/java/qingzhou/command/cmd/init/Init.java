@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
@@ -26,7 +27,7 @@ public class Init extends Processor {
 
     @Override
     public String info() {
-        return "Initialize the instance: global key, admin password, TOTP and SSL certificate.";
+        return "Initialize the instance: admin password, TOTP, SSL certificate and agent domain.";
     }
 
     @Override
@@ -49,6 +50,7 @@ public class Init extends Processor {
         new AdminPasswordStep().init(this);
         new TotpStep().init(this);
         new SslStep().init(this);
+        new AgentDomainStep().init(this);
         log("Done, restart the instance to take effect.");
     }
 
@@ -86,9 +88,9 @@ public class Init extends Processor {
         return console.readLine(prompt);
     }
 
-    boolean noConfirm(String prompt) {
+    boolean confirm(String prompt) {
         String answer = readLine(prompt);
-        return answer == null || !answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
+        return answer != null && answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
     }
 
     String readProps() throws IOException {
@@ -105,6 +107,14 @@ public class Init extends Processor {
 
     static void write(File file, String content) throws IOException {
         Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // 密钥文件仅属主可读写：默认 umask 下同机其它用户可读，等同泄露全平台信任根
+    static void restrictToOwnerOnly(File file) {
+        try {
+            Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
+        } catch (UnsupportedOperationException | IOException ignored) { // 非 POSIX 平台或无权限修改
+        }
     }
 
     static boolean hasValue(String content, String key) {

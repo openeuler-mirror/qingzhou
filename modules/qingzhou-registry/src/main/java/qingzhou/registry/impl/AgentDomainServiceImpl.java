@@ -42,18 +42,17 @@ public class AgentDomainServiceImpl implements AgentDomainService {
         String prefix = "agent-domain~";
         for (String name : properties.stringPropertyNames()) {
             if (!name.startsWith(prefix)) continue;
-            String rest = name.substring(prefix.length());
-            int dot = rest.indexOf('.');
-            if (dot <= 0) { // 缺分隔符时的 substring 会越界，配置笔误不得表现为隐晦的运行期异常
+            String domain = name.substring(prefix.length());
+            if (domain.isEmpty()) { // 空域名会让查找与 AAD 失去区分度，配置笔误须显式报错
                 throw new IllegalArgumentException("invalid key name in secret-key.properties: " + name
-                        + ", expected " + prefix + "<domain>.<item>");
+                        + ", expected " + prefix + "<domain>");
             }
             byte[] domainKey = crypto.getBase64Coder().decode(properties.getProperty(name).trim());
             // 域根密钥是全平台信任根：HKDF 无法补救低熵 IKM，至少 32 字节（256 位）以满足后量子强度，激活即校验
             if (domainKey.length < 32) {
                 throw new IllegalArgumentException("agent domain key too short (>=32 bytes): " + name);
             }
-            masters.put(rest.substring(0, dot), domainKey);
+            masters.put(domain, domainKey);
         }
     }
 

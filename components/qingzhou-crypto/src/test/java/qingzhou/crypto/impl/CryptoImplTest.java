@@ -15,13 +15,13 @@ import qingzhou.logger.impl.LoggerImpl;
 
 public class CryptoImplTest {
     @Test
-    public void anyTime_generateKey_mustBe24Chars() {
+    public void anyTime_generateKey_mustBe44Chars() {
 
         for (int i = 0; i < 10000; i++) {
-            String key = crypto.generateCipherKey();
+            String key = crypto.generateSecureKey();
             Assert.assertNotNull(key);
             Assert.assertFalse(key.matches(".*\\s.*"));
-            Assert.assertEquals(key.length(), 24);
+            Assert.assertEquals(key.length(), 44); // 32 字节 Base64
         }
     }
 
@@ -57,7 +57,7 @@ public class CryptoImplTest {
         CryptoImpl crypto = getCryptoImpl();
         int count = 10000;
         for (int i = 0; i < count; i++) {
-            String randomKey = crypto.generateCipherKey();
+            String randomKey = crypto.generateSecureKey();
             boolean added = randomKeys.add(randomKey);
             Assert.assertTrue(added);
         }
@@ -65,7 +65,7 @@ public class CryptoImplTest {
     }
 
     @Test
-    public void not24CharsKey_getCipher_throwInvalidKeyException() {
+    public void invalidKey_getCipher_throwInvalidKeyException() {
         CryptoImpl crypto = getCryptoImpl();
         try {
             crypto.getCipher((String) null);
@@ -94,9 +94,9 @@ public class CryptoImplTest {
     }
 
     @Test
-    public void use24CharsKey_getCipher_success() {
+    public void generateKey_getCipher_success() {
         CryptoImpl crypto = getCryptoImpl();
-        String key = crypto.generateCipherKey();
+        String key = crypto.generateSecureKey();
         try {
             Cipher cipher = crypto.getCipher(key);
             Cipher cipher2 = crypto.getCipher(key);
