@@ -26,7 +26,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
      */
     @ModelAction(
             code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
-            name = {"下载", "en:Download"}, show = true, update = true,
+            name = {"下载", "en:Download"}, show = true, update = true, list = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public void files(Request request) {
         String id = request.getId();
