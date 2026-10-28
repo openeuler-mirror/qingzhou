@@ -3,16 +3,14 @@ package qingzhou.app.demo;
 import java.io.File;
 import java.util.*;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.action.*;
 
 /**
  * 演示文件上传和下载功能
  * - 支持通过表单上传附件（multipart/form-data）
  * - 支持通过 files/download action 下载文件
- * - 下载按钮在列表头、表格行、详情页、编辑页均显示（覆盖全场景）
+ * - files 动作按 code 覆盖框架默认实现（见 BundleConverter）：去掉列表头入口，仅保留详情页、编辑页
  */
 @Model(code = "file-demo", order = 5,
         name = {"文件管理", "en:File Management"},
@@ -22,6 +20,40 @@ import qingzhou.api.action.*;
 public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, DownloadFile {
     private static final Map<String, Map<String, String>> db = new LinkedHashMap<>();
     private static int idCounter = 1;
+
+    /**
+     * 覆盖框架默认的 files 动作：仅去掉列表头（list_head）入口，执行逻辑与默认实现保持一致
+     */
+    @ModelAction(
+            code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
+            name = {"下载", "en:Download"}, show = true, update = true, list = true,
+            info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
+    public void files(Request request) {
+        String id = request.getId();
+        // id 会直接拼进基准目录，穿越字符在此拦截（与框架默认实现同一防线）
+        if (id != null && hasIllegalPath(id)) {
+            request.getResponse().error("illegal file name");
+            return;
+        }
+
+        Map<String, String> fileMap = new TreeMap<>();
+        File fileBase = files(id);
+        if (fileBase.isDirectory()) {
+            File[] listFiles = fileBase.listFiles();
+            if (listFiles != null) {
+                for (File file : listFiles) {
+                    if (file.isFile() && !file.getName().startsWith(".")) {
+                        fileMap.put(file.getName(), String.valueOf(file.length()));
+                    }
+                }
+            }
+        }
+        request.getResponse().data(fileMap);
+    }
+
+    private static boolean hasIllegalPath(String name) {
+        return name.contains("..") || name.contains("/") || name.contains("\\");
+    }
 
     @Override
     public File files(String id) {
