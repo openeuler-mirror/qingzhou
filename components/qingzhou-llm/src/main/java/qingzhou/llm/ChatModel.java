@@ -3,7 +3,7 @@ package qingzhou.llm;
 public interface ChatModel {
     // 发起一次同步对话。
     String chat(String message, Attachment... attachment);
-    
+
     /**
      * 发起一次流式对话。
      * <p>
@@ -13,5 +13,5 @@ public interface ChatModel {
      * 调用方不得在方法返回后依赖请求线程上下文（如 ThreadLocal、请求线程相关资源）来驱动或终结回调，
      * 也不应在方法返回时即销毁回调所依赖的输出通道，否则后台回调可能失效。
      */
-    void chat(String message, Listener listener, Attachment... attachment);
+    void chat(String message, ChatListener chatListener, Attachment... attachment);
 }

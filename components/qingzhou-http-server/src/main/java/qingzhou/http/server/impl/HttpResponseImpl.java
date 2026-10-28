@@ -32,8 +32,7 @@ class HttpResponseImpl implements HttpResponse {
     private volatile boolean async;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
-    @Override
-    public boolean isCancelled() {
+    boolean isCancelled() {
         return cancelled;
     }
 
