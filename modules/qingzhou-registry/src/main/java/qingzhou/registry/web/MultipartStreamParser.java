@@ -16,8 +16,6 @@ class MultipartStreamParser {
     // 文本字段累计上限：单字段上限 × 分片总数可达 GB 级并全部驻留堆，须按总量独立约束（文件分片落盘，不计入）
     private static final long MAX_TOTAL_TEXT_BYTES = 8L * 1024 * 1024;
     private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
-    // 文件分片总量上限：与服务端请求体上限对齐，防止认证用户用单个请求写满磁盘
-    private static final long MAX_TOTAL_BYTES = 256L * 1024 * 1024;
     private static final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
     private static final int[] HEADER_DELIMITER_FAILURE = failure(HEADER_DELIMITER);
 

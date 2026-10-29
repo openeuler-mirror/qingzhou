@@ -119,12 +119,22 @@ public class Init extends Processor {
         }
     }
 
+    static boolean hasKey(String content, String key) {
+        return value(content, key) != null;
+    }
+
     static boolean hasValue(String content, String key) {
+        String value = value(content, key);
+        return value != null && !value.isEmpty(); // 无该配置项或有但为空，均视为未初始化
+    }
+
+    // 注释行 trim 后以 '#' 开头，不会被误判为存在该配置项
+    private static String value(String content, String key) {
         for (String line : content.split("\n", -1)) {
             String trim = line.trim();
-            if (trim.startsWith(key + "=")) return !trim.substring(key.length() + 1).trim().isEmpty();
+            if (trim.startsWith(key + "=")) return trim.substring(key.length() + 1).trim();
         }
-        return false; // 无该配置项或有但为空，均视为未初始化
+        return null;
     }
 
     static String putValue(String content, String key, String value) {

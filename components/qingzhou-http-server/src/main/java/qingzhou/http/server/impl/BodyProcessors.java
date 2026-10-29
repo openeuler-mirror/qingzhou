@@ -78,7 +78,11 @@ final class BodyProcessors {
                             safeRun(() -> streamHandler.onError(cause)); // 回调自身出错不得吞掉下方兜底
                             // 兜底：handler 未写响应时补 500，避免以 200 空体掩盖读失败
                             if (!httpResponse.isCommitted()) {
-                                logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
+                                if (cause instanceof BodyTooLargeException) {
+                                    ctx.logBodyTooLarge(logger, receivedBytes.get(), maxStreamBytes);
+                                } else {
+                                    logger.error("http stream handler error", cause); // 仅在真正需要兜底时记录，避免客户端中断也刷日志
+                                }
                                 httpResponse.status(statusOf(cause).code()); // 未产出响应内容，写链尚未订阅，状态码仍可设置
                             }
                             // 已提交时也必须收尾：否则 sink 不结束，并发许可与内存配额要挂到 idle_timeout
@@ -145,7 +149,11 @@ final class BodyProcessors {
                         httpResponse.finish(); // 已提交只能补终止信号，否则 sink 不结束、许可无法归还
                         return Mono.empty();
                     }
-                    return ctx.respond(statusOf(getCause(e)));
+                    Throwable cause = getCause(e);
+                    if (cause instanceof BodyTooLargeException) {
+                        ctx.logBodyTooLarge(logger, receivedBytes.get(), maxBodyBytes);
+                    }
+                    return ctx.respond(statusOf(cause));
                 });
     }
 
