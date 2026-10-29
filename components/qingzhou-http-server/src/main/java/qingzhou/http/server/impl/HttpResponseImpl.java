@@ -32,8 +32,7 @@ class HttpResponseImpl implements HttpResponse {
     private volatile boolean async;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
-    @Override
-    public boolean isCancelled() {
+    boolean isCancelled() {
         return cancelled;
     }
 
@@ -133,7 +132,8 @@ class HttpResponseImpl implements HttpResponse {
         // "/\evil.com" 会被浏览器当作协议相对地址跳到外站。
         // TAB 同样必须拦截：WHATWG 解析会先移除 URL 中的制表符，"/\t/evil.com" 会被还原成 "//evil.com"
         boolean validTarget = url != null && !url.isEmpty() && url.indexOf('\\') < 0 && url.indexOf('\t') < 0
-                && url.startsWith("/") && !url.startsWith("//");
+                // && url.startsWith("/") // oauth2 重定向是 http 开头的外部地址
+                && !url.startsWith("//");
         if (!validTarget || hasBreak(url)) throw new IllegalArgumentException("invalid redirect url");
         response.status(HttpResponseStatus.FOUND)
                 .header(HttpHeaderNames.LOCATION, url)

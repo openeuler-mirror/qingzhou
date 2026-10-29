@@ -1,6 +1,15 @@
 package qingzhou.llm;
 
-public interface Listener {
+public interface ChatListener {
+    void onMessage(String content);
+
+    void onComplete();
+
+    void onError(String error);
+
+    default void onSubscribe(Subscription s) {
+    }
+
     default void onReasoning(String content) {
     }
 
@@ -9,12 +18,6 @@ public interface Listener {
 
     default void onToolCall(String toolCallId, String toolName, String args) {
     }
-
-    void onMessage(String content);
-
-    void onComplete();
-
-    void onError(String error);
 
     /**
      * 本轮请求的 token 用量统计（需服务端支持 stream_options.include_usage）。
@@ -27,20 +30,10 @@ public interface Listener {
      * 阶段状态提示：模型实现可在长耗时/静默阶段主动上报阶段语义，
      * 正在做技能匹配等前置工作（同步 LLM 调用，期间不会有任何内容事件）
      */
-    default void onSkillMatching() {
+    default void onSkillMatch() {
     }
 
-    /**
-     * 阶段状态提示：模型实现可在长耗时/静默阶段主动上报阶段语义，
-     * 告知前端“服务端还活着、仍在处理”，避免其把缓慢当卡死
-     */
-    default void onStillActive() {
-    }
-
-    /**
-     * 客户端是否已取消本轮生成：实现方在连接断开时置位，模型实现据此停止拉取与后续轮次
-     */
-    default boolean isCancelled() {
-        return false;
+    interface Subscription {
+        void cancel();
     }
 }

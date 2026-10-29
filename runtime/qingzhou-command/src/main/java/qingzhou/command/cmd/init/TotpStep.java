@@ -10,7 +10,7 @@ final class TotpStep {
         String props = init.readProps();
         if (Init.hasValue(props, "qingzhou-auth.totp_secret")) return; // 已有值则静默跳过
 
-        if (init.noConfirm("Enable TOTP two-factor login? (optional, needs an authenticator app) [y/N] ")) return;
+        if (!init.confirm("Enable TOTP two-factor login? (optional, needs an authenticator app) [y/N] ")) return;
 
         String secret = init.getCrypto().getTotp().generateKey();
         // 勿再加 issuer 等参数：URI 每多约 14 个字符，ECC HIGH 下二维码版本就升一档，终端宽度可能不够

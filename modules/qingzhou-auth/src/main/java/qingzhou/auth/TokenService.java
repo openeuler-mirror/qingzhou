@@ -75,6 +75,8 @@ public class TokenService {
     }
 
     public void sendCookie(String name, String value, String path, int age, String sameSite, HttpRequest request, HttpResponse response) {
+        if (value == null) return; // 不能用 value.isEmpty() return，空串有业务意义，表示要清空 Cookie
+
         String cookie = "; Path=" + path + "; HttpOnly; SameSite=" + sameSite;
 
         // Max-Age=0 或负数：表示立即过期，常用于删除 Cookie

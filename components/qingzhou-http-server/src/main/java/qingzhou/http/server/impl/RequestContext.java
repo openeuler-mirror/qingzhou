@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -16,6 +17,8 @@ import reactor.netty.http.server.HttpServerResponse;
  * 一次请求在准入闸门与 body 处理之间传递的状态：每个 gate 只写自己负责的字段。
  */
 final class RequestContext {
+    private static final int MAX_LOGGED_PATH = 256; // 路径无长度上限，入日志前截断防刷盘
+
     final HttpServerRequest request;
     final HttpServerResponse response;
     final AtomicBoolean released = new AtomicBoolean();
@@ -53,6 +56,18 @@ final class RequestContext {
     void intakeComplete() {
         ScheduledFuture<?> future = intakeTimeout;
         if (future != null) future.cancel(false);
+    }
+
+    /**
+     * 请求体超限日志的唯一出口：闸门、聚合、流式三条路径共用同一文案与字段。
+     * path 由 URL 解码而来且 normalize 不拦控制字符，直接入日志可伪造行（日志注入），故先清洗再截断；
+     * size 为触发现场读数，闸门处是声明的 Content-Length，按字节累加处是已接收字节数。
+     */
+    void logBodyTooLarge(Logger logger, long size, long limit) {
+        String loggedPath = path.replaceAll("\\p{Cntrl}", "?");
+        if (loggedPath.length() > MAX_LOGGED_PATH) loggedPath = loggedPath.substring(0, MAX_LOGGED_PATH) + "...";
+        logger.warn("request body too large: method=" + request.method() + ", path=" + loggedPath
+                + ", remoteHost=" + httpRequest.getRemoteHost() + ", size=" + size + ", limit=" + limit);
     }
 
     /**

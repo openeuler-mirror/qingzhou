@@ -65,7 +65,7 @@ public class AiChat implements HttpHandler {
     public void deactivate() {
         // 刻意停用即关停共享看门狗：在途会话会失去心跳与首字超时（悬挂到客户端超时），
         // 但不关停会让空闲线程经 Worker→Executor→线程工厂持有旧 bundle 的类加载器，导致 bundle 更新后泄漏
-        SseListener.watchdog().shutdownNow();
+        SseWatchdog.getExecutorService().shutdownNow();
     }
 
     @Override
@@ -167,15 +167,9 @@ public class AiChat implements HttpHandler {
                 .header("connection", "keep-alive")
                 .header("cache-control", "no-cache")
                 .header("x-accel-buffering", "no"); // 告知反代（如 nginx）不要缓冲 SSE，否则事件会攒到连接结束才一次性到达
-        SseListener sseListener = new SseListener(httpResponse, logger, json);
 
-        // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
-        String assistantMessageId = UUID.randomUUID().toString();
-        // chat() 异步返回，回答全文须等流结束才完整，落库挂 onComplete
-        sseListener.onCompleteAction(() -> conversationStore.storeAssistantMessage(request.conversationId, request.userId, sseListener.allContent.toString(), assistantMessageId));
-
+        SseChatListener sseListener = null;
         try {
-            sseListener.setStarted(request.conversationId, assistantMessageId); // 先告知"已受理"：技能匹配等前置工作可能耗时数秒，不能让客户端误以为请求没发出去
             Collection<Skill> skills = LlmConverter.convertSkills(llmSkills, logger); // 只转换一次，开销统计与实际注入同源
             int maxRefChars = 10000; // 单篇技能说明书/参考文档注入系统提示的字符上限
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
@@ -189,6 +183,8 @@ public class AiChat implements HttpHandler {
                     .chatMemory(() -> conversationStore.getMessageList(request.userId, request.conversationId,
                             overhead(skills, request.refDocs, request.question.length(), maxRefChars)));
             ChatModel chatModel = builder.build();
+
+            sseListener = startSseChatListener(request, httpResponse);
             chatModel.chat(request.question, sseListener, request.images);
 
             // chat() 异步返回，立即落库（在 chatMemory 读取历史之后，避免本轮提问混入上下文重复），
@@ -200,8 +196,23 @@ public class AiChat implements HttpHandler {
             // 否则连接被静默断开，前端会一直停留在“AI 正在思考...”
             String msg = t.getMessage() != null && !t.getMessage().isEmpty() ? t.getMessage() : t.toString();
             logger.error("ai chat request failed: " + msg, t);
-            sseListener.onError(msg);
+            if (sseListener != null) {
+                sseListener.onError(msg);
+            }
         }
+    }
+
+    private SseChatListener startSseChatListener(ChatRequest request, HttpResponse httpResponse) {
+        SseChatListener sseListener = new SseChatListener(httpResponse, logger, json);
+        String assistantMessageId = UUID.randomUUID().toString(); // AI 回复落库 id 预生成：随 RUN_STARTED 下发，onComplete 落库时对齐同一 id
+        sseListener.setStarted(request.conversationId, assistantMessageId, new SseChatListener.MessageAggregator() {
+            @Override
+            void aggregatedMessage(String content) {
+                // 流正常结束后的动作（AiChat 落库回答全文：chat() 异步，全文须等 onComplete 才完整）
+                conversationStore.storeAssistantMessage(request.conversationId, request.userId, content, assistantMessageId);
+            }
+        });
+        return sseListener;
     }
 
     private Map<String, Object> params(HttpRequest httpRequest) {

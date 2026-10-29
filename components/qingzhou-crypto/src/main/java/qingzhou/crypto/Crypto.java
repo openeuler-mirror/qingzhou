@@ -4,11 +4,11 @@ import java.security.InvalidKeyException;
 
 public interface Crypto {
     /**
-     * 随机生成 24 个字符密钥，供 getCipher 方法使用。
+     * 随机生成 32 字节（256 位）安全密钥，Base64 编码。
      * 密钥由 SecureRandom 直接产生、不建立在主密钥之上：KDF 不产生熵，派生只会把风险集中到主密钥；
-     * 多节点共享同一密钥由 getGlobalCipher 的密钥文件分发实现。
+     * 用于配置加解密（getCipher）与域信任根（HKDF 的 IKM），多节点共享由密钥文件分发实现。
      */
-    String generateCipherKey();
+    String generateSecureKey();
 
     /**
      * 将多个上下文串分帧为 AAD：每段以「长度:内容」编码（null 记为 -1），字段边界无歧义，
@@ -17,9 +17,9 @@ public interface Crypto {
     byte[] generateCipherAad(String... context);
 
     /**
-     * 传入24个字符密钥，获得加解密服务对象。
+     * 传入 Base64 编码的 AES-256 密钥，获得加解密服务对象。
      *
-     * @param key 必需24个字符长度。
+     * @param key 必需解码为 32 字节。
      * @return 加解密服务对象。
      * @throws InvalidKeyException when 密钥不正确。
      */

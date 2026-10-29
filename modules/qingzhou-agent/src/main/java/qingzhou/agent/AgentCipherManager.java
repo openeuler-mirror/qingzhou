@@ -1,5 +1,6 @@
 package qingzhou.agent;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
@@ -25,13 +26,12 @@ public class AgentCipherManager {
     @Activate
     public void init() {
         Set<String> allAgentDomains = agentDomainService.getAllAgentDomains();
-        if (allAgentDomains.size() == 1) {
-            agentDomain = allAgentDomains.iterator().next();
-        } else {
-            // 密钥数量异常时 agent 的所有端点都会 503、心跳也无法加密：必须 fail-fast 并指明配置文件
-            throw new IllegalStateException("agent domain keys must be exactly 1, but was " + allAgentDomains.size()
-                    + "; check agent-domain~* entries in conf/secret-key.properties");
+        if (allAgentDomains.isEmpty()) {
+            // 空配置下 agent 的所有端点都会 503、心跳也无法加密：必须 fail-fast 并指明配置文件
+            throw new IllegalStateException("no agent domain configured; check agent-domain~* entries in conf/secret-key.properties");
         }
+        // 多域时取字典序第一个：Properties/HashMap 遍历顺序不保证，固定选择避免各实例选定不同域
+        agentDomain = Collections.min(allAgentDomains);
     }
 
     String getAgentDomain() {

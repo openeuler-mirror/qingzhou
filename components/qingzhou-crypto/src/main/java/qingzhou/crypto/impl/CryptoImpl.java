@@ -21,6 +21,7 @@ import qingzhou.logger.Logger;
 @Component(configurationPid = "qingzhou-crypto", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class CryptoImpl implements Crypto {
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final int SECURE_KEY_BYTES = 32; // 256 位：AES-256 与域信任根共用
 
     @Reference
     private Logger logger;
@@ -63,8 +64,8 @@ public class CryptoImpl implements Crypto {
     }
 
     @Override
-    public String generateCipherKey() {
-        byte[] key = new byte[16];
+    public String generateSecureKey() {
+        byte[] key = new byte[SECURE_KEY_BYTES]; // AES-256：Grover 攻击下仍保 128 位安全
         RANDOM.nextBytes(key);
         return base64Coder.encode(key);
     }
@@ -88,13 +89,9 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public Cipher getCipher(String key) throws InvalidKeyException {
-        String trimmed = key == null ? null : key.trim();
-        if (trimmed == null || trimmed.length() != 24) {
-            throw new InvalidKeyException("key length must be 24");
-        }
         byte[] cipherKey;
         try {
-            cipherKey = base64Coder.decode(trimmed);// 先校验 Base64 合法性：非法字符应在此报 InvalidKeyException，而非构造时抛 IAE 破坏契约
+            cipherKey = base64Coder.decode(key == null ? null : key.trim());// 先校验 Base64 合法性：非法字符应在此报 InvalidKeyException，而非构造时抛 IAE 破坏契约
         } catch (IllegalArgumentException e) {
             throw new InvalidKeyException("key is not valid base64", e);
         }
@@ -103,9 +100,10 @@ public class CryptoImpl implements Crypto {
 
     @Override
     public Cipher getCipher(byte[] cipherKey) throws InvalidKeyException {
-        // 24 字符 Base64 可解出 16 至 18 字节，而 AES 只接受 16/24/32 字节：在此拦下，避免用错密钥时延迟到加解密才失败
-        if (cipherKey.length != 16 && cipherKey.length != 24 && cipherKey.length != 32) {
-            throw new InvalidKeyException("key must decode to 16, 24 or 32 bytes: " + cipherKey.length);
+        // 仅接受 AES-256：16/24 字节一律拒绝，避免强度降级
+        if (cipherKey == null || cipherKey.length != SECURE_KEY_BYTES) {
+            throw new InvalidKeyException("key must be " + SECURE_KEY_BYTES + " bytes (AES-256): "
+                    + (cipherKey == null ? "null" : cipherKey.length));
         }
         return new CipherImpl(cipherKey, base64Coder, logger);
     }

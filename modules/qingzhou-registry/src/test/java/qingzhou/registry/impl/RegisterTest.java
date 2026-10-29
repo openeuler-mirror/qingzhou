@@ -50,7 +50,7 @@ public class RegisterTest {
         // 全零密钥仅测试用：长度满足激活期的 256 位校验
         String key = Base64.getEncoder().encodeToString(new byte[32]);
         Files.write(conf.resolve("secret-key.properties"),
-                ("agent-domain~" + DOMAIN + ".key=" + key + "\n").getBytes(StandardCharsets.UTF_8));
+                ("agent-domain~" + DOMAIN + "=" + key + "\n").getBytes(StandardCharsets.UTF_8));
 
         CryptoImpl crypto = new CryptoImpl();
         crypto.init(Collections.singletonMap("qingzhou.instance", instanceDir.toString()));

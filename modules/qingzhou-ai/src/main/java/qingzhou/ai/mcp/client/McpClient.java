@@ -142,7 +142,7 @@ final class McpClient {
         }
     }
 
-    private Response post(String method, Map<String, Object> params, Long id, ResponseListener listener) throws Exception {
+    private Response post(String method, Map<String, Object> params, Long id, ClientListener listener) throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", "2.0");
         if (id != null) envelope.put("id", id);
@@ -263,7 +263,7 @@ final class McpClient {
         return null;
     }
 
-    private final class Collector implements ResponseListener {
+    private final class Collector implements ClientListener {
         private final long expectedId;
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile Map<String, Object> message;

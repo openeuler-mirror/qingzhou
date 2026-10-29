@@ -308,7 +308,9 @@ final class RequestGates {
     private Publisher<Void> denyOversizedBody(RequestContext ctx) {
         long size = declaredBodySize(ctx.request);
         if (size == INVALID_BODY_SIZE) return ctx.respond(HttpResponseStatus.BAD_REQUEST);
-        if (size > (ctx.streamRequired ? maxStreamBytes : maxBodyBytes)) {
+        long limit = ctx.streamRequired ? maxStreamBytes : maxBodyBytes;
+        if (size > limit) {
+            ctx.logBodyTooLarge(logger, size, limit);
             return ctx.respond(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE);
         }
         return null;

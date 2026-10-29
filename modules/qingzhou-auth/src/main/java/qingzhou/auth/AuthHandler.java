@@ -1,6 +1,8 @@
 package qingzhou.auth;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -49,17 +51,8 @@ public class AuthHandler implements HttpHandler {
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
         username = configs.notBlank("username");
-        passwordDigest = configs.notBlank("password");
-        String rolesStr = config.get("roles");
-        if (rolesStr != null && !rolesStr.trim().isEmpty()) {
-            List<String> roleList = new ArrayList<>();
-            for (String s : rolesStr.split(",")) {
-                if (!s.trim().isEmpty()) {
-                    roleList.add(s.trim());
-                }
-            }
-            roles = roleList.toArray(new String[0]);
-        }
+        passwordDigest = configs.get("password"); // null 表示 agent 进程，拒绝一切登录
+        roles = configs.splitList("roles").toArray(new String[0]);
 
         totpEnabled = configs.getOrDefault("totp_enabled", false);
         if (totpEnabled) {
@@ -157,6 +150,10 @@ public class AuthHandler implements HttpHandler {
     private boolean verifyUserPassword(String reqUser, String reqPass) {
         if (reqPass == null) reqPass = ""; // null 会让 matches 抛 NPE 变 500，泄露「用户名有效」信号；按空凭据处理
         if (reqPass.length() > MAX_CREDENTIAL_CHARS) return false;
+
+        if (passwordDigest == null || passwordDigest.trim().isEmpty()) {
+            return false; // 拒绝不设置密码登录，防手误
+        }
 
         return Objects.equals(reqUser, username)
                 & // 用户名错误也执行等价慢哈希：抹平与「密码错误」的响应时序差，防用户名枚举

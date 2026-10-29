@@ -62,7 +62,7 @@ public class HttpClientImpl implements HttpClient {
     }
 
     @Override
-    public Response send(Request request, ResponseListener listener) throws Exception {
+    public Response send(Request request, ClientListener listener) throws Exception {
         if (!(request instanceof RequestImpl)) { // 明确报错：强转失败只暴露 ClassCastException，掩盖真实原因（非本实现构建的请求）
             throw new IllegalArgumentException("unsupported request type: "
                     + (request == null ? "null" : request.getClass().getName()));
