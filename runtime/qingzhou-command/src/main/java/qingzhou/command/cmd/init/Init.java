@@ -7,18 +7,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Locale;
 
 import qingzhou.command.Processor;
 import qingzhou.crypto.Crypto;
-import qingzhou.crypto.impl.CryptoImpl;
 
 public class Init extends Processor {
     private File instanceDir;
     private File propsFile;
     private Console console;
     private Crypto crypto;
+    private String globalKeyName;
 
     @Override
     public String name() {
@@ -42,9 +41,8 @@ public class Init extends Processor {
         }
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
 
-        crypto = new CryptoImpl() {{
-            init(Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
-        }};
+        globalKeyName = globalCipherKeyName(instanceDir); // 与运行时同源，避免写入位置错位
+        crypto = createCrypto(instanceDir, globalKeyName);
 
         new GlobalKeyStep().init(this);
         new AdminPasswordStep().init(this);
@@ -56,6 +54,10 @@ public class Init extends Processor {
 
     Crypto getCrypto() {
         return crypto;
+    }
+
+    String globalKeyName() {
+        return globalKeyName;
     }
 
     File confFile(String name) {
