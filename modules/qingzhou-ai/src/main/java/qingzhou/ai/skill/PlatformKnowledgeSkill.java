@@ -14,7 +14,7 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.SkillService;
 import qingzhou.logger.Logger;
 
-@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {
                 SkillService.SKILL_NAME + "=平台知识",
                 SkillService.SKILL_DESCRIPTION + "=当用户意图涉及轻舟平台的理解与使用时，激活本技能。适用场景包括但不限于：" +
