@@ -67,7 +67,7 @@ public class McpServer implements HttpHandler {
 
     @Deactivate
     public void destroy() {
-        workers.shutdownNow();
+        workers.shutdown(); // 排空而非中断：丢弃排队请求会使其 finish() 永不执行，响应挂到空闲超时
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
@@ -123,19 +123,16 @@ public class McpServer implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         byte[] requestBody = httpRequest.getBody();
         httpResponse.async(); // 工具执行可能长时间阻塞，响应由业务线程写并收尾
         try {
             workers.execute(() -> respond(httpRequest, httpResponse, requestBody));
         } catch (RejectedExecutionException e) {
-            logger.error("mcp worker pool is exhausted, request rejected");
+            logger.error("mcp worker pool is exhausted, request rejected", e);
             httpResponse.status(503);
-            try {
-                try {
-                    send(httpResponse, errorResponse(null, -32603, "Server busy"));
-                } catch (Exception ignored) {
-                }
+            try { // 写失败交由框架区分客户端中断与真实故障后统一收尾
+                send(httpResponse, errorResponse(null, -32603, "Server busy"));
             } finally {
                 httpResponse.finish();
             }
