@@ -180,7 +180,8 @@ public class McpServer implements HttpHandler {
         }
 
         if (replies.isEmpty()) {
-            httpResponse.status(202); // 全为 notification：按规范不得回复
+            // 全为 notification：按规范不得回复；无体也须带 Content-Type，客户端据其判定报文类型
+            httpResponse.status(202).contentTypeJsonUtf8();
             return;
         }
         send(httpResponse, isBatch ? replies : replies.get(0));
