@@ -4,163 +4,133 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
-// 仅同包 QingzhouMain 使用，不对外暴露
+// 由 PathDetectionScheduler 按 bundle 清单驱动；清单值在构造期一次解析，避免每拍探测重复 split
 class PathDetector {
-    // 进程扫描结果共享：全量进程扫描开销大，探测调度为 5 秒一次（见 PathDetectionScheduler），缓存须明显长于该周期以免每拍都拉起 ps/powershell
+    private static final String USER_HOME_VAR = "user.home";
+    // 进程清单跨 bundle 共享：全量扫描开销大，探测调度为 5 秒一次（见 PathDetectionScheduler），缓存须明显长于该周期
     private static final long SCAN_CACHE_MILLIS = 30_000;
-    private static volatile List<String> cachedScanLines;
-    private static volatile long lastScanAt;
+    // 单次扫描读超时：子进程挂起时强杀，读阻塞随流关闭解除，避免探测线程被永久卡死
+    private static final long SCAN_READ_TIMEOUT_MILLIS = 10_000;
 
-    private final String featureFiles;
-    private final String detectionEnvVars;
-    private final String scanRoots;
-    private final String processNames;
+    // 仅在同一 monitor 内读写，可见性由锁保证，故不加 volatile
+    private static List<String> cachedScanLines;
+    private static long lastScanAt;
+
+    private final List<String> featureFileNames;
+    private final List<String> envVarNames;
+    private final List<String> scanRootPaths;
+    private final List<String> processKeywords;
 
     PathDetector(Dictionary<String, String> attributes) {
-        this.featureFiles = attributes.get("Qingzhou-Detection-Feature-Files");
-        this.detectionEnvVars = attributes.get("Qingzhou-Detection-Env-Vars");
-        String roots = attributes.get("Qingzhou-Detection-Scan-Roots");
-        this.scanRoots = roots != null ? roots : System.getProperty("Qingzhou-Detection-Scan-Roots");
-        this.processNames = attributes.get("Qingzhou-Detection-Process-Names");
+        this.featureFileNames = splitCsv(attributes.get("Qingzhou-Detection-Feature-Files"));
+        this.envVarNames = splitCsv(attributes.get("Qingzhou-Detection-Env-Vars"));
+
+        List<String> roots = splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots"));
+        // 清单未给出时回落到 JVM 属性，便于部署期覆盖扫描范围
+        this.scanRootPaths = roots.isEmpty() ? splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots")) : roots;
+
+        List<String> keywords = new ArrayList<>();
+        for (String name : splitCsv(attributes.get("Qingzhou-Detection-Process-Names"))) {
+            keywords.add(name.toLowerCase(Locale.ROOT));
+        }
+        this.processKeywords = keywords;
     }
 
-    // ================= 主探测逻辑 =================
-    String detect() {
-        String detected = detectByFile();
-
-        if (detected == null) detected = detectByProcess();
-
-        return detected;
+    String detect() throws Exception {
+        String detectedPath = detectByFile();
+        return detectedPath != null ? detectedPath : detectByProcess();
     }
 
-    private boolean matchesFeatureFile(String dir) {
-        if (dir == null || dir.isEmpty() || featureFiles == null) return false;
-        return Arrays.stream(featureFiles.split(",")).anyMatch(f -> !f.isEmpty() && Files.exists(Paths.get(dir, f)));
-    }
-
+    // 候选目录按优先级：环境变量指向的目录、扫描根目录自身及其一级子目录；流惰性求值，首个命中即短路，不再全量枚举
     private String detectByFile() {
-        List<File> detectPaths = new ArrayList<>();
+        Stream<File> envCandidates = envVarNames.stream()
+                .map(System::getenv)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .map(File::new);
+        return Stream.concat(envCandidates, rootCandidates())
+                .filter(this::hasFeatureFile)
+                .map(File::getAbsolutePath)
+                .findFirst()
+                .orElse(null);
+    }
 
-        // 1. 环境变量直接指定的路径
-        if (detectionEnvVars != null) {
-            Arrays.stream(detectionEnvVars.split(","))
-                    .map(System::getenv)
-                    .filter(p -> p != null && !p.trim().isEmpty())
-                    .map(s -> new File(s.trim()))
-                    .forEach(detectPaths::add);
-        }
+    private Stream<File> rootCandidates() {
+        return scanRootPaths.stream()
+                .map(PathDetector::resolveHomeVar)
+                .map(File::new)
+                .filter(File::isDirectory)
+                .flatMap(root -> Stream.concat(Stream.of(root), subDirs(root)));
+    }
 
-        // 2. 常见根目录的子目录扫描
-        if (scanRoots != null) {
-            for (String s : scanRoots.split(",")) {
-                s = s.trim();
-                if (s.isEmpty()) continue;
-                File file = new File(s);
-                if (!file.isDirectory()) continue;
+    // 清单中以 user.home 指代当前用户主目录（见《轻舟应用开发规范》自动发现章节）
+    private static String resolveHomeVar(String root) {
+        return USER_HOME_VAR.equals(root) ? System.getProperty(USER_HOME_VAR) : root;
+    }
 
-                detectPaths.add(file); // 直接配置了软件的安装目录
+    private static Stream<File> subDirs(File dir) {
+        File[] subs = dir.listFiles(File::isDirectory); // 契约约定：I/O 失败返回 null
+        return subs == null ? Stream.empty() : Arrays.stream(subs);
+    }
 
-                File[] files = file.listFiles();
-                if (files != null) {
-                    for (File sub : files) {
-                        if (sub.isDirectory()) {
-                            detectPaths.add(sub);
-                        }
-                    }
-                }
-            }
-        }
+    private boolean hasFeatureFile(File candidateDir) {
+        return featureFileNames.stream().anyMatch(name -> new File(candidateDir, name).exists());
+    }
 
-        // 3. 合并流：统一用特征文件校验，找到第一个有效路径立即返回 (短路)
-        for (File detectPath : detectPaths) {
-            String targetPath = detectPath.getAbsolutePath();
-            if (matchesFeatureFile(targetPath)) {
-                return targetPath;
-            }
+    // 从进程命令行反推安装目录
+    private String detectByProcess() throws Exception {
+        if (processKeywords.isEmpty()) return null;
+
+        return processLines().stream()
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .map(this::installDirOf)
+                .filter(Objects::nonNull)
+                .filter(this::hasFeatureFile)
+                .map(File::getAbsolutePath)
+                .findFirst()
+                .orElse(null);
+    }
+
+    // 取关键字之前的命令行前缀作为候选安装目录；关键字位于行首时无父目录信息，须丢弃，否则会退化成工作目录下的相对路径误判
+    private File installDirOf(String line) {
+        String lowerLine = line.toLowerCase(Locale.ROOT);
+        for (String keyword : processKeywords) {
+            int idx = lowerLine.indexOf(keyword);
+            if (idx > 0) return new File(line.substring(0, idx));
         }
         return null;
     }
 
-    // 通过扫描系统进程，反向推断软件的安装目录
-    private String detectByProcess() {
-        if (processNames == null) return null; // 未配置进程名，不做进程探测
-
-        try {
-            // 数据探查（processNames 转小写并拆分只需一次，避免在每一行上重复计算）
-            String[] keywords = processNames.toLowerCase(Locale.ROOT).split(",");
-            return processLines().stream()
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty())
-                    .map(line -> { // 从行中提取匹配到的目录前缀 (到关键字为止)
-                        // 统一转为小写查找，兼容大小写（Locale.ROOT：避免特殊 locale 下关键字匹配失败）
-                        String lowerPath = line.toLowerCase(Locale.ROOT);
-                        for (String kw : keywords) {
-                            int idx = lowerPath.indexOf(kw);
-                            if (idx != -1) {
-                                return line.substring(0, idx).replace('\\', '/');
-                            }
-                        }
-                        return null;
-                    })
-                    // 验证特征文件是否存在，一旦 true，findFirst 立即中断
-                    .filter(this::matchesFeatureFile)
-                    .findFirst()
-                    .orElse(null);
-        } catch (Exception e) {
-            // 引导模块先于日志体系启动，只能直写 stderr
-            System.err.println("process detection failed: " + e.getMessage());
-            return null;
-        }
-    }
-
     private static List<String> processLines() throws Exception {
-        List<String> cached = cachedScanLines;
-        if (cached != null && System.currentTimeMillis() - lastScanAt < SCAN_CACHE_MILLIS) return cached;
-        synchronized (PathDetector.class) {
-            cached = cachedScanLines;
-            if (cached != null && System.currentTimeMillis() - lastScanAt < SCAN_CACHE_MILLIS) return cached;
-            List<String> lines = runProcessScan();
-            cachedScanLines = lines;
-            lastScanAt = System.currentTimeMillis();
-            return lines;
+        synchronized (PathDetector.class) { // 探测为 5 秒一次，串行进入的开销远小于一次进程扫描
+            if (cachedScanLines == null || System.currentTimeMillis() - lastScanAt >= SCAN_CACHE_MILLIS) {
+                cachedScanLines = runProcessScan();
+                lastScanAt = System.currentTimeMillis();
+            }
+            return cachedScanLines;
         }
     }
-
-    // 单次扫描读超时：子进程挂起时强杀，读阻塞随之以流关闭解除，避免唯一探测调度线程被永久卡死
-    private static final long SCAN_READ_TIMEOUT_MILLIS = 10_000;
 
     private static List<String> runProcessScan() throws Exception {
-        // 构造全平台兼容的极简原生命令
-        String[] cmd;
-        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-        if (os.contains("win")) {
-            // Windows: 使用 PowerShell 获取所有进程的可执行文件路径（wmic 已在新版 Windows 中被移除）
-            // -ErrorAction SilentlyContinue：访问受保护进程的 Path 会被拒绝，避免这类错误混入输出
-            cmd = new String[]{"powershell", "-NoProfile", "-Command",
-                    "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
-        } else {
-            // Linux & Mac: 使用 ps 获取所有进程的启动命令及参数（-ww 避免 macOS 长命令行被截断，Linux procps 亦兼容）；
-            // 直接 exec 而非经 sh -c：命令无 shell 语法，少依赖一层 shell 更利于裁剪过的基础镜像
-            cmd = new String[]{"ps", "-ww", "-e", "-o", "args="};
-        }
-
         List<String> lines = new ArrayList<>();
-        Process process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-        // 看门狗线程：超时未读完即强杀进程，readLine 因流关闭解除阻塞
+        Process process = new ProcessBuilder(processScanCommand()).redirectErrorStream(true).start();
         Thread watchdog = new Thread(() -> {
             try {
                 Thread.sleep(SCAN_READ_TIMEOUT_MILLIS);
-            } catch (InterruptedException ignored) {
-                return; // 正常读完后被中断取消
+            } catch (InterruptedException e) {
+                return; // 读完后被取消
             }
             process.destroyForcibly();
         }, "qz-process-scan-watchdog");
@@ -174,14 +144,37 @@ class PathDetector {
                 lines.add(line);
             }
         } finally {
-            watchdog.interrupt(); // 取消看门狗
-            process.destroyForcibly();
+            watchdog.interrupt();
+            process.destroyForcibly(); // 读取提前结束（超时/异常）时同样要回收，否则每次扫描残留一个僵尸进程
             try {
                 process.waitFor(5, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
+                // 回收属关闭路径，恢复中断位即可，不覆盖主流程异常
                 Thread.currentThread().interrupt();
             }
         }
         return lines;
+    }
+
+    private static String[] processScanCommand() {
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win")) {
+            // wmic 已在新版 Windows 中被移除；-ErrorAction SilentlyContinue 屏蔽读取受保护进程 Path 的报错，防止其混入输出
+            return new String[]{"powershell", "-NoProfile", "-Command",
+                    "Get-Process | Select-Object -ExpandProperty Path -ErrorAction SilentlyContinue"};
+        }
+        // 直接 exec 而非经 sh -c：命令无 shell 语法，少依赖一层 shell，更利于裁剪过的基础镜像；-ww 避免 macOS 长命令行被截断
+        return new String[]{"ps", "-ww", "-e", "-o", "args="};
+    }
+
+    // 清单值允许逗号后带空格，故逐项 trim
+    private static List<String> splitCsv(String value) {
+        if (value == null) return Collections.emptyList();
+
+        List<String> tokens = new ArrayList<>();
+        for (String token : value.split(",")) {
+            String trimmed = token.trim();
+            if (!trimmed.isEmpty()) tokens.add(trimmed);
+        }
+        return tokens;
     }
 }
