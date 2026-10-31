@@ -1,9 +1,5 @@
 package qingzhou.ai.mcp.client;
 
-import qingzhou.http.client.*;
-import qingzhou.json.Json;
-import qingzhou.logger.Logger;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -11,6 +7,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import qingzhou.http.client.*;
+import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 
 final class McpClient {
     private static final String PREFERRED_VERSION = "2025-06-18";
@@ -154,7 +154,7 @@ final class McpClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json, text/event-stream")
                 .readTimeout(READ_TIMEOUT)
-                .trustAllCertificates()
+                .trustAllCertificates() // 受控内网降级：需 allow_ssl_trust_all=true
                 .maxBodySize(0);
         config.headers.forEach(request::header);
         if (protocolVersion != null) request.header(PROTOCOL_HEADER, protocolVersion);
