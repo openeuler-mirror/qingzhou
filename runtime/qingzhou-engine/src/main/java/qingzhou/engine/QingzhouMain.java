@@ -10,6 +10,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
+import qingzhou.engine.detector.PathDetectionScheduler;
+
 public class QingzhouMain {
     private static String instanceDir;
     private static Framework osgiFramework;
