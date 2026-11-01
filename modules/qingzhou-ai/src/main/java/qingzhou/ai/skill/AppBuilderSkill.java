@@ -79,7 +79,6 @@ public class AppBuilderSkill implements SkillService {
             properties.put(ToolService.PARAMETER_NAME + suffix, parameters[i]);
             properties.put(ToolService.PARAMETER_DESCRIPTION + suffix, parameters[i + 1]);
             properties.put(ToolService.PARAMETER_REQUIRED + suffix, parameters[i + 2]);
-            properties.put(ToolService.PARAMETER_TYPE + suffix, "string");
         }
         tools.put(tool, properties);
     }

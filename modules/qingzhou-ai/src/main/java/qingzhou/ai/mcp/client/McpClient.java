@@ -74,17 +74,17 @@ final class McpClient {
     }
 
     private <T> T withSession(Callable<T> action) throws Exception {
-        try {
-            initialize();
-            return action.call();
-        } catch (Exception e) {
-            if (!isSessionExpired(e)) throw e;
+        for (int attempt = 0; ; attempt++) {
+            try {
+                initialize();
+                return action.call();
+            } catch (Exception e) {
+                if (attempt > 0 || !isSessionExpired(e)) throw e;
 
-            logger.warn("mcp session of [" + config.id + "] expired, reconnecting");
-            initialized = false;
-            sessionId = null;
-            initialize();
-            return action.call();
+                logger.warn("mcp session of [" + config.id + "] expired, reconnecting");
+                initialized = false;
+                sessionId = null;
+            }
         }
     }
 
@@ -95,7 +95,6 @@ final class McpClient {
         params.put("protocolVersion", PREFERRED_VERSION);
         params.put("capabilities", Collections.emptyMap());
         params.put("clientInfo", clientInfo());
-
 
         long id = requestIds.incrementAndGet();
         Collector collector = new Collector(id);
@@ -170,20 +169,14 @@ final class McpClient {
             throw new IOException("mcp server [" + config.id + "] returned status " + status + ": " + errorBody(response));
         }
 
-        Map<String, Object> message;
-        if (collector != null) {
-            if (!collector.awaitResponse()) {
-                throw new IOException("timeout waiting for response of [" + config.id + "]");
-            }
-            if (collector.failure != null) {
-                throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
-            }
-            message = collector.message;
-        } else {
-            String res = new String(response.getBody(), StandardCharsets.UTF_8);
-            message = json.fromJson(res, Map.class);
+        if (!collector.awaitResponse()) {
+            throw new IOException("timeout waiting for response of [" + config.id + "]");
+        }
+        if (collector.failure != null) {
+            throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
         }
 
+        Map<String, Object> message = collector.message;
         if (message == null) {
             throw new IOException("mcp server [" + config.id + "] sent no response");
         }
