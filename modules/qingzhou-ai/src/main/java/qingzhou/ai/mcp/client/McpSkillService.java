@@ -15,7 +15,7 @@ final class McpSkillService implements SkillService {
     private final Logger logger;
 
     private final Object refreshLock = new Object();
-    private volatile CachedTools cached;
+    private volatile Map<ToolService, Map<String, Object>> cached;
 
     McpSkillService(McpConfig config, McpClient client, Logger logger) {
         this.config = config;
@@ -25,33 +25,25 @@ final class McpSkillService implements SkillService {
 
     @Override
     public Map<ToolService, Map<String, Object>> tools() {
-        if (isExpired()) refresh();
-
-        CachedTools snapshot = cached;
-        return snapshot == null ? Collections.emptyMap() : snapshot.tools;
-    }
-
-    private boolean isExpired() {
-        CachedTools snapshot = cached;
-        return snapshot == null;
+        if (cached == null) refresh();
+        return cached;
     }
 
     private void refresh() {
         synchronized (refreshLock) {
-            CachedTools snapshot = cached;
-            if (snapshot != null) return;
+            if (cached != null) return;
 
             try {
                 cached = build(client.listTools());
             } catch (Exception e) {
                 // 保留旧缓存并进入退避期：故障 Server 不应让每轮对话都卡在连接超时上
                 logger.warn("failed to load tools of mcp server [" + config.id + "]: " + e.getMessage());
-                cached = new CachedTools(Collections.emptyMap());
+                cached = Collections.emptyMap();
             }
         }
     }
 
-    private CachedTools build(List<Map<String, Object>> tools) {
+    private Map<ToolService, Map<String, Object>> build(List<Map<String, Object>> tools) {
         Map<ToolService, Map<String, Object>> declared = new HashMap<>();
         for (Map<String, Object> tool : tools) {
             String remote = text(tool.get("name"));
@@ -61,18 +53,10 @@ final class McpSkillService implements SkillService {
             Map<String, Object> properties = McpToolConverter.properties(exposed, text(tool.get("description")), tool.get("inputSchema"));
             declared.put(toolArgs -> client.callTool(remote, toolArgs), properties);
         }
-        return new CachedTools(declared);
+        return declared;
     }
 
     private static String text(Object value) {
         return value == null ? "" : String.valueOf(value);
-    }
-
-    private static final class CachedTools {
-        final Map<ToolService, Map<String, Object>> tools;
-
-        CachedTools(Map<ToolService, Map<String, Object>> tools) {
-            this.tools = tools;
-        }
     }
 }

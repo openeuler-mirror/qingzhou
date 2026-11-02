@@ -87,13 +87,6 @@ final class McpToolConverter {
         return required;
     }
 
-    private static String description(Object definition) {
-        if (!(definition instanceof Map)) return "";
-
-        Object description = ((Map<?, ?>) definition).get("description");
-        return description == null ? "" : String.valueOf(description);
-    }
-
     private static String normalize(String raw) {
         return ILLEGAL_CHAR.matcher(raw == null ? "" : raw).replaceAll("_");
     }

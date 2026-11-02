@@ -55,6 +55,13 @@ class MultipartStreamParser {
         boolean isFileField(String fieldName);
     }
 
+    // 请求体格式畸形（客户端可控输入）：与内部故障区分，调用方据此映射 400 而非 500
+    static final class MalformedException extends RuntimeException {
+        MalformedException(String message) {
+            super(message);
+        }
+    }
+
     MultipartStreamParser(String boundary, File uploadBase, FieldTypeResolver resolver) {
         this.boundaryDelimiter = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
         this.boundaryFailure = failure(boundaryDelimiter);
@@ -95,7 +102,7 @@ class MultipartStreamParser {
         }
         // 缺少结束边界说明请求体被截断：不得把最后一片当完整内容交给业务
         if (isLast && state != State.DONE) {
-            throw new IllegalStateException("unexpected end of multipart body");
+            throw new MalformedException("unexpected end of multipart body");
         }
     }
 
@@ -136,7 +143,7 @@ class MultipartStreamParser {
             return data.length;
         }
         if (boundarySuffix[0] != '\r' || boundarySuffix[1] != '\n') {
-            throw new IllegalStateException("malformed multipart boundary");
+            throw new MalformedException("malformed multipart boundary");
         }
         state = State.IN_HEADERS;
         return pos;
@@ -150,12 +157,12 @@ class MultipartStreamParser {
         int idx = indexOf(headerBytes, 0, headerLen, HEADER_DELIMITER, HEADER_DELIMITER_FAILURE);
         if (idx < 0) {
             if (headerLen > MAX_PART_HEADERS) {
-                throw new IllegalStateException("multipart part headers too large");
+                throw new MalformedException("multipart part headers too large");
             }
             return data.length;
         }
         if (idx > MAX_PART_HEADERS) {
-            throw new IllegalStateException("multipart part headers too large");
+            throw new MalformedException("multipart part headers too large");
         }
 
         parsePartHeaders(new String(headerBytes, 0, idx, StandardCharsets.UTF_8));
@@ -206,11 +213,11 @@ class MultipartStreamParser {
             fileStream.write(data, offset, len);
         } else {
             if (fieldBuffer.size() + len > MAX_FIELD_BYTES) {
-                throw new IllegalStateException("multipart field too large: " + currentFieldName);
+                throw new MalformedException("multipart field too large: " + currentFieldName);
             }
             totalTextBytes += len;
             if (totalTextBytes > MAX_TOTAL_TEXT_BYTES) {
-                throw new IllegalStateException("multipart text fields exceed max total bytes: " + MAX_TOTAL_TEXT_BYTES);
+                throw new MalformedException("multipart text fields exceed max total bytes: " + MAX_TOTAL_TEXT_BYTES);
             }
             fieldBuffer.write(data, offset, len);
         }
@@ -235,9 +242,9 @@ class MultipartStreamParser {
     }
 
     /**
-     * 中断解析时调用：关闭未完成的文件流并清理已写入的临时文件，防止句柄与临时文件残留。此方法可重复调用。
+     * 释放解析器占用：关闭未完成的文件流并清理已落盘的临时文件。正常结束与异常中断均须调用，可重复调用。
      */
-    void abort() {
+    void close() {
         if (fileStream != null) {
             try {
                 fileStream.close();
@@ -269,13 +276,17 @@ class MultipartStreamParser {
 
     private void parsePartHeaders(String headers) throws IOException {
         if (++partCount > MAX_TOTAL_PARTS) {
-            throw new IllegalStateException("too many multipart parts");
+            throw new MalformedException("too many multipart parts");
         }
         String disposition = contentDisposition(headers);
         currentFieldName = extractValue(disposition, "name=\"");
         if (currentFieldName != null && currentFieldName.isEmpty()) currentFieldName = null;
 
         String currentFileName = extractValue(disposition, "filename=\"");
+        // 既无字段名也无文件名：内容无处归属，静默丢弃会让业务在缺参状态下继续执行
+        if (currentFieldName == null && currentFileName == null) {
+            throw new MalformedException("multipart part without name");
+        }
         if (currentFileName != null && !currentFileName.isEmpty()) {
             validateFileName(currentFileName);
             isFileField = currentFieldName != null && fieldTypeResolver.isFileField(currentFieldName);
@@ -302,7 +313,7 @@ class MultipartStreamParser {
             invalid = Character.isISOControl(c) || Character.getType(c) == Character.FORMAT
                     || c == '/' || c == '\\' || c == '=' || c == ',';
         }
-        if (invalid) throw new IllegalStateException("invalid upload file name");
+        if (invalid) throw new MalformedException("invalid upload file name");
     }
 
     // 只认 Content-Disposition 行：其它头部出现的 name="..." 不参与字段识别

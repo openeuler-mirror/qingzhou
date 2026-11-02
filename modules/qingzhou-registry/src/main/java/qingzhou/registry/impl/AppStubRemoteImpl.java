@@ -55,6 +55,7 @@ class AppStubRemoteImpl implements AppStubRemote {
             byte[] aad = registry.agentDomainService.aadForAgent(instanceInfo.getId(), Constants.REMOTE_INVOKE_URI);
             byte[] encrypted = cipher.encrypt(data, aad);
             Response response = registry.httpClient.send(registry.httpClient.buildRequest(invokeUrl)
+                    .trustAllCertificates() // 受控内网降级：跳过注册中心自签证书校验，需 allow_ssl_trust_all=true
                     .method(HttpMethod.POST)
                     .body(encrypted));
             if (response.getStatus() == 200) {
@@ -149,7 +150,10 @@ class AppStubRemoteImpl implements AppStubRemote {
         byte[] encrypted = cipher.encrypt(chunk, aad);
         String url = uploadUrl + "?" + Constants.REMOTE_PARAMETER_FILE_KEY + "=" + encode(key)
                 + "&" + Constants.REMOTE_PARAMETER_FILE_OFFSET + "=" + offset;
-        Response response = registry.httpClient.send(registry.httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
+        Response response = registry.httpClient.send(registry.httpClient.buildRequest(url)
+                .trustAllCertificates() // 受控内网降级：跳过注册中心自签证书校验，需 allow_ssl_trust_all=true
+                .method(HttpMethod.POST)
+                .body(encrypted));
         if (response.getStatus() != 200) {
             throw new IllegalStateException("upload failed [" + response.getStatus() + "]: " + uploadUrl);
         }

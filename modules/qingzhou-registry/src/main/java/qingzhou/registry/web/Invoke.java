@@ -293,8 +293,13 @@ public class Invoke implements HttpHandler {
 
         @Override
         public void onNext(byte[] data) throws Throwable {
-            if (parser != null) {
+            if (parser == null) return;
+            try {
                 parser.feed(data, false);
+            } catch (MultipartStreamParser.MalformedException e) {
+                // 畸形请求先以 400 收尾：框架错误分支见已提交即跳过 ERROR 堆栈，避免被畸形请求刷日志
+                httpResponse.status(400).finish();
+                throw e;
             }
         }
 
@@ -306,12 +311,16 @@ public class Invoke implements HttpHandler {
                 parser.feed(new byte[0], true);
                 applyParserResults(parser, request);
                 app.invokeApp(request);
+            } catch (MultipartStreamParser.MalformedException e) {
+                logger.warn("malformed multipart body: " + forLog(e.getMessage()));
+                httpResponse.status(400);
+                return;
             } catch (Throwable e) {
                 logger.error("multipart invoke failed", e);
                 httpResponse.status(500);
                 return;
             } finally {
-                parser.abort();
+                parser.close();
             }
 
             sendResponse(request, httpResponse);
@@ -320,7 +329,7 @@ public class Invoke implements HttpHandler {
         @Override
         public void onError(Throwable t) {
             if (parser != null) {
-                parser.abort();
+                parser.close();
             }
         }
 

@@ -2,7 +2,8 @@ package qingzhou.ai.mcp;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -11,6 +12,7 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.impl.InterceptToolInvocation;
 import qingzhou.ai.impl.LlmConverter;
+import qingzhou.common.Configs;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -19,7 +21,8 @@ import qingzhou.llm.Parameter;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/mcp", HttpHandler.HANDLE_METHODS + "=POST"})
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {HttpHandler.HANDLE_PATH + "=/mcp", HttpHandler.HANDLE_METHODS + "=POST"})
 public class McpServer implements HttpHandler {
     private static final String JSONRPC_VERSION = "2.0";
 
@@ -31,25 +34,40 @@ public class McpServer implements HttpHandler {
     private InterceptToolInvocation interceptToolInvocation;
 
     private final Map<SkillService, Map<String, Object>> llmSkills = new ConcurrentHashMap<>();
-
-    private Map<String, Object> initializeData;
+    private final Map<String, Object> initializeData = new HashMap<>();
+    private ThreadPoolExecutor workers;
 
     @Activate
-    public void init() {
-        initializeData = new HashMap<>();
+    public void init(Map<String, String> config) {
+        Configs configs = new Configs(config);
+        int workerThreads = configs.atLeast("mcp_worker_threads", 1, 16);
+        int capacity = configs.atLeast("mcp_worker_queue", 1, 100);
+        AtomicInteger seq = new AtomicInteger();
+        workers = new ThreadPoolExecutor(workerThreads, workerThreads, 0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(capacity), runnable -> {
+            Thread thread = new Thread(runnable, "qz-mcp-" + seq.incrementAndGet());
+            thread.setDaemon(true);
+            return thread;
+        });
 
         Map<String, Object> serverInfo = new HashMap<>();
         serverInfo.put("name", "qingzhou-mcp-server");
-        serverInfo.put("version", "1.0.0");
+        serverInfo.put("version", config.get("qingzhou.version"));
 
-        Map<String, Object> capabilities = new HashMap<>();
         Map<String, Object> toolsCapability = new HashMap<>();
         toolsCapability.put("listChanged", false);
+
+        Map<String, Object> capabilities = new HashMap<>();
         capabilities.put("tools", toolsCapability);
 
         initializeData.put("protocolVersion", "2025-03-26");
         initializeData.put("serverInfo", serverInfo);
         initializeData.put("capabilities", capabilities);
+    }
+
+    @Deactivate
+    public void destroy() {
+        workers.shutdown(); // 排空而非中断：丢弃排队请求会使其 finish() 永不执行，响应挂到空闲超时
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
@@ -97,16 +115,47 @@ public class McpServer implements HttpHandler {
     }
 
     private ToolCache buildToolCache() {
-        Set<Tool> tools = LlmConverter.convertSkills(llmSkills, logger).stream()
+        // 工具名已由 LlmConverter 全局去重，同名即声明方违约，直接抛错而非静默择一
+        Map<String, Tool> toolMap = LlmConverter.convertSkills(llmSkills, logger).stream()
                 .flatMap((Function<qingzhou.llm.Skill, Stream<Tool>>) skill -> skill.tools().stream())
-                .collect(Collectors.toSet());
-        Map<String, Tool> toolMap = tools.stream().collect(Collectors.toMap(Tool::name, t -> t, (a, b) -> a));
+                .collect(Collectors.toMap(Tool::name, tool -> tool));
         return new ToolCache(toolMap, toolSchemas(toolMap.values()));
     }
 
     @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         byte[] requestBody = httpRequest.getBody();
+        httpResponse.async(); // 工具执行可能长时间阻塞，响应由业务线程写并收尾
+        try {
+            workers.execute(() -> respond(httpRequest, httpResponse, requestBody));
+        } catch (RejectedExecutionException e) {
+            logger.error("mcp worker pool is exhausted, request rejected", e);
+            httpResponse.status(503);
+            try { // 写失败交由框架区分客户端中断与真实故障后统一收尾
+                send(httpResponse, errorResponse(null, -32603, "Server busy"));
+            } finally {
+                httpResponse.finish();
+            }
+        }
+    }
+
+    // 业务线程执行：解析、分发与写响应；异步响应必须在此收尾
+    private void respond(HttpRequest httpRequest, HttpResponse httpResponse, byte[] requestBody) {
+        try {
+            process(httpRequest, httpResponse, requestBody);
+        } catch (Throwable t) {
+            logger.error("mcp request failed", t);
+            try { // 未提交时可回 JSON-RPC 内部错误；已提交则只能收尾
+                httpResponse.status(500);
+                send(httpResponse, errorResponse(null, -32603, "Internal error"));
+            } catch (Throwable ignored) {
+            }
+        } finally {
+            httpResponse.finish();
+        }
+    }
+
+    private void process(HttpRequest httpRequest, HttpResponse httpResponse, byte[] requestBody) throws Exception {
         String body = requestBody == null ? "" : new String(requestBody, StandardCharsets.UTF_8);
         Object parsed;
         try {
@@ -126,19 +175,20 @@ public class McpServer implements HttpHandler {
 
         List<Map<String, Object>> replies = new ArrayList<>();
         for (Object node : nodes) {
-            Map<String, Object> reply = process(node, httpRequest);
+            Map<String, Object> reply = processNode(node, httpRequest);
             if (reply != null) replies.add(reply); // notification 不产生响应
         }
 
         if (replies.isEmpty()) {
-            httpResponse.status(202); // 全为 notification：按规范不得回复
+            // 全为 notification：按规范不得回复；无体也须带 Content-Type，客户端据其判定报文类型
+            httpResponse.status(202).contentTypeJsonUtf8();
             return;
         }
         send(httpResponse, isBatch ? replies : replies.get(0));
     }
 
     // 单条报文处理；返回 null 表示 notification
-    private Map<String, Object> process(Object node, HttpRequest httpRequest) {
+    private Map<String, Object> processNode(Object node, HttpRequest httpRequest) {
         Map<String, Object> invalid = invalidRequest(node);
         if (invalid != null) return invalid;
 
@@ -187,13 +237,8 @@ public class McpServer implements HttpHandler {
         return null;
     }
 
-    private void send(HttpResponse httpResponse, Object response) {
-        try {
-            httpResponse.contentTypeJsonUtf8().send(json.toJson(response));
-        } catch (Exception e) {
-            httpResponse.status(500);
-            logger.error(e.getMessage(), e);
-        }
+    private void send(HttpResponse httpResponse, Object response) throws Exception {
+        httpResponse.contentTypeJsonUtf8().send(json.toJson(response));
     }
 
     private static Map<String, Object> resultResponse(Object id, Object result) {
@@ -278,7 +323,7 @@ public class McpServer implements HttpHandler {
         Map<String, Object> arguments = argumentsObj == null
                 ? Collections.emptyMap() : (Map<String, Object>) argumentsObj; // arguments 缺省即空参
 
-        // 授权：复用共享拦截链；未认证请求已在框架闸门拦截，principal/roles 非 null
+        // 授权：复用共享拦截链；未认证请求已在框架闸门拦截
         String denied = interceptToolInvocation.intercept(toolName, arguments, httpRequest.getPrincipal(), httpRequest.getRoles());
         if (denied != null) {
             // 实现自定义错误码区间；data 带机器可读分类，客户端不必解析文案

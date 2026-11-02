@@ -15,6 +15,7 @@ import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
+import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -83,7 +84,11 @@ public class Heartbeat {
                     + Constants.REMOTE_PARAMETER_DOMAIN_ID + "=" + encode(agentCipherManager.getAgentDomain())
                     + (payload.parameter.isEmpty() ? "" : "&" + payload.parameter);
             byte[] encrypted = payload.cipher.encrypt(payload.data.getBytes(StandardCharsets.UTF_8), payload.aad);
-            Response response = httpClient.send(httpClient.buildRequest(url).method(HttpMethod.POST).body(encrypted));
+            Request request = httpClient.buildRequest(url)
+                    .trustAllCertificates() // 受控内网降级：跳过注册中心自签证书校验，需 allow_ssl_trust_all=true
+                    .method(HttpMethod.POST)
+                    .body(encrypted);
+            Response response = httpClient.send(request);
 
             if (response.getStatus() == 304) {
                 registered = true;

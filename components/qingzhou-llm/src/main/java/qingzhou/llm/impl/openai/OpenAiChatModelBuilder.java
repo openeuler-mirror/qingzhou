@@ -151,7 +151,8 @@ public class OpenAiChatModelBuilder extends ChatModelBuilderBase implements Open
                 List<String> required = new ArrayList<>();
                 for (Parameter param : params) {
                     Map<String, Object> prop = new HashMap<>();
-                    prop.put("type", param.type());
+                    String type = param.type(); // 类型缺省按 string 适配，schema 不接受 null
+                    prop.put("type", type == null ? "string" : type);
                     if (param.description() != null) {
                         prop.put("description", param.description());
                     }

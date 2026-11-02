@@ -141,7 +141,10 @@ final class BodyProcessors {
                             httpResponse.status(status.code()).finish();
                         }
                     }
-                    return ctx.response.sendByteArray(streamResponse.asFlux()).then();
+                    // 订阅写链即发出状态行与响应头，故须等首个输出（send/finish）后再订阅，
+                    // 否则 async handler 在业务线程后设置的 status/header/contentType 全部失效
+                    return httpResponse.firstOutput()
+                            .then(Mono.defer(() -> ctx.response.sendByteArray(streamResponse.asFlux()).then()));
                 })
                 // 连接中断等也应回响应，且不能一律报 413；已写出响应体时不得再发状态行，否则造成响应污染
                 .onErrorResume(e -> {

@@ -19,7 +19,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolService;
 
-@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {
                 SkillService.SKILL_NAME + "=应用构建",
                 SkillService.SKILL_DESCRIPTION + "=根据 REST 接口文档创建轻舟应用；生成、查看或修改应用源码，" +
@@ -79,7 +79,6 @@ public class AppBuilderSkill implements SkillService {
             properties.put(ToolService.PARAMETER_NAME + suffix, parameters[i]);
             properties.put(ToolService.PARAMETER_DESCRIPTION + suffix, parameters[i + 1]);
             properties.put(ToolService.PARAMETER_REQUIRED + suffix, parameters[i + 2]);
-            properties.put(ToolService.PARAMETER_TYPE + suffix, "string");
         }
         tools.put(tool, properties);
     }
