@@ -1,8 +1,8 @@
 package qingzhou.command.cmd;
 
+import qingzhou.command.Processor;
+
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -12,9 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import qingzhou.command.Processor;
-import qingzhou.config.impl.Config;
 
 public class StartArg extends Processor {
     private File instanceDir;
@@ -134,7 +131,4 @@ public class StartArg extends Processor {
         return false;
     }
 
-    private Map<String, String> parseConfig(Path configFile) throws Exception {
-        return Config.parse(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8));
-    }
 }

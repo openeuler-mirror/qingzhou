@@ -24,5 +24,10 @@
             <artifactId>qingzhou-image</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-auth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Locale;
@@ -92,6 +93,10 @@ public abstract class Processor {
     private static boolean isSafeInstanceName(String name) {
         if (name == null || name.isEmpty()) return false;
         return !name.equals(".") && !name.contains("..") && !name.contains("/") && !name.contains("\\") && name.indexOf('\0') < 0;
+    }
+
+    protected Map<String, String> parseConfig(Path configFile) throws Exception {
+        return Config.parse(new String(Files.readAllBytes(configFile), StandardCharsets.UTF_8));
     }
 
     @Override

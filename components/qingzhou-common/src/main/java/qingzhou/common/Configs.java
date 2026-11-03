@@ -20,6 +20,16 @@ public final class Configs {
         return config.get(key);
     }
 
+    public Map<String, String> getConfig(String prefix) {
+        Map<String, String> map = new HashMap<>();
+        for (Map.Entry<String, String> entry : config.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) {
+                map.put(entry.getKey().substring(prefix.length()), entry.getValue());
+            }
+        }
+        return map;
+    }
+
     @SuppressWarnings("unchecked") // 按 defaultValue 的实际类型分派，四种分支各自类型安全
     public <T> T getOrDefault(String key, T defaultValue) {
         String val = get(key);
