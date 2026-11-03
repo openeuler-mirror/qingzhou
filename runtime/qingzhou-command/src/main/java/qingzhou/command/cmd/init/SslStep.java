@@ -16,11 +16,10 @@ final class SslStep {
     void init(Init init) throws Exception {
         String props = init.readProps();
         if (Init.hasValue(props, "qingzhou-http-server.ssl_keystore_password")) return; // 已有值则静默跳过
-        if (init.noConfirm("Generate the SSL certificate conf/keystore.p12 and enable https? [y/N] ")) return;
+        if (!init.confirm("Generate the SSL certificate conf/keystore.p12 and enable https? (recommended) [y/N] "))
+            return;
 
-        String password = init.readPassword("New keystore password: ");
-        if (password == null) return;
-
+        String password = init.readPassword("Input keystore password: ");
         File keystore = init.confFile("keystore.p12");
         Files.deleteIfExists(keystore.toPath()); // 不能预创建空文件：JDK8 keytool 对已存在的空文件报错
         boolean success = genKeystore(keystore, password, init);
@@ -29,7 +28,7 @@ final class SslStep {
             return;
         }
 
-        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.encrypt(password));
+        props = Init.putValue(props, "qingzhou-http-server.ssl_keystore_password", init.getCrypto().getGlobalCipher().encrypt(password));
         props = Init.putValue(props, "qingzhou-http-server.ssl_enabled", "true");
         init.writeProps(props);
         init.log("SSL certificate generated and https enabled.");

@@ -11,6 +11,11 @@ public interface HttpResponse {
 
     HttpResponse send(String bodyAsUtf8);
 
+    /**
+     * 写入响应体分片。响应缓冲有界（慢客户端保护）：缓冲满时抛出 IllegalStateException，
+     * 调用方不得假定 send 总能成功；异步长响应（如 SSE）应处理该异常，避免慢客户端
+     * 把分片写入失败升级为未兜底的崩溃。
+     */
     HttpResponse send(byte[] body);
 
     /**

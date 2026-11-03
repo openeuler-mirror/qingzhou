@@ -9,18 +9,13 @@ import java.util.stream.Collectors;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.*;
-import qingzhou.crypto.Crypto;
-import qingzhou.dto.Constants;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.logger.util.PendingLogs;
-import qingzhou.registry.AppStub;
-import qingzhou.registry.AppStubLocal;
-import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 import qingzhou.registry.web.Invoke;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -34,8 +29,6 @@ public class RegistryImpl implements Registry {
     @Reference
     HttpClient httpClient;
     @Reference
-    Crypto crypto;
-    @Reference
     AgentDomainService agentDomainService;
 
     private final PendingLogs pendingLogs = new PendingLogs();
@@ -46,11 +39,9 @@ public class RegistryImpl implements Registry {
     // 单调递增的数据版本：用计数器而非毫秒墙钟，避免同一毫秒内的多次变更互相覆盖
     private final AtomicLong registryDataVersion = new AtomicLong(System.currentTimeMillis());
 
-    private final Map<String, AppStubLocal> localApps = java.util.Collections
-            .synchronizedMap(new java.util.LinkedHashMap<>());
+    private final Map<String, AppStubLocal> localApps = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    private final Map<String, InstanceInfo> remoteInstances = java.util.Collections
-            .synchronizedMap(new java.util.LinkedHashMap<>());
+    private final Map<String, InstanceInfo> remoteInstances = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Activate
     public void start(Map<String, String> config) {
@@ -131,7 +122,19 @@ public class RegistryImpl implements Registry {
             // 实例端口
             try {
                 Dictionary<String, Object> httpServerConfig = configAdmin.getConfiguration("qingzhou-http-server", null).getProperties();
-                localInstanceInfo.setPort(Integer.parseInt(String.valueOf(httpServerConfig.get("port"))));
+                if (httpServerConfig == null) { // 配置缺失不阻断实例列表：端口留空由调用方按未就绪处理
+                    logger.warn("missing configuration: qingzhou-http-server");
+                } else {
+                    Object port = httpServerConfig.get("port");
+                    if (port != null) {
+                        try {
+                            localInstanceInfo.setPort(Integer.parseInt(String.valueOf(port)));
+                        } catch (NumberFormatException e) {
+                            // 端口缺失/非法不阻断实例列表：端口留默认值由调用方按未就绪处理
+                            logger.warn("illegal qingzhou-http-server port: " + port);
+                        }
+                    }
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -183,25 +186,9 @@ public class RegistryImpl implements Registry {
         // 先填充存活时间再发布：健康检查线程可能在此期间遍历表，
         // 若先 put 后填，新对象会短暂带着 lastRefreshTime=0 出现，被立即剔除（实例周期性抖动的根因之一）。
         // 重复注册同样要填：新对象的 lastRefreshTime 为 0，不填则重注册恢复路径必然被健康检查删除。
-        instanceInfo.setLastRefreshTime(System.currentTimeMillis());
-        InstanceInfo previous = remoteInstances.put(instanceInfo.getId(), instanceInfo);
-        // 心跳即注册：元数据未变时只刷新存活时间，避免 registryDataVersion 每 6 秒自增令前端缓存持续失效
-        if (previous == null || !sameMetadata(previous, instanceInfo)) {
-            registryDataVersion.incrementAndGet();
-        }
-    }
-
-    // 按内容整体比对：应用元数据（图标、模型、接口等）变化同样要触发版本自增，否则前端缓存不刷新
-    private boolean sameMetadata(InstanceInfo a, InstanceInfo b) {
-        try {
-            return Objects.equals(a.getPlatformVersion(), b.getPlatformVersion())
-                    && Objects.equals(a.getHost(), b.getHost())
-                    && a.getPort() == b.getPort()
-                    && a.isSslEnabled() == b.isSslEnabled()
-                    && json.toJson(a.getAppMetas()).equals(json.toJson(b.getAppMetas()));
-        } catch (Exception e) {
-            return false;
-        }
+        instanceInfo.refreshTime();
+        remoteInstances.put(instanceInfo.getId(), instanceInfo);
+        registryDataVersion.incrementAndGet();
     }
 
     @Override

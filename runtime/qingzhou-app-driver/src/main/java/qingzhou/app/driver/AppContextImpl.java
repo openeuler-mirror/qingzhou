@@ -106,8 +106,10 @@ public class AppContextImpl implements AppContext {
     @Override
     public long getPid() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
+        int at = name.indexOf('@');
+        if (at <= 0) return -1; // 无 '@' 分隔（异常环境）：无法解析 pid
         try {
-            return Long.parseLong(name.substring(0, name.indexOf('@')));
+            return Long.parseLong(name.substring(0, at));
         } catch (NumberFormatException e) {
             return -1;
         }

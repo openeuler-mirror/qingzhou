@@ -1,9 +1,5 @@
 package qingzhou.ai.mcp.client;
 
-import qingzhou.http.client.*;
-import qingzhou.json.Json;
-import qingzhou.logger.Logger;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -11,6 +7,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import qingzhou.http.client.*;
+import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 
 final class McpClient {
     private static final String PREFERRED_VERSION = "2025-06-18";
@@ -74,17 +74,17 @@ final class McpClient {
     }
 
     private <T> T withSession(Callable<T> action) throws Exception {
-        try {
-            initialize();
-            return action.call();
-        } catch (Exception e) {
-            if (!isSessionExpired(e)) throw e;
+        for (int attempt = 0; ; attempt++) {
+            try {
+                initialize();
+                return action.call();
+            } catch (Exception e) {
+                if (attempt > 0 || !isSessionExpired(e)) throw e;
 
-            logger.warn("mcp session of [" + config.id + "] expired, reconnecting");
-            initialized = false;
-            sessionId = null;
-            initialize();
-            return action.call();
+                logger.warn("mcp session of [" + config.id + "] expired, reconnecting");
+                initialized = false;
+                sessionId = null;
+            }
         }
     }
 
@@ -95,7 +95,6 @@ final class McpClient {
         params.put("protocolVersion", PREFERRED_VERSION);
         params.put("capabilities", Collections.emptyMap());
         params.put("clientInfo", clientInfo());
-
 
         long id = requestIds.incrementAndGet();
         Collector collector = new Collector(id);
@@ -142,7 +141,7 @@ final class McpClient {
         }
     }
 
-    private Response post(String method, Map<String, Object> params, Long id, ResponseListener listener) throws Exception {
+    private Response post(String method, Map<String, Object> params, Long id, ClientListener listener) throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", "2.0");
         if (id != null) envelope.put("id", id);
@@ -154,7 +153,7 @@ final class McpClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json, text/event-stream")
                 .readTimeout(READ_TIMEOUT)
-                .trustAllCertificates()
+                .trustAllCertificates() // 受控内网降级：需 allow_ssl_trust_all=true
                 .maxBodySize(0);
         config.headers.forEach(request::header);
         if (protocolVersion != null) request.header(PROTOCOL_HEADER, protocolVersion);
@@ -170,20 +169,14 @@ final class McpClient {
             throw new IOException("mcp server [" + config.id + "] returned status " + status + ": " + errorBody(response));
         }
 
-        Map<String, Object> message;
-        if (collector != null) {
-            if (!collector.awaitResponse()) {
-                throw new IOException("timeout waiting for response of [" + config.id + "]");
-            }
-            if (collector.failure != null) {
-                throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
-            }
-            message = collector.message;
-        } else {
-            String res = new String(response.getBody(), StandardCharsets.UTF_8);
-            message = json.fromJson(res, Map.class);
+        if (!collector.awaitResponse()) {
+            throw new IOException("timeout waiting for response of [" + config.id + "]");
+        }
+        if (collector.failure != null) {
+            throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
         }
 
+        Map<String, Object> message = collector.message;
         if (message == null) {
             throw new IOException("mcp server [" + config.id + "] sent no response");
         }
@@ -263,7 +256,7 @@ final class McpClient {
         return null;
     }
 
-    private final class Collector implements ResponseListener {
+    private final class Collector implements ClientListener {
         private final long expectedId;
         private final CountDownLatch latch = new CountDownLatch(1);
         private volatile Map<String, Object> message;

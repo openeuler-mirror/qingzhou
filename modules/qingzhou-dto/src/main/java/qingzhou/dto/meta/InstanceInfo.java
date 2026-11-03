@@ -5,12 +5,17 @@ import java.util.List;
 
 public class InstanceInfo {
     // 以下字段由 registry 在认证通过后写入，不参与 JSON 收发
-    private transient long lastRefreshTime;
+    private transient volatile long lastRefreshTime; // 续期写入与健康检查读取跨线程，须保证可见性
+    private transient String domain;
+    private transient volatile String id; // agent注册不带，由registry生成返回；心跳线程写、请求线程读算AAD，须保证可见性
 
-    private String id;
+    // 每实例随机密钥：agent 生成、仅随首次注册报文上报一次（已登记后心跳不再携带）。
+    // 用于派生每实例加密密钥（见 AgentDomainService#getInstanceCipher）；
+    private String instanceSecret;
+
+    // agent 自报的对外可达地址：仅用于反代/NAT 部署，registry 未显式开启信任时忽略
     private String host;
     private int port;
-    private String domain;
     private boolean sslEnabled;
     private String platformVersion;
     private final List<AppMeta> appMetas = new ArrayList<>();
@@ -67,11 +72,19 @@ public class InstanceInfo {
         return appMetas;
     }
 
-    public long getLastRefreshTime() {
+    public String getInstanceSecret() {
+        return instanceSecret;
+    }
+
+    public void setInstanceSecret(String instanceSecret) {
+        this.instanceSecret = instanceSecret;
+    }
+
+    public long getRefreshTime() {
         return lastRefreshTime;
     }
 
-    public void setLastRefreshTime(long lastRefreshTime) {
-        this.lastRefreshTime = lastRefreshTime;
+    public void refreshTime() {
+        this.lastRefreshTime = System.currentTimeMillis();
     }
 }

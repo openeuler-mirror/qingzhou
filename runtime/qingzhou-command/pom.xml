@@ -8,4 +8,21 @@
         <version>${revision}</version>
     </parent>
     <artifactId>qingzhou-command</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-image</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

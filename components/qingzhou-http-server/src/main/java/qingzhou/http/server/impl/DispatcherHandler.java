@@ -54,11 +54,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         long maxBodyBytes = configs.atLeast("max_body_bytes", 1L, 8 * 1024 * 1024);
         // 流式上传落临时文件，默认额度过大易打满磁盘
         long maxStreamBytes = configs.atLeast("max_stream_bytes", 1L, 256L * 1024 * 1024);
+        // 逐来源并发上限：全局额度无来源维度，单 IP 洪水即可耗尽；0 表示不启用
+        SourceLimiter sourceLimiter = new SourceLimiter(
+                configs.atLeast("max_concurrent_per_source", 0, 64),
+                configs.atLeast("max_tracked_sources", 1, 10_000));
         // 请求进入期（准入到请求体读完）总时长上限：慢速滴漏请求被 idle_timeout 漏掉
         // （每秒 1 字节连接永远"活跃"），却可长期占住并发许可。0 表示不启用
         int intakeTimeoutSeconds = configs.atLeast("request_timeout_seconds", 0, 10);
         ResponseHeaders responseHeaders = new ResponseHeaders(config);
-        RequestGates requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, authManager, handlerManager, logger, aggregatedBytes);
+        RequestGates requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, sourceLimiter, authManager, handlerManager, logger, aggregatedBytes);
         BodyProcessors bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);
 
         hotConfig = new HotConfig(concurrentSemaphore, streamSemaphore, intakeTimeoutSeconds,
@@ -130,9 +134,15 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         ctx.intakeTimeout = channel.eventLoop().schedule(() -> {
             if (ctx.released.get()) return; // 与 release() 的取消竞态：已结束的请求不再处理
             logger.warn("request intake exceeded " + timeoutSeconds + "s, closing connection: "
-                    + ctx.request.method() + " " + ctx.request.uri());
+                    + ctx.request.method() + " " + safePath(ctx));
             channel.close();
         }, timeoutSeconds, TimeUnit.SECONDS);
+    }
+
+    // 只记录规范化路径：原始 URI 的 query 可能携带 password= 等敏感参数，落日志即泄露；
+    // 超时触发时闸门已同步执行完毕（同一 IO 线程排队），path 必然已解析
+    private static String safePath(RequestContext ctx) {
+        return ctx.path != null ? ctx.path : "<unresolved>";
     }
 
     // 许可与内存配额统一在入口归还：gate 只管判定，不必关心释放，也不受 gate 顺序影响
@@ -141,6 +151,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         ctx.intakeComplete(); // 拒绝分支/异常分支的进入期到此结束
         ctx.concurrentSemaphore.release();
         if (ctx.streamPermitHeld) ctx.streamSemaphore.release();
+        if (ctx.sourceReservation != null) {
+            ctx.sourceReservation.limiter.release(ctx.sourceReservation.key); // 归还到取得许可时的限制器实例
+        }
         if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
     }
 }

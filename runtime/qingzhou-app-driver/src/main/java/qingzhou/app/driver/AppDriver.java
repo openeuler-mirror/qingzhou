@@ -19,6 +19,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
 import qingzhou.api.Request;
+import qingzhou.common.FileUtil;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.App;
 import qingzhou.dto.meta.annotation.Model;
@@ -83,9 +84,9 @@ public class AppDriver implements BundleActivator {
     }
 
     private <T> T loadService(Class<T> serviceType, String name) {
-        // 应用日志优先取专属日志器 qingzhou-logger~app，与框架系统日志分文件
-        boolean appLogger = name == null && Logger.class.isAssignableFrom(serviceType);
-        String lookupName = appLogger ? "app" : name;
+        boolean isLoggerService = serviceType == Logger.class;
+        boolean isAppDefaultLoggerService = isLoggerService && name == null;
+        String lookupName = isAppDefaultLoggerService ? "app_default" : name;
 
         ServiceReference<?> serviceReference = null;
         if (lookupName != null) {
@@ -101,17 +102,25 @@ public class AppDriver implements BundleActivator {
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
-            // 未配置 qingzhou-logger~app 时回退默认日志器
-            if (appLogger && serviceReference == null) {
-                serviceReference = context.getServiceReference(serviceType);
-            }
         } else {
             serviceReference = context.getServiceReference(serviceType);
         }
+
+        // 未配置 qingzhou-logger~app 时回退默认日志器
+        if (isAppDefaultLoggerService && serviceReference == null) {
+            serviceReference = context.getServiceReference(serviceType);
+        }
+
         if (serviceReference != null) {
             serviceReferences.add(serviceReference);
             Object service = context.getService(serviceReference);
-            if (service instanceof Logger) {
+            // 服务已注册但对象不可得（如组件激活失败、服务被并发注销）：立即失败，
+            // 避免把 null 包装成 Logger 交给应用，使其在调用处才以 NPE 暴露
+            if (service == null) {
+                throw new IllegalStateException("service object unavailable: " + serviceType.getName()
+                        + (name == null ? "" : "~" + name));
+            }
+            if (isLoggerService) {
                 service = new AppLogger(appMeta.getApp().code, (Logger) service);
             }
             return serviceType.cast(service);

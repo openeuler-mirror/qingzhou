@@ -23,6 +23,13 @@
             </includes>
             <outputDirectory>lib/version/docs</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../modules/qingzhou-api/src/main/java</directory>
+            <includes>
+                <include>**/*.java</include>
+            </includes>
+            <outputDirectory>lib/version/docs/qingzhou-api</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <dependencySets>

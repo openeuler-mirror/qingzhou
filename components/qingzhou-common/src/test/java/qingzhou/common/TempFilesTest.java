@@ -8,20 +8,6 @@ import org.testng.annotations.Test;
 
 public class TempFilesTest {
     @Test
-    public void cleanDir_removesAllChildrenRecursively() throws Exception {
-        File dir = Files.createTempDirectory("tempfiles-clean").toFile();
-        File nested = new File(dir, "sub/deep");
-        Assert.assertTrue(nested.mkdirs());
-        Assert.assertTrue(new File(nested, "a.txt").createNewFile());
-        Assert.assertTrue(new File(dir, "b.txt").createNewFile());
-
-        TempFiles.cleanDir(dir);
-
-        Assert.assertTrue(dir.isDirectory());
-        Assert.assertEquals(dir.listFiles().length, 0);
-    }
-
-    @Test
     public void cleanExpired_removesOnlyStaleChildren() throws Exception {
         File dir = Files.createTempDirectory("tempfiles-expire").toFile();
         File stale = new File(dir, "stale.txt");
@@ -38,13 +24,11 @@ public class TempFilesTest {
 
     @Test
     public void clean_missingDirectory_isSilent() {
-        TempFiles.cleanDir(new File("tempfiles-not-exists-" + System.nanoTime()));
         TempFiles.cleanExpired(new File("tempfiles-not-exists-" + System.nanoTime()), 1_000);
     }
 
     @Test
     public void clean_nullDirectory_isSilent() {
-        TempFiles.cleanDir(null);
         TempFiles.cleanExpired(null, 1_000);
     }
 }

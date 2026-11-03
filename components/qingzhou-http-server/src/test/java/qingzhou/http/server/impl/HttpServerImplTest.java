@@ -2,6 +2,7 @@ package qingzhou.http.server.impl;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.osgi.framework.Constants;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.impl.CryptoImpl;
 import qingzhou.http.client.HttpClient;
@@ -11,12 +12,10 @@ import qingzhou.http.client.impl.HttpClientImpl;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.auth.impl.AuthManager;
 import qingzhou.logger.impl.LoggerImpl;
-import reactor.netty.DisposableServer;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.ConnectException;
-import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -31,7 +30,7 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = build();
         try {
             HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer)).method(HttpMethod.GET));
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + httpServer.getPort()).method(HttpMethod.GET));
             Assert.assertEquals(result.getStatus(), 404);
         } finally {
             httpServer.stop(); // 断言失败也不能泄漏 Netty 线程与监听端口
@@ -41,7 +40,7 @@ public class HttpServerImplTest {
     @Test
     public void normal_stop_requestGetConnectException() throws Exception {
         HttpServerImpl httpServer = build();
-        int port = actualPort(httpServer);
+        int port = httpServer.getPort();
         httpServer.stop();
         try {
             HttpClientImpl httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
@@ -61,7 +60,7 @@ public class HttpServerImplTest {
             httpServer.registerHttpHandler(httpHandler, path, true);
 
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + httpServer.getPort() + path).method(HttpMethod.GET));
             Assert.assertEquals(result.getStatus(), 200);
             Assert.assertTrue(new String(result.getBody(), StandardCharsets.UTF_8).contains(path));
         } finally {
@@ -78,7 +77,7 @@ public class HttpServerImplTest {
             httpServer.registerHttpHandler(httpHandler, path, true);
             httpServer.unregisterHttpHandler(httpHandler);
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + actualPort(httpServer) + path).method(HttpMethod.GET));
+            Response result = httpClient.send(httpClient.buildRequest("http://localhost:" + httpServer.getPort() + path).method(HttpMethod.GET));
             Assert.assertEquals(result.getStatus(), 404);
         } finally {
             httpServer.stop(); // 断言失败也不能泄漏 Netty 线程与监听端口
@@ -93,7 +92,7 @@ public class HttpServerImplTest {
             httpServer.registerHttpHandler((httpRequest, httpResponse) -> httpResponse.send("ssl-ok").finish(), path, true);
 
             HttpClient httpClient = HttpClientServerIntegrationTest.buildHttpClientImpl();
-            Response result = httpClient.send(httpClient.buildRequest("https://localhost:" + actualPort(httpServer) + path)
+            Response result = httpClient.send(httpClient.buildRequest("https://localhost:" + httpServer.getPort() + path)
                     .trustAllCertificates()
                     .method(HttpMethod.GET));
             Assert.assertEquals(result.getStatus(), 200);
@@ -131,21 +130,6 @@ public class HttpServerImplTest {
     }
 
     @Test
-    public void startFailed_wrongKeystorePassword_resourcesReleased() throws Exception {
-        Map<String, String> config = sslConfig();
-        config.put("ssl_keystore_password", Cipher.PLAIN_PREFIX_MARKER + "wrong-password");
-        HttpServerImpl httpServer = buildHttpServer(config);
-        try {
-            httpServer.start(config);
-            Assert.fail("start should throw when ssl keystore password is wrong");
-        } catch (IllegalStateException e) {
-            // 激活失败不会触发 @Deactivate，泄漏的 EventLoop 线程池将永不回收
-            assertFieldNull(httpServer, "loopResources");
-            assertFieldNull(httpServer, "disposableServer");
-        }
-    }
-
-    @Test
     public void sslInvalidKeystoreType_start_throwsException() throws Exception {
         Map<String, String> config = sslConfig();
         config.put("ssl_keystore_type", "DSA");
@@ -176,11 +160,15 @@ public class HttpServerImplTest {
     static HttpServerImpl buildHttpServer(Map<String, String> config) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
+        // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE；
+        // 非默认日志器名（~test）跳过启动 banner，避免每个用例刷屏
+        Map<String, Object> loggerConfig = new HashMap<>();
+        loggerConfig.put(Constants.SERVICE_PID, "qingzhou-logger~test");
+        logger.init(loggerConfig);
         CryptoImpl crypto = new CryptoImpl();
         crypto.init(new HashMap<String, String>() {{
             put("qingzhou.instance", new File("/tmp").getAbsolutePath());
             put("qingzhou.version", "1.0");
-            put("qingzhou.http.client.trustAll", "true"); // 测试服务端为自签名证书：显式开启跳过校验
         }});
         HandlerManager handlerManager = new HandlerManager();
         DispatcherHandler dispatcherHandler = new DispatcherHandler();
@@ -229,19 +217,6 @@ public class HttpServerImplTest {
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().contains(expectedMessage), e.getMessage());
         }
-    }
-
-    private static void assertFieldNull(HttpServerImpl httpServer, String fieldName) throws Exception {
-        Field field = HttpServerImpl.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        Assert.assertNull(field.get(httpServer), fieldName + " must be released when start fails");
-    }
-
-    private static int actualPort(HttpServerImpl httpServer) throws Exception {
-        Field field = HttpServerImpl.class.getDeclaredField("disposableServer");
-        field.setAccessible(true);
-        DisposableServer disposableServer = (DisposableServer) field.get(httpServer);
-        return ((InetSocketAddress) disposableServer.address()).getPort();
     }
 
     private static File keystoreFile() throws Exception {

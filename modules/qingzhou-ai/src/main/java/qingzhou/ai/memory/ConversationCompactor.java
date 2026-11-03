@@ -53,7 +53,7 @@ final class ConversationCompactor {
     /**
      * 先锁内取一次快照确定本次任务范围（有界），再按字符预算分批：每批锁外调 LLM、锁内按 id 回写
      */
-    void compact(String conversationId) {
+    private void compact(String conversationId) {
         List<StoredMessage> queue;
         String summarySoFar;
         synchronized (store) {

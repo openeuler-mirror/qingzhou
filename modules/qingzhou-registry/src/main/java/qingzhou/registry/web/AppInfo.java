@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
@@ -40,7 +39,7 @@ public class AppInfo extends AbstractMetaHandler {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter("lang");
 
         Map<String, Object> appMetaInfo = new HashMap<>();
         appMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);

@@ -1,6 +1,7 @@
 package qingzhou.app.tomcat;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
@@ -22,6 +24,8 @@ import qingzhou.api.action.Show;
         name = {"日志查看", "en:Log Viewer"},
         info = {"查看Tomcat日志文件", "en:View Tomcat log files"})
 public class TomcatLogs extends TomcatModelBase implements Page, Show {
+    // 单次查看读入内存的上限：Tomcat 日志可达数百 MB，全量读取再 split 会成倍占用堆内存
+    private static final int MAX_LOG_VIEW_BYTES = 2 * 1024 * 1024;
 
     @ModelField(id = true, list = true, show = true, readonly = true,
             name = {"文件名", "en:File Name"},
@@ -98,11 +102,10 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
 
         if (Files.exists(file)) {
             try {
-                String fileContent = new String(Files.readAllBytes(file));
-                long lines = fileContent.split("\n").length;
+                String fileContent = readLogTail(file);
 
                 logInfo.put("content", fileContent);
-                logInfo.put("lineCount", String.valueOf(lines));
+                logInfo.put("lineCount", String.valueOf(fileContent.split("\n").length));
             } catch (IOException e) {
                 logInfo.put("content", "无法读取日志文件: " + e.getMessage());
                 logInfo.put("lineCount", "0");
@@ -128,9 +131,8 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
             return logs;
         }
 
-        try {
-            Files.list(logDir)
-                    .filter(p -> p.toString().endsWith(".log") || p.toString().endsWith(".txt"))
+        try (Stream<Path> logFiles = Files.list(logDir)) {
+            logFiles.filter(p -> p.toString().endsWith(".log") || p.toString().endsWith(".txt"))
                     .filter(Files::isRegularFile)
                     .forEach(p -> {
                         try {
@@ -157,6 +159,22 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
 
     private String getLogPath(String fileName) {
         return resolvePath(getBaseLogsDir(), fileName).toString();
+    }
+
+    // 大文件只读尾部窗口：截断处可能落在半个字符上，跳到首个换行之后
+    private static String readLogTail(Path file) throws IOException {
+        long size = Files.size(file);
+        if (size <= MAX_LOG_VIEW_BYTES) return new String(Files.readAllBytes(file));
+
+        byte[] tail = new byte[MAX_LOG_VIEW_BYTES];
+        try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
+            raf.seek(size - tail.length);
+            raf.readFully(tail);
+        }
+        int start = 0;
+        while (start < tail.length && tail[start] != '\n') start++;
+        start = Math.min(start + 1, tail.length);
+        return "...(仅显示最后 " + (MAX_LOG_VIEW_BYTES / 1024) + " KB)\n" + new String(tail, start, tail.length - start);
     }
 
     private String determineLogType(String fileName) {

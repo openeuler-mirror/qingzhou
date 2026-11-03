@@ -115,6 +115,12 @@ public class HttpServerImpl implements HttpServer {
         logger.info("http server stopped");
     }
 
+    @Override
+    public int getPort() {
+        if (disposableServer == null) throw new IllegalStateException("http server is not started");
+        return disposableServer.port();
+    }
+
     // 释放失败不得掩盖真正的启动失败原因，否则排障看到的是释放异常而非端口/密钥库问题
     private void disposeOnStartFailure(Exception startError) {
         try {

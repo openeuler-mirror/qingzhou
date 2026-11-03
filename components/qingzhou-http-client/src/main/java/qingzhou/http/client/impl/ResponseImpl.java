@@ -5,8 +5,8 @@ import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 
+import qingzhou.http.client.ClientListener;
 import qingzhou.http.client.Response;
-import qingzhou.http.client.ResponseListener;
 
 class ResponseImpl implements Response {
     private final int code;
@@ -19,7 +19,7 @@ class ResponseImpl implements Response {
     // cancel() 由调用线程写、流式读取线程读，volatile 保证取消状态及时可见
     private volatile boolean cancelled;
 
-    ResponseImpl(HttpURLConnection conn, ResponseListener listener, int maxBodySize, Executor executor) throws IOException {
+    ResponseImpl(HttpURLConnection conn, ClientListener listener, int maxBodySize, Executor executor) throws IOException {
         this.maxBodySize = maxBodySize;
         this.conn = conn;
         this.code = conn.getResponseCode();
@@ -29,7 +29,7 @@ class ResponseImpl implements Response {
             streaming = true;
             executor.execute(() -> readStreaming(listener));
         } else {
-            // 同步模式或非 2xx：一次性读完整响应体，由调用方根据 getStatus() 处理，不触发任何回调
+            // 同步模式或非 2xx：一次性读完整响应体，不 disconnect 以复用 keep-alive 连接
             streaming = false;
             result = read(responseStream());
         }
@@ -40,7 +40,7 @@ class ResponseImpl implements Response {
         return stream != null ? stream : new ByteArrayInputStream(new byte[0]);
     }
 
-    private void readStreaming(ResponseListener listener) {
+    private void readStreaming(ClientListener listener) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(), StandardCharsets.UTF_8))) {
             long received = 0;
             for (String line; !cancelled && (line = reader.readLine()) != null; ) {
@@ -59,24 +59,25 @@ class ResponseImpl implements Response {
                 listener.onError(t);
             }
         } finally {
-            if (cancelled) {
-                conn.disconnect(); // 被取消时强制断开底层连接
-            }
+            // 流式读毕后断开连接，不占用 keep-alive
+            conn.disconnect();
         }
     }
 
     @Override
     public void cancel() {
-        cancelled = true;
         if (streaming) {
-            conn.disconnect(); // 仅流式中止需断开连接；同步响应已读完并关闭流，不 disconnect 以复用 keep-alive 连接
+            cancelled = true;
+            conn.disconnect(); // 仅流式中止需断开连接
+        } else {
+            throw new IllegalStateException("'cancel()' is only supported in streaming mode");
         }
     }
 
     @Override
     public byte[] getBody() {
         if (streaming) {
-            throw new IllegalStateException("Response body is not available in streaming mode");
+            throw new IllegalStateException("'getBody()' is not available in streaming mode");
         }
 
         return result;

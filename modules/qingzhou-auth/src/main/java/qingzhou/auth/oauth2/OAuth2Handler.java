@@ -3,10 +3,7 @@ package qingzhou.auth.oauth2;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -55,6 +52,7 @@ public class OAuth2Handler implements HttpHandler {
     private String scope;
     private String callbackUrl;
     private String usernameField;
+    private String roleField;
     private List<String> grantedRoles;
 
     private Cipher tokenCipher;
@@ -71,6 +69,7 @@ public class OAuth2Handler implements HttpHandler {
         tokenEndpoint = configs.notBlank("oauth2_token_endpoint");
         userinfoEndpoint = configs.notBlank("oauth2_userinfo_endpoint");
         usernameField = config.get("oauth2_userinfo_username_field");
+        roleField = config.get("oauth2_userinfo_role_field");
         scope = config.get("oauth2_scope");
         // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
         grantedRoles = configs.splitList("oauth2_roles");
@@ -137,14 +136,14 @@ public class OAuth2Handler implements HttpHandler {
         String accessToken = exchangeCodeForAccessToken(code, response);
         if (accessToken == null) return;
 
-        String user = getUserInfoByAccessToken(accessToken);
+        Map<String, Object> userInfo = getUserInfo(accessToken);
+        String user = userInfo == null ? null : pickUsername(userInfo);
         if (user == null) {
             response.status(500);
             return;
         }
 
-        String[] roles = grantedRoles.toArray(new String[0]);
-        tokenService.sendToken(user, roles, request, response);
+        tokenService.sendToken(user, resolveRoles(pickRoles(userInfo)), request, response);
         response.redirect("/web"); // 管控台前端入口，前端资源与接口分处不同路径，登录后须回到此处
     }
 
@@ -158,44 +157,35 @@ public class OAuth2Handler implements HttpHandler {
 
         Response tokenResponse = httpClient.send(
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
-        try {
-            byte[] tokenBodyBytes = tokenResponse.getBody();
-            if (tokenBodyBytes == null) {
-                // 上游未返回响应体：固定文案回浏览器，避免 NPE 且不外泄内部信息
-                response.status(403).send("token exchange failed");
-                return null;
-            }
-            String tokenBodyText = new String(tokenBodyBytes, StandardCharsets.UTF_8);
-            Map tokenBody = json.fromJson(tokenBodyText, Map.class);
-            // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
-            if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
-                // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
-                response.status(403).send("token exchange failed");
-                return null;
-            }
-
-            // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
-            return (String) tokenBody.get("access_token");
-        } finally {
-            tokenResponse.cancel();
+        byte[] tokenBodyBytes = tokenResponse.getBody();
+        if (tokenBodyBytes == null) {
+            // 上游未返回响应体：固定文案回浏览器，避免 NPE 且不外泄内部信息
+            response.status(403).send("token exchange failed");
+            return null;
         }
+        String tokenBodyText = new String(tokenBodyBytes, StandardCharsets.UTF_8);
+        Map tokenBody = json.fromJson(tokenBodyText, Map.class);
+        // 非 JSON 响应（如网关 HTML 错误页）fromJson 返回 null，须与 error 响应一并走失败路径，否则 NPE
+        if (tokenResponse.getStatus() != 200 || tokenBody == null || tokenBody.get("error") != null) {
+            // 固定文案回浏览器：上游 token 端点的原文可能含 IdP 内部信息，不应外泄
+            response.status(403).send("token exchange failed");
+            return null;
+        }
+
+        // 优先走 userinfo endpoint（由授权服务器校验 access_token，身份可信）
+        return (String) tokenBody.get("access_token");
     }
 
     /**
      * 身份必须由授权服务器校验：只接受 userinfo endpoint 返回的 sub。
      * 不接受未验签的 id_token——其 payload 可任意伪造，据此登录等同于身份可被直接接管。
      */
-    private String getUserInfoByAccessToken(String accessToken) throws Exception {
+    private Map<String, Object> getUserInfo(String accessToken) throws Exception {
         if (accessToken != null && userinfoEndpoint != null && !userinfoEndpoint.isEmpty()) {
             Response resp = httpClient.send(httpClient.buildRequest(userinfoEndpoint)
                     .header("Authorization", "Bearer " + accessToken));
-            try {
-                if (resp.getStatus() == 200) {
-                    Map<String, Object> info = json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
-                    return pickUsername(info);
-                }
-            } finally {
-                resp.cancel();
+            if (resp.getStatus() == 200) {
+                return json.fromJson(new String(resp.getBody(), StandardCharsets.UTF_8), Map.class);
             }
         }
         return null;
@@ -203,6 +193,7 @@ public class OAuth2Handler implements HttpHandler {
 
     private String pickUsername(Map<String, Object> map) {
         String[] tryUserNames = {usernameField,
+                "userName",
                 "preferred_username",// OIDC 标准 scope=profile 时属性，服务器决定是否有值
                 "name", // OIDC 标准 scope=profile 时属性，服务器决定是否有值
                 "sub" // OIDC scope=openid 标准属性，一个id字符串
@@ -213,6 +204,49 @@ public class OAuth2Handler implements HttpHandler {
             if (val != null) return val;
         }
         return null;
+    }
+
+    private List<String> pickRoles(Map<String, Object> map) {
+        String[] tryRoles = {roleField,
+                "roleName", // 本项目接入管理应用 userinfo 的角色属性名
+                "role",
+                "roles"
+        };
+        for (String field : tryRoles) {
+            if (field == null || field.isEmpty()) continue;
+            List<String> roles = toRoles(map.get(field));
+            if (!roles.isEmpty()) return roles;
+        }
+        return Collections.emptyList();
+    }
+
+    // userinfo 的角色可能是 JSON 数组，也可能是逗号分隔字符串，两种形态都须归一为角色列表
+    private List<String> toRoles(Object val) {
+        if (val instanceof Collection) {
+            List<String> roles = new ArrayList<>();
+            for (Object item : (Collection<?>) val) {
+                String role = trimToNull(item);
+                if (role != null) roles.add(role);
+            }
+            return roles;
+        }
+        String text = trimToNull(val);
+        if (text == null) return Collections.emptyList();
+        return Arrays.asList(text.split("\\s*,\\s*"));
+    }
+
+    /**
+     * 授予角色以本地 oauth2_roles 为准，IdP 提供的角色名只做过滤：
+     * IdP 侧角色可被其用户自行改写，直接采信等于"能通过外部认证即获得任意平台角色"。
+     * IdP 未提供角色时沿用配置全量，保持未暴露角色属性的既有部署可用。
+     */
+    private String[] resolveRoles(List<String> idpRoles) {
+        if (idpRoles.isEmpty()) return grantedRoles.toArray(new String[0]);
+        List<String> roles = new ArrayList<>();
+        for (String role : grantedRoles) {
+            if (idpRoles.contains(role)) roles.add(role);
+        }
+        return roles.toArray(new String[0]);
     }
 
     private String trimToNull(Object val) {

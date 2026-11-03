@@ -11,7 +11,7 @@ import qingzhou.http.client.Request;
 class RequestImpl implements Request {
     private final boolean allowSslTrustAll;
 
-    String url;
+    final String url;
     HttpMethod method;
     Map<String, String> headers;
     Map<String, String> params;
@@ -93,12 +93,16 @@ class RequestImpl implements Request {
 
     @Override
     public Request trustAllCertificates() {
-        // 跳过证书与主机名校验属高危能力：须由运维显式开启系统属性，避免代码侧误用造成静默 MITM
-        if (!allowSslTrustAll) {
-            throw new IllegalStateException("trustAllCertificates is disabled, enable it with qingzhou-http-client.allow_ssl_trust_all=true");
+        if (trustAll) return this;
+        if (!url.startsWith("https://")) return this;
+        if (trustedCertificates != null) return this;
+
+        if (allowSslTrustAll) {
+            trustAll = true;
+            return this;
         }
-        this.trustAll = true;
-        return this;
+        // 跳过证书与主机名校验属高危能力：须由运维显式开启系统属性，避免代码侧误用造成静默 MITM
+        throw new IllegalStateException("trustAllCertificates is disabled, enable it with qingzhou-http-client.allow_ssl_trust_all=true");
     }
 
     @Override

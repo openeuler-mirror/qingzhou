@@ -80,14 +80,17 @@ public final class FailureLockout {
 
         int excess = states.size() - evictWatermark;
         if (excess <= 0) return;
-        // 有界堆一次遍历选出最久未失败的 excess 个：堆序取倒序（堆顶为最近失败），溢出时弹出的是较新者
-        PriorityQueue<Map.Entry<String, LockState>> oldest = new PriorityQueue<>(excess + 1,
-                Comparator.<Map.Entry<String, LockState>>comparingLong(e -> e.getValue().lastFailureAt).reversed());
+        // 淘汰顺序：先剔失败次数少的（来源洪水），次数相同再剔最久未失败的。
+        // 堆取倒序（堆顶为计数最高者），溢出时弹出计数低者，尽量保住真实爆破目标的锁定状态
+        Comparator<Map.Entry<String, LockState>> evictionOrder = Comparator
+                .<Map.Entry<String, LockState>>comparingInt(e -> e.getValue().count)
+                .thenComparingLong(e -> e.getValue().lastFailureAt);
+        PriorityQueue<Map.Entry<String, LockState>> victims = new PriorityQueue<>(excess + 1, evictionOrder.reversed());
         for (Map.Entry<String, LockState> entry : states.entrySet()) {
-            oldest.offer(entry);
-            if (oldest.size() > excess) oldest.poll();
+            victims.offer(entry);
+            if (victims.size() > excess) victims.poll();
         }
-        for (Map.Entry<String, LockState> entry : oldest) states.remove(entry.getKey());
+        for (Map.Entry<String, LockState> entry : victims) states.remove(entry.getKey());
     }
 
     private static long now() {

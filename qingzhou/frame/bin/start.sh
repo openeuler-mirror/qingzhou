@@ -15,9 +15,8 @@ if ! [ -d "${instanceDir}" ]; then
     exit 1
 fi
 
-# java 启动参数
-#startCmd="$(java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=7777 -jar "${qingzhou_home}/bin/qingzhou-launcher.jar" start-arg "${runInstance}" 2>&1)"
-startCmd="$(java -jar "${qingzhou_home}/bin/qingzhou-launcher.jar" start-arg "${runInstance}" 2>&1)"
+# java 启动参数只取 stdout：stderr 是 launcher 的告警通道，合并后会被 eval 当成命令执行
+startCmd="$(java -jar "${qingzhou_home}/bin/qingzhou-launcher.jar" start-arg "${runInstance}")"
 
 # 判断返回码，给出错误提示信息
 exit_code=$?

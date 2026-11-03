@@ -1,7 +1,7 @@
 package qingzhou.dto.meta.annotation;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class Model extends Base {
     public String roles;
@@ -18,7 +18,7 @@ public class Model extends Base {
 
     public String[] info;
 
-    public final List<ModelField> fields = new ArrayList<>();
-
-    public final List<ModelAction> actions = new ArrayList<>();
+    // 固定顺序：qingzhou.agent.Heartbeat.fingerprints 计算指纹
+    public final Set<ModelField> fields = new LinkedHashSet<>();
+    public final Set<ModelAction> actions = new LinkedHashSet<>();
 }

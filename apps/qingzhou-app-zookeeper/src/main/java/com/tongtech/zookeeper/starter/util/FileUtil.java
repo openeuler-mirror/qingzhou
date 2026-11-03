@@ -15,13 +15,6 @@ import java.util.List;
  */
 public class FileUtil {
 
-    private FileUtil() {
-    }
-
-    public static File newFile(File first, String... more) {
-        return newFile(first.getAbsolutePath(), more);
-    }
-
     public static File newFile(String first, String... more) {
         if (first.contains("..")) {
             throw new IllegalArgumentException(first);

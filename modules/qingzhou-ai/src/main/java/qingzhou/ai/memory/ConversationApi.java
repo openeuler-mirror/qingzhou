@@ -127,7 +127,8 @@ public class ConversationApi implements HttpHandler {
                 params = json.fromJson(new String(body, StandardCharsets.UTF_8), HashMap.class);
             } catch (Exception e) {
                 // 仅记录异常摘要，不输出请求体原文（可能含会话标题等用户内容）
-                logger.warn("failed to parse conversation api request body: " + e.getMessage());
+                logger.warn("failed to parse conversation api request body: " + e.getClass().getSimpleName()
+                        + ", body length=" + body.length);
             }
         }
         if (params == null) {

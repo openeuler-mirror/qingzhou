@@ -3,6 +3,8 @@ package qingzhou.crypto.impl;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import qingzhou.crypto.Base16Coder;
+
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
@@ -15,13 +17,13 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataNull_encode_returnNull() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         Assert.assertNull(coder.encode(null));
     }
 
     @Test
     public void dataEmptyByteArray_encode_returnEmptyString() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[] emptyBytes = new byte[0];
         String result = coder.encode(emptyBytes);
         Assert.assertEquals(result, "");
@@ -29,7 +31,7 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataSingleByte_encode_returnValidBase16() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[] sourceData = new byte[]{0x66};  // 单字节 'f'
         String encodeResult = coder.encode(sourceData);
         Assert.assertEquals(encodeResult, "66");
@@ -39,7 +41,7 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encode_onlyValidBase16Char() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[][] testDatas = {
                 "Hello".getBytes(StandardCharsets.UTF_8),
                 "Base16".getBytes(StandardCharsets.UTF_8),
@@ -56,7 +58,7 @@ public class Base16CoderImplTest {
     }
     @Test
     public void dataNormalByteArray_encode_returnUppercaseHex() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[] sourceData = new byte[]{0x0A, 0x1B, 0x2C};//0x0A -> "0A"，0x1B -> "1B"，0x2C -> "2C"，最终为 "0A1B2C"
         String encodeResult = coder.encode(sourceData);
         Assert.assertEquals(encodeResult, "0A1B2C");
@@ -65,7 +67,7 @@ public class Base16CoderImplTest {
     }
     @Test
     public void dataBinaryBytes_encode_returnValidBase16() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         // 覆盖全部 256 种字节值
         byte[] allBytes = new byte[256];
         for (int i = 0; i < 256; i++) {
@@ -82,19 +84,19 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataNull_decode_returnNull() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         Assert.assertNull(coder.decode((String) null));
     }
     @Test
     public void dataEmptyString_decode_returnEmptyByteArray() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[] result = coder.decode("");
         Assert.assertEquals(result.length, 0);
     }
 
     @Test
     public void dataStandardBase16Str_decode_restoreSourceBytes() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         String hexString = "0A1B2C";
         byte[] decodeBytes = coder.decode(hexString);
         Assert.assertEquals(decodeBytes, new byte[]{0x0A, 0x1B, 0x2C});
@@ -102,7 +104,7 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataEncodeThenDecode_decode_restoreOriginalBytes() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[] originBytes = "Java Base16 Crypto Demo".getBytes(StandardCharsets.UTF_8);
         String encodeStr = coder.encode(originBytes);
         byte[] decodeBytes = coder.decode(encodeStr);
@@ -111,7 +113,7 @@ public class Base16CoderImplTest {
 
     @Test
     public void dataVariousByteArrays_encodeThenDecode_restoreOriginalBytes() {
-        Base16CoderImpl coder = new Base16CoderImpl();
+        Base16Coder coder = new CryptoImpl().getBase16Coder();
         byte[][] testDatas = {
                 new byte[0],
                 new byte[]{0x00},

@@ -1,13 +1,18 @@
 package qingzhou.bundle.converter;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -17,7 +22,7 @@ import javassist.*;
 import org.osgi.framework.Constants;
 import qingzhou.api.*;
 import qingzhou.app.driver.DefaultAction;
-import qingzhou.app.driver.FileUtil;
+import qingzhou.common.FileUtil;
 import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
@@ -91,10 +96,17 @@ public class BundleConverter {
         attributes.putValue(Constants.BUNDLE_SYMBOLICNAME, targetJar.getName().substring(0, targetJar.getName().length() - ".jar".length())); // osgi bundle
         attributes.putValue(Constants.BUNDLE_VERSION_ATTRIBUTE, version); // osgi bundle
         attributes.putValue(Constants.BUNDLE_ACTIVATOR, "qingzhou.app.driver.AppDriver"); // osgi bundle
+
+        // 此处配置的导入须是 qingzhou-app-driver 直接依赖的，并且与 -Dqingzhou.osgi.packages.import.app 配置不冲突
         attributes.putValue(Constants.IMPORT_PACKAGE, "org.osgi.framework,org.osgi.service.cm," + // osgi
-                "qingzhou.registry," +
                 "qingzhou.api,qingzhou.api.action," +
-                "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation");
+                "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation," +
+                "qingzhou.common," +
+                "qingzhou.registry," +
+                "qingzhou.logger," +
+                "qingzhou.json," +
+                "qingzhou.crypto"
+        );
         if (appDynamicPackages == null) {
             String pkgExtra = System.getProperty("qingzhou.osgi.packages.import.system");
             appDynamicPackages = pkgExtra != null && !pkgExtra.trim().isEmpty() ? pkgExtra.trim() : "";

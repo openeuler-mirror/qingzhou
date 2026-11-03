@@ -4,13 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+
+import qingzhou.common.FileUtil;
 
 class MultipartStreamParser {
     private static final int MAX_PART_HEADERS = 8192; // 单个分片的头部上限
@@ -18,8 +16,6 @@ class MultipartStreamParser {
     // 文本字段累计上限：单字段上限 × 分片总数可达 GB 级并全部驻留堆，须按总量独立约束（文件分片落盘，不计入）
     private static final long MAX_TOTAL_TEXT_BYTES = 8L * 1024 * 1024;
     private static final int MAX_TOTAL_PARTS = 1000; // 分片总数上限：防小分片洪水放大内存
-    // 文件分片总量上限：与服务端请求体上限对齐，防止认证用户用单个请求写满磁盘
-    private static final long MAX_TOTAL_BYTES = 256L * 1024 * 1024;
     private static final byte[] HEADER_DELIMITER = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
     private static final int[] HEADER_DELIMITER_FAILURE = failure(HEADER_DELIMITER);
 
@@ -42,7 +38,6 @@ class MultipartStreamParser {
     private int suffixLen;
 
     private int partCount;
-    private long totalBytes;
     private long totalTextBytes;
     private String currentFieldName;
     private boolean isFileField;
@@ -60,6 +55,13 @@ class MultipartStreamParser {
         boolean isFileField(String fieldName);
     }
 
+    // 请求体格式畸形（客户端可控输入）：与内部故障区分，调用方据此映射 400 而非 500
+    static final class MalformedException extends RuntimeException {
+        MalformedException(String message) {
+            super(message);
+        }
+    }
+
     MultipartStreamParser(String boundary, File uploadBase, FieldTypeResolver resolver) {
         this.boundaryDelimiter = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
         this.boundaryFailure = failure(boundaryDelimiter);
@@ -70,11 +72,6 @@ class MultipartStreamParser {
 
     void feed(byte[] data, boolean isLast) throws IOException {
         if (state == State.DONE) return;
-
-        totalBytes += data.length;
-        if (totalBytes > MAX_TOTAL_BYTES) {
-            throw new IllegalStateException("multipart body too large");
-        }
 
         byte[] searchArea;
         if (leftoverLen > 0) {
@@ -105,7 +102,7 @@ class MultipartStreamParser {
         }
         // 缺少结束边界说明请求体被截断：不得把最后一片当完整内容交给业务
         if (isLast && state != State.DONE) {
-            throw new IllegalStateException("unexpected end of multipart body");
+            throw new MalformedException("unexpected end of multipart body");
         }
     }
 
@@ -146,13 +143,13 @@ class MultipartStreamParser {
             return data.length;
         }
         if (boundarySuffix[0] != '\r' || boundarySuffix[1] != '\n') {
-            throw new IllegalStateException("malformed multipart boundary");
+            throw new MalformedException("malformed multipart boundary");
         }
         state = State.IN_HEADERS;
         return pos;
     }
 
-    private int handleHeaders(byte[] data, int pos) {
+    private int handleHeaders(byte[] data, int pos) throws IOException {
         int oldLen = headerLen;
         // 只缓存头部上限所需的字节：多余正文由返回值回退给 content 处理，避免整块复制与 headerBytes 无界扩容
         int appendLen = Math.min(data.length - pos, MAX_PART_HEADERS + HEADER_DELIMITER.length - oldLen);
@@ -160,12 +157,12 @@ class MultipartStreamParser {
         int idx = indexOf(headerBytes, 0, headerLen, HEADER_DELIMITER, HEADER_DELIMITER_FAILURE);
         if (idx < 0) {
             if (headerLen > MAX_PART_HEADERS) {
-                throw new IllegalStateException("multipart part headers too large");
+                throw new MalformedException("multipart part headers too large");
             }
             return data.length;
         }
         if (idx > MAX_PART_HEADERS) {
-            throw new IllegalStateException("multipart part headers too large");
+            throw new MalformedException("multipart part headers too large");
         }
 
         parsePartHeaders(new String(headerBytes, 0, idx, StandardCharsets.UTF_8));
@@ -216,11 +213,11 @@ class MultipartStreamParser {
             fileStream.write(data, offset, len);
         } else {
             if (fieldBuffer.size() + len > MAX_FIELD_BYTES) {
-                throw new IllegalStateException("multipart field too large: " + currentFieldName);
+                throw new MalformedException("multipart field too large: " + currentFieldName);
             }
             totalTextBytes += len;
             if (totalTextBytes > MAX_TOTAL_TEXT_BYTES) {
-                throw new IllegalStateException("multipart text fields exceed max total bytes: " + MAX_TOTAL_TEXT_BYTES);
+                throw new MalformedException("multipart text fields exceed max total bytes: " + MAX_TOTAL_TEXT_BYTES);
             }
             fieldBuffer.write(data, offset, len);
         }
@@ -245,9 +242,9 @@ class MultipartStreamParser {
     }
 
     /**
-     * 中断解析时调用：关闭未完成的文件流并清理已写入的临时文件，防止句柄与临时文件残留。此方法可重复调用。
+     * 释放解析器占用：关闭未完成的文件流并清理已落盘的临时文件。正常结束与异常中断均须调用，可重复调用。
      */
-    void abort() {
+    void close() {
         if (fileStream != null) {
             try {
                 fileStream.close();
@@ -277,15 +274,19 @@ class MultipartStreamParser {
         }
     }
 
-    private void parsePartHeaders(String headers) {
+    private void parsePartHeaders(String headers) throws IOException {
         if (++partCount > MAX_TOTAL_PARTS) {
-            throw new IllegalStateException("too many multipart parts");
+            throw new MalformedException("too many multipart parts");
         }
         String disposition = contentDisposition(headers);
         currentFieldName = extractValue(disposition, "name=\"");
         if (currentFieldName != null && currentFieldName.isEmpty()) currentFieldName = null;
 
         String currentFileName = extractValue(disposition, "filename=\"");
+        // 既无字段名也无文件名：内容无处归属，静默丢弃会让业务在缺参状态下继续执行
+        if (currentFieldName == null && currentFileName == null) {
+            throw new MalformedException("multipart part without name");
+        }
         if (currentFileName != null && !currentFileName.isEmpty()) {
             validateFileName(currentFileName);
             isFileField = currentFieldName != null && fieldTypeResolver.isFileField(currentFieldName);
@@ -295,14 +296,10 @@ class MultipartStreamParser {
         if (isFileField) {
             String uploadId = UUID.randomUUID().toString();
             File uploadDir = new File(uploadBase, uploadId);
-            if (!uploadDir.mkdirs()) throw new IllegalStateException(uploadDir.getAbsolutePath());
-            restrictDirPermission(uploadDir);
+            // 上传内容可能含敏感数据：创建即收紧为 0700，避免默认 umask 下同机其它用户列举目录、经文件名泄露内容
+            FileUtil.createOwnerOnlyDir(uploadDir);
             currentTempFile = new File(uploadDir, currentFileName);
-            try {
-                fileStream = createTempFile(currentTempFile.toPath());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            fileStream = FileUtil.newOwnerOnlyFile(currentTempFile.toPath(), StandardOpenOption.CREATE_NEW);
         }
     }
 
@@ -316,26 +313,7 @@ class MultipartStreamParser {
             invalid = Character.isISOControl(c) || Character.getType(c) == Character.FORMAT
                     || c == '/' || c == '\\' || c == '=' || c == ',';
         }
-        if (invalid) throw new IllegalStateException("invalid upload file name");
-    }
-
-    // 上传内容可能含敏感数据：POSIX 平台创建即 0600，避免默认 umask 下同机其它用户可读
-    private static OutputStream createTempFile(Path path) throws IOException {
-        try {
-            return Channels.newOutputStream(Files.newByteChannel(path,
-                    EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE),
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"))));
-        } catch (UnsupportedOperationException e) { // Windows 等无 POSIX 权限模型的平台
-            return Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        }
-    }
-
-    // 上传目录同样收紧：默认 umask 下目录可被同机其它用户列举，原始文件名（如"体检报告.pdf"）随之泄露
-    private static void restrictDirPermission(File dir) {
-        try {
-            Files.setPosixFilePermissions(dir.toPath(), PosixFilePermissions.fromString("rwx------"));
-        } catch (IOException | UnsupportedOperationException ignored) { // 非 POSIX 平台保持默认权限
-        }
+        if (invalid) throw new MalformedException("invalid upload file name");
     }
 
     // 只认 Content-Disposition 行：其它头部出现的 name="..." 不参与字段识别

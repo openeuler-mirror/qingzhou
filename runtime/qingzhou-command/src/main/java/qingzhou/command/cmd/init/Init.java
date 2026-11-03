@@ -3,26 +3,21 @@ package qingzhou.command.cmd.init;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 
 import qingzhou.command.Processor;
+import qingzhou.crypto.Crypto;
 
 public class Init extends Processor {
     private File instanceDir;
     private File propsFile;
     private Console console;
-
-    private URLClassLoader cryptoLoader;
-    private Object crypto;
+    private Crypto crypto;
+    private String globalKeyName;
 
     @Override
     public String name() {
@@ -31,7 +26,7 @@ public class Init extends Processor {
 
     @Override
     public String info() {
-        return "Initialize the instance: global key, admin password and SSL certificate.";
+        return "Initialize the instance: admin password, TOTP, SSL certificate and agent domain.";
     }
 
     @Override
@@ -46,67 +41,58 @@ public class Init extends Processor {
         }
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
 
-        URL cryptoJar = Paths.get(getLibDir().getAbsolutePath(), "components", "qingzhou-crypto.jar").toUri().toURL();
-        cryptoLoader = new URLClassLoader(new URL[]{cryptoJar});
-        try {
-            crypto = cryptoLoader.loadClass("qingzhou.crypto.impl.CryptoImpl").getDeclaredConstructor().newInstance();
-            // CryptoImpl 的密钥文件路径由 @Activate 注入，脱离 OSGi 时须显式初始化，否则 getGlobalCipher 读取的路径为空
-            crypto.getClass().getMethod("init", Map.class)
-                    .invoke(crypto, Collections.singletonMap("qingzhou.instance", instanceDir.getAbsolutePath()));
+        globalKeyName = globalCipherKeyName(instanceDir); // 与运行时同源，避免写入位置错位
+        crypto = createCrypto(instanceDir, globalKeyName);
 
-            new GlobalKeyStep().init(this);
-            new AdminPasswordStep().init(this);
-            new SslStep().init(this);
-        } finally {
-            cryptoLoader.close();
-        }
+        new GlobalKeyStep().init(this);
+        new AdminPasswordStep().init(this);
+        new TotpStep().init(this);
+        new SslStep().init(this);
+        new AgentDomainStep().init(this);
         log("Done, restart the instance to take effect.");
+    }
+
+    Crypto getCrypto() {
+        return crypto;
+    }
+
+    String globalKeyName() {
+        return globalKeyName;
     }
 
     File confFile(String name) {
         return new File(instanceDir, "conf/" + name);
     }
 
-    String generateCipherKey() throws Exception {
-        return (String) crypto.getClass().getMethod("generateCipherKey").invoke(crypto);
-    }
-
-    String digest(String text) throws Exception {
-        Object messageDigest = crypto.getClass().getMethod("getMessageDigest").invoke(crypto);
-        Method digest = cryptoLoader.loadClass("qingzhou.crypto.MessageDigest").getMethod("digest", String.class);
-        return (String) digest.invoke(messageDigest, text);
-    }
-
-    String encrypt(String plain) throws Exception {
-        Object globalCipher = crypto.getClass().getMethod("getGlobalCipher").invoke(crypto);
-        Method encrypt = cryptoLoader.loadClass("qingzhou.crypto.Cipher").getMethod("encrypt", String.class);
-        return (String) encrypt.invoke(globalCipher, plain);
-    }
-
+    // 口令不回显、输错无法自查：为空或不一致即重新输入，返回时必已确认一致；Ctrl+C 退出
     String readPassword(String prompt) {
-        char[] password = null;
-        char[] confirm = null;
-        try {
-            password = console.readPassword(prompt);
-            if (password == null || password.length == 0) return null; // 空口令视为跳过
+        while (true) {
+            char[] password = console.readPassword(prompt);
+            char[] confirm = console.readPassword("Confirm password: ");
+            // 终端关闭（EOF）时继续循环只会刷屏，直接终止
+            if (password == null || confirm == null) throw new IllegalStateException("no input, aborted");
 
-            confirm = console.readPassword("Confirm password: ");
-            boolean matched = confirm != null && Arrays.equals(password, confirm);
-            if (!matched) {
-                log("Passwords do not match, skipped.");
-                return null;
+            try {
+                if (password.length == 0) {
+                    log("Password cannot be empty.");
+                    continue;
+                }
+                if (Arrays.equals(password, confirm)) return new String(password);
+                log("Passwords do not match, please try again.");
+            } finally {
+                Arrays.fill(password, '\0');
+                Arrays.fill(confirm, '\0');
             }
-
-            return new String(password);
-        } finally {
-            if (password != null) Arrays.fill(password, '\0');
-            if (confirm != null) Arrays.fill(confirm, '\0');
         }
     }
 
-    boolean noConfirm(String prompt) {
-        String answer = console.readLine(prompt);
-        return answer == null || !answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
+    String readLine(String prompt) {
+        return console.readLine(prompt);
+    }
+
+    boolean confirm(String prompt) {
+        String answer = readLine(prompt);
+        return answer != null && answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
     }
 
     String readProps() throws IOException {
@@ -125,12 +111,30 @@ public class Init extends Processor {
         Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
     }
 
+    // 密钥文件仅属主可读写：默认 umask 下同机其它用户可读，等同泄露全平台信任根
+    static void restrictToOwnerOnly(File file) {
+        try {
+            Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
+        } catch (UnsupportedOperationException | IOException ignored) { // 非 POSIX 平台或无权限修改
+        }
+    }
+
+    static boolean hasKey(String content, String key) {
+        return value(content, key) != null;
+    }
+
     static boolean hasValue(String content, String key) {
+        String value = value(content, key);
+        return value != null && !value.isEmpty(); // 无该配置项或有但为空，均视为未初始化
+    }
+
+    // 注释行 trim 后以 '#' 开头，不会被误判为存在该配置项
+    private static String value(String content, String key) {
         for (String line : content.split("\n", -1)) {
             String trim = line.trim();
-            if (trim.startsWith(key + "=")) return !trim.substring(key.length() + 1).trim().isEmpty();
+            if (trim.startsWith(key + "=")) return trim.substring(key.length() + 1).trim();
         }
-        return false; // 无该配置项或有但为空，均视为未初始化
+        return null;
     }
 
     static String putValue(String content, String key, String value) {

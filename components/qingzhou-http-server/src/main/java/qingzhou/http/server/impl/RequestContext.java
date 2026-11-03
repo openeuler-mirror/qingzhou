@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpHandler;
+import qingzhou.logger.Logger;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
@@ -16,6 +17,8 @@ import reactor.netty.http.server.HttpServerResponse;
  * 一次请求在准入闸门与 body 处理之间传递的状态：每个 gate 只写自己负责的字段。
  */
 final class RequestContext {
+    private static final int MAX_LOGGED_PATH = 256; // 路径无长度上限，入日志前截断防刷盘
+
     final HttpServerRequest request;
     final HttpServerResponse response;
     final AtomicBoolean released = new AtomicBoolean();
@@ -33,6 +36,8 @@ final class RequestContext {
     volatile boolean streamRequired;
     volatile boolean streamPermitHeld; // 流式分支已取得的并发许可
     volatile long reservedBytes; // 聚合分支已预留的内存配额（long 需防 32 位字撕裂）
+    // 逐源并发许可：须归还到取得许可时的限制器实例，热更新重建不得串代
+    volatile SourceReservation sourceReservation;
 
     // 请求进入期超时任务（防 Slowloris）：只覆盖「准入 → 请求体读完」，不覆盖 handler 执行期（SSE 等长响应合法）
     volatile ScheduledFuture<?> intakeTimeout;
@@ -54,6 +59,18 @@ final class RequestContext {
     }
 
     /**
+     * 请求体超限日志的唯一出口：闸门、聚合、流式三条路径共用同一文案与字段。
+     * path 由 URL 解码而来且 normalize 不拦控制字符，直接入日志可伪造行（日志注入），故先清洗再截断；
+     * size 为触发现场读数，闸门处是声明的 Content-Length，按字节累加处是已接收字节数。
+     */
+    void logBodyTooLarge(Logger logger, long size, long limit) {
+        String loggedPath = path.replaceAll("\\p{Cntrl}", "?");
+        if (loggedPath.length() > MAX_LOGGED_PATH) loggedPath = loggedPath.substring(0, MAX_LOGGED_PATH) + "...";
+        logger.warn("request body too large: method=" + request.method() + ", path=" + loggedPath
+                + ", remoteHost=" + httpRequest.getRemoteHost() + ", size=" + size + ", limit=" + limit);
+    }
+
+    /**
      * 终止响应一律不读请求体并关闭连接：
      * 既避免错误分支被当成免费上传通道，也避免残留请求体在保活连接上被当作下一个请求解析（请求走私）。
      */
@@ -61,5 +78,16 @@ final class RequestContext {
         return response.status(status)
                 .header(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
                 .send();
+    }
+
+    // 逐源许可随请求传递：释放时回到取得许可的限制器实例，与信号量快照同思路
+    static final class SourceReservation {
+        final SourceLimiter limiter;
+        final String key;
+
+        SourceReservation(SourceLimiter limiter, String key) {
+            this.limiter = limiter;
+            this.key = key;
+        }
     }
 }

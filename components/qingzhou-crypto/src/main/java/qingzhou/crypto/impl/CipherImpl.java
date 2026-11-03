@@ -50,6 +50,7 @@ class CipherImpl implements Cipher {
         try {
             return decrypt(s);
         } catch (Exception e) {
+            if (logger == null) return s; // 非 OSGi 场景（命令行 init/单测）logger 未注入：仍按原值降级，不得 NPE
             // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级，须以 error 级别留痕；
             // 不需要加密的明文配置应显式加 "plain:" 前缀，避免与损坏的密文无法区分
             logger.error("WARNING: failed to decrypt '" + configName + "', using raw value as-is. "

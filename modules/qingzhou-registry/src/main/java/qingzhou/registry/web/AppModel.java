@@ -6,7 +6,6 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelActionView;
@@ -42,7 +41,7 @@ public class AppModel extends AbstractMetaHandler {
         if (appStub == null) return null;
 
         qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
-        String lang = context.getParameter(Constants.REQUEST_PARAMETER_NAME_LANG);
+        String lang = context.getParameter("lang");
 
         // 处理结果
         for (Model model : app.models) {
@@ -86,7 +85,7 @@ public class AppModel extends AbstractMetaHandler {
                 if (field.getType() == String[].class && fromVal != null) {
                     String[] arr = (String[]) fromVal;
 
-                    if (Arrays.stream(arr).anyMatch(s -> s.startsWith("en:"))) {
+                    if (Arrays.stream(arr).anyMatch(s -> s != null && s.startsWith("en:"))) {
                         // 单值 i18n：整体翻译为一个字符串
                         fromVal = new String[]{i18nService.getI18n(arr, lang)};
                     }

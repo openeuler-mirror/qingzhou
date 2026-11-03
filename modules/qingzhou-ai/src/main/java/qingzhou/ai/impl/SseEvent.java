@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 class SseEvent {
+    static SseEvent of(Type type) {
+        return new SseEvent(type);
+    }
+
     // 枚举名即 SSE 协议事件名，修改需同步前端
     // 段（思考 / 正文）的结束不单独发事件，由下一个段开始事件或 RUN_FINISHED / RUN_ERROR 推导
     enum Type {
@@ -19,10 +23,6 @@ class SseEvent {
 
     private SseEvent(Type type) {
         this.type = type;
-    }
-
-    static SseEvent of(Type type) {
-        return new SseEvent(type);
     }
 
     SseEvent message(String message) {

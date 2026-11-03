@@ -53,10 +53,10 @@ public class Command {
 
     private List<Processor> listCommands() {
         List<Processor> processors = new ArrayList<>();
-        ServiceLoader.load(Processor.class, Processor.class.getClassLoader()).forEach(e -> {
-            e.setLibDir(libDir);
-            processors.add(e);
-        });
+        for (Processor processor : ServiceLoader.load(Processor.class, Processor.class.getClassLoader())) {
+            processor.setLibDir(libDir);
+            processors.add(processor);
+        }
         processors.sort(Comparator.comparing(Processor::name));
         return processors;
     }

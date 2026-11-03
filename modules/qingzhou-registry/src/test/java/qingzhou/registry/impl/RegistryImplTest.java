@@ -2,14 +2,15 @@ package qingzhou.registry.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.api.AppContext;
-import qingzhou.dto.Constants;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
@@ -18,9 +19,9 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.AppStubRemote;
+import qingzhou.registry.Constants;
 
 public class RegistryImplTest {
-    private static final String VERSION_PROPERTY = "qingzhou.version";
     private static final String APP_CODE_1 = "app-one";
     private static final String APP_CODE_2 = "app-two";
     private static final String REMOTE_INSTANCE_ID = "remote-instance-1";
@@ -114,7 +115,7 @@ public class RegistryImplTest {
         registry.addRemoteInstance(remote);
 
         Assert.assertTrue(registry.getRegistryDataVersion() > before);
-        Assert.assertTrue(remote.getLastRefreshTime() > 0);
+        Assert.assertTrue(remote.getRefreshTime() > 0);
     }
 
     @Test
@@ -133,8 +134,8 @@ public class RegistryImplTest {
         Assert.assertTrue(registry.getRegistryDataVersion() > versionAfterFirst);
         Assert.assertEquals(registry.getRemoteInstance(REMOTE_INSTANCE_ID), second);
         // 重复注册也必须刷新存活时间：否则新对象 lastRefreshTime=0，会被健康检查立即剔除（实例周期性抖动的根因）
-        Assert.assertTrue(second.getLastRefreshTime() > 0);
-        Assert.assertTrue(first.getLastRefreshTime() > 0);
+        Assert.assertTrue(second.getRefreshTime() > 0);
+        Assert.assertTrue(first.getRefreshTime() > 0);
     }
 
     @Test
@@ -253,16 +254,6 @@ public class RegistryImplTest {
     // ===================== start 与 getLocalInstance =====================
 
     @Test
-    public void start_validVersion_propertyParsed() throws Exception {
-        RegistryImpl registry = newRegistry();
-        Map<String, String> config = new HashMap<>();
-        config.put(VERSION_PROPERTY, "1.2.3");
-        registry.start(config);
-
-        Assert.assertEquals(getQzVersion(registry), "1.2.3");
-    }
-
-    @Test
     public void getLocalInstance_calledTwice_returnSameInstance() {
         RegistryImpl registry = newRegistryWithConfig();
 
@@ -322,12 +313,6 @@ public class RegistryImplTest {
             info.getAppMetas().add(meta);
         }
         return info;
-    }
-
-    private static String getQzVersion(RegistryImpl registry) throws Exception {
-        Field field = RegistryImpl.class.getDeclaredField("qzVersion");
-        field.setAccessible(true);
-        return (String) field.get(registry);
     }
 
     private static void setField(Object target, String name, Object value) {

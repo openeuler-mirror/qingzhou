@@ -15,7 +15,7 @@ public class ReplayGuardCipherImplTest {
     private ReplayGuardCipher newGuard() {
         try {
             CryptoImpl crypto = CryptoImplTest.getCryptoImpl();
-            return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateCipherKey()));
+            return crypto.getReplayGuardCipher(crypto.getCipher(crypto.generateSecureKey()));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

@@ -5,10 +5,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import qingzhou.crypto.Crypto;
+import qingzhou.http.client.ClientListener;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
-import qingzhou.http.client.ResponseListener;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ToolCallInfo;
@@ -43,11 +43,11 @@ class OpenAiChatModel implements ChatModel {
     }
 
     @Override
-    public void chat(String message, Listener chatListener, Attachment... attachment) {
+    public void chat(String message, ChatListener chatListener, Attachment... attachment) {
         try {
             if (builder.getSkills() != null && !builder.getSkills().isEmpty()) {
                 // 技能匹配是同步的 LLM 调用且期间无其它事件，先告知客户端当前阶段，避免误判卡死
-                chatListener.onSkillMatching();
+                chatListener.onSkillMatch();
             }
             List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
@@ -72,30 +72,31 @@ class OpenAiChatModel implements ChatModel {
      * 一轮模型对话：新建流式监听器并发送请求（含 429/5xx/网络异常重试）。
      * 请求返回 200 后本方法立即返回，流式读取与后续回调（onBody/onComplete/onError）在后台线程进行。
      */
-    private void doChat(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
+    private void doChat(List<Object> messages, List<Object> toolDefs, ChatListener chatListener, Map<String, Tool> tools, int toolIteration) {
         if (toolIteration >= builder.getMaxToolIterations()) { // 达到工具调用上限：明确告知调用方，避免静默终止
             Utils.println("Tool iterations have reached the limit: " + toolIteration);
             messages.add(builder.buildUserMessageForMaxToolIterations());
             toolDefs = null; // 工具调用到最大轮次后，也需要无工具再请求一次，强制要求给出最后结论
         }
-        HttpListener httpListener = new HttpListener(messages, toolDefs, chatListener, tools, toolIteration);
-        sendWithRetry(messages, toolDefs, chatListener, httpListener, 0);
+        LlmCallingListener llmCallingListener = new LlmCallingListener(messages, toolDefs, chatListener, tools, toolIteration);
+        sendWithRetry(messages, toolDefs, chatListener, llmCallingListener, 0);
     }
 
     /**
      * 发送请求并对瞬时故障（HTTP 429/5xx、连接失败/超时等网络异常）做指数退避重试。
      * 200 时立即返回，流式读取交给 httpListener 在后台线程进行。
      */
-    private void sendWithRetry(List<Object> messages, List<Object> toolDefs, Listener chatListener,
-                               HttpListener httpListener, int attempt) {
+    private void sendWithRetry(List<Object> messages, List<Object> toolDefs, ChatListener chatListener,
+                               LlmCallingListener llmCallingListener, int attempt) {
         try {
             Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json, crypto);
-            Response response = httpClient.send(request, httpListener);
+            Response response = httpClient.send(request, llmCallingListener);
+            chatListener.onSubscribe(response::cancel);
             if (response.getStatus() == 200) return;
 
             if (Utils.isRetryableStatus(response.getStatus()) && attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
-                sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
+                sendWithRetry(messages, toolDefs, chatListener, llmCallingListener, attempt + 1);
                 return;
             }
             chatListener.onError("API error " + response.getStatus() + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
@@ -103,17 +104,17 @@ class OpenAiChatModel implements ChatModel {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.getMaxRetries()) {
                 Utils.sleepBackoff(attempt);
-                sendWithRetry(messages, toolDefs, chatListener, httpListener, attempt + 1);
+                sendWithRetry(messages, toolDefs, chatListener, llmCallingListener, attempt + 1);
                 return;
             }
             chatListener.onError(Utils.errorMessage(e));
         }
     }
 
-    private class HttpListener implements ResponseListener {
+    private class LlmCallingListener implements ClientListener {
         private final List<Object> messages;
         private final List<Object> toolDefs;
-        private final Listener chatListener;
+        private final ChatListener chatListener;
         private final Map<String, Tool> tools;
         private final int toolIteration;
 
@@ -126,7 +127,7 @@ class OpenAiChatModel implements ChatModel {
         private String finishReason; // 最后一个 chunk 的 finish_reason（stop / length / tool_calls ...）
         private Map<String, Object> usage; // 流式末尾 usage chunk（依赖 stream_options.include_usage）
 
-        HttpListener(List<Object> messages, List<Object> toolDefs, Listener chatListener, Map<String, Tool> tools, int toolIteration) {
+        LlmCallingListener(List<Object> messages, List<Object> toolDefs, ChatListener chatListener, Map<String, Tool> tools, int toolIteration) {
             this.messages = messages;
             this.toolDefs = toolDefs;
             this.chatListener = chatListener;

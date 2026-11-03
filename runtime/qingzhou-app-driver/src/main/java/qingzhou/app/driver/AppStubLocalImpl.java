@@ -2,14 +2,12 @@ package qingzhou.app.driver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.app.driver.systemcall.Icon;
-import qingzhou.dto.Constants;
 import qingzhou.dto.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
@@ -17,6 +15,7 @@ import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.annotation.Model;
 import qingzhou.dto.meta.annotation.ModelAction;
 import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.Constants;
 
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;

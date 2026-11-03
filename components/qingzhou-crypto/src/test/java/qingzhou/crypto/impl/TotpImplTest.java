@@ -8,12 +8,10 @@ import qingzhou.crypto.Totp;
 
 public class TotpImplTest {
 
-    // Base32 合法字符：大写 A-Z、数字 2-7、填充符 =
     private static final Pattern BASE32_VALID_REGEX = Pattern.compile("^[A-Z2-7=]+$");
 
-    // 每个用例独立创建实例，避免共享状态
-    private TotpImpl newTotp() {
-        return new TotpImpl(new Base16CoderImpl(), new Base32CoderImpl());
+    private Totp newTotp() {
+        return new CryptoImpl().getTotp();
     }
 
     // ===================== generateKey() =====================
@@ -52,68 +50,39 @@ public class TotpImplTest {
         Assert.assertTrue(code.matches("\\d{6}"), "验证码不是 6 位数字: " + code);
     }
 
-    // ===================== 内置窗口容忍 =====================
+    // ===================== verifyCodeWithReplayGuard(String key, String code) =====================
     @Test
-    public void previousWindowCode_verifyCode_returnTrue() throws Exception {
-        TotpImpl totp = newTotp();
+    public void currentWindowCode_verifyCodeWithReplayGuard_returnTrue() throws Exception {
+        Totp totp = newTotp();
         String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
-        Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step - 1))); // 窗口末尾读到口令、跨窗后才提交
+        Assert.assertTrue(totp.verifyCodeWithReplayGuard(key, totp.getCode(key)));
     }
 
     @Test
-    public void nextWindowCode_verifyCode_returnTrue() throws Exception {
-        TotpImpl totp = newTotp();
-        String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
-        Assert.assertTrue(totp.verifyCode(key, totp.getCode(key, step + 1))); // 覆盖服务端时钟偏慢
-    }
-
-    @Test
-    public void outOfRangeCode_verifyCode_returnFalse() throws Exception {
-        TotpImpl totp = newTotp();
-        String key = totp.generateKey();
-        long step = System.currentTimeMillis() / TotpImpl.STEP_MILLIS;
-        Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step - 2)));
-        Assert.assertFalse(totp.verifyCode(key, totp.getCode(key, step + 2)));
-    }
-
-    // ===================== verifyCode(String key, String code) =====================
-    @Test
-    public void correctCode_verifyCode_returnTrue() throws Exception {
+    public void wrongCode_verifyCodeWithReplayGuard_returnFalse() throws Exception {
         Totp totp = newTotp();
         String key = totp.generateKey();
         String code = totp.getCode(key);
-        Assert.assertTrue(totp.verifyCode(key, code));
-    }
-
-    @Test
-    public void wrongCode_verifyCode_returnFalse() throws Exception {
-        Totp totp = newTotp();
-        String key = totp.generateKey();
-        String code = totp.getCode(key);
-        // 翻转最后一位，保证与正确验证码不同
         char last = code.charAt(5);
         String wrong = code.substring(0, 5) + (last == '0' ? '1' : '0');
-        Assert.assertFalse(totp.verifyCode(key, wrong));
+        Assert.assertFalse(totp.verifyCodeWithReplayGuard(key, wrong));
     }
 
     @Test
-    public void nullKey_verifyCode_returnFalse() throws Exception {
-        Assert.assertFalse(newTotp().verifyCode(null, "123456"));
-    }
-
-    @Test
-    public void nullCode_verifyCode_returnFalse() throws Exception {
+    public void nullOrEmpty_verifyCodeWithReplayGuard_returnFalse() throws Exception {
         Totp totp = newTotp();
-        Assert.assertFalse(totp.verifyCode(totp.generateKey(), null));
+        Assert.assertFalse(totp.verifyCodeWithReplayGuard(null, "123456"));
+        Assert.assertFalse(totp.verifyCodeWithReplayGuard(totp.generateKey(), null));
+        Assert.assertFalse(totp.verifyCodeWithReplayGuard("", ""));
+        Assert.assertFalse(totp.verifyCodeWithReplayGuard(totp.generateKey(), ""));
     }
 
     @Test
-    public void emptyKeyOrCode_verifyCode_returnFalse() throws Exception {
+    public void differentKeys_verifyCodeWithReplayGuard_stateIndependent() throws Exception {
         Totp totp = newTotp();
-        String key = totp.generateKey();
-        Assert.assertFalse(totp.verifyCode("", ""));
-        Assert.assertFalse(totp.verifyCode(key, ""));
+        String key1 = totp.generateKey();
+        String key2 = totp.generateKey();
+        Assert.assertTrue(totp.verifyCodeWithReplayGuard(key1, totp.getCode(key1)));
+        Assert.assertTrue(totp.verifyCodeWithReplayGuard(key2, totp.getCode(key2)));
     }
 }

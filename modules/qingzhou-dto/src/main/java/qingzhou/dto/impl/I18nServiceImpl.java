@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -16,11 +17,12 @@ import qingzhou.dto.I18nService;
 
 @Component
 public class I18nServiceImpl implements I18nService {
-    private static final Map<Character, Character> ZH_TR_MAP = new HashMap<>();
+    // 只读映射：重建时以不可变快照整体替换引用，避免并发读看到清空后的空表或半填充状态
+    private static volatile Map<Character, Character> ZH_TR_MAP = Collections.emptyMap();
 
     @Activate
     public void init() {
-        ZH_TR_MAP.clear(); // 允许组件重新激活时重建，避免静态映射残留上次内容
+        Map<Character, Character> mapping = new HashMap<>();
         try (InputStream inputStream = I18nServiceImpl.class.getResourceAsStream(
                 "/" + I18nServiceImpl.class.getPackage().getName().replace(".", "/")
                         + "/zh_Hant.txt")) {
@@ -39,7 +41,7 @@ public class I18nServiceImpl implements I18nService {
                 throw new IllegalStateException("zh_Hans and zh_Hant must be aligned character by character with equal length");
             }
             for (int i = 0; i < zh.length(); i++) {
-                Character check = ZH_TR_MAP.put(zh.charAt(i), zhHant.charAt(i));
+                Character check = mapping.put(zh.charAt(i), zhHant.charAt(i));
                 if (check != null) {
                     throw new IllegalArgumentException("Please remove duplicate characters");
                 }
@@ -47,6 +49,7 @@ public class I18nServiceImpl implements I18nService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        ZH_TR_MAP = Collections.unmodifiableMap(mapping); // 构建完成后一次发布，失败则保留旧快照
     }
 
     private String getI18n(String[] i18n, Lang lang, Object... args) {
