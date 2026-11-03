@@ -13,7 +13,6 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 final class McpClient {
-    private static final String PREFERRED_VERSION = "2025-06-18";
     private static final String FALLBACK_VERSION = "2025-03-26";
     private static final String UNSUPPORTED_VERSION = "2024-11-05";
     private static final String SESSION_HEADER = "Mcp-Session-Id";
@@ -22,6 +21,7 @@ final class McpClient {
     private static final int READ_TIMEOUT = 60_000;
     private static final int AWAIT_TIMEOUT = READ_TIMEOUT + 5_000;
     private static final int ERROR_BODY_CHARS = 200;
+    private static final int MAX_RESULT_CHARS = 20_000;
 
     private final McpConfig config;
     private final HttpClient httpClient;
@@ -46,11 +46,7 @@ final class McpClient {
             List<Map<String, Object>> tools = new ArrayList<>();
             String cursor = null;
             do {
-                Map<String, Object> params = null;
-                if (cursor != null) {
-                    params = new HashMap<>();
-                    params.put("cursor", cursor);
-                }
+                Map<String, Object> params = cursor == null ? null : Collections.singletonMap("cursor", cursor);
                 Map<String, Object> result = request("tools/list", params);
                 Object page = result.get("tools");
                 if (page instanceof List) {
@@ -69,8 +65,25 @@ final class McpClient {
             Map<String, Object> params = new HashMap<>();
             params.put("name", toolName);
             params.put("arguments", arguments == null ? Collections.emptyMap() : arguments);
-            return McpToolConverter.extractText(request("tools/call", params));
+            return extractText(request("tools/call", params));
         });
+    }
+
+    private static String extractText(Map<String, Object> result) throws IOException {
+        Object content = result.get("content");
+        StringBuilder text = new StringBuilder();
+        for (Object item : content instanceof List ? (List<?>) content : Collections.emptyList()) {
+            if (!(item instanceof Map)) continue;
+            Map<?, ?> part = (Map<?, ?>) item;
+            if (text.length() > 0) text.append('\n');
+            text.append("text".equals(part.get("type"))
+                    ? Objects.toString(part.get("text"), "") : "[" + part.get("type") + " content]");
+        }
+
+        String value = text.length() > MAX_RESULT_CHARS
+                ? text.substring(0, MAX_RESULT_CHARS) + "\n…（内容过长已截断）" : text.toString();
+        if (Boolean.TRUE.equals(result.get("isError"))) throw new IOException(value.isEmpty() ? "mcp tool reported an error" : value);
+        return value;
     }
 
     private <T> T withSession(Callable<T> action) throws Exception {
@@ -92,36 +105,25 @@ final class McpClient {
         if (initialized) return;
 
         Map<String, Object> params = new HashMap<>();
-        params.put("protocolVersion", PREFERRED_VERSION);
+        params.put("protocolVersion", "2025-06-18");
         params.put("capabilities", Collections.emptyMap());
         params.put("clientInfo", clientInfo());
 
-        long id = requestIds.incrementAndGet();
-        Collector collector = new Collector(id);
-        Response response = post("initialize", params, id, collector);
-        try {
-            Map<String, Object> result = await(response, collector);
-            String negotiated = text(result.get("protocolVersion"));
-            if (UNSUPPORTED_VERSION.equals(negotiated)) {
-                throw new IOException("mcp server [" + config.id + "] negotiated " + negotiated
-                        + ", which requires the deprecated HTTP+SSE transport");
-            }
-            protocolVersion = negotiated == null ? FALLBACK_VERSION : negotiated;
-            sessionId = response.getHeader(SESSION_HEADER);
-            serverDescription = descriptionFrom(result);
-            initialized = true;
-        } finally {
-            response.cancel();
+        Map<String, Object> result = request("initialize", params);
+        String negotiated = text(result.get("protocolVersion"));
+        if (UNSUPPORTED_VERSION.equals(negotiated)) {
+            throw new IOException("mcp server [" + config.id + "] negotiated " + negotiated
+                    + ", which requires the deprecated HTTP+SSE transport");
         }
-
+        protocolVersion = negotiated == null ? FALLBACK_VERSION : negotiated;
+        serverDescription = descriptionFrom(result);
+        initialized = true;
         notifyInitialized();
     }
 
     private void notifyInitialized() {
         try {
-            Response response = post("notifications/initialized", null, null, null);
-            int status = response.getStatus();
-            response.cancel();
+            int status = post("notifications/initialized", null, null, null).getStatus();
             if (status < 200 || status >= 300) {
                 logger.warn("mcp server [" + config.id + "] rejected notifications/initialized: status " + status);
             }
@@ -134,8 +136,13 @@ final class McpClient {
         long id = requestIds.incrementAndGet();
         Collector collector = new Collector(id);
         Response response = post(method, params, id, collector);
+
+        int status = response.getStatus();
+        if (status < 200 || status >= 300) { // 非 2xx 不进入流式读取，无可取消的响应
+            throw new IOException("mcp server [" + config.id + "] returned status " + status + ": " + errorBody(response));
+        }
         try {
-            return await(response, collector);
+            return collector.await();
         } finally {
             response.cancel();
         }
@@ -160,55 +167,26 @@ final class McpClient {
         if (sessionId != null) request.header(SESSION_HEADER, sessionId);
         request.body(json.toJson(envelope).getBytes(StandardCharsets.UTF_8));
 
-        return listener == null ? httpClient.send(request) : httpClient.send(request, listener);
-    }
-
-    private Map<String, Object> await(Response response, Collector collector) throws Exception {
-        int status = response.getStatus();
-        if (status < 200 || status >= 300) {
-            throw new IOException("mcp server [" + config.id + "] returned status " + status + ": " + errorBody(response));
-        }
-
-        if (!collector.awaitResponse()) {
-            throw new IOException("timeout waiting for response of [" + config.id + "]");
-        }
-        if (collector.failure != null) {
-            throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
-        }
-
-        Map<String, Object> message = collector.message;
-        if (message == null) {
-            throw new IOException("mcp server [" + config.id + "] sent no response");
-        }
-        Object error = message.get("error");
-        if (error instanceof Map) {
-            Map<?, ?> errorMap = (Map<?, ?>) error;
-            throw new IOException("mcp server [" + config.id + "] error [" + errorMap.get("code") + "]: " + errorMap.get("message"));
-        }
-        Object result = message.get("result");
-        if (!(result instanceof Map)) {
-            throw new IOException("mcp server [" + config.id + "] sent invalid result");
-        }
-        return (Map<String, Object>) result;
+        Response response = listener == null ? httpClient.send(request) : httpClient.send(request, listener);
+        String session = response.getHeader(SESSION_HEADER); // 会话 id 仅由服务端在 initialize 响应下发
+        if (session != null) sessionId = session;
+        return response;
     }
 
     private String errorBody(Response response) {
-        byte[] body = response.getBody();
-        if (body == null || body.length == 0) return "";
-        String text = new String(body, StandardCharsets.UTF_8);
+        String text = new String(response.getBody(), StandardCharsets.UTF_8);
         return text.length() > ERROR_BODY_CHARS ? text.substring(0, ERROR_BODY_CHARS) : text;
     }
 
     private Map<String, Object> parseMessage(String line) {
         String data = line.trim();
-        if (data.isEmpty()) return null;
-        if (data.startsWith(SSE_DATA)) data = data.substring(SSE_DATA.length()).trim(); // SSE 控制行（event/id）无 JSON，自然被跳过
+        if (data.startsWith(SSE_DATA)) data = data.substring(SSE_DATA.length()).trim();
         if (data.isEmpty()) return null;
 
         try {
             return json.fromJson(data, Map.class);
         } catch (Exception e) {
-            return null;
+            return null; // SSE 控制行（event/id）无 JSON
         }
     }
 
@@ -256,11 +234,15 @@ final class McpClient {
         return null;
     }
 
+    /**
+     * 收集单个请求的响应：onBody/onComplete/onError 只由流式读取线程触发，
+     * 字段可见性由 CountDownLatch 的 happens-before 保证，故不加 volatile。
+     */
     private final class Collector implements ClientListener {
         private final long expectedId;
         private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile Map<String, Object> message;
-        private volatile Throwable failure;
+        private Map<String, Object> message;
+        private Throwable failure;
 
         Collector(long expectedId) {
             this.expectedId = expectedId;
@@ -289,8 +271,28 @@ final class McpClient {
             latch.countDown();
         }
 
-        boolean awaitResponse() throws InterruptedException {
-            return latch.await(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> await() throws Exception {
+            if (!latch.await(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                throw new IOException("timeout waiting for response of [" + config.id + "]");
+            }
+            if (failure != null) {
+                throw new IOException("mcp request to [" + config.id + "] failed: " + failure.getMessage(), failure);
+            }
+            if (message == null) {
+                throw new IOException("mcp server [" + config.id + "] sent no response");
+            }
+
+            Object error = message.get("error");
+            if (error instanceof Map) {
+                Map<?, ?> errorMap = (Map<?, ?>) error;
+                throw new IOException("mcp server [" + config.id + "] error [" + errorMap.get("code") + "]: " + errorMap.get("message"));
+            }
+            Object result = message.get("result");
+            if (!(result instanceof Map)) {
+                throw new IOException("mcp server [" + config.id + "] sent invalid result");
+            }
+            return (Map<String, Object>) result;
         }
     }
 }
