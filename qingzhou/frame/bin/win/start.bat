@@ -28,7 +28,12 @@ if errorlevel 1 (
     del "%startArgFile%"
     exit /b 1
 )
-set /p startCmd=<"%startArgFile%"
+set "startCmd="
+for /f "usebackq delims=" %%a in ("%startArgFile%") do (
+    set "startCmd=%%a"
+    goto :gotLine
+)
+:gotLine
 del "%startArgFile%"
 
 rem 设置工作目录，保障 qingzhou.json 里的 logs/jvm/jvm.log 能识别准确

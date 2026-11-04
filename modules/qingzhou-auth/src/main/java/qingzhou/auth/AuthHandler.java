@@ -29,8 +29,7 @@ public class AuthHandler implements HttpHandler {
     // 凭据长度上限：慢哈希成本随长度增长，免认证端点上超长凭据即 CPU 放大攻击，超长直接按无效处理
     private static final int MAX_CREDENTIAL_CHARS = 1024;
 
-    @Reference
-    private Crypto crypto;
+    private final Crypto crypto;
     @Reference
     private TokenService tokenService;
     @Reference
@@ -48,7 +47,12 @@ public class AuthHandler implements HttpHandler {
     private FailureLockout lockout;
 
     @Activate
-    public void init(Map<String, String> config) {
+    public AuthHandler(@Reference Crypto crypto, Map<String, String> config) {
+        this.crypto = crypto;
+        init(config);
+    }
+
+    private void init(Map<String, String> config) {
         Configs configs = new Configs(config);
         username = configs.notBlank("username");
         passwordDigest = configs.get("password"); // null 表示 agent 进程，拒绝一切登录
@@ -147,7 +151,7 @@ public class AuthHandler implements HttpHandler {
         response.contentTypeJsonUtf8().send(json.toJson(body));
     }
 
-    private boolean verifyUserPassword(String reqUser, String reqPass) {
+    public boolean verifyUserPassword(String reqUser, String reqPass) {
         if (reqPass == null) reqPass = ""; // null 会让 matches 抛 NPE 变 500，泄露「用户名有效」信号；按空凭据处理
         if (reqPass.length() > MAX_CREDENTIAL_CHARS) return false;
 
