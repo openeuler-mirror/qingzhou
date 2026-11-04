@@ -45,7 +45,9 @@ public interface Request {
     Request trustAllCertificates();
 
     /**
-     * 非流式响应体大小上限（字节），超出时抛 IOException。0 表示不限制，默认 64MB。
+     * 响应体大小上限（字节），同步与流式读取均受限。
+     * 超限抛 IOException：同步模式由 send() 直接抛出，流式模式经 ClientListener.onError 上报。
+     * 0 表示不限制，默认 64MB。
      */
     Request maxBodySize(int maxBodySize);
 }

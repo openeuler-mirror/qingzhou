@@ -26,19 +26,21 @@ final class McpSkillService implements SkillService {
     public Map<ToolService, Map<String, Object>> tools() {
         if (cached == null) {
             synchronized (this) {
-                if (cached == null) {
-                    Map<ToolService, Map<String, Object>> declared = new HashMap<>();
-                    try {
-                        for (Map<String, Object> tool : client.listTools()) {
-                            String name = Objects.toString(tool.get("name"), "");
-                            if (!name.isEmpty())
-                                declared.put(args -> client.callTool(name, args), properties(name, tool));
-                        }
-                    } catch (Exception e) {
-                        logger.warn("failed to load tools of mcp server [" + config.id + "]: " + e.getMessage());
+                if (cached != null) return cached;
+
+                Map<ToolService, Map<String, Object>> declared = new HashMap<>();
+                try {
+                    for (Map<String, Object> tool : client.listTools()) {
+                        String name = Objects.toString(tool.get("name"), "");
+                        if (!name.isEmpty())
+                            declared.put(args -> client.callTool(name, args), properties(name, tool));
                     }
-                    cached = declared;
+                } catch (Exception e) {
+                    // 失败不写缓存：服务器恢复后下次调用可重试，避免永久空技能
+                    logger.warn("failed to load tools of mcp server [" + config.id + "]: " + e.getMessage());
+                    return declared;
                 }
+                cached = declared;
             }
         }
         return cached;

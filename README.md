@@ -2,148 +2,193 @@
 
 ## 概述
 
-Qingzhou（轻舟）是一个基于 Java 的轻量级软件开发平台，主要用于实现多品类异构业务系统的统一管控与智能化运维。
-它通过创新的模型驱动架构，让开发者只需编写简单的 JavaBean 并利用声明式注解即可动态生成前端页面，彻底免去了繁琐的前端开发工作。
-这一核心优势不仅大幅节省了初期开发成本、显著提升了交付效率，更从源头上降低了系统维护复杂度，带来降低维护成本、实现长久收益的显著价值。
-Qingzhou（轻舟）还通过自动发现、插件化扩展、统一API规范、前后端分离以及大模型驱动的自然语言交互，让企业能够以标准化、低成本、高灵活性的方式，对各类业务系统进行统一管理，并将传统手动运维升级为意图驱动的智能管控。
+Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类异构业务系统做统一纳管与智能运维。
+开发者只需编写模型类并添加注解，平台即自动生成列表、表单、操作按钮，以及 REST 与 MCP 两种接口，无需手写前端与接口层。
+平台以「轻舟应用」插件承载具体纳管逻辑，通过网络 Agent 纳管多台主机，并支持大模型驱动的自然语言运维。
 
-### 核心特点与功能
-
-1. **集中管理**  
-   Qingzhou（轻舟）通过在服务器端部署“轻舟代理”，企业无需为每个业务系统单独配置管理入口，代理可自动发现并远程注册各类系统至“轻舟管控台”。
-   这一机制极大降低了运维复杂度，避免了多系统分散管理带来的信息孤岛和重复劳动。
-   同时，集中管理使得全局监控、统一配置、批量操作成为可能，显著提升企业IT治理的透明度和效率，为规模化运维奠定基础。
-
-2. **插件化架构**  
-   Qingzhou（轻舟）不直接固化管控逻辑，而是通过调度符合轻舟API规范的“轻舟应用”插件来执行具体操作。
-   这种插件化设计将核心框架与业务实现解耦，新增或升级某个业务系统的管控能力时，只需增减对应插件即可轻松实现。
-   其意义在于赋予系统极高的扩展性和灵活性，企业可按需组合管控能力，同时支持第三方开发者贡献插件，形成开放的生态，有效避免因业务变化导致的系统重构成本。
-
-3. **统一规范**  
-   Qingzhou（轻舟）从接口定义、交互界面到集成模式为所有业务系统提供了一套标准开发规范。
-   这使得原本异构、风格迥异的多个系统能够以统一的“语言”和“外观”呈现给管理员，实现真正的一致化管理。
-   其价值在于大幅降低学习成本和操作失误率，管理员无需逐个熟悉不同系统的私有操作方式；同时规范化的接口也为自动化、脚本化运维提供了坚实基础，推动企业从“人治”走向“法治”的标准化运维体系。
-
-4. **前后端分离**  
-   Qingzhou（轻舟）支持前端与后端独立部署，前端可单独托管于Nginx等高性能服务器。
-   该架构带来三大核心价值：一是前端与后端可分别弹性伸缩，在高并发界面访问时不挤压后端计算资源；
-   二是开发与发布解耦，前端可独立迭代界面，后端专注服务，提升团队协作效率；
-   三是通过标准API通信，便于在云原生环境中灵活对接统一认证、API网关等组件，并支持与第三方系统进行界面级整合。
-
-5. **AI驱动的智能管控**  
-   Qingzhou（轻舟）集成大模型能力，管理员无需记忆复杂的操作路径或脚本，只需通过自然语言描述意图（如“汇总整个系统的健康情况”），系统即可自动理解并执行相应的管控逻辑。
-   这实现了从传统手动配置、点击操作到意图驱动的根本性升级，极大降低运维门槛，甚至非技术人员也能参与日常管理。
-   更深层的价值在于，AI可基于历史数据和上下文主动推荐优化策略、预测异常，使管控系统从被动响应转向主动智能治理，释放生产力并减少人为差错。
-
-6. **支持 REST、MCP 多协议集成**
-   Qingzhou（轻舟）多协议集成并非简单叠加，而是在同一个业务模型上同时生成 REST 和 MCP 两种协议的接入能力：
-   REST 协议：面向传统 Web 前端、移动端 App 及第三方系统集成，满足常规的 HTTP API 调用需求；
-   MCP 协议：面向大模型、AI Agent 等智能化应用场景，提供标准化的工具调用接口。
-   开发者只需维护一套 JavaBean 业务模型，即可同时支撑“人工操作界面”和“AI 智能调用”两种交互模式，真正做到“一次编写，双协议输出”，大幅降低系统在多生态间适配的维护成本。
-
-### 适用范围
-
-基于轻舟“异构系统集中管控与智能运维”的定位，其最适合开发**跨系统、重管控、需标准化**的企业级管理应用（即“管理业务系统的系统”）：
-
-1. **统一IT运维与管控类**
-    - 典型场景：多云管理平台、混合云监控中心、自动化运维平台。
-    - 契合点：利用“代理注册”实现跨网络节点自动接入，集中监控与批量操作解决分散运维痛点。
-
-2. **异构业务系统聚合门户类**
-    - 典型场景：企业统一管理门户（整合ERP、CRM、OA等）、跨系统数据看板。
-    - 契合点：通过“插件化”适配不同底层系统，用“统一API与界面规范”屏蔽异构差异，提供一致体验。
-
-3. **物联网与边缘设备管理类**
-    - 典型场景：边缘网关管控台、分布式物联网设备监控与配置系统。
-    - 契合点：代理机制天然契合边缘节点接入，插件化适合处理多品类设备的私有协议。
-
-4. **安全与合规审计类**
-    - 典型场景：统一权限治理中心、全局安全策略巡检与下发系统。
-    - 契合点：集中式管控便于全局策略统一下发与审计，标准化接口适合进行跨系统合规比对。
-
-5. **意图驱动的智能运营类**
-    - 典型场景：AIOps智能运维助手、自然语言驱动的业务配置中心。
-    - 契合点：发挥平台“AI+大模型”优势，将复杂的跨系统配置巡检操作转化为自然语言交互的简易指令。
-
-> **核心结论**：轻舟平台不是用来开发具体的业务生产系统（如交易核心、订单系统）的，而是用来开发**“管理系统”的系统**
-> 。凡符合“多源异构接入、集中统一管控、意图智能运维”特征的应用，均为其最佳落地场景。
-
-### 轻舟架构图
+### 架构
 
 ![Qingzhou Architecture Diagram](./docs/images/architecture.png)
 
+管控台通过内置注册中心纳管各主机上的 Agent；Agent 所在实例加载轻舟应用插件，由插件完成对目标系统的具体操作。
+
+## 核心能力
+
+| 能力 | 说明 |
+| --- | --- |
+| 模型驱动 | 一个 `ModelBase` 子类加 `@Model`/`@ModelField`/`@ModelAction` 注解，自动生成列表、表单、按钮与接口 |
+| 插件化 | 新增纳管对象只需开发一个轻舟应用 jar，投入 `instances/<实例>/apps` 并重启，不改动框架 |
+| 自动发现 | 应用可在 `MANIFEST.MF` 声明 `Qingzhou-Detection-*` 探测规则，发现目标软件后自动完成自部署 |
+| 集中纳管 | 中心实例内置注册中心，Agent 心跳自注册，支持跨主机统一纳管与跨节点调用 |
+| AI 赋能 | 接入兼容 OpenAI 的模型后，按技能编排调用平台模型操作，内置健康检查等技能；同时以 MCP 对外提供工具调用 |
+| 双协议输出 | 同一业务模型同时输出 REST 与 MCP，兼顾人工操作界面与 AI 工具调用 |
+| 安全 | 登录态、TOTP、OAuth2 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS |
+
+## 内置应用
+
+产品包自带以下应用（位于 `instances/default/apps`），可直接作为开发模板：
+
+| 应用 | 纳管对象 | 能力 |
+| --- | --- | --- |
+| Redis 管理 | Redis | 单机/哨兵/集群日常运维 |
+| Tomcat 管理 | Tomcat | 连接器配置、应用部署、线程池监控、日志查看 |
+| Nacos 应用 | Nacos | 配置中心与服务注册发现 |
+| ZooKeeper 应用 | ZooKeeper | 服务状态、连接、生效参数查看 |
+| OAuth2 授权服务 | — | 授权码、密码、客户端凭证、刷新令牌 |
+| 示例应用 | — | 演示标准开发方式 |
+| 图书管理 | — | 完整业务系统示例（非纳管类） |
+
+## 适用场景
+
+轻舟不用于开发交易、订单等业务生产系统，而是开发**管理业务系统的系统**：
+
+| 类型 | 典型场景 | 契合点 |
+| --- | --- | --- |
+| 统一 IT 运维管控 | 多云管理、混合云监控、自动化运维 | Agent 跨网络自注册，集中监控与批量操作 |
+| 异构系统聚合门户 | 整合 ERP/CRM/OA 的统一门户、跨系统看板 | 插件适配异构底层，统一模型屏蔽差异 |
+| 物联网与边缘管理 | 边缘网关管控台、分布式设备监控 | Agent 契合边缘接入，插件承载私有协议 |
+| 安全与合规审计 | 统一权限治理、全局策略巡检下发 | 集中下发与审计，标准化接口便于跨系统比对 |
+| 意图驱动智能运营 | AIOps 助手、自然语言配置中心 | 大模型把跨系统巡检操作转为自然语言指令 |
+
 ## 快速上手
 
-- 环境要求：JDK 1.8+ 和 Maven 3.8+。
-- 构建：在源码根目录执行 `mvn clean install -DskipTests`，得到二进制产品包（/qingzhou/target/qingzhou）。
-- 启动：进入产品包的 bin 目录，执行启动脚本（如 Linux/macOS 下执行 sh start.sh）。
-- 访问：启动后，浏览器访问 http://localhost:7900/web 即可打开轻舟可视化 Web 管控台。
+1. **环境**：JDK 8+、Maven 3.8+（建议版本，构建未强制校验）。
+2. **构建**：源码根目录执行 `mvn clean install -DskipTests`，产物为 `qingzhou/target/qingzhou`。对外发布加 `-Prelease`；默认的开发档 zip 名带构建时间戳。
+3. **初始化**：`cd qingzhou/target/qingzhou && sh bin/init.sh`，按提示设置全局密钥、管理员口令，可选 TOTP、TLS 证书、Agent 域密钥。未初始化直接启动会因缺少必需配置退出。
+4. **启动**：`sh bin/start.sh`，可追加实例名（默认 `default`）。
+5. **访问**：`http://localhost:7900/web`，账号 `admin`，口令为初始化时设置；若初始化时启用了 TLS，改用 `https://`。
 
-## 功能
+### 目录结构
 
-### REST
+```text
+qingzhou/
+├── bin/
+│   ├── start.sh                  # 启动，可追加实例名
+│   ├── init.sh                   # 交互式安全初始化，可追加实例名
+│   ├── encrypt.sh                # 用实例全局密钥加密明文口令
+│   ├── qingzhou-launcher.jar     # 启动引导
+│   └── win/
+│       ├── start.bat
+│       └── init.bat
+├── instances/
+│   └── default/                  # 一个实例，配置、应用、数据、日志相互隔离
+│       ├── conf/                 # qingzhou.properties、secret-key.properties、mcp.json
+│       ├── apps/                 # 轻舟应用（插件）投放目录
+│       └── data/ logs/ temp/     # 运行期生成
+└── lib/
+    └── version<版本>.zip         # 平台 jar，首次启动若解压目录不存在则自动解压
+```
 
-### 远程管理
+- `init.sh`、`encrypt.sh` 需在可交互终端执行。`sh bin/encrypt.sh default` 读取明文口令并输出密文，可直接写入配置项。
+- `lib` 下多版本并存时取版本号最大的目录；升级只需放入新的 `version*.zip` 后重启。解压后的 zip 可保留或删除。
 
-### 集成
+### 多实例
+
+`instances` 下每个子目录即一个独立实例。复制 `default` 为新目录（如 `instances/agent`）后，执行 `sh bin/init.sh agent` 完成初始化，`sh bin/start.sh agent` 启动。
+同机多实例须在各自 `conf/qingzhou.properties` 中配置不同的 `qingzhou-http-server.port`。
+
+## 远程管理
+
+远程管理基于「注册中心 + Agent」模型，实现跨主机统一纳管与跨节点应用调用。
+
+- **注册中心**：正常运行的轻舟实例，内置 registry 服务，接收 Agent 心跳、维护远程实例清单并在管控台呈现。
+- **Agent**：被纳管主机上的另一个轻舟实例，按心跳周期自动注册，并暴露本机应用供中心跨节点调用。
+
+### 一、准备注册中心
+
+1. 按「快速上手」构建、初始化并启动一个实例作为注册中心。
+2. 跨主机纳管须改监听地址：`qingzhou-http-server.host=0.0.0.0`。默认 `127.0.0.1` 仅本机可达，其他主机无法访问管控台，Agent 也无法回连。
+3. 在 `instances/default/conf/qingzhou.properties` 按需调整：
+    - `qingzhou-registry.interval`：检测远端实例状态的周期（秒，默认 6）。
+    - `qingzhou-registry.timeout`：远端实例失联判定阈值（秒，默认 12，须明显大于 Agent 心跳周期）。
+    - `qingzhou-registry.trust_advertised_host`：反代/NAT 下是否采信 Agent 自报地址（默认 false，风险见「安全边界」）。
+
+### 二、部署 Agent
+
+关键是与中心**共享同一条域根密钥**：
+
+1. 在被纳管主机解压同一份产品包，实例可用自带的 `default`，也可复制独立实例目录（如 `instances/agent`）。
+2. 在 `instances/default/conf/secret-key.properties` 配置与中心**完全相同**的域根密钥（带外分发，切勿经网络传输）：
+    ```properties
+    agent-domain~default=<Base64 编码密钥>
+    ```
+    > 格式为 `agent-domain~<域名>`，域名是中心与一组 Agent 共享的信任域标识，一个域可纳管多个实例，两端须同名同值。声明了 `qingzhou-agent.url` 却缺少域根密钥时，实例启动即失败。
+3. 在 `instances/default/conf/qingzhou.properties` 启用并指向中心：
+    ```properties
+    qingzhou-agent.url=https://<中心地址>:7900
+    qingzhou-agent.interval=6
+    # qingzhou-agent.advertised_host=反代/NAT 下本机对外可达地址；留空由中心按连接源地址推断
+    ```
+    `qingzhou-agent.url` 会自动拼接 `/registry/register` 作为注册接口，启用 Agent 时必填；协议须与中心一致，中心未启用 TLS 时用 `http://`。
+4. 启动：`sh bin/start.sh agent`，Agent 即按 `interval` 周期心跳注册。
+
+### 三、验证与使用
+
+- Agent 日志首次注册成功会打印 `N apps registered`；续期不打印，应用数为 0 时同样打印，需结合下一步确认。
+- 访问中心管控台，实例列表除本机（local）外会列出已纳管的远程实例（host/port/version），以此为准。
+- 选中远程实例即可跨节点调用其应用；文件类参数由中心分片加密上传至 Agent 执行。
+
+### 安全边界
+
+- 域根密钥仅存于中心与 Agent 两侧的 `secret-key.properties`，属带外分发的信任根；链路报文用域密钥加每实例密钥加密，同域其他节点无法冒名续期或解密。
+- `qingzhou-http-client.allow_ssl_trust_all=true` 会跳过自签证书校验，链路可被中间人攻击，仅限受控内网。
+- `trust_advertised_host` 仅在跨网络/NAT 部署时开启：开启后持域密钥者可将中心流量导向任意内网地址（SSRF 风险）。
+
+## 接口与集成
+
+默认监听 7900，接口与认证方式如下：
+
+| 用途 | 方法与路径 | 认证 |
+| --- | --- | --- |
+| 管控台页面 | `GET /web` | 静态资源免认证 |
+| 管控台数据接口 | `/registry/app/*`、`/registry/instance` | 登录态 |
+| REST 集成 | `POST /registry/invoke/<实例>/<应用>/<模型>/<操作>[/<id>]` | 登录态 |
+| MCP | `POST /ai/mcp` | 登录态 |
+| 监控指标 | `GET /monitor/prometheus` | 登录态 |
+| 登录与 OAuth2 | `/auth/*`、`/oauth2/*` | 免认证（登录入口） |
+| Agent 链路 | `POST /registry/register`、`/agent/invoke`、`/agent/upload` | 免登录，域密钥加密保护 |
 
 ## 更多信息
 
 ### 参数配置
 
-参数配置文件在 `产品包/instances/default/conf/qingzhou.properties`，修改后，重启轻舟实例即可生效。
-
-### 目录结构
-
-轻舟二进制产品包目录结构如下：
-
-- bin: 可执行程序目录。
-    - start.sh: Linux/Mac 平台启动脚本，可以“空格+实例名”指定要启动的实例（即 instances 目录下的子文件名），默认为 default。
-    - start.bat: Windows 平台启动脚本，可以“空格+实例名”指定要启动的实例（即 instances 目录下的子文件名）），默认为 default。
-    - init.sh: 统一命令入口，无参数执行进入交互向导，引导初始化实例安全配置、生成各类密钥口令与 TLS 密钥库；带参数直接执行子命令
-      （bin/init.sh --help 查看全部子命令），如：init 交互式初始化实例安全配置（全局密钥、密钥对、TLS 证书、管理员口令、TOTP 双因素与配置值加密）。
-- instances: 实例数据目录，可根据用途复制多份实例，如：开发实例、测试实例等。
-    - default: 默认启动的实例目录。
-- lib: 存放轻舟源码编译后的二进制 *.jar 文件。
-    - version*.zip: 轻舟二进制 *.jar 文件的分发 zip 包，启动时会自动解压开，解压后此文件不再需要，可删除或继续留存。
-    - version* 目录: 在启动时根据 version*.zip 自动解压生成的目录，此目录下的 *.jar 文件会加载到内存。
-    - 重点说明：启动时，如果 version* 目录已存在，则会与 version*.zip 比对，不一致，则删除重新生成，若要禁止此行为，可将
-      version*.zip 移出此目录，或修改其名字不要以 version 开头。
+配置文件位于 `产品包/instances/<实例>/conf/qingzhou.properties`，修改后重启实例生效。
 
 ### 前后端分离
 
-轻舟采用前后端分离架构，支持前后端独立部署。
+前端静态资源位于 `modules/qingzhou-web/src/main/resources/webapp`，可单独部署到 Nginx；后端接口按下列前缀反向代理：
 
-以下是将轻舟前端独立部署到 Nginx 上的示例：
+```nginx
+server {
+    listen 8000;
 
-1. 前端静态资源位于源码目录 `modules/qingzhou-web/src/main/resources/webapp`。
-2. 在 Nginx 配置中添加以下内容：
-    ```asciidoc
-    server {
-        listen 8000;
-
-        location /web {
-            alias /modules/qingzhou-web/src/main/resources/webapp;
-            index index.html;
-            try_files $uri $uri/ /web/index.html;
-        }
-
-        location ^~ /registry/web/ {
-            proxy_pass http://localhost:7900/registry/web/;
-        }
-
-        location ^~ /registry/invoke/ {
-            proxy_pass http://localhost:7900/registry/invoke/;
-        }
-
-        location ^~ /ai/ {
-            proxy_pass http://localhost:7900/ai/;
-        }
+    location /web {
+        alias <前端资源目录>;
+        index index.html;
+        try_files $uri $uri/ /web/index.html;
     }
-    ```
-3. 启动 Nginx 服务。
-4. 访问 http://localhost:8000/web 打开轻舟管控台。
+
+    location ^~ /registry/ { proxy_pass http://localhost:7900/registry/; }
+    location ^~ /ai/       { proxy_pass http://localhost:7900/ai/; }
+    location ^~ /auth/     { proxy_pass http://localhost:7900/auth/; }
+    location ^~ /oauth2/   { proxy_pass http://localhost:7900/oauth2/; }
+    # 需要外部抓取监控指标时再开启
+    # location ^~ /monitor/ { proxy_pass http://localhost:7900/monitor/; }
+}
+```
+
+启动 Nginx 后访问 `http://localhost:8000/web`。
+
+### 应用开发
+
+1. 开发规范见 [docs/轻舟应用开发规范.md](./docs/轻舟应用开发规范.md)，示例见 `apps/qingzhou-app-demo`。
+2. 在应用模块下执行 `mvn clean install`。
+3. 将生成的 jar 放入 `instances/<实例>/apps`，重启后在管控台可见。
 
 ### 常见问题
 
-### 故障排除
+- 启动即退出并提示 `xxx is missing in ..., run bin/init.sh to initialize`：未完成安全初始化，执行 `sh bin/init.sh` 后重启。
+- 提示 `no interactive terminal found`：`init.sh`、`encrypt.sh` 需在可交互终端中执行。
+- 解压 `version*.zip` 失败：按日志提示手动解压到 `lib/version<版本>`，或删除该目录后重启触发自动解压。
+- 远程实例不出现：确认中心已设 `qingzhou-http-server.host=0.0.0.0`、端口放通、`qingzhou-agent.url` 可达且协议与中心一致、两端域密钥同名同值。
+- 启用 TLS 后浏览器或 Agent 报证书错误：为自签证书补充信任，或在受控内网设置 `qingzhou-http-client.allow_ssl_trust_all=true`。
