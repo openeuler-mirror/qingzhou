@@ -152,12 +152,16 @@ public class HttpServerImplTest {
     }
 
     static HttpServerImpl start(Map<String, String> config) throws Exception {
-        HttpServerImpl httpServer = buildHttpServer(config);
+        return start(config, new AuthManager());
+    }
+
+    static HttpServerImpl start(Map<String, String> config, AuthManager authManager) throws Exception {
+        HttpServerImpl httpServer = buildHttpServer(config, authManager);
         httpServer.start(config);
         return httpServer;
     }
 
-    static HttpServerImpl buildHttpServer(Map<String, String> config) throws Exception {
+    static HttpServerImpl buildHttpServer(Map<String, String> config, AuthManager authManager) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
         // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE；
@@ -172,7 +176,6 @@ public class HttpServerImplTest {
         }});
         HandlerManager handlerManager = new HandlerManager();
         DispatcherHandler dispatcherHandler = new DispatcherHandler();
-        AuthManager authManager = new AuthManager();
 
         setField(httpServer, "crypto", crypto);
         setField(httpServer, "logger", logger);

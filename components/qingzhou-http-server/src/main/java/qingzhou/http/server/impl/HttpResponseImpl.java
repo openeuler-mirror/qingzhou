@@ -6,24 +6,33 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.util.concurrent.Queues;
 
 class HttpResponseImpl implements HttpResponse {
+    private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
+
     private final HttpServerResponse response;
     private final Sinks.Many<byte[]> streamResponse;
     private final Sinks.Empty<Void> firstOutputSignal = Sinks.empty();
 
-    HttpResponseImpl(HttpServerResponse response, Sinks.Many<byte[]> streamResponse) {
+    HttpResponseImpl(HttpServerResponse response) {
         this.response = response;
-        this.streamResponse = streamResponse;
+        // 有界缓冲：慢客户端不再导致内存无界堆积
+        this.streamResponse = Sinks.many().unicast().onBackpressureBuffer(Queues.<byte[]>get(RESPONSE_QUEUE_SIZE).get());
     }
 
     // 流式链路须等首个响应内容产出后才订阅写链：订阅即发送状态行与响应头，
     // 提前订阅会让 handler 在 onComplete 里设置的 status/header/contentType 全部失效
     Mono<Void> firstOutput() {
         return firstOutputSignal.asMono();
+    }
+
+    Flux<byte[]> body() {
+        return streamResponse.asFlux();
     }
 
     // handler 可能在业务线程写、框架在 EventLoop 读，须保证可见性

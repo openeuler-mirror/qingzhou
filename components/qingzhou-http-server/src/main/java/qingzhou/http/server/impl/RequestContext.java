@@ -27,11 +27,13 @@ final class RequestContext {
     final Semaphore concurrentSemaphore;
     final Semaphore streamSemaphore;
 
+    // 认证闸门早于 body 处理，且须经响应下发滑动续期 Cookie，故响应对象随请求一次装配
+    final HttpResponseImpl httpResponse;
+
     // 以下字段由 EventLoop 上的各闸门写入，release()/doFinally 可能在业务线程执行，须保证跨线程可见性
     volatile String path; // 规范化后的路径
     volatile HandlerManager.HandlerEntry entry;
     volatile HttpRequestImpl httpRequest;
-    volatile HttpResponseImpl httpResponse;
     volatile HttpHandler.StreamHandler streamHandler;
     volatile boolean streamRequired;
     volatile boolean streamPermitHeld; // 流式分支已取得的并发许可
@@ -46,6 +48,7 @@ final class RequestContext {
                    Semaphore concurrentSemaphore, Semaphore streamSemaphore) {
         this.request = request;
         this.response = response;
+        this.httpResponse = new HttpResponseImpl(response);
         this.concurrentSemaphore = concurrentSemaphore;
         this.streamSemaphore = streamSemaphore;
     }
