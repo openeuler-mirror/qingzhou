@@ -1,6 +1,5 @@
 package qingzhou.command.cmd.init;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -9,13 +8,13 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Locale;
 
+import qingzhou.command.ConsoleInput;
 import qingzhou.command.Processor;
 import qingzhou.crypto.Crypto;
 
 public class Init extends Processor {
     private File instanceDir;
     private File propsFile;
-    private Console console;
     private Crypto crypto;
     private String globalKeyName;
 
@@ -34,11 +33,6 @@ public class Init extends Processor {
         instanceDir = initInstance(args);
         if (instanceDir == null) return;
 
-        console = System.console();
-        if (console == null) { // 确认与密码均需交互，无终端时不得按默认值擅自初始化
-            log("no interactive terminal found, run this command in a terminal");
-            return;
-        }
         propsFile = new File(instanceDir, "conf/qingzhou.properties");
 
         globalKeyName = globalCipherKeyName(instanceDir); // 与运行时同源，避免写入位置错位
@@ -65,10 +59,10 @@ public class Init extends Processor {
     }
 
     // 口令不回显、输错无法自查：为空或不一致即重新输入，返回时必已确认一致；Ctrl+C 退出
-    String readPassword(String prompt) {
+    String readConfirmedPassword(String prompt) {
         while (true) {
-            char[] password = console.readPassword(prompt);
-            char[] confirm = console.readPassword("Confirm password: ");
+            char[] password = ConsoleInput.readPassword(prompt);
+            char[] confirm = ConsoleInput.readPassword("Confirm password: ");
             // 终端关闭（EOF）时继续循环只会刷屏，直接终止
             if (password == null || confirm == null) throw new IllegalStateException("no input, aborted");
 
@@ -86,12 +80,8 @@ public class Init extends Processor {
         }
     }
 
-    String readLine(String prompt) {
-        return console.readLine(prompt);
-    }
-
     boolean confirm(String prompt) {
-        String answer = readLine(prompt);
+        String answer = ConsoleInput.readLine(prompt);
         return answer != null && answer.trim().toLowerCase(Locale.ROOT).startsWith("y"); // 默认否，回车即跳过
     }
 

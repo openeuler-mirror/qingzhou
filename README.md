@@ -193,7 +193,7 @@ server {
 ### 常见问题
 
 - 启动即退出并提示 `xxx is missing in ..., run bin/init.sh to initialize`：未完成安全初始化，执行 `sh bin/init.sh` 后重启。
-- 提示 `no interactive terminal found`：`init.sh`、`encrypt.sh` 需在可交互终端中执行。
+- 提示 `!!! WARNING: no interactive terminal`：口令输入不隐藏、可能回显或被记录，`init.sh`、`encrypt.sh` 应在可交互终端中执行。
 - 解压 `version*.zip` 失败：按日志提示手动解压到 `lib/version<版本>`，或删除该目录后重启触发自动解压。
 - 远程实例不出现：确认中心已设 `qingzhou-http-server.host=0.0.0.0`、端口放通、`qingzhou-agent.url` 可达且协议与中心一致、两端域密钥同名同值。
 - 启用 TLS 后浏览器或 Agent 报证书错误：为自签证书补充信任，或在受控内网设置 `qingzhou-http-client.allow_ssl_trust_all=true`。

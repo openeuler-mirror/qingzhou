@@ -1,6 +1,5 @@
 package qingzhou.command.cmd;
 
-import java.io.Console;
 import java.io.File;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -10,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import qingzhou.auth.AuthHandler;
+import qingzhou.command.ConsoleInput;
 import qingzhou.command.Processor;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Crypto;
@@ -20,7 +20,6 @@ public class Token extends Processor {
     private static final long MILLIS_PER_DAY = 24L * 60 * 60 * 1000;
     private static final DateTimeFormatter EXPIRE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private Console console;
     private AuthHandler authHandler;
     private Crypto crypto;
 
@@ -44,12 +43,6 @@ public class Token extends Processor {
         File instanceDir = initInstance(args);
         if (instanceDir == null) return;
 
-        console = System.console();
-        if (console == null) {
-            log("no interactive terminal found, run this command in a terminal");
-            return;
-        }
-
         Configs configs = new Configs(parseConfig(instanceDir.toPath().resolve("conf/qingzhou.properties")));
         crypto = createCrypto(instanceDir, globalCipherKeyName(instanceDir));
         authHandler = new AuthHandler(crypto, configs.parseConfigAsPrefix("qingzhou-auth."));
@@ -64,8 +57,8 @@ public class Token extends Processor {
     }
 
     private boolean verifyPassword() {
-        String user = console.readLine("Username: ");
-        char[] pass = console.readPassword("Password: ");
+        String user = ConsoleInput.readLine("Username: ");
+        char[] pass = ConsoleInput.readPassword("Password: ");
         try {
             boolean matched = authHandler.verifyUserPassword(user, pass == null ? null : new String(pass));
             if (!matched) log("invalid username or password");
@@ -81,7 +74,7 @@ public class Token extends Processor {
         }
 
         while (true) {
-            String input = console.readLine("Select roles to grant (numbers, comma separated): ");
+            String input = ConsoleInput.readLine("Select roles to grant (numbers, comma separated): ");
             if (input == null) throw new IllegalStateException("no input, aborted");
 
             Set<String> selected = new LinkedHashSet<>();
@@ -105,7 +98,7 @@ public class Token extends Processor {
 
     private long readExpireAt() {
         while (true) {
-            String input = console.readLine("Expire in days (1-" + MAX_EXPIRE_DAYS + ", default " + DEFAULT_EXPIRE_DAYS + "): ");
+            String input = ConsoleInput.readLine("Expire in days (1-" + MAX_EXPIRE_DAYS + ", default " + DEFAULT_EXPIRE_DAYS + "): ");
             if (input == null) throw new IllegalStateException("no input, aborted");
 
             String text = input.trim();

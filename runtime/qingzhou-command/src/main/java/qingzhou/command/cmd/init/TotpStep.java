@@ -2,6 +2,7 @@ package qingzhou.command.cmd.init;
 
 import java.nio.charset.Charset;
 
+import qingzhou.command.ConsoleInput;
 import qingzhou.command.Processor;
 import qingzhou.image.impl.QrCodeImpl;
 
@@ -59,7 +60,7 @@ final class TotpStep {
     // 按 TOTP 的 30 秒窗口，三次足够覆盖用户输入期间的换窗
     private static boolean confirm(Init init, String secret) throws Exception {
         for (int i = 0; i < 3; i++) {
-            String code = init.readLine("Code from the authenticator app: ");
+            String code = ConsoleInput.readLine("Code from the authenticator app: ");
             if (code != null && init.getCrypto().getTotp().verifyCodeWithReplayGuard(secret, code.trim())) return true;
         }
         return false;
