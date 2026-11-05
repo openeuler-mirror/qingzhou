@@ -1,10 +1,5 @@
 package qingzhou.command.cmd;
 
-import qingzhou.auth.AuthHandler;
-import qingzhou.command.Processor;
-import qingzhou.common.Configs;
-import qingzhou.crypto.Crypto;
-
 import java.io.Console;
 import java.io.File;
 import java.nio.file.Path;
@@ -17,7 +12,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GenerateToken extends Processor {
+import qingzhou.auth.AuthHandler;
+import qingzhou.command.Processor;
+import qingzhou.common.Configs;
+import qingzhou.crypto.Crypto;
+
+public class Token extends Processor {
     private static final int DEFAULT_EXPIRE_DAYS = 30;
     private static final int MAX_EXPIRE_DAYS = 365;
     private static final long MILLIS_PER_DAY = 24L * 60 * 60 * 1000;
@@ -29,12 +29,12 @@ public class GenerateToken extends Processor {
 
     @Override
     public String name() {
-        return "generateToken";
+        return "token";
     }
 
     @Override
     public String info() {
-        return "Create a token for remote access. Usage: generateToken <instance>";
+        return "Create a token to access the system. Usage: token <instance>";
     }
 
     @Override
@@ -56,7 +56,7 @@ public class GenerateToken extends Processor {
         Path configFile = Paths.get(instanceDir.getAbsolutePath(), "conf", "qingzhou.properties");
         Configs configs = new Configs(parseConfig(configFile));
         crypto = createCrypto(instanceDir, globalCipherKeyName(instanceDir));
-        authHandler = new AuthHandler(crypto, configs.getConfig("qingzhou-auth."));
+        authHandler = new AuthHandler(crypto, configs.parseConfigAsPrefix("qingzhou-auth."));
         if (!verifyPassword()) return;
 
         List<String> allRoles = configs.splitList("qingzhou-auth.roles");

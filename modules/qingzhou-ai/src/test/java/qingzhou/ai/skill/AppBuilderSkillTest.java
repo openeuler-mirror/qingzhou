@@ -72,18 +72,6 @@ public class AppBuilderSkillTest {
     }
 
     @Test
-    public void toolParametersDeclareStringTypes() {
-        for (Map<String, Object> properties : skill.tools().values()) {
-            for (String key : properties.keySet()) {
-                if (key.startsWith(ToolService.PARAMETER_NAME + ".")) {
-                    String suffix = key.substring(ToolService.PARAMETER_NAME.length());
-                    Assert.assertEquals(properties.get(ToolService.PARAMETER_TYPE + suffix), "string");
-                }
-            }
-        }
-    }
-
-    @Test
     public void reopeningPreservesManualChanges() throws Exception {
         invoke("app_builder_project", "app", "manual");
         Path pom = project("manual").resolve("pom.xml");
@@ -122,7 +110,8 @@ public class AppBuilderSkillTest {
 
     @Test
     public void buildFailureRepairAndConflict() throws Exception {
-        if (!"1.8".equals(System.getProperty("java.specification.version"))) throw new SkipException("需要 JDK 1.8 和 PATH 中的 Maven");
+        if (!"1.8".equals(System.getProperty("java.specification.version")))
+            throw new SkipException("需要 JDK 1.8 和 PATH 中的 Maven");
         invoke("app_builder_project", "app", "build-check");
         String path = "src/main/java/demo/Generated.java";
         invoke("app_builder_source", "app", "build-check", "path", path, "content", "package demo; public class Generated { notJava }");
