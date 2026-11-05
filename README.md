@@ -66,10 +66,15 @@ qingzhou/
 │   ├── start.sh                  # 启动，可追加实例名
 │   ├── init.sh                   # 交互式安全初始化，可追加实例名
 │   ├── encrypt.sh                # 用实例全局密钥加密明文口令
+│   ├── digest.sh                 # 生成管理员登录口令摘要
+│   ├── token.sh                  # 生成访问系统的令牌
 │   ├── qingzhou-launcher.jar     # 启动引导
 │   └── win/
 │       ├── start.bat
-│       └── init.bat
+│       ├── init.bat
+│       ├── token.bat
+│       ├── digest.bat
+│       └── encrypt.bat
 ├── instances/
 │   └── default/                  # 一个实例，配置、应用、数据、日志相互隔离
 │       ├── conf/                 # qingzhou.properties、secret-key.properties、mcp.json

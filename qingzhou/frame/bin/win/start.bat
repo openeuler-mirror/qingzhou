@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
 rem 本脚本位于 bin\win 下，实例目录与 bin 同级，故回退两级得到 qingzhou 根目录
 if "%qingzhou_home%"=="" (

@@ -160,7 +160,6 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-app-library</include>
                 <include>${project.groupId}:qingzhou-app-demo</include>
                 <include>${project.groupId}:qingzhou-app-redis</include>
                 <include>${project.groupId}:qingzhou-app-tomcat</include>

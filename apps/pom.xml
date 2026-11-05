@@ -12,7 +12,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>qingzhou-app-demo</module>
-        <module>qingzhou-app-library</module>
         <module>qingzhou-app-redis</module>
         <module>qingzhou-app-tomcat</module>
         <module>qingzhou-app-nacos</module>
