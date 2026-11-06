@@ -27,7 +27,7 @@ public class ChatConfig implements HttpHandler {
     private final List<String[]> promptSamples = Collections.unmodifiableList(Arrays.asList(
             new String[]{"请概述轻舟平台的价值和意义", "en:Please summarize the value and significance of the Qingzhou platform"},
             new String[]{"请帮我查询轻舟平台上部署了哪些应用", "en:Please check what applications are deployed on the Qingzhou platform"},
-            new String[]{"请问“图书管理”系统有多少读者数据？", "en:Could you tell me how many reader records are in the \"Book Management\" system?"},
+            new String[]{"列表数据量最多的是哪个应用哪个模块，找出前三？", "en:List the top three app/module combinations by the number of records in their list views."},
             new String[]{"请为我展示“示例应用”中S001学生的信息", "en:Please show me the information of student S001 in the \"Demo Application\"."},
             new String[]{"如何开发一个轻舟应用？", "en:How to develop a Qingzhou application?"},
             new String[]{"以 nginx 为例说明如何实现轻舟的前后端分离部署", "en:Explain how to implement separated frontend and backend deployment for Qingzhou using Nginx as an example."},
