@@ -234,6 +234,15 @@ public class JsonImplTest {
         Assert.assertNull(restored.getInternal());
     }
 
+    @Test
+    public void dataSetField_fromJson_keepArrayOrder() throws Exception {
+        Json json = createJsonImpl();
+        SetBean result = json.fromJson(
+                "{\"codes\":[\"fileFrom\",\"fromServer\",\"fromUpload\"]}", SetBean.class);
+        Assert.assertEquals(new ArrayList<>(result.codes),
+                Arrays.asList("fileFrom", "fromServer", "fromUpload"));
+    }
+
     // ==================== 内部测试Bean类 ====================
 
     public static class EmptyBean {
@@ -290,5 +299,9 @@ public class JsonImplTest {
         public void setAttributes(Map<String, String> attributes) { this.attributes = attributes; }
         public boolean isActive() { return active; }
         public void setActive(boolean active) { this.active = active; }
+    }
+
+    public static class SetBean {
+        public final Set<String> codes = new LinkedHashSet<>();
     }
 }

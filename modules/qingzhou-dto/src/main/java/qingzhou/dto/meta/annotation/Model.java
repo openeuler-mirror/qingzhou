@@ -1,7 +1,6 @@
 package qingzhou.dto.meta.annotation;
 
 import java.util.LinkedHashSet;
-import java.util.Set;
 
 public class Model extends Base {
     public String roles;
@@ -19,6 +18,7 @@ public class Model extends Base {
     public String[] info;
 
     // 固定顺序：qingzhou.agent.Heartbeat.fingerprints 计算指纹
-    public final Set<ModelField> fields = new LinkedHashSet<>();
-    public final Set<ModelAction> actions = new LinkedHashSet<>();
+    // 必须声明为有序实现：Jackson 对 Set 接口默认实例化 HashSet，会按 code 哈希重排。
+    public final LinkedHashSet<ModelField> fields = new LinkedHashSet<>();
+    public final LinkedHashSet<ModelAction> actions = new LinkedHashSet<>();
 }
