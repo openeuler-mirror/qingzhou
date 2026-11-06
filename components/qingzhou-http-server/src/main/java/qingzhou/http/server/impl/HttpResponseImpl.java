@@ -3,7 +3,6 @@ package qingzhou.http.server.impl;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import qingzhou.http.server.HttpResponse;
 import reactor.core.publisher.Flux;
@@ -39,6 +38,11 @@ class HttpResponseImpl implements HttpResponse {
     private volatile boolean committed;
     private volatile boolean cancelled;
     private volatile boolean async;
+    // handler 显式设置过 Content-Length：框架自动补不得覆盖业务意图
+    private volatile boolean explicitContentLength;
+    // 框架已补过 Content-Length：多次 send 只认首次，不重复补
+    private volatile boolean contentLengthAutoApplied;
+    private volatile int statusCode = 200;
 
     // 订阅方已取消（客户端断开）：属正常终止，不得按错误处理
     boolean isCancelled() {
@@ -65,6 +69,7 @@ class HttpResponseImpl implements HttpResponse {
             throw new IllegalArgumentException("invalid http status: " + status);
         }
         response.status(status);
+        statusCode = status;
         return this;
     }
 
@@ -74,6 +79,7 @@ class HttpResponseImpl implements HttpResponse {
         if (name == null || value == null || hasBreak(name) || hasBreak(value)) {
             throw new IllegalArgumentException("invalid http header");
         }
+        if ("Content-Length".equalsIgnoreCase(name)) explicitContentLength = true;
         response.header(name, value);
         return this;
     }
@@ -109,6 +115,11 @@ class HttpResponseImpl implements HttpResponse {
     @Override
     public HttpResponse send(byte[] body) {
         if (body != null) {
+            // 单次 send 已是完整实体：补 Content-Length 走定长，对齐 Servlet 容器行为并消除 chunked 开销。
+            // 声明 async 或多次 send 时总量不可知，交给 Netty 按 chunked 处理
+            if (!committed && !async && !explicitContentLength && !contentLengthAutoApplied) {
+                applyContentLength(body.length);
+            }
             Sinks.EmitResult result = streamResponse.tryEmitNext(body);
             // 失败原因可能是客户端断开、背压缓冲满、已结束或并发发射，须如实暴露而非一律归为断连
             if (result.isFailure()) {
@@ -129,9 +140,21 @@ class HttpResponseImpl implements HttpResponse {
 
     @Override
     public void finish() {
+        // 未写实体且无显式长度：明确宣告空响应，避免 Netty 对空 Flux 仍走 chunked
+        if (!committed && !async && !explicitContentLength && !contentLengthAutoApplied) {
+            applyContentLength(0);
+        }
         committed = true;
         streamResponse.tryEmitComplete(); // 已取消或已结束时忽略，重复调用无副作用
         firstOutputSignal.tryEmitEmpty();
+    }
+
+    // RFC 7230 禁止 1xx/204/304 携带 Content-Length；无论是否写头都标记已处理，避免重复尝试
+    private void applyContentLength(long length) {
+        if (statusCode >= 200 && statusCode != 204 && statusCode != 304) {
+            response.header(HttpHeaderNames.CONTENT_LENGTH, String.valueOf(length));
+        }
+        contentLengthAutoApplied = true;
     }
 
     @Override
@@ -145,8 +168,8 @@ class HttpResponseImpl implements HttpResponse {
                 && !url.startsWith("//");
         if (!validTarget || hasBreak(url)) throw new IllegalArgumentException("invalid redirect url");
         response.status(HttpResponseStatus.FOUND)
-                .header(HttpHeaderNames.LOCATION, url)
-                .header(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
+                .header(HttpHeaderNames.LOCATION, url);
+        header("Content-Length", "0"); // 走统一入口：标记显式长度，finish 不再重复补
         finish();
     }
 }
