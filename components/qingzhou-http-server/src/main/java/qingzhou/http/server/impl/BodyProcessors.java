@@ -9,11 +9,10 @@ import qingzhou.http.server.HttpHandler;
 import qingzhou.logger.Logger;
 import reactor.core.Disposable;
 import reactor.core.Exceptions;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
-import reactor.util.concurrent.Queues;
 
 import static qingzhou.http.server.impl.Errors.getCause;
 import static qingzhou.http.server.impl.Errors.safeRun;
@@ -24,7 +23,6 @@ import static qingzhou.http.server.impl.Errors.safeRun;
  */
 final class BodyProcessors {
     private static final byte[] EMPTY_BODY = new byte[0];
-    private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
 
     private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxStreamBytes; // 流式上传总量上限
@@ -37,15 +35,12 @@ final class BodyProcessors {
     }
 
     Publisher<Void> handle(RequestContext ctx) {
-        Sinks.Many<byte[]> streamResponse = Sinks.many().unicast()
-                .onBackpressureBuffer(Queues.<byte[]>get(RESPONSE_QUEUE_SIZE).get()); // 有界缓冲：慢客户端不再导致内存无界堆积
-        HttpResponseImpl httpResponse = new HttpResponseImpl(ctx.response, streamResponse);
-        ctx.httpResponse = httpResponse;
-        return ctx.streamRequired ? receiveStream(ctx, httpResponse, streamResponse)
-                : aggregate(ctx, httpResponse, streamResponse);
+        HttpResponseImpl httpResponse = ctx.httpResponse;
+        return ctx.streamRequired ? receiveStream(ctx, httpResponse, httpResponse.body())
+                : aggregate(ctx, httpResponse, httpResponse.body());
     }
 
-    private Publisher<Void> receiveStream(RequestContext ctx, HttpResponseImpl httpResponse, Sinks.Many<byte[]> streamResponse) {
+    private Publisher<Void> receiveStream(RequestContext ctx, HttpResponseImpl httpResponse, Flux<byte[]> body) {
         HttpHandler.StreamHandler streamHandler = ctx.streamHandler;
         Throwable beginError = safeRun(() -> streamHandler.onBegin(ctx.httpRequest, httpResponse));
         if (beginError != null) {
@@ -103,7 +98,7 @@ final class BodyProcessors {
                         }
                 );
         return httpResponse.firstOutput()
-                .then(Mono.defer(() -> ctx.response.sendByteArray(streamResponse.asFlux()).then()))
+                .then(Mono.defer(() -> ctx.response.sendByteArray(body).then()))
                 .doFinally(signal -> {
                     // 响应结束即停止读请求体：handler 在 onBegin 中就结束响应时，否则会继续读到 maxStreamBytes
                     receiveDisposable.dispose();
@@ -112,7 +107,7 @@ final class BodyProcessors {
                 });
     }
 
-    private Publisher<Void> aggregate(RequestContext ctx, HttpResponseImpl httpResponse, Sinks.Many<byte[]> streamResponse) {
+    private Publisher<Void> aggregate(RequestContext ctx, HttpResponseImpl httpResponse, Flux<byte[]> body) {
         HttpHandler httpHandler = ctx.entry.handler;
         AtomicLong receivedBytes = new AtomicLong();
         return ByteBufFlux.fromInbound(ctx.request.receive()
@@ -144,7 +139,7 @@ final class BodyProcessors {
                     // 订阅写链即发出状态行与响应头，故须等首个输出（send/finish）后再订阅，
                     // 否则 async handler 在业务线程后设置的 status/header/contentType 全部失效
                     return httpResponse.firstOutput()
-                            .then(Mono.defer(() -> ctx.response.sendByteArray(streamResponse.asFlux()).then()));
+                            .then(Mono.defer(() -> ctx.response.sendByteArray(body).then()));
                 })
                 // 连接中断等也应回响应，且不能一律报 413；已写出响应体时不得再发状态行，否则造成响应污染
                 .onErrorResume(e -> {

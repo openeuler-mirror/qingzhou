@@ -20,7 +20,7 @@ public final class Configs {
         return config.get(key);
     }
 
-    public Map<String, String> getConfig(String prefix) {
+    public Map<String, String> parseConfigAsPrefix(String prefix) {
         Map<String, String> map = new HashMap<>();
         for (Map.Entry<String, String> entry : config.entrySet()) {
             if (entry.getKey().startsWith(prefix)) {

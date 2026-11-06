@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "demo-server": {
+      "enabled": true,
+      "url": "http://127.0.0.1:8080/mcp",
+      "description": "示例 MCP Server",
+      "headers": {
+        "Authorization": "Bearer plain:token"
+      }
+    }
+  }
+}

@@ -62,13 +62,7 @@ public class Utils {
             else candidates.add(skill);
         }
 
-        if (!candidates.isEmpty()) {
-            Collection<Skill> matched1 = LiteralSkillMatcher.getInstance().match(candidates, message);
-            if (!matched1.isEmpty()) {
-                active.addAll(matched1);
-                return active; // 词面强相关：直接激活，不再调用模型
-            }
-
+        if (!candidates.isEmpty()) { // 因原本地的“词面相关”匹配器不够准确，故已删除，此处只保留“模型筛选”
             // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
             ChatModel selectionChatModel = callback.newChatModelBuilder()
                     // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
@@ -76,12 +70,10 @@ public class Utils {
                     .readTimeout(60_000)
                     .maxRetries(2)
                     .build();
-            Collection<Skill> matched2 = new ModelSkillMatcher(selectionChatModel).match(candidates, message);
-            if (!matched2.isEmpty()) {
-                active.addAll(matched2);
-                return active;
-            }
+            Collection<Skill> matched = new ModelSkillMatcher(selectionChatModel).match(candidates, message);
+            active.addAll(matched);
         }
+        
         return active;
     }
 

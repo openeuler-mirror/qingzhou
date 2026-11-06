@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import qingzhou.http.client.*;
@@ -13,32 +11,30 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 final class McpClient {
-    private static final String PREFERRED_VERSION = "2025-06-18";
+    static final int READ_TIMEOUT = 60_000;
     private static final String FALLBACK_VERSION = "2025-03-26";
-    private static final String UNSUPPORTED_VERSION = "2024-11-05";
+    private static final int MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
     private static final String SESSION_HEADER = "Mcp-Session-Id";
     private static final String PROTOCOL_HEADER = "MCP-Protocol-Version";
-    private static final String SSE_DATA = "data:";
-    private static final int READ_TIMEOUT = 60_000;
-    private static final int AWAIT_TIMEOUT = READ_TIMEOUT + 5_000;
     private static final int ERROR_BODY_CHARS = 200;
+    private static final int MAX_RESULT_CHARS = 20_000;
 
     private final McpConfig config;
     private final HttpClient httpClient;
     private final Json json;
     private final Logger logger;
+    private final String qzVersion;
 
     private final AtomicLong requestIds = new AtomicLong();
-    private volatile boolean initialized;
-    private volatile String protocolVersion;
+    private volatile String protocolVersion; // 非 null 即已完成 initialize
     private volatile String sessionId;
-    private volatile String serverDescription;
 
-    McpClient(McpConfig config, HttpClient httpClient, Json json, Logger logger) {
+    McpClient(McpConfig config, HttpClient httpClient, Json json, Logger logger, String qzVersion) {
         this.config = config;
         this.httpClient = httpClient;
         this.json = json;
         this.logger = logger;
+        this.qzVersion = qzVersion;
     }
 
     List<Map<String, Object>> listTools() throws Exception {
@@ -46,11 +42,7 @@ final class McpClient {
             List<Map<String, Object>> tools = new ArrayList<>();
             String cursor = null;
             do {
-                Map<String, Object> params = null;
-                if (cursor != null) {
-                    params = new HashMap<>();
-                    params.put("cursor", cursor);
-                }
+                Map<String, Object> params = cursor == null ? null : Collections.singletonMap("cursor", cursor);
                 Map<String, Object> result = request("tools/list", params);
                 Object page = result.get("tools");
                 if (page instanceof List) {
@@ -69,7 +61,7 @@ final class McpClient {
             Map<String, Object> params = new HashMap<>();
             params.put("name", toolName);
             params.put("arguments", arguments == null ? Collections.emptyMap() : arguments);
-            return McpToolConverter.extractText(request("tools/call", params));
+            return extractContent(request("tools/call", params));
         });
     }
 
@@ -79,49 +71,39 @@ final class McpClient {
                 initialize();
                 return action.call();
             } catch (Exception e) {
-                if (attempt > 0 || !isSessionExpired(e)) throw e;
+                if (attempt > 0 || !(e instanceof SessionLostException)) throw e;
 
                 logger.warn("mcp session of [" + config.id + "] expired, reconnecting");
-                initialized = false;
+                protocolVersion = null; // 强制重连后重新 initialize，服务端已丢失会话
                 sessionId = null;
             }
         }
     }
 
     private synchronized void initialize() throws Exception {
-        if (initialized) return;
+        if (protocolVersion != null) return;
 
+        Map<String, Object> clientInfo = new HashMap<>();
+        clientInfo.put("name", "qingzhou");
+        clientInfo.put("version", qzVersion);
         Map<String, Object> params = new HashMap<>();
-        params.put("protocolVersion", PREFERRED_VERSION);
+        params.put("protocolVersion", "2025-06-18");
         params.put("capabilities", Collections.emptyMap());
-        params.put("clientInfo", clientInfo());
+        params.put("clientInfo", clientInfo);
 
-        long id = requestIds.incrementAndGet();
-        Collector collector = new Collector(id);
-        Response response = post("initialize", params, id, collector);
-        try {
-            Map<String, Object> result = await(response, collector);
-            String negotiated = text(result.get("protocolVersion"));
-            if (UNSUPPORTED_VERSION.equals(negotiated)) {
-                throw new IOException("mcp server [" + config.id + "] negotiated " + negotiated
-                        + ", which requires the deprecated HTTP+SSE transport");
-            }
-            protocolVersion = negotiated == null ? FALLBACK_VERSION : negotiated;
-            sessionId = response.getHeader(SESSION_HEADER);
-            serverDescription = descriptionFrom(result);
-            initialized = true;
-        } finally {
-            response.cancel();
+        Map<String, Object> result = request("initialize", params);
+        String negotiated = text(result.get("protocolVersion"));
+        if (negotiated != null && negotiated.compareTo(FALLBACK_VERSION) < 0) { // 2025-03-26 之前为废弃的 HTTP+SSE 传输
+            throw new IOException("mcp server [" + config.id + "] negotiated " + negotiated
+                    + ", which predates the Streamable HTTP transport");
         }
-
+        protocolVersion = negotiated == null ? FALLBACK_VERSION : negotiated;
         notifyInitialized();
     }
 
     private void notifyInitialized() {
         try {
-            Response response = post("notifications/initialized", null, null, null);
-            int status = response.getStatus();
-            response.cancel();
+            int status = send("notifications/initialized", null, null, null).getStatus();
             if (status < 200 || status >= 300) {
                 logger.warn("mcp server [" + config.id + "] rejected notifications/initialized: status " + status);
             }
@@ -130,18 +112,49 @@ final class McpClient {
         }
     }
 
+    private static String extractContent(Map<String, Object> result) throws IOException {
+        Object content = result.get("content");
+        StringBuilder text = new StringBuilder();
+        for (Object item : content instanceof List ? (List<?>) content : Collections.emptyList()) {
+            if (!(item instanceof Map)) continue;
+            Map<?, ?> part = (Map<?, ?>) item;
+            if (text.length() > 0) text.append('\n');
+            text.append("text".equals(part.get("type"))
+                    ? Objects.toString(part.get("text"), "")
+                    : "[" + part.get("type") + " content]");
+        }
+
+        String value = text.length() > MAX_RESULT_CHARS
+                ? text.substring(0, MAX_RESULT_CHARS) + "\n…（内容过长已截断）" : text.toString();
+        if (Boolean.TRUE.equals(result.get("isError")))
+            throw new IOException(value.isEmpty() ? "mcp tool reported an error" : value);
+        return value;
+    }
+
+    private static String text(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
     private Map<String, Object> request(String method, Map<String, Object> params) throws Exception {
         long id = requestIds.incrementAndGet();
-        Collector collector = new Collector(id);
-        Response response = post(method, params, id, collector);
+        McpResponse mcpResponse = new McpResponse(json, config, id);
+        Response response = send(method, params, id, mcpResponse);
         try {
-            return await(response, collector);
+            int status = response.getStatus();
+            if (status < 200 || status >= 300) { // 非 2xx 不进入流式读取，无可取消的响应
+                String body = new String(response.getBody(), StandardCharsets.UTF_8);
+                String message = "mcp server [" + config.id + "] returned status " + status + ": "
+                        + body.substring(0, Math.min(body.length(), ERROR_BODY_CHARS));
+                throw status == 404 ? new SessionLostException(message) : new IOException(message); // 404 是 MCP 约定的会话失效
+            }
+
+            return mcpResponse.await();
         } finally {
             response.cancel();
         }
     }
 
-    private Response post(String method, Map<String, Object> params, Long id, ClientListener listener) throws Exception {
+    private Response send(String method, Map<String, Object> params, Long id, ClientListener listener) throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", "2.0");
         if (id != null) envelope.put("id", id);
@@ -154,143 +167,21 @@ final class McpClient {
                 .header("Accept", "application/json, text/event-stream")
                 .readTimeout(READ_TIMEOUT)
                 .trustAllCertificates() // 受控内网降级：需 allow_ssl_trust_all=true
-                .maxBodySize(0);
+                .maxBodySize(MAX_RESPONSE_BYTES);
         config.headers.forEach(request::header);
         if (protocolVersion != null) request.header(PROTOCOL_HEADER, protocolVersion);
         if (sessionId != null) request.header(SESSION_HEADER, sessionId);
         request.body(json.toJson(envelope).getBytes(StandardCharsets.UTF_8));
 
-        return listener == null ? httpClient.send(request) : httpClient.send(request, listener);
+        Response response = httpClient.send(request, listener); // listener 为 null 即同步整读
+        String session = response.getHeader(SESSION_HEADER); // 会话 id 仅由服务端在 initialize 响应下发
+        if (session != null) sessionId = session;
+        return response;
     }
 
-    private Map<String, Object> await(Response response, Collector collector) throws Exception {
-        int status = response.getStatus();
-        if (status < 200 || status >= 300) {
-            throw new IOException("mcp server [" + config.id + "] returned status " + status + ": " + errorBody(response));
-        }
-
-        if (!collector.awaitResponse()) {
-            throw new IOException("timeout waiting for response of [" + config.id + "]");
-        }
-        if (collector.failure != null) {
-            throw new IOException("mcp request to [" + config.id + "] failed: " + collector.failure.getMessage(), collector.failure);
-        }
-
-        Map<String, Object> message = collector.message;
-        if (message == null) {
-            throw new IOException("mcp server [" + config.id + "] sent no response");
-        }
-        Object error = message.get("error");
-        if (error instanceof Map) {
-            Map<?, ?> errorMap = (Map<?, ?>) error;
-            throw new IOException("mcp server [" + config.id + "] error [" + errorMap.get("code") + "]: " + errorMap.get("message"));
-        }
-        Object result = message.get("result");
-        if (!(result instanceof Map)) {
-            throw new IOException("mcp server [" + config.id + "] sent invalid result");
-        }
-        return (Map<String, Object>) result;
-    }
-
-    private String errorBody(Response response) {
-        byte[] body = response.getBody();
-        if (body == null || body.length == 0) return "";
-        String text = new String(body, StandardCharsets.UTF_8);
-        return text.length() > ERROR_BODY_CHARS ? text.substring(0, ERROR_BODY_CHARS) : text;
-    }
-
-    private Map<String, Object> parseMessage(String line) {
-        String data = line.trim();
-        if (data.isEmpty()) return null;
-        if (data.startsWith(SSE_DATA)) data = data.substring(SSE_DATA.length()).trim(); // SSE 控制行（event/id）无 JSON，自然被跳过
-        if (data.isEmpty()) return null;
-
-        try {
-            return json.fromJson(data, Map.class);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static boolean isSessionExpired(Exception e) {
-        String message = e.getMessage();
-        if (message == null) return false;
-
-        String lower = message.toLowerCase(Locale.ROOT);
-        return lower.contains("status 404") || lower.contains("session");
-    }
-
-    private static Map<String, Object> clientInfo() {
-        Map<String, Object> info = new HashMap<>();
-        info.put("name", "qingzhou");
-        info.put("version", System.getProperty("qingzhou.version", "1.0.0"));
-        return info;
-    }
-
-    private static String text(Object value) {
-        return value == null ? null : String.valueOf(value);
-    }
-
-    String getServerDescription() {
-        try {
-            initialize();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-        }
-        return serverDescription;
-    }
-
-    private static String descriptionFrom(Map<String, Object> result) {
-        String instructions = text(result.get("instructions"));
-        if (instructions != null && !instructions.trim().isEmpty()) return instructions.trim();
-
-        Object infoNode = result.get("serverInfo");
-        if (infoNode instanceof Map) {
-            Map<?, ?> info = (Map<?, ?>) infoNode;
-            String name = text(info.get("name"));
-            String version = text(info.get("version"));
-            if (name != null && !name.isEmpty()) {
-                return version == null || version.isEmpty() ? name : name + " " + version;
-            }
-        }
-        return null;
-    }
-
-    private final class Collector implements ClientListener {
-        private final long expectedId;
-        private final CountDownLatch latch = new CountDownLatch(1);
-        private volatile Map<String, Object> message;
-        private volatile Throwable failure;
-
-        Collector(long expectedId) {
-            this.expectedId = expectedId;
-        }
-
-        @Override
-        public void onBody(String line) {
-            Map<String, Object> parsed = parseMessage(line);
-            if (parsed == null) return;
-
-            Object id = parsed.get("id");
-            if (id instanceof Number && ((Number) id).longValue() == expectedId) {
-                message = parsed;
-                latch.countDown();
-            }
-        }
-
-        @Override
-        public void onComplete() {
-            latch.countDown();
-        }
-
-        @Override
-        public void onError(Throwable t) {
-            failure = t;
-            latch.countDown();
-        }
-
-        boolean awaitResponse() throws InterruptedException {
-            return latch.await(AWAIT_TIMEOUT, TimeUnit.MILLISECONDS);
+    private static final class SessionLostException extends IOException {
+        SessionLostException(String message) {
+            super(message);
         }
     }
 }

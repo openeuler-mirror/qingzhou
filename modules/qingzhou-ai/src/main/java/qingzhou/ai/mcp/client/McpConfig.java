@@ -9,6 +9,9 @@ import qingzhou.crypto.Crypto;
 import qingzhou.json.Json;
 
 final class McpConfig {
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
     final String id;
     final String url;
     final String description;
@@ -34,8 +37,20 @@ final class McpConfig {
 
             Map<String, String> headers = new LinkedHashMap<>();
             Map<String, Object> raw = (Map<String, Object>) entry.getOrDefault("headers", Collections.emptyMap());
-            raw.forEach((name, text) ->
-                    headers.put(name, crypto.getGlobalCipher().tryDecrypt(String.valueOf(text), "mcpServers." + id + ".headers" + "." + name)));
+            raw.forEach((name, text) -> {
+                String headerValue = String.valueOf(text);
+
+                // HTTP header 名/scheme 大小写不敏感；仅 Bearer 凭证是加密项，其余 header 原样透传以免明文被误判为损坏密文
+                if (AUTH_HEADER.equalsIgnoreCase(name)
+                        && headerValue.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+                    headerValue = headerValue.substring(0, BEARER_PREFIX.length()) +
+                            crypto.getGlobalCipher().tryDecrypt(
+                                    headerValue.substring(BEARER_PREFIX.length()),
+                                    "mcpServers." + id + ".headers." + name);
+                }
+
+                headers.put(name, headerValue);
+            });
             configs.add(new McpConfig(id, (String) entry.get("url"), (String) entry.get("description"), headers));
         });
         return configs;

@@ -37,23 +37,24 @@ public class McpSkillRegistry {
     @Activate
     public void init(ComponentContext context, Map<String, String> config) throws Exception {
         BundleContext bundleContext = context.getBundleContext();
+        String qzVersion = config.get("qingzhou.version");
         Path mcpFile = Paths.get(config.get("qingzhou.instance"), "conf", "mcp.json");
         for (McpConfig server : McpConfig.load(mcpFile, json, crypto)) {
-            McpClient client = new McpClient(server, httpClient, json, logger);
+            McpClient client = new McpClient(server, httpClient, json, logger, qzVersion);
             McpSkillService skill = new McpSkillService(server, client, logger);
 
             Hashtable<String, Object> properties = new Hashtable<>();
             properties.put(SkillService.SKILL_NAME, server.id);
-            properties.put(SkillService.SKILL_DESCRIPTION, description(server, client));
+            properties.put(SkillService.SKILL_DESCRIPTION, description(server));
             properties.put(SkillService.SKILL_REQUIRED, Boolean.FALSE.toString()); // 按需匹配激活；McpServer 只绑定 true 的技能，故不对外暴露
             registrations.add(bundleContext.registerService(SkillService.class, skill, properties));
         }
     }
 
-    private static String description(McpConfig server, McpClient client) {
+    private static String description(McpConfig server) {
         String desc = server.description;
-        if (desc == null || desc.trim().isEmpty()) desc = client.getServerDescription();
-        return desc != null ? desc : "由 MCP 服务器 " + server.id + " 提供的工具集。";
+        return desc == null || desc.trim().isEmpty()
+                ? "由 MCP 服务器 " + server.id + " 提供的工具集。" : desc;
     }
 
     @Deactivate

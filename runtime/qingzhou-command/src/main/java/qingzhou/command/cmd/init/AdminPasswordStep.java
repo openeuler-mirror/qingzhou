@@ -8,7 +8,7 @@ final class AdminPasswordStep {
         if (Init.hasValue(props, "qingzhou-auth.password")) return; // 已有值则静默跳过
 
         // 键存在即视为启用登录，无口令则登录不可用，故不提供跳过项，直接要求输入
-        String password = init.readPassword("Input admin password: ");
+        String password = init.readConfirmedPassword("Input admin password: ");
         init.writeProps(Init.putValue(props, "qingzhou-auth.password", init.getCrypto().getMessageDigest().digest(password)));
         init.log("Admin password updated.");
     }

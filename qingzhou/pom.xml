@@ -321,11 +321,6 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-app-library</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <artifactId>qingzhou-app-demo</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>

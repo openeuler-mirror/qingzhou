@@ -2,6 +2,8 @@ package qingzhou.command.cmd.init;
 
 import java.io.File;
 
+import qingzhou.command.ConsoleInput;
+
 final class AgentDomainStep {
     // 键格式 <prefix><domain> 须与 AgentDomainServiceImpl 的解析保持一致
     private static final String KEY_PREFIX = "agent-domain~";
@@ -10,7 +12,7 @@ final class AgentDomainStep {
         File secretFile = init.confFile("secret-key.properties");
         String content = Init.read(secretFile);
         while (init.confirm("Add an agent domain? (agent and registry share this key) [y/N] ")) {
-            String domain = init.readLine("Agent domain name: ");
+            String domain = ConsoleInput.readLine("Agent domain name: ");
             if (domain == null) return; // 终端已关闭，结束交互
             domain = domain.trim();
             if (!isValidDomain(domain)) {

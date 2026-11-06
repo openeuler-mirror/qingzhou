@@ -1,4 +1,5 @@
 qingzhou.command.cmd.StartArg
 qingzhou.command.cmd.init.Init
 qingzhou.command.cmd.Encrypt
-qingzhou.command.cmd.GenerateToken
+qingzhou.command.cmd.Token
+qingzhou.command.cmd.Digest

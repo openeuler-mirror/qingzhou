@@ -1,9 +1,9 @@
 package qingzhou.command.cmd;
 
-import java.io.Console;
 import java.io.File;
 import java.util.Arrays;
 
+import qingzhou.command.ConsoleInput;
 import qingzhou.command.Processor;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
@@ -43,22 +43,12 @@ public class Encrypt extends Processor {
             return;
         }
 
-        char[] plaintext = readPlaintext();
+        char[] plaintext = ConsoleInput.readPassword("Password: ");
         if (plaintext == null) return; // EOF/Ctrl-D
         try {
             log(cipher.encrypt(new String(plaintext)));
         } finally {
             Arrays.fill(plaintext, '\0'); // 口令不驻留内存
-        }
-    }
-
-    private char[] readPlaintext() {
-        Console console = System.console();
-        if (console == null) { // 确认与密码均需交互，无终端时不得按默认值擅自初始化
-            log("no interactive terminal found, run this command in a terminal");
-            return null;
-        } else {
-            return console.readPassword("Password: ");
         }
     }
 }

@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
 if "%qingzhou_home%"=="" (
     for %%a in ("%~dp0..\..") do set qingzhou_home=%%~fa
