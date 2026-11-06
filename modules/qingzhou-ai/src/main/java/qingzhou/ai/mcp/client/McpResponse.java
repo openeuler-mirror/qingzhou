@@ -9,8 +9,8 @@ import qingzhou.http.client.ClientListener;
 import qingzhou.json.Json;
 
 /**
- * 收集单个请求的响应：onBody/onComplete/onError 只由流式读取线程触发，
- * 字段可见性由 CountDownLatch 的 happens-before 保证，故不加 volatile。
+ * 收集单个请求的响应：回调只由流式读取线程触发，countDown 之后不再写字段，
+ * 可见性由 CountDownLatch 的 happens-before 保证，故不加 volatile。
  */
 public class McpResponse implements ClientListener {
     private static final String SSE_DATA = "data:";
@@ -21,6 +21,7 @@ public class McpResponse implements ClientListener {
     private final long expectedId;
 
     private final CountDownLatch latch = new CountDownLatch(1);
+    private final StringBuilder pending = new StringBuilder();
     private Map<String, Object> message;
     private Throwable failure;
 
@@ -32,37 +33,49 @@ public class McpResponse implements ClientListener {
 
     @Override
     public void onBody(String line) {
-        Map<String, Object> parsed = parseMessage(line);
-        if (parsed == null) return;
+        if (message != null || failure != null) return; // 首条响应既定，后续流式内容不再参与
 
-        Object id = parsed.get("id");
-        if (id instanceof Number && ((Number) id).longValue() == expectedId) {
-            message = parsed;
-            latch.countDown();
+        String data = line.trim();
+        if (data.isEmpty() || data.startsWith("event:")) { // SSE 事件边界：丢弃未收齐的残片
+            pending.setLength(0);
+            return;
         }
+        if (data.startsWith(SSE_DATA)) {
+            data = data.substring(SSE_DATA.length()).trim();
+            if (data.isEmpty()) return;
+        } else if (!data.startsWith("{")) {
+            return; // id:/retry:/注释等非数据行
+        }
+        if (pending.length() > 0) pending.append('\n');
+        pending.append(data);
+
+        Map<String, Object> parsed;
+        try {
+            parsed = json.fromJson(pending.toString(), Map.class);
+        } catch (Exception e) {
+            return; // 跨行 JSON 尚未收齐，由后续行或 onComplete 收口
+        }
+        pending.setLength(0);
+        if (!parsed.containsKey("result") && !parsed.containsKey("error")) return; // 通知/服务端请求
+        if (!Long.toString(expectedId).equals(String.valueOf(parsed.get("id")))) return; // 缺失/异号一律拒绝
+
+        message = parsed;
+        latch.countDown();
     }
 
     @Override
     public void onComplete() {
+        if (message == null && failure == null && pending.length() > 0) {
+            failure = new IOException("mcp server [" + config.id + "] sent invalid response");
+        }
         latch.countDown();
     }
 
     @Override
     public void onError(Throwable t) {
+        if (message != null || failure != null) return;
         failure = t;
         latch.countDown();
-    }
-
-    private Map<String, Object> parseMessage(String line) {
-        String data = line.trim();
-        if (data.startsWith(SSE_DATA)) data = data.substring(SSE_DATA.length()).trim();
-        if (data.isEmpty()) return null;
-
-        try {
-            return json.fromJson(data, Map.class);
-        } catch (Exception e) {
-            return null; // SSE 控制行（event/id）无 JSON
-        }
     }
 
     Map<String, Object> await() throws Exception {
@@ -72,16 +85,17 @@ public class McpResponse implements ClientListener {
         if (failure != null) {
             throw new IOException("mcp request to [" + config.id + "] failed: " + failure.getMessage(), failure);
         }
-        if (message == null) {
+        Map<String, Object> response = message;
+        if (response == null) {
             throw new IOException("mcp server [" + config.id + "] sent no response");
         }
 
-        Object error = message.get("error");
+        Object error = response.get("error");
         if (error instanceof Map) {
             Map<?, ?> errorMap = (Map<?, ?>) error;
             throw new IOException("mcp server [" + config.id + "] error [" + errorMap.get("code") + "]: " + errorMap.get("message"));
         }
-        Object result = message.get("result");
+        Object result = response.get("result");
         if (!(result instanceof Map)) {
             throw new IOException("mcp server [" + config.id + "] sent invalid result");
         }
