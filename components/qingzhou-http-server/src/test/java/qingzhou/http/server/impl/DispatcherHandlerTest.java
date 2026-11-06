@@ -645,6 +645,81 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
         Assert.assertEquals(countStatusLines(response), 1, "pipelined request must not be served: " + response);
     }
 
+    @Test
+    public void singleSend_response_carriesContentLengthWithoutChunked() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.send(new byte[1024]), "/clSingle", true);
+
+        String response = lower(rawResponse(testServer.port, "GET /clSingle HTTP/1.1\r\n"
+                + "Host: localhost\r\nConnection: close\r\n\r\n"));
+
+        // 单次 send 已是完整实体，须走定长路径，与 Servlet 容器自动定长行为对齐
+        Assert.assertTrue(response.contains("content-length: 1024"), response);
+        Assert.assertFalse(response.contains("transfer-encoding"), response);
+    }
+
+    @Test
+    public void asyncSend_response_staysChunked() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> {
+            response.async();
+            response.send(new byte[32]).finish();
+        }, "/clAsync", true);
+
+        String response = lower(rawResponse(testServer.port, "GET /clAsync HTTP/1.1\r\n"
+                + "Host: localhost\r\nConnection: close\r\n\r\n"));
+
+        // 异步场景总长不可知（SSE 等后续仍可能写入），框架不得替 handler 补定长
+        Assert.assertFalse(response.contains("content-length"), response);
+        Assert.assertTrue(response.contains("transfer-encoding: chunked"), response);
+    }
+
+    @Test
+    public void explicitContentLength_response_keepsHandlerValue() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) ->
+                response.header("Content-Length", "5").send("hello"), "/clExplicit", true);
+
+        String response = lower(rawResponse(testServer.port, "GET /clExplicit HTTP/1.1\r\n"
+                + "Host: localhost\r\nConnection: close\r\n\r\n"));
+
+        Assert.assertTrue(response.contains("content-length: 5"), response);
+        Assert.assertEquals(countOccurrences(response, "content-length:"), 1, response);
+    }
+
+    @Test
+    public void emptyResponse_carriesZeroContentLength() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.finish(), "/clEmpty", true);
+
+        String response = lower(rawResponse(testServer.port, "GET /clEmpty HTTP/1.1\r\n"
+                + "Host: localhost\r\nConnection: close\r\n\r\n"));
+
+        Assert.assertTrue(response.contains("content-length: 0"), response);
+        Assert.assertFalse(response.contains("transfer-encoding"), response);
+    }
+
+    @Test
+    public void redirect_response_hasSingleContentLength() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.redirect("/target"), "/clRedirect", true);
+
+        String response = lower(rawResponse(testServer.port, "GET /clRedirect HTTP/1.1\r\n"
+                + "Host: localhost\r\nConnection: close\r\n\r\n"));
+
+        // 显式写长度后 finish 不得再补，否则同一响应出现两个 Content-Length
+        Assert.assertTrue(response.contains("content-length: 0"), response);
+        Assert.assertEquals(countOccurrences(response, "content-length:"), 1, response);
+    }
+
+    private static int countOccurrences(String text, String token) {
+        int count = 0;
+        for (int index = text.indexOf(token); index >= 0; index = text.indexOf(token, index + token.length())) {
+            count++;
+        }
+        return count;
+    }
+
     private static int countStatusLines(String response) {
         int count = 0;
         for (String line : response.split("\n")) {
