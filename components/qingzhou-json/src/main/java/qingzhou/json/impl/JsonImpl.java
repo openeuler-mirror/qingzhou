@@ -4,9 +4,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleAbstractTypeResolver;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import qingzhou.json.Json;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Component
 public class JsonImpl implements Json {
@@ -19,6 +24,13 @@ public class JsonImpl implements Json {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         // transient 表示本进程内部状态（如 registry 写入的存活时间/密钥版本），不随报文收发
         objectMapper.configure(MapperFeature.PROPAGATE_TRANSIENT_MARKER, true);
+        // 元数据集合声明为 Set 接口时 Jackson 默认实例化 HashSet，迭代顺序改由 code 哈希决定，
+        // 会把 annotation.json 里的字段声明顺序打乱（前端按该顺序渲染表单）。
+        SimpleAbstractTypeResolver types = new SimpleAbstractTypeResolver();
+        types.addMapping(Set.class, LinkedHashSet.class);
+        SimpleModule module = new SimpleModule();
+        module.setAbstractTypes(types);
+        objectMapper.registerModule(module);
     }
 
     @Override
