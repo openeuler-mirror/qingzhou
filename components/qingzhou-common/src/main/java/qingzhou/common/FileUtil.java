@@ -124,8 +124,9 @@ public class FileUtil {
                         throw new IOException("cannot create dir: " + targetFile);
                     }
                 } else {
-                    // 应用解压跳过已存在项：应用侧的 META-INF/MANIFEST.MF 不得被 driver 覆盖；
-                    // driver 解压（overwrite=true）允许覆盖，保证驱动实现始终以框架自带版本为准
+                    // driver 覆盖解压也不能碰 MANIFEST.MF：应用可能在 manifest 中声明 Qingzhou-Detection-Enabled 等自定义 headers
+                    if (overwrite && "META-INF/MANIFEST.MF".equals(entry.getName())) continue;
+                    // overwrite=true 覆盖同名 class（防应用遮蔽驱动实现）；false 跳过已存在项（保留应用侧自定义文件）
                     if (overwrite || !Files.exists(targetFile.toPath())) {
                         File parent = targetFile.getParentFile();
                         if (parent != null) parent.mkdirs();
