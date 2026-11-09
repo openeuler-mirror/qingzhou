@@ -69,11 +69,7 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
 
     @Override
     public int totalSize(Map<String, String> query) {
-        try {
-            return filterByQuery(listLogFiles(), query).size();
-        } catch (Exception e) {
-            return 0;
-        }
+        return filterByQuery(listLogFiles(), query).size();
     }
 
     @Override
@@ -122,9 +118,6 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
         List<Map<String, String>> logs = new ArrayList<>();
 
         String logBasePath = getBaseLogsDir();
-        if (logBasePath == null) {
-            return logs;
-        }
         Path logDir = Paths.get(logBasePath);
 
         if (!Files.exists(logDir)) {

@@ -17,11 +17,6 @@ import qingzhou.api.action.*;
         info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
         icon = "Fries")
 public class Connector extends TomcatModelBase implements Page, Show {
-    private java.util.List<Map<String, String>> db;
-
-    public Connector() {
-    }
-
     @ModelField(id = true,
             name = {"Connector ID", "en:Connector ID"},
             list = true,
@@ -173,38 +168,26 @@ public class Connector extends TomcatModelBase implements Page, Show {
 
     @Override
     public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        db = loadConnectors();
-        List<Map<String, String>> filtered = filterByQuery(db, query);
-        return buildListResult(filtered, pageNum, pageSize, listFields);
+        List<Map<String, String>> connectors = loadConnectors();
+        return buildListResult(filterByQuery(connectors, query), pageNum, pageSize, listFields);
     }
 
     @Override
     public int totalSize(Map<String, String> query) {
-        return db.size();
-
+        return filterByQuery(loadConnectors(), query).size();
     }
 
     @Override
     public boolean contains(String id) {
-        for (Map<String, String> connector : db) {
-            if (connector.get("id").equals(id)) {
-                return true;
-            }
-        }
-        return false;
+        return loadConnectors().stream().anyMatch(connector -> connector.get("id").equals(id));
     }
 
     @Override
     public Map<String, String> show(String id) {
-        if (id == null) {
-            return new HashMap<>();
-        }
-        for (Map<String, String> connector : db) {
-            if (connector.get("id").equals(id)) {
-                return connector;
-            }
-        }
-        return new HashMap<>();
+        return loadConnectors().stream()
+                .filter(connector -> connector.get("id").equals(id))
+                .findFirst()
+                .orElse(new HashMap<>());
     }
 
     // 覆盖框架默认 monitor 动作：默认动作未声明 list，列表行不会生成"监视"按钮

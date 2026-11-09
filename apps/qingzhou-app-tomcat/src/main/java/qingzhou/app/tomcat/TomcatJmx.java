@@ -463,18 +463,25 @@ final class TomcatJmx {
                 continue;
             }
             String targetPid = (String) descriptor.getClass().getMethod("id").invoke(descriptor);
-            Object vm = vmClass.getMethod("attach", String.class).invoke(null, targetPid);
+            Object vm = null;
             boolean matched = false;
             try {
+                vm = vmClass.getMethod("attach", String.class).invoke(null, targetPid);
                 Properties props = (Properties) vmClass.getMethod("getSystemProperties").invoke(vm);
-                matched = tomcatHome == null || samePath(tomcatHome, props.getProperty("catalina.home"));
+                matched = samePath(tomcatHome, props.getProperty("catalina.home"));
                 if (matched) {
                     pid = targetPid;
                     return vm;
                 }
+            } catch (Exception e) {
+                // 单个进程 attach 或读属性失败（权限不足、进程已退出）不应中断对其余候选的匹配
             } finally {
-                if (!matched) {
-                    vmClass.getMethod("detach").invoke(vm);
+                if (!matched && vm != null) {
+                    try {
+                        vmClass.getMethod("detach").invoke(vm);
+                    } catch (Exception ignored) {
+                        // detach 属清理动作，失败不阻断继续尝试其他进程
+                    }
                 }
             }
         }

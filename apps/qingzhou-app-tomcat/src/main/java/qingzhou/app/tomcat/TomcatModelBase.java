@@ -17,18 +17,14 @@ public class TomcatModelBase extends ModelBase {
     public String getTomcatBaseDir() {
         String basePath = getAppContext().getDetectedPath();
         if (basePath == null || basePath.isEmpty()) {
-            System.err.println("tomcat path is empty.");
-            return null;
+            // 无探测路径时不能返回 null：后续会退化为"匹配任意 Tomcat 进程"，可能连错实例
+            throw new IllegalStateException("tomcat path is empty");
         }
         return basePath;
     }
 
     public String getBaseLogsDir() {
-        String basePath = getTomcatBaseDir();
-        if (basePath == null) {
-            return null;
-        }
-        return resolvePath(basePath, "logs").toString();
+        return resolvePath(getTomcatBaseDir(), "logs").toString();
     }
 
     /**
