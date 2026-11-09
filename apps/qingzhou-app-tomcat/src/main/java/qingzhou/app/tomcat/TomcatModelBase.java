@@ -1,19 +1,16 @@
 package qingzhou.app.tomcat;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
 import qingzhou.logger.Logger;
-import qingzhou.xml.Doc;
-import qingzhou.xml.Xml;
 
 public class TomcatModelBase extends ModelBase {
 
@@ -34,20 +31,32 @@ public class TomcatModelBase extends ModelBase {
         return resolvePath(basePath, "logs").toString();
     }
 
-    public File getContextXmlFile() {
-        String basePath = getTomcatBaseDir();
-        if (basePath == null) {
-            return null;
+    /**
+     * 从 Context path 提取应用名称："/demo" -> "demo"，空路径 -> ROOT。
+     */
+    static String appName(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            return "ROOT";
         }
-        return resolvePath(basePath, "conf", "context.xml").toFile();
+        String name = path.trim();
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
+        return name.isEmpty() ? "ROOT" : name;
     }
 
-    public File getServerXmlFile() {
-        String basePath = getTomcatBaseDir();
-        if (basePath == null) {
-            return null;
+    /**
+     * 监视动作由前端以 POST /{model}/monitor + body{id} 调用，路径中无 id，需从参数兜底。
+     */
+    static String monitorId(Request request) {
+        String id = request.getId();
+        if (id == null || id.isEmpty()) {
+            id = request.getParameter("id");
         }
-        return resolvePath(basePath, "conf", "server.xml").toFile();
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("缺少记录 id 参数");
+        }
+        return id;
     }
 
     /**
@@ -108,93 +117,6 @@ public class TomcatModelBase extends ModelBase {
         return result;
     }
     
-    // ==================== XML 操作方法 ====================
-    
-    /**
-     * 获取 Xml 服务
-     */
-    protected Xml getXmlService() {
-        return getAppContext().getService(Xml.class);
-    }
-    
-    /**
-     * 解析 XML 文件
-     */
-    protected Doc parseXml(File file) throws Exception {
-        if (file == null || !file.exists()) {
-            throw new IllegalStateException("XML 文件不存在: " + (file != null ? file.getPath() : "null"));
-        }
-        return getXmlService().parse(file);
-    }
-    
-    /**
-     * 查询 XML 节点列表
-     */
-    protected List<Properties> getXmlNodes(File file, String xpath) throws Exception {
-        Doc doc = parseXml(file);
-        return doc.getNodes(xpath);
-    }
-    
-    /**
-     * 查询 XML 单个节点
-     */
-    protected Properties getXmlNode(File file, String xpath) throws Exception {
-        Doc doc = parseXml(file);
-        return doc.getNode(xpath);
-    }
-    
-    /**
-     * 检查 XML 节点是否存在
-     */
-    protected boolean xmlNodeExists(File file, String xpath) {
-        try {
-            Properties node = getXmlNode(file, xpath);
-            return node != null && !node.isEmpty();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-    
-    /**
-     * 添加 XML 节点
-     */
-    protected void addXmlNode(File file, String parentPath, String nodeName, Properties attrs) throws Exception {
-        Doc doc = parseXml(file);
-        doc.addNode(parentPath, nodeName, attrs);
-        doc.write(file);
-    }
-    
-    /**
-     * 更新 XML 节点
-     */
-    protected void updateXmlNode(File file, String xpath, Properties attrs) throws Exception {
-        Doc doc = parseXml(file);
-        doc.updateNode(xpath, attrs);
-        doc.write(file);
-    }
-    
-    /**
-     * 删除 XML 节点
-     */
-    protected void deleteXmlNode(File file, String xpath) throws Exception {
-        Doc doc = parseXml(file);
-        doc.deleteNode(xpath);
-        doc.write(file);
-    }
-
-    /**
-     * Properties 转 Map
-     */
-    protected Map<String, String> toMap(Properties props) {
-        Map<String, String> map = new java.util.HashMap<>();
-        if (props != null) {
-            for (String key : props.stringPropertyNames()) {
-                map.put(key, props.getProperty(key));
-            }
-        }
-        return map;
-    }
-
     protected void logError(String message, Throwable e) {
         Logger logger = getAppContext().getService(Logger.class);
         if (logger != null) logger.error(message, e);

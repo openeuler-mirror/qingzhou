@@ -41,25 +41,38 @@ mvn clean install
 
 | 顺序 | 模型 code | 名称 | 支持操作 |
 |------|-----------|------|----------|
-| 0 | dashboard | 首页 / Dashboard | 详情（Show） |
+| 0 | dashboard | 首页 / Dashboard | 详情、监控（Show、Monitor） |
 | 1 | applications | 应用管理 / Applications | 列表（List） |
-| 2 | connector | Connector 通道 / Connector | 列表、详情、新增、修改、删除 |
+| 2 | connector | Connector 通道 / Connector | 列表、详情、监控 |
 | 3 | threadpool | 线程池 / Thread Pools | 列表、详情 |
 | 4 | logs | 日志查看 / Log Viewer | 列表、详情 |
 
 ### 首页（dashboard）
 
-显示当前探测到的 Tomcat 安装路径，用于快速确认探测结果。
+以监控卡片/图表展示 Tomcat 安装路径与运行中 MBean 的汇总指标。
 
 字段：
 
-| 字段 | 说明 |
-|------|------|
-| 安装路径 | `getAppContext().getDetectedPath()` 返回的 Tomcat 根目录 |
+| 字段 | 图表 | MBean 来源 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 安装路径 | 文本 | `getAppContext().getDetectedPath()` |
+| 服务器版本 | 文本 | `Catalina:type=Server` 的 `serverInfo` |
+| 通道数 | stat | `Catalina:type=Connector` 数量 |
+| 应用数 | stat | `Catalina:j2eeType=WebModule` 数量 |
+| 活跃会话数 | stat | `Catalina:type=Manager` 的 `activeSessions` 求和 |
+| 累计请求数 | stat | `Catalina:type=GlobalRequestProcessor` 的 `requestCount` 求和 |
+| 累计错误数 | stat | 同上 `errorCount` 求和 |
+| 已发送 / 已接收(MB) | stat | 同上 `bytesSent` / `bytesReceived` 求和并换算 |
+| 线程繁忙率(%) | gauge | ThreadPool 的 `currentThreadsBusy / maxThreads` |
+| 繁忙线程 / 空闲线程 | bar | ThreadPool 的 `currentThreadsBusy` 与 `currentThreadCount - currentThreadsBusy` |
+| 平均 / 最大处理时间(ms) | line | GlobalRequestProcessor 的 `processingTime / requestCount` 与 `maxTime` |
+
+> 指标为累计值，反映 Tomcat 自启动以来的数据；线程与会话为实时值。
 
 ### 应用管理（applications）
 
-从 `conf/context.xml` 解析 `<Context>` 节点，并扫描 `webapps/` 目录，合并展示已部署应用。
+通过本地 Attach 读取运行中 Tomcat 的 WebModule MBean；Tomcat 未运行或无法 attach 时页面直接报错。
 
 字段：
 
@@ -69,50 +82,89 @@ mvn clean install
 | 上下文路径 | 应用访问路径，如 `/demo` |
 | 文档基目录 | 应用 docBase |
 | 可重载 | 是否自动重载（`true` / `false`） |
-| 应用状态 | `deployed`（docBase 目录存在）或 `not_found`（不存在） |
+| 应用状态 | Tomcat 运行状态（`STARTED` 等） |
 
-> 此模型仅支持列表查看，不可新增或修改。`webapps/` 下后缀为 `.war`、`.xml`、`.txt` 的文件，以及 `work`、`temp`、隐藏文件等会被自动跳过。
-> `appBase` 来自 `server.xml` 中 `<Engine><Host>` 的 `appBase` 属性，相对路径会自动拼接到 Tomcat 根目录下。
+> 此模型仅支持列表查看，不可新增或修改。
+
+列表操作列的「监视」按应用名读取该应用的运行时指标：
+
+| 指标 | 图表 | MBean 来源 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 累计请求数 / 累计错误数 | stat | `WebModule` 的 `requestCount` / `errorCount` |
+| 平均 / 最大 / 最小处理时间 | line / stat | `processingTime / requestCount`、`maxTime`、`minTime` |
+| 活跃会话数 | stat | 同 `path` 的 `Manager` 的 `activeSessions` |
+| 运行状态 | 文本 | `WebModule` 的 `stateName` |
 
 ### Connector 通道（connector）
 
-支持对 `conf/server.xml` 中 `<Service><Connector>` 节点进行完整的增删改查。
+只读运行中 Tomcat 的 Connector MBean，不读写任何配置文件。
 
 字段：
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| id | string | - | - | Connector ID（端口，只读） |
-| protocol | select | 否 | `HTTP/1.1` | Connector 使用的协议 |
-| port | port | 是 | - | 监听端口（不可修改，新增时确定） |
-| address | host | 否 | `0.0.0.0` | 绑定地址 |
-| maxThreads | numeric | 否 | `200` | 最大工作线程数 |
-| minSpareThreads | numeric | 否 | `10` | 最小空闲线程数 |
-| acceptCount | numeric | 否 | `100` | 等待队列长度 |
-| connectionTimeout | numeric | 否 | `20000` | 连接超时时间（毫秒） |
-| redirectPort | port | 否 | `8443` | SSL 重定向端口 |
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | Connector ID（端口，只读） |
+| protocol | select | Connector 使用的协议 |
+| port | port | 监听端口 |
+| address | host | 绑定地址 |
+| maxThreads | numeric | 最大工作线程数 |
+| minSpareThreads | numeric | 最小空闲线程数 |
+| acceptCount | numeric | 等待队列长度 |
+| connectionTimeout | numeric | 连接超时时间（毫秒） |
+| redirectPort | port | SSL 重定向端口 |
 
-操作说明：
+> 列表/详情读取 Connector MBean，支持按字段搜索。
 
-- **新增**：通过端口校验避免重复添加，相同端口的 Connector 会被自动跳过；新增节点会写入 `<Service>` 节点下。
-- **修改**：以端口为唯一标识（id）定位节点，更新其属性。
-- **删除**：以端口为唯一标识删除对应 `<Connector>` 节点。
-- **列表/详情**：解析 `server.xml` 中所有 `<Connector>` 节点并支持按字段搜索。
+列表操作列的「监控」按端口读取该通道的运行时指标：
+
+| 指标 | 图表 | MBean 来源 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 累计请求数 / 累计错误数 | stat | 同名 `GlobalRequestProcessor` 的 `requestCount` / `errorCount` |
+| 已发送 / 已接收 (MB) | stat | 同上 `bytesSent` / `bytesReceived` |
+| 线程繁忙率 | gauge | 同端口 `ThreadPool` 的 `currentThreadsBusy / maxThreads` |
+| 繁忙 / 空闲线程 | bar | `currentThreadsBusy`、`currentThreadCount - currentThreadsBusy` |
+| 平均 / 最大处理时间 | line | `processingTime / requestCount`、`maxTime` |
 
 ### 线程池（threadpool）
 
-从 `conf/server.xml` 解析 `<Executor>` 节点，展示线程池配置。仅支持列表和详情查看。
+只读运行中 Tomcat 的 ThreadPool MBean，字段与 MBean 实际暴露的属性一一对应。
 
 字段：
 
-| 字段 | 说明 |
-|------|------|
-| 池名称 | Executor 的 `name` 属性 |
-| 池前缀 | Executor 的 `namePrefix` 属性 |
-| 最大线程 | `maxThreads`（默认 `200`） |
-| 最小空闲 | `minSpareThreads`（默认 `10`） |
+| 字段 | MBean 属性 | 说明 |
+|------|-----------|------|
+| 池名称 | `name`（ObjectName key） | 线程池名称，作为 id |
+| 端口 | `port` | 所属 Connector 端口 |
+| 本地端口 | `localPort` | 实际监听端口 |
+| 最大线程 | `maxThreads` | 配置的最大线程数 |
+| 最小空闲 | `minSpareThreads` | 最小空闲线程数 |
+| 当前线程数 | `currentThreadCount` | 当前已创建的线程数 |
+| 繁忙线程数 | `currentThreadsBusy` | 正在处理请求的线程数 |
+| 连接数 | `connectionCount` | 当前打开的连接数 |
+| 长连接数 | `keepAliveCount` | 当前保持的长连接数 |
+| 最大连接数 | `maxConnections` | 允许的最大连接数（详情） |
+| 等待队列 | `backlog` | 等待接受的连接队列长度（详情） |
+| 接受线程数 | `acceptorThreadCount` | Acceptor 线程数（详情） |
+| 轮询线程数 | `pollerThreadCount` | Poller 线程数（详情） |
+| 长连接超时 | `keepAliveTimeout` | 长连接超时时间（详情） |
+| 最大长连接请求 | `maxKeepAliveRequests` | 单个长连接允许的最大请求数（详情） |
+| 读取超时 | `soTimeout` | Socket 读取超时时间（详情） |
+| 运行状态 | `running` | 线程池是否运行中（详情） |
+| 暂停状态 | `paused` | 线程池是否已暂停（详情） |
 
 > 池名称作为 id 在详情查看时会进行 URL 解码处理。
+
+列表操作列的「监视」按池名称读取该线程池的运行时指标：
+
+| 指标 | 图表 | MBean 属性 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 已创建线程 | stat | `currentThreadCount` |
+| 繁忙 / 空闲线程 | bar | `currentThreadsBusy`、`currentThreadCount - currentThreadsBusy` |
+| 线程繁忙率 | gauge | `currentThreadsBusy / maxThreads` |
+| 当前连接数 / 长连接数 | stat | `connectionCount` / `keepAliveCount` |
 
 ### 日志查看（logs）
 
@@ -131,14 +183,11 @@ mvn clean install
 
 ## 依赖的 Tomcat 关键文件
 
-本应用所有读写操作均针对以下 Tomcat 自带文件，未引入额外的运行时数据存储：
+运行期数据全部来自运行中 Tomcat 的 MBean，本应用为只读，不读取也不修改 Tomcat 配置文件：
 
 | 文件 | 用途 | 涉及操作 |
 |------|------|----------|
-| `<TOMCAT_HOME>/conf/server.xml` | Connector / Executor / Host appBase 配置 | 解析、新增、修改、删除 |
-| `<TOMCAT_HOME>/conf/context.xml` | 应用 `<Context>` 配置 | 解析 |
 | `<TOMCAT_HOME>/logs/` | 日志文件目录 | 读取 |
-| `<TOMCAT_HOME>/webapps/` | 已部署应用目录 | 扫描 |
 
 ## 常见问题
 
@@ -150,15 +199,11 @@ A: 未探测到 Tomcat 安装目录。请确认：
 
 **Q: 应用管理列表为空？**
 
-A: 检查 `conf/context.xml` 是否存在 `<Context>` 节点，以及 `webapps/` 目录是否包含已部署应用。`appBase` 取自 `server.xml` 中 `<Engine><Host>` 节点的 `appBase` 属性，若该属性缺失则无法解析相对路径的应用。
+A: 走 JMX，需确认 Tomcat 进程正在运行，Qingzhou 与 Tomcat 属同一操作系统用户（Attach 要求），且未配置 `-XX:+DisableAttachMechanism`。
 
-**Q: Connector 新增不生效？**
+**Q: Connector 列表与实际不符？**
 
-A: 新增时会按端口校验，若 `server.xml` 中已存在相同 `port` 的 `<Connector>` 节点会被静默跳过。请改用「修改」操作或更换端口。同时确认 `<Service>` 节点存在，新节点会被挂到该节点下。
-
-**Q: Connector 修改后端口被覆盖？**
-
-A: 修改接口以原端口作为唯一标识（id），并将 `port` 属性强制写回为原端口值，因此无法通过「修改」直接变更端口。如需变更端口，请删除旧 Connector 后重新「新增」。
+A: 列表读取运行中 Tomcat 的 MBean，反映的是 Tomcat 启动时加载的配置。手工修改 `conf/server.xml` 后需重启 Tomcat 才会同步。
 
 **Q: 日志列表为空？**
 
