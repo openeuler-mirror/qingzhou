@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // 文件策略：候选目录按优先级为环境变量指向的目录、扫描根目录自身及其一级子目录；流惰性求值，首个命中即短路
@@ -21,7 +22,7 @@ class FeatureFileStrategy implements PathDetectionStrategy {
     }
 
     @Override
-    public String detect() {
+    public List<String> detect() {
         Stream<File> envCandidates = envVarNames.stream()
                 .map(System::getenv)
                 .filter(Objects::nonNull)
@@ -31,8 +32,7 @@ class FeatureFileStrategy implements PathDetectionStrategy {
         return Stream.concat(envCandidates, rootCandidates())
                 .filter(featureFiles::containsIn)
                 .map(File::getAbsolutePath)
-                .findFirst()
-                .orElse(null);
+                .collect(Collectors.toList());
     }
 
     private Stream<File> rootCandidates() {

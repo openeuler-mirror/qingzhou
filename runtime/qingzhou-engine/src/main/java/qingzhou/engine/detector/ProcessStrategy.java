@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 // 进程策略：从进程命令行反推安装目录；全量扫描开销大，扫描结果按静态缓存跨 bundle 共享
 class ProcessStrategy implements PathDetectionStrategy {
@@ -33,7 +34,7 @@ class ProcessStrategy implements PathDetectionStrategy {
     }
 
     @Override
-    public String detect() throws Exception {
+    public List<String> detect() throws Exception {
         if (processKeywords.isEmpty()) return null;
 
         return processLines().stream()
@@ -43,8 +44,7 @@ class ProcessStrategy implements PathDetectionStrategy {
                 .filter(Objects::nonNull)
                 .filter(featureFiles::containsIn)
                 .map(File::getAbsolutePath)
-                .findFirst()
-                .orElse(null);
+                .collect(Collectors.toList());
     }
 
     // 取关键字之前的命令行前缀作为候选安装目录；关键字位于行首时无父目录信息，须丢弃，否则会退化成工作目录下的相对路径误判
