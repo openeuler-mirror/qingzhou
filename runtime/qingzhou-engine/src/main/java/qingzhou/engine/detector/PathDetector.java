@@ -24,10 +24,10 @@ class PathDetector {
         this.strategies = list;
     }
 
-    String detect() throws Exception {
+    List<String> detect() throws Exception {
         for (PathDetectionStrategy strategy : strategies) {
-            String detected = strategy.detect();
-            if (detected != null) return detected;
+            List<String> detectedList = strategy.detect();
+            if (detectedList != null) return detectedList;
         }
         return null;
     }

@@ -1,5 +1,7 @@
 package qingzhou.engine.detector;
 
+import java.util.List;
+
 interface PathDetectionStrategy {
-    String detect() throws Exception;
+    List<String> detect() throws Exception;
 }

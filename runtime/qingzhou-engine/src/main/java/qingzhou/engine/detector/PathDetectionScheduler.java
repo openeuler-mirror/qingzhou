@@ -1,10 +1,16 @@
 package qingzhou.engine.detector;
 
+import org.osgi.framework.Bundle;
+import qingzhou.engine.QingzhouMain;
+
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import org.osgi.framework.Bundle;
 
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
@@ -22,13 +28,22 @@ public class PathDetectionScheduler {
         PathDetector detector = new PathDetector(bundle.getHeaders());
         scheduledExecutor.scheduleAtFixedRate(() -> {
             try { // 实际检测逻辑
-                String detected = detector.detect();
-                if (detected != null) {
-                    // 按 bundle 符号名分键传递，避免多个探测型 bundle 互相覆盖，
-                    // 也避免"设置后即清除"与 Activator 异步读取之间的竞态；属性值随检测覆盖更新，无需清除
-                    String dataFlag = "Qingzhou-Detected-Path." + bundle.getSymbolicName();
-                    System.setProperty(dataFlag, detected);
-                    bundle.start();
+                List<String> detectedList = detector.detect();
+                if (detectedList != null) {
+                    for (int i = 0; i < detectedList.size(); i++) {
+                        String detected = detectedList.get(i);
+                        // 按 bundle 符号名分键传递，避免多个探测型 bundle 互相覆盖，
+                        // 也避免"设置后即清除"与 Activator 异步读取之间的竞态；属性值随检测覆盖更新，无需清除
+                        String dataFlag = "Qingzhou-Detected-Path." + bundle.getSymbolicName();
+                        System.setProperty(dataFlag, detected);
+                        try (InputStream inputStream = Files.newInputStream(new File(new URL(bundle.getLocation()).getFile()).toPath())) {
+                            Bundle installed = QingzhouMain.getBundleContext().installBundle(bundle.getLocation() + ":" + i, inputStream);
+                            String seqFlag = "Qingzhou-App-Seq." + bundle.getSymbolicName();
+                            System.setProperty(seqFlag, i + "");
+                            installed.start();
+                        }
+
+                    }
                 } else {
                     bundle.stop();
                 }

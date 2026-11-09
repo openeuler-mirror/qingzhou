@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -142,5 +143,9 @@ public class QingzhouMain {
             config.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, pkgExtra.trim());
         }
         return config;
+    }
+
+    public static BundleContext getBundleContext() {
+        return osgiFramework.getBundleContext();
     }
 }

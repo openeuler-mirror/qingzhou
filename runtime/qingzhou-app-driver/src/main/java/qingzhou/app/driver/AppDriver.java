@@ -45,10 +45,14 @@ public class AppDriver implements BundleActivator {
 
         // 初始化上下文
         appContext = new AppContextImpl(this, context, appMeta);
+        String seq = context.getProperty("Qingzhou-App-Seq." + context.getBundle().getSymbolicName());
         Properties appProperties = parseProperties();
         String code = appProperties.getProperty("code");
         if (code != null && !code.trim().isEmpty()) {
             appMeta.getApp().code = code.trim();
+        }
+        if (seq != null && !seq.trim().isEmpty()) {
+            appMeta.getApp().code = appMeta.getApp().code + ":" + seq.trim();
         }
         appContext.appProperties = appProperties;
         // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
@@ -162,27 +166,38 @@ public class AppDriver implements BundleActivator {
         if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
-            Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
+            Configuration appShareConfiguration = configurationAdmin.getFactoryConfiguration("app",
                     context.getBundle().getSymbolicName(), null);
-            Dictionary<String, Object> properties = appConfiguration.getProperties();
-            if (properties != null) {
-                Enumeration<?> keys = properties.keys();
-                while (keys.hasMoreElements()) {
-                    String key = (String) keys.nextElement();
-                    if (key.equals(Constants.SERVICE_PID))
-                        continue;
-                    if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
-                        continue;
-                    Object value = properties.get(key);
-                    if (value != null) { // 配置值不保证是 String，且 Hashtable 不接受 null 值
-                        appProperties.setProperty(key, String.valueOf(value));
-                    }
-                }
+            getProperties(appShareConfiguration, appProperties);
+            String seq = context.getProperty("Qingzhou-App-Seq." + context.getBundle().getSymbolicName());
+            if (seq != null && !seq.trim().isEmpty()) {
+                Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
+                        context.getBundle().getSymbolicName() + ":" + seq, null);
+                getProperties(appConfiguration, appProperties);
             }
+
         } finally {
             context.ungetService(serviceReference);
         }
         return appProperties;
+    }
+
+    private static void getProperties(Configuration appConfiguration, Properties appProperties) {
+        Dictionary<String, Object> properties = appConfiguration.getProperties();
+        if (properties != null) {
+            Enumeration<?> keys = properties.keys();
+            while (keys.hasMoreElements()) {
+                String key = (String) keys.nextElement();
+                if (key.equals(Constants.SERVICE_PID))
+                    continue;
+                if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
+                    continue;
+                Object value = properties.get(key);
+                if (value != null) { // 配置值不保证是 String，且 Hashtable 不接受 null 值
+                    appProperties.setProperty(key, String.valueOf(value));
+                }
+            }
+        }
     }
 
     private void initAppModels() {
