@@ -6,7 +6,7 @@ import qingzhou.api.action.Page;
 
 import java.util.*;
 
-@Model(code = "applications", order = 1, icon = "ShoppingBag",
+@Model(code = "applications", order = 3, icon = "ShoppingBag",
         name = {"应用管理", "en:Applications"},
         info = {"展示运行中 Tomcat 的应用(Context)", "en:Display applications of the running Tomcat"})
 public class TomcatApplications extends TomcatModelBase implements Page {

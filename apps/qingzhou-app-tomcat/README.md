@@ -37,15 +37,19 @@ mvn clean install
 
 ## 功能模块
 
-应用按 `order` 顺序提供以下 5 个模型，对应控制台左侧菜单：
+应用按 `order` 顺序提供以下 7 个模型，对应控制台左侧菜单：
 
 | 顺序 | 模型 code | 名称 | 支持操作 |
 |------|-----------|------|----------|
 | 0 | dashboard | 首页 / Dashboard | 详情、监控（Show、Monitor） |
-| 1 | applications | 应用管理 / Applications | 列表（List） |
-| 2 | connector | Connector 通道 / Connector | 列表、详情、监控 |
-| 3 | threadpool | 线程池 / Thread Pools | 列表、详情 |
-| 4 | logs | 日志查看 / Log Viewer | 列表、详情 |
+| 1 | jvm | JVM 监控 / JVM Monitor | 监控（Monitor） |
+| 2 | system | 系统监控 / System Monitor | 监控（Monitor） |
+| 3 | applications | 应用管理 / Applications | 列表（List） |
+| 4 | connector | Connector 通道 / Connector | 列表、详情、监控 |
+| 5 | threadpool | 线程池 / Thread Pools | 列表、详情 |
+| 6 | logs | 日志查看 / Log Viewer | 列表、详情 |
+
+> jvm 与 system 仅有 Monitor 动作，点击菜单即直接打开监视页面。
 
 ### 首页（dashboard）
 
@@ -60,15 +64,43 @@ mvn clean install
 | 服务器版本 | 文本 | `Catalina:type=Server` 的 `serverInfo` |
 | 通道数 | stat | `Catalina:type=Connector` 数量 |
 | 应用数 | stat | `Catalina:j2eeType=WebModule` 数量 |
-| 活跃会话数 | stat | `Catalina:type=Manager` 的 `activeSessions` 求和 |
-| 累计请求数 | stat | `Catalina:type=GlobalRequestProcessor` 的 `requestCount` 求和 |
-| 累计错误数 | stat | 同上 `errorCount` 求和 |
-| 已发送 / 已接收(MB) | stat | 同上 `bytesSent` / `bytesReceived` 求和并换算 |
-| 线程繁忙率(%) | gauge | ThreadPool 的 `currentThreadsBusy / maxThreads` |
-| 繁忙线程 / 空闲线程 | bar | ThreadPool 的 `currentThreadsBusy` 与 `currentThreadCount - currentThreadsBusy` |
-| 平均 / 最大处理时间(ms) | line | GlobalRequestProcessor 的 `processingTime / requestCount` 与 `maxTime` |
 
-> 指标为累计值，反映 Tomcat 自启动以来的数据；线程与会话为实时值。
+> 首页只保留基础信息：安装路径、服务器版本、通道与应用数量。
+> 通道监视（请求/流量/线程/耗时）与按应用监视的指标不在首页重复展示。
+> JVM 与进程/系统资源指标已拆分到「JVM 监控」「系统监控」两个独立模块。
+
+### JVM 监控（jvm）
+
+点击菜单直接进入监视页面，读取运行中 Tomcat 进程的 `java.lang` 域 MBean。
+
+| 字段 | 图表 | MBean 来源 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 运行时长(小时) | stat | `java.lang:type=Runtime` 的 `Uptime` |
+| 进程 CPU(%) | gauge | `java.lang:type=OperatingSystem` 的 `ProcessCpuLoad`（0~1 换算，`-1` 表示不可用） |
+| JVM 线程数 | line | `java.lang:type=Threading` 的 `ThreadCount` |
+| 已加载类 | stat | `java.lang:type=ClassLoading` 的 `LoadedClassCount` |
+| 堆已用 / 堆上限(MB) | line | `java.lang:type=Memory` 的 `HeapMemoryUsage.used` / `max`（`max` 为 `-1` 时取 `committed`） |
+| 堆使用率(%) | gauge | 堆已用占堆上限的比例 |
+| 非堆已用(MB) | line | `java.lang:type=Memory` 的 `NonHeapMemoryUsage.used` |
+| GC 次数 / GC 耗时(ms) | bar | `java.lang:type=GarbageCollector` 的 `CollectionCount` / `CollectionTime` 求和 |
+
+### 系统监控（system）
+
+点击菜单直接进入监视页面，展示 Tomcat 进程与操作系统资源，用于排查内存泄漏、句柄耗尽、CPU 异常等问题。
+
+| 字段 | 图表 | MBean 来源 |
+|------|------|-----------|
+| 统计时间 | 文本 | 采集时刻 |
+| 进程 PID | 文本 | Attach 命中的 Tomcat 进程号 |
+| 进程启动时间 | 文本 | `java.lang:type=Runtime` 的 `StartTime` |
+| JVM 版本 | 文本 | `java.lang:type=Runtime` 的 `VmName` / `VmVersion` |
+| 物理内存(MB) | line | 进程常驻内存（`ps -o rss`，无 `ps` 平台为 `0`） |
+| 物理内存占比(%) | gauge | 常驻内存占整机 `TotalPhysicalMemorySize` 的比例 |
+| 启动参数 | 文本 | `java.lang:type=Runtime` 的 `InputArguments` |
+| 系统 CPU(%) | gauge | `java.lang:type=OperatingSystem` 的 `SystemCpuLoad` |
+| 物理内存总量 / 可用(MB) | line | `java.lang:type=OperatingSystem` 的 `TotalPhysicalMemorySize` / `FreePhysicalMemorySize` |
+| 打开文件数 / 文件句柄上限 | bar | `java.lang:type=OperatingSystem` 的 `OpenFileDescriptorCount` / `MaxFileDescriptorCount` |
 
 ### 应用管理（applications）
 

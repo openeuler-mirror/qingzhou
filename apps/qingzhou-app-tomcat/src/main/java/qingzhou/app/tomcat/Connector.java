@@ -12,7 +12,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.action.*;
 
-@Model(code = "connector", order = 2,
+@Model(code = "connector", order = 4,
         name = {"Connector通道", "en:Connector"},
         info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
         icon = "Fries")

@@ -14,8 +14,11 @@ import qingzhou.api.*;
 @I18n(name = {"线程", "en:Thread"}, code = "Thread")
 @I18n(name = {"连接", "en:Connection"}, code = "Connection")
 @I18n(name = {"响应耗时", "en:Latency"}, code = "Latency")
-@I18n(name = {"虚拟机", "en:JVM"}, code = "Jvm")
 @I18n(name = {"内存", "en:Memory"}, code = "Memory")
+@I18n(name = {"进程", "en:Process"}, code = "Process")
+@I18n(name = {"系统资源", "en:OS Resources"}, code = "Os")
+@I18n(name = {"文件句柄", "en:File Descriptors"}, code = "File")
+@I18n(name = {"垃圾回收", "en:GC"}, code = "GC")
 public class TomcatApp implements QingzhouApp{
     @Override
     public void start(AppContext appContext) {

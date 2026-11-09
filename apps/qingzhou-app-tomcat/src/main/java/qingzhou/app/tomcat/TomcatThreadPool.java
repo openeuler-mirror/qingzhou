@@ -13,7 +13,7 @@ import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
 
-@Model(code = "threadpool", order = 3, icon = "Coin",
+@Model(code = "threadpool", order = 5, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},
         info = {"Tomcat线程池监控", "en:Tomcat thread pool monitoring"})
 public class TomcatThreadPool extends TomcatModelBase implements Page, Show {

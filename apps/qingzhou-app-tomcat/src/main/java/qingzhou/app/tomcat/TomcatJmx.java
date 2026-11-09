@@ -1,6 +1,8 @@
 package qingzhou.app.tomcat;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -30,6 +32,7 @@ final class TomcatJmx {
 
     private final JMXConnector connector;
     private final MBeanServerConnection mBeanServer;
+    private String pid;
 
     static synchronized TomcatJmx get(String tomcatHome) throws Exception {
         if (shared == null) {
@@ -129,7 +132,7 @@ final class TomcatJmx {
             "keepAliveTimeout", "maxKeepAliveRequests", "soTimeout", "running", "paused"};
 
     /**
-     * 汇总 GlobalRequestProcessor / ThreadPool / Manager / WebModule MBean 的监控项。
+     * 首页汇总：Server / Connector / WebModule MBean 的基础信息与数量。
      */
     Map<String, String> stats() throws Exception {
         try {
@@ -142,45 +145,31 @@ final class TomcatJmx {
             }
             stats.put("connectorCount", String.valueOf(names("Catalina:type=Connector,*").size()));
             stats.put("applicationCount", String.valueOf(names("Catalina:j2eeType=WebModule,*").size()));
-
-            long requests = 0, errors = 0, bytesSent = 0, bytesReceived = 0, processing = 0, maxTime = 0;
-            for (ObjectName name : names("Catalina:type=GlobalRequestProcessor,*")) {
-                requests += number(name, "requestCount");
-                errors += number(name, "errorCount");
-                bytesSent += number(name, "bytesSent");
-                bytesReceived += number(name, "bytesReceived");
-                processing += number(name, "processingTime");
-                maxTime = Math.max(maxTime, number(name, "maxTime"));
-            }
-            stats.put("requestCount", String.valueOf(requests));
-            stats.put("errorCount", String.valueOf(errors));
-            stats.put("bytesSent", mb(bytesSent));
-            stats.put("bytesReceived", mb(bytesReceived));
-            stats.put("avgProcessingTime", String.valueOf(requests == 0 ? 0 : processing / requests));
-            stats.put("maxProcessingTime", String.valueOf(maxTime));
-
-            long threads = 0, busy = 0, maxThreads = 0;
-            for (ObjectName name : names("Catalina:type=ThreadPool,*")) {
-                threads += number(name, "currentThreadCount");
-                busy += number(name, "currentThreadsBusy");
-                maxThreads += number(name, "maxThreads");
-            }
-            stats.put("threadBusyPercent", String.valueOf(maxThreads == 0 ? 0 : busy * 100 / maxThreads));
-            stats.put("threadBusy", String.valueOf(busy));
-            stats.put("threadIdle", String.valueOf(threads - busy));
-
-            long sessions = 0;
-            for (ObjectName name : names("Catalina:type=Manager,*")) {
-                sessions += number(name, "activeSessions");
-            }
-            stats.put("activeSessions", String.valueOf(sessions));
-
-            addJvmStats(stats);
             return stats;
         } catch (Exception e) {
             invalidate();
             throw e;
         }
+    }
+
+    /**
+     * JVM 级指标（目标 Tomcat 进程的 java.lang 域），供 jvm 模型使用。
+     */
+    Map<String, String> jvmStats() throws Exception {
+        Map<String, String> stats = new LinkedHashMap<>();
+        stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        addJvmStats(stats);
+        return stats;
+    }
+
+    /**
+     * 系统级指标（目标进程与操作系统资源），供 system 模型使用。
+     */
+    Map<String, String> systemStats() throws Exception {
+        Map<String, String> stats = new LinkedHashMap<>();
+        stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        addProcessStats(stats);
+        return stats;
     }
 
     /**
@@ -195,13 +184,12 @@ final class TomcatJmx {
         }
         stats.put("heapUsedMb", mb(heapUsed));
         stats.put("heapMaxMb", mb(heapMax));
-        stats.put("heapUsedPercent", String.valueOf(heapMax == 0 ? 0 : heapUsed * 100 / heapMax));
+        // 保留两位小数：堆占用常低于 1%，取整会恒显 0，仪表图无法反映真实水位
+        stats.put("heapUsedPercent", heapMax == 0 ? "0" : String.format("%.2f", heapUsed * 100.0 / heapMax));
         stats.put("nonHeapUsedMb", mb(compositeNumber(memory, "NonHeapMemoryUsage", "used")));
 
         ObjectName os = new ObjectName("java.lang:type=OperatingSystem");
         stats.put("processCpuPercent", percent(os, "ProcessCpuLoad"));
-        stats.put("systemCpuPercent", percent(os, "SystemCpuLoad"));
-        stats.put("physicalFreeMb", mb(number(os, "FreePhysicalMemorySize")));
 
         ObjectName threading = new ObjectName("java.lang:type=Threading");
         stats.put("jvmThreadCount", String.valueOf(number(threading, "ThreadCount")));
@@ -217,6 +205,45 @@ final class TomcatJmx {
         stats.put("loadedClassCount", String.valueOf(number(new ObjectName("java.lang:type=ClassLoading"), "LoadedClassCount")));
         stats.put("uptimeHours", String.format("%.1f",
                 number(new ObjectName("java.lang:type=Runtime"), "Uptime") / 3600000.0));
+    }
+
+    /**
+     * 进程级指标：PID、启动时间、常驻内存、文件句柄与 JVM 参数，便于排查进程层面问题。
+     */
+    private void addProcessStats(Map<String, String> stats) throws Exception {
+        stats.put("pid", pid);
+        ObjectName runtime = new ObjectName("java.lang:type=Runtime");
+        stats.put("startTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(number(runtime, "StartTime"))));
+        stats.put("jvmName", attribute(runtime, "VmName") + " " + attribute(runtime, "VmVersion"));
+        stats.put("vmArgs", String.join(" ", (String[]) mBeanServer.getAttribute(runtime, "InputArguments")));
+
+        ObjectName os = new ObjectName("java.lang:type=OperatingSystem");
+        long rssKb = rssKb();
+        long totalBytes = number(os, "TotalPhysicalMemorySize");
+        stats.put("rssMb", String.format("%.2f", rssKb / 1024.0));
+        stats.put("rssPercent", totalBytes == 0 ? "0" : String.format("%.2f", rssKb * 1024.0 * 100 / totalBytes));
+        stats.put("systemCpuPercent", percent(os, "SystemCpuLoad"));
+        stats.put("physicalTotalMb", mb(totalBytes));
+        stats.put("physicalFreeMb", mb(number(os, "FreePhysicalMemorySize")));
+        stats.put("openFileCount", String.valueOf(number(os, "OpenFileDescriptorCount")));
+        stats.put("maxFileCount", String.valueOf(number(os, "MaxFileDescriptorCount")));
+    }
+
+    /**
+     * 常驻内存 JDK 未暴露，按操作系统 ps 读取；Windows 等无 ps 的平台返回 0（契约适配）。
+     */
+    private long rssKb() {
+        try {
+            Process process = new ProcessBuilder("ps", "-o", "rss=", "-p", pid).start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line = reader.readLine();
+                return line == null || line.trim().isEmpty() ? 0 : Long.parseLong(line.trim());
+            } finally {
+                process.destroy();
+            }
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private long compositeNumber(ObjectName name, String attribute, String item) throws Exception {
@@ -333,7 +360,8 @@ final class TomcatJmx {
                 stats.put("errorCount", String.valueOf(number(name, "errorCount")));
                 stats.put("avgProcessingTime", String.valueOf(requests == 0 ? 0 : number(name, "processingTime") / requests));
                 stats.put("maxProcessingTime", String.valueOf(number(name, "maxTime")));
-                stats.put("minProcessingTime", String.valueOf(number(name, "minTime")));
+                // Tomcat 无请求时 minTime 为 Long.MAX_VALUE，不能直接展示
+                stats.put("minProcessingTime", String.valueOf(requests == 0 ? 0 : number(name, "minTime")));
                 stats.put("activeSessions", String.valueOf(activeSessions(contextPath)));
                 stats.put("stateName", attribute(name, "stateName"));
                 return stats;
@@ -427,20 +455,21 @@ final class TomcatJmx {
     /**
      * 多个 Tomcat 进程并存时，以 catalina.home 与探测到的安装路径匹配，避免连错实例。
      */
-    private static Object attachTomcat(Class<?> vmClass, String tomcatHome) throws Exception {
+    private Object attachTomcat(Class<?> vmClass, String tomcatHome) throws Exception {
         List<?> descriptors = (List<?>) vmClass.getMethod("list").invoke(null);
         for (Object descriptor : descriptors) {
             String displayName = (String) descriptor.getClass().getMethod("displayName").invoke(descriptor);
             if (displayName == null || !displayName.contains(BOOTSTRAP)) {
                 continue;
             }
-            String pid = (String) descriptor.getClass().getMethod("id").invoke(descriptor);
-            Object vm = vmClass.getMethod("attach", String.class).invoke(null, pid);
+            String targetPid = (String) descriptor.getClass().getMethod("id").invoke(descriptor);
+            Object vm = vmClass.getMethod("attach", String.class).invoke(null, targetPid);
             boolean matched = false;
             try {
                 Properties props = (Properties) vmClass.getMethod("getSystemProperties").invoke(vm);
                 matched = tomcatHome == null || samePath(tomcatHome, props.getProperty("catalina.home"));
                 if (matched) {
+                    pid = targetPid;
                     return vm;
                 }
             } finally {

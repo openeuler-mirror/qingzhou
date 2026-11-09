@@ -20,7 +20,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
 
-@Model(code = "logs", order = 4, icon = "Document",
+@Model(code = "logs", order = 6, icon = "Document",
         name = {"日志查看", "en:Log Viewer"},
         info = {"查看Tomcat日志文件", "en:View Tomcat log files"})
 public class TomcatLogs extends TomcatModelBase implements Page, Show {
