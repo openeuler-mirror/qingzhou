@@ -1,32 +1,79 @@
 package qingzhou.app.tomcat;
 
-import qingzhou.api.*;
-import qingzhou.api.action.Show;
-import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Show;
 
 @Model(code = "dashboard",
         order = 0,
         name = {"首页", "en:Dashboard"},
-        info = {"数据概览", "en:Dashboard Overview"},
+        info = {"Tomcat 运行监控", "en:Tomcat runtime monitoring"},
         icon = "HomeFilled")
-public class Dashboard extends qingzhou.api.ModelBase implements Show {
+public class Dashboard extends TomcatModelBase implements Show, Monitor {
 
-    @ModelField(id = true,
+    @ModelField(id = true, show = false,
             name = {"编号", "en:ID"},
-            show = false)
+            field_type = FieldType.monitor)
     public String id;
+
+    @ModelField(
+            name = {"统计时间", "en:Stats Time"},
+            info = {"监控数据采集时间", "en:Statistics generation time"},
+            field_type = FieldType.monitor,
+            group = "Basic")
+    public String statsTime;
 
     @ModelField(
             name = {"安装路径", "en:Install Path"},
             info = {"Tomcat 安装路径", "en:Tomcat installation path"},
+            field_type = FieldType.monitor,
             group = "Basic")
     public String path;
 
+    @ModelField(
+            name = {"服务器版本", "en:Server Info"},
+            info = {"Tomcat 版本信息", "en:Tomcat version"},
+            field_type = FieldType.monitor,
+            group = "Basic")
+    public String serverInfo;
+
+    @ModelField(
+            name = {"通道数", "en:Connectors"},
+            info = {"当前 Connector 数量", "en:Number of connectors"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Basic")
+    public String connectorCount;
+
+    @ModelField(
+            name = {"应用数", "en:Applications"},
+            info = {"当前部署的应用数量", "en:Number of deployed applications"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Basic")
+    public String applicationCount;
+
     @Override
-    public Map<String, String> show(String s) {
-        Map<String, String> stats = new HashMap<>();
-        stats.put("path",  getAppContext().getDetectedPath());
+    public Map<String, String> show(String id) {
+        Map<String, String> stats;
+        try {
+            stats = TomcatJmx.read(getTomcatBaseDir(), TomcatJmx::stats);
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to read Tomcat metrics via JMX", e);
+        }
+        stats.put("path", getAppContext().getDetectedPath());
         return stats;
+    }
+
+    @Override
+    public Map<String, String> monitor(String id) {
+        return show(id);
     }
 }

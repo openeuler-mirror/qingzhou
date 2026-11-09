@@ -1,50 +1,22 @@
 package qingzhou.app.tomcat;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
 import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.action.*;
 
-@Model(code = "connector", order = 2,
+@Model(code = "connector", order = 4,
         name = {"Connector通道", "en:Connector"},
         info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
         icon = "Fries")
-public class Connector extends TomcatModelBase implements Page, Show, Add, Update, Delete {
-    private java.util.List<Map<String, String>> db;
-    
-    // Connector 字段定义
-    private static final String[] CONNECTOR_FIELDS = {"protocol", "port", "address", "maxThreads", "minSpareThreads", "acceptCount", "connectionTimeout", "redirectPort"};
-    
-    // 默认值常量
-    private static final String DEFAULT_PROTOCOL = "HTTP/1.1";
-    private static final String DEFAULT_ADDRESS = "0.0.0.0";
-    private static final int DEFAULT_MAX_THREADS = 200;
-    private static final int DEFAULT_MIN_SPARE_THREADS = 10;
-    private static final int DEFAULT_ACCEPT_COUNT = 100;
-    private static final int DEFAULT_CONNECTION_TIMEOUT = 20000;
-    private static final int DEFAULT_REDIRECT_PORT = 8443;
-    
-    private static final Map<String, String> CONNECTOR_DEFAULTS = new HashMap<>();
-
-    static {
-        CONNECTOR_DEFAULTS.put("protocol", DEFAULT_PROTOCOL);
-        CONNECTOR_DEFAULTS.put("address", DEFAULT_ADDRESS);
-        CONNECTOR_DEFAULTS.put("maxThreads", String.valueOf(DEFAULT_MAX_THREADS));
-        CONNECTOR_DEFAULTS.put("minSpareThreads", String.valueOf(DEFAULT_MIN_SPARE_THREADS));
-        CONNECTOR_DEFAULTS.put("acceptCount", String.valueOf(DEFAULT_ACCEPT_COUNT));
-        CONNECTOR_DEFAULTS.put("connectionTimeout", String.valueOf(DEFAULT_CONNECTION_TIMEOUT));
-        CONNECTOR_DEFAULTS.put("redirectPort", String.valueOf(DEFAULT_REDIRECT_PORT));
-    }
-
-    public Connector() {
-    }
-
+public class Connector extends TomcatModelBase implements Page, Show {
     @ModelField(id = true,
             name = {"Connector ID", "en:Connector ID"},
             list = true,
@@ -106,127 +78,134 @@ public class Connector extends TomcatModelBase implements Page, Show, Add, Updat
             show = true, port = true)
     public String redirectPort;
 
+    @ModelField(
+            name = {"统计时间", "en:Stats Time"},
+            info = {"监控数据采集时间", "en:Statistics generation time"},
+            field_type = FieldType.monitor,
+            group = "Basic")
+    public String statsTime;
+
+    @ModelField(
+            name = {"累计请求数", "en:Requests"},
+            info = {"该通道自启动以来的累计请求数", "en:Requests since startup"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Request")
+    public String requestCount;
+
+    @ModelField(
+            name = {"累计错误数", "en:Errors"},
+            info = {"该通道自启动以来的累计错误数", "en:Errors since startup"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Request")
+    public String errorCount;
+
+    @ModelField(
+            name = {"已发送(MB)", "en:Sent (MB)"},
+            info = {"该通道累计发送字节数", "en:Bytes sent"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Traffic")
+    public String bytesSent;
+
+    @ModelField(
+            name = {"已接收(MB)", "en:Received (MB)"},
+            info = {"该通道累计接收字节数", "en:Bytes received"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.stat,
+            group = "Traffic")
+    public String bytesReceived;
+
+    @ModelField(
+            name = {"线程繁忙率(%)", "en:Busy Threads (%)"},
+            info = {"繁忙线程数占最大线程数的比例", "en:Busy threads ratio"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.gauge,
+            group = "Thread")
+    public String threadBusyPercent;
+
+    @ModelField(
+            name = {"繁忙线程", "en:Busy Threads"},
+            info = {"当前处理请求的线程数", "en:Threads processing requests"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.bar,
+            group = "Thread")
+    public String threadBusy;
+
+    @ModelField(
+            name = {"空闲线程", "en:Idle Threads"},
+            info = {"当前可用的空闲线程数", "en:Idle threads"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.bar,
+            group = "Thread")
+    public String threadIdle;
+
+    @ModelField(
+            name = {"平均处理时间(ms)", "en:Avg Time (ms)"},
+            info = {"该通道请求平均处理耗时", "en:Average processing time"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.line,
+            group = "Latency")
+    public String avgProcessingTime;
+
+    @ModelField(
+            name = {"最大处理时间(ms)", "en:Max Time (ms)"},
+            info = {"该通道请求历史最大处理耗时", "en:Maximum processing time"},
+            field_type = FieldType.monitor,
+            numeric = true,
+            chart_type = ChartType.line,
+            group = "Latency")
+    public String maxProcessingTime;
+
     @Override
     public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        db = parseServerXml();
-        List<Map<String, String>> filtered = filterByQuery(db, query);
-        return buildListResult(filtered, pageNum, pageSize, listFields);
+        List<Map<String, String>> connectors = loadConnectors();
+        return buildListResult(filterByQuery(connectors, query), pageNum, pageSize, listFields);
     }
 
     @Override
     public int totalSize(Map<String, String> query) {
-        return db.size();
-
+        return filterByQuery(loadConnectors(), query).size();
     }
 
     @Override
     public boolean contains(String id) {
-        for (Map<String, String> connector : db) {
-            if (connector.get("id").equals(id)) {
-                return true;
-            }
-        }
-        return false;
+        return loadConnectors().stream().anyMatch(connector -> connector.get("id").equals(id));
     }
 
     @Override
     public Map<String, String> show(String id) {
-        if (id == null) {
-            return new HashMap<>();
-        }
-        for (Map<String, String> connector : db) {
-            if (connector.get("id").equals(id)) {
-                return connector;
-            }
-        }
-        return new HashMap<>();
+        return loadConnectors().stream()
+                .filter(connector -> connector.get("id").equals(id))
+                .findFirst()
+                .orElse(new HashMap<>());
     }
 
-    @Override
-    public void add(Map<String, String> data) throws Exception {
-        File file = getServerXmlFile();
-        if (file == null || !file.exists()) {
-            throw new IllegalStateException("server.xml 文件不存在");
-        }
-
-        // 检查端口是否已存在
-        if (xmlNodeExists(file, "//Connector[@port='" + port + "']")) {
-            return;
-        }
-
-        // 构建属性
-        Properties attrs = new Properties();
-        for (String field : CONNECTOR_FIELDS) {
-            String value = data.get(field);
-            if (value == null || value.isEmpty()) {
-                value = CONNECTOR_DEFAULTS.get(field);
-            }
-            if (value != null) {
-                attrs.setProperty(field, value);
-            }
-        }
-        
-        addXmlNode(file, "//Service", "Connector", attrs);
+    // 覆盖框架默认 monitor 动作：默认动作未声明 list，列表行不会生成"监视"按钮
+    @ModelAction(code = Monitor.ACTION_CODE_MONITOR, icon = "TrendCharts", list = true,
+            name = {"监视", "en:Monitor"},
+            info = {"查看该通道的实时运行指标。", "en:View realtime metrics of this connector."})
+    public void monitor(Request request) throws Exception {
+        request.getResponse().data(TomcatJmx.read(getTomcatBaseDir(), jmx -> jmx.connectorStats(monitorId(request))));
     }
 
-    // XPath 由 ID 拼接而成，必须先把 ID 约束为合法端口，否则 ' or '1'='1 之类会命中非目标节点
-    private static String requireValidPort(String id) {
-        if (id == null || !id.matches("\\d{1,5}")) throw new IllegalArgumentException("invalid connector port: " + id);
-        int port = Integer.parseInt(id);
-        if (port < 1 || port > 65535) throw new IllegalArgumentException("invalid connector port: " + id);
-        return id;
-    }
-
-    @Override
-    public void delete(String id) throws Exception {
-        File file = getServerXmlFile();
-        deleteXmlNode(file, "//Connector[@port='" + requireValidPort(id) + "']");
-    }
-
-    @Override
-    public void update(String id, Map<String, String> data) throws Exception {
-        File file = getServerXmlFile();
-        if (file == null || !file.exists()) {
-            throw new IllegalStateException("server.xml 文件不存在");
-        }
-
-        Properties attrs = new Properties();
-        for (String field : CONNECTOR_FIELDS) {
-            String value = data.get(field);
-            attrs.setProperty(field, value != null ? value : "");
-        }
-        attrs.setProperty("port", requireValidPort(id));
-
-        updateXmlNode(file, "//Connector[@port='" + requireValidPort(id) + "']", attrs);
-    }
-
-
-    private java.util.List<Map<String, String>> parseServerXml() {
-        java.util.List<Map<String, String>> result = new ArrayList<>();
+    /**
+     * 只读运行中 Tomcat 的 Connector MBean，Tomcat 未运行或无法 attach 时直接报错。
+     */
+    private java.util.List<Map<String, String>> loadConnectors() {
         try {
-            File file = getServerXmlFile();
-            if (file == null || !file.exists()) {
-                return result;
-            }
-            
-            List<Properties> nodes = getXmlNodes(file, "//Connector");
-            
-            for (Properties p : nodes) {
-                Map<String, String> c1 = new HashMap<>();
-                c1.put("id", p.getProperty("port"));
-                c1.put("protocol", p.getProperty("protocol", DEFAULT_PROTOCOL));
-                c1.put("port", p.getProperty("port"));
-                c1.put("connectionTimeout", p.getProperty("connectionTimeout", String.valueOf(DEFAULT_CONNECTION_TIMEOUT)));
-                c1.put("redirectPort", p.getProperty("redirectPort", ""));
-                c1.put("address", p.getProperty("address", DEFAULT_ADDRESS));
-                c1.put("maxThreads", p.getProperty("maxThreads", String.valueOf(DEFAULT_MAX_THREADS)));
-                c1.put("minSpareThreads", p.getProperty("minSpareThreads", String.valueOf(DEFAULT_MIN_SPARE_THREADS)));
-                c1.put("acceptCount", p.getProperty("acceptCount", String.valueOf(DEFAULT_ACCEPT_COUNT)));
-                result.add(c1);
-            }
-        } catch (Throwable e) {
-            logError("failed to read Tomcat connector configuration", e);
+            return TomcatJmx.read(getTomcatBaseDir(), TomcatJmx::connectors);
+        } catch (Exception e) {
+            throw new IllegalStateException("failed to read Tomcat connectors via JMX", e);
         }
-        return result;
     }
 }
