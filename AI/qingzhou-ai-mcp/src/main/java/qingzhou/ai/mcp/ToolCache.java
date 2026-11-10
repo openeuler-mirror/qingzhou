@@ -6,6 +6,9 @@ import qingzhou.ai.ToolParameterParser;
 import qingzhou.ai.ToolService;
 
 class ToolCache {
+    private static final Set<String> SCHEMA_TYPES = new HashSet<>(Arrays.asList(
+            "string", "number", "integer", "boolean", "array", "object", "null"));
+
     final String toolName;
     final String toolDescription;
     final Map<String, Object> toolSchema;
@@ -39,8 +42,12 @@ class ToolCache {
                 throw new IllegalArgumentException("missing " + ToolService.PARAMETER_NAME + " of tool " + toolName);
             }
             Map<String, Object> parameterSchema = new HashMap<>();
-            // type 缺省为 string：JSON Schema 的 type 不接受 null
-            parameterSchema.put("type", parameter.type == null || parameter.type.isEmpty() ? "string" : parameter.type);
+            // 非法 type 在注册边界 fail-fast；缺省值由 ToolParameter 定义保证
+            String type = parameter.type;
+            if (!SCHEMA_TYPES.contains(type)) {
+                throw new IllegalArgumentException("invalid " + ToolService.PARAMETER_TYPE + " [" + type + "] of tool " + toolName);
+            }
+            parameterSchema.put("type", type);
             if (parameter.description != null) {
                 parameterSchema.put("description", parameter.description);
             }

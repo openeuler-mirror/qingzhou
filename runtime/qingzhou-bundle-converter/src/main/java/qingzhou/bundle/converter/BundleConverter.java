@@ -1,18 +1,11 @@
 package qingzhou.bundle.converter;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.nio.file.*;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -201,31 +194,20 @@ public class BundleConverter {
             parseModelAnnotations(model, ctClass, metaApp);
         }
 
-        // Process single @Menu
-        Menu singleMenu = (Menu) ctClass.getAnnotation(Menu.class);
-        if (singleMenu != null) {
-            addMenu(singleMenu, metaApp);
-        }
-
-        // Process @Menus (multiple @Menu)
-        Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
-        if (menus != null) {
-            for (Menu menu : menus.value()) {
-                addMenu(menu, metaApp);
-            }
-        }
-
-        // single @I18n is @Repeatable)
-        I18n singleI18n = (I18n) ctClass.getAnnotation(I18n.class);
-        if (singleI18n != null) {
-            addI18n(singleI18n, metaApp);
-        }
-
-        // @I18ns contains multiple @I18n
-        I18ns i18ns = (I18ns) ctClass.getAnnotation(I18ns.class);
-        if (i18ns != null) {
-            for (I18n i18n : i18ns.value()) {
-                addI18n(i18n, metaApp);
+        // 可重复注解在 class 文件里有两种形态：单次使用为裸注解，多次使用为编译器合成的容器注解
+        for (Object annotation : ctClass.getAnnotations()) {
+            if (annotation instanceof Menu) {
+                addMenu((Menu) annotation, metaApp);
+            } else if (annotation instanceof Menus) {
+                for (Menu menu : ((Menus) annotation).value()) {
+                    addMenu(menu, metaApp);
+                }
+            } else if (annotation instanceof I18ns) {
+                for (I18n i18n : ((I18ns) annotation).value()) {
+                    addI18n(i18n, metaApp);
+                }
+            } else if (annotation instanceof I18n) {
+                addI18n((I18n) annotation, metaApp);
             }
         }
     }

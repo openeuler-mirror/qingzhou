@@ -1,5 +1,6 @@
 package qingzhou.json.impl;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,9 @@ public class JsonImpl implements Json {
         objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // 输入边界：拒绝尾随 JSON 值与重复键，避免 {...}{...} 被静默截断造成解析歧义
+        objectMapper.configure(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, true);
+        objectMapper.configure(JsonParser.Feature.STRICT_DUPLICATE_DETECTION, true);
         // transient 表示本进程内部状态（如 registry 写入的存活时间/密钥版本），不随报文收发
         objectMapper.configure(MapperFeature.PROPAGATE_TRANSIENT_MARKER, true);
         // 元数据集合声明为 Set 接口时 Jackson 默认实例化 HashSet，迭代顺序改由 code 哈希决定，

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolCallInterceptionService;
-import qingzhou.ai.memory.ConversationStore;
+import qingzhou.ai.chat.ConversationStore;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -20,7 +20,10 @@ import qingzhou.llm.ChatModelFactory;
 import qingzhou.llm.Skill;
 import qingzhou.logger.Logger;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=/chat/stream", HttpHandler.HANDLE_METHODS + "=POST"})
+@Component(property = {
+        HttpHandler.HANDLE_PATH + "=/ai/chat/stream",
+        HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
+        HttpHandler.HANDLE_METHODS + "=POST"})
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +

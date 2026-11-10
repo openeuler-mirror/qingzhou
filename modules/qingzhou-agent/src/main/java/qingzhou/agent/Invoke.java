@@ -18,7 +18,10 @@ import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_INVOKE_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+@Component(property = {
+        HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_INVOKE_URI,
+        HttpHandler.HANDLE_NO_AUTH + "=true",
+        HttpHandler.HANDLE_METHODS + "=POST"},
         service = HttpHandler.class)
 public class Invoke extends AbstractAgentHandler {
     @Reference

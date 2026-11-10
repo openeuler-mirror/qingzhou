@@ -1,4 +1,4 @@
-package qingzhou.ai.memory;
+package qingzhou.ai.chat;
 
 import java.util.List;
 

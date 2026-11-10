@@ -13,7 +13,7 @@ import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 import qingzhou.logger.Logger;
 
-@Component
+@Component(service = LlmConverter.class)
 public class LlmConverter {
     @Reference
     private ToolParameterParser toolParameterParser;

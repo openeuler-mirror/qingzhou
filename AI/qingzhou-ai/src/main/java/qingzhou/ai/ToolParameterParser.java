@@ -10,6 +10,6 @@ public interface ToolParameterParser {
         public String name;
         public String description;
         public boolean required;
-        public String type;
+        public String type = "string"; // 缺省类型：JSON Schema 的 type 不接受 null
     }
 }
