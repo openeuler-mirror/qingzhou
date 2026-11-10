@@ -35,7 +35,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package/>
+                        <Export-Package>qingzhou.ai.memory</Export-Package>
                         <Import-Package>
                             qingzhou.store,
                             qingzhou.logger,

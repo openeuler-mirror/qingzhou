@@ -12,8 +12,12 @@ class ToolCache {
     final ToolService toolService;
 
     ToolCache(ToolService toolService, Map<String, Object> properties, ToolParameterParser parameterParser) {
-        this.toolName = (String) properties.get(ToolService.TOOL_NAME);
-        this.toolDescription = (String) properties.get(ToolService.TOOL_DESCRIPTION);
+        Object name = properties.get(ToolService.TOOL_NAME);
+        if (!(name instanceof String) || ((String) name).isEmpty()) {
+            throw new IllegalArgumentException("missing " + ToolService.TOOL_NAME + " of " + toolService.getClass().getName());
+        }
+        this.toolName = (String) name;
+        this.toolDescription = Objects.toString(properties.get(ToolService.TOOL_DESCRIPTION), null);
         this.toolService = toolService;
 
         Collection<ToolParameterParser.ToolParameter> toolParameters = parameterParser.parse(properties);
@@ -23,15 +27,21 @@ class ToolCache {
     private Map<String, Object> buildSchema(Collection<ToolParameterParser.ToolParameter> toolParameters) {
         Map<String, Object> schema = new HashMap<>();
         schema.put("name", toolName);
-        schema.put("description", toolDescription);
+        if (toolDescription != null) { // schema description 须为 string，缺省省略
+            schema.put("description", toolDescription);
+        }
 
         List<String> requiredParameters = new ArrayList<>();
         // properties 契约为 JSON Schema object（参数名 → 参数 schema）
         Map<String, Object> parameterProperties = new HashMap<>();
         for (ToolParameterParser.ToolParameter parameter : toolParameters) {
+            if (parameter.name == null || parameter.name.isEmpty()) {
+                throw new IllegalArgumentException("missing " + ToolService.PARAMETER_NAME + " of tool " + toolName);
+            }
             Map<String, Object> parameterSchema = new HashMap<>();
-            parameterSchema.put("type", parameter.type);
-            if (parameter.description != null) { // schema description 须为 string，缺省省略
+            // type 缺省为 string：JSON Schema 的 type 不接受 null
+            parameterSchema.put("type", parameter.type == null || parameter.type.isEmpty() ? "string" : parameter.type);
+            if (parameter.description != null) {
                 parameterSchema.put("description", parameter.description);
             }
             parameterProperties.put(parameter.name, parameterSchema);

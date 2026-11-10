@@ -13,6 +13,15 @@ public interface Metric {
         GAUGE, COUNTER
     }
 
+    String name();
+
+    double value();
+
+    Type type();
+
+    Map<String, String> labels();
+
+
     /**
      * 无维度样本
      */
@@ -47,12 +56,4 @@ public interface Metric {
             }
         };
     }
-
-    String name();
-
-    double value();
-
-    Type type();
-
-    Map<String, String> labels();
 }
