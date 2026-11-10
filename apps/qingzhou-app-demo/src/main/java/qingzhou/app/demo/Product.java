@@ -4,6 +4,9 @@ import java.util.*;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.logger.Logger;
 
 @Model(code = "product", order = 3,
@@ -11,7 +14,7 @@ import qingzhou.logger.Logger;
         info = {"产品信息管理，演示Monitor和自定义Action", "en:Product management with Monitor"},
         icon = "Box",
         menu = "advanced")
-public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor, SwitchSpace {
+public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor, Namespace {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -226,7 +229,7 @@ public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, 
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> product : db.values()) {
             if (matchesQuery(product, query)) {
@@ -288,13 +291,13 @@ public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, 
     private String currentSpace;
 
     @Override
-    public void switchSpace(String id) throws Exception {
+    public void namespace(String id) throws Exception {
         currentSpace = id;
         getAppContext().getService(Logger.class).info("切换到：" + id);
     }
 
     @Override
-    public String currentSpace() {
+    public String current() {
         return currentSpace;
     }
 }

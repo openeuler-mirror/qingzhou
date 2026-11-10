@@ -17,21 +17,6 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-dto</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-json</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-common</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <artifactId>qingzhou-app-driver</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>

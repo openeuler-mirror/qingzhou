@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
+import qingzhou.api.annotations.Model;
 import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Add;
 import qingzhou.api.action.Delete;
 import qingzhou.api.action.Page;
@@ -73,7 +73,7 @@ public class UserModel extends ModelBase implements Page, Show, Add, Update, Del
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         try {
             return store.count(Store.USER_TABLE, "userName", ClientModel.keyword(query, "userName"));
         } catch (SQLException e) {

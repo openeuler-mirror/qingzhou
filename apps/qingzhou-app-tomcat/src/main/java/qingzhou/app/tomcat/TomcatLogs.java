@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
 
@@ -68,7 +68,7 @@ public class TomcatLogs extends TomcatModelBase implements Page, Show {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         return filterByQuery(listLogFiles(), query).size();
     }
 

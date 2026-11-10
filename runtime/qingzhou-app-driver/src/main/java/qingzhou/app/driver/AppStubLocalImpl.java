@@ -8,12 +8,12 @@ import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.app.driver.systemcall.Icon;
-import qingzhou.dto.I18nService;
+import qingzhou.registry.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Constants;
 

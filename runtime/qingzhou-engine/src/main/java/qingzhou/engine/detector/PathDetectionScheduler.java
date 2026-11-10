@@ -1,8 +1,5 @@
 package qingzhou.engine.detector;
 
-import org.osgi.framework.Bundle;
-import qingzhou.engine.QingzhouMain;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -11,6 +8,9 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.osgi.framework.Bundle;
+import qingzhou.engine.QingzhouMain;
 
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
@@ -35,17 +35,17 @@ public class PathDetectionScheduler {
                         // 按 bundle 符号名分键传递，避免多个探测型 bundle 互相覆盖，
                         // 也避免"设置后即清除"与 Activator 异步读取之间的竞态；属性值随检测覆盖更新，无需清除
                         String dataFlag = "Qingzhou-Detected-Path." + bundle.getSymbolicName();
-                        System.setProperty(dataFlag, detected);
+                        System.setProperty(dataFlag, detected); // todo： 同应用的不同实例 bundle 的探测结果互不影响 ？
+
                         try (InputStream inputStream = Files.newInputStream(new File(new URL(bundle.getLocation()).getFile()).toPath())) {
                             Bundle installed = QingzhouMain.getBundleContext().installBundle(bundle.getLocation() + ":" + i, inputStream);
                             String seqFlag = "Qingzhou-App-Seq." + bundle.getSymbolicName();
                             System.setProperty(seqFlag, i + "");
                             installed.start();
                         }
-
                     }
                 } else {
-                    bundle.stop();
+                    bundle.stop(); // TODO：停止也需要按照具体路径进行？
                 }
             } catch (Exception e) {
                 // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr

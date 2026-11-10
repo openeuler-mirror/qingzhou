@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
 
 @Model(code = "nacos-namespace", order = 4,
@@ -79,7 +79,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         try {
             NacosApi nacosApi = getNacosApi();
             List<?> namespaces = nacosApi.getNamespaces();

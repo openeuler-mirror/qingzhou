@@ -5,13 +5,16 @@ import java.util.*;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "order", order = 2,
         name = {"订单", "en:Order"},
         info = {"订单信息管理，演示复杂表单", "en:Order management with complex forms"},
         icon = "Document",
         menu = "basic")
-public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, DownloadFile {
+public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Download {
     public static final Map<String, Map<String, String>> db = new HashMap<>();
     private static int idCounter = 1;
 
@@ -186,7 +189,7 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> order : db.values()) {
             if (matchesQuery(order, query)) {
@@ -229,7 +232,7 @@ public class Order extends qingzhou.api.ModelBase implements Page, Show, Add, Up
     }
 
     @Override
-    public File files(String id) {
+    public File file(String id) {
         return new File(getAppContext().getRoot(), "apps");
     }
 }

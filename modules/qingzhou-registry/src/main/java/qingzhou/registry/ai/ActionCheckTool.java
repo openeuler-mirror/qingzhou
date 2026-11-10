@@ -5,14 +5,14 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolService;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Registry;
 import qingzhou.registry.web.RequestParameters;
 
 @Component(property = {
-        ToolService.PARENT_SKILL + "=" + InvokeActionSkill.TOOL_LABEL,
+        ToolService.TOOL_LABEL + "=" + InvokeActionSkill.TOOL_LABEL,
 
         ToolService.TOOL_DESCRIPTION + "=该接口用于检查某个模块是否具有某个操作，返回true表示有，false则没有，其它则输入参数有误。如果只需要知道某模块是否具有某操作或方法，那么应该调用此方法而不是调用获取应用模块详细信息的方法。",
 

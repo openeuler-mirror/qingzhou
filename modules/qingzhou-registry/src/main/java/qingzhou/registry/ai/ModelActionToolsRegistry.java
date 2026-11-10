@@ -15,13 +15,13 @@ import qingzhou.ai.ToolService;
 import qingzhou.api.action.*;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.annotation.App;
+import qingzhou.dto.meta.App;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Constants;
+import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.Registry;
-import qingzhou.registry.web.PermissionChecker;
 import qingzhou.registry.web.RequestParameters;
 
 @Component(immediate = true)
@@ -36,6 +36,8 @@ public class ModelActionToolsRegistry {
     private Logger logger;
     @Reference
     private Json json;
+    @Reference
+    private PermissionChecker permissionChecker;
 
     private BundleContext bundleContext;
     private final List<ServiceRegistration> registrations = new ArrayList<>();
@@ -70,8 +72,8 @@ public class ModelActionToolsRegistry {
         tools.put(Show.ACTION_CODE_SHOW, "该接口返回某模块或模块内某业务数据或资源的详细信息。");
         tools.put(Monitor.ACTION_CODE_MONITOR, "该接口用于获取某模块或模块内某业务数据或资源的实时状态，用来反映资源用量、检查系统健康、告警安全阈值等。");
 
-        tools.put(SwitchSpace.ACTION_CODE_SWITCHSPACE, "该接口将应用的模块切换到指定的空间上。");
-        tools.put(SwitchSpace.ACTION_CODE_CURRENTSPACE, "该接口返回应用当前使用的模块空间。");
+        tools.put(Namespace.ACTION_CODE_NAMESPACE, "该接口将应用的模块切换到指定的业务域上。");
+        tools.put(Namespace.ACTION_CODE_CURRENT, "该接口返回应用当前使用的模块业务域。");
 
         tools.put(Add.ACTION_CODE_ADD, "该接口在指定模块中新建一条业务数据，这是会影响真实数据的写操作。"
                 + "调用前须先用获取模块详细信息的工具取得该模块的新增字段清单与校验规则，禁止凭常识猜测字段编码。"
@@ -89,7 +91,7 @@ public class ModelActionToolsRegistry {
         tools.forEach((actionCode, toolDescription) -> {
             Hashtable<String, String> properties = (Hashtable<String, String>) sharedProperties.clone();
             applyToolParameters(actionCode, addIndex, properties);
-            properties.put(ToolService.PARENT_SKILL, InvokeActionSkill.TOOL_LABEL);
+            properties.put(ToolService.TOOL_LABEL, InvokeActionSkill.TOOL_LABEL);
             properties.put(ToolService.TOOL_NAME, TOOL_NAME_PREFIX + actionCode);
             properties.put(ToolService.TOOL_DESCRIPTION, toolDescription);
             ToolService systemToolService = toolArgs -> ModelActionToolsRegistry.this.invokeActionTool(actionCode, toolArgs);
@@ -117,7 +119,7 @@ public class ModelActionToolsRegistry {
                         return "操作执行失败：无法定位目标应用或模块，请确认参数后重试。";
                     }
 
-                    boolean allowed = PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, actionCode, roles);
+                    boolean allowed = permissionChecker.isAllowed(appStub.getAppMeta().getApp(), modelCode, actionCode, roles);
                     if (allowed) return null;
                     else return "操作执行失败：当前身份缺少对应工具执行权限，请检查权限配置后重试。";
                 }

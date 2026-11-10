@@ -13,6 +13,7 @@ import reactor.util.concurrent.Queues;
 
 class HttpResponseImpl implements HttpResponse {
     private static final int RESPONSE_QUEUE_SIZE = 1024; // 慢客户端时最多缓存的响应分片数
+    private static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
     private final HttpServerResponse response;
     private final Sinks.Many<byte[]> streamResponse;
@@ -79,8 +80,10 @@ class HttpResponseImpl implements HttpResponse {
         if (name == null || value == null || hasBreak(name) || hasBreak(value)) {
             throw new IllegalArgumentException("invalid http header");
         }
-        if ("Content-Length".equalsIgnoreCase(name)) explicitContentLength = true;
         response.header(name, value);
+
+        if (CONTENT_LENGTH_HEADER.equalsIgnoreCase(name)) explicitContentLength = true;
+
         return this;
     }
 
@@ -169,7 +172,7 @@ class HttpResponseImpl implements HttpResponse {
         if (!validTarget || hasBreak(url)) throw new IllegalArgumentException("invalid redirect url");
         response.status(HttpResponseStatus.FOUND)
                 .header(HttpHeaderNames.LOCATION, url);
-        header("Content-Length", "0"); // 走统一入口：标记显式长度，finish 不再重复补
+        header(CONTENT_LENGTH_HEADER, "0"); // 走统一入口：标记显式长度，finish 不再重复补
         finish();
     }
 }

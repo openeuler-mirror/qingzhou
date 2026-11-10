@@ -1,8 +1,8 @@
 package qingzhou.app.oauth2;
 
-import qingzhou.api.App;
+import qingzhou.api.annotations.App;
 import qingzhou.api.AppContext;
-import qingzhou.api.Menu;
+import qingzhou.api.annotations.Menu;
 import qingzhou.api.QingzhouApp;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;

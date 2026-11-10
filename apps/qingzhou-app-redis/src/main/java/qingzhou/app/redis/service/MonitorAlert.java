@@ -2,6 +2,9 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.alert.AlertEngine;
@@ -116,7 +119,7 @@ public class MonitorAlert extends RedisModelBase implements Page, Show, Add, Upd
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         return RedisApp.getAlertStore().listRules().size();
     }
 

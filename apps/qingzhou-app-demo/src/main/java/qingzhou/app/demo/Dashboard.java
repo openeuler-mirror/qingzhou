@@ -8,6 +8,9 @@ import java.util.Map;
 import qingzhou.api.*;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 /**
  * Dashboard 首页模型

@@ -3,8 +3,8 @@ package qingzhou.app.demo;
 import java.util.*;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
 import qingzhou.logger.Logger;
 
@@ -13,7 +13,7 @@ import qingzhou.logger.Logger;
         info = {"系统配置管理", "en:System configuration management"},
         icon = "Setting",
         menu = "system")
-public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, SwitchSpace {
+public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Namespace {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Config() {
@@ -129,7 +129,7 @@ public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, U
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> config : db.values()) {
             if (matchesQuery(config, query)) {
@@ -173,13 +173,13 @@ public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, U
     private String currentSpace;
 
     @Override
-    public void switchSpace(String id) throws Exception {
+    public void namespace(String id) throws Exception {
         currentSpace = id;
         getAppContext().getService(Logger.class).info("切换到：" + id);
     }
 
     @Override
-    public String currentSpace() {
+    public String current() {
         return currentSpace;
     }
 }

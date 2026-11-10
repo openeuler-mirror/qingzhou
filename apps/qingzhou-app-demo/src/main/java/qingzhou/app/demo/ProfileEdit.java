@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Show;
 import qingzhou.api.action.Update;
 

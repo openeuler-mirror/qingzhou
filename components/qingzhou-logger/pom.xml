@@ -7,9 +7,8 @@
         <artifactId>components</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-logger</artifactId>
+    <packaging>bundle</packaging>
 
     <dependencies>
         <dependency>

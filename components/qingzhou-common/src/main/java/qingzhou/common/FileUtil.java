@@ -2,20 +2,12 @@ package qingzhou.common;
 
 import java.io.*;
 import java.nio.channels.Channels;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -105,7 +97,7 @@ public class FileUtil {
      *
      * @param overwrite true 覆盖已存在项（如驱动覆盖应用同名类）；false 跳过已存在项（如保留应用自带 MANIFEST）
      */
-    public static void unZipToDir(File srcFile, File unZipDir, boolean overwrite) throws IOException {
+    public static void unZipToDir(File srcFile, File unZipDir, boolean overwrite, String... skipOverwriteEntries) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ)) {
             String baseDir = unZipDir.getCanonicalPath() + File.separator;
             long totalBytes = 0;
@@ -124,12 +116,13 @@ public class FileUtil {
                         throw new IOException("cannot create dir: " + targetFile);
                     }
                 } else {
-                    // driver 覆盖解压也不能碰 MANIFEST.MF：应用可能在 manifest 中声明 Qingzhou-Detection-Enabled 等自定义 headers
-                    if (overwrite && "META-INF/MANIFEST.MF".equals(entry.getName())) continue;
-                    // overwrite=true 覆盖同名 class（防应用遮蔽驱动实现）；false 跳过已存在项（保留应用侧自定义文件）
+                    if (overwrite && skipOverwriteEntries != null && Arrays.asList(skipOverwriteEntries).contains(entry.getName())) {
+                        continue;
+                    }
+
                     if (overwrite || !Files.exists(targetFile.toPath())) {
                         File parent = targetFile.getParentFile();
-                        if (parent != null) parent.mkdirs();
+                        mkdirs(parent);
                         try (InputStream in = zip.getInputStream(entry);
                              OutputStream out = Files.newOutputStream(targetFile.toPath())) {
                             totalBytes += copyStreamWithLimit(in, out, MAX_UNZIP_BYTES - totalBytes);

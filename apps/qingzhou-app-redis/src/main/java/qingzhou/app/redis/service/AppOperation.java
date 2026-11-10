@@ -2,6 +2,9 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.action.Page;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.util.RedisUtil;
@@ -54,7 +57,7 @@ public class AppOperation extends RedisModelBase implements Page {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         return OP_IDS.length;
     }
 

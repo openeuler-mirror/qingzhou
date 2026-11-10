@@ -1,10 +1,17 @@
 package qingzhou.app.tomcat;
 
-import qingzhou.api.*;
+import java.util.List;
+import java.util.Map;
+
+import qingzhou.api.ChartType;
+import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
+import qingzhou.api.Request;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
-
-import java.util.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "applications", order = 3, icon = "ShoppingBag",
         name = {"应用管理", "en:Applications"},
@@ -121,7 +128,7 @@ public class TomcatApplications extends TomcatModelBase implements Page {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         loadApplications();
         return filterByQuery(applications, query).size();
     }

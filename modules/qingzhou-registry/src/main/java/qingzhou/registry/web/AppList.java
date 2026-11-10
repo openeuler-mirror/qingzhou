@@ -8,7 +8,8 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.I18nService;
+import qingzhou.dto.meta.App;
+import qingzhou.registry.I18nService;
 import qingzhou.dto.meta.InstanceInfo;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
@@ -35,7 +36,7 @@ public class AppList extends AbstractMetaHandler {
         String lang = context.getParameter("lang");
         List<Map<String, String>> appBasicInfoList = new ArrayList<>();
         for (String localApp : registry.getAllLocalApps()) {
-            qingzhou.dto.meta.annotation.App app = localAppMeta(localApp);
+            App app = localAppMeta(localApp);
             if (app != null) {
                 appBasicInfoList.add(appInfo(registry.getLocalInstance(), app, lang));
             }
@@ -57,12 +58,12 @@ public class AppList extends AbstractMetaHandler {
         return function;
     }
 
-    private qingzhou.dto.meta.annotation.App localAppMeta(String localApp) {
+    private App localAppMeta(String localApp) {
         AppStub stub = registry.getLocalApp(localApp);
         return stub == null || stub.getAppMeta() == null ? null : stub.getAppMeta().getApp();
     }
 
-    private Map<String, String> appInfo(InstanceInfo instanceInfo, qingzhou.dto.meta.annotation.App app, String lang) {
+    private Map<String, String> appInfo(InstanceInfo instanceInfo, App app, String lang) {
         Map<String, String> appInfo = new HashMap<>();
         appInfo.put(RequestParameters.INSTANCE_ID, instanceInfo.getId());
         appInfo.put(RequestParameters.APP_CODE, app.code);

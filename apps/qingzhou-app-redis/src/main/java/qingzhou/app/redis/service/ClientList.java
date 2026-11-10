@@ -1,7 +1,8 @@
 package qingzhou.app.redis.service;
 
-import qingzhou.api.*;
 import qingzhou.api.action.Page;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisModelBase;
 import redis.clients.jedis.Jedis;
 
@@ -101,7 +102,7 @@ public class ClientList extends RedisModelBase implements Page {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         String searchAddr = query != null ? query.get("clientAddr") : null;
         if (searchAddr == null || searchAddr.isEmpty()) {
             if (getRedisUtil().isCluster()) {

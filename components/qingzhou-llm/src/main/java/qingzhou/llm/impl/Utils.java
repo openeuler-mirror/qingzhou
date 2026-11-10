@@ -1,7 +1,10 @@
 package qingzhou.llm.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
@@ -52,38 +55,27 @@ public class Utils {
     }
 
     // 按需激活技能：required 技能恒生效，其余先词面匹配、再交由模型筛选
-    public static List<Skill> getActiveSkills(Collection<Skill> skills, String message, ActiveSkillCallback callback) {
+    public static Collection<Skill> getActiveSkills(Collection<Skill> skills, String message, ActiveSkillCallback callback) {
         if (skills == null || skills.isEmpty()) return Collections.emptyList();
 
-        List<Skill> active = new ArrayList<>();
-        List<Skill> candidates = new ArrayList<>();
-        for (Skill skill : skills) {
-            if (skill.required()) active.add(skill);
-            else candidates.add(skill);
-        }
 
-        if (!candidates.isEmpty()) { // 因原本地的“词面相关”匹配器不够准确，故已删除，此处只保留“模型筛选”
-            // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
-            ChatModel selectionChatModel = callback.newChatModelBuilder()
-                    // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
-                    .connectTimeout(15_000)
-                    .readTimeout(60_000)
-                    .maxRetries(2)
-                    .build();
-            Collection<Skill> matched = new ModelSkillMatcher(selectionChatModel).match(candidates, message);
-            active.addAll(matched);
-        }
-        
-        return active;
+        // 因原本地的“词面相关”匹配器不够准确，故已删除，此处只保留“模型筛选”
+        // 选择模型须用无技能的独立 builder，避免共享技能配置导致匹配递归
+        ChatModel selectionChatModel = callback.newChatModelBuilder()
+                // 技能匹配只是“开场白”，收紧超时与重试：模型异常时应快速失败并提示，而不是把用户长时间晾在“思考中”
+                .connectTimeout(15_000)
+                .readTimeout(60_000)
+                .maxRetries(2)
+                .build();
+        return new ModelSkillMatcher(selectionChatModel).match(skills, message);
     }
 
     // 激活技能的 tools 随对话挂载（显式工具 baseTools 恒挂载）
     public static Map<String, Tool> getActiveTools(Collection<Skill> activeSkills, Map<String, Tool> baseTools) {
         Map<String, Tool> tools = new HashMap<>(baseTools);
         for (Skill skill : activeSkills) {
-            if (skill.tools() != null) {
-                skill.tools().forEach(tool -> tools.put(tool.name(), tool));
-            }
+            Collection<Tool> skillTools = skill.tools();
+            if (skillTools != null) skillTools.forEach(tool -> tools.put(tool.name(), tool));
         }
         return tools;
     }

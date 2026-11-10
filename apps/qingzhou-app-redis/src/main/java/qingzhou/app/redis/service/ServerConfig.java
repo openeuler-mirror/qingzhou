@@ -3,8 +3,8 @@ package qingzhou.app.redis.service;
 import java.util.*;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Add;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
@@ -72,7 +72,7 @@ public class ServerConfig extends RedisModelBase implements Page, Show, Update, 
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         Map<String, String> rawMap;
         if (getRedisUtil().isCluster()) {
             rawMap = getRedisUtil().executeOnFirstClusterNode(jedis -> jedis.configGet("*"));

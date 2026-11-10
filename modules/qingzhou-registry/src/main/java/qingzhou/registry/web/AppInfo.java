@@ -8,7 +8,9 @@ import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.dto.I18nService;
+import qingzhou.dto.meta.App;
+import qingzhou.dto.meta.ModelAction;
+import qingzhou.registry.I18nService;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.json.Json;
 import qingzhou.registry.AppStub;
@@ -38,7 +40,7 @@ public class AppInfo extends AbstractMetaHandler {
         AppStub appStub = registry.getAppStub(instanceId, appCode);
         if (appStub == null) return null;
 
-        qingzhou.dto.meta.annotation.App app = appStub.getAppMeta().getApp();
+        App app = appStub.getAppMeta().getApp();
         String lang = context.getParameter("lang");
 
         Map<String, Object> appMetaInfo = new HashMap<>();
@@ -58,7 +60,7 @@ public class AppInfo extends AbstractMetaHandler {
             modelBasicInfo.put("name", i18nService.getI18n(model.name, lang));
 
             List<String> actionCodes = new ArrayList<>();
-            for (qingzhou.dto.meta.annotation.ModelAction action : model.actions) {
+            for (ModelAction action : model.actions) {
                 actionCodes.add(action.code);
             }
             modelBasicInfo.put("actions", actionCodes);

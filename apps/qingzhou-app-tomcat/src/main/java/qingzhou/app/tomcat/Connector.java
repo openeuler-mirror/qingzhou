@@ -6,11 +6,13 @@ import java.util.Map;
 
 import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
 import qingzhou.api.Request;
-import qingzhou.api.action.*;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "connector", order = 4,
         name = {"Connector通道", "en:Connector"},
@@ -173,7 +175,7 @@ public class Connector extends TomcatModelBase implements Page, Show {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         return filterByQuery(loadConnectors(), query).size();
     }
 

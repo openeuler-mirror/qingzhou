@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
 
 @Model(code = "teacher", order = 2,
@@ -265,7 +265,7 @@ public class Teacher extends qingzhou.api.ModelBase implements Page, Show, Add, 
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> teacher : db.values()) {
             if (matchesQuery(teacher, query)) {

@@ -10,7 +10,7 @@ public interface Page extends QingzhouModel {
 
     List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception;
 
-    default int totalSize(Map<String, String> query) {
+    default int total(Map<String, String> query) {
         return -1; // -1：不使用分页
     }
 

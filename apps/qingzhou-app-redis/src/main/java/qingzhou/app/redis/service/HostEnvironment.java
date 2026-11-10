@@ -2,6 +2,8 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.action.Monitor;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.util.HostInfoUtil;
 
@@ -114,29 +116,32 @@ public class HostEnvironment extends RedisModelBase implements Monitor {
         data.put("osArch", HostInfoUtil.getOsArch());
         data.put("availableProcessors", String.valueOf(HostInfoUtil.getAvailableProcessors()));
 
+        // 采集不到时省略 key，禁止填 -1 哨兵：监控端点会把 -1 当作真实指标导出
         double processCpu = HostInfoUtil.getProcessCpuUsage();
-        data.put("cpuProcessUsage", processCpu < 0 ? "-1" : String.format("%.2f", processCpu * 100));
+        if (processCpu >= 0) data.put("cpuProcessUsage", String.format("%.2f", processCpu * 100));
         double systemCpu = HostInfoUtil.getSystemCpuUsage();
-        data.put("cpuSystemUsage", systemCpu < 0 ? "-1" : String.format("%.2f", systemCpu * 100));
+        if (systemCpu >= 0) data.put("cpuSystemUsage", String.format("%.2f", systemCpu * 100));
 
         long totalMem = HostInfoUtil.getTotalPhysicalMemory();
         long freeMem = HostInfoUtil.getFreePhysicalMemory();
-        data.put("totalPhysicalMemory", totalMem < 0 ? "-1" : String.valueOf(totalMem / (1024 * 1024)));
-        data.put("freePhysicalMemory", freeMem < 0 ? "-1" : String.valueOf(freeMem / (1024 * 1024)));
-        data.put("usedPhysicalMemory", totalMem < 0 || freeMem < 0 ? "-1" : String.valueOf((totalMem - freeMem) / (1024 * 1024)));
+        if (totalMem >= 0) data.put("totalPhysicalMemory", String.valueOf(totalMem / (1024 * 1024)));
+        if (freeMem >= 0) data.put("freePhysicalMemory", String.valueOf(freeMem / (1024 * 1024)));
+        if (totalMem >= 0 && freeMem >= 0) {
+            data.put("usedPhysicalMemory", String.valueOf((totalMem - freeMem) / (1024 * 1024)));
+        }
 
         long totalSwap = HostInfoUtil.getTotalSwapSpace();
         long freeSwap = HostInfoUtil.getFreeSwapSpace();
-        data.put("totalSwapSpace", totalSwap < 0 ? "-1" : String.valueOf(totalSwap / (1024 * 1024)));
-        data.put("freeSwapSpace", freeSwap < 0 ? "-1" : String.valueOf(freeSwap / (1024 * 1024)));
+        if (totalSwap >= 0) data.put("totalSwapSpace", String.valueOf(totalSwap / (1024 * 1024)));
+        if (freeSwap >= 0) data.put("freeSwapSpace", String.valueOf(freeSwap / (1024 * 1024)));
 
         long openFd = HostInfoUtil.getOpenFileDescriptorCount();
         long maxFd = HostInfoUtil.getMaxFileDescriptorCount();
-        data.put("openFileDescriptorCount", openFd < 0 ? "-1" : String.valueOf(openFd));
-        data.put("maxFileDescriptorCount", maxFd < 0 ? "-1" : String.valueOf(maxFd));
+        if (openFd >= 0) data.put("openFileDescriptorCount", String.valueOf(openFd));
+        if (maxFd >= 0) data.put("maxFileDescriptorCount", String.valueOf(maxFd));
 
         double load = HostInfoUtil.getSystemLoadAverage();
-        data.put("systemLoadAverage", load < 0 ? "-1" : String.format("%.2f", load));
+        if (load >= 0) data.put("systemLoadAverage", String.format("%.2f", load));
         data.put("javaVersion", HostInfoUtil.getJavaVersion());
         data.put("processPid", HostInfoUtil.getProcessPid());
         data.put("hostname", HostInfoUtil.getHostname());

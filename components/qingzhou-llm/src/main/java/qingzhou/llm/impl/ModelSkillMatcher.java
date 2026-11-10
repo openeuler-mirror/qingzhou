@@ -7,11 +7,11 @@ import java.util.List;
 import qingzhou.llm.ChatModel;
 import qingzhou.llm.Skill;
 
-public class ModelSkillMatcher implements SkillMatcher {
+class ModelSkillMatcher implements SkillMatcher {
     private static final String NONE = "NONE";
     private final ChatModel selectionModel;
 
-    public ModelSkillMatcher(ChatModel selectionModel) {
+    ModelSkillMatcher(ChatModel selectionModel) {
         this.selectionModel = selectionModel;
     }
 

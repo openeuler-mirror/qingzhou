@@ -13,8 +13,8 @@ import qingzhou.api.InputType;
 import qingzhou.common.TempFiles;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelField;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -22,6 +22,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Constants;
+import qingzhou.registry.PermissionChecker;
 import qingzhou.registry.Registry;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
@@ -41,6 +42,8 @@ public class Invoke implements HttpHandler {
     private Json json;
     @Reference
     private Logger logger;
+    @Reference
+    private PermissionChecker permissionChecker;
 
     private File uploadBase;
 
@@ -101,7 +104,7 @@ public class Invoke implements HttpHandler {
 
     private boolean permissionForbidReq(HttpRequest httpRequest, HttpResponse httpResponse, AppStub appStub, RequestImpl request) {
         String[] roles = httpRequest.getRoles();
-        if (PermissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
+        if (permissionChecker.isAllowed(appStub.getAppMeta().getApp(), request.getModel(), request.getAction(), roles)) {
             return false;
         } else {
             logger.warn("forbidden: app=" + forLog(request.getApp()) + ", model=" + forLog(request.getModel())

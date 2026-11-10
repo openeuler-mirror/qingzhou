@@ -8,6 +8,8 @@ import java.util.Map;
 import qingzhou.api.*;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "nacos-dashboard", order = 1,
         name = {"Nacos仪表盘", "en:Nacos Dashboard"},

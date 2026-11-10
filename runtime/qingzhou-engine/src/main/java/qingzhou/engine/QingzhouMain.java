@@ -42,14 +42,12 @@ public class QingzhouMain {
         osgiFramework.init();
         osgiFramework.start();
 
-        // 启动 OSGI 基础框架
-        startDirAndJars(Paths.get(libDir, "runtime", "features").toFile());
-
-        // 启动基础模块
-        startDirAndJars(new File(libDir, "components"));
-
-        // 启动业务模块
-        startDirAndJars(new File(libDir, "modules"));
+        // 先安装全部 bundle，再统一启动，避免跨目录依赖解析失败
+        List<Bundle> bundles = new ArrayList<>();
+        for (String f : new String[]{"runtime/features", "components", "AI", "modules"}) {
+            bundles.addAll(installDirAndJars(new File(libDir, f)));
+        }
+        startBundles(bundles);
 
         // 驱动应用
         new AppDeployer(instanceDir, libDir).deployApps();
@@ -64,51 +62,36 @@ public class QingzhouMain {
         }, QingzhouMain.class.getName() + "-ShutdownHook"));
     }
 
-    static void startDirAndJars(File bundleDir) throws BundleException {
-        List<File> subDirs = new ArrayList<>();
-        List<File> subJars = new ArrayList<>();
-
-        File[] listFiles = bundleDir.listFiles();
-        if (listFiles != null) {
-            for (File file : listFiles) {
-                if (file.isDirectory()) {
-                    subDirs.add(file);
-                } else if (file.getName().endsWith(".jar")) {
-                    subJars.add(file);
-                }
-            }
+    static List<Bundle> installDirAndJars(File dir) throws BundleException {
+        List<File> subDirs = new ArrayList<>(), subJars = new ArrayList<>();
+        File[] files = dir.listFiles();
+        if (files != null) for (File f : files) {
+            if (f.isDirectory()) subDirs.add(f);
+            else if (f.getName().endsWith(".jar")) subJars.add(f);
         }
-
+        List<Bundle> installed = new ArrayList<>();
         subDirs.sort(Comparator.comparing(File::getName));
-        subDirs.forEach(dir -> {
-            try {
-                startBundles(dir.listFiles());
-            } catch (BundleException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        startBundles(subJars.toArray(new File[0]));
+        for (File d : subDirs) installed.addAll(installBundles(d.listFiles()));
+        installed.addAll(installBundles(subJars.toArray(new File[0])));
+        return installed;
     }
 
-    private static void startBundles(File[] bundleJars) throws BundleException {
-        if (bundleJars == null || bundleJars.length == 0) return;
-
-        List<Bundle> bundleList = new ArrayList<>();
-        for (File bundleJar : bundleJars) {
-            if (isFeatureDisabled(bundleJar)) continue;
-
-            // toURI() 对路径做 URL 编码，含空格/中文的安装目录不再产生非法的 bundle location
-            Bundle bundle = osgiFramework.getBundleContext().installBundle(bundleJar.toURI().toString());
-            bundleList.add(bundle);
+    private static List<Bundle> installBundles(File[] jars) throws BundleException {
+        List<Bundle> list = new ArrayList<>();
+        if (jars == null) return list;
+        for (File j : jars) {
+            if (isFeatureDisabled(j)) continue;
+            // toURI() 做 URL 编码，避免含空格/中文路径生成非法 bundle location
+            list.add(osgiFramework.getBundleContext().installBundle(j.toURI().toString()));
         }
-        for (Bundle bundle : bundleList) {
-            Dictionary<String, String> bundleHeaders = bundle.getHeaders();
-            boolean detectionEnabled = Boolean.parseBoolean(bundleHeaders.get("Qingzhou-Detection-Enabled"));
-            if (detectionEnabled) {
-                PathDetectionScheduler.startWithDetection(bundle);
-            } else {
-                bundle.start();
-            }
+        return list;
+    }
+
+    static void startBundles(List<Bundle> bundles) throws BundleException {
+        for (Bundle b : bundles) {
+            Dictionary<String, String> h = b.getHeaders();
+            if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled"))) PathDetectionScheduler.startWithDetection(b);
+            else b.start();
         }
     }
 

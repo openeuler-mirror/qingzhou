@@ -4,10 +4,10 @@ import java.util.Map;
 
 import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "dashboard",
         order = 0,

@@ -3,8 +3,8 @@ package qingzhou.app.demo;
 import java.util.HashMap;
 import java.util.Map;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Show;
 
 /**
