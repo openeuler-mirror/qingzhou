@@ -163,6 +163,7 @@
                 <include>${project.groupId}:qingzhou-ai-chat</include>
                 <include>${project.groupId}:qingzhou-ai-memory</include>
                 <include>${project.groupId}:qingzhou-ai-skill-app-builder</include>
+                <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
                 <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
                 <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>
             </includes>

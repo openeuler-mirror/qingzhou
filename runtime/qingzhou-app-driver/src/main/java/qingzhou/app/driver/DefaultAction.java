@@ -7,7 +7,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Predicate;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.FieldType;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
 import qingzhou.api.action.*;
 import qingzhou.api.annotations.ModelAction;
 import qingzhou.common.FileUtil;
@@ -140,10 +143,10 @@ public class DefaultAction {
 
     @ModelAction(
             code = Namespace.ACTION_CODE_NAMESPACE, icon = "Switch",
-            name = {"切换", "en:Switch"},
-            info = {"切换至此空间。", "en:Switch to this space."})
-    public static void switchspace(Namespace aNamespace, Request request) throws Exception {
-        aNamespace.namespace(request.getId());
+            name = {"命名空间", "en:Namespace"},
+            info = {"切换至此命名空间。", "en:Switch to this namespace."})
+    public static void namespace(Namespace namespace, Request request) throws Exception {
+        namespace.namespace(request.getId());
     }
 
     @ModelAction(
