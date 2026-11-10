@@ -5,6 +5,9 @@ import java.util.*;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 /**
  * 演示文件上传和下载功能
@@ -17,7 +20,7 @@ import qingzhou.api.action.*;
         info = {"演示文件上传与下载功能", "en:Demo file upload and download"},
         icon = "FolderOpened",
         menu = "advanced")
-public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, DownloadFile {
+public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Download {
     private static final Map<String, Map<String, String>> db = new LinkedHashMap<>();
     private static int idCounter = 1;
 
@@ -25,7 +28,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
      * 覆盖框架默认的 files 动作：仅去掉列表头（list_head）入口，执行逻辑与默认实现保持一致
      */
     @ModelAction(
-            code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
+            code = Download.ACTION_CODE_FILE, icon = "Download", order = 3,
             name = {"下载", "en:Download"}, show = true, update = true, list = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public void files(Request request) {
@@ -37,7 +40,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
         }
 
         Map<String, String> fileMap = new TreeMap<>();
-        File fileBase = files(id);
+        File fileBase = file(id);
         if (fileBase.isDirectory()) {
             File[] listFiles = fileBase.listFiles();
             if (listFiles != null) {
@@ -56,7 +59,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     }
 
     @Override
-    public File files(String id) {
+    public File file(String id) {
         // 根据记录 ID 返回对应的文件目录
         File baseDir = new File(getAppContext().getTempDir(), "file-demo");
 
@@ -230,7 +233,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> file : db.values()) {
             if (matchesQuery(file, query)) {

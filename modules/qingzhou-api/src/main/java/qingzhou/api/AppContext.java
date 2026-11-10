@@ -34,7 +34,7 @@ public interface AppContext {
 
     long getPid();
 
-    <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function);
+    <T, R> FunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function);
 
     <T, R> SharedFunction<T, R> getSharedFunction(String functionName);
 }

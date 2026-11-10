@@ -4,6 +4,9 @@ import java.util.*;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -12,7 +15,7 @@ import qingzhou.app.redis.store.model.AuditEntry;
         name = {"实例管理", "en:Instance Manager"},
         info = {"只读展示 Redis 连接实例，支持通过切换按钮或下拉框选择当前使用的实例。",
                 "en:Display Redis connection instances in read-only mode, switch via button or dropdown."})
-public class RedisInstance extends RedisModelBase implements Page, Show, SwitchSpace {
+public class RedisInstance extends RedisModelBase implements Page, Show, Namespace {
 
     @ModelField(id = true, show = true, list = true, readonly = true,
             name = {"ID", "en:ID"},
@@ -106,12 +109,12 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 
-    @ModelAction(code = SwitchSpace.ACTION_CODE_SWITCHSPACE, icon = "Switch",
+    @ModelAction(code = Namespace.ACTION_CODE_NAMESPACE, icon = "Switch",
             name = {"切换", "en:Switch"}, list = true,
             confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
             info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"})
     @Override
-    public void switchSpace(String id) throws Exception {
+    public void namespace(String id) throws Exception {
         String previousName = RedisApp.getCurrentInstanceName();
         try {
             if (id != null && !id.isEmpty()) {
@@ -145,7 +148,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
     }
 
     @Override
-    public String currentSpace() {
+    public String current() {
         String currentName = RedisApp.getCurrentInstanceName();
         if (currentName == null || currentName.isEmpty()) {
             return null;
@@ -200,7 +203,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, SwitchS
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         String searchKey = query != null ? query.get("instanceName") : null;
         if (searchKey == null || searchKey.isEmpty()) {
             return RedisApp.getInstances().size();

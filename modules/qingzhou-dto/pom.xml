@@ -7,9 +7,8 @@
         <artifactId>modules</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-dto</artifactId>
+    <packaging>bundle</packaging>
 
     <dependencies>
         <dependency>
@@ -26,8 +25,8 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Export-Package>qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation</Export-Package>
-                        <Import-Package>qingzhou.api,qingzhou.api.action</Import-Package>
+                        <Export-Package>qingzhou.dto,qingzhou.dto.meta</Export-Package>
+                        <Import-Package>qingzhou.api</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -22,6 +22,7 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 | 集中纳管 | 中心实例内置注册中心，Agent 心跳自注册，支持跨主机统一纳管与跨节点调用 |
 | AI 赋能 | 接入兼容 OpenAI 的模型后，按技能编排调用平台模型操作，内置健康检查等技能；同时以 MCP 对外提供工具调用 |
 | 双协议输出 | 同一业务模型同时输出 REST 与 MCP，兼顾人工操作界面与 AI 工具调用 |
+| 可观测 | `field_type = monitor, numeric = true` 的字段自动成为 Prometheus 指标，内置 `/monitor/prometheus` 抓取端点与自监控指标 |
 | 安全 | 登录态、TOTP、OAuth2 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS |
 
 ## 内置应用
@@ -36,7 +37,6 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 | ZooKeeper 应用 | ZooKeeper | 服务状态、连接、生效参数查看 |
 | OAuth2 授权服务 | — | 授权码、密码、客户端凭证、刷新令牌 |
 | 示例应用 | — | 演示标准开发方式 |
-| 图书管理 | — | 完整业务系统示例（非纳管类） |
 
 ## 适用场景
 
@@ -130,7 +130,7 @@ qingzhou/
 ### 三、验证与使用
 
 - Agent 日志首次注册成功会打印 `N apps registered`；续期不打印，应用数为 0 时同样打印，需结合下一步确认。
-- 访问中心管控台，实例列表除本机（local）外会列出已纳管的远程实例（host/port/version），以此为准。
+- 访问中心管控台，实例列表除本机（host 为 `localhost`，实例 ID 为 `-`）外会列出已纳管的远程实例（host/port/version），以此为准。
 - 选中远程实例即可跨节点调用其应用；文件类参数由中心分片加密上传至 Agent 执行。
 
 ### 安全边界
@@ -145,13 +145,13 @@ qingzhou/
 
 | 用途 | 方法与路径 | 认证 |
 | --- | --- | --- |
-| 管控台页面 | `GET /web` | 静态资源免认证 |
+| 管控台页面 | `/web` | 静态资源免认证 |
 | 管控台数据接口 | `/registry/app/*`、`/registry/instance` | 登录态 |
-| REST 集成 | `POST /registry/invoke/<实例>/<应用>/<模型>/<操作>[/<id>]` | 登录态 |
-| MCP | `POST /ai/mcp` | 登录态 |
-| 监控指标 | `GET /monitor/prometheus` | 登录态 |
+| REST 集成 | `/registry/invoke/<实例>/<应用>/<模型>/<操作>[/<id>]` | 登录态 |
+| MCP | `/ai/mcp` | 登录态 |
+| 监控指标 | `/monitor/prometheus` | 登录态 / Bearer 令牌 |
 | 登录与 OAuth2 | `/auth/*`、`/oauth2/*` | 免认证（登录入口） |
-| Agent 链路 | `POST /registry/register`、`/agent/invoke`、`/agent/upload` | 免登录，域密钥加密保护 |
+| Agent 链路 | `/registry/register`、`/agent/invoke`、`/agent/upload` | 免登录，域密钥加密保护 |
 
 ## 更多信息
 
@@ -183,6 +183,27 @@ server {
 ```
 
 启动 Nginx 后访问 `http://localhost:8000/web`。
+
+### 监控指标抓取
+
+`/monitor/prometheus` 需登录态，与管控台接口共用令牌（Cookie 或 `Authorization: Bearer`）。外部探针须使用长期令牌：
+
+```sh
+sh bin/token.sh <实例>   # 交互输入账号口令，选择角色与有效天数（默认 30 天，最长 365 天）
+```
+
+令牌中的角色须与应用 `@App.roles` 匹配，否则该应用指标不会出现。外部抓取还需放开上方 Nginx 配置中的 `/monitor/` 反代。
+
+```yaml
+scrape_configs:
+  - job_name: qingzhou
+    metrics_path: /monitor/prometheus
+    authorization:
+      type: Bearer
+      credentials: <bin/token.sh 生成的令牌>
+    static_configs:
+      - targets: ['<host>:7900']
+```
 
 ### 应用开发
 

@@ -2,6 +2,8 @@ package qingzhou.app.redis.service;
 
 import qingzhou.api.*;
 import qingzhou.api.action.Monitor;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.util.RedisUtil;
 

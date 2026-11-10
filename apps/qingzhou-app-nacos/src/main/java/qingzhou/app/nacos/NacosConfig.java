@@ -9,6 +9,8 @@ import java.util.Map;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "nacos-config", order = 3,
         name = {"配置列表", "en:Config Management"},
@@ -141,7 +143,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         try {
             NacosApi nacosApi = getNacosApi();
             String namespaceId = query != null ? query.get("namespace") : null;

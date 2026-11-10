@@ -10,8 +10,8 @@ import java.util.Map;
 
 import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Monitor;
 
 @Model(code = "os", order = 2,
@@ -133,17 +133,18 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
         OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
         data.put("availableProcessors", String.valueOf(osBean.getAvailableProcessors()));
 
+        // 采集不到时省略 key，禁止填 -1 哨兵：监控端点会把 -1 当作真实指标导出
         double loadAvg = osBean.getSystemLoadAverage();
-        data.put("systemLoadAverage", loadAvg < 0 ? "-1" : String.format("%.2f", loadAvg));
+        if (loadAvg >= 0) data.put("systemLoadAverage", String.format("%.2f", loadAvg));
 
         try {
             Class<?> sunOsClass = Class.forName("com.sun.management.OperatingSystemMXBean");
             if (sunOsClass.isInstance(osBean)) {
                 double processCpu = invokeDoubleMethod(osBean, sunOsClass, "getProcessCpuLoad");
-                data.put("cpuProcessUsage", processCpu < 0 ? "-1" : String.format("%.2f", processCpu * 100));
+                if (processCpu >= 0) data.put("cpuProcessUsage", String.format("%.2f", processCpu * 100));
 
                 double systemCpu = invokeDoubleMethod(osBean, sunOsClass, "getSystemCpuLoad");
-                data.put("cpuSystemUsage", systemCpu < 0 ? "-1" : String.format("%.2f", systemCpu * 100));
+                if (systemCpu >= 0) data.put("cpuSystemUsage", String.format("%.2f", systemCpu * 100));
 
                 long totalMem = invokeLongMethod(osBean, sunOsClass, "getTotalPhysicalMemorySize");
                 long freeMem = invokeLongMethod(osBean, sunOsClass, "getFreePhysicalMemorySize");
@@ -155,11 +156,9 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
                 long freeSwap = invokeLongMethod(osBean, sunOsClass, "getFreeSwapSpaceSize");
                 data.put("totalSwapSpace", String.valueOf(totalSwap / (1024 * 1024)));
                 data.put("freeSwapSpace", String.valueOf(freeSwap / (1024 * 1024)));
-            } else {
-                setUnavailable(data);
             }
-        } catch (ClassNotFoundException e) {
-            setUnavailable(data);
+        } catch (ClassNotFoundException ignored) {
+            // 平台无 com.sun.management MXBean 时相关字段整体缺失
         }
 
         try {
@@ -169,26 +168,12 @@ public class OsMonitor extends qingzhou.api.ModelBase implements Monitor {
                 long maxFd = invokeLongMethod(osBean, unixOsClass, "getMaxFileDescriptorCount");
                 data.put("openFileDescriptorCount", String.valueOf(openFd));
                 data.put("maxFileDescriptorCount", String.valueOf(maxFd));
-            } else {
-                data.put("openFileDescriptorCount", "-1");
-                data.put("maxFileDescriptorCount", "-1");
             }
-        } catch (ClassNotFoundException e) {
-            data.put("openFileDescriptorCount", "-1");
-            data.put("maxFileDescriptorCount", "-1");
+        } catch (ClassNotFoundException ignored) {
+            // 同上
         }
 
         return data;
-    }
-
-    private void setUnavailable(Map<String, String> data) {
-        data.put("cpuProcessUsage", "-1");
-        data.put("cpuSystemUsage", "-1");
-        data.put("totalPhysicalMemory", "-1");
-        data.put("freePhysicalMemory", "-1");
-        data.put("usedPhysicalMemory", "-1");
-        data.put("totalSwapSpace", "-1");
-        data.put("freeSwapSpace", "-1");
     }
 
     private static double invokeDoubleMethod(Object obj, Class<?> clazz, String methodName) throws Exception {

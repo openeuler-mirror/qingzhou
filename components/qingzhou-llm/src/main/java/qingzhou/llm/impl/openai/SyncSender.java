@@ -2,6 +2,7 @@ package qingzhou.llm.impl.openai;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ class SyncSender {
 
     String chat(Map<String, Tool> baseTools, String message, Attachment... attachment) {
         try {
-            List<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
+            Collection<Skill> activeSkills = Utils.getActiveSkills(builder.getSkills(), message, builder::newSameConfigBuilder);
             Map<String, Tool> activeTools = Utils.getActiveTools(activeSkills, baseTools);
 
             List<Object> messages = new ArrayList<>();

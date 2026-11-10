@@ -3,6 +3,7 @@ package qingzhou.app.nacos;
 
 import java.util.*;
 import qingzhou.api.*;
+import qingzhou.api.annotations.App;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
 

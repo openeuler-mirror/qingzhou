@@ -1,7 +1,10 @@
 package qingzhou.app.tomcat;
 
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.annotations.App;
+import qingzhou.api.annotations.I18n;
 
 @App(icon = "/icons/logo.png", roles = "admin",
         name = {"Tomcat管理", "en:Tomcat Manager"},
@@ -19,10 +22,11 @@ import qingzhou.api.*;
 @I18n(name = {"系统资源", "en:OS Resources"}, code = "Os")
 @I18n(name = {"文件句柄", "en:File Descriptors"}, code = "File")
 @I18n(name = {"垃圾回收", "en:GC"}, code = "GC")
-public class TomcatApp implements QingzhouApp{
+public class TomcatApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) {
     }
+
     @Override
     public void stop() {
     }

@@ -1,7 +1,5 @@
 package qingzhou.dto.meta;
 
-import qingzhou.dto.meta.annotation.App;
-
 public class AppMeta {
     private App app;
 

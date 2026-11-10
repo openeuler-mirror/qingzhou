@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Page;
 
 /**
@@ -117,7 +117,7 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> task : db.values()) {
             if (matchesQuery(task, query)) {

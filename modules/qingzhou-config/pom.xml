@@ -7,20 +7,19 @@
         <artifactId>modules</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-config</artifactId>
+    <packaging>bundle</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-common</artifactId>
-            <version>${revision}</version>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-json</artifactId>
-            <version>${revision}</version>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

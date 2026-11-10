@@ -11,37 +11,7 @@
 
     <dependencies>
         <dependency>
-            <artifactId>qingzhou-api</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <artifactId>qingzhou-common</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <artifactId>qingzhou-json</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <artifactId>qingzhou-registry</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <artifactId>qingzhou-logger</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <artifactId>qingzhou-crypto</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

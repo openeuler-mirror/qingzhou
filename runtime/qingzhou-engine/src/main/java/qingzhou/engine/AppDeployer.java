@@ -47,7 +47,7 @@ class AppDeployer {
         }
 
         try {
-            QingzhouMain.startDirAndJars(appCacheDir);
+            QingzhouMain.startBundles(QingzhouMain.installDirAndJars(appCacheDir));
         } finally {
             if (tempClassLoader != null) tempClassLoader.close();
         }

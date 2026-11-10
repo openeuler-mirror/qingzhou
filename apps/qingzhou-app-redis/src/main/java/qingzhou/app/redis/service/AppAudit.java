@@ -3,6 +3,8 @@ package qingzhou.app.redis.service;
 import qingzhou.api.*;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -85,7 +87,7 @@ public class AppAudit extends RedisModelBase implements Page, Show {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         String keyword = query != null ? query.get("operator") : null;
         String type = query != null ? query.get("operationType") : null;
         if (keyword != null && keyword.isEmpty()) {

@@ -20,10 +20,10 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
 import qingzhou.api.Request;
 import qingzhou.common.FileUtil;
+import qingzhou.dto.meta.App;
 import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.annotation.App;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
@@ -164,25 +164,26 @@ public class AppDriver implements BundleActivator {
         Properties appProperties = new Properties();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
         if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
+
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
-            Configuration appShareConfiguration = configurationAdmin.getFactoryConfiguration("app",
+            Configuration appSharedConfig = configurationAdmin.getFactoryConfiguration("app",
                     context.getBundle().getSymbolicName(), null);
-            getProperties(appShareConfiguration, appProperties);
+            addAppConfig(appSharedConfig, appProperties);
+
             String seq = context.getProperty("Qingzhou-App-Seq." + context.getBundle().getSymbolicName());
             if (seq != null && !seq.trim().isEmpty()) {
                 Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
                         context.getBundle().getSymbolicName() + ":" + seq, null);
-                getProperties(appConfiguration, appProperties);
+                addAppConfig(appConfiguration, appProperties);
             }
-
         } finally {
             context.ungetService(serviceReference);
         }
         return appProperties;
     }
 
-    private static void getProperties(Configuration appConfiguration, Properties appProperties) {
+    private static void addAppConfig(Configuration appConfiguration, Properties appProperties) {
         Dictionary<String, Object> properties = appConfiguration.getProperties();
         if (properties != null) {
             Enumeration<?> keys = properties.keys();

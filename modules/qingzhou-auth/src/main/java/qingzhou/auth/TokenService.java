@@ -135,9 +135,7 @@ public class TokenService {
             if (map != null && map.get(EXPIRE) instanceof Number) {
                 return map;
             }
-        } catch (Exception e) {
-            // 校验失败是常见攻击面（伪造/篡改令牌），不打印令牌内容与异常细节，防止日志注入与噪音放大
-            logger.warn("Token verification failed: " + e.getClass().getSimpleName());
+        } catch (Exception ignored) {
         }
         return null;
     }

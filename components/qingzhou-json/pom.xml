@@ -7,9 +7,8 @@
         <artifactId>components</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-json</artifactId>
+    <packaging>bundle</packaging>
 
     <properties>
         <jackson.version>2.16.2</jackson.version>
@@ -60,7 +59,8 @@
                     <instructions>
                         <Export-Package>qingzhou.json</Export-Package>
                         <Import-Package/>
-                        <Embed-Dependency>jackson-core;scope=compile;inline=false,jackson-databind,jackson-annotations
+                        <Embed-Dependency>
+                            jackson-core;scope=compile;inline=false,jackson-databind,jackson-annotations
                         </Embed-Dependency>
                     </instructions>
                 </configuration>

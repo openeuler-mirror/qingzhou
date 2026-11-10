@@ -7,9 +7,8 @@
         <artifactId>components</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-common</artifactId>
+    <packaging>bundle</packaging>
 
     <!--
         平台基础原语模块：跨模块共享、无业务语义、无协议语义的底层工具。
@@ -24,6 +23,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.common</Export-Package>
+                        <Import-Package/>
                     </instructions>
                 </configuration>
             </plugin>

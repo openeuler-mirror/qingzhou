@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import qingzhou.api.*;
+import qingzhou.api.annotations.App;
+import qingzhou.api.annotations.I18n;
+import qingzhou.api.annotations.Menu;
 import qingzhou.app.redis.alert.AlertEngine;
 import qingzhou.app.redis.collector.CollectorScheduler;
 import qingzhou.app.redis.collector.InstanceCollector;

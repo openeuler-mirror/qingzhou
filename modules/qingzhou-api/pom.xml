@@ -7,9 +7,8 @@
         <artifactId>modules</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-api</artifactId>
+    <packaging>bundle</packaging>
 
     <build>
         <plugins>

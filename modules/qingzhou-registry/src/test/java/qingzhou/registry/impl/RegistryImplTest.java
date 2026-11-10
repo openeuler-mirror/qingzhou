@@ -14,7 +14,7 @@ import qingzhou.api.AppContext;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.dto.meta.annotation.App;
+import qingzhou.dto.meta.App;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.AppStubLocal;

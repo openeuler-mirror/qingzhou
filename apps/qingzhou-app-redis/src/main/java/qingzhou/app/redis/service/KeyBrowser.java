@@ -3,8 +3,8 @@ package qingzhou.app.redis.service;
 import java.util.*;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
@@ -240,7 +240,7 @@ public class KeyBrowser extends RedisModelBase implements Page, Add, Delete, Sho
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         String pattern = query != null ? query.get("key") : null;
         if (pattern == null || pattern.isEmpty()) pattern = "*";
         else pattern = "*" + pattern + "*";

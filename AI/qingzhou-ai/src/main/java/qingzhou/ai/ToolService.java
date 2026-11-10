@@ -1,0 +1,17 @@
+package qingzhou.ai;
+
+import java.util.Map;
+
+public interface ToolService {
+    String TOOL_LABEL = "PARENT_SKILL";
+
+    String TOOL_NAME = "TOOL_NAME";
+    String TOOL_DESCRIPTION = "TOOL_DESCRIPTION";
+
+    String PARAMETER_NAME = "PARAMETER_NAME";
+    String PARAMETER_DESCRIPTION = "PARAMETER_DESCRIPTION";
+    String PARAMETER_REQUIRED = "PARAMETER_REQUIRED";
+    String PARAMETER_TYPE = "PARAMETER_TYPE";
+
+    String invoke(Map<String, Object> toolArgs) throws Exception;
+}

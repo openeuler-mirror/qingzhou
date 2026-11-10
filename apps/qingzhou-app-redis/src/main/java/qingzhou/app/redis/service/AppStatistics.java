@@ -3,6 +3,8 @@ package qingzhou.app.redis.service;
 import qingzhou.api.*;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.MetricsStore;
@@ -109,10 +111,8 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
 
         RedisUtil util = RedisApp.getRedisUtil();
         MetricsStore metricsStore = RedisApp.getMetricsStore();
-        if (util == null || !util.isConnected() || metricsStore == null) {
-            setUnavailable(data);
-            return data;
-        }
+        // 采集不到时省略 key，禁止填 -1 哨兵：监控端点会把 -1 当作真实指标导出
+        if (util == null || !util.isConnected() || metricsStore == null) return data;
 
         Map<String, String> info = util.getAggregatedInfo();
         fillBaseMetrics(data, info);
@@ -162,7 +162,7 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
         long usedMemory = Long.parseLong(info.getOrDefault("used_memory", "0"));
         String maxMemoryStr = util.configGetValue("maxmemory");
         long maxMemory = maxMemoryStr != null && !maxMemoryStr.isEmpty() ? Long.parseLong(maxMemoryStr) : 0;
-        data.put("memoryUsageRate", maxMemory > 0 ? String.format("%.2f", usedMemory * 100.0 / maxMemory) : "-1");
+        if (maxMemory > 0) data.put("memoryUsageRate", String.format("%.2f", usedMemory * 100.0 / maxMemory));
 
         return data;
     }
@@ -187,7 +187,7 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         MetricsStore metricsStore = RedisApp.getMetricsStore();
         return metricsStore.getMetricNames().size();
     }
@@ -210,18 +210,4 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
         return sum / points.size();
     }
 
-    private void setUnavailable(Map<String, String> data) {
-        data.put("totalKeys", "-1");
-        data.put("currentOps", "-1");
-        data.put("connectedClients", "-1");
-        data.put("usedMemory", "-1");
-        data.put("hitRate", "-1");
-        data.put("avgOps5m", "-1");
-        data.put("memoryGrowth1h", "-1");
-        data.put("slowLogTotal", "-1");
-        data.put("avgLatency", "-1");
-        data.put("maxLatency", "-1");
-        data.put("clientUsageRate", "-1");
-        data.put("memoryUsageRate", "-1");
-    }
 }

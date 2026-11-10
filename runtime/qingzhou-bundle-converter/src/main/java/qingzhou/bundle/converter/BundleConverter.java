@@ -20,14 +20,15 @@ import java.util.stream.Stream;
 
 import javassist.*;
 import org.osgi.framework.Constants;
-import qingzhou.api.*;
+import qingzhou.api.QingzhouModel;
+import qingzhou.api.annotations.*;
 import qingzhou.app.driver.DefaultAction;
 import qingzhou.common.FileUtil;
 import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
     private ClassPool classPool;
-    private final Map<String, qingzhou.dto.meta.annotation.ModelAction> defaultActionMetaCache = new HashMap<>();
+    private final Map<String, qingzhou.dto.meta.ModelAction> defaultActionMetaCache = new HashMap<>();
     private String appDynamicPackages;
 
     public void build(File sourceJar, File targetJar, String libDir) throws Exception {
@@ -37,7 +38,8 @@ public class BundleConverter {
             throw new IllegalStateException("cannot create temp dir: " + appTmpDir);
         }
         try {
-            FileUtil.unZipToDir(sourceJar, appTmpDir, false); // 应用解压跳过已存在项
+            // overwrite=true 覆盖同名 class（防应用遮蔽驱动实现）；false 跳过已存在项（保留应用侧自定义文件）
+            FileUtil.unZipToDir(sourceJar, appTmpDir, false);
 
             // 生成注解文件
             if (classPool == null) {
@@ -100,7 +102,7 @@ public class BundleConverter {
         // 此处配置的导入须是 qingzhou-app-driver 直接依赖的，并且与 -Dqingzhou.osgi.packages.import.app 配置不冲突
         attributes.putValue(Constants.IMPORT_PACKAGE, "org.osgi.framework,org.osgi.service.cm," + // osgi
                 "qingzhou.api,qingzhou.api.action," +
-                "qingzhou.dto,qingzhou.dto.meta,qingzhou.dto.meta.annotation," +
+                "qingzhou.dto,qingzhou.dto.meta," +
                 "qingzhou.common," +
                 "qingzhou.registry," +
                 "qingzhou.logger," +
@@ -131,7 +133,9 @@ public class BundleConverter {
             throw new IllegalStateException("app-driver directory not found under: " + libDir);
         }
         for (File driverJarFile : driverJarFiles) {
-            FileUtil.unZipToDir(driverJarFile, appTmpDir, true); // driver 覆盖应用同名类，防止应用遮蔽驱动实现
+            // overwrite=true 覆盖同名 class（防应用遮蔽驱动实现）；false 跳过已存在项（保留应用侧自定义文件）
+            // driver 覆盖解压也不能碰 MANIFEST.MF：应用可能在 manifest 中声明 Qingzhou-Detection-Enabled 等自定义 headers
+            FileUtil.unZipToDir(driverJarFile, appTmpDir, true, "META-INF/MANIFEST.MF");
         }
     }
 
@@ -155,7 +159,7 @@ public class BundleConverter {
             jarNameDefaultCode = jarNameDefaultCode.substring(0, jarNameDefaultCode.length() - ".jar".length());
         }
 
-        qingzhou.dto.meta.annotation.App app = new qingzhou.dto.meta.annotation.App();
+        qingzhou.dto.meta.App app = new qingzhou.dto.meta.App();
         for (String cls : allClassNames) {
             CtClass ctClass = classPool.get(cls);
             try {
@@ -176,7 +180,7 @@ public class BundleConverter {
         Files.write(jsonPath, json.getBytes(StandardCharsets.UTF_8));
     }
 
-    private void parseAnnotations(CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp, String defaultCode) throws Exception {
+    private void parseAnnotations(CtClass ctClass, qingzhou.dto.meta.App metaApp, String defaultCode) throws Exception {
         App app = (App) ctClass.getAnnotation(App.class);
         if (app != null) {
             if (metaApp.className != null) {
@@ -226,20 +230,20 @@ public class BundleConverter {
         }
     }
 
-    private void addMenu(Menu menu, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
-        qingzhou.dto.meta.annotation.Menu dtoMenu = new qingzhou.dto.meta.annotation.Menu();
+    private void addMenu(Menu menu, qingzhou.dto.meta.App metaApp) throws Exception {
+        qingzhou.dto.meta.Menu dtoMenu = new qingzhou.dto.meta.Menu();
         setObjAnnotation(dtoMenu, menu);
         metaApp.menus.add(dtoMenu);
     }
 
-    private void addI18n(I18n i18n, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
-        qingzhou.dto.meta.annotation.I18n dtoI18n = new qingzhou.dto.meta.annotation.I18n();
+    private void addI18n(I18n i18n, qingzhou.dto.meta.App metaApp) throws Exception {
+        qingzhou.dto.meta.I18n dtoI18n = new qingzhou.dto.meta.I18n();
         setObjAnnotation(dtoI18n, i18n);
         metaApp.i18ns.add(dtoI18n);
     }
 
-    private void parseModelAnnotations(Model model, CtClass ctClass, qingzhou.dto.meta.annotation.App metaApp) throws Exception {
-        qingzhou.dto.meta.annotation.Model dtoModel = new qingzhou.dto.meta.annotation.Model();
+    private void parseModelAnnotations(Model model, CtClass ctClass, qingzhou.dto.meta.App metaApp) throws Exception {
+        qingzhou.dto.meta.Model dtoModel = new qingzhou.dto.meta.Model();
         dtoModel.className = ctClass.getName();
         setObjAnnotation(dtoModel, model);
         if (dtoModel.code == null || dtoModel.code.isEmpty()) {
@@ -256,7 +260,7 @@ public class BundleConverter {
                     String fieldName = ctField.getName();
                     if (fieldName.startsWith("ACTION_CODE_")) {
                         String fieldVal = (String) ctField.getConstantValue();
-                        qingzhou.dto.meta.annotation.ModelAction modelAction = parseDefaultActionMeta(fieldVal);
+                        qingzhou.dto.meta.ModelAction modelAction = parseDefaultActionMeta(fieldVal);
                         if (modelAction != null) {
                             dtoModel.actions.add(modelAction);
                         }
@@ -268,7 +272,7 @@ public class BundleConverter {
         for (CtMethod ctMethod : ctClass.getMethods()) {
             ModelAction modelAction = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
             if (modelAction != null) {
-                qingzhou.dto.meta.annotation.ModelAction dtoModelAction = new qingzhou.dto.meta.annotation.ModelAction();
+                qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
                 dtoModelAction.methodName = ctMethod.getName();
                 setObjAnnotation(dtoModelAction, modelAction);
                 if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
@@ -282,7 +286,7 @@ public class BundleConverter {
         for (CtField ctField : ctClass.getFields()) {
             ModelField modelField = (ModelField) ctField.getAnnotation(ModelField.class);
             if (modelField != null) {
-                qingzhou.dto.meta.annotation.ModelField dtoModelField = new qingzhou.dto.meta.annotation.ModelField();
+                qingzhou.dto.meta.ModelField dtoModelField = new qingzhou.dto.meta.ModelField();
                 dtoModelField.fieldName = ctField.getName();
                 setObjAnnotation(dtoModelField, modelField);
                 if (dtoModelField.code == null || dtoModelField.code.isEmpty()) {
@@ -296,7 +300,7 @@ public class BundleConverter {
         }
     }
 
-    private qingzhou.dto.meta.annotation.ModelAction parseDefaultActionMeta(String actionName) {
+    private qingzhou.dto.meta.ModelAction parseDefaultActionMeta(String actionName) {
         return defaultActionMetaCache.computeIfAbsent(actionName, s -> {
             CtClass ctClassForDefaultAction = null;
             try {
@@ -308,7 +312,7 @@ public class BundleConverter {
                         // 因此按注解声明的 code 或方法名匹配，且 methodName 必须取真实方法名以便反射调用。
                         if (methodAnnotation.code().equals(actionName)
                                 || ctMethod.getName().equals(actionName)) {
-                            qingzhou.dto.meta.annotation.ModelAction dtoModelAction = new qingzhou.dto.meta.annotation.ModelAction();
+                            qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
                             dtoModelAction.isDefaultAction = true;
                             dtoModelAction.methodName = ctMethod.getName();
                             setObjAnnotation(dtoModelAction, methodAnnotation);

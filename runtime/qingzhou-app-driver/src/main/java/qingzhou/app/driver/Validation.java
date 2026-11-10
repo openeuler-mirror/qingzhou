@@ -8,10 +8,10 @@ import java.util.stream.Collectors;
 import qingzhou.api.*;
 import qingzhou.api.action.Add;
 import qingzhou.api.action.Update;
-import qingzhou.dto.I18nService;
+import qingzhou.registry.I18nService;
 import qingzhou.dto.RequestImpl;
-import qingzhou.dto.meta.annotation.ModelAction;
-import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.dto.meta.ModelAction;
+import qingzhou.dto.meta.ModelField;
 
 class Validation implements ActionFilter {
     private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};

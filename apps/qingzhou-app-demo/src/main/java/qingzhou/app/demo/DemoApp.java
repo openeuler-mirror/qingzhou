@@ -4,6 +4,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import qingzhou.api.*;
+import qingzhou.api.annotations.App;
+import qingzhou.api.annotations.I18n;
+import qingzhou.api.annotations.Menu;
 import qingzhou.logger.Logger;
 
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "User", order = 1)
@@ -61,19 +64,10 @@ public class DemoApp implements QingzhouApp {
             Map<String, String> monitor = jvmMonitor.monitor(request.getId());
             String heapUsed = monitor.get("heapUsed");
             int i = Integer.parseInt(heapUsed);
-            if (i >= 100) {
+            if (i >= 200) {
                 logger.warn("内存过大（MB）：" + i);
             }
             chain.doFilter();
         });
-
-        Thread.sleep(2000); // 确保图书管理应用启动完成
-        SharedFunction<String, String> testSharedFunction = appContext.getSharedFunction("queryBook");
-        if (testSharedFunction != null) {
-            String bookInfo = testSharedFunction.invoke("示例应用->调用->图书管理应用共享的方法，查询图书：");
-            logger.info(bookInfo);
-        } else {
-            logger.warn("未找到共享函数 queryBook，跳过图书查询。请确认图书管理应用已启动并注册了该共享函数。");
-        }
     }
 }

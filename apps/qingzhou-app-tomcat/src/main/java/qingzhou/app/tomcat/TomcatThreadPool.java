@@ -2,16 +2,18 @@ package qingzhou.app.tomcat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.api.ChartType;
 import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.action.Monitor;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 
 @Model(code = "threadpool", order = 5, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},
@@ -175,7 +177,7 @@ public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         loadThreadPools();
         return filterByQuery(threadPools, query).size();
     }

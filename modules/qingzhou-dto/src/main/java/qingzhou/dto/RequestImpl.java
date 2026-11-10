@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import qingzhou.api.Request;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelAction;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
 
 public class RequestImpl implements Request {
     private transient ResponseImpl response = new ResponseImpl();

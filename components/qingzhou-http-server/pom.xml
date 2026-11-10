@@ -7,9 +7,8 @@
         <artifactId>components</artifactId>
         <version>${revision}</version>
     </parent>
-
-    <packaging>bundle</packaging>
     <artifactId>qingzhou-http-server</artifactId>
+    <packaging>bundle</packaging>
 
     <properties>
         <reactor-netty-version>1.2.18</reactor-netty-version>
@@ -154,17 +153,7 @@
         </dependency>
 
         <dependency>
-            <artifactId>qingzhou-common</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <artifactId>qingzhou-crypto</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-logger</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>

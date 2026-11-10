@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.action.*;
@@ -155,7 +155,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         try {
             NacosApi nacosApi = getNacosApi();
             Map<String, Object> data = nacosApi.getServiceList(1, 1);

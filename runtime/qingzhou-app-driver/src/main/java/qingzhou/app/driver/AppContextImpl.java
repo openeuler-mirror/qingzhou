@@ -6,7 +6,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import qingzhou.api.*;
 import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.annotation.Model;
+import qingzhou.dto.meta.Model;
 import qingzhou.registry.AppStubLocal;
 
 import java.io.File;
@@ -139,7 +139,7 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public <T, R> SharedFunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function) {
+    public <T, R> FunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function) {
         if (functionName == null || functionName.isEmpty()) {
             throw new IllegalArgumentException("shared function name is required");
         }

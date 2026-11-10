@@ -3,8 +3,8 @@ package qingzhou.app.demo;
 import java.util.*;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
 
 @Model(code = "student", order = 1,
@@ -253,7 +253,7 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
     }
 
     @Override
-    public int totalSize(Map<String, String> query) {
+    public int total(Map<String, String> query) {
         int count = 0;
         for (Map<String, String> student : db.values()) {
             if (matchesQuery(student, query)) {

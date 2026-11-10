@@ -1,6 +1,9 @@
 package qingzhou.llm;
 
 import java.util.Collection;
+import java.util.function.Supplier;
+
+import qingzhou.llm.impl.Lazy;
 
 public interface Skill {
     String name();
@@ -13,12 +16,12 @@ public interface Skill {
     // 技能的工具集：该技能需要挂载的功能工具
     Collection<Tool> tools();
 
-    /**
-     * 是否需按 description 匹配激活。false：参与匹配，命中才激活；true：表示恒激活（跳过匹配直接加载）。
-     */
-    boolean required();
-    
-    static Skill of(String name, String description, String instruction, Collection<Tool> tools, boolean required) {
+    // provider 延迟到 getter 首次调用时执行：匹配阶段只用 name/description，未激活技能不触发说明书与工具集
+    static Skill of(String name, String description,
+                    Supplier<String> instructionProvider,
+                    Supplier<Collection<Tool>> toolsProvider) {
+        Supplier<String> instruction = new Lazy<>(instructionProvider);
+        Supplier<Collection<Tool>> tools = new Lazy<>(toolsProvider);
         return new Skill() {
             @Override
             public String name() {
@@ -32,17 +35,12 @@ public interface Skill {
 
             @Override
             public String instruction() {
-                return instruction;
+                return instruction.get();
             }
 
             @Override
             public Collection<Tool> tools() {
-                return tools;
-            }
-
-            @Override
-            public boolean required() {
-                return required;
+                return tools.get();
             }
         };
     }

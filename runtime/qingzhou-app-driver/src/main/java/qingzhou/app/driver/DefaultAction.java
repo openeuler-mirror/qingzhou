@@ -9,13 +9,14 @@ import java.util.function.Predicate;
 
 import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.ModelAction;
 import qingzhou.common.FileUtil;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.annotation.Model;
-import qingzhou.dto.meta.annotation.ModelField;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelField;
 import qingzhou.registry.Constants;
 
 /**
@@ -106,7 +107,7 @@ public class DefaultAction {
             finalResult.put(Constants.WEB_RESPONSE_PARAMETER_PAGE_NUM, pageNum);
             finalResult.put(Constants.WEB_RESPONSE_PARAMETER_PAGE_SIZE, pageSize);
             // response.getData() == null 时，结果会被丢弃（response 已有数据），放在此处可跳过非必要的 totalSize 的后端查询
-            finalResult.put(Constants.WEB_RESPONSE_PARAMETER_TOTAL_SIZE, page.totalSize(query));
+            finalResult.put(Constants.WEB_RESPONSE_PARAMETER_TOTAL_SIZE, page.total(query));
             response.data(finalResult);
         }
     }
@@ -138,30 +139,30 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = SwitchSpace.ACTION_CODE_SWITCHSPACE, icon = "Switch",
+            code = Namespace.ACTION_CODE_NAMESPACE, icon = "Switch",
             name = {"切换", "en:Switch"},
             info = {"切换至此空间。", "en:Switch to this space."})
-    public static void switchspace(SwitchSpace switchSpace, Request request) throws Exception {
-        switchSpace.switchSpace(request.getId());
+    public static void switchspace(Namespace aNamespace, Request request) throws Exception {
+        aNamespace.namespace(request.getId());
     }
 
     @ModelAction(
-            code = SwitchSpace.ACTION_CODE_CURRENTSPACE,
+            code = Namespace.ACTION_CODE_CURRENT,
             name = {"当前空间", "en:Current Space"},
             info = {"显示已切换至的空间。", "en:Displays the currently active space."})
-    public static void currentspace(SwitchSpace switchSpace, Request request) {
-        String currentSpace = switchSpace.currentSpace();
+    public static void currentspace(Namespace aNamespace, Request request) {
+        String currentSpace = aNamespace.current();
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> data = new HashMap<>();
-        data.put(SwitchSpace.ACTION_CODE_CURRENTSPACE, currentSpace != null ? currentSpace : "");
+        data.put(Namespace.ACTION_CODE_CURRENT, currentSpace != null ? currentSpace : "");
         response.data(data);
     }
 
     @ModelAction(
-            code = DownloadFile.ACTION_CODE_FILES, icon = "Download", order = 3,
+            code = Download.ACTION_CODE_FILE, icon = "Download", order = 3,
             name = {"下载", "en:Download"}, list_head = true, show = true, update = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
-    public static void files(DownloadFile downloadFile, Request request) throws Exception {
+    public static void files(Download download, Request request) throws Exception {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null) {
             Map<String, String> map = new TreeMap<>();
@@ -172,7 +173,7 @@ public class DefaultAction {
                 response.error("illegal file name");
                 return;
             }
-            File fileBase = downloadFile.files(id);
+            File fileBase = download.file(id);
             if (fileBase.isDirectory()) {
                 File[] files = fileBase.listFiles();
                 if (files != null) {
@@ -191,11 +192,11 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = DownloadFile.ACTION_CODE_DOWNLOAD, icon = "Download",
+            code = Download.ACTION_CODE_DOWNLOAD, icon = "Download",
             name = {"下载", "en:Download"},
             info = {"下载选择的文件列表。", "en:Download the selected file list."})
-    public static void download(DownloadFile downloadFile, Request request) throws Exception {
-        ModelBase modelBase = (ModelBase) downloadFile;
+    public static void download(Download download, Request request) throws Exception {
+        ModelBase modelBase = (ModelBase) download;
         AppContext appContext = modelBase.getAppContext();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
@@ -206,12 +207,12 @@ public class DefaultAction {
             response.error("illegal file name");
             return;
         }
-        File fileBase = downloadFile.files(id);
+        File fileBase = download.file(id);
         File tempBase = new File(appContext.getTempDir(), "download");
 
-        String downloadKey = request.getParameter(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY);
+        String downloadKey = request.getParameter(Download.REQUEST_PARAMETER_SERIAL_KEY);
         if (downloadKey == null || downloadKey.isEmpty()) {
-            String downloadFileNames = request.getParameter(DownloadFile.REQUEST_PARAMETER_FILE_NAMES);
+            String downloadFileNames = request.getParameter(Download.REQUEST_PARAMETER_FILE_NAMES);
             if (downloadFileNames == null) {
                 response.error("empty file name");
                 return;
@@ -244,7 +245,7 @@ public class DefaultAction {
         if (downloadKey == null || downloadKey.isEmpty()) return;
 
         long offset = 0;
-        String downloadOffsetParameter = request.getParameter(DownloadFile.REQUEST_PARAMETER_OFFSET);
+        String downloadOffsetParameter = request.getParameter(Download.REQUEST_PARAMETER_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.isEmpty()) {
             try {
                 offset = Long.parseLong(downloadOffsetParameter);
@@ -298,9 +299,9 @@ public class DefaultAction {
         String byteEncoded = base64Coder.encode(byteRead);
 
         Map<String, String> data = new HashMap<>();
-        data.put(DownloadFile.REQUEST_PARAMETER_SERIAL_KEY, downloadKey);
-        data.put(DownloadFile.REQUEST_PARAMETER_OFFSET, String.valueOf(offset));
-        data.put(DownloadFile.REQUEST_PARAMETER_BYTES, byteEncoded);
+        data.put(Download.REQUEST_PARAMETER_SERIAL_KEY, downloadKey);
+        data.put(Download.REQUEST_PARAMETER_OFFSET, String.valueOf(offset));
+        data.put(Download.REQUEST_PARAMETER_BYTES, byteEncoded);
         response.data(data);
     }
 
