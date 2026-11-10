@@ -2,9 +2,7 @@ package qingzhou.api.action;
 
 import java.io.File;
 
-import qingzhou.api.QingzhouModel;
-
-public interface Download extends QingzhouModel {
+public interface Download {
     String ACTION_CODE_FILE = "file";
     String ACTION_CODE_DOWNLOAD = "download";
 

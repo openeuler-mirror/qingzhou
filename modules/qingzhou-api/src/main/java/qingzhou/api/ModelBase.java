@@ -1,9 +1,9 @@
 package qingzhou.api;
 
 /**
- * 轻舟所有的模块，都需要用 @qingzhou.api.Model 标注，并且都需要从此类继承。
+ * 轻舟所有的模块，都需要用 @qingzhou.api.annotations.Model 标注，并且都需要从此类继承。
  */
-public abstract class ModelBase implements QingzhouModel {
+public abstract class ModelBase {
     private static final ThreadLocal<Request> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
 
     private AppContext appContext;

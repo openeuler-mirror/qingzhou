@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 
 import javassist.*;
 import org.osgi.framework.Constants;
-import qingzhou.api.QingzhouModel;
 import qingzhou.api.annotations.*;
 import qingzhou.app.driver.DefaultAction;
 import qingzhou.common.FileUtil;
@@ -21,7 +20,6 @@ import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
     private ClassPool classPool;
-    private final Map<String, qingzhou.dto.meta.ModelAction> defaultActionMetaCache = new HashMap<>();
     private String appDynamicPackages;
 
     public void build(File sourceJar, File targetJar, String libDir) throws Exception {
@@ -235,20 +233,21 @@ public class BundleConverter {
             throw new IllegalStateException("Duplicate annotation @Model:" + dtoModel.code);
         }
 
-        // 添加默认的 Action
-        for (CtClass ctInterface : ctClass.getInterfaces()) {
-            if (ctInterface.subtypeOf(classPool.get(QingzhouModel.class.getName()))) {
-                for (CtField ctField : ctInterface.getFields()) {
-                    String fieldName = ctField.getName();
-                    if (fieldName.startsWith("ACTION_CODE_")) {
-                        String fieldVal = (String) ctField.getConstantValue();
-                        qingzhou.dto.meta.ModelAction modelAction = parseDefaultActionMeta(fieldVal);
-                        if (modelAction != null) {
-                            dtoModel.actions.add(modelAction);
-                        }
-                    }
-                }
+        // 默认 Action 以 DefaultAction 方法签名为唯一来源：模型实现首参能力接口即注入
+        for (CtMethod ctMethod : classPool.get(DefaultAction.class.getName()).getMethods()) {
+            ModelAction methodAnnotation = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
+            if (methodAnnotation == null) continue;
+            CtClass[] parameterTypes = ctMethod.getParameterTypes();
+            if (parameterTypes.length != 2 || !ctClass.subtypeOf(parameterTypes[0])) continue;
+
+            qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
+            dtoModelAction.isDefaultAction = true;
+            dtoModelAction.methodName = ctMethod.getName();
+            setObjAnnotation(dtoModelAction, methodAnnotation);
+            if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
+                dtoModelAction.code = ctMethod.getName();
             }
+            dtoModel.actions.add(dtoModelAction);
         }
 
         for (CtMethod ctMethod : ctClass.getMethods()) {
@@ -280,40 +279,6 @@ public class BundleConverter {
                 dtoModel.fields.add(dtoModelField);
             }
         }
-    }
-
-    private qingzhou.dto.meta.ModelAction parseDefaultActionMeta(String actionName) {
-        return defaultActionMetaCache.computeIfAbsent(actionName, s -> {
-            CtClass ctClassForDefaultAction = null;
-            try {
-                ctClassForDefaultAction = classPool.get(DefaultAction.class.getName());
-                for (CtMethod ctMethod : ctClassForDefaultAction.getMethods()) {
-                    ModelAction methodAnnotation = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
-                    if (methodAnnotation != null) {
-                        // 默认操作的方法名与对外 code 可能不一致（如 SwitchSpace switchSpace 方法对外 code 为 switchspace，大小写有差别），
-                        // 因此按注解声明的 code 或方法名匹配，且 methodName 必须取真实方法名以便反射调用。
-                        if (methodAnnotation.code().equals(actionName)
-                                || ctMethod.getName().equals(actionName)) {
-                            qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
-                            dtoModelAction.isDefaultAction = true;
-                            dtoModelAction.methodName = ctMethod.getName();
-                            setObjAnnotation(dtoModelAction, methodAnnotation);
-                            if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
-                                dtoModelAction.code = actionName;
-                            }
-                            return dtoModelAction;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            } finally {
-                if (ctClassForDefaultAction != null) {
-                    ctClassForDefaultAction.detach();
-                }
-            }
-            return null;
-        });
     }
 
     private void setObjAnnotation(Object object, Annotation annotation) throws Exception {

@@ -2,9 +2,11 @@ package qingzhou.app.driver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import qingzhou.api.*;
 import qingzhou.app.driver.systemcall.Icon;
@@ -25,8 +27,10 @@ class AppStubLocalImpl implements AppStubLocal {
 
     private final Map<String, SystemCall> systemCallMap;
 
-    // 默认 action 方法清单在类加载时反射一次并缓存，避免每次请求都扫描 DefaultAction 的全部方法
-    private static final Method[] DEFAULT_ACTION_METHODS = DefaultAction.class.getMethods();
+    // 默认 action 由转换器按 DefaultAction 方法名生成，按名索引一次即可
+    private static final Map<String, Method> DEFAULT_ACTION_METHODS = Arrays.stream(DefaultAction.class.getMethods())
+            .filter(m -> m.getParameterCount() == 2 && m.getParameterTypes()[1] == Request.class)
+            .collect(Collectors.toMap(Method::getName, m -> m));
 
     AppStubLocalImpl(AppContextImpl appContext) {
         this.appContext = appContext;
@@ -92,19 +96,11 @@ class AppStubLocalImpl implements AppStubLocal {
 
         ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
-            for (Method method : DEFAULT_ACTION_METHODS) {
-                // 默认操作名已由 list 改为 page（action.code），方法名仍为 list，用 methodName 匹配
-                if (method.getName().equals(action.methodName)) {
-                    Class<?>[] parameterTypes = method.getParameterTypes();
-                    if (parameterTypes.length == 2) {
-                        if (QingzhouModel.class.isAssignableFrom(parameterTypes[0])
-                                && parameterTypes[1] == Request.class) {
-                            invokeMethod(request, method, null, modelBase, request);
-                        }
-                    }
-                    break;
-                }
+            Method method = DEFAULT_ACTION_METHODS.get(action.methodName);
+            if (method == null) {
+                throw new IllegalStateException("unknown default action: " + action.methodName);
             }
+            invokeMethod(request, method, null, modelBase, request);
         } else { // 执行自定义 action
             Method method = appContext.actionMethods.get(AppDriver.resolveActionKey(model, action));
             if (method != null) {

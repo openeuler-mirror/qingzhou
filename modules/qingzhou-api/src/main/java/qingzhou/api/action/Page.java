@@ -3,9 +3,7 @@ package qingzhou.api.action;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.api.QingzhouModel;
-
-public interface Page extends QingzhouModel {
+public interface Page {
     String ACTION_CODE_PAGE = "page";
 
     List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception;

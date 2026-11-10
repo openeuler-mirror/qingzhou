@@ -1,8 +1,6 @@
 package qingzhou.api.action;
 
-import qingzhou.api.QingzhouModel;
-
-public interface Namespace extends QingzhouModel {
+public interface Namespace {
     String ACTION_CODE_NAMESPACE = "namespace";
     String ACTION_CODE_CURRENT = "current";
 

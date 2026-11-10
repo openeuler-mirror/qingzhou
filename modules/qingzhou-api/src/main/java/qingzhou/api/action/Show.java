@@ -2,9 +2,7 @@ package qingzhou.api.action;
 
 import java.util.Map;
 
-import qingzhou.api.QingzhouModel;
-
-public interface Show extends QingzhouModel {
+public interface Show {
     String ACTION_CODE_SHOW = "show";
 
     Map<String, String> show(String id) throws Exception;
