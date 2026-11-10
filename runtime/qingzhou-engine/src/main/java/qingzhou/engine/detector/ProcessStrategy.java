@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 // 进程策略：从进程命令行反推安装目录；全量扫描开销大，扫描结果按静态缓存跨 bundle 共享
@@ -24,13 +26,16 @@ class ProcessStrategy implements PathDetectionStrategy {
 
     private final FeatureFiles featureFiles;
     private final List<String> processKeywords;
+    // 从进程命令行提取安装目录的正则（须含捕获组），由清单 Qingzhou-Detection-Process-Home-Regex 配置；未配置时退回关键字前缀
+    private final Pattern homeRegex;
 
-    ProcessStrategy(FeatureFiles featureFiles, List<String> processNames) {
+    ProcessStrategy(FeatureFiles featureFiles, List<String> processNames, String homeRegex) {
         this.featureFiles = featureFiles;
         this.processKeywords = new ArrayList<>();
         for (String name : processNames) {
             processKeywords.add(name.toLowerCase(Locale.ROOT));
         }
+        this.homeRegex = homeRegex == null || homeRegex.isEmpty() ? null : Pattern.compile(homeRegex);
     }
 
     @Override
@@ -47,12 +52,18 @@ class ProcessStrategy implements PathDetectionStrategy {
                 .collect(Collectors.toList());
     }
 
-    // 取关键字之前的命令行前缀作为候选安装目录；关键字位于行首时无父目录信息，须丢弃，否则会退化成工作目录下的相对路径误判
+    // 关键字确认"是目标进程"后再定位安装目录：配置了 home 提取正则就用它，否则退回关键字之前的路径前缀
     private File installDirOf(String line) {
         String lowerLine = line.toLowerCase(Locale.ROOT);
         for (String keyword : processKeywords) {
             int idx = lowerLine.indexOf(keyword);
-            if (idx > 0) return new File(line.substring(0, idx));
+            if (idx <= 0) continue;
+
+            if (homeRegex != null) {
+                Matcher matcher = homeRegex.matcher(line);
+                if (matcher.find()) return new File(matcher.group(1));
+            }
+            return new File(line.substring(0, idx).trim());
         }
         return null;
     }
