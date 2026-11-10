@@ -43,20 +43,29 @@ public class AppDriver implements BundleActivator {
         appMeta = new AppMeta();
         appMeta.setApp(parseAnnotations());
 
+        String location = context.getBundle().getLocation();
+        int startIdx = location.lastIndexOf("[");
+        int endIdx = location.lastIndexOf("]");
+        String seq = "";
+        if (startIdx > -1 && endIdx > startIdx) {
+            seq = location.substring(startIdx + 1, endIdx);
+        }
         // 初始化上下文
         appContext = new AppContextImpl(this, context, appMeta);
-        String seq = context.getProperty("Qingzhou-App-Seq." + context.getBundle().getSymbolicName());
-        Properties appProperties = parseProperties();
+        Properties appProperties = parseProperties(seq);
         String code = appProperties.getProperty("code");
         if (code != null && !code.trim().isEmpty()) {
             appMeta.getApp().code = code.trim();
         }
-        if (seq != null && !seq.trim().isEmpty()) {
-            appMeta.getApp().code = appMeta.getApp().code + ":" + seq.trim();
+        String symbolicName = context.getBundle().getSymbolicName();
+        if (!seq.trim().isEmpty()) {
+            appMeta.getApp().code = appMeta.getApp().code + "[" + seq.trim() + "]";
+            symbolicName = symbolicName + "[" + seq + "]";
         }
+
         appContext.appProperties = appProperties;
         // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
-        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + context.getBundle().getSymbolicName());
+        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + symbolicName);
 
         // 初始化对象
         appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).getDeclaredConstructor().newInstance();
@@ -160,7 +169,7 @@ public class AppDriver implements BundleActivator {
         }
     }
 
-    private Properties parseProperties() throws IOException {
+    private Properties parseProperties(String seq) throws IOException {
         Properties appProperties = new Properties();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
         if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
@@ -171,10 +180,9 @@ public class AppDriver implements BundleActivator {
                     context.getBundle().getSymbolicName(), null);
             addAppConfig(appSharedConfig, appProperties);
 
-            String seq = context.getProperty("Qingzhou-App-Seq." + context.getBundle().getSymbolicName());
             if (seq != null && !seq.trim().isEmpty()) {
                 Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
-                        context.getBundle().getSymbolicName() + ":" + seq, null);
+                        context.getBundle().getSymbolicName() + "[" + seq + "]", null);
                 addAppConfig(appConfiguration, appProperties);
             }
         } finally {
