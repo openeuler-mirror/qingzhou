@@ -25,15 +25,15 @@ mvn clean install
 | `Qingzhou-Detection-Feature-Files` | 用于识别 Tomcat 目录的特征文件：`bin/catalina.sh`、`bin/catalina.bat`、`conf/server.xml` |
 | `Qingzhou-Detection-Env-Vars` | 用于识别 Tomcat 目录的环境变量：`CATALINA_HOME`、`TOMCAT_HOME` |
 | `Qingzhou-Detection-Scan-Roots` | 探测扫描根目录，需要时按部署环境调整 |
-| `Qingzhou-Detection-Process-Names` | 进程名匹配规则（当前为空） |
+| `Qingzhou-Detection-Process-Names` | 进程命令行关键字，用于从运行中 Tomcat 反推安装目录：`org.apache.catalina.startup.Bootstrap`|
 
 ### 探测优先级
 
-1. 优先读取环境变量 `CATALINA_HOME` 或 `TOMCAT_HOME` 指向的目录；
-2. 若环境变量未设置，则在 `Qingzhou-Detection-Scan-Roots` 指定的根目录下递归扫描，命中特征文件（`bin/catalina.sh` + `conf/server.xml`）的目录即视为 Tomcat 安装目录；
-3. 探测结果会显示在「首页」的"安装路径"字段中。
+1. **环境变量**：读取 `CATALINA_HOME` / `TOMCAT_HOME` 指向的目录；
+2. **扫描根**：在 `Qingzhou-Detection-Scan-Roots` 指定的根目录及其一级子目录下扫特征文件（`bin/catalina.sh` + `conf/server.xml`）；
+3. **进程匹配**：若上述两步都未命中，扫描本机进程命令行，找到含 `org.apache.catalina.startup.Bootstrap` 的 JVM，从命令行里的 `-Dcatalina.home=XXX` / `-Dcatalina.base=XXX` 提取安装目录，再用特征文件二次验证。
 
-> 若首页未显示安装路径，请检查环境变量是否设置，或将 Tomcat 安装目录置于扫描根之下。
+> 进程匹配优先级最低，是环境变量与扫描根都不适用时的兜底。只要 Tomcat 在运行、命令行里带 `-Dcatalina.home=XXX`，这条路径就能命中。探测结果会显示在「首页」的"安装路径"字段中。
 
 ## 功能模块
 
@@ -225,9 +225,10 @@ mvn clean install
 
 **Q: 首页"安装路径"为空，所有页面提示 "tomcat path is empty"？**
 
-A: 未探测到 Tomcat 安装目录。请确认：
+A: 未探测到 Tomcat 安装目录。请确认（按优先级）：
 1. 设置了环境变量 `CATALINA_HOME` 或 `TOMCAT_HOME` 指向 Tomcat 根目录；或
-2. Tomcat 安装目录位于 `pom.xml` 中 `Qingzhou-Detection-Scan-Roots` 指定的扫描根之下，且包含 `bin/catalina.sh`（或 `bin/catalina.bat`）和 `conf/server.xml` 特征文件。
+2. Tomcat 安装目录位于 `pom.xml` 中 `Qingzhou-Detection-Scan-Roots` 指定的扫描根之下，且包含 `bin/catalina.sh`（或 `bin/catalina.bat`）和 `conf/server.xml` 特征文件；或
+3. Tomcat 正在运行，其 JVM 命令行含 `-Dcatalina.home=XXX`（标准 `startup.sh` / `catalina.sh` 启动方式天然满足这条）。
 
 **Q: 应用管理列表为空？**
 

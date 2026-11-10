@@ -441,10 +441,14 @@ final class TomcatJmx {
         }
         File toolsJar = new File(System.getProperty("java.home"), "../lib/tools.jar");
         if (toolsJar.isFile()) {
-            // 原生库 libattach 按类加载器只允许加载一次：重连时必须复用同一个 tools.jar 类加载器，
-            // 每次新建 URLClassLoader 会在第二次 attach 时抛出 already loaded in another classloader
-            URLClassLoader loader = new URLClassLoader(new URL[]{toolsJar.toURI().toURL()}, TomcatJmx.class.getClassLoader());
-            attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, loader);
+            // 多个 Tomcat 实例（bundle :0/:1）各有独立类加载器，若各自新建 URLClassLoader 加载 tools.jar，
+            // 原生库 libattach 会在第二个实例加载时抛出 already loaded in another classloader。
+            // 须把 tools.jar 注入系统类加载器，所有实例共享同一个 VirtualMachine 类与 libattach。
+            ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
+            java.lang.reflect.Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+            addURL.setAccessible(true);
+            addURL.invoke(systemLoader, toolsJar.toURI().toURL());
+            attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, systemLoader);
         } else {
             // JDK 9+ 的 attach 类在 jdk.attach 模块内，Bundle 类加载器不可见，须由系统类加载器加载
             attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, ClassLoader.getSystemClassLoader());
@@ -480,7 +484,6 @@ final class TomcatJmx {
                     try {
                         vmClass.getMethod("detach").invoke(vm);
                     } catch (Exception ignored) {
-                        // detach 属清理动作，失败不阻断继续尝试其他进程
                     }
                 }
             }

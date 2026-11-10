@@ -26,7 +26,10 @@
                             <Qingzhou-Detection-Scan-Roots>
                                 user.home,/usr/local,/opt,/opt/homebrew/opt
                             </Qingzhou-Detection-Scan-Roots>
-                            <Qingzhou-Detection-Process-Names/>
+                            <Qingzhou-Detection-Process-Names>
+                                org.apache.catalina.startup.Bootstrap
+                            </Qingzhou-Detection-Process-Names>
+                            <Qingzhou-Detection-Process-Home-Regex>-Dcatalina\.home=(\S+)</Qingzhou-Detection-Process-Home-Regex>
                         </manifestEntries>
                     </archive>
                 </configuration>

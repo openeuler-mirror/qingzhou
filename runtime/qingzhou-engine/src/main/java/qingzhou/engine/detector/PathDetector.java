@@ -20,14 +20,16 @@ class PathDetector {
         list.add(new FeatureFileStrategy(featureFiles,
                 splitCsv(attributes.get("Qingzhou-Detection-Env-Vars")), roots));
         list.add(new ProcessStrategy(featureFiles,
-                splitCsv(attributes.get("Qingzhou-Detection-Process-Names"))));
+                splitCsv(attributes.get("Qingzhou-Detection-Process-Names")),
+                attributes.get("Qingzhou-Detection-Process-Home-Regex")));
         this.strategies = list;
     }
 
+    // 协调器：空列表表示策略跑了但没找到候选，继续下一个；null 表示策略自身不适用（如 ProcessStrategy 无 processNames）
     List<String> detect() throws Exception {
         for (PathDetectionStrategy strategy : strategies) {
             List<String> detectedList = strategy.detect();
-            if (detectedList != null) return detectedList;
+            if (detectedList != null && !detectedList.isEmpty()) return detectedList;
         }
         return null;
     }
