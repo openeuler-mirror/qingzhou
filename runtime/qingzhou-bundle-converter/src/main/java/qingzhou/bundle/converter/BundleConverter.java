@@ -2,9 +2,19 @@ package qingzhou.bundle.converter;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.jar.Attributes;
@@ -168,8 +178,41 @@ public class BundleConverter {
         jsonPath.toFile().getParentFile().mkdirs();
         JsonImpl jsonImpl = new JsonImpl();
         jsonImpl.init();
-        String json = jsonImpl.toJson(app);
+        // 仅写入非默认值：缺省字段由 AppDriver 反序列化时按 DTO 初值（与注解默认值一致）补齐
+        String json = jsonImpl.toJson(toSparseMeta(app));
         Files.write(jsonPath, json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    // DTO 默认实例：作为“注解默认值”的比较基准，避免在注解解析后再全量输出默认值
+    private static final Map<Class<?>, Object> DEFAULT_META_INSTANCES = new HashMap<>();
+
+    private static Object defaultMetaInstance(Class<?> metaType) throws Exception {
+        Object defaults = DEFAULT_META_INSTANCES.get(metaType);
+        if (defaults == null) {
+            defaults = metaType.getDeclaredConstructor().newInstance();
+            DEFAULT_META_INSTANCES.put(metaType, defaults);
+        }
+        return defaults;
+    }
+
+    private static Map<String, Object> toSparseMeta(Object meta) throws Exception {
+        Object defaults = defaultMetaInstance(meta.getClass());
+        Map<String, Object> sparse = new LinkedHashMap<>();
+        for (Field field : meta.getClass().getFields()) {
+            Object value = field.get(meta);
+            if (value instanceof Set) { // 元数据集合按声明顺序展开，空集合省略
+                Set<?> items = (Set<?>) value;
+                if (items.isEmpty()) continue;
+                List<Map<String, Object>> list = new ArrayList<>(items.size());
+                for (Object item : items) {
+                    list.add(toSparseMeta(item));
+                }
+                sparse.put(field.getName(), list);
+            } else if (!Objects.deepEquals(value, field.get(defaults))) {
+                sparse.put(field.getName(), value);
+            }
+        }
+        return sparse;
     }
 
     private void parseAnnotations(CtClass ctClass, qingzhou.dto.meta.App metaApp, String defaultCode) throws Exception {

@@ -1,20 +1,21 @@
 package qingzhou.engine.detector;
 
+import org.osgi.framework.Bundle;
+import qingzhou.engine.QingzhouMain;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.osgi.framework.Bundle;
-import qingzhou.engine.QingzhouMain;
-
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
     private static ScheduledExecutorService scheduledExecutor;
+    public static final Map<String, List<String>> detectedMap = new HashMap<>();
 
     public static void startWithDetection(Bundle bundle) {
         if (scheduledExecutor == null) {
@@ -29,23 +30,41 @@ public class PathDetectionScheduler {
         scheduledExecutor.scheduleAtFixedRate(() -> {
             try { // 实际检测逻辑
                 List<String> detectedList = detector.detect();
-                if (detectedList != null) {
-                    for (int i = 0; i < detectedList.size(); i++) {
-                        String detected = detectedList.get(i);
-                        // 按 bundle 符号名分键传递，避免多个探测型 bundle 互相覆盖，
-                        // 也避免"设置后即清除"与 Activator 异步读取之间的竞态；属性值随检测覆盖更新，无需清除
-                        String dataFlag = "Qingzhou-Detected-Path." + bundle.getSymbolicName();
-                        System.setProperty(dataFlag, detected); // todo： 同应用的不同实例 bundle 的探测结果互不影响 ？
-
+                if (!detectedList.isEmpty()) {
+                    List<String> historyDetectedList = detectedMap.computeIfAbsent(bundle.getSymbolicName(), k -> new ArrayList<>(4));
+                    // 停止未检测到的应用实例
+                    for (String detected : historyDetectedList) {
+                        if (!detectedList.contains(detected)) {
+                            int i = historyDetectedList.indexOf(detected);
+                            String dataFlag = addSeq("Qingzhou-Detected-Path." + bundle.getSymbolicName(), i);
+                            System.clearProperty(dataFlag);
+                            Bundle bnd = QingzhouMain.getBundleContext().getBundle(addSeq(bundle.getLocation(), i));
+                            if (bnd != null) {
+                                bnd.stop();
+                            }
+                        }
+                    }
+                    // 启动已检测到的实例
+                    for (String detected : detectedList) {
+                        if (!historyDetectedList.contains(detected)) {
+                            historyDetectedList.add(detected);
+                        }
+                        int i = historyDetectedList.indexOf(detected);
+                        String dataFlag = addSeq("Qingzhou-Detected-Path." + bundle.getSymbolicName(), i);
+                        System.setProperty(dataFlag, detected);
                         try (InputStream inputStream = Files.newInputStream(new File(new URL(bundle.getLocation()).getFile()).toPath())) {
-                            Bundle installed = QingzhouMain.getBundleContext().installBundle(bundle.getLocation() + ":" + i, inputStream);
-                            String seqFlag = "Qingzhou-App-Seq." + bundle.getSymbolicName();
-                            System.setProperty(seqFlag, i + "");
+                            Bundle installed = QingzhouMain.getBundleContext().installBundle(addSeq(bundle.getLocation(), i), inputStream);
                             installed.start();
+                        } catch (Exception e) {
+                            System.err.println("App " + bundle.getSymbolicName() + " failed to start, path: " + detected + " : " + e.getMessage());
                         }
                     }
                 } else {
-                    bundle.stop(); // TODO：停止也需要按照具体路径进行？
+                    for (Bundle bnd : QingzhouMain.getBundleContext().getBundles()) {
+                        if (bnd.getLocation().startsWith(bundle.getLocation())) {
+                            bnd.stop();
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
@@ -58,5 +77,9 @@ public class PathDetectionScheduler {
         if (scheduledExecutor != null) {
             scheduledExecutor.shutdownNow();
         }
+    }
+
+    private static String addSeq(String str, int seq) {
+        return String.format("%s[%d]", str, seq);
     }
 }
