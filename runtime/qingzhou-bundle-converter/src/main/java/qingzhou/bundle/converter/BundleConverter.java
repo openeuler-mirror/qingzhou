@@ -257,6 +257,11 @@ public class BundleConverter {
             dtoModel.actions.add(dtoModelAction);
         }
 
+        // 类级别 @ModelAction 仅覆盖默认 action 的元数据，执行逻辑仍走 DefaultAction
+        for (ModelAction a : classModelActions(ctClass)) {
+            applyClassAction(a, dtoModel.actions);
+        }
+
         for (CtMethod ctMethod : ctClass.getMethods()) {
             ModelAction modelAction = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
             if (modelAction != null) {
@@ -302,6 +307,50 @@ public class BundleConverter {
             object.getClass().getField(fieldName)
                     .set(object, fieldValue);
         }
+    }
+
+    // javassist 从字节码读取类级 ModelAction：单个注解直接返回，多个由编译器打包成 ModelActions 容器
+    private static java.util.List<ModelAction> classModelActions(CtClass ctClass) throws Exception {
+        java.util.List<ModelAction> result = new java.util.ArrayList<>();
+        ModelAction single = (ModelAction) ctClass.getAnnotation(ModelAction.class);
+        if (single != null) result.add(single);
+        ModelActions container = (ModelActions) ctClass.getAnnotation(ModelActions.class);
+        if (container != null) java.util.Collections.addAll(result, container.value());
+        return result;
+    }
+
+    private void applyClassAction(ModelAction classAction, Set<qingzhou.dto.meta.ModelAction> defaultActions) throws Exception {
+        if (classAction.code().isEmpty()) return;
+        for (qingzhou.dto.meta.ModelAction dto : defaultActions) {
+            if (dto.isDefaultAction && classAction.code().equals(dto.code)) {
+                mergeObjAnnotation(dto, classAction);
+                break;
+            }
+        }
+    }
+
+    // 仅覆盖注解中显式声明（非默认值）的字段，保留 DTO 已有值
+    private void mergeObjAnnotation(Object dto, Annotation annotation) throws Exception {
+        for (Method method : annotation.annotationType().getDeclaredMethods()) {
+            Object defaultValue = method.getDefaultValue();
+            Object actualValue;
+            try {
+                actualValue = method.invoke(annotation);
+            } catch (Exception e) {
+                actualValue = defaultValue; // 反射失败视为未声明，不覆盖 DTO
+            }
+            if (!isDefaultValue(actualValue, defaultValue)) {
+                dto.getClass().getField(method.getName()).set(dto, actualValue);
+            }
+        }
+    }
+
+    // 注解字段默认值判定：数组按内容比较，标量按值比较
+    private static boolean isDefaultValue(Object actual, Object defaultValue) {
+        if (actual.getClass().isArray() && defaultValue.getClass().isArray()) {
+            return java.util.Arrays.equals((Object[]) actual, (Object[]) defaultValue);
+        }
+        return actual.equals(defaultValue);
     }
 
 }
