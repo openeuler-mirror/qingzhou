@@ -90,7 +90,8 @@ public class QingzhouMain {
     static void startBundles(List<Bundle> bundles) throws BundleException {
         for (Bundle b : bundles) {
             Dictionary<String, String> h = b.getHeaders();
-            if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled"))) PathDetectionScheduler.startWithDetection(b);
+            if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled")))
+                PathDetectionScheduler.startWithDetection(b, instanceDir);
             else b.start();
         }
     }

@@ -25,13 +25,13 @@ class PathDetector {
         this.strategies = list;
     }
 
-    // 协调器：空列表表示策略跑了但没找到候选，继续下一个；null 表示策略自身不适用（如 ProcessStrategy 无 processNames）
+    // 协调器：按序尝试各策略，返回首个非空结果；全部落空返回空列表（不用 null 表达，免去调用方判空）
     List<String> detect() throws Exception {
         for (PathDetectionStrategy strategy : strategies) {
             List<String> detectedList = strategy.detect();
-            if (detectedList != null && !detectedList.isEmpty()) return detectedList;
+            if (!detectedList.isEmpty()) return detectedList;
         }
-        return null;
+        return Collections.emptyList();
     }
 
     // 清单值允许逗号后带空格，故逐项 trim

@@ -157,15 +157,15 @@ public class DefaultAction {
         String currentSpace = aNamespace.current();
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> data = new HashMap<>();
-        data.put(Constants.ACTION_CODE_CURRENT, currentSpace != null ? currentSpace : "");
+        data.put("current", currentSpace != null ? currentSpace : "");
         response.data(data);
     }
 
     @ModelAction(
-            code = Constants.ACTION_CODE_FILE, icon = "Download", order = 3,
+            code = "file", icon = "Download", order = 3,
             name = {"下载", "en:Download"}, list_head = true, show = true, update = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
-    public static void files(Download download, Request request) throws Exception {
+    public static void file(Download download, Request request) throws Exception {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         if (response.getData() == null) {
             Map<String, String> map = new TreeMap<>();
@@ -195,9 +195,9 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_CODE_DOWNLOAD, icon = "Download",
+            code = "download", icon = "Download",
             name = {"下载", "en:Download"},
-            info = {"下载选择的文件列表。", "en:Download the selected file list."})
+            info = {"下载选择的文件。", "en:Download the selected files."})
     public static void download(Download download, Request request) throws Exception {
         ModelBase modelBase = (ModelBase) download;
         AppContext appContext = modelBase.getAppContext();

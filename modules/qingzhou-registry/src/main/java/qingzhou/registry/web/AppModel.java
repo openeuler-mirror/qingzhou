@@ -32,10 +32,10 @@ public class AppModel extends AbstractMetaHandler {
         this.json = json;
     }
 
-    private final Function<RequestParameters, Object> function = (context) -> {
-        String instanceId = context.getParameter(RequestParameters.INSTANCE_ID);
-        String appCode = context.getParameter(RequestParameters.APP_CODE);
-        String modelCode = context.getParameter(RequestParameters.MODEL_CODE);
+    private final Function<WebParameters, Object> function = (context) -> {
+        String instanceId = context.getParameter(WebParameters.INSTANCE_ID);
+        String appCode = context.getParameter(WebParameters.APP_CODE);
+        String modelCode = context.getParameter(WebParameters.MODEL_CODE);
         if (instanceId == null || appCode == null || modelCode == null) return null;
 
         AppStub appStub = registry.getAppStub(instanceId, appCode);
@@ -53,15 +53,15 @@ public class AppModel extends AbstractMetaHandler {
         return null;
     };
 
-    public Function<RequestParameters, Object> getFunction() {
+    public Function<WebParameters, Object> getFunction() {
         return function;
     }
 
     private Map<String, Object> modelMetaInfo(I18nService i18nService, Model model, String instanceId, String appCode, String lang) {
         Map<String, Object> modelMetaInfo = new HashMap<>();
-        modelMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);
-        modelMetaInfo.put(RequestParameters.APP_CODE, appCode);
-        modelMetaInfo.put(RequestParameters.MODEL_CODE, model.code);
+        modelMetaInfo.put(WebParameters.INSTANCE_ID, instanceId);
+        modelMetaInfo.put(WebParameters.APP_CODE, appCode);
+        modelMetaInfo.put(WebParameters.MODEL_CODE, model.code);
         modelMetaInfo.put("icon", model.icon);
         modelMetaInfo.put("name", i18nService.getI18n(model.name, lang));
         modelMetaInfo.put("info", i18nService.getI18n(model.info, lang));

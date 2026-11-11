@@ -20,7 +20,7 @@ abstract class AbstractMetaHandler implements HttpHandler {
     protected Registry registry;
     protected Json json;
 
-    abstract Function<RequestParameters, Object> getFunction();
+    abstract Function<WebParameters, Object> getFunction();
 
     @Override
     public final void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {

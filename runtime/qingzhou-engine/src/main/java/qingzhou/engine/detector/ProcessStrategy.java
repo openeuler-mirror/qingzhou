@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -40,7 +41,7 @@ class ProcessStrategy implements PathDetectionStrategy {
 
     @Override
     public List<String> detect() throws Exception {
-        if (processKeywords.isEmpty()) return null;
+        if (processKeywords.isEmpty()) return Collections.emptyList();
 
         return processLines().stream()
                 .map(String::trim)
@@ -49,6 +50,7 @@ class ProcessStrategy implements PathDetectionStrategy {
                 .filter(Objects::nonNull)
                 .filter(featureFiles::containsIn)
                 .map(File::getAbsolutePath)
+                .distinct() // 多个进程可反推出同一安装目录，去重避免同一实例被重复安装
                 .collect(Collectors.toList());
     }
 

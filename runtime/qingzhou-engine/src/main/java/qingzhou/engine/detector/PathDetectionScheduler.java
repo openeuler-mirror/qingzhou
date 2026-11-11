@@ -1,23 +1,24 @@
 package qingzhou.engine.detector;
 
-import org.osgi.framework.Bundle;
-import qingzhou.engine.QingzhouMain;
-
-import java.io.File;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import qingzhou.engine.QingzhouMain;
+
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
     private static ScheduledExecutorService scheduledExecutor;
-    public static final Map<String, List<String>> detectedMap = new HashMap<>();
 
-    public static void startWithDetection(Bundle bundle) {
+    public static void startWithDetection(Bundle bundle, String instanceDir) {
         if (scheduledExecutor == null) {
             scheduledExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread thread = new Thread(r, DETECTOR_NAME);
@@ -27,43 +28,53 @@ public class PathDetectionScheduler {
         }
 
         PathDetector detector = new PathDetector(bundle.getHeaders());
+        String symbolicName = bundle.getSymbolicName();
+        String location = bundle.getLocation();
+        String pathFlagPrefix = "Qingzhou-Detected-Path." + symbolicName;
+        // location 由 toURI() 生成（见 QingzhouMain），须按 URI 解码，否则含空格/中文的路径读不到
+        Path bundleJar = Paths.get(URI.create(location));
+        PathSeqAllocator seqAllocator;
+        try {
+            seqAllocator = new PathSeqAllocator(instanceDir, symbolicName);
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot load detected path seq of " + symbolicName + " : " + e.getMessage(), e);
+        }
+
+        // 本进程内已启动的 路径→序号；首拍必为空，故上个进程遗留在 framework 缓存里的同 location bundle 会被重装，刷成路径上的最新 jar
+        Map<String, Integer> running = new HashMap<>();
         scheduledExecutor.scheduleAtFixedRate(() -> {
-            try { // 实际检测逻辑
-                List<String> detectedList = detector.detect();
-                if (!detectedList.isEmpty()) {
-                    List<String> historyDetectedList = detectedMap.computeIfAbsent(bundle.getSymbolicName(), k -> new ArrayList<>(4));
-                    // 停止未检测到的应用实例
-                    for (String detected : historyDetectedList) {
-                        if (!detectedList.contains(detected)) {
-                            int i = historyDetectedList.indexOf(detected);
-                            String dataFlag = addSeq("Qingzhou-Detected-Path." + bundle.getSymbolicName(), i);
-                            System.clearProperty(dataFlag);
-                            Bundle bnd = QingzhouMain.getBundleContext().getBundle(addSeq(bundle.getLocation(), i));
-                            if (bnd != null) {
-                                bnd.stop();
-                            }
-                        }
+            try {
+                Map<String, Integer> detected = seqAllocator.assign(detector.detect());
+
+                for (Map.Entry<String, Integer> entry : new HashMap<>(running).entrySet()) {
+                    if (detected.containsKey(entry.getKey())) continue;
+                    System.clearProperty(addSeq(pathFlagPrefix, entry.getValue()));
+                    Bundle stale = QingzhouMain.getBundleContext().getBundle(addSeq(location, entry.getValue()));
+                    if (stale != null) stale.stop();
+                    running.remove(entry.getKey());
+                }
+
+                for (Map.Entry<String, Integer> entry : detected.entrySet()) {
+                    String path = entry.getKey();
+                    if (running.containsKey(path)) continue;
+                    int seq = entry.getValue();
+                    String seqLocation = addSeq(location, seq);
+                    System.setProperty(addSeq(pathFlagPrefix, seq), path);
+                    BundleContext bundleContext = QingzhouMain.getBundleContext();
+                    try (InputStream inputStream = Files.newInputStream(bundleJar)) {
+                        // 同 location 的 bundle 可能来自上个进程或已回收的旧路径，其内容未必对应当前路径，须卸载后重装
+                        Bundle existing = bundleContext.getBundle(seqLocation);
+                        if (existing != null) existing.uninstall();
+                        bundleContext.installBundle(seqLocation, inputStream).start();
+                        running.put(path, seq);
+                    } catch (Exception e) {
+                        System.err.println("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
                     }
-                    // 启动已检测到的实例
-                    for (String detected : detectedList) {
-                        if (!historyDetectedList.contains(detected)) {
-                            historyDetectedList.add(detected);
-                        }
-                        int i = historyDetectedList.indexOf(detected);
-                        String dataFlag = addSeq("Qingzhou-Detected-Path." + bundle.getSymbolicName(), i);
-                        System.setProperty(dataFlag, detected);
-                        try (InputStream inputStream = Files.newInputStream(new File(new URL(bundle.getLocation()).getFile()).toPath())) {
-                            Bundle installed = QingzhouMain.getBundleContext().installBundle(addSeq(bundle.getLocation(), i), inputStream);
-                            installed.start();
-                        } catch (Exception e) {
-                            System.err.println("App " + bundle.getSymbolicName() + " failed to start, path: " + detected + " : " + e.getMessage());
-                        }
-                    }
-                } else {
+                }
+
+                if (detected.isEmpty()) {
                     for (Bundle bnd : QingzhouMain.getBundleContext().getBundles()) {
-                        if (bnd.getLocation().startsWith(bundle.getLocation())) {
-                            bnd.stop();
-                        }
+                        if (bnd.getLocation().startsWith(location)) bnd.stop();
                     }
                 }
             } catch (Exception e) {
@@ -80,6 +91,6 @@ public class PathDetectionScheduler {
     }
 
     private static String addSeq(String str, int seq) {
-        return String.format("%s[%d]", str, seq);
+        return str + "[" + seq + "]";
     }
 }

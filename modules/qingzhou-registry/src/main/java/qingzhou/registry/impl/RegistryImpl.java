@@ -20,6 +20,8 @@ import qingzhou.registry.web.Invoke;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RegistryImpl implements Registry {
+    private static final String LOCAL_INSTANCE_ID = "-";
+
     @Reference
     private ConfigurationAdmin configAdmin;
     @Reference
@@ -99,7 +101,7 @@ public class RegistryImpl implements Registry {
         if (instanceId == null) {
             return null;
         }
-        if (instanceId.equals(Constants.LOCAL_INSTANCE_ID)) {
+        if (instanceId.equals(LOCAL_INSTANCE_ID)) {
             return getLocalApp(appCode);
         } else {
             return getRemoteApp(instanceId, appCode);
@@ -115,7 +117,7 @@ public class RegistryImpl implements Registry {
                     return localApps.values().stream().map(AppStub::getAppMeta).collect(Collectors.toList());
                 }
             };
-            localInstanceInfo.setId(Constants.LOCAL_INSTANCE_ID);
+            localInstanceInfo.setId(LOCAL_INSTANCE_ID);
             localInstanceInfo.setPlatformVersion(qzVersion);
             localInstanceInfo.setHost("localhost");
 
