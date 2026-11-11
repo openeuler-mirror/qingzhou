@@ -3,7 +3,8 @@ package qingzhou.dto.meta;
 import java.util.Objects;
 
 public abstract class Base {
-    public String code;
+    // 以下默认值须与注解默认值一致：annotation.json 仅记录非默认值，缺省字段依赖此初值
+    public String code = "";
 
     @Override
     public final boolean equals(Object object) {
