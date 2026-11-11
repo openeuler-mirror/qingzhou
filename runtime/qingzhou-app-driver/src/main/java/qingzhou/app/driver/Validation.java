@@ -6,12 +6,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
-import qingzhou.api.action.Add;
-import qingzhou.api.action.Update;
-import qingzhou.registry.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.meta.ModelAction;
 import qingzhou.dto.meta.ModelField;
+import qingzhou.registry.Constants;
+import qingzhou.registry.I18nService;
 
 class Validation implements ActionFilter {
     private static final String[] MSG_DATA_VALIDATION_FAILED = {"数据校验失败", "en:Data validation failed"};
@@ -57,12 +56,12 @@ class Validation implements ActionFilter {
     Map<String, List<String>> validate(ModelAction action, RequestImpl request) {
         // 确定要检验哪些字段
         Set<ModelField> validateFields = null;
-        if (action.code.equals(Add.ACTION_CODE_ADD)) {
+        if (action.code.equals(Constants.ACTION_CODE_ADD)) {
             validateFields = request.getCurrentModel().fields.stream()
                     .filter(field -> field.field_type == FieldType.form && field.add && !field.readonly)
                     .filter(field -> request.getParameter(field.code) != null) // 只校验前端传递了的字段，支持部分字段创建（默认值由后端处理）
                     .collect(Collectors.toSet());
-        } else if (action.code.equals(Update.ACTION_CODE_UPDATE)) {
+        } else if (action.code.equals(Constants.ACTION_CODE_UPDATE)) {
             validateFields = request.getCurrentModel().fields.stream()
                     .filter(field -> field.field_type == FieldType.form && field.update && !field.readonly)
                     .filter(field -> !field.id) // 更新的 id 不校验

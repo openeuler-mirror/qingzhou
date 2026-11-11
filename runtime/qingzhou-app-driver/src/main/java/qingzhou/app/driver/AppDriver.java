@@ -1,8 +1,6 @@
 package qingzhou.app.driver;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -10,20 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.*;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.common.FileUtil;
-import qingzhou.dto.meta.App;
-import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.Model;
-import qingzhou.dto.meta.ModelAction;
+import qingzhou.dto.meta.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
@@ -52,8 +42,8 @@ public class AppDriver implements BundleActivator {
         }
         // 初始化上下文
         appContext = new AppContextImpl(this, context, appMeta);
-        Properties appProperties = parseProperties(seq);
-        String code = appProperties.getProperty("code");
+        Map<String, String> appConfig = parseAppConfig(seq);
+        String code = appConfig.get("code");
         if (code != null && !code.trim().isEmpty()) {
             appMeta.getApp().code = code.trim();
         }
@@ -62,8 +52,7 @@ public class AppDriver implements BundleActivator {
             appMeta.getApp().code = appMeta.getApp().code + "[" + seq.trim() + "]";
             symbolicName = symbolicName + "[" + seq + "]";
         }
-
-        appContext.appProperties = appProperties;
+        appContext.appConfig = Collections.unmodifiableMap(appConfig);
         // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
         appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + symbolicName);
 
@@ -169,29 +158,29 @@ public class AppDriver implements BundleActivator {
         }
     }
 
-    private Properties parseProperties(String seq) throws IOException {
-        Properties appProperties = new Properties();
+    private Map<String, String> parseAppConfig(String seq) throws IOException {
+        Map<String, String> appConfig = new HashMap<>();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
-        if (serviceReference == null) return appProperties; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
+        if (serviceReference == null) return appConfig; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
 
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
             Configuration appSharedConfig = configurationAdmin.getFactoryConfiguration("app",
                     context.getBundle().getSymbolicName(), null);
-            addAppConfig(appSharedConfig, appProperties);
+            addAppConfig(appSharedConfig, appConfig);
 
             if (seq != null && !seq.trim().isEmpty()) {
                 Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
                         context.getBundle().getSymbolicName() + "[" + seq + "]", null);
-                addAppConfig(appConfiguration, appProperties);
+                addAppConfig(appConfiguration, appConfig);
             }
         } finally {
             context.ungetService(serviceReference);
         }
-        return appProperties;
+        return appConfig;
     }
 
-    private static void addAppConfig(Configuration appConfiguration, Properties appProperties) {
+    private static void addAppConfig(Configuration appConfiguration, Map<String, String> appConfig) {
         Dictionary<String, Object> properties = appConfiguration.getProperties();
         if (properties != null) {
             Enumeration<?> keys = properties.keys();
@@ -203,7 +192,7 @@ public class AppDriver implements BundleActivator {
                     continue;
                 Object value = properties.get(key);
                 if (value != null) { // 配置值不保证是 String，且 Hashtable 不接受 null 值
-                    appProperties.setProperty(key, String.valueOf(value));
+                    appConfig.put(key, String.valueOf(value));
                 }
             }
         }

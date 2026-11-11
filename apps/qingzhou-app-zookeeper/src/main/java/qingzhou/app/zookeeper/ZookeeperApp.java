@@ -1,32 +1,18 @@
 package qingzhou.app.zookeeper;
 
-import qingzhou.app.zookeeper.util.FileUtil;
-import qingzhou.app.zookeeper.util.Util;
-import qingzhou.app.zookeeper.util.ZkJaaSConfigExtractor;
-import qingzhou.app.zookeeper.util.ZkPathExtractor;
-import qingzhou.api.annotations.App;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.*;
+
 import qingzhou.api.AppContext;
-import qingzhou.api.annotations.Menu;
 import qingzhou.api.QingzhouApp;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Request;
-import qingzhou.http.client.Response;
+import qingzhou.api.annotations.App;
+import qingzhou.api.annotations.Menu;
+import qingzhou.app.zookeeper.util.*;
+import qingzhou.http.client.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Zookeeper 应用入口：启动时探测安装路径、加载配置并初始化监控元数据。
@@ -40,7 +26,6 @@ import java.util.Properties;
 @Menu(name = {"生效参数", "en:Validity parameter"}, code = "configuration", icon = "icon-bar-chart-alt", order = 4)
 @Menu(name = {"配置", "en:config"}, code = "config", icon = "icon-bar-chart-alt", order = 5)
 public class ZookeeperApp implements QingzhouApp {
-    public static final String METADATA_KEY = "metadata";
     public static final String METADATA_CONFIG_KEY = "metadata_zoo";
     public static final String METADATA_MYID_KEY = "metadata_myid";
     public static final String METADATA_INSTALL_KEY = "metadata_install";
@@ -48,9 +33,7 @@ public class ZookeeperApp implements QingzhouApp {
     public static final String METADATA_JAAS_KEY = "metadata_jaas_file";
     public static final String METADATA_COMMANDS_KEY = "metadata_commands";
 
-    public static final String ZOO_KEY = "zoo";
     public static final String ZOO_DATADIR_KEY = "dataDir";
-    public static final String MYID_KEY = "myid";
 
     public static final String MAIN = "QuorumPeerMain";
 
@@ -61,6 +44,10 @@ public class ZookeeperApp implements QingzhouApp {
     public static Json json;
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
     private static final boolean IS_LINUX = System.getProperty("os.name").toLowerCase().contains("linux");
+
+    public static Properties metadata;
+    public static Properties zooProperties;
+    public static String myid;
 
     @Override
     public void start(AppContext appContext) throws Exception {
@@ -104,8 +91,8 @@ public class ZookeeperApp implements QingzhouApp {
         loadAuth(properties, metadata, zkCmd);
         String version = getVersion(detectionPath, properties, metadata);
         metadata.setProperty(METADATA_VERSION_KEY, version);
-        appContext.getProperties().put(ZOO_KEY, properties);
-        appContext.getProperties().put(METADATA_KEY, metadata);
+        ZookeeperApp.zooProperties = properties;
+        ZookeeperApp.metadata = metadata;
     }
 
     private static void loadAuth(Properties properties, Properties metadata, String zkCmd) throws IOException {
@@ -149,10 +136,7 @@ public class ZookeeperApp implements QingzhouApp {
         File myidFile = FileUtil.newFile(dataDirPath, MYID_FILE_NAME);
         if (myidFile.exists()) {
             metadata.setProperty(METADATA_MYID_KEY, myidFile.getAbsolutePath());
-            String first = FileUtil.readLines(myidFile).get(0);
-            Properties myid = new Properties();
-            myid.setProperty(first, first);
-            appContext.getProperties().put(MYID_KEY, myid);
+            ZookeeperApp.myid = FileUtil.readLines(myidFile).get(0);
         }
     }
 
@@ -186,7 +170,9 @@ public class ZookeeperApp implements QingzhouApp {
         return zkCmd == null ? "" : zkCmd;
     }
 
-    /** 执行命令并在输出中查找 ZooKeeper 主进程（QuorumPeerMain）命令行 */
+    /**
+     * 执行命令并在输出中查找 ZooKeeper 主进程（QuorumPeerMain）命令行
+     */
     private String runAndFind(String[] cmd) {
         Process process = null;
         try {
@@ -207,7 +193,9 @@ public class ZookeeperApp implements QingzhouApp {
         }
     }
 
-    /** Linux 兜底：直接读取 /proc/<pid>/cmdline（参数以 \0 分隔，需替换为空格） */
+    /**
+     * Linux 兜底：直接读取 /proc/<pid>/cmdline（参数以 \0 分隔，需替换为空格）
+     */
     private String findZkFromProc() {
         File proc = new File("/proc");
         File[] pidDirs = proc.listFiles(f -> f.isDirectory() && isNumeric(f.getName()));

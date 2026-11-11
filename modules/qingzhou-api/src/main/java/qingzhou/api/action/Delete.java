@@ -1,9 +1,5 @@
 package qingzhou.api.action;
 
-import qingzhou.api.QingzhouModel;
-
-public interface Delete extends QingzhouModel {
-    String ACTION_CODE_DELETE = "delete";
-
+public interface Delete {
     void delete(String id) throws Exception;
 }

@@ -1,14 +1,11 @@
 package qingzhou.app.nacos;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
+import qingzhou.api.action.*;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.*;
 
 @Model(code = "nacos-namespace", order = 4,
         name = {"命名空间", "en:Namespace Management"},
@@ -46,24 +43,24 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
     @Override
     public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             List<?> namespaces = nacosApi.getNamespaces();
-            
+
             if (namespaces != null && !namespaces.isEmpty()) {
                 for (Object namespaceObj : namespaces) {
                     Map<String, Object> ns = (Map<String, Object>) namespaceObj;
                     String namespaceId = String.valueOf(ns.get("namespace"));
                     String namespaceShowName = String.valueOf(ns.getOrDefault("namespaceShowName", ns.get("namespaceShowName")));
-                    
+
                     Map<String, String> namespaceInfo = new HashMap<>();
                     namespaceInfo.put("namespaceShowName", namespaceShowName);
                     namespaceInfo.put("namespace", namespaceId);
                     Object descObj = ns.getOrDefault("namespaceDesc", ns.get("description"));
                     namespaceInfo.put("namespaceDesc", descObj != null ? String.valueOf(descObj) : "");
                     namespaceInfo.put("configCount", String.valueOf(ns.getOrDefault("configCount", "0")));
-                    
+
                     String[] row = new String[listFields.length];
                     for (int j = 0; j < listFields.length; j++) {
                         row[j] = namespaceInfo.getOrDefault(listFields[j], "");
@@ -74,7 +71,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
         } catch (Exception e) {
             logError("Nacos namespace query failed", e);
         }
-        
+
         return result;
     }
 
@@ -112,11 +109,11 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
     public Map<String, String> show(String id) {
         Map<String, String> result = new HashMap<>();
         result.put("namespace", id);
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             List<?> namespaces = nacosApi.getNamespaces();
-            
+
             if (namespaces != null && !namespaces.isEmpty()) {
                 for (Object namespaceObj : namespaces) {
                     Map<String, Object> ns = (Map<String, Object>) namespaceObj;
@@ -135,7 +132,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
         } catch (Exception e) {
             logError("Nacos namespace query failed", e);
         }
-        
+
         return result;
     }
 
@@ -144,7 +141,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
         String namespaceId = data.get("namespace");
         String namespaceShowName = data.get("namespaceShowName");
         String namespaceDesc = data.get("namespaceDesc");
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.createNamespace(namespaceId, namespaceShowName, namespaceDesc);
@@ -161,15 +158,15 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
         if (isPublicNamespace(id)) {
             throw new Exception(NacosConstants.ERROR_PUBLIC_NAMESPACE_READONLY);
         }
-        
+
         String namespaceShowName = data.get("namespaceShowName");
         String namespaceDesc = data.get("namespaceDesc");
 
-        
+
         if (!contains(id)) {
             throw new Exception(NacosConstants.ERROR_NAMESPACE_NOT_EXISTS);
         }
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.updateNamespace(id, namespaceShowName.trim(), namespaceDesc != null ? namespaceDesc.trim() : null);
@@ -186,7 +183,7 @@ public class NacosNamespace extends NacosModelBase implements Page, Show, Add, U
         if (isPublicNamespace(id)) {
             throw new Exception(NacosConstants.ERROR_PUBLIC_NAMESPACE_READONLY);
         }
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.deleteNamespace(id);

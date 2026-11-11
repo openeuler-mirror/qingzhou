@@ -52,7 +52,7 @@ public final class Store {
         if (instance == null) {
             synchronized (Store.class) {
                 if (instance == null) {
-                    String name = appContext.getProperties().getProperty("jdbc_name", "h2");
+                    String name = appContext.getAppConfig().getOrDefault("jdbc_name", "h2");
                     JdbcPool jdbcPool = appContext.getService(JdbcPool.class, name);
                     if (jdbcPool == null) {
                         return null;
@@ -64,7 +64,7 @@ public final class Store {
                     }
 
                     Store store = new Store(jdbcPool, crypto.getMessageDigest());
-                    store.init(Boolean.parseBoolean(appContext.getProperties().getProperty("seed_demo", "false")));
+                    store.init(Boolean.parseBoolean(appContext.getAppConfig().getOrDefault("seed_demo", "false")));
                     instance = store;
                 }
             }
