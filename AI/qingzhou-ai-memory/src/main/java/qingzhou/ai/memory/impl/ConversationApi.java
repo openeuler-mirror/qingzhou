@@ -13,7 +13,9 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-@Component(property = HttpHandler.HANDLE_PATH + "=" + ConversationApi.API_PREFIX)
+@Component(property = {
+        HttpHandler.HANDLE_PATH + "=/ai" + ConversationApi.API_PREFIX,
+        HttpHandler.HANDLE_PATH_ABSOLUTE + "=true"})
 public class ConversationApi implements HttpHandler {
     public static final String API_PREFIX = "/conversations";
     private static final Map<String, Boolean> OK_BODY = Collections.singletonMap("ok", true);

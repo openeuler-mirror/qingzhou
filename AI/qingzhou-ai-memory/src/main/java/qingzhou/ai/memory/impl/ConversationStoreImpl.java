@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.service.component.annotations.*;
-import qingzhou.ai.memory.ConversationStore;
+import qingzhou.ai.chat.ConversationStore;
 import qingzhou.json.Json;
 import qingzhou.llm.ChatMemory;
 import qingzhou.llm.ChatModelFactory;
@@ -20,7 +20,8 @@ import qingzhou.store.StoreFactory;
  * 占用有界靠三层降级而非直接丢弃：先压缩（保留摘要）→ 再归档（只留标题与摘要）→ 最后才删除。
  * KV 仍是唯一正本，{@link ConversationCatalog} 是纯派生索引，可随时从 KV 重建
  */
-@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        service = {ConversationStoreImpl.class, ConversationStore.class})
 public class ConversationStoreImpl implements ConversationStore {
     private static final String SUMMARY_MESSAGE_ID = "summary";
 

@@ -1,12 +1,11 @@
 package qingzhou.bundle.converter;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 
 import javassist.*;
 import org.osgi.framework.Constants;
-import qingzhou.api.QingzhouModel;
 import qingzhou.api.annotations.*;
 import qingzhou.app.driver.DefaultAction;
 import qingzhou.common.FileUtil;
@@ -33,7 +31,6 @@ import qingzhou.json.impl.JsonImpl;
 
 public class BundleConverter {
     private ClassPool classPool;
-    private final Map<String, qingzhou.dto.meta.ModelAction> defaultActionMetaCache = new HashMap<>();
     private String appDynamicPackages;
 
     public void build(File sourceJar, File targetJar, String libDir) throws Exception {
@@ -239,31 +236,26 @@ public class BundleConverter {
             parseModelAnnotations(model, ctClass, metaApp);
         }
 
-        // Process single @Menu
-        Menu singleMenu = (Menu) ctClass.getAnnotation(Menu.class);
-        if (singleMenu != null) {
-            addMenu(singleMenu, metaApp);
-        }
-
-        // Process @Menus (multiple @Menu)
+        // 可重复注解在 class 文件里有两种形态：单次使用为裸注解，多次使用为编译器合成的容器注解
+        // 按类型定向读取：getAnnotations() 会解析类上全部注解，应用侧 OSGi 等注解不在转换器 classpath 中
+        Menu menu = (Menu) ctClass.getAnnotation(Menu.class);
         Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
+        I18n i18n = (I18n) ctClass.getAnnotation(I18n.class);
+        I18ns i18ns = (I18ns) ctClass.getAnnotation(I18ns.class);
+        if (menu != null) {
+            addMenu(menu, metaApp);
+        }
         if (menus != null) {
-            for (Menu menu : menus.value()) {
-                addMenu(menu, metaApp);
+            for (Menu item : menus.value()) {
+                addMenu(item, metaApp);
             }
         }
-
-        // single @I18n is @Repeatable)
-        I18n singleI18n = (I18n) ctClass.getAnnotation(I18n.class);
-        if (singleI18n != null) {
-            addI18n(singleI18n, metaApp);
+        if (i18n != null) {
+            addI18n(i18n, metaApp);
         }
-
-        // @I18ns contains multiple @I18n
-        I18ns i18ns = (I18ns) ctClass.getAnnotation(I18ns.class);
         if (i18ns != null) {
-            for (I18n i18n : i18ns.value()) {
-                addI18n(i18n, metaApp);
+            for (I18n item : i18ns.value()) {
+                addI18n(item, metaApp);
             }
         }
     }
@@ -291,20 +283,21 @@ public class BundleConverter {
             throw new IllegalStateException("Duplicate annotation @Model:" + dtoModel.code);
         }
 
-        // 添加默认的 Action
-        for (CtClass ctInterface : ctClass.getInterfaces()) {
-            if (ctInterface.subtypeOf(classPool.get(QingzhouModel.class.getName()))) {
-                for (CtField ctField : ctInterface.getFields()) {
-                    String fieldName = ctField.getName();
-                    if (fieldName.startsWith("ACTION_CODE_")) {
-                        String fieldVal = (String) ctField.getConstantValue();
-                        qingzhou.dto.meta.ModelAction modelAction = parseDefaultActionMeta(fieldVal);
-                        if (modelAction != null) {
-                            dtoModel.actions.add(modelAction);
-                        }
-                    }
-                }
+        // 默认 Action 以 DefaultAction 方法签名为唯一来源：模型实现首参能力接口即注入
+        for (CtMethod ctMethod : classPool.get(DefaultAction.class.getName()).getMethods()) {
+            ModelAction methodAnnotation = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
+            if (methodAnnotation == null) continue;
+            CtClass[] parameterTypes = ctMethod.getParameterTypes();
+            if (parameterTypes.length != 2 || !ctClass.subtypeOf(parameterTypes[0])) continue;
+
+            qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
+            dtoModelAction.isDefaultAction = true;
+            dtoModelAction.methodName = ctMethod.getName();
+            setObjAnnotation(dtoModelAction, methodAnnotation);
+            if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
+                dtoModelAction.code = ctMethod.getName();
             }
+            dtoModel.actions.add(dtoModelAction);
         }
 
         for (CtMethod ctMethod : ctClass.getMethods()) {
@@ -336,40 +329,6 @@ public class BundleConverter {
                 dtoModel.fields.add(dtoModelField);
             }
         }
-    }
-
-    private qingzhou.dto.meta.ModelAction parseDefaultActionMeta(String actionName) {
-        return defaultActionMetaCache.computeIfAbsent(actionName, s -> {
-            CtClass ctClassForDefaultAction = null;
-            try {
-                ctClassForDefaultAction = classPool.get(DefaultAction.class.getName());
-                for (CtMethod ctMethod : ctClassForDefaultAction.getMethods()) {
-                    ModelAction methodAnnotation = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
-                    if (methodAnnotation != null) {
-                        // 默认操作的方法名与对外 code 可能不一致（如 SwitchSpace switchSpace 方法对外 code 为 switchspace，大小写有差别），
-                        // 因此按注解声明的 code 或方法名匹配，且 methodName 必须取真实方法名以便反射调用。
-                        if (methodAnnotation.code().equals(actionName)
-                                || ctMethod.getName().equals(actionName)) {
-                            qingzhou.dto.meta.ModelAction dtoModelAction = new qingzhou.dto.meta.ModelAction();
-                            dtoModelAction.isDefaultAction = true;
-                            dtoModelAction.methodName = ctMethod.getName();
-                            setObjAnnotation(dtoModelAction, methodAnnotation);
-                            if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
-                                dtoModelAction.code = actionName;
-                            }
-                            return dtoModelAction;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            } finally {
-                if (ctClassForDefaultAction != null) {
-                    ctClassForDefaultAction.detach();
-                }
-            }
-            return null;
-        });
     }
 
     private void setObjAnnotation(Object object, Annotation annotation) throws Exception {

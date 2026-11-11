@@ -1,19 +1,12 @@
 package qingzhou.auth;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.common.FailureLockout;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
@@ -44,7 +37,9 @@ public class AuthHandler implements HttpHandler {
     private boolean totpEnabled;
     private String totpSecret;
 
-    private FailureLockout lockout;
+    private FailureLockout ipUserLockout;
+    // 独立按来源计数：仅按「来源+用户名」计数时，轮换用户名即可重置预算
+    private FailureLockout ipLockout;
 
     @Activate
     public AuthHandler(@Reference Crypto crypto, Map<String, String> config) {
@@ -65,7 +60,10 @@ public class AuthHandler implements HttpHandler {
 
         int maxFailures = configs.atLeast("max_failures", 1, 5);
         long lockMillis = configs.atLeast("lock_seconds", 1, 300) * 1000L;
-        lockout = new FailureLockout(maxFailures, lockMillis, 10_000);
+        ipUserLockout = new FailureLockout(maxFailures, lockMillis, 10_000);
+        // 来源级阈值放宽：NAT 下多用户共享出口地址，过严会误锁正常用户
+        int maxIpFailures = configs.atLeast("ip_max_failures", 1, 20);
+        ipLockout = new FailureLockout(maxIpFailures, lockMillis, 10_000);
     }
 
     @Override
@@ -106,7 +104,7 @@ public class AuthHandler implements HttpHandler {
             return;
         }
         String lockKey = ip + '\0' + (reqUser == null ? "" : reqUser);
-        if (lockout.isLocked(lockKey)) {
+        if (ipUserLockout.isLocked(lockKey) || ipLockout.isLocked(ip)) {
             response.status(429).send("too many login failures, try again later");
             return;
         }
@@ -114,7 +112,8 @@ public class AuthHandler implements HttpHandler {
         String reqPass = request.getParameter("password");
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
-            lockout.recordFailure(lockKey);
+            ipUserLockout.recordFailure(lockKey);
+            ipLockout.recordFailure(ip);
             response.status(401).send("invalid username or password");
             return;
         }
@@ -126,12 +125,14 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
             if (!verifyCode(code, response)) {
-                lockout.recordFailure(lockKey);
+                ipUserLockout.recordFailure(lockKey);
+                ipLockout.recordFailure(ip);
                 return;
             }
         }
 
-        lockout.clear(lockKey);
+        ipUserLockout.clear(lockKey);
+        ipLockout.clear(ip);
         tokenService.sendToken(reqUser, roles, request, response);
     }
 

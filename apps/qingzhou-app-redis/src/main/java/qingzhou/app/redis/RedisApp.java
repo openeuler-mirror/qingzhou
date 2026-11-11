@@ -4,13 +4,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import qingzhou.api.*;
-import qingzhou.api.annotations.App;
-import qingzhou.api.annotations.I18n;
-import qingzhou.api.annotations.Menu;
+import qingzhou.api.annotations.*;
 import qingzhou.app.redis.alert.AlertEngine;
-import qingzhou.app.redis.collector.CollectorScheduler;
-import qingzhou.app.redis.collector.InstanceCollector;
-import qingzhou.app.redis.collector.MachineCollector;
+import qingzhou.app.redis.collector.*;
 import qingzhou.app.redis.diagnosis.DiagnosticEngine;
 import qingzhou.app.redis.service.MemoryAnalysis;
 import qingzhou.app.redis.store.*;
@@ -249,14 +245,12 @@ public class RedisApp implements QingzhouApp {
     }
 
 
-
-
     private static String decryptPassword(String encrypted) {
         return new String(Base64.getDecoder().decode(encrypted));
     }
 
     private void loadInstances(AppContext appContext) {
-        Properties props = appContext.getProperties();
+        Map<String, String> props = appContext.getAppConfig();
         if (props == null) {
             return;
         }
@@ -265,8 +259,8 @@ public class RedisApp implements QingzhouApp {
         String activeIndex = null;
 
 
-        for (String key : new TreeSet<>(props.stringPropertyNames())) {
-            String value = props.getProperty(key);
+        for (String key : new TreeSet<>(props.keySet())) {
+            String value = props.get(key);
             if (value == null) {
                 continue;
             }

@@ -1,9 +1,9 @@
 package qingzhou.app.oauth2;
 
-import qingzhou.api.annotations.App;
 import qingzhou.api.AppContext;
-import qingzhou.api.annotations.Menu;
 import qingzhou.api.QingzhouApp;
+import qingzhou.api.annotations.App;
+import qingzhou.api.annotations.Menu;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
@@ -35,7 +35,7 @@ public class OAuth2App implements QingzhouApp {
         }
 
         boolean implicitEnabled = Boolean.parseBoolean(
-                appContext.getProperties().getProperty("implicit_enabled", "false"));
+                appContext.getAppConfig().getOrDefault("implicit_enabled", "false"));
         Json json = appContext.getService(Json.class);
         Throttle throttle = new Throttle();
         endpoints = new HttpHandler[]{

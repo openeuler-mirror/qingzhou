@@ -1,9 +1,6 @@
 package qingzhou.ai.mcp;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.Constants;
@@ -17,11 +14,16 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
+/**
+ * MCP over Streamable HTTP（POST /mcp）：OSGi 生命周期、工具注册与异步响应收尾。
+ * 协议收发见 {@link JsonRpc}，方法语义见 {@link McpMethods}，执行线程见 {@link WorkerPool}。
+ */
 @Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=/mcp", HttpHandler.HANDLE_METHODS + "=POST"})
+        property = {
+                HttpHandler.HANDLE_PATH + "=/ai/mcp",
+                HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
+                HttpHandler.HANDLE_METHODS + "=POST"})
 public class McpServer implements HttpHandler {
-    private static final String JSONRPC_VERSION = "2.0";
-
     @Reference
     private Json json;
     @Reference
@@ -31,259 +33,80 @@ public class McpServer implements HttpHandler {
     @Reference
     private ToolParameterParser parameterParser;
 
-    private final Map<String, ToolCache> toolCacheMap = new ConcurrentHashMap<>();
-    private volatile List<Map<String, Object>> toolSchemas = Collections.emptyList();
-    private final Map<String, Object> initializeData = new HashMap<>();
-    private ThreadPoolExecutor workers;
+    private final ToolRegistry toolRegistry = new ToolRegistry();
+    private volatile WorkerPool workers;
+    private volatile JsonRpc jsonRpc;
 
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        int workerThreads = configs.atLeast("mcp_worker_threads", 1, 16);
-        int capacity = configs.atLeast("mcp_worker_queue", 1, 100);
-        AtomicInteger seq = new AtomicInteger();
-        workers = new ThreadPoolExecutor(workerThreads, workerThreads, 0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(capacity), runnable -> {
-            Thread thread = new Thread(runnable, "qz-mcp-" + seq.incrementAndGet());
-            thread.setDaemon(true);
-            return thread;
-        });
-
-        Map<String, Object> serverInfo = new HashMap<>();
-        serverInfo.put("name", "qingzhou-mcp-server");
-        serverInfo.put("version", config.get("qingzhou.version"));
-
-        Map<String, Object> toolsCapability = new HashMap<>();
-        toolsCapability.put("listChanged", false);
-
-        Map<String, Object> capabilities = new HashMap<>();
-        capabilities.put("tools", toolsCapability);
-
-        initializeData.put("protocolVersion", "2025-03-26");
-        initializeData.put("serverInfo", serverInfo);
-        initializeData.put("capabilities", capabilities);
+        workers = new WorkerPool(configs);
+        jsonRpc = new JsonRpc(json, logger, new McpMethods(toolRegistry, interceptionService, logger,
+                configs.getOrDefault("qingzhou.version", "unknown")));
     }
 
     @Deactivate
     public void destroy() {
-        workers.shutdown(); // 排空而非中断：丢弃排队请求会使其 finish() 永不执行，响应挂到空闲超时
+        try {
+            if (!workers.terminate()) logger.warn("mcp workers did not terminate within 5s");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // 停用路径恢复中断位，不阻断停用
+        }
+    }
+
+    @Override
+    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
+        byte[] requestBody = httpRequest.getBody();
+        long enqueuedAt = System.nanoTime();
+        httpResponse.async(); // 工具执行可能长时间阻塞，响应由业务线程写并收尾
+        if (workers.submit(() -> respond(httpRequest, httpResponse, requestBody, enqueuedAt))) return;
+
+        logger.error("mcp worker pool is exhausted, request rejected");
+        write(httpResponse, JsonRpc.failure(503, "Server busy"));
+        httpResponse.finish();
+    }
+
+    // 业务线程执行：解析、分发与写响应；异步响应必须在此收尾
+    private void respond(HttpRequest httpRequest, HttpResponse httpResponse, byte[] requestBody, long enqueuedAt) {
+        try {
+            if (workers.isExpired(enqueuedAt)) {
+                logger.warn("mcp queued request expired");
+                write(httpResponse, JsonRpc.failure(503, "Queued request expired"));
+                return;
+            }
+            write(httpResponse, jsonRpc.dispatch(httpRequest, requestBody));
+        } catch (Throwable t) { // 异步任务兜底：逃逸既无日志，又因漏写响应挂到空闲超时
+            logger.error("mcp request failed", t);
+            write(httpResponse, JsonRpc.failure(500, "Internal error"));
+        } finally {
+            httpResponse.finish(); // 异步响应由业务线程收尾，重复调用无副作用
+        }
+    }
+
+    // 唯一的响应写点：写完不再补写，避免已提交响应后二次写入
+    private void write(HttpResponse httpResponse, JsonRpc.Reply reply) {
+        try {
+            httpResponse.status(reply.status);
+            if (reply.body != null) httpResponse.contentTypeJsonUtf8().send(json.toJson(reply.body));
+        } catch (Exception e) {
+            // 契约适配：HttpResponse 未暴露连接状态，按 emit 结果区分客户端断连与真实故障
+            if (e instanceof IllegalStateException && e.getMessage() != null && e.getMessage().contains("FAIL_CANCELLED")) {
+                logger.warn("mcp client disconnected");
+            } else {
+                logger.error("failed to write mcp response", e);
+            }
+        }
     }
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE,
             target = "(" + ToolService.TOOL_LABEL + "=" + Constants.TOOL_LABEL_INVOKE_ACTION + ")", // 按服务属性过滤
             unbind = "unbindAiTool")
     public void bindAiTool(ToolService tool, Map<String, Object> properties) {
-        ToolCache toolCache = new ToolCache(tool, properties, parameterParser);
-        toolCacheMap.put(toolCache.toolName, toolCache);
-        buildToolSchemas();
+        toolRegistry.put(new ToolCache(tool, properties, parameterParser));
     }
 
-    // OSGI 框架根据名称规则自动识别调用此方法或在子类的 @Reference 中指定
+    // 显式声明 unbind：动态多引用按服务实例增删
     public void unbindAiTool(ToolService tool) {
-        toolCacheMap.entrySet().removeIf(entry -> entry.getValue().toolService == tool);
-        buildToolSchemas();
-    }
-
-    private void buildToolSchemas() {
-        List<Map<String, Object>> schemas = new ArrayList<>();
-        toolCacheMap.values().forEach(a -> schemas.add(a.toolSchema));
-        toolSchemas = Collections.unmodifiableList(schemas);
-    }
-
-    @Override
-    public void handle(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-        byte[] requestBody = httpRequest.getBody();
-        httpResponse.async(); // 工具执行可能长时间阻塞，响应由业务线程写并收尾
-        try {
-            workers.execute(() -> respond(httpRequest, httpResponse, requestBody));
-        } catch (RejectedExecutionException e) {
-            logger.error("mcp worker pool is exhausted, request rejected", e);
-            httpResponse.status(503);
-            try { // 写失败交由框架区分客户端中断与真实故障后统一收尾
-                send(httpResponse, errorResponse(null, -32603, "Server busy"));
-            } finally {
-                httpResponse.finish();
-            }
-        }
-    }
-
-    // 业务线程执行：解析、分发与写响应；异步响应必须在此收尾
-    private void respond(HttpRequest httpRequest, HttpResponse httpResponse, byte[] requestBody) {
-        try {
-            process(httpRequest, httpResponse, requestBody);
-        } catch (Throwable t) {
-            logger.error("mcp request failed", t);
-            try { // 未提交时可回 JSON-RPC 内部错误；已提交则只能收尾
-                httpResponse.status(500);
-                send(httpResponse, errorResponse(null, -32603, "Internal error"));
-            } catch (Throwable ignored) {
-            }
-        } finally {
-            httpResponse.finish();
-        }
-    }
-
-    private void process(HttpRequest httpRequest, HttpResponse httpResponse, byte[] requestBody) throws Exception {
-        String body = requestBody == null ? "" : new String(requestBody, StandardCharsets.UTF_8);
-        Object parsed;
-        try {
-            parsed = json.fromJson(body, Object.class);
-        } catch (Exception e) {
-            httpResponse.status(400); // 非 JSON 无法构成 JSON-RPC 报文，只能以 HTTP 400 携带 -32700
-            send(httpResponse, errorResponse(null, -32700, "Parse error"));
-            return;
-        }
-
-        boolean isBatch = parsed instanceof List;
-        List<?> nodes = isBatch ? (List<?>) parsed : Collections.singletonList(parsed);
-        if (isBatch && nodes.isEmpty()) {
-            send(httpResponse, errorResponse(null, -32600, "Invalid Request"));
-            return;
-        }
-
-        List<Map<String, Object>> replies = new ArrayList<>();
-        for (Object node : nodes) {
-            Map<String, Object> reply = processNode(node, httpRequest);
-            if (reply != null) replies.add(reply); // notification 不产生响应
-        }
-
-        if (replies.isEmpty()) {
-            // 全为 notification：按规范不得回复；无体也须带 Content-Type，客户端据其判定报文类型
-            httpResponse.status(202).contentTypeJsonUtf8();
-            return;
-        }
-        send(httpResponse, isBatch ? replies : replies.get(0));
-    }
-
-    // 单条报文处理；返回 null 表示 notification
-    private Map<String, Object> processNode(Object node, HttpRequest httpRequest) {
-        Map<String, Object> invalid = invalidRequest(node);
-        if (invalid != null) return invalid;
-
-        Map<String, Object> requestMap = (Map<String, Object>) node;
-        if (!requestMap.containsKey("id")) return null; // 如握手必须的 notifications/initialized
-
-        Object id = requestMap.get("id");
-        try {
-            Object result;
-            switch ((String) requestMap.get("method")) {
-                case "initialize":
-                    result = new HashMap<>(initializeData);
-                    break;
-                case "ping":
-                    result = new HashMap<>();
-                    break;
-                case "tools/list":
-                    Map<String, Object> listResult = new HashMap<>();
-                    listResult.put("tools", toolSchemas);
-                    result = listResult;
-                    break;
-                case "tools/call":
-                    result = call(httpRequest, requestMap.get("params"));
-                    break;
-                default:
-                    return errorResponse(id, -32601, "Method not found");
-            }
-            return resultResponse(id, result);
-        } catch (RpcException e) {
-            return errorResponse(id, e.code, e.getMessage(), e.data);
-        }
-    }
-
-    // JSON-RPC 请求契约校验（jsonrpc/method/id）；不合法回 -32600，id 非标量时按规范回 null
-    private Map<String, Object> invalidRequest(Object node) {
-        if (!(node instanceof Map)) return errorResponse(null, -32600, "Invalid Request");
-
-        Map<String, Object> requestMap = (Map<String, Object>) node;
-        Object id = requestMap.get("id");
-        boolean validId = id == null || id instanceof String || id instanceof Number;
-        Object version = requestMap.get("jsonrpc"); // 兼容省略该成员的客户端，出现即须为 2.0
-        if ((version != null && !JSONRPC_VERSION.equals(version))
-                || !(requestMap.get("method") instanceof String) || !validId) {
-            return errorResponse(validId ? id : null, -32600, "Invalid Request");
-        }
-        return null;
-    }
-
-    private void send(HttpResponse httpResponse, Object response) throws Exception {
-        httpResponse.contentTypeJsonUtf8().send(json.toJson(response));
-    }
-
-    private Map<String, Object> resultResponse(Object id, Object result) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("jsonrpc", JSONRPC_VERSION);
-        response.put("id", id);
-        response.put("result", result);
-        return response;
-    }
-
-    private Map<String, Object> errorResponse(Object id, int code, String message) {
-        return errorResponse(id, code, message, null);
-    }
-
-    private Map<String, Object> errorResponse(Object id, int code, String message, Object data) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("code", code);
-        error.put("message", message);
-        if (data != null) error.put("data", data);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("jsonrpc", JSONRPC_VERSION);
-        response.put("id", id);
-        response.put("error", error);
-        return response;
-    }
-
-    private Map<String, Object> call(HttpRequest httpRequest, Object requestParams) {
-        if (!(requestParams instanceof Map)) throw new RpcException(-32602, "Invalid params");
-
-        Map<String, Object> params = (Map<String, Object>) requestParams;
-        Object toolNameObj = params.get("name");
-        if (!(toolNameObj instanceof String) || ((String) toolNameObj).isEmpty()) {
-            throw new RpcException(-32602, "Invalid params: missing tool name");
-        }
-        String toolName = (String) toolNameObj;
-
-        Object argumentsObj = params.get("arguments");
-        if (argumentsObj != null && !(argumentsObj instanceof Map)) {
-            throw new RpcException(-32602, "Invalid params: arguments must be an object");
-        }
-        Map<String, Object> arguments = argumentsObj == null
-                ? Collections.emptyMap() : (Map<String, Object>) argumentsObj; // arguments 缺省即空参
-
-        // 授权：复用共享拦截链；未认证请求已在框架闸门拦截
-        String denied = interceptionService.intercept(toolName, arguments, httpRequest.getPrincipal(), httpRequest.getRoles());
-        if (denied != null) {
-            // 实现自定义错误码区间；data 带机器可读分类，客户端不必解析文案
-            throw new RpcException(-32000, denied, Collections.singletonMap("reason", "forbidden"));
-        }
-
-        ToolCache toolCache = toolCacheMap.get(toolName);
-        if (toolCache == null) {
-            // 未知工具属协议错误，须走 JSON-RPC error 而非 isError（MCP 规范）
-            throw new RpcException(-32602, "Unknown tool");
-        }
-
-        String invokeResult;
-        boolean isError = false;
-        try {
-            invokeResult = toolCache.toolService.invoke(arguments);
-        } catch (Throwable e) {
-            // 工具内部异常仅记服务端日志，不回传客户端，避免信息泄露
-            logger.error("mcp tool invoke failed: " + toolName, e);
-            invokeResult = "tool invocation failed";
-            isError = true;
-        }
-
-        Map<String, Object> contentItem = new HashMap<>();
-        contentItem.put("type", "text");
-        contentItem.put("text", invokeResult == null ? "" : invokeResult); // 契约适配：text 必为 string，不输出 null
-        List<Map<String, Object>> contentList = new ArrayList<>();
-        contentList.add(contentItem);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("content", contentList);
-        result.put("isError", isError);
-        return result;
+        toolRegistry.remove(tool);
     }
 }

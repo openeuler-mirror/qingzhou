@@ -3,15 +3,9 @@ package qingzhou.app.tomcat;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.InputType;
-import qingzhou.api.Request;
-import qingzhou.api.action.Monitor;
+import qingzhou.api.*;
 import qingzhou.api.action.Page;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
+import qingzhou.api.annotations.*;
 
 @Model(code = "applications", order = 3, icon = "ShoppingBag",
         name = {"应用管理", "en:Applications"},
@@ -112,7 +106,7 @@ public class TomcatApplications extends TomcatModelBase implements Page {
 
     private List<Map<String, String>> applications;
 
-    @ModelAction(code = Monitor.ACTION_CODE_MONITOR, icon = "TrendCharts", list = true,
+    @ModelAction(code = "monitor", icon = "TrendCharts", list = true,
             name = {"监视", "en:Monitor"},
             info = {"查看该应用的实时运行指标。", "en:View realtime metrics of this application."})
     public void monitor(Request request) throws Exception {

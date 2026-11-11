@@ -2,11 +2,9 @@ package qingzhou.app.redis.service;
 
 import java.util.*;
 
-import qingzhou.api.*;
+import qingzhou.api.InputType;
 import qingzhou.api.action.*;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
+import qingzhou.api.annotations.*;
 import qingzhou.app.redis.RedisApp;
 import qingzhou.app.redis.RedisModelBase;
 import qingzhou.app.redis.store.model.AuditEntry;
@@ -109,7 +107,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, Namespa
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 
-    @ModelAction(code = Namespace.ACTION_CODE_NAMESPACE, icon = "Switch",
+    @ModelAction(code = "namespace", icon = "Switch",
             name = {"切换", "en:Switch"}, list = true,
             confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
             info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"})
@@ -140,7 +138,7 @@ public class RedisInstance extends RedisModelBase implements Page, Show, Namespa
                 try {
                     RedisApp.activateInstance(previousName);
                 } catch (Exception restoreEx) {
-                    
+
                 }
             }
             throw e;
@@ -219,17 +217,17 @@ public class RedisInstance extends RedisModelBase implements Page, Show, Namespa
 
     @Override
     public boolean contains(String id) {
-        
+
         for (Map<String, String> config : RedisApp.getInstances().values()) {
             if (id.equals(config.get("id"))) return true;
         }
-        
+
         return RedisApp.getInstances().containsKey(id);
     }
 
     @Override
     public Map<String, String> show(String id) throws Exception {
-        
+
         String name = null;
         Map<String, String> config = null;
         for (Map.Entry<String, Map<String, String>> entry : RedisApp.getInstances().entrySet()) {
@@ -244,10 +242,10 @@ public class RedisInstance extends RedisModelBase implements Page, Show, Namespa
         Map<String, String> data = new LinkedHashMap<>(config);
         data.put("id", config.getOrDefault("id", ""));
         data.put("instanceName", name);
-        
+
         String storedPassword = config.getOrDefault("password", "");
         if (storedPassword.startsWith(RedisApp.getEncryptedPrefix())) {
-            data.put("password", ""); 
+            data.put("password", "");
         }
         data.put("active", name.equals(RedisApp.getCurrentInstanceName()) ? "是" : "否");
         boolean connected = name.equals(RedisApp.getCurrentInstanceName()) && RedisApp.getRedisUtil() != null

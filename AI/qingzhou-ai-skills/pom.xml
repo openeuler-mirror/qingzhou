@@ -12,6 +12,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>qingzhou-ai-skill-app-builder</module>
+        <module>qingzhou-ai-skill-health-check</module>
         <module>qingzhou-ai-skill-mcp-loader</module>
         <module>qingzhou-ai-skill-platform-knowledge</module>
     </modules>

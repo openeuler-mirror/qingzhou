@@ -1,4 +1,4 @@
-package qingzhou.ai.memory;
+package qingzhou.ai.memory.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.ai.memory.impl.ConversationStoreImpl;
 import qingzhou.json.impl.JsonImpl;
 import qingzhou.logger.Logger;
 import qingzhou.store.impl.StoreFactoryImpl;

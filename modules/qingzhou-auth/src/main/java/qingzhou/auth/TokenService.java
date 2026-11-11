@@ -93,7 +93,8 @@ public class TokenService {
             }
         }
 
-        response.header("Set-Cookie", name + "=" + value + cookie)
+        // 追加而非覆盖：同一响应可能先后写 state 清理与登录令牌两个 Cookie
+        response.addHeader("Set-Cookie", name + "=" + value + cookie)
                 .header("Cache-Control", "no-store");
     }
 
