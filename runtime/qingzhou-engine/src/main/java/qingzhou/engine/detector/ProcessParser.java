@@ -8,50 +8,47 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-// 进程策略：从进程命令行反推安装目录；全量扫描开销大，扫描结果按静态缓存跨 bundle 共享
-class ProcessStrategy implements PathDetectionStrategy {
-    // 探测调度为 5 秒一次（见 PathDetectionScheduler），缓存须明显长于该周期
+class ProcessParser {
+    // 探测调度为 5 秒一次（见 PathDetectionScheduler），进程扫描缓存须明显长于该周期
     private static final long SCAN_CACHE_MILLIS = 30_000;
     // 单次扫描读超时：子进程挂起时强杀，读阻塞随流关闭解除，避免探测线程被永久卡死
     private static final long SCAN_READ_TIMEOUT_MILLIS = 10_000;
 
-    // 仅在同一 monitor 内读写，可见性由锁保证，故不加 volatile
+    // 须为 static：探测任务全部在单线程执行器内串行执行（见 PathDetectionScheduler），访问无需加锁，故不加 volatile
     private static List<String> cachedScanLines;
     private static long lastScanAt;
 
-    private final FeatureFiles featureFiles;
     private final List<String> processKeywords;
-    // 从进程命令行提取安装目录的正则（须含捕获组），由清单 Qingzhou-Detection-Process-Home-Regex 配置；未配置时退回关键字前缀
     private final Pattern homeRegex;
 
-    ProcessStrategy(FeatureFiles featureFiles, List<String> processNames, String homeRegex) {
-        this.featureFiles = featureFiles;
-        this.processKeywords = new ArrayList<>();
-        for (String name : processNames) {
-            processKeywords.add(name.toLowerCase(Locale.ROOT));
-        }
-        this.homeRegex = homeRegex == null || homeRegex.isEmpty() ? null : Pattern.compile(homeRegex);
+    ProcessParser(List<String> processKeywords, Pattern homeRegex) {
+        this.processKeywords = processKeywords;
+        this.homeRegex = homeRegex;
     }
 
-    @Override
-    public List<String> detect() throws Exception {
+    List<File> processCandidateDirs() {
         if (processKeywords.isEmpty()) return Collections.emptyList();
 
-        return processLines().stream()
-                .map(String::trim)
-                .filter(line -> !line.isEmpty())
-                .map(this::installDirOf)
-                .filter(Objects::nonNull)
-                .filter(featureFiles::containsIn)
-                .map(File::getAbsolutePath)
-                .distinct() // 多个进程可反推出同一安装目录，去重避免同一实例被重复安装
-                .collect(Collectors.toList());
+        List<String> lines;
+        try {
+            lines = processLines();
+        } catch (Exception e) {
+            // 来源之间互不影响：进程来源依赖外部命令（ps/powershell），失败只丢这一路候选，
+            // 环境变量与扫描根仍照常生效；引导期日志体系未就绪，只能直写 stderr
+            System.err.println("process detection failed: " + e.getMessage());
+            return Collections.emptyList();
+        }
+
+        List<File> dirs = new ArrayList<>();
+        for (String line : lines) {
+            File dir = installDirOf(line.trim());
+            if (dir != null) dirs.add(dir);
+        }
+        return dirs;
     }
 
     // 关键字确认"是目标进程"后再定位安装目录：配置了 home 提取正则就用它，否则退回关键字之前的路径前缀
@@ -71,17 +68,16 @@ class ProcessStrategy implements PathDetectionStrategy {
     }
 
     private static List<String> processLines() throws Exception {
-        synchronized (ProcessStrategy.class) { // 探测为 5 秒一次，串行进入的开销远小于一次进程扫描
-            if (cachedScanLines == null || System.currentTimeMillis() - lastScanAt >= SCAN_CACHE_MILLIS) {
-                cachedScanLines = runProcessScan();
-                lastScanAt = System.currentTimeMillis();
-            }
-            return cachedScanLines;
+        if (cachedScanLines == null || System.currentTimeMillis() - lastScanAt >= SCAN_CACHE_MILLIS) {
+            cachedScanLines = runProcessScan();
+            lastScanAt = System.currentTimeMillis();
         }
+        return cachedScanLines;
     }
 
     private static List<String> runProcessScan() throws Exception {
         List<String> lines = new ArrayList<>();
+
         Process process = new ProcessBuilder(processScanCommand()).redirectErrorStream(true).start();
         Thread watchdog = new Thread(() -> {
             try {

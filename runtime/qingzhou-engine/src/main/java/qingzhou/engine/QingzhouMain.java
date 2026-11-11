@@ -91,7 +91,7 @@ public class QingzhouMain {
         for (Bundle b : bundles) {
             Dictionary<String, String> h = b.getHeaders();
             if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled")))
-                PathDetectionScheduler.startWithDetection(b, instanceDir);
+                new PathDetectionScheduler(b).start();
             else b.start();
         }
     }
