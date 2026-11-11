@@ -274,6 +274,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <artifactId>qingzhou-prometheus</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <artifactId>qingzhou-monitor</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>

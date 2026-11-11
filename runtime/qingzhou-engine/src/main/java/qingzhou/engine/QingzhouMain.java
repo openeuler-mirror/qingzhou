@@ -44,7 +44,7 @@ public class QingzhouMain {
 
         // 先安装全部 bundle，再统一启动，避免跨目录依赖解析失败
         List<Bundle> bundles = new ArrayList<>();
-        for (String f : new String[]{"runtime/features", "components", "AI", "modules"}) {
+        for (String f : new String[]{"runtime/features", "common", "components", "AI", "modules"}) {
             bundles.addAll(installDirAndJars(new File(libDir, f)));
         }
         startBundles(bundles);

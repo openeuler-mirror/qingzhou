@@ -15,6 +15,7 @@
         <module>apps</module>
         <module>qingzhou</module>
         <module>AI</module>
+        <module>common</module>
     </modules>
 
     <properties>

@@ -11,13 +11,12 @@
 
     <packaging>pom</packaging>
     <modules>
-        <module>qingzhou-config</module>
         <module>qingzhou-api</module>
         <module>qingzhou-dto</module>
         <module>qingzhou-registry</module>
         <module>qingzhou-auth</module>
         <module>qingzhou-agent</module>
         <module>qingzhou-web</module>
-        <module>qingzhou-monitor</module>
+        <module>qingzhou-prometheus</module>
     </modules>
 </project>
