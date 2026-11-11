@@ -1,16 +1,11 @@
 package qingzhou.app.driver;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Predicate;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.FieldType;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.action.*;
 import qingzhou.api.annotations.ModelAction;
 import qingzhou.common.FileUtil;
@@ -26,6 +21,11 @@ import qingzhou.registry.Constants;
  * 被 AppStubLocalImpl#invokeAction 方法反射调用
  */
 public class DefaultAction {
+    private static String REQUEST_PARAMETER_SERIAL_KEY = "download_serial_key";
+    private static String REQUEST_PARAMETER_FILE_NAMES = "download_file_names";
+    private static String REQUEST_PARAMETER_OFFSET = "download_offset";
+    private static String REQUEST_PARAMETER_BYTES = "download_bytes";
+
     private DefaultAction() {
     }
 
@@ -213,9 +213,9 @@ public class DefaultAction {
         File fileBase = download.file(id);
         File tempBase = new File(appContext.getTempDir(), "download");
 
-        String downloadKey = request.getParameter(Download.REQUEST_PARAMETER_SERIAL_KEY);
+        String downloadKey = request.getParameter(REQUEST_PARAMETER_SERIAL_KEY);
         if (downloadKey == null || downloadKey.isEmpty()) {
-            String downloadFileNames = request.getParameter(Download.REQUEST_PARAMETER_FILE_NAMES);
+            String downloadFileNames = request.getParameter(REQUEST_PARAMETER_FILE_NAMES);
             if (downloadFileNames == null) {
                 response.error("empty file name");
                 return;
@@ -248,7 +248,7 @@ public class DefaultAction {
         if (downloadKey == null || downloadKey.isEmpty()) return;
 
         long offset = 0;
-        String downloadOffsetParameter = request.getParameter(Download.REQUEST_PARAMETER_OFFSET);
+        String downloadOffsetParameter = request.getParameter(REQUEST_PARAMETER_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.isEmpty()) {
             try {
                 offset = Long.parseLong(downloadOffsetParameter);
@@ -302,9 +302,9 @@ public class DefaultAction {
         String byteEncoded = base64Coder.encode(byteRead);
 
         Map<String, String> data = new HashMap<>();
-        data.put(Download.REQUEST_PARAMETER_SERIAL_KEY, downloadKey);
-        data.put(Download.REQUEST_PARAMETER_OFFSET, String.valueOf(offset));
-        data.put(Download.REQUEST_PARAMETER_BYTES, byteEncoded);
+        data.put(REQUEST_PARAMETER_SERIAL_KEY, downloadKey);
+        data.put(REQUEST_PARAMETER_OFFSET, String.valueOf(offset));
+        data.put(REQUEST_PARAMETER_BYTES, byteEncoded);
         response.data(data);
     }
 

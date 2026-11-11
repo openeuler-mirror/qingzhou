@@ -2,15 +2,10 @@ package qingzhou.ai.chat.impl;
 
 import java.util.*;
 
-import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.ai.SkillService;
-import qingzhou.ai.ToolParameterParser;
-import qingzhou.ai.ToolService;
-import qingzhou.llm.Parameter;
-import qingzhou.llm.Skill;
-import qingzhou.llm.Tool;
+import qingzhou.ai.*;
+import qingzhou.llm.*;
 import qingzhou.logger.Logger;
 
 @Component(service = LlmConverter.class)
@@ -60,8 +55,7 @@ public class LlmConverter {
         for (Map.Entry<ToolService, Map<String, Object>> entry : aiTools.entrySet()) {
             String toolTypeName = typeName(entry.getKey());
             try {
-                Tool tool = convertTool(entry.getKey(), entry.getValue(), logger);
-                if (tool == null) continue;
+                Tool tool = convertTool(entry.getKey(), entry.getValue());
 
                 String owner = toolOwners.putIfAbsent(tool.name(), toolTypeName);
                 if (owner != null) { // 重名工具模型无法区分，保留先到者并告警
@@ -77,14 +71,11 @@ public class LlmConverter {
         return tools;
     }
 
-    private Tool convertTool(ToolService toolService, Map<String, Object> toolProp, Logger logger) {
-        String name = toolName(toolProp);
+    private Tool convertTool(ToolService toolService, Map<String, Object> toolProp) {
+        String name = text(toolProp, ToolService.TOOL_NAME);
         String description = text(toolProp, ToolService.TOOL_DESCRIPTION);
-        if (name == null || description == null) {
-            logger.warn("skip tool [" + typeName(toolService) + "]: missing "
-                    + (name == null ? ToolService.TOOL_NAME + " or " + ComponentConstants.COMPONENT_NAME
-                    : ToolService.TOOL_DESCRIPTION));
-            return null;
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("missing " + ToolService.TOOL_NAME + " of " + typeName(toolService));
         }
 
         return Tool.of(name, description, parameters(toolProp), toolArgs -> {
@@ -95,18 +86,6 @@ public class LlmConverter {
                 throw new RuntimeException("tool [" + name + "] invocation failed: " + e.getMessage(), e);
             }
         });
-    }
-
-    // 未显式声明 TOOL_NAME 时回退到组件简单名，两者都取不到则视为声明不完整
-    private String toolName(Map<String, Object> toolProp) {
-        Object declared = toolProp.get(ToolService.TOOL_NAME);
-        if (declared != null) return (String) declared;
-
-        Object component = toolProp.get(ComponentConstants.COMPONENT_NAME);
-        if (component == null) return null;
-        String name = component.toString();
-        int i = name.lastIndexOf('.');
-        return i < 0 ? name : name.substring(i + 1);
     }
 
     private Parameter[] parameters(Map<String, Object> toolProp) {

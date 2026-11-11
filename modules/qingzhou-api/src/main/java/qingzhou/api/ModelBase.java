@@ -12,27 +12,26 @@ public abstract class ModelBase {
         return appContext;
     }
 
-    public void setAppContext(AppContext appContext) {
-        if (this.appContext != null) return;
-        this.appContext = appContext;
-    }
-
     public Request getCurrentRequest() {
         return REQUEST_THREAD_LOCAL.get();
-    }
-
-    public void setCurrentRequest(Request request) {
-        REQUEST_THREAD_LOCAL.set(request);
-    }
-
-    // 请求处理结束必须清除：线程池复用线程时若不 remove，会残留上一个会话的 Request 引用（会话泄漏）
-    public void clearCurrentRequest() {
-        REQUEST_THREAD_LOCAL.remove();
     }
 
     public void start() {
     }
 
     public void stop() {
+    }
+
+    protected void setAppContext(AppContext appContext) {
+        if (this.appContext != null) return;
+        this.appContext = appContext;
+    }
+
+    protected void setCurrentRequest(Request request) {
+        REQUEST_THREAD_LOCAL.set(request);
+    }
+
+    protected void clearCurrentRequest() {
+        REQUEST_THREAD_LOCAL.remove();
     }
 }

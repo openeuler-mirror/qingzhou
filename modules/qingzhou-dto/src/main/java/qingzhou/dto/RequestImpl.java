@@ -1,9 +1,6 @@
 package qingzhou.dto;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import qingzhou.api.Request;
 import qingzhou.dto.meta.Model;
@@ -27,12 +24,10 @@ public class RequestImpl implements Request {
         return response;
     }
 
-    @Override
     public String getInstance() {
         return instance;
     }
 
-    @Override
     public String getApp() {
         return app;
     }
@@ -62,7 +57,6 @@ public class RequestImpl implements Request {
         return parameters;
     }
 
-    @Override
     public Set<String> getUploadFileFields() {
         return uploadFileFields;
     }

@@ -2,22 +2,15 @@ package qingzhou.app.driver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
 import qingzhou.app.driver.systemcall.Icon;
-import qingzhou.registry.I18nService;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.Model;
-import qingzhou.dto.meta.ModelAction;
-import qingzhou.registry.AppStubLocal;
-import qingzhou.registry.Constants;
+import qingzhou.dto.meta.*;
+import qingzhou.registry.*;
 
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;
@@ -104,11 +97,15 @@ class AppStubLocalImpl implements AppStubLocal {
         } else { // 执行自定义 action
             Method method = appContext.actionMethods.get(AppDriver.resolveActionKey(model, action));
             if (method != null) {
-                modelBase.setCurrentRequest(request);
+                Method setCurrentRequest = ModelBase.class.getDeclaredMethod("setCurrentRequest", Request.class);
+                setCurrentRequest.setAccessible(true);
+                setCurrentRequest.invoke(modelBase, request);
                 try {
                     invokeMethod(request, method, modelBase, request);
                 } finally {
-                    modelBase.clearCurrentRequest();
+                    Method clearCurrentRequest = ModelBase.class.getDeclaredMethod("clearCurrentRequest");
+                    clearCurrentRequest.setAccessible(true);
+                    clearCurrentRequest.invoke(modelBase);
                 }
             }
         }

@@ -1,17 +1,12 @@
 package qingzhou.api;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 代表客户端请求相关信息
  */
 public interface Request {
     Response getResponse();
-
-    String getInstance();
-
-    String getApp();
 
     String getModel();
 
@@ -22,6 +17,4 @@ public interface Request {
     String getParameter(String name);
 
     Map<String, String> getParameters();
-
-    Set<String> getUploadFileFields();
 }

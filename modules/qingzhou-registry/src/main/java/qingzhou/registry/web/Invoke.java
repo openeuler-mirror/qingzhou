@@ -5,25 +5,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.api.InputType;
 import qingzhou.common.TempFiles;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.Model;
 import qingzhou.dto.meta.ModelField;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppStub;
-import qingzhou.registry.Constants;
-import qingzhou.registry.PermissionChecker;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 @Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=/invoke", HttpHandler.HANDLE_METHODS + "=POST"})

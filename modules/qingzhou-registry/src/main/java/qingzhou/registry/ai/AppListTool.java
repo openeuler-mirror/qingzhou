@@ -11,6 +11,7 @@ import qingzhou.registry.web.RequestParameters;
 
 @Component(property = {
         ToolService.TOOL_LABEL + "=" + InvokeActionSkill.TOOL_LABEL,
+        ToolService.TOOL_NAME + "=AppListTool",
         ToolService.TOOL_DESCRIPTION + "=该接口返回已注册的应用列表信息。每个应用包含唯一标识、名称、描述、所属实例等信息。"})
 public class AppListTool implements ToolService {
     @Reference

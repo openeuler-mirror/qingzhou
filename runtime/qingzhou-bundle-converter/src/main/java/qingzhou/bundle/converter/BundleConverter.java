@@ -5,7 +5,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.*;
+import java.util.Set;
+import java.util.UUID;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -193,19 +194,25 @@ public class BundleConverter {
         }
 
         // 可重复注解在 class 文件里有两种形态：单次使用为裸注解，多次使用为编译器合成的容器注解
-        for (Object annotation : ctClass.getAnnotations()) {
-            if (annotation instanceof Menu) {
-                addMenu((Menu) annotation, metaApp);
-            } else if (annotation instanceof Menus) {
-                for (Menu menu : ((Menus) annotation).value()) {
-                    addMenu(menu, metaApp);
-                }
-            } else if (annotation instanceof I18ns) {
-                for (I18n i18n : ((I18ns) annotation).value()) {
-                    addI18n(i18n, metaApp);
-                }
-            } else if (annotation instanceof I18n) {
-                addI18n((I18n) annotation, metaApp);
+        // 按类型定向读取：getAnnotations() 会解析类上全部注解，应用侧 OSGi 等注解不在转换器 classpath 中
+        Menu menu = (Menu) ctClass.getAnnotation(Menu.class);
+        Menus menus = (Menus) ctClass.getAnnotation(Menus.class);
+        I18n i18n = (I18n) ctClass.getAnnotation(I18n.class);
+        I18ns i18ns = (I18ns) ctClass.getAnnotation(I18ns.class);
+        if (menu != null) {
+            addMenu(menu, metaApp);
+        }
+        if (menus != null) {
+            for (Menu item : menus.value()) {
+                addMenu(item, metaApp);
+            }
+        }
+        if (i18n != null) {
+            addI18n(i18n, metaApp);
+        }
+        if (i18ns != null) {
+            for (I18n item : i18ns.value()) {
+                addI18n(item, metaApp);
             }
         }
     }

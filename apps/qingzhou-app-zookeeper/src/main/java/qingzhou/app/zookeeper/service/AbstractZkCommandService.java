@@ -1,14 +1,12 @@
 package qingzhou.app.zookeeper.service;
 
+import java.math.BigDecimal;
+import java.util.*;
+
+import qingzhou.api.ModelBase;
 import qingzhou.app.zookeeper.ZookeeperApp;
 import qingzhou.app.zookeeper.util.Util;
-import qingzhou.api.ModelBase;
 import qingzhou.http.client.HttpMethod;
-
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * 调用 Zookeeper admin server 命令接口的公共基类，
@@ -25,18 +23,16 @@ public abstract class AbstractZkCommandService extends ModelBase {
     }
 
     protected String findMetaDataProperties(String key) {
-        Properties properties = getAppContext().getProperties();
-        if (properties == null) {
-            return null;
-        }
-        Properties metadata = (Properties) properties.get(ZookeeperApp.METADATA_KEY);
+        Properties metadata = ZookeeperApp.metadata;
         if (metadata == null) {
             return null;
         }
         return metadata.getProperty(key);
     }
 
-    /** 校验 Zookeeper 版本不低于 3.5.0 且已开启 admin server */
+    /**
+     * 校验 Zookeeper 版本不低于 3.5.0 且已开启 admin server
+     */
     protected void checkJetty() {
         String version = findMetaDataProperties(ZookeeperApp.METADATA_VERSION_KEY);
         if (!Util.comparativeVersion(version)) {
@@ -52,7 +48,9 @@ public abstract class AbstractZkCommandService extends ModelBase {
         return findMetaDataProperties(ZookeeperApp.METADATA_COMMANDS_KEY) + "/" + getSubPath();
     }
 
-    /** 向 Zookeeper admin server 发起 GET 请求并解析 JSON 响应 */
+    /**
+     * 向 Zookeeper admin server 发起 GET 请求并解析 JSON 响应
+     */
     @SuppressWarnings("unchecked")
     protected Map<String, Object> sendHttp() throws Exception {
         String url = buildUrl();

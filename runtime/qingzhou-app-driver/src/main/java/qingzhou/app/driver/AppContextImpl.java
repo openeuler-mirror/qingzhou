@@ -1,21 +1,18 @@
 package qingzhou.app.driver;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import qingzhou.api.*;
-import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.Model;
-import qingzhou.registry.AppStubLocal;
-
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+import qingzhou.api.*;
+import qingzhou.dto.meta.AppMeta;
+import qingzhou.dto.meta.Model;
+import qingzhou.registry.AppStubLocal;
 
 public class AppContextImpl implements AppContext {
     // 应用元数据的对外通道是 AppStubLocal.getAppMeta()：此处收窄为包内可见，避免应用绕过接口直接读实现字段
@@ -25,22 +22,18 @@ public class AppContextImpl implements AppContext {
     private final BundleContext bundleContext;
     private File appTemp;
 
-    Properties appProperties;
+    Map<String, String> appConfig;
     String detectedPath;
     QingzhouApp qingzhouApp;
     final Map<Model, ModelBase> modelInstances = new HashMap<>();
     final Map<String, Method> actionMethods = new HashMap<>();
 
     private final File instanceFile = new File(System.getProperty("qingzhou.instance")); // 缓存，防止系统参数被应用覆盖
-    private final String qzVersion = System.getProperty("qingzhou.version"); // 缓存，防止系统参数被应用覆盖
 
     // 应用启动过程中，可能被调用；运行期读多写少，用 COW 保证请求线程遍历安全
     final List<ActionFilter> actionFilters = new CopyOnWriteArrayList<>();
 
     private volatile ServiceRegistration<AppStubLocal> appRegistration;
-
-    private final Set<ServiceRegistration<?>> sharedFunctionServiceRegistrationList = ConcurrentHashMap.newKeySet();
-    private final Set<ServiceReference<?>> sharedFunctionServiceReferences = ConcurrentHashMap.newKeySet();
 
     AppContextImpl(AppDriver appDriver, BundleContext bundleContext, AppMeta appMeta) {
         this.appDriver = appDriver;
@@ -61,8 +54,6 @@ public class AppContextImpl implements AppContext {
         if (appRegistration != null) { // start 中途失败尚未注册时避免 NPE
             appRegistration.unregister();
         }
-        sharedFunctionServiceRegistrationList.forEach(ServiceRegistration::unregister);
-        sharedFunctionServiceReferences.forEach(bundleContext::ungetService);
         actionFilters.clear();
 
         modelInstances.values().forEach(ModelBase::stop);
@@ -70,8 +61,8 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public Properties getProperties() {
-        return appProperties;
+    public Map<String, String> getAppConfig() {
+        return appConfig;
     }
 
     @Override
@@ -82,11 +73,6 @@ public class AppContextImpl implements AppContext {
     @Override
     public File getRoot() {
         return instanceFile;
-    }
-
-    @Override
-    public String getPlatformVersion() {
-        return qzVersion;
     }
 
     @Override
@@ -123,55 +109,5 @@ public class AppContextImpl implements AppContext {
     @Override
     public <T> T getService(Class<T> type, String name) {
         return appDriver.getService(type, name);
-    }
-
-    @Override
-    public <T> T getAppObject(Class<T> type) {
-        if (type != null) {
-            for (ModelBase modelBase : modelInstances.values()) {
-                if (type.isInstance(modelBase)) return (T) modelBase;
-            }
-            if (type.isInstance(qingzhouApp)) {
-                return (T) qingzhouApp;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public <T, R> FunctionRegistration registerSharedFunction(String functionName, SharedFunction<T, R> function) {
-        if (functionName == null || functionName.isEmpty()) {
-            throw new IllegalArgumentException("shared function name is required");
-        }
-        Dictionary<String, String> dictionary = new Hashtable<>();
-        dictionary.put(Constants.SERVICE_PID, functionName);
-        ServiceRegistration<?> serviceRegistration = bundleContext.registerService(SharedFunction.class, function, dictionary);
-        sharedFunctionServiceRegistrationList.add(serviceRegistration);
-        return () -> {
-            sharedFunctionServiceRegistrationList.remove(serviceRegistration);
-            try {
-                serviceRegistration.unregister();
-            } catch (IllegalStateException e) {
-                if (!e.getMessage().contains("already unregistered")) {
-                    throw e;
-                }
-            }
-        };
-    }
-
-    @Override
-    public <T, R> SharedFunction<T, R> getSharedFunction(String functionName) {
-        try {
-            Collection<ServiceReference<SharedFunction>> serviceReferences = bundleContext.getServiceReferences(SharedFunction.class,
-                    "(" + Constants.SERVICE_PID + "=" + AppDriver.escapeFilterValue(functionName) + ")");
-            if (!serviceReferences.isEmpty()) {
-                ServiceReference<SharedFunction> serviceReference = serviceReferences.iterator().next();
-                this.sharedFunctionServiceReferences.add(serviceReference);
-                return bundleContext.getService(serviceReference);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-        return null;
     }
 }

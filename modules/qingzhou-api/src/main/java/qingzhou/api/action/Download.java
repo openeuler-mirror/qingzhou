@@ -6,11 +6,6 @@ public interface Download {
     String ACTION_CODE_FILE = "file";
     String ACTION_CODE_DOWNLOAD = "download";
 
-    String REQUEST_PARAMETER_SERIAL_KEY = "download_serial_key";
-    String REQUEST_PARAMETER_FILE_NAMES = "download_file_names";
-    String REQUEST_PARAMETER_OFFSET = "download_offset";
-    String REQUEST_PARAMETER_BYTES = "download_bytes";
-
     // 下载文件的父目录或文件本身，安全考虑：子目录会被忽略
     File file(String id) throws Exception;
 }
