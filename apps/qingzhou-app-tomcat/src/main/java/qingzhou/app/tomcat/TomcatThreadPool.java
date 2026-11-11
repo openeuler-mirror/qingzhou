@@ -5,15 +5,10 @@ import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
-import qingzhou.api.ChartType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Request;
-import qingzhou.api.action.Monitor;
+import qingzhou.api.*;
 import qingzhou.api.action.Page;
 import qingzhou.api.action.Show;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
+import qingzhou.api.annotations.*;
 
 @Model(code = "threadpool", order = 5, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},
@@ -161,7 +156,7 @@ public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
 
     private List<Map<String, String>> threadPools;
 
-    @ModelAction(code = Monitor.ACTION_CODE_MONITOR, icon = "TrendCharts", list = true,
+    @ModelAction(code = "monitor", icon = "TrendCharts", list = true,
             name = {"监视", "en:Monitor"},
             info = {"查看该线程池的实时运行指标。", "en:View realtime metrics of this thread pool."})
     public void monitor(Request request) throws Exception {

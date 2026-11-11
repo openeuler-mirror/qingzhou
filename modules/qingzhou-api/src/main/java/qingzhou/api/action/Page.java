@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface Page {
-    String ACTION_CODE_PAGE = "page";
-
     List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception;
 
     default int total(Map<String, String> query) {

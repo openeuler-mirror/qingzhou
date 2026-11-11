@@ -1,7 +1,6 @@
 package qingzhou.app.driver;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.*;
@@ -87,18 +86,6 @@ public class AppContextImpl implements AppContext {
             appTemp = Paths.get(getRoot().getAbsolutePath(), "temp", "apps", appMeta.getApp().code).toFile();
         }
         return appTemp;
-    }
-
-    @Override
-    public long getPid() {
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        int at = name.indexOf('@');
-        if (at <= 0) return -1; // 无 '@' 分隔（异常环境）：无法解析 pid
-        try {
-            return Long.parseLong(name.substring(0, at));
-        } catch (NumberFormatException e) {
-            return -1;
-        }
     }
 
     @Override

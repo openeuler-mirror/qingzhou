@@ -5,6 +5,11 @@ public interface HttpResponse {
 
     HttpResponse header(String name, String value);
 
+    /**
+     * 追加响应头而不覆盖同名头：Set-Cookie 等允许出现多次的头须用本方法。
+     */
+    HttpResponse addHeader(String name, String value);
+
     HttpResponse contentType(String value);
 
     HttpResponse contentTypeJsonUtf8();

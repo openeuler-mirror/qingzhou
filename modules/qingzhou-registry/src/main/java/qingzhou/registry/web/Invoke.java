@@ -137,7 +137,7 @@ public class Invoke implements HttpHandler {
                 logger.warn("invoke parameter too long, rejected: " + forLog(entry.getKey()));
                 return null;
             }
-            request.getParameters().put(entry.getKey(), value);
+            request.setParameter(entry.getKey(), value);
         }
         return request;
     }
@@ -163,7 +163,7 @@ public class Invoke implements HttpHandler {
                                     + ", app=" + forLog(request.getApp()));
                             return false;
                         }
-                        parameters.put(String.valueOf(entry.getKey()), value);
+                        request.setParameter(String.valueOf(entry.getKey()), value);
                     }
                 }
             } catch (Exception e) {
@@ -343,7 +343,7 @@ public class Invoke implements HttpHandler {
         }
 
         void applyParserResults(MultipartStreamParser parser, RequestImpl request) {
-            request.getParameters().putAll(parser.getParameters());
+            parser.getParameters().forEach(request::setParameter);
             Map<String, List<String>> uploadFileMap = parser.getUploadFileMap();
             for (Map.Entry<String, List<String>> entry : uploadFileMap.entrySet()) {
                 String fieldName = entry.getKey();
@@ -357,7 +357,7 @@ public class Invoke implements HttpHandler {
                     if (combined.length() > 0) combined.append(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP);
                     combined.append(path);
                 }
-                request.getParameters().put(fieldName, combined.toString());
+                request.setParameter(fieldName, combined.toString());
             }
             request.getUploadFileFields().addAll(parser.getUploadFileFields());
         }

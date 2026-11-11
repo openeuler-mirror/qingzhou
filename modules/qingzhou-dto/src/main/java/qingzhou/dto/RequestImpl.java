@@ -17,6 +17,7 @@ public class RequestImpl implements Request {
     private String action;
     private String id;
     private final Map<String, String> parameters = new HashMap<>();
+    private final Map<String, String> parametersView = Collections.unmodifiableMap(parameters);
     private final Set<String> uploadFileFields = new HashSet<>();
 
     @Override
@@ -54,7 +55,18 @@ public class RequestImpl implements Request {
 
     @Override
     public Map<String, String> getParameters() {
-        return parameters;
+        return parametersView;
+    }
+
+    // Jackson 反序列化入口：RequestImpl 是跨实例报文载体，无 setter 时 Jackson 回写不可变视图会失败
+    public void setParameters(Map<String, String> parameters) {
+        this.parameters.clear();
+        this.parameters.putAll(parameters);
+    }
+
+    // 平台输入边界写入通道；应用侧只持有 Request 接口，无此方法
+    public void setParameter(String name, String value) {
+        parameters.put(name, value);
     }
 
     public Set<String> getUploadFileFields() {

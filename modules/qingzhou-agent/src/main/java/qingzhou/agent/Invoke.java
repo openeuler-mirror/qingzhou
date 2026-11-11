@@ -96,7 +96,7 @@ public class Invoke extends AbstractAgentHandler {
                     paths.add(target.getAbsolutePath());
                 }
                 String newPaths = String.join(",", paths);
-                request.getParameters().put(field, newPaths);
+                request.setParameter(field, newPaths);
             }
 
             appStub.invokeApp(request);

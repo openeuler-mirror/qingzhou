@@ -197,11 +197,8 @@ public class AppDriver implements BundleActivator {
                 // 初始化模块实例
                 Class<?> modelClass = Class.forName(model.className);
                 ModelBase modelBase = (ModelBase) modelClass.getDeclaredConstructor().newInstance();
+                modelBase.setAppContext(appContext);
                 appContext.modelInstances.put(model, modelBase);
-
-                Method setAppContext = ModelBase.class.getDeclaredMethod("setAppContext", AppContext.class);
-                setAppContext.setAccessible(true);
-                setAppContext.invoke(modelBase, appContext);
 
                 // 初始化模块属性
                 model.fields.forEach(modelField -> {

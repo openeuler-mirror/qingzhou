@@ -5,10 +5,7 @@ import java.util.Map;
 
 import qingzhou.monitor.Metric;
 
-/**
- * 端点侧样本模型：提供方样本在入缓冲时一次性完成改名与内置标签合并，端点内部只消费本类型，
- * 后续增删样本字段不影响指标提供方。
- */
+/** 端点侧样本模型：提供方样本在此完成改名与内置标签合并。 */
 public final class Sample {
     final String name;
     final double value;
@@ -22,7 +19,6 @@ public final class Sample {
         this.labels = labels;
     }
 
-    /** 提供方样本入缓冲：name 含提供方命名空间，labels 为端点内置标签 */
     static Sample of(Metric metric, String name, Map<String, String> labels) {
         Map<String, String> merged = new LinkedHashMap<>(metric.labels());
         merged.putAll(labels);

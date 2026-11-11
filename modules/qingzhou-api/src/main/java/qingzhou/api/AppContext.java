@@ -24,6 +24,4 @@ public interface AppContext {
     <T> T getService(Class<T> type, String name);
 
     void addActionFilter(ActionFilter... actionFilter);
-
-    long getPid();
 }

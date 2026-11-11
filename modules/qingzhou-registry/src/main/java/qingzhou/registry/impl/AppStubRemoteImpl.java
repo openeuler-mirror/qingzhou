@@ -105,7 +105,7 @@ class AppStubRemoteImpl implements AppStubRemote {
                 String remoteKey = uploadFileToRemoteAgent(file, cipher);
                 remotePaths.add(remoteKey + Constants.REMOTE_UPLOAD_TEMP_KEY_FILE_SP + file.getName());
             }
-            request.getParameters().put(field, String.join(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP, remotePaths));
+            request.setParameter(field, String.join(Constants.REMOTE_UPLOAD_MULTIPLE_FILE_SP, remotePaths));
         }
     }
 

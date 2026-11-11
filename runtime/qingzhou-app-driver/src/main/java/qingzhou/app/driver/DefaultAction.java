@@ -21,16 +21,16 @@ import qingzhou.registry.Constants;
  * 被 AppStubLocalImpl#invokeAction 方法反射调用
  */
 public class DefaultAction {
-    private static String REQUEST_PARAMETER_SERIAL_KEY = "download_serial_key";
-    private static String REQUEST_PARAMETER_FILE_NAMES = "download_file_names";
-    private static String REQUEST_PARAMETER_OFFSET = "download_offset";
-    private static String REQUEST_PARAMETER_BYTES = "download_bytes";
+    private static final String REQUEST_PARAMETER_SERIAL_KEY = "download_serial_key";
+    private static final String REQUEST_PARAMETER_FILE_NAMES = "download_file_names";
+    private static final String REQUEST_PARAMETER_OFFSET = "download_offset";
+    private static final String REQUEST_PARAMETER_BYTES = "download_bytes";
 
     private DefaultAction() {
     }
 
     @ModelAction(
-            code = Add.ACTION_CODE_ADD, icon = "Check", order = 1,
+            code = Constants.ACTION_CODE_ADD, icon = "Check", order = 1,
             name = {"保存", "en:Add"}, add = true,
             info = {"保存新建的记录。", "en:Save the newly created record."})
     public static void add(Add add, Request request) throws Exception {
@@ -39,7 +39,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Update.ACTION_CODE_UPDATE, icon = "Check", order = 1,
+            code = Constants.ACTION_CODE_UPDATE, icon = "Check", order = 1,
             name = {"更新", "en:Update"}, update = true,
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public static void update(Update update, Request request) throws Exception {
@@ -53,7 +53,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Show.ACTION_CODE_SHOW, icon = "Document",
+            code = Constants.ACTION_CODE_SHOW, icon = "Document",
             name = {"查看", "en:Show"}, list = true, show = true,
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void show(Show show, Request request) throws Exception {
@@ -66,7 +66,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Monitor.ACTION_CODE_MONITOR, icon = "TrendCharts",
+            code = Constants.ACTION_CODE_MONITOR, icon = "TrendCharts",
             name = {"监视", "en:Monitor"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public static void monitor(Monitor monitor, Request request) throws Exception {
@@ -79,7 +79,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Page.ACTION_CODE_PAGE, icon = "List",
+            code = Constants.ACTION_CODE_PAGE, icon = "List",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public static void page(Page page, Request request) throws Exception {
@@ -116,7 +116,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Delete.ACTION_CODE_DELETE, icon = "Delete", order = 99,
+            code = Constants.ACTION_CODE_DELETE, icon = "Delete", order = 99,
             name = {"删除", "en:Delete"}, list = true, batch = true,
             confirm = {"确认删除该记录？此操作不可恢复。", "en:Confirm delete this record? This action cannot be undone."},
             info = {"删除该模块。", "en:Delete this module."})
@@ -142,7 +142,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Namespace.ACTION_CODE_NAMESPACE, icon = "Switch",
+            code = Constants.ACTION_CODE_NAMESPACE, icon = "Switch",
             name = {"命名空间", "en:Namespace"},
             info = {"切换至此命名空间。", "en:Switch to this namespace."})
     public static void namespace(Namespace namespace, Request request) throws Exception {
@@ -150,19 +150,19 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Namespace.ACTION_CODE_CURRENT,
+            code = Constants.ACTION_CODE_CURRENT,
             name = {"当前空间", "en:Current Space"},
             info = {"显示已切换至的空间。", "en:Displays the currently active space."})
-    public static void currentspace(Namespace aNamespace, Request request) {
+    public static void current(Namespace aNamespace, Request request) {
         String currentSpace = aNamespace.current();
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> data = new HashMap<>();
-        data.put(Namespace.ACTION_CODE_CURRENT, currentSpace != null ? currentSpace : "");
+        data.put(Constants.ACTION_CODE_CURRENT, currentSpace != null ? currentSpace : "");
         response.data(data);
     }
 
     @ModelAction(
-            code = Download.ACTION_CODE_FILE, icon = "Download", order = 3,
+            code = Constants.ACTION_CODE_FILE, icon = "Download", order = 3,
             name = {"下载", "en:Download"}, list_head = true, show = true, update = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public static void files(Download download, Request request) throws Exception {
@@ -195,7 +195,7 @@ public class DefaultAction {
     }
 
     @ModelAction(
-            code = Download.ACTION_CODE_DOWNLOAD, icon = "Download",
+            code = Constants.ACTION_CODE_DOWNLOAD, icon = "Download",
             name = {"下载", "en:Download"},
             info = {"下载选择的文件列表。", "en:Download the selected file list."})
     public static void download(Download download, Request request) throws Exception {
