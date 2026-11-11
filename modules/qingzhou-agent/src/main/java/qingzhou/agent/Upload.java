@@ -24,7 +24,10 @@ import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 
 @Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_UPLOAD_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
+        property = {
+                HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_UPLOAD_URI,
+                HttpHandler.HANDLE_NO_AUTH + "=true",
+                HttpHandler.HANDLE_METHODS + "=POST"},
         service = {Upload.class, HttpHandler.class})
 public class Upload extends AbstractAgentHandler {
     // 单上传总量上限：分片追加若无总量约束，攻击者可持续上传写满磁盘（DoS）

@@ -14,6 +14,7 @@ import qingzhou.registry.web.RequestParameters;
 @Component(property = {
         ToolService.TOOL_LABEL + "=" + InvokeActionSkill.TOOL_LABEL,
 
+        ToolService.TOOL_NAME + "=ActionCheckTool",
         ToolService.TOOL_DESCRIPTION + "=该接口用于检查某个模块是否具有某个操作，返回true表示有，false则没有，其它则输入参数有误。如果只需要知道某模块是否具有某操作或方法，那么应该调用此方法而不是调用获取应用模块详细信息的方法。",
 
         ToolService.PARAMETER_NAME + ".1=" + RequestParameters.INSTANCE_ID,

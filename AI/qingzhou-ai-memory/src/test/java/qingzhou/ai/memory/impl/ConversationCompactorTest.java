@@ -1,4 +1,4 @@
-package qingzhou.ai.memory;
+package qingzhou.ai.memory.impl;
 
 import java.util.List;
 import java.util.Map;
@@ -7,7 +7,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import qingzhou.ai.memory.impl.ConversationStoreImpl;
 import qingzhou.llm.ChatMemory;
 
 /**

@@ -17,12 +17,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-llm</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <artifactId>qingzhou-http-server</artifactId>
+            <artifactId>qingzhou-ai-chat</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -37,6 +32,7 @@
                     <instructions>
                         <Export-Package/>
                         <Import-Package>
+                            qingzhou.ai.chat,
                             qingzhou.store,
                             qingzhou.logger,
                             qingzhou.json,

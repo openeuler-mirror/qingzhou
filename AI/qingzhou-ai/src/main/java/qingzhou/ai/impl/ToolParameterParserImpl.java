@@ -3,6 +3,7 @@ package qingzhou.ai.impl;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
@@ -29,23 +30,18 @@ public class ToolParameterParserImpl implements ToolParameterParser {
                             ToolParameter toolParameter = params.computeIfAbsent(parameterGroup, s -> new ToolParameter());
                             switch (flag) {
                                 case ToolService.PARAMETER_NAME:
-                                    toolParameter.name = (String) value;
+                                    toolParameter.name = Objects.toString(value, null);
                                     break;
                                 case ToolService.PARAMETER_DESCRIPTION:
-                                    toolParameter.description = (String) value;
+                                    toolParameter.description = Objects.toString(value, null);
                                     break;
                                 case ToolService.PARAMETER_REQUIRED:
-                                    if (value == null) {
-                                        toolParameter.required = true;
-                                    } else {
-                                        toolParameter.required = Boolean.parseBoolean((String) value);
-                                    }
+                                    toolParameter.required = value == null || Boolean.parseBoolean(Objects.toString(value));
                                     break;
                                 case ToolService.PARAMETER_TYPE:
-                                    if (value == null) {
-                                        toolParameter.type = "string";
-                                    } else {
-                                        toolParameter.type = (String) value;
+                                    String type = Objects.toString(value, "");
+                                    if (!type.isEmpty()) {
+                                        toolParameter.type = type;
                                     }
                                     break;
                             }

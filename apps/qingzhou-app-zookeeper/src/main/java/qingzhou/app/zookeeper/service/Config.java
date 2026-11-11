@@ -1,17 +1,15 @@
 package qingzhou.app.zookeeper.service;
 
-import qingzhou.app.zookeeper.ZookeeperApp;
-import qingzhou.app.zookeeper.util.Util;
-import qingzhou.api.FieldType;
-import qingzhou.api.InputType;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.Monitor;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+
+import qingzhou.api.*;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
+import qingzhou.app.zookeeper.ZookeeperApp;
+import qingzhou.app.zookeeper.util.Util;
 
 
 @Model(code = "config", order = 5, icon = "icon-file-text-o",
@@ -98,7 +96,7 @@ public class Config extends ModelBase implements Monitor {
         for (String filedName : FIELD_NAME_SET) {
             monitorMap.put(filedName, zooConfigAsMap.remove(filedName));
         }
-        String myid = getAppContext().getProperties().getProperty(ZookeeperApp.MYID_KEY);
+        String myid = ZookeeperApp.myid;
         if (Util.notBlank(myid)) {
             monitorMap.put("myid", myid);
         }
@@ -110,7 +108,7 @@ public class Config extends ModelBase implements Monitor {
     }
 
     public Map<String, String> getZooConfigAsMap() {
-        Properties properties = (Properties) getAppContext().getProperties().get(ZookeeperApp.ZOO_KEY);
+        Properties properties = ZookeeperApp.zooProperties;
 
         if (properties == null) {
             return Collections.emptyMap();  // 防御性处理

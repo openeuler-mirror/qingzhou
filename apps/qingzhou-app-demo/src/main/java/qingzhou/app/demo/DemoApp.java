@@ -1,12 +1,10 @@
 package qingzhou.app.demo;
 
 import java.util.Map;
-import java.util.Properties;
 
-import qingzhou.api.*;
-import qingzhou.api.annotations.App;
-import qingzhou.api.annotations.I18n;
-import qingzhou.api.annotations.Menu;
+import qingzhou.api.AppContext;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.annotations.*;
 import qingzhou.logger.Logger;
 
 @Menu(name = {"基础功能", "en:Basic"}, code = "basic", icon = "User", order = 1)
@@ -49,25 +47,14 @@ import qingzhou.logger.Logger;
         info = {"用于演示轻舟的功能。", "en:Used to demo the ability of Qingzhou."})
 public class DemoApp implements QingzhouApp {
     @Override
-    public void start(AppContext appContext) throws Exception {
+    public void start(AppContext appContext) {
         Logger logger = appContext.getService(Logger.class);
         logger.info("Demo 应用启动成功！");
-        logger.info("当前进程 PID: " + appContext.getPid());
 
         String detectionPath = appContext.getDetectedPath();
         logger.info("探测到的 Java 安装路径：" + detectionPath);
 
-        Properties properties = appContext.getProperties();
+        Map<String, String> properties = appContext.getAppConfig();
         logger.info("配置参数：" + properties);
-        appContext.addActionFilter((request, chain) -> {
-            JvmMonitor jvmMonitor = appContext.getAppObject(JvmMonitor.class);
-            Map<String, String> monitor = jvmMonitor.monitor(request.getId());
-            String heapUsed = monitor.get("heapUsed");
-            int i = Integer.parseInt(heapUsed);
-            if (i >= 200) {
-                logger.warn("内存过大（MB）：" + i);
-            }
-            chain.doFilter();
-        });
     }
 }

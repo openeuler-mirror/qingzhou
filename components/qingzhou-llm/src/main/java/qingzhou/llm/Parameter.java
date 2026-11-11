@@ -10,7 +10,7 @@ public interface Parameter {
     boolean required();
 
     static Parameter of(String name, String description, boolean required) {
-        return of(name, description, "string", required);
+        return of(name, description, null, required);
     }
 
     static Parameter of(String name, String description, String type, boolean required) {

@@ -87,6 +87,15 @@ class HttpResponseImpl implements HttpResponse {
         return this;
     }
 
+    @Override
+    public HttpResponse addHeader(String name, String value) {
+        if (name == null || value == null || hasBreak(name) || hasBreak(value)) {
+            throw new IllegalArgumentException("invalid http header");
+        }
+        response.responseHeaders().add(name, value); // 追加语义：同名头（如 Set-Cookie）须保留多值
+        return this;
+    }
+
     private static boolean hasBreak(String text) {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);

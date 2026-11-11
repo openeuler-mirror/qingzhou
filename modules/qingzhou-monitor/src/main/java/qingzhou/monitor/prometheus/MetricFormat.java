@@ -1,32 +1,17 @@
 package qingzhou.monitor.prometheus;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import qingzhou.monitor.Metric;
 
-/**
- * Prometheus 0.0.4 文本格式：指标名规范化与 exposition 渲染。
- * 命名空间约定：应用字段为 qingzhou_&lt;字段&gt;，提供方为 qingzhou_&lt;providerId&gt;_&lt;指标&gt;，
- * 端点自监控独占 qingzhou_monitor_ 前缀（应用字段与提供方 id 不得占用，见 {@link #SELF_NAMESPACE}）。
- */
+/** Prometheus 0.0.4 文本格式：指标名规范化与 exposition 渲染。 */
 final class MetricFormat {
     private static final String PREFIX = "qingzhou_";
-
-    /** 端点自监控命名空间：应用字段与提供方 id 占用会导致自监控序列被同名样本污染 */
-    static final String SELF_NAMESPACE = "monitor";
-
-    /** 抓取端注入标签与端点内置标签：扩展方 labels 不得占用，否则内置标签被覆盖 */
-    static final Set<String> RESERVED_LABELS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "instance", "job", "qingzhou_instance", "app", "model", "field", "provider")));
 
     private MetricFormat() {
     }
@@ -40,10 +25,7 @@ final class MetricFormat {
         return name;
     }
 
-    /**
-     * 渲染 exposition。调用方须保证同名指标类型一致（抓取期由 MetricBuffer 归一），
-     * 违反属编程错误，直接抛出。
-     */
+    /** 渲染 exposition；同名指标类型冲突属编程错误，直接抛出。 */
     static String render(Collection<Sample> metrics) {
         Map<String, Group> groups = new LinkedHashMap<>();
         for (Sample metric : metrics) {

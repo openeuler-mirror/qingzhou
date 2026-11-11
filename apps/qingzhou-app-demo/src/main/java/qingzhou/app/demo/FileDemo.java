@@ -3,11 +3,10 @@ package qingzhou.app.demo;
 import java.io.File;
 import java.util.*;
 
-import qingzhou.api.*;
+import qingzhou.api.InputType;
+import qingzhou.api.Request;
 import qingzhou.api.action.*;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
+import qingzhou.api.annotations.*;
 
 /**
  * 演示文件上传和下载功能
@@ -28,7 +27,7 @@ public class FileDemo extends qingzhou.api.ModelBase implements Page, Show, Add,
      * 覆盖框架默认的 files 动作：仅去掉列表头（list_head）入口，执行逻辑与默认实现保持一致
      */
     @ModelAction(
-            code = Download.ACTION_CODE_FILE, icon = "Download", order = 3,
+            code = "file", icon = "Download", order = 3,
             name = {"下载", "en:Download"}, show = true, update = true, list = true,
             info = {"获取可下载的文件列表。", "en:Get the list of downloadable files."})
     public void files(Request request) {

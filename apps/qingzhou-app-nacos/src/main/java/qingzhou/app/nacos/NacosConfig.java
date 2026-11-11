@@ -2,12 +2,9 @@ package qingzhou.app.nacos;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import qingzhou.api.*;
+import qingzhou.api.InputType;
 import qingzhou.api.action.*;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelField;
@@ -98,17 +95,17 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
     @Override
     public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             String namespaceId = query != null ? query.get("namespace") : null;
             String tenant = getEffectiveNamespaceId(namespaceId);
-            
+
             configCache.clear();
-            
+
             Map<String, Object> data = nacosApi.getConfigs(pageNum, pageSize, tenant);
             List<?> configs = (List<?>) data.get("pageItems");
-            
+
             if (configs != null) {
                 for (Object configObj : configs) {
                     Map<String, Object> config = (Map<String, Object>) configObj;
@@ -116,7 +113,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
                     String configDataId = String.valueOf(config.get("dataId"));
                     String configGroup = String.valueOf(config.get("group"));
                     String configType = String.valueOf(config.get("type"));
-                    
+
                     Map<String, String> configInfo = new HashMap<>();
                     configInfo.put("id", configId);
                     configInfo.put("namespace", isPublicNamespace(namespaceId) ? NacosConstants.PUBLIC_NAMESPACE : namespaceId);
@@ -125,9 +122,9 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
                     configInfo.put("tenant", tenant);
                     configInfo.put("type", configType);
                     configInfo.put("belongApp", String.valueOf(config.get("appName")));
-                    
+
                     configCache.put(configId, configInfo);
-                    
+
                     String[] row = new String[listFields.length];
                     for (int j = 0; j < listFields.length; j++) {
                         row[j] = configInfo.getOrDefault(listFields[j], "");
@@ -138,7 +135,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
         } catch (Exception e) {
             logError("Nacos config query failed", e);
         }
-        
+
         return result;
     }
 
@@ -148,7 +145,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
             NacosApi nacosApi = getNacosApi();
             String namespaceId = query != null ? query.get("namespace") : null;
             String tenant = getEffectiveNamespaceId(namespaceId);
-            
+
             Map<String, Object> data = nacosApi.getConfigs(1, 1, tenant);
             return ((Number) data.get("totalCount")).intValue();
         } catch (Exception e) {
@@ -164,18 +161,18 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
     @Override
     public Map<String, String> show(String id) {
         Map<String, String> result = new HashMap<>();
-        
+
         try {
             id = URLDecoder.decode(id, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        
+
         Map<String, String> cachedConfig = configCache.get(id);
         String dataId = "";
         String group = "";
         String tenant = "";
-        
+
         if (cachedConfig != null) {
             dataId = cachedConfig.get("dataId");
             group = cachedConfig.get("group");
@@ -185,9 +182,9 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
 
         try {
             NacosApi nacosApi = getNacosApi();
-            
+
             result.put("content", nacosApi.getConfigContent(dataId, group, tenant));
-            
+
             Map<String, Object> configInfo = nacosApi.getConfigInfo(dataId, group, tenant);
             if (result.get("type") == null) {
                 result.put("type", String.valueOf(configInfo.get("type")));
@@ -200,7 +197,7 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
         } catch (Exception e) {
             logError("Nacos config query failed", e);
         }
-        
+
         return result;
     }
 
@@ -210,12 +207,12 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
         String dataId = data.get("dataId");
         String group = data.get("group");
         String content = data.get("content");
-        
+
         group = getOrDefault(group, NacosConstants.DEFAULT_GROUP);
         String type = getOrDefault(data.get("type"), NacosConstants.DEFAULT_CONFIG_TYPE);
         String namespaceId = data.get("namespace");
         String tenant = getEffectiveNamespaceId(namespaceId);
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.publishConfig(dataId, group, content, type, tenant);
@@ -234,21 +231,21 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        
+
         String dataId = "";
         String group = "";
         String tenant = "";
-        
+
         Map<String, String> cachedConfig = configCache.get(id);
         if (cachedConfig != null) {
             dataId = cachedConfig.get("dataId");
             group = cachedConfig.get("group");
             tenant = cachedConfig.get("tenant");
         }
-        
+
         String content = data.get("content");
         String type = getOrDefault(data.get("type"), NacosConstants.DEFAULT_CONFIG_TYPE);
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.publishConfig(dataId, group, content, type, tenant);
@@ -271,14 +268,14 @@ public class NacosConfig extends NacosModelBase implements Page, Show, Add, Upda
         String dataId = "";
         String group = "";
         String tenant = "";
-        
+
         Map<String, String> cachedConfig = configCache.get(id);
         if (cachedConfig != null) {
             dataId = cachedConfig.get("dataId");
             group = cachedConfig.get("group");
             tenant = cachedConfig.get("tenant");
         }
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.deleteConfig(dataId, group, tenant);

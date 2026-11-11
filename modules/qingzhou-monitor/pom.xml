@@ -12,7 +12,7 @@
 
     <dependencies>
         <dependency>
-            <artifactId>qingzhou-registry</artifactId>
+            <artifactId>qingzhou-http-server</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -26,14 +26,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.monitor</Export-Package>
-                        <Import-Package>
-                            qingzhou.registry,
-                            qingzhou.api,qingzhou.api.action,
-                            qingzhou.dto,qingzhou.dto.meta,
-                            qingzhou.http.server,
-                            qingzhou.logger,
-                            qingzhou.ai
-                        </Import-Package>
+                        <Import-Package>qingzhou.http.server,qingzhou.logger</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

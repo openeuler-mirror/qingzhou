@@ -1,5 +1,6 @@
 package qingzhou.json.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.json.Json;
@@ -132,6 +133,26 @@ public class JsonImplTest {
         Assert.assertEquals(result[2], "z");
     }
 
+    @Test
+    public void dataTrailingTokenJson_fromJson_throwException() throws Exception {
+        Json json = createJsonImpl();
+        try {
+            json.fromJson("{\"name\":\"a\"}{\"name\":\"b\"}", SimpleBean.class);
+            Assert.fail("尾随 JSON 必须拒绝，否则 {...}{...} 会被静默截断");
+        } catch (JsonProcessingException expected) { // 预期：输入边界拒绝尾随 JSON
+        }
+    }
+
+    @Test
+    public void dataDuplicateKeyJson_fromJson_throwException() throws Exception {
+        Json json = createJsonImpl();
+        try {
+            json.fromJson("{\"name\":\"a\",\"name\":\"b\"}", SimpleBean.class);
+            Assert.fail("重复键必须拒绝，否则取值由解析顺序决定");
+        } catch (JsonProcessingException expected) { // 预期：输入边界拒绝重复键
+        }
+    }
+
     // ==================== 往返测试：toJson + fromJson ====================
 
     @Test
@@ -205,9 +226,10 @@ public class JsonImplTest {
         original.add(b1);
         original.add(b2);
         String jsonStr = json.toJson(original);
-        @SuppressWarnings("unchecked")
-        List<SimpleBean> restored = json.fromJson(jsonStr, List.class);
+        List<?> restored = json.fromJson(jsonStr, List.class);
         Assert.assertEquals(restored.size(), 2);
+        // 泛型擦除后元素为 Map，只能按字符串比对校验元素内容
+        Assert.assertEquals(json.toJson(restored), jsonStr);
     }
 
     @Test
@@ -227,7 +249,7 @@ public class JsonImplTest {
         TransientBean bean = new TransientBean();
         bean.setName("kept");
         bean.setInternal("hidden");
-        Assert.assertFalse(json.toJson(bean).contains("internal"));
+        Assert.assertFalse(json.toJson(bean).contains("hidden"));
 
         TransientBean restored = json.fromJson("{\"name\":\"kept\",\"internal\":\"injected\"}", TransientBean.class);
         Assert.assertEquals(restored.getName(), "kept");
@@ -301,6 +323,7 @@ public class JsonImplTest {
         public void setActive(boolean active) { this.active = active; }
     }
 
+    // 用于校验 Set 抽象类型被映射为 LinkedHashSet（JsonImpl#init），删除则丢失"顺序不可被哈希打乱"的契约防线
     public static class SetBean {
         public final Set<String> codes = new LinkedHashSet<>();
     }

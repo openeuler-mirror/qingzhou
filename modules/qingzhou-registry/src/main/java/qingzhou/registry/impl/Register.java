@@ -17,8 +17,11 @@ import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
 
-@Component(property = {HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI, HttpHandler.HANDLE_NO_AUTH + "=true", HttpHandler.HANDLE_METHODS + "=POST"},
-        configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE)
+@Component(configurationPid = "qingzhou-registry", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {
+                HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI,
+                HttpHandler.HANDLE_NO_AUTH + "=true",
+                HttpHandler.HANDLE_METHODS + "=POST"})
 public class Register implements HttpHandler {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
     private static final int MAX_REGISTER_BODY = 1024 * 1024;

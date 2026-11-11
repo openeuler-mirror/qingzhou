@@ -54,6 +54,7 @@ public class OAuth2Handler implements HttpHandler {
     private String usernameField;
     private String roleField;
     private List<String> grantedRoles;
+    private boolean rolesFallback;
 
     private Cipher tokenCipher;
 
@@ -73,6 +74,8 @@ public class OAuth2Handler implements HttpHandler {
         scope = config.get("oauth2_scope");
         // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
         grantedRoles = configs.splitList("oauth2_roles");
+        // 兼容开关：默认 fail-closed，IdP 未断言角色时不授予；既有部署确需全量授予时显式开启
+        rolesFallback = configs.getOrDefault("oauth2_roles_fallback", false);
         String thisServerUrl = configs.notBlank("oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
@@ -192,11 +195,13 @@ public class OAuth2Handler implements HttpHandler {
     }
 
     private String pickUsername(Map<String, Object> map) {
+        // 身份标识优先取稳定字段：sub 为 OIDC 唯一标识，name 是用户可改的显示名；
+        // name 仅作最后兜底，避免可变显示名被当作会话主体导致身份混淆
         String[] tryUserNames = {usernameField,
                 "userName",
-                "preferred_username",// OIDC 标准 scope=profile 时属性，服务器决定是否有值
-                "name", // OIDC 标准 scope=profile 时属性，服务器决定是否有值
-                "sub" // OIDC scope=openid 标准属性，一个id字符串
+                "preferred_username", // OIDC 标准 scope=profile 时属性，服务器决定是否有值
+                "sub", // OIDC scope=openid 标准属性，唯一且稳定的身份标识
+                "name" // OIDC 标准 scope=profile 时属性，用户可改的显示名
         };
         for (String field : tryUserNames) {
             if (field == null || field.isEmpty()) continue;
@@ -238,10 +243,12 @@ public class OAuth2Handler implements HttpHandler {
     /**
      * 授予角色以本地 oauth2_roles 为准，IdP 提供的角色名只做过滤：
      * IdP 侧角色可被其用户自行改写，直接采信等于"能通过外部认证即获得任意平台角色"。
-     * IdP 未提供角色时沿用配置全量，保持未暴露角色属性的既有部署可用。
+     * IdP 未提供角色时默认不授予；既有部署确需全量授予时由 oauth2_roles_fallback 显式开启。
      */
     private String[] resolveRoles(List<String> idpRoles) {
-        if (idpRoles.isEmpty()) return grantedRoles.toArray(new String[0]);
+        if (idpRoles.isEmpty()) {
+            return rolesFallback ? grantedRoles.toArray(new String[0]) : new String[0];
+        }
         List<String> roles = new ArrayList<>();
         for (String role : grantedRoles) {
             if (idpRoles.contains(role)) roles.add(role);

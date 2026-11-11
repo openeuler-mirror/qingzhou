@@ -1,17 +1,11 @@
 package qingzhou.app.nacos;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import qingzhou.api.InputType;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.*;
+import qingzhou.json.Json;
 
 @Model(code = "nacos-service", order = 2,
         name = {"服务管理", "en:Service Management"},
@@ -102,12 +96,12 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
     @Override
     public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
         List<String[]> result = new ArrayList<>();
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             Map<String, Object> data = nacosApi.getServiceList(pageNum, pageSize);
             List<?> services = (List<?>) data.get("doms");
-            
+
             if (services != null) {
                 for (Object serviceObj : services) {
                     String serviceName = (String) serviceObj;
@@ -117,10 +111,10 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
 
                     Map<String, Object> instanceData = nacosApi.getServiceInstances(serviceName);
                     List<?> instances = (List<?>) instanceData.get("hosts");
-                    
+
                     int instanceCount = instances != null ? instances.size() : 0;
                     int healthyCount = 0;
-                    
+
                     if (instances != null && !instances.isEmpty()) {
                         Map<String, Object> firstInstance = (Map<String, Object>) instances.get(0);
                         serviceInfo.put("ip", String.valueOf(firstInstance.get("ip")));
@@ -128,7 +122,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
                         serviceInfo.put("healthy", String.valueOf(firstInstance.get("healthy")));
                         serviceInfo.put("namespaceId", String.valueOf(firstInstance.get("namespaceId")));
                         serviceInfo.put("clusterName", String.valueOf(firstInstance.get("clusterName")));
-                        
+
                         for (Object instance : instances) {
                             Map<String, Object> inst = (Map<String, Object>) instance;
                             if (Boolean.TRUE.equals(inst.get("healthy"))) {
@@ -136,10 +130,10 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
                             }
                         }
                     }
-                    
+
                     serviceInfo.put("instanceCount", String.valueOf(instanceCount));
                     serviceInfo.put("healthyCount", String.valueOf(healthyCount));
-                    
+
                     String[] row = new String[listFields.length];
                     for (int j = 0; j < listFields.length; j++) {
                         row[j] = serviceInfo.getOrDefault(listFields[j], "");
@@ -150,7 +144,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
         } catch (Exception e) {
             logError("Nacos service query failed", e);
         }
-        
+
         return result;
     }
 
@@ -181,12 +175,12 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
         Map<String, String> result = new HashMap<>();
         result.put("id", id);
         result.put("serviceName", id);
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             Map<String, Object> instanceData = nacosApi.getServiceInstances(id);
             List<?> instances = (List<?>) instanceData.get("hosts");
-            
+
             if (instances != null && !instances.isEmpty()) {
                 Map<String, Object> firstInstance = (Map<String, Object>) instances.get(0);
                 result.put("ip", String.valueOf(firstInstance.get("ip")));
@@ -195,14 +189,14 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
                 result.put("healthy", String.valueOf(firstInstance.get("healthy")));
                 result.put("namespaceId", String.valueOf(firstInstance.get("namespaceId")));
                 result.put("clusterName", String.valueOf(firstInstance.get("clusterName")));
-                
+
                 Map<String, Object> meta = (Map<String, Object>) firstInstance.get("metadata");
                 if (meta != null) {
-                    result.put("metadata", getNacosApp().getJson().toJson(meta));
+                    result.put("metadata", getAppContext().getService(Json.class).toJson(meta));
                 }
-                
+
                 result.put("instanceCount", String.valueOf(instances.size()));
-                
+
                 int healthyCount = 0;
                 for (Object instance : instances) {
                     Map<String, Object> inst = (Map<String, Object>) instance;
@@ -215,7 +209,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
         } catch (Exception e) {
             logError("Nacos service query failed", e);
         }
-        
+
         return result;
     }
 
@@ -229,7 +223,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
         double weight = weightStr != null ? Double.parseDouble(weightStr) : NacosConstants.DEFAULT_WEIGHT;
         String namespaceId = getOrDefault(data.get("namespaceId"), NacosConstants.PUBLIC_NAMESPACE);
         String clusterName = getOrDefault(data.get("clusterName"), NacosConstants.DEFAULT_CLUSTER);
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             boolean success = nacosApi.registerInstance(serviceName, ip, port, weight, namespaceId, clusterName);
@@ -262,7 +256,7 @@ public class NacosService extends NacosModelBase implements Page, Show, Add, Del
             request.getResponse().message("服务名称不能为空").messageLevel(Response.MessageLevel.error);
             return;
         }
-        
+
         try {
             NacosApi nacosApi = getNacosApi();
             Map<String, Object> data = nacosApi.getServiceInstances(serviceName);

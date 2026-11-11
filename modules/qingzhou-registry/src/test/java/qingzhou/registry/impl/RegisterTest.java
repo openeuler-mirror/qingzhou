@@ -233,6 +233,11 @@ public class RegisterTest {
         }
 
         @Override
+        public HttpResponse addHeader(String name, String value) {
+            return this;
+        }
+
+        @Override
         public HttpResponse contentType(String value) {
             return this;
         }
