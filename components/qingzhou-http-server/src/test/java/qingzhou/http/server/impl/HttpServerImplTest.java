@@ -156,6 +156,8 @@ public class HttpServerImplTest {
     }
 
     static HttpServerImpl start(Map<String, String> config, AuthManager authManager) throws Exception {
+        // 测试默认关闭全局前缀：存量用例按无前缀路径请求，前缀行为由 DispatcherHandlerTest 专属用例覆盖
+        config.putIfAbsent("context_path", "/");
         HttpServerImpl httpServer = buildHttpServer(config, authManager);
         httpServer.start(config);
         return httpServer;

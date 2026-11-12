@@ -40,6 +40,8 @@ final class RequestGates {
     private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
     private final Set<String> corsAllowedOrigins; // 显式允许的跨域来源，跨站写请求据此放行
+    private final String globalPrefix; // 全站挂载前缀；空串表示不启用（配置 "/"）
+    private final String prefixBoundary; // 预拼「前缀 + /」，每请求复用，免去重复拼接
     private final List<RequestGate> gates;
 
     RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, SourceLimiter sourceLimiter, AuthManager authManager, HandlerManager handlerManager,
@@ -54,6 +56,8 @@ final class RequestGates {
         this.maxBodyBytes = maxBodyBytes;
         this.maxAggregatedBytes = configs.atLeast("max_aggregated_bytes", 1L, 64L * 1024 * 1024);
         this.corsAllowedOrigins = new HashSet<>(configs.splitList("cors_allowed_origins"));
+        this.globalPrefix = normalizeContextPath(configs.getOrDefault("context_path", "/qingzhou"));
+        this.prefixBoundary = this.globalPrefix.isEmpty() ? "" : this.globalPrefix + "/";
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");
@@ -61,7 +65,7 @@ final class RequestGates {
         // 顺序即优先级：读 ctx.path 的须排在 denyUnnormalizedPath 之后，读 ctx.entry 的须排在 denyUnroutedPath 之后
         this.gates = Arrays.asList(
                 this::denyDisallowedMethod, // 405
-                this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越
+                this::denyUnnormalizedPath, // 400：非 origin-form / 解码失败 / 多层编码 / 路径穿越；并剥离全局前缀（未挂返回 404）
                 this::denyUnroutedPath,     // 404
                 this::denyPreflight,        // 204：预检免认证但须已路由；须排在方法白名单之前，否则 POST-only 路由收不到预检
                 this::denyMethodNotAllowedByHandler, // 405：路由声明的方法白名单，认证前即拒绝
@@ -224,11 +228,13 @@ final class RequestGates {
             return ctx.respond(HttpResponseStatus.BAD_REQUEST);
         }
         if (hasDangerousEncoding(path)) return ctx.respond(HttpResponseStatus.BAD_REQUEST);
-        path = normalize(path);
+        path = canonicalizePath(path);
         if (path == null) return ctx.respond(HttpResponseStatus.BAD_REQUEST);
+        String unprefixed = stripGlobalPrefix(path);
+        if (unprefixed == null) return ctx.respond(HttpResponseStatus.NOT_FOUND);
 
-        ctx.path = path;
-        ctx.httpRequest = new HttpRequestImpl(ctx.request, path);
+        ctx.path = unprefixed;
+        ctx.httpRequest = new HttpRequestImpl(ctx.request, unprefixed); // 一次性构造：路径即最终形态，不再二次改写
         return null;
     }
 
@@ -256,7 +262,7 @@ final class RequestGates {
      * 路径规范化：折叠重复斜杠与 "." 段；发现 ".." 段返回 null（拒绝请求）。
      * 各 handler 自行解析路径，防护难以统一，故在分发入口一次性拦截穿越。
      */
-    private static String normalize(String path) {
+    private static String canonicalizePath(String path) {
         if (path.indexOf('\0') >= 0) return null; // NUL 会被下游文件 API 截断，可能绕过路径校验
         // 反斜杠在 Windows 上等价分隔符，矩阵参数会被下游解析截断，二者都可能绕过基于路径的校验
         if (path.indexOf('\\') >= 0 || path.indexOf(';') >= 0) return null;
@@ -275,6 +281,23 @@ final class RequestGates {
     private static boolean hasDangerousEncoding(String path) {
         String upper = path.toUpperCase(Locale.ROOT);
         return upper.contains("%2E") || upper.contains("%2F") || upper.contains("%5C") || upper.contains("%00");
+    }
+
+    // 前缀在激活期一次性校验：非 "/" 开头或含 "//" 则永不匹配任何规范化路径，须 fail-fast 而非全站 404
+    static String normalizeContextPath(String configured) {
+        if (!configured.startsWith("/") || configured.contains("//")) {
+            throw new IllegalArgumentException("qingzhou-http-server.context_path must be a normalized path starting with /, got: " + configured);
+        }
+        String stripped = configured.replaceAll("/+$", "");
+        return stripped.isEmpty() ? "" : stripped; // 配置 "/" 即关闭前缀
+    }
+
+    // 全站请求必须挂载在全局前缀之下：未挂或仅前缀相似（非其子路径）返回 null，由调用方回 404；
+    // 命中后剥离前缀，路由表与 handler 保持无前缀语义，注册侧无需感知。前缀为空（配置 "/"）时原样放行
+    private String stripGlobalPrefix(String path) {
+        if (globalPrefix.isEmpty()) return path;
+        if (path.equals(globalPrefix)) return "/";
+        return path.startsWith(prefixBoundary) ? path.substring(globalPrefix.length()) : null;
     }
 
     private Publisher<Void> denyUnroutedPath(RequestContext ctx) {

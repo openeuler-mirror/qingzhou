@@ -9,6 +9,7 @@ qingzhou-http-server.ssl_enabled=是否启用 HTTPS，默认 true，启用时须
 qingzhou-http-server.ssl_keystore_path=密钥库文件路径，相对实例目录，可用 qingzhou.sh keystore 命令生成
 qingzhou-http-server.ssl_keystore_password=密钥库口令，plain: 前缀表示明文，否则按密文解密
 qingzhou-http-server.ssl_keystore_type=密钥库类型，仅支持 PKCS12 或 JKS，默认 PKCS12
+qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀
 qingzhou-http-server.auth_fail_max=同一来源 IP 在窗口期内认证失败次数上限，达到后直接返回 401，默认 10
 qingzhou-http-server.auth_fail_window=认证失败计数窗口，单位秒，默认 60
 qingzhou-http-server.idle_timeout=连接空闲超时，单位秒，0 表示不超时，默认 60

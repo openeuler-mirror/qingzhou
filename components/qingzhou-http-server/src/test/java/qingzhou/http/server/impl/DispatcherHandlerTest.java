@@ -40,6 +40,49 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     }
 
     @Test
+    public void contextPathConfigured_onlyPrefixedRequestsRoutedAndStripped() throws Exception {
+        startServer(Collections.singletonMap("context_path", "/qingzhou"));
+        testServer.server.registerHttpHandler((request, response) ->
+                response.send(request.getPath()).finish(), "/test", true);
+
+        // 未挂前缀与仅前缀相似（非其子路径）的请求都不得进入路由
+        Assert.assertEquals(client.send(client.buildRequest("http://localhost:" + testServer.port + "/test")
+                .method(HttpMethod.GET)).getStatus(), 404);
+        Assert.assertEquals(client.send(client.buildRequest("http://localhost:" + testServer.port + "/qingzhoutest")
+                .method(HttpMethod.GET)).getStatus(), 404);
+
+        // 挂前缀后正常路由，handler 经 HttpRequest 看到的是剥离前缀后的路径
+        Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/qingzhou/test")
+                .method(HttpMethod.GET));
+        Assert.assertEquals(result.getStatus(), 200);
+        Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "/test");
+    }
+
+    @Test
+    public void nestedContextPath_multiSegment_routedAndStripped() throws Exception {
+        startServer(Collections.singletonMap("context_path", "/api/v1"));
+        testServer.server.registerHttpHandler((request, response) ->
+                response.send(request.getPath()).finish(), "/test", true);
+
+        Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/api/v1/test")
+                .method(HttpMethod.GET));
+        Assert.assertEquals(result.getStatus(), 200);
+        Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "/test");
+    }
+
+    @Test
+    public void contextPathWithTrailingSlash_normalizedAndRouted() throws Exception {
+        startServer(Collections.singletonMap("context_path", "/api/"));
+        testServer.server.registerHttpHandler((request, response) ->
+                response.send(request.getPath()).finish(), "/test", true);
+
+        Response result = client.send(client.buildRequest("http://localhost:" + testServer.port + "/api/test")
+                .method(HttpMethod.GET));
+        Assert.assertEquals(result.getStatus(), 200);
+        Assert.assertEquals(new String(result.getBody(), StandardCharsets.UTF_8), "/test");
+    }
+
+    @Test
     public void registeredPath_getRequest_handlerInvokedWithResponse() throws Exception {
         startServer();
         testServer.server.registerHttpHandler((request, response) ->
