@@ -7,7 +7,7 @@ import org.osgi.service.component.annotations.Reference;
 import qingzhou.ai.ToolService;
 import qingzhou.json.Json;
 import qingzhou.registry.web.AppList;
-import qingzhou.registry.web.RequestParameters;
+import qingzhou.registry.web.WebParameters;
 
 @Component(property = {
         ToolService.TOOL_LABEL + "=" + InvokeActionSkill.TOOL_LABEL,
@@ -21,6 +21,6 @@ public class AppListTool implements ToolService {
 
     @Override
     public String invoke(Map<String, Object> toolArgs) throws Exception {
-        return json.toJson(appList.getFunction().apply(RequestParameters.of(toolArgs)));
+        return json.toJson(appList.getFunction().apply(WebParameters.of(toolArgs)));
     }
 }

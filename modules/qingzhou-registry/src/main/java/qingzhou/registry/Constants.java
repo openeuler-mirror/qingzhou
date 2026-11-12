@@ -1,7 +1,6 @@
 package qingzhou.registry;
 
 public interface Constants {
-    String LOCAL_INSTANCE_ID = "-";
     String SYSTEM_MODEL_CODE = "-";
 
     // 平台内部动作码
@@ -11,12 +10,9 @@ public interface Constants {
     String ACTION_CODE_DELETE = "delete";
     String ACTION_CODE_PAGE = "page";
     String ACTION_CODE_CURRENT = "current";
-    String ACTION_CODE_DOWNLOAD = "download";
     String ACTION_CODE_MONITOR = "monitor";
-    String ACTION_CODE_FILE = "file";
     String ACTION_CODE_NAMESPACE = "namespace";
 
-    String AI_REQUEST_PARAMETER_PAGE_NUM = "pageNum";
     String WEB_REQUEST_PARAMETER_PAGE_NUM = "pageNum";
     String WEB_RESPONSE_PARAMETER_PAGE_NUM = "pageNum";
     String WEB_RESPONSE_PARAMETER_PAGE_SIZE = "pageSize";

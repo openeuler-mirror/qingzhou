@@ -1,11 +1,11 @@
 package qingzhou.ai.impl;
 
+import java.util.*;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.ai.ToolParameterParser.ToolParameter;
 import qingzhou.ai.ToolService;
-
-import java.util.*;
 
 public class ToolParameterParserImplTest {
 
@@ -63,7 +63,7 @@ public class ToolParameterParserImplTest {
     public void dataRequiredAbsent_parse_notRequired() {
         List<ToolParameter> parameters = parse(properties(
                 ToolService.PARAMETER_NAME + ".1", "code"));
-        Assert.assertFalse(parameters.get(0).required);
+        Assert.assertTrue(parameters.get(0).required);
     }
 
     @Test
@@ -71,6 +71,23 @@ public class ToolParameterParserImplTest {
         List<ToolParameter> parameters = parse(properties(
                 ToolService.TOOL_NAME, "tool",
                 ToolService.TOOL_DESCRIPTION, "desc"));
+        Assert.assertTrue(parameters.isEmpty());
+    }
+
+    @Test
+    public void dataNullRequired_parse_notRequired() {
+        List<ToolParameter> parameters = parse(properties(
+                ToolService.PARAMETER_NAME + ".1", "code",
+                ToolService.PARAMETER_REQUIRED + ".1", null));
+        Assert.assertTrue(parameters.get(0).required);
+    }
+
+    @Test
+    public void dataNonDeclaredParameterKeys_parse_ignored() {
+        List<ToolParameter> parameters = parse(properties(
+                "component.name", "qingzhou.ai",
+                ToolService.PARAMETER_NAME, "orphan",
+                ToolService.PARAMETER_NAME + "_EXTRA.1", "x"));
         Assert.assertTrue(parameters.isEmpty());
     }
 }

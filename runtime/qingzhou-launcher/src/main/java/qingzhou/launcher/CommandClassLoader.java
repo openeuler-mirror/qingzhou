@@ -1,9 +1,6 @@
 package qingzhou.launcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +18,7 @@ class CommandClassLoader {
     static ClassLoader build(File libDir) throws Exception {
         // 命令类会直接引用 components/modules 中的类型（如 Init 的 Crypto 字段），
         // 类链接发生在实例化之前，这些 jar 必须与命令 jar 同处一个类加载器
-        final String[] COMMAND_LIBS = {"command", "components", "modules"};
+        final String[] COMMAND_LIBS = {"command", "common", "components", "modules"};
         // 内嵌三方 jar 的 bundle 需要额外补类路径（如 qingzhou-image 内嵌 qrcodegen）
         Set<String> embedJars = Collections.singleton("qingzhou-image.jar");
         List<URL> urls = new ArrayList<>();

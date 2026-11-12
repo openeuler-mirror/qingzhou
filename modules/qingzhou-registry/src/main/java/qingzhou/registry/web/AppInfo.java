@@ -32,9 +32,9 @@ public class AppInfo extends AbstractMetaHandler {
         this.json = json;
     }
 
-    private final Function<RequestParameters, Object> function = (context) -> {
-        String instanceId = context.getParameter(RequestParameters.INSTANCE_ID);
-        String appCode = context.getParameter(RequestParameters.APP_CODE);
+    private final Function<WebParameters, Object> function = (context) -> {
+        String instanceId = context.getParameter(WebParameters.INSTANCE_ID);
+        String appCode = context.getParameter(WebParameters.APP_CODE);
         if (instanceId == null || appCode == null) return null;
 
         AppStub appStub = registry.getAppStub(instanceId, appCode);
@@ -44,8 +44,8 @@ public class AppInfo extends AbstractMetaHandler {
         String lang = context.getParameter("lang");
 
         Map<String, Object> appMetaInfo = new HashMap<>();
-        appMetaInfo.put(RequestParameters.INSTANCE_ID, instanceId);
-        appMetaInfo.put(RequestParameters.APP_CODE, app.code);
+        appMetaInfo.put(WebParameters.INSTANCE_ID, instanceId);
+        appMetaInfo.put(WebParameters.APP_CODE, app.code);
         appMetaInfo.put("icon", app.icon);
         appMetaInfo.put("name", i18nService.getI18n(app.name, lang));
         appMetaInfo.put("info", i18nService.getI18n(app.info, lang));
@@ -53,7 +53,7 @@ public class AppInfo extends AbstractMetaHandler {
         List<Map<String, Object>> models = new ArrayList<>();
         app.models.forEach(model -> {
             Map<String, Object> modelBasicInfo = new HashMap<>();
-            modelBasicInfo.put(RequestParameters.MODEL_CODE, model.code);
+            modelBasicInfo.put(WebParameters.MODEL_CODE, model.code);
             modelBasicInfo.put("icon", model.icon);
             modelBasicInfo.put("menu", model.menu);
             modelBasicInfo.put("order", model.order + "");
@@ -93,7 +93,7 @@ public class AppInfo extends AbstractMetaHandler {
         return appMetaInfo;
     };
 
-    public Function<RequestParameters, Object> getFunction() {
+    public Function<WebParameters, Object> getFunction() {
         return function;
     }
 }

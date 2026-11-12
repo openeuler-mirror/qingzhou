@@ -1,48 +1,84 @@
 package qingzhou.engine.detector;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.List;
+import java.io.File;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-// 协调器：构造期一次性解析清单，按序尝试各策略，返回首个命中；清单值在构造期一次解析，避免每拍探测重复 split
+// 探测 = 多来源候选目录 → 特征文件判定。环境变量、扫描根（自身与一级子目录）、进程命令行反推三路候选合并去重后统一过滤：
+// 来源只决定"候选目录从哪来"，任一来源命中即计入，不再按来源短路——配置目录与运行态目录可能是不同实例，都要发现
 class PathDetector {
-    private final List<PathDetectionStrategy> strategies;
+    private static final String USER_HOME_VAR = "user.home";
+
+    private final List<String> featureFileNames;
+    private final List<String> envVarNames;
+    private final List<String> scanRootPaths;
+    private final ProcessParser processParser;
 
     PathDetector(Dictionary<String, String> attributes) {
-        FeatureFiles featureFiles = new FeatureFiles(splitCsv(attributes.get("Qingzhou-Detection-Feature-Files")));
+        // 清单值在构造期一次解析，避免每拍探测重复 split
+        featureFileNames = splitCsv(attributes.get("Qingzhou-Detection-Feature-Files"));
 
-        List<String> roots = splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots"));
+        envVarNames = splitCsv(attributes.get("Qingzhou-Detection-Env-Vars"));
+
+        List<String> roots = splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots"));
         // 清单未给出时回落到 JVM 属性，便于部署期覆盖扫描范围
-        if (roots.isEmpty()) roots = splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots"));
+        scanRootPaths = roots.isEmpty() ? splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots")) : roots;
 
-        List<PathDetectionStrategy> list = new ArrayList<>();
-        list.add(new FeatureFileStrategy(featureFiles,
-                splitCsv(attributes.get("Qingzhou-Detection-Env-Vars")), roots));
-        list.add(new ProcessStrategy(featureFiles,
-                splitCsv(attributes.get("Qingzhou-Detection-Process-Names")),
-                attributes.get("Qingzhou-Detection-Process-Home-Regex")));
-        this.strategies = list;
+        List<String> processKeywords = splitCsv(attributes.get("Qingzhou-Detection-Process-Names")).stream()
+                .map(name -> name.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toList());
+        String processHomeRegex = attributes.get("Qingzhou-Detection-Process-Home-Regex");
+        // 从进程命令行提取安装目录的正则（须含捕获组），由清单 Qingzhou-Detection-Process-Home-Regex 配置；未配置时退回关键字前缀
+        Pattern pattern = processHomeRegex == null || processHomeRegex.isEmpty() ? null : Pattern.compile(processHomeRegex);
+        processParser = new ProcessParser(processKeywords, pattern);
     }
 
-    // 协调器：空列表表示策略跑了但没找到候选，继续下一个；null 表示策略自身不适用（如 ProcessStrategy 无 processNames）
-    List<String> detect() throws Exception {
-        for (PathDetectionStrategy strategy : strategies) {
-            List<String> detectedList = strategy.detect();
-            if (detectedList != null && !detectedList.isEmpty()) return detectedList;
+    // 结果无序：listFiles 与 ps 输出顺序均未定义，调用方不得依赖位次
+    Set<String> detect() {
+        List<File> candidates = new ArrayList<>();
+        candidates.addAll(envCandidateDirs());
+        candidates.addAll(rootCandidateDirs());
+        candidates.addAll(processParser.processCandidateDirs());
+        return candidates.stream()
+                .filter(this::hasFeatureFile)
+                .map(File::getAbsolutePath)
+                .collect(Collectors.toSet());
+    }
+
+    // 唯一的"是不是目标安装目录"判据：三路来源共用
+    private boolean hasFeatureFile(File dir) {
+        return featureFileNames.stream().anyMatch(name -> new File(dir, name).exists());
+    }
+
+    private List<File> envCandidateDirs() {
+        return envVarNames.stream()
+                .map(System::getenv)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .map(File::new)
+                .collect(Collectors.toList());
+    }
+
+    private List<File> rootCandidateDirs() {
+        List<File> dirs = new ArrayList<>();
+        for (String root : scanRootPaths) {
+            File dir = new File(USER_HOME_VAR.equals(root) ? System.getProperty(USER_HOME_VAR) : root);
+            if (!dir.isDirectory()) continue;
+            dirs.add(dir);
+            File[] subs = dir.listFiles(File::isDirectory); // 契约约定：I/O 失败返回 null
+            if (subs != null) dirs.addAll(Arrays.asList(subs));
         }
-        return null;
+        return dirs;
     }
 
     // 清单值允许逗号后带空格，故逐项 trim
     private static List<String> splitCsv(String value) {
         if (value == null) return Collections.emptyList();
-
-        List<String> tokens = new ArrayList<>();
-        for (String token : value.split(",")) {
-            String trimmed = token.trim();
-            if (!trimmed.isEmpty()) tokens.add(trimmed);
-        }
-        return tokens;
+        return Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .collect(Collectors.toList());
     }
 }

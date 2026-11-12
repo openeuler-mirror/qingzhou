@@ -32,7 +32,7 @@ public class AppList extends AbstractMetaHandler {
         this.json = json;
     }
 
-    private final Function<RequestParameters, Object> function = context -> {
+    private final Function<WebParameters, Object> function = context -> {
         String lang = context.getParameter("lang");
         List<Map<String, String>> appBasicInfoList = new ArrayList<>();
         for (String localApp : registry.getAllLocalApps()) {
@@ -54,7 +54,7 @@ public class AppList extends AbstractMetaHandler {
         return appBasicInfoList;
     };
 
-    public Function<RequestParameters, Object> getFunction() {
+    public Function<WebParameters, Object> getFunction() {
         return function;
     }
 
@@ -65,8 +65,8 @@ public class AppList extends AbstractMetaHandler {
 
     private Map<String, String> appInfo(InstanceInfo instanceInfo, App app, String lang) {
         Map<String, String> appInfo = new HashMap<>();
-        appInfo.put(RequestParameters.INSTANCE_ID, instanceInfo.getId());
-        appInfo.put(RequestParameters.APP_CODE, app.code);
+        appInfo.put(WebParameters.INSTANCE_ID, instanceInfo.getId());
+        appInfo.put(WebParameters.APP_CODE, app.code);
         appInfo.put("icon", app.icon);
         appInfo.put("name", i18nService.getI18n(app.name, lang));
         appInfo.put("info", i18nService.getI18n(app.info, lang));

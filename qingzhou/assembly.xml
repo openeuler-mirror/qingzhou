@@ -121,14 +121,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-api</include>
                 <include>${project.groupId}:qingzhou-dto</include>
                 <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-web</include>
                 <include>${project.groupId}:qingzhou-auth</include>
-                <include>${project.groupId}:qingzhou-monitor</include>
+                <include>${project.groupId}:qingzhou-prometheus</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -138,7 +137,23 @@
         </dependencySet>
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-common</include>
+                <include>${project.groupId}:qingzhou-ai</include>
+                <include>${project.groupId}:qingzhou-ai-mcp</include>
+                <include>${project.groupId}:qingzhou-ai-chat</include>
+                <include>${project.groupId}:qingzhou-ai-memory</include>
+                <include>${project.groupId}:qingzhou-ai-skill-app-builder</include>
+                <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
+                <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
+                <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version/AI</outputDirectory>
+        </dependencySet>
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-xml</include>
@@ -158,20 +173,15 @@
         </dependencySet>
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-ai</include>
-                <include>${project.groupId}:qingzhou-ai-mcp</include>
-                <include>${project.groupId}:qingzhou-ai-chat</include>
-                <include>${project.groupId}:qingzhou-ai-memory</include>
-                <include>${project.groupId}:qingzhou-ai-skill-app-builder</include>
-                <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
-                <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
-                <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>
+                <include>${project.groupId}:qingzhou-common</include>
+                <include>${project.groupId}:qingzhou-config</include>
+                <include>${project.groupId}:qingzhou-monitor</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/AI</outputDirectory>
+            <outputDirectory>lib/version/common</outputDirectory>
         </dependencySet>
 
         <dependencySet>

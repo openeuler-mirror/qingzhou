@@ -24,7 +24,7 @@ public class Instance extends AbstractMetaHandler {
         this.json = json;
     }
 
-    private final Function<RequestParameters, Object> function = context -> {
+    private final Function<WebParameters, Object> function = context -> {
         List<InstanceInfo> remoteInstanceList = new ArrayList<>();
         for (String id : registry.getAllRemoteInstances()) {
             InstanceInfo remote = registry.getRemoteInstance(id);
@@ -37,7 +37,7 @@ public class Instance extends AbstractMetaHandler {
         List<Map<String, String>> result = new ArrayList<>();
         for (InstanceInfo info : remoteInstanceList) {
             Map<String, String> item = new HashMap<>();
-            item.put(RequestParameters.INSTANCE_ID, info.getId());
+            item.put(WebParameters.INSTANCE_ID, info.getId());
             item.put("host", info.getHost());
             item.put("port", String.valueOf(info.getPort()));
             item.put("version", info.getPlatformVersion());
@@ -47,7 +47,7 @@ public class Instance extends AbstractMetaHandler {
         return result;
     };
 
-    public Function<RequestParameters, Object> getFunction() {
+    public Function<WebParameters, Object> getFunction() {
         return function;
     }
 }

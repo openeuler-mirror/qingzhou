@@ -44,7 +44,7 @@ public class QingzhouMain {
 
         // 先安装全部 bundle，再统一启动，避免跨目录依赖解析失败
         List<Bundle> bundles = new ArrayList<>();
-        for (String f : new String[]{"runtime/features", "components", "AI", "modules"}) {
+        for (String f : new String[]{"runtime/features", "common", "components", "AI", "modules"}) {
             bundles.addAll(installDirAndJars(new File(libDir, f)));
         }
         startBundles(bundles);
@@ -90,7 +90,8 @@ public class QingzhouMain {
     static void startBundles(List<Bundle> bundles) throws BundleException {
         for (Bundle b : bundles) {
             Dictionary<String, String> h = b.getHeaders();
-            if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled"))) PathDetectionScheduler.startWithDetection(b);
+            if (Boolean.parseBoolean(h.get("Qingzhou-Detection-Enabled")))
+                new PathDetectionScheduler(b).start();
             else b.start();
         }
     }

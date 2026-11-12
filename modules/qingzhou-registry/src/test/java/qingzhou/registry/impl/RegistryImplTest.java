@@ -2,9 +2,7 @@ package qingzhou.registry.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -12,14 +10,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.api.AppContext;
 import qingzhou.dto.RequestImpl;
-import qingzhou.dto.meta.AppMeta;
-import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.dto.meta.App;
+import qingzhou.dto.meta.*;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppStub;
-import qingzhou.registry.AppStubLocal;
-import qingzhou.registry.AppStubRemote;
-import qingzhou.registry.Constants;
+import qingzhou.registry.*;
 
 public class RegistryImplTest {
     private static final String APP_CODE_1 = "app-one";
@@ -218,7 +211,7 @@ public class RegistryImplTest {
         AppStubLocal stub = newLocalApp(APP_CODE_1);
         registry.bindApp(stub);
 
-        AppStub result = registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1);
+        AppStub result = registry.getAppStub("-", APP_CODE_1);
 
         Assert.assertNotNull(result);
         Assert.assertTrue(result instanceof AppStubLocal);
@@ -240,7 +233,7 @@ public class RegistryImplTest {
     public void getAppStub_localInstanceIdUnknownCode_returnNull() {
         RegistryImpl registry = newRegistry();
 
-        Assert.assertNull(registry.getAppStub(Constants.LOCAL_INSTANCE_ID, APP_CODE_1));
+        Assert.assertNull(registry.getAppStub("-", APP_CODE_1));
     }
 
     @Test
@@ -261,7 +254,7 @@ public class RegistryImplTest {
         InstanceInfo second = registry.getLocalInstance();
 
         Assert.assertSame(first, second);
-        Assert.assertEquals(first.getId(), Constants.LOCAL_INSTANCE_ID);
+        Assert.assertEquals(first.getId(), "-");
         Assert.assertEquals(first.getHost(), "localhost");
     }
 

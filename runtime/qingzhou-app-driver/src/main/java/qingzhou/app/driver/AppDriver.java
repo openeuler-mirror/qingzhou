@@ -1,8 +1,6 @@
 package qingzhou.app.driver;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -29,34 +27,26 @@ public class AppDriver implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         this.context = context;
 
-        // 初始化元数据
         appMeta = new AppMeta();
         appMeta.setApp(parseAnnotations());
 
         String location = context.getBundle().getLocation();
-        int startIdx = location.lastIndexOf("[");
-        int endIdx = location.lastIndexOf("]");
-        String seq = "";
-        if (startIdx > -1 && endIdx > startIdx) {
-            seq = location.substring(startIdx + 1, endIdx);
-        }
-        // 初始化上下文
-        appContext = new AppContextImpl(this, context, appMeta);
-        Map<String, String> appConfig = parseAppConfig(seq);
-        String code = appConfig.get("code");
-        if (code != null && !code.trim().isEmpty()) {
-            appMeta.getApp().code = code.trim();
-        }
-        String symbolicName = context.getBundle().getSymbolicName();
-        if (!seq.trim().isEmpty()) {
-            appMeta.getApp().code = appMeta.getApp().code + "[" + seq.trim() + "]";
-            symbolicName = symbolicName + "[" + seq + "]";
-        }
-        appContext.appConfig = Collections.unmodifiableMap(appConfig);
-        // 探测结果按 bundle 符号名分键传递，避免多 bundle 互相覆盖与清除竞态（见 QingzhouMain.startWithDetection）
-        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + symbolicName);
+        int open = location.lastIndexOf('['), close = location.lastIndexOf(']');
+        String seq = open > -1 && close > open ? location.substring(open + 1, close) : "";
+        boolean multiInstance = !seq.trim().isEmpty();
+        String instanceName = context.getBundle().getSymbolicName() + (multiInstance ? "[" + seq + "]" : "");
 
-        // 初始化对象
+        appContext = new AppContextImpl(this, context, appMeta);
+        Map<String, String> appConfig = parseAppConfig();
+        appContext.appConfig = Collections.unmodifiableMap(appConfig);
+
+        String code = appConfig.get("code");
+        if (code != null && !code.trim().isEmpty()) appMeta.getApp().code = code.trim();
+        if (multiInstance) appMeta.getApp().code += "[" + seq.trim() + "]";
+        
+        // 探测结果按符号名+序号分键，避免多 bundle 互相覆盖与清除竞态（见 PathDetectionScheduler）
+        appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + instanceName);
+
         appContext.qingzhouApp = (QingzhouApp) Class.forName(appMeta.getApp().className).getDeclaredConstructor().newInstance();
         initAppModels();
 
@@ -78,10 +68,8 @@ public class AppDriver implements BundleActivator {
         if (cached != null) return serviceType.cast(cached);
 
         T service = loadService(serviceType, name);
-        if (service != null) {
-            // 只缓存命中结果：目标服务可能晚于首次调用注册，缓存 null 会让其永远不可见
-            serviceObjects.put(cacheKey, service);
-        }
+        // 只缓存命中结果：目标服务可能晚于首次调用注册，缓存 null 会让其永远不可见
+        if (service != null) serviceObjects.put(cacheKey, service);
         return service;
     }
 
@@ -98,9 +86,7 @@ public class AppDriver implements BundleActivator {
                 String escapedName = escapeFilterValue(lookupName);
                 Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
                         "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
-                if (!serviceReferences.isEmpty()) {
-                    serviceReference = serviceReferences.iterator().next();
-                }
+                if (!serviceReferences.isEmpty()) serviceReference = serviceReferences.iterator().next();
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
@@ -109,25 +95,18 @@ public class AppDriver implements BundleActivator {
         }
 
         // 未配置 qingzhou-logger~app 时回退默认日志器
-        if (isAppDefaultLoggerService && serviceReference == null) {
+        if (isAppDefaultLoggerService && serviceReference == null)
             serviceReference = context.getServiceReference(serviceType);
-        }
+        if (serviceReference == null) return null;
 
-        if (serviceReference != null) {
-            serviceReferences.add(serviceReference);
-            Object service = context.getService(serviceReference);
-            // 服务已注册但对象不可得（如组件激活失败、服务被并发注销）：立即失败，
-            // 避免把 null 包装成 Logger 交给应用，使其在调用处才以 NPE 暴露
-            if (service == null) {
-                throw new IllegalStateException("service object unavailable: " + serviceType.getName()
-                        + (name == null ? "" : "~" + name));
-            }
-            if (isLoggerService) {
-                service = new AppLogger(appMeta.getApp().code, (Logger) service);
-            }
-            return serviceType.cast(service);
-        }
-        return null;
+        serviceReferences.add(serviceReference);
+        Object service = context.getService(serviceReference);
+        // 服务已注册但对象不可得（如组件激活失败、服务被并发注销）：立即失败，
+        // 避免把 null 包装成 Logger 交给应用，使其在调用处才以 NPE 暴露
+        if (service == null) throw new IllegalStateException("service object unavailable: " + serviceType.getName()
+                + (name == null ? "" : "~" + name));
+        if (isLoggerService) service = new AppLogger(appMeta.getApp().code, (Logger) service);
+        return serviceType.cast(service);
     }
 
     // OSGi filter 为 LDAP 语法，值中的 \ * ( ) 必须转义：否则会破坏语法，
@@ -136,9 +115,7 @@ public class AppDriver implements BundleActivator {
         StringBuilder escaped = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
-            if (c == '\\' || c == '*' || c == '(' || c == ')') {
-                escaped.append('\\');
-            }
+            if (c == '\\' || c == '*' || c == '(' || c == ')') escaped.append('\\');
             escaped.append(c);
         }
         return escaped.toString();
@@ -152,28 +129,19 @@ public class AppDriver implements BundleActivator {
         try (InputStream inputStream = annotationFile.openStream();
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             FileUtil.copyStream(inputStream, bos);
-            String json = new String(bos.toByteArray(), StandardCharsets.UTF_8);
-            Json jsonService = getService(Json.class, null);
-            return jsonService.fromJson(json, App.class);
+            return getService(Json.class, null).fromJson(new String(bos.toByteArray(), StandardCharsets.UTF_8), App.class);
         }
     }
 
-    private Map<String, String> parseAppConfig(String seq) throws IOException {
+    private Map<String, String> parseAppConfig() throws IOException {
         Map<String, String> appConfig = new HashMap<>();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
         if (serviceReference == null) return appConfig; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
 
         try {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
-            Configuration appSharedConfig = configurationAdmin.getFactoryConfiguration("app",
-                    context.getBundle().getSymbolicName(), null);
-            addAppConfig(appSharedConfig, appConfig);
-
-            if (seq != null && !seq.trim().isEmpty()) {
-                Configuration appConfiguration = configurationAdmin.getFactoryConfiguration("app",
-                        context.getBundle().getSymbolicName() + "[" + seq + "]", null);
-                addAppConfig(appConfiguration, appConfig);
-            }
+            addAppConfig(configurationAdmin.getFactoryConfiguration("app",
+                    context.getBundle().getSymbolicName(), null), appConfig);
         } finally {
             context.ungetService(serviceReference);
         }
@@ -182,18 +150,13 @@ public class AppDriver implements BundleActivator {
 
     private static void addAppConfig(Configuration appConfiguration, Map<String, String> appConfig) {
         Dictionary<String, Object> properties = appConfiguration.getProperties();
-        if (properties != null) {
-            Enumeration<?> keys = properties.keys();
-            while (keys.hasMoreElements()) {
-                String key = (String) keys.nextElement();
-                if (key.equals(Constants.SERVICE_PID))
-                    continue;
-                if (key.equals(ConfigurationAdmin.SERVICE_FACTORYPID))
-                    continue;
-                Object value = properties.get(key);
-                if (value != null) { // 配置值不保证是 String，且 Hashtable 不接受 null 值
-                    appConfig.put(key, String.valueOf(value));
-                }
+        if (properties == null) return;
+        for (Enumeration<?> keys = properties.keys(); keys.hasMoreElements(); ) {
+            String key = (String) keys.nextElement();
+            if (key.equals(Constants.SERVICE_PID) || key.equals(ConfigurationAdmin.SERVICE_FACTORYPID)) continue;
+            Object value = properties.get(key);
+            if (value != null) {
+                appConfig.put(key, String.valueOf(value)); // 配置值不保证是 String，且 Hashtable 不接受 null 值
             }
         }
     }
@@ -201,37 +164,28 @@ public class AppDriver implements BundleActivator {
     private void initAppModels() {
         appMeta.getApp().models.forEach(model -> {
             try {
-                // 初始化模块实例
-                Class<?> modelClass = Class.forName(model.className);
-                ModelBase modelBase = (ModelBase) modelClass.getDeclaredConstructor().newInstance();
+                ModelBase modelBase = (ModelBase) Class.forName(model.className).getDeclaredConstructor().newInstance();
                 modelBase.setAppContext(appContext);
                 appContext.modelInstances.put(model, modelBase);
 
-                // 初始化模块属性
                 model.fields.forEach(modelField -> {
                     try {
-                        Field field = modelBase.getClass().getField(modelField.code);
-                        Object val = field.get(modelBase);
-                        if (val != null) {
-                            modelField.default_value = val.toString();
-                        }
+                        Object val = modelBase.getClass().getField(modelField.code).get(modelBase);
+                        if (val != null) modelField.default_value = val.toString();
                     } catch (Throwable e) {
                         String msg = "failed to parse default value, model: " + model.code
                                 + ", field: " + modelField.code + ", cause: " + e;
                         Logger logger = getService(Logger.class, null);
-                        if (logger != null) {
-                            logger.warn(msg);
-                        } else { // Logger 服务未注册时降级 stderr，不掩盖原始解析异常
-                            System.err.println(msg);
-                        }
+                        // Logger 服务未注册时降级 stderr，不掩盖原始解析异常
+                        if (logger != null) logger.warn(msg);
+                        else System.err.println(msg);
                     }
                 });
 
-                // 初始化模块操作
                 model.actions.forEach(action -> {
                     try {
-                        Method actionMethod = modelBase.getClass().getMethod(action.methodName, Request.class);
-                        appContext.actionMethods.put(resolveActionKey(model, action), actionMethod);
+                        appContext.actionMethods.put(resolveActionKey(model, action),
+                                modelBase.getClass().getMethod(action.methodName, Request.class));
                     } catch (Throwable ignored) {
                         // 实现的 Show List 等类型的默认方法不只有 Request.class 一个参数
                         // 他们在 invokeAction 中被委派到 DefaultAction 中处理
