@@ -69,17 +69,11 @@ class ResponseImpl implements Response {
         if (streaming) {
             cancelled = true;
             conn.disconnect(); // 仅流式中止需断开连接
-        } else {
-            throw new IllegalStateException("'cancel()' is only supported in streaming mode");
         }
     }
 
     @Override
     public byte[] getBody() {
-        if (streaming) {
-            throw new IllegalStateException("'getBody()' is not available in streaming mode");
-        }
-
         return result;
     }
 

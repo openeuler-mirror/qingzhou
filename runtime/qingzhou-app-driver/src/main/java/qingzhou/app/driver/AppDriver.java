@@ -37,11 +37,13 @@ public class AppDriver implements BundleActivator {
         String instanceName = context.getBundle().getSymbolicName() + (multiInstance ? "[" + seq + "]" : "");
 
         appContext = new AppContextImpl(this, context, appMeta);
-        Map<String, String> appConfig = parseAppConfig(multiInstance ? instanceName : null);
+        Map<String, String> appConfig = parseAppConfig();
+        appContext.appConfig = Collections.unmodifiableMap(appConfig);
+
         String code = appConfig.get("code");
         if (code != null && !code.trim().isEmpty()) appMeta.getApp().code = code.trim();
         if (multiInstance) appMeta.getApp().code += "[" + seq.trim() + "]";
-        appContext.appConfig = Collections.unmodifiableMap(appConfig);
+        
         // 探测结果按符号名+序号分键，避免多 bundle 互相覆盖与清除竞态（见 PathDetectionScheduler）
         appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + instanceName);
 
@@ -93,7 +95,8 @@ public class AppDriver implements BundleActivator {
         }
 
         // 未配置 qingzhou-logger~app 时回退默认日志器
-        if (isAppDefaultLoggerService && serviceReference == null) serviceReference = context.getServiceReference(serviceType);
+        if (isAppDefaultLoggerService && serviceReference == null)
+            serviceReference = context.getServiceReference(serviceType);
         if (serviceReference == null) return null;
 
         serviceReferences.add(serviceReference);
@@ -130,7 +133,7 @@ public class AppDriver implements BundleActivator {
         }
     }
 
-    private Map<String, String> parseAppConfig(String instanceName) throws IOException {
+    private Map<String, String> parseAppConfig() throws IOException {
         Map<String, String> appConfig = new HashMap<>();
         ServiceReference<ConfigurationAdmin> serviceReference = context.getServiceReference(ConfigurationAdmin.class);
         if (serviceReference == null) return appConfig; // ConfigurationAdmin 缺失时按无配置处理，避免 NPE
@@ -139,7 +142,6 @@ public class AppDriver implements BundleActivator {
             ConfigurationAdmin configurationAdmin = context.getService(serviceReference);
             addAppConfig(configurationAdmin.getFactoryConfiguration("app",
                     context.getBundle().getSymbolicName(), null), appConfig);
-            if (instanceName != null) addAppConfig(configurationAdmin.getFactoryConfiguration("app", instanceName, null), appConfig);
         } finally {
             context.ungetService(serviceReference);
         }
@@ -153,7 +155,9 @@ public class AppDriver implements BundleActivator {
             String key = (String) keys.nextElement();
             if (key.equals(Constants.SERVICE_PID) || key.equals(ConfigurationAdmin.SERVICE_FACTORYPID)) continue;
             Object value = properties.get(key);
-            if (value != null) appConfig.put(key, String.valueOf(value)); // 配置值不保证是 String，且 Hashtable 不接受 null 值
+            if (value != null) {
+                appConfig.put(key, String.valueOf(value)); // 配置值不保证是 String，且 Hashtable 不接受 null 值
+            }
         }
     }
 
