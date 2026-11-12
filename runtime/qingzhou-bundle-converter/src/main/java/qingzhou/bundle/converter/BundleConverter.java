@@ -288,6 +288,11 @@ public class BundleConverter {
             dtoModel.actions.add(dtoModelAction);
         }
 
+        // 类级别 @ModelAction 仅覆盖默认 action 的元数据，执行逻辑仍走 DefaultAction
+        for (ModelAction a : classModelActions(ctClass)) {
+            applyClassAction(a, dtoModel.actions);
+        }
+
         for (CtMethod ctMethod : ctClass.getMethods()) {
             ModelAction modelAction = (ModelAction) ctMethod.getAnnotation(ModelAction.class);
             if (modelAction != null) {
@@ -320,18 +325,37 @@ public class BundleConverter {
     }
 
     private void setObjAnnotation(Object object, Annotation annotation) throws Exception {
-        Method[] methods = annotation.annotationType().getDeclaredMethods();
-        for (Method method : methods) {
-            String fieldName = method.getName(); // 方法名 = 注解属性名
-            Object fieldValue;
-            try {
-                fieldValue = method.invoke(annotation); // 注解实例的属性值经方法调用获取
-            } catch (Exception e) {
-                // 反射调用失败（如代理被外部干预）时回退注解声明的默认值，避免中断注解解析
-                fieldValue = method.getDefaultValue();
+        setObjAnnotation(object, annotation, false);
+    }
+
+    // 仅覆盖注解中显式声明（非默认值）的字段，保留 DTO 已有值
+    private void mergeObjAnnotation(Object object, Annotation annotation) throws Exception {
+        setObjAnnotation(object, annotation, true);
+    }
+
+    // 方法名 = 注解属性名 = DTO 字段名；declaredOnly 时跳过仍为注解默认值的字段
+    private void setObjAnnotation(Object object, Annotation annotation, boolean declaredOnly) throws Exception {
+        for (Method method : annotation.annotationType().getDeclaredMethods()) {
+            Object value = method.invoke(annotation);
+            if (declaredOnly && java.util.Objects.deepEquals(value, method.getDefaultValue())) continue;
+            object.getClass().getField(method.getName()).set(object, value);
+        }
+    }
+
+    // 编译器对单个 @ModelAction 直接存储，多个打包成 @OverrideDefaultActions 容器
+    private static java.util.List<ModelAction> classModelActions(CtClass ctClass) throws Exception {
+        ModelAction single = (ModelAction) ctClass.getAnnotation(ModelAction.class);
+        if (single != null) return java.util.Collections.singletonList(single);
+        OverrideDefaultActions container = (OverrideDefaultActions) ctClass.getAnnotation(OverrideDefaultActions.class);
+        return container == null ? java.util.Collections.emptyList() : java.util.Arrays.asList(container.value());
+    }
+
+    private void applyClassAction(ModelAction classAction, Set<qingzhou.dto.meta.ModelAction> defaultActions) throws Exception {
+        for (qingzhou.dto.meta.ModelAction dto : defaultActions) {
+            if (dto.isDefaultAction && classAction.code().equals(dto.code)) {
+                mergeObjAnnotation(dto, classAction);
+                return;
             }
-            object.getClass().getField(fieldName)
-                    .set(object, fieldValue);
         }
     }
 
