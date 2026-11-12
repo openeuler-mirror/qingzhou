@@ -1,8 +1,6 @@
 package qingzhou.app.demo;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import qingzhou.api.annotations.Model;
@@ -10,16 +8,15 @@ import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.Page;
 
 /**
- * 演示无行操作的纯列表页面（仅实现List接口，不实现Show/Update/Delete）
- * 验证：列表页无"操作"列，分页正常显示
+ * 无操作列表：仅实现 {@link Page}（不实现 Show/Add/Update/Delete），
+ * 用于演示「纯列表页」——无行内操作列、仅分页与搜索。
  */
 @Model(code = "simple-list", order = 12,
         name = {"无操作列表", "en:No-Op List"},
         info = {"演示纯列表页（无行操作），25条数据验证分页和无操作列", "en:Demo list-only page with pagination, no row actions"},
         icon = "List",
         menu = "advanced")
-public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
-
+public class SimpleListDemo extends AbstractPageModel implements Page {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public SimpleListDemo() {
@@ -41,94 +38,26 @@ public class SimpleListDemo extends qingzhou.api.ModelBase implements Page {
         }
     }
 
-    @ModelField(id = true,
-            name = {"编号", "en:ID"},
-            list = true)
+    @Override
+    protected Map<String, Map<String, String>> data() {
+        return db;
+    }
+
+    @ModelField(id = true, name = {"编号", "en:ID"}, list = true)
     public String id;
 
-    @ModelField(
-            name = {"标题", "en:Title"},
-            list = true,
-            search = true)
+    @ModelField(name = {"标题", "en:Title"}, list = true, search = true)
     public String title;
 
-    @ModelField(
-            name = {"负责人", "en:Assignee"},
-            list = true,
-            search = true)
+    @ModelField(name = {"负责人", "en:Assignee"}, list = true, search = true)
     public String assignee;
 
-    @ModelField(
-            name = {"分类", "en:Category"},
-            list = true)
+    @ModelField(name = {"分类", "en:Category"}, list = true)
     public String category;
 
-    @ModelField(
-            name = {"优先级", "en:Priority"},
-            list = true)
+    @ModelField(name = {"优先级", "en:Priority"}, list = true)
     public String priority;
 
-    @ModelField(
-            name = {"进度", "en:Progress"},
-            list = true)
+    @ModelField(name = {"进度", "en:Progress"}, list = true)
     public String progress;
-
-    @Override
-    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        List<String[]> result = new ArrayList<>();
-        List<Map<String, String>> filtered = new ArrayList<>();
-
-        for (Map<String, String> task : db.values()) {
-            if (matchesQuery(task, query)) {
-                filtered.add(task);
-            }
-        }
-
-        int fromIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(fromIndex + pageSize, filtered.size());
-
-        for (int i = fromIndex; i < endIndex; i++) {
-            Map<String, String> t = filtered.get(i);
-            String[] data = new String[listFields.length];
-            for (int j = 0; j < listFields.length; j++) {
-                String value = t.get(listFields[j]);
-                data[j] = value != null ? value : "";
-            }
-            result.add(data);
-        }
-
-        return result;
-    }
-
-    private boolean matchesQuery(Map<String, String> data, Map<String, String> query) {
-        if (query == null || query.isEmpty()) return true;
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value != null && !value.isEmpty()) {
-                String dataValue = data.get(key);
-                if (dataValue == null || !dataValue.toLowerCase().contains(value.toLowerCase())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public int total(Map<String, String> query) {
-        int count = 0;
-        for (Map<String, String> task : db.values()) {
-            if (matchesQuery(task, query)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    @Override
-    public boolean contains(String id) {
-        return db.containsKey(id);
-    }
 }

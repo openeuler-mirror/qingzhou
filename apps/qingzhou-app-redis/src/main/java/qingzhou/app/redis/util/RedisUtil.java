@@ -319,6 +319,7 @@ public class RedisUtil {
                             synchronized (result) {
                                 result.add(new AbstractMap.SimpleEntry<>(key, usage));
                                 if (result.size() > sampleSize * 2) {
+                                    cursor = "0";
                                     break;
                                 }
                             }

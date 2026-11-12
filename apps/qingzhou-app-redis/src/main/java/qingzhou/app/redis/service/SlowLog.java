@@ -16,28 +16,23 @@ import java.util.*;
         info = {"查看 Redis 慢查询日志，用于排查性能问题。", "en:View Redis slow query logs for performance diagnosis."})
 public class SlowLog extends RedisModelBase implements Page, Delete {
 
-    @ModelField(id = true, list = true, show = true, readonly = true,
-            name = {"日志 ID", "en:Log ID"},
+    @ModelField(id = true, list = true, show = true, readonly = true, name = {"日志 ID", "en:Log ID"},
             info = {"慢查询日志的唯一标识", "en:Unique identifier of the slow query log"})
     public String logId;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"执行时间", "en:Timestamp"},
+    @ModelField(list = true, show = true, readonly = true, name = {"执行时间", "en:Timestamp"},
             info = {"命令执行的时间", "en:Time when the command was executed"})
     public String timestamp;
 
-    @ModelField(list = true, show = true, readonly = true, numeric = true,
-            name = {"耗时(微秒)", "en:Duration(us)"},
+    @ModelField(list = true, show = true, readonly = true, numeric = true, name = {"耗时(微秒)", "en:Duration(us)"},
             info = {"命令执行的耗时（微秒）", "en:Execution duration in microseconds"})
     public String duration;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"命令", "en:Command"},
+    @ModelField(list = true, show = true, readonly = true, name = {"命令", "en:Command"},
             info = {"执行的命令和参数", "en:Executed command and arguments"})
     public String command;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"客户端", "en:Client"},
+    @ModelField(list = true, show = true, readonly = true, name = {"客户端", "en:Client"},
             info = {"发起命令的客户端 IP:端口", "en:IP:port of the client that issued the command"})
     public String clientIp;
 

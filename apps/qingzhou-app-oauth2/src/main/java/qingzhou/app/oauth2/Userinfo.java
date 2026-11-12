@@ -9,9 +9,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 用户信息端点：凭访问令牌返回资源拥有者信息。
- */
+/** 用户信息端点：凭访问令牌返回资源拥有者信息。 */
 public class Userinfo implements HttpHandler {
     private final Store store;
     private final Json json;

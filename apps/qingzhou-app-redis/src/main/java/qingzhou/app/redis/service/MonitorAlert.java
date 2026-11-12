@@ -22,13 +22,11 @@ import java.util.*;
 public class MonitorAlert extends RedisModelBase implements Page, Show, Add, Update, Delete {
 
 
-    @ModelField(id = true, list = true, show = true, add = false, update = false, readonly = true,
-            name = {"规则 ID", "en:Rule ID"},
+    @ModelField(id = true, list = true, show = true, add = false, update = false, readonly = true, name = {"规则 ID", "en:Rule ID"},
             info = {"告警规则唯一标识", "en:Unique alert rule ID"})
     public String id;
 
-    @ModelField(list = true, show = true, add = true, update = true, required = true,
-            name = {"规则名称", "en:Rule Name"},
+    @ModelField(list = true, show = true, add = true, update = true, required = true, name = {"规则名称", "en:Rule Name"},
             info = {"告警规则名称", "en:Alert rule name"})
     public String name;
 
@@ -37,28 +35,24 @@ public class MonitorAlert extends RedisModelBase implements Page, Show, Add, Upd
                     "redis.hit_rate", "redis.mem_fragmentation_ratio", "redis.latency_ms",
                     "redis.rejected_connections", "redis.total_keys", "machine.process_cpu_usage",
                     "machine.system_cpu_usage", "machine.memory_usage_rate"},
-            input_type = InputType.select,
-            name = {"监控指标", "en:Metric"},
+            input_type = InputType.select, name = {"监控指标", "en:Metric"},
             info = {"要监控的指标", "en:Metric to monitor"})
     public String metric;
 
     @ModelField(show = true, add = true, update = true, required = true,
             options = {">", ">=", "<", "<=", "=", "!="},
-            input_type = InputType.select,
-            name = {"比较方式", "en:Comparator"},
+            input_type = InputType.select, name = {"比较方式", "en:Comparator"},
             info = {"指标值与阈值的比较方式", "en:Comparison operator"})
     public String comparator;
 
     @ModelField(show = true, add = true, update = true, required = true, numeric = true,
-            input_type = InputType.number,
-            name = {"阈值", "en:Threshold"},
+            input_type = InputType.number, name = {"阈值", "en:Threshold"},
             info = {"告警阈值", "en:Alert threshold"})
     public String threshold;
 
     @ModelField(list = true, show = true, add = true, update = true, required = true,
             options = {"严重", "警告"},
-            input_type = InputType.select,
-            name = {"告警级别", "en:Level"},
+            input_type = InputType.select, name = {"告警级别", "en:Level"},
             info = {"告警级别", "en:Alert level"})
     public String level;
 
@@ -70,30 +64,25 @@ public class MonitorAlert extends RedisModelBase implements Page, Show, Add, Upd
     public String enabled;
 
 
-    @ModelField(show = true,
-            name = {"触发值", "en:Triggered Value"},
+    @ModelField(show = true, name = {"触发值", "en:Triggered Value"},
             info = {"触发告警时的指标值", "en:Metric value when triggered"})
     public String triggeredValue;
 
-    @ModelField(show = true,
-            name = {"阈值", "en:Threshold"},
+    @ModelField(show = true, name = {"阈值", "en:Threshold"},
             info = {"告警阈值", "en:Alert threshold"})
     public String historyThreshold;
 
     @ModelField(show = true,
-            color = {"严重:#F56C6C", "警告:#E6A23C"},
-            name = {"级别", "en:Level"},
+            color = {"严重:#F56C6C", "警告:#E6A23C"}, name = {"级别", "en:Level"},
             info = {"告警级别", "en:Alert level"})
     public String historyLevel;
 
     @ModelField(show = true,
-            color = {"未确认:#F56C6C", "已确认:#67C23A"},
-            name = {"状态", "en:Status"},
+            color = {"未确认:#F56C6C", "已确认:#67C23A"}, name = {"状态", "en:Status"},
             info = {"告警状态", "en:Alert status"})
     public String status;
 
-    @ModelField(show = true,
-            name = {"触发时间", "en:Triggered At"},
+    @ModelField(show = true, name = {"触发时间", "en:Triggered At"},
             info = {"告警触发时间", "en:Alert trigger time"})
     public String triggeredAt;
 

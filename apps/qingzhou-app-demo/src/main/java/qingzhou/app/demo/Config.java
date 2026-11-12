@@ -1,12 +1,25 @@
 package qingzhou.app.demo;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import qingzhou.api.InputType;
-import qingzhou.api.action.*;
-import qingzhou.api.annotations.*;
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelAction;
+import qingzhou.api.annotations.ModelField;
+import qingzhou.api.annotations.OverrideDefaultActions;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Delete;
+import qingzhou.api.action.Namespace;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.api.action.Update;
 import qingzhou.logger.Logger;
 
+/**
+ * 系统配置管理：演示「以业务字段作主键」——此处主键即 {@code configKey}（而非自增 id）。
+ * 另演示 {@link OverrideDefaultActions} 覆盖默认 Action 的元数据，以及命名空间切换。
+ */
 @Model(code = "config", order = 4,
         name = {"配置", "en:Config"},
         info = {"系统配置管理", "en:System configuration management"},
@@ -17,161 +30,37 @@ import qingzhou.logger.Logger;
         @ModelAction(code = "add", name = {"增加配置", "en:Add Config"}, icon = "Plus", order = 10),
 })
 @ModelAction(code = "show", name = {"显示配置", "en:Show Config"}, icon = "Plus", order = 100)
-public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Namespace {
+public class Config extends AbstractCrudModel implements Page, Show, Add, Update, Delete, Namespace {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Config() {
         if (!db.isEmpty()) return;
 
-        Map<String, String> c1 = new HashMap<>();
-        c1.put("configKey", "system.name");
-        c1.put("configValue", "轻舟管理平台");
-        c1.put("description", "系统名称");
-        c1.put("createdAt", "2026-01-01 00:00:00");
-        db.put(c1.get("configKey"), c1);
-
-        Map<String, String> c2 = new HashMap<>();
-        c2.put("configKey", "system.version");
-        c2.put("configValue", "1.0.0");
-        c2.put("description", "系统版本号");
-        c2.put("createdAt", "2026-01-01 00:00:00");
-        db.put(c2.get("configKey"), c2);
-
-        Map<String, String> c3 = new HashMap<>();
-        c3.put("configKey", "email.smtp.host");
-        c3.put("configValue", "smtp.example.com");
-        c3.put("description", "SMTP服务器地址");
-        c3.put("createdAt", "2026-01-01 00:00:00");
-        db.put(c3.get("configKey"), c3);
-
-        Map<String, String> c4 = new HashMap<>();
-        c4.put("configKey", "email.smtp.port");
-        c4.put("configValue", "587");
-        c4.put("description", "SMTP服务器端口");
-        c4.put("createdAt", "2026-01-01 00:00:00");
-        db.put(c4.get("configKey"), c4);
+        put("system.name", "轻舟管理平台", "系统名称", "2026-01-01 00:00:00");
+        put("system.version", "1.0.0", "系统版本号", "2026-01-01 00:00:00");
+        put("email.smtp.host", "smtp.example.com", "SMTP服务器地址", "2026-01-01 00:00:00");
+        put("email.smtp.port", "587", "SMTP服务器端口", "2026-01-01 00:00:00");
     }
 
-    @ModelField(id = true,
-            name = {"配置键", "en:Config Key"},
-            info = {"配置唯一标识键", "en:Configuration unique key"},
-            list = true,
-            show = true,
-            readonly = true)
-    public String configKey;
-
-    @ModelField(
-            name = {"配置值", "en:Config Value"},
-            info = {"配置值内容", "en:Configuration value"},
-            list = true,
-            search = true,
-            add = true,
-            update = true,
-            input_type = InputType.textarea,
-            group = "ConfigDetails")
-    public String configValue;
-
-    @ModelField(
-            name = {"描述", "en:Description"},
-            info = {"配置项描述信息", "en:Configuration description"},
-            list = true,
-            add = true,
-            update = true,
-            group = "ConfigDetails")
-    public String description;
-
-    @ModelField(
-            name = {"创建时间", "en:Created"},
-            info = {"创建时间", "en:Creation time"},
-            list = true,
-            show = true,
-            readonly = true,
-            input_type = InputType.datetime)
-    public String createdAt;
-
-    @Override
-    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        List<String[]> result = new ArrayList<>();
-        List<Map<String, String>> filtered = new ArrayList<>();
-
-        for (Map<String, String> config : db.values()) {
-            if (matchesQuery(config, query)) {
-                filtered.add(config);
-            }
-        }
-
-        int fromIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(fromIndex + pageSize, filtered.size());
-
-        for (int i = fromIndex; i < endIndex; i++) {
-            Map<String, String> c = filtered.get(i);
-            String[] data = new String[listFields.length];
-            for (int j = 0; j < listFields.length; j++) {
-                String value = c.get(listFields[j]);
-                data[j] = value != null ? value : "";
-            }
-            result.add(data);
-        }
-
-        return result;
-    }
-
-    private boolean matchesQuery(Map<String, String> data, Map<String, String> query) {
-        if (query == null || query.isEmpty()) return true;
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value != null && !value.isEmpty()) {
-                String dataValue = data.get(key);
-                if (dataValue == null || !dataValue.toLowerCase().contains(value.toLowerCase())) {
-                    return false;
-                }
-            }
-        }
-        return true;
+    private static void put(String key, String value, String desc, String created) {
+        Map<String, String> c = new HashMap<>();
+        c.put("configKey", key);
+        c.put("configValue", value);
+        c.put("description", desc);
+        c.put("createdAt", created);
+        db.put(key, c);
     }
 
     @Override
-    public int total(Map<String, String> query) {
-        int count = 0;
-        for (Map<String, String> config : db.values()) {
-            if (matchesQuery(config, query)) {
-                count++;
-            }
-        }
-        return count;
+    protected Map<String, Map<String, String>> data() {
+        return db;
     }
 
     @Override
-    public boolean contains(String id) {
-        return db.containsKey(id);
-    }
-
-    @Override
-    public Map<String, String> show(String id) {
-        return db.get(id);
-    }
-
-    @Override
-    public void add(Map<String, String> data) {
-        String key = data.get("configKey");
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-        db.put(key, new HashMap<>(data));
-    }
-
-    @Override
-    public void update(String id, Map<String, String> data) {
-        if (db.containsKey(id)) {
-            Map<String, String> existing = db.get(id);
-            existing.putAll(data);
-            existing.put("configKey", id);
-        }
-    }
-
-    @Override
-    public void delete(String id) {
-        db.remove(id);
+    protected String genId(Map<String, String> d) {
+        // 主键即 configKey，新增时由表单提供，无需自增
+        d.put("createdAt", DateKit.now());
+        return d.get("configKey");
     }
 
     private String currentSpace;
@@ -186,4 +75,26 @@ public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, U
     public String current() {
         return currentSpace;
     }
+
+    @ModelField(id = true,
+            name = {"配置键", "en:Config Key"},
+            info = {"配置唯一标识键", "en:Configuration unique key"},
+            list = true)
+    public String configKey;
+
+    @ModelField(name = {"配置值", "en:Config Value"},
+            info = {"配置值内容", "en:Configuration value"},
+            list = true, search = true, add = true, update = true,
+            input_type = InputType.textarea, group = "ConfigDetails")
+    public String configValue;
+
+    @ModelField(name = {"描述", "en:Description"},
+            info = {"配置项描述信息", "en:Configuration description"},
+            list = true, add = true, update = true, group = "ConfigDetails")
+    public String description;
+
+    @ModelField(name = {"创建时间", "en:Created"},
+            info = {"创建时间", "en:Creation time"},
+            list = true, show = true, readonly = true, input_type = InputType.datetime)
+    public String createdAt;
 }

@@ -7,9 +7,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 客户端端点模板：统一 POST 限定与客户端鉴权。
- */
+/** 客户端端点模板：统一 POST 限定与客户端鉴权。 */
 abstract class ClientEndpoint implements HttpHandler {
     protected final Store store;
     protected final Json json;

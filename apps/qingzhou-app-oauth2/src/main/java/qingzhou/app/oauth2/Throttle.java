@@ -3,9 +3,7 @@ package qingzhou.app.oauth2;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 登录失败限流：同一来源连续失败超过阈值后锁定，防止口令爆破。
- */
+/** 登录失败限流：同一来源连续失败超过阈值后锁定，防止口令爆破。 */
 final class Throttle {
     private static final int MAX_FAILURES = 5;
     private static final long LOCK_MILLIS = 300_000;

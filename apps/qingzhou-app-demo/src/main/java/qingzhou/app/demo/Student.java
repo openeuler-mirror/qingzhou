@@ -1,20 +1,29 @@
 package qingzhou.app.demo;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import qingzhou.api.InputType;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.*;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Delete;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.api.action.Update;
 
+/**
+ * 学生管理：演示完整 CRUD 能力与表单组件的丰富用法。
+ *
+ * <p>仅需声明内存表、示例数据与字段，分页/增删改查逻辑全部由 {@link AbstractCrudModel} 提供。
+ */
 @Model(code = "student", order = 1,
         name = {"学生", "en:Student"},
         info = {"学生信息管理，演示完整CRUD功能", "en:Student information management"},
         icon = "User",
         menu = "basic")
-public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete {
-    public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private static int idCounter = 1;
+public class Student extends AbstractCrudModel implements Page, Show, Add, Update, Delete {
+    private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Student() {
         if (!db.isEmpty()) return;
@@ -26,8 +35,7 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
 
         for (int i = 1; i <= 30; i++) {
             Map<String, String> s = new HashMap<>();
-            String id = "S" + String.format("%03d", i);
-            s.put("id", id);
+            s.put("id", "S" + String.format("%03d", i));
             s.put("name", names[i % names.length] + (i / 10 > 0 ? i : ""));
             s.put("age", String.valueOf(18 + i % 8));
             s.put("gender", genders[i % 2]);
@@ -45,253 +53,112 @@ public class Student extends qingzhou.api.ModelBase implements Page, Show, Add, 
             s.put("themeColor", i % 3 == 0 ? "#FF6B6B" : (i % 3 == 1 ? "#4ECDC4" : "#45B7D1"));
             db.put(s.get("id"), s);
         }
-        idCounter = 31;
+        idCounter = 31; // 种子数据后的下一个序号，避免新增主键冲突
+    }
+
+    @Override
+    protected Map<String, Map<String, String>> data() {
+        return db;
+    }
+
+    @Override
+    protected String genId(Map<String, String> d) {
+        String id = "S" + nextSeq();
+        d.put("id", id);
+        d.put("createdAt", DateKit.now());
+        return id;
     }
 
     @ModelField(id = true,
             name = {"学号", "en:ID"},
             info = {"学生唯一标识", "en:Student unique identifier"},
-            list = true,
-            show = true,
-            readonly = true)
+            list = true, show = true, readonly = true)
     public String id;
 
-    @ModelField(
-            name = {"姓名", "en:Name"},
+    @ModelField(name = {"姓名", "en:Name"},
             info = {"学生姓名", "en:Student name"},
-            list = true,
-            search = true,
-            add = true,
-            update = true,
-            required = true)
+            list = true, search = true, add = true, update = true, required = true)
     public String name;
 
-    @ModelField(
-            name = {"年龄", "en:Age"},
+    @ModelField(name = {"年龄", "en:Age"},
             info = {"学生年龄", "en:Student age"},
-            list = true,
-            input_type = InputType.number,
-            min_value = 0,
-            max_value = 150)
+            list = true, input_type = InputType.number, min_value = 0, max_value = 150)
     public Integer age;
 
-    @ModelField(
-            name = {"性别", "en:Gender"},
+    @ModelField(name = {"性别", "en:Gender"},
             info = {"学生性别", "en:Student gender"},
-            list = true,
-            required = true,
-            input_type = InputType.radio,
-            options = {"男", "女"})
+            list = true, required = true, input_type = InputType.radio, options = {"男", "女"})
     public Boolean gender;
 
-    @ModelField(
-            name = {"班级", "en:Class"},
+    @ModelField(name = {"班级", "en:Class"},
             info = {"所属班级", "en:Class name"},
-            list = true,
-            search = true,
-            add = true,
-            update = true)
+            list = true, search = true, add = true, update = true)
     public String className;
 
-    @ModelField(
-            name = {"邮箱", "en:Email"},
+    @ModelField(name = {"邮箱", "en:Email"},
             info = {"电子邮箱", "en:E-mail address"},
-            list = true,
-            add = true,
-            update = true,
-            email = true,
-            group = "Contact")
+            list = true, add = true, update = true, email = true, group = "Contact")
     public String email;
 
-    @ModelField(
-            name = {"密码", "en:Password"},
+    @ModelField(name = {"密码", "en:Password"},
             info = {"登录密码", "en:Login password"},
-            input_type = InputType.password,
-            add = true,
-            update = true,
-            group = "Contact")
+            input_type = InputType.password, add = true, update = true, group = "Contact")
     public String password;
 
-    @ModelField(
-            name = {"简介", "en:Bio"},
+    @ModelField(name = {"简介", "en:Bio"},
             info = {"个人简介", "en:Personal biography"},
-            input_type = InputType.textarea,
-            add = true,
-            update = true,
-            group = "Personal")
+            input_type = InputType.textarea, add = true, update = true, group = "Personal")
     public String bio;
 
-    @ModelField(
-            name = {"爱好", "en:Hobbies"},
+    @ModelField(name = {"爱好", "en:Hobbies"},
             info = {"兴趣爱好", "en:Interests and hobbies"},
-            input_type = InputType.multiselect,
-            add = true,
-            update = true,
-            separator = ",",
-            options = {"篮球", "足球", "音乐", "绘画", "编程", "阅读", "游泳", "游戏"},
+            input_type = InputType.multiselect, separator = ",",
+            add = true, update = true, options = {"篮球", "足球", "音乐", "绘画", "编程", "阅读", "游泳", "游戏"},
             group = "Personal")
     public String hobbies;
 
-    @ModelField(
-            name = {"状态", "en:Status"},
+    @ModelField(name = {"状态", "en:Status"},
             info = {"学生状态", "en:Student status"},
-            list = true,
-            add = true,
-            update = true,
-            input_type = InputType.select,
+            list = true, add = true, update = true, input_type = InputType.select,
             options = {"active", "inactive", "suspended"})
     public String status = "active";
 
-    @ModelField(
-            name = {"停用原因", "en:Suspension Reason"},
+    @ModelField(name = {"停用原因", "en:Suspension Reason"},
             info = {"停用原因说明，仅状态为suspended时显示", "en:Reason for suspension, only visible when status is suspended"},
-            input_type = InputType.textarea,
-            add = true,
-            update = true,
-            display = "status==suspended",
-            group = "Personal")
+            input_type = InputType.textarea, add = true, update = true,
+            display = "status==suspended", group = "Personal")
     public String suspensionReason;
 
-    @ModelField(
-            name = {"头像", "en:Avatar"},
+    @ModelField(name = {"头像", "en:Avatar"},
             info = {"头像图片", "en:Avatar image"},
-            input_type = InputType.file,
-            add = true,
-            update = true,
-            group = "Personal")
+            input_type = InputType.file, add = true, update = true, group = "Personal")
     public String avatar;
 
-    @ModelField(
-            name = {"注册时间", "en:Created"},
+    @ModelField(name = {"注册时间", "en:Created"},
             info = {"注册时间", "en:Registration time"},
-            list = true,
-            show = true,
-            readonly = true,
-            input_type = InputType.datetime)
+            list = true, show = true, readonly = true, input_type = InputType.datetime)
     public String createdAt;
 
-    @ModelField(
-            name = {"启用", "en:Enabled"},
+    @ModelField(name = {"启用", "en:Enabled"},
             info = {"是否启用", "en:Is enabled"},
-            list = true,
-            add = true,
-            update = true,
-            input_type = InputType.bool)
+            list = true, add = true, update = true, input_type = InputType.bool)
     public Boolean enabled = true;
 
-    @ModelField(
-            name = {"技能标签", "en:Skills"},
+    @ModelField(name = {"技能标签", "en:Skills"},
             info = {"技能标签，可拖拽排序", "en:Skill tags, draggable and sortable"},
-            input_type = InputType.sortable,
-            separator = ",",
-            add = true,
-            update = true,
-            group = "Personal")
+            input_type = InputType.sortable, separator = ",",
+            add = true, update = true, group = "Personal")
     public String skills;
 
-    @ModelField(
-            name = {"姓名组合", "en:Full Name"},
+    @ModelField(name = {"姓名组合", "en:Full Name"},
             info = {"姓|名", "en:First Name|Last Name"},
-            input_type = InputType.combine,
-            separator = "|",
-            add = true,
-            update = true,
-            group = "Personal")
+            input_type = InputType.combine, separator = "|",
+            add = true, update = true, group = "Personal")
     public String fullName;
 
-    @ModelField(
-            name = {"主题色", "en:Theme Color"},
+    @ModelField(name = {"主题色", "en:Theme Color"},
             info = {"个人主题颜色", "en:Personal theme color"},
-            input_type = InputType.text,
-            color = {"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"},
-            add = true,
-            update = true,
-            group = "Personal")
+            input_type = InputType.text, color = {"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"},
+            add = true, update = true, group = "Personal")
     public String themeColor;
-
-    @Override
-    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) {
-        List<String[]> result = new ArrayList<>();
-        List<Map<String, String>> filtered = new ArrayList<>();
-
-        for (Map<String, String> student : db.values()) {
-            if (matchesQuery(student, query)) {
-                filtered.add(student);
-            }
-        }
-
-        int fromIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(fromIndex + pageSize, filtered.size());
-
-        for (int i = fromIndex; i < endIndex; i++) {
-            Map<String, String> s = filtered.get(i);
-            String[] data = new String[listFields.length];
-            for (int j = 0; j < listFields.length; j++) {
-                String value = s.get(listFields[j]);
-                data[j] = value != null ? value : "";
-            }
-            result.add(data);
-        }
-
-        return result;
-    }
-
-    private boolean matchesQuery(Map<String, String> data, Map<String, String> query) {
-        if (query == null || query.isEmpty()) return true;
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value != null && !value.isEmpty()) {
-                String dataValue = data.get(key);
-                if (dataValue == null || !dataValue.toLowerCase().contains(value.toLowerCase())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public int total(Map<String, String> query) {
-        int count = 0;
-        for (Map<String, String> student : db.values()) {
-            if (matchesQuery(student, query)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    @Override
-    public boolean contains(String id) {
-        return db.containsKey(id);
-    }
-
-    @Override
-    public Map<String, String> show(String id) {
-        return db.get(id);
-    }
-
-    @Override
-    public void add(Map<String, String> data) {
-        String newId = "S" + String.format("%03d", idCounter++);
-        data.put("id", newId);
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-        db.put(newId, new HashMap<>(data));
-    }
-
-    @Override
-    public void update(String id, Map<String, String> data) {
-        if (db.containsKey(id)) {
-            Map<String, String> existing = db.get(id);
-            existing.putAll(data);
-            existing.put("id", id);
-        }
-    }
-
-    @Override
-    public void delete(String id) {
-        db.remove(id);
-    }
 }

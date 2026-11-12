@@ -16,48 +16,19 @@ import qingzhou.api.action.*;
         menu = "access")
 public class ClientModel extends ModelBase implements Page, Show, Add, Update, Delete {
 
-    @ModelField(id = true,
-            name = {"编号", "en:ID"},
-            info = {"客户端记录编号", "en:Client record id"},
-            list = true,
-            readonly = true)
+    @ModelField(id = true, name = {"编号", "en:ID"}, info = {"客户端记录编号", "en:Client record id"}, list = true, readonly = true)
     public String id;
-
-    @ModelField(
-            name = {"客户端 ID", "en:Client ID"},
-            info = {"授权请求中的 client_id", "en:client_id of authorization request"},
-            list = true,
-            search = true,
-            required = true)
+    @ModelField(name = {"客户端 ID", "en:Client ID"}, info = {"授权请求中的 client_id", "en:client_id of authorization request"}, list = true, search = true, required = true)
     public String client_id;
-
-    @ModelField(
-            name = {"客户端密钥", "en:Client Secret"},
-            info = {"授权服务器的 client_secret", "en:client_secret of authorization server"},
-            required = true)
+    @ModelField(name = {"客户端密钥", "en:Client Secret"}, info = {"授权服务器的 client_secret", "en:client_secret of authorization server"}, required = true)
     public String client_secret;
-
-    @ModelField(
-            name = {"客户端名称", "en:Client Name"},
-            info = {"授权页展示的名称", "en:Name shown on consent page"},
-            list = true,
-            required = true)
+    @ModelField(name = {"客户端名称", "en:Client Name"}, info = {"授权页展示的名称", "en:Name shown on consent page"}, list = true, required = true)
     public String client_name;
-
-    @ModelField(
-            name = {"回调地址", "en:Redirect URI"},
-            info = {"授权完成后回跳的地址", "en:Redirect uri after authorization"},
-            list = true)
+    @ModelField(name = {"回调地址", "en:Redirect URI"}, info = {"授权完成后回跳的地址", "en:Redirect uri after authorization"}, list = true)
     public String redirect_uri;
-
-    @ModelField(
-            name = {"授予类型", "en:Grant Types"},
-            info = {"该客户端允许的 grant_type，逗号分隔", "en:Allowed grant types, comma separated"})
+    @ModelField(name = {"授予类型", "en:Grant Types"}, info = {"该客户端允许的 grant_type，逗号分隔", "en:Allowed grant types, comma separated"})
     public String grant_types;
-
-    @ModelField(
-            name = {"授权范围", "en:Scope"},
-            info = {"该客户端可申请的 scope", "en:Scopes the client may request"})
+    @ModelField(name = {"授权范围", "en:Scope"}, info = {"该客户端可申请的 scope", "en:Scopes the client may request"})
     public String scope;
 
     private Store store;

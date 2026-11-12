@@ -8,12 +8,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * ZooKeeper JAAS 配置提取工具
- * 兼容 Windows / Linux / macOS，
- * 从 zkEnv.sh、zkEnv.cmd、zkServer.sh、zkServer.cmd 和启动命令中
- * 提取 -Djava.security.auth.login.config 属性值。
- */
+/** 从 zkEnv/zkServer 脚本及启动命令中提取 -Djava.security.auth.login.config 属性值，兼容 Windows/Linux/macOS。 */
 public class ZkJaaSConfigExtractor {
 
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("windows");
@@ -47,10 +42,7 @@ public class ZkJaaSConfigExtractor {
     private ZkJaaSConfigExtractor() {
     }
 
-    /**
-     * 从脚本文件中提取 JAAS 配置路径。
-     * 脚本不存在或读取失败时返回 null（属于探测性逻辑，不阻塞应用启动）。
-     */
+    /** 从脚本文件提取 JAAS 配置路径；脚本不存在或读取失败返回 null（探测性逻辑，不阻塞启动）。 */
     public static String extractFromScript(Path scriptFilePath) {
         try {
             String content = new String(Files.readAllBytes(scriptFilePath));

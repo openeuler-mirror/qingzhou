@@ -14,9 +14,7 @@ import qingzhou.http.client.*;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-/**
- * Zookeeper 应用入口：启动时探测安装路径、加载配置并初始化监控元数据。
- */
+/** Zookeeper 应用入口：启动时探测安装路径、加载配置并初始化监控元数据。 */
 @App(icon = "Cloud", roles = "admin",
         name = {"Zookeeper应用", "en:Zookeeper Application"},
         info = {"用于演示Zookeeper的核心功能，包括服务注册发现、配置管理等。", "en:Zookeeper application demo with service discovery and configuration management."})
@@ -32,11 +30,8 @@ public class ZookeeperApp implements QingzhouApp {
     public static final String METADATA_VERSION_KEY = "metadata_version";
     public static final String METADATA_JAAS_KEY = "metadata_jaas_file";
     public static final String METADATA_COMMANDS_KEY = "metadata_commands";
-
     public static final String ZOO_DATADIR_KEY = "dataDir";
-
     public static final String MAIN = "QuorumPeerMain";
-
     public static final String ZOO_FILE_NAME = "zoo.cfg";
     public static final String MYID_FILE_NAME = "myid";
     public static Logger logger;
@@ -170,9 +165,7 @@ public class ZookeeperApp implements QingzhouApp {
         return zkCmd == null ? "" : zkCmd;
     }
 
-    /**
-     * 执行命令并在输出中查找 ZooKeeper 主进程（QuorumPeerMain）命令行
-     */
+    /** 执行命令并在输出中查找 ZooKeeper 主进程（QuorumPeerMain）命令行 */
     private String runAndFind(String[] cmd) {
         Process process = null;
         try {
@@ -193,12 +186,10 @@ public class ZookeeperApp implements QingzhouApp {
         }
     }
 
-    /**
-     * Linux 兜底：直接读取 /proc/<pid>/cmdline（参数以 \0 分隔，需替换为空格）
-     */
+    /** Linux 兜底：直接读取 /proc/<pid>/cmdline（参数以 \0 分隔，需替换为空格） */
     private String findZkFromProc() {
         File proc = new File("/proc");
-        File[] pidDirs = proc.listFiles(f -> f.isDirectory() && isNumeric(f.getName()));
+        File[] pidDirs = proc.listFiles(f -> f.isDirectory() && f.getName().matches("\\d+"));
         if (pidDirs == null) {
             return null;
         }
@@ -214,18 +205,6 @@ public class ZookeeperApp implements QingzhouApp {
             }
         }
         return null;
-    }
-
-    private static boolean isNumeric(String s) {
-        if (s == null || s.isEmpty()) {
-            return false;
-        }
-        for (int i = 0; i < s.length(); i++) {
-            if (!Character.isDigit(s.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @SuppressWarnings("unchecked")

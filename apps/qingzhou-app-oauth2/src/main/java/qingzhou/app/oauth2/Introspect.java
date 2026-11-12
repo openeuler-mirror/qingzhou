@@ -7,9 +7,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 令牌校验端点：查询访问令牌是否有效。
- */
+/** 令牌校验端点：查询访问令牌是否有效。 */
 public class Introspect extends ClientEndpoint {
     public Introspect(Store store, Json json) {
         super(store, json);

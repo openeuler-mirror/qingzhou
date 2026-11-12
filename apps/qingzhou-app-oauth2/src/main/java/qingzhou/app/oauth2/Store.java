@@ -8,9 +8,7 @@ import qingzhou.crypto.Crypto;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.jdbc.JdbcPool;
 
-/**
- * OAuth 2.0 数据存取：客户端、用户、授权码与令牌。
- */
+/** OAuth 2.0 数据存取：客户端、用户、授权码与令牌。 */
 public final class Store {
     static final String CLIENT_TABLE = "oauth_client";
     static final String USER_TABLE = "oauth_user";
@@ -41,12 +39,7 @@ public final class Store {
     }
 
     /**
-     * 首次访问时建表，应用与模型共享同一实例。
-     * <p>
-     * 数据源按名取自平台 JdbcPool 服务，名字即 qingzhou.properties 中
-     * {@code qingzhou-jdbc~<name>.*} 里 {@code ~} 之后的名字，可用
-     * {@code app~qingzhou-app-oauth2.jdbc_name} 指定（默认 h2）；
-     * {@code seed_demo=true} 时额外写入演示用客户端与用户，仅供试用。
+     * 首次访问时建表，应用与模型共享同一实例；数据源按名取自平台 JdbcPool 服务（默认 h2，可用 app~qingzhou-app-oauth2.jdbc_name 指定）；seed_demo=true 时写入演示数据。
      */
     public static Store get(AppContext appContext) throws Exception {
         if (instance == null) {
@@ -102,9 +95,7 @@ public final class Store {
         return queryOne("SELECT * FROM oauth_user WHERE userName = ?", userName);
     }
 
-    /**
-     * @return 密钥校验通过的客户端，不存在或校验失败时返回 null
-     */
+    /** @return 密钥校验通过的客户端，不存在或校验失败时返回 null */
     Map<String, String> authenticateClient(String clientId, String clientSecret) throws SQLException {
         Map<String, String> client = findClient(clientId);
         return client != null && verifySecret(clientSecret, client.get("client_secret")) ? client : null;
@@ -131,9 +122,7 @@ public final class Store {
                 code, clientId, userName, redirectUri, scope, now() + AUTH_CODE_EXPIRE);
     }
 
-    /**
-     * @return 未使用且未过期的授权码，不存在时返回 null
-     */
+    /** @return 未使用且未过期的授权码，不存在时返回 null */
     Map<String, String> findUsableAuthCode(String code, String clientId) throws SQLException {
         Map<String, String> authCode = queryOne("SELECT * FROM oauth_auth_code WHERE code = ? AND client_id = ?", code, clientId);
         if (authCode == null || "1".equals(authCode.get("used")) || expired(authCode.get("expires_at"))) {
@@ -142,20 +131,12 @@ public final class Store {
         return authCode;
     }
 
-    /**
-     * 核销授权码：授权码一次性使用，并发重复提交时只有一次成功。
-     *
-     * @return 本次调用是否核销成功
-     */
+    /** 核销授权码：授权码一次性使用，并发重复提交时只有一次成功；@return 是否核销成功 */
     boolean consumeAuthCode(String id) throws SQLException {
         return execute("UPDATE oauth_auth_code SET used = 1 WHERE id = ? AND used = 0", id) == 1;
     }
 
-    /**
-     * 签发并持久化令牌。
-     *
-     * @return 可直接序列化的令牌响应内容
-     */
+    /** 签发并持久化令牌；@return 可直接序列化的令牌响应内容 */
     Map<String, Object> issueToken(String clientId, String userName, String scope) throws SQLException {
         String grantedScope = Security.isEmpty(scope) ? DEFAULT_SCOPE : scope;
         String accessToken = Security.randomToken(32);
@@ -174,39 +155,29 @@ public final class Store {
         return token;
     }
 
-    /**
-     * @return 未过期的访问令牌，不存在或已过期时返回 null
-     */
+    /** @return 未过期的访问令牌，不存在或已过期时返回 null */
     Map<String, String> findValidAccessToken(String accessToken) throws SQLException {
         Map<String, String> token = queryOne("SELECT * FROM oauth_token WHERE access_token = ?", accessToken);
         return expired(token == null ? null : token.get("expires_at")) ? null : token;
     }
 
-    /**
-     * @return 未过期的刷新令牌，不存在或已过期时返回 null
-     */
+    /** @return 未过期的刷新令牌，不存在或已过期时返回 null */
     Map<String, String> findValidRefreshToken(String refreshToken, String clientId) throws SQLException {
         Map<String, String> token = queryOne("SELECT * FROM oauth_token WHERE refresh_token = ? AND client_id = ?", refreshToken, clientId);
         return expired(token == null ? null : token.get("refresh_expires_at")) ? null : token;
     }
 
-    /**
-     * @return 访问令牌或刷新令牌匹配的记录，不存在时返回 null
-     */
+    /** @return 访问令牌或刷新令牌匹配的记录，不存在时返回 null */
     Map<String, String> findToken(String token) throws SQLException {
         return queryOne("SELECT * FROM oauth_token WHERE access_token = ? OR refresh_token = ?", token, token);
     }
 
-    /**
-     * 删除令牌：刷新即轮换，并发刷新时只有一次成功。
-     *
-     * @return 本次调用是否删除成功
-     */
+    /** 删除令牌：刷新即轮换，并发刷新时只有一次成功；@return 是否删除成功 */
     boolean deleteToken(String id) throws SQLException {
         return execute("DELETE FROM oauth_token WHERE id = ?", id) == 1;
     }
 
-    // ==================== 控制台管理用 ====================
+    // 控制台管理用
 
     List<String[]> page(String table, String searchColumn, int pageNum, int pageSize, String keyword, String[] listFields) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT * FROM ").append(table);

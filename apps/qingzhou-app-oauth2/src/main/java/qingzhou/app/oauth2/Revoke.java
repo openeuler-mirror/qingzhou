@@ -7,9 +7,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 令牌注销端点：撤销访问令牌及其关联的刷新令牌。
- */
+/** 令牌注销端点：撤销访问令牌及其关联的刷新令牌。 */
 public class Revoke extends ClientEndpoint {
     public Revoke(Store store, Json json) {
         super(store, json);

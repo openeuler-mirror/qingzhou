@@ -10,9 +10,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 授权端点：展示登录授权页，签发授权码或隐式令牌。
- */
+/** 授权端点：展示登录授权页，签发授权码或隐式令牌。 */
 public class Authorize implements HttpHandler {
     private static final String PAGE = "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">"
             + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>授权 — OAuth 2.0</title>"

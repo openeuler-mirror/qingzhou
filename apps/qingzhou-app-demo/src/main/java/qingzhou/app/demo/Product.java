@@ -1,292 +1,139 @@
 package qingzhou.app.demo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import qingzhou.api.*;
-import qingzhou.api.action.*;
+import qingzhou.api.InputType;
+import qingzhou.api.Request;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelAction;
 import qingzhou.api.annotations.ModelField;
+import qingzhou.api.action.Add;
+import qingzhou.api.action.Delete;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Namespace;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.api.action.Update;
 import qingzhou.logger.Logger;
 
+/**
+ * 产品管理：演示 CRUD + 监控（Monitor）+ 命名空间（Namespace）+ 条件按钮（display）+ 批量操作。
+ */
 @Model(code = "product", order = 3,
         name = {"产品", "en:Product"},
         info = {"产品信息管理，演示Monitor和自定义Action", "en:Product management with Monitor"},
         icon = "Box",
         menu = "advanced")
-public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Monitor, Namespace {
-    public static final Map<String, Map<String, String>> db = new HashMap<>();
-    private static int idCounter = 1;
+public class Product extends AbstractCrudModel implements Page, Show, Add, Update, Delete, Monitor, Namespace {
+    private static final Map<String, Map<String, String>> db = new HashMap<>();
 
     public Product() {
         if (!db.isEmpty()) return;
 
-        Map<String, String> p1 = new HashMap<>();
-        p1.put("id", "P001");
-        p1.put("name", "笔记本电脑");
-        p1.put("price", "5999.00");
-        p1.put("stock", "50");
-        p1.put("sales", "120");
-        p1.put("status", "onsale");
-        p1.put("createdAt", "2026-01-10 09:00:00");
-        db.put(p1.get("id"), p1);
-
-        Map<String, String> p2 = new HashMap<>();
-        p2.put("id", "P002");
-        p2.put("name", "无线鼠标");
-        p2.put("price", "129.00");
-        p2.put("stock", "200");
-        p2.put("sales", "350");
-        p2.put("status", "onsale");
-        p2.put("createdAt", "2026-02-15 14:30:00");
-        db.put(p2.get("id"), p2);
-
-        Map<String, String> p3 = new HashMap<>();
-        p3.put("id", "P003");
-        p3.put("name", "机械键盘");
-        p3.put("price", "399.00");
-        p3.put("stock", "0");
-        p3.put("sales", "80");
-        p3.put("status", "offshelf");
-        p3.put("createdAt", "2026-03-01 11:00:00");
-        db.put(p3.get("id"), p3);
+        db.put("P001", row("P001", "笔记本电脑", "5999.00", "50", "120", "onsale"));
+        db.put("P002", row("P002", "无线鼠标", "129.00", "200", "350", "onsale"));
+        db.put("P003", row("P003", "机械键盘", "399.00", "0", "80", "offshelf"));
         idCounter = 4;
     }
 
-    @ModelField(id = true,
-            name = {"产品ID", "en:Product ID"},
-            info = {"产品唯一标识", "en:Product unique identifier"},
-            list = true,
-            show = true,
-            readonly = true)
-    public String id;
+    private static Map<String, String> row(String id, String name, String price, String stock,
+                                           String sales, String status) {
+        Map<String, String> p = new HashMap<>();
+        p.put("id", id);
+        p.put("name", name);
+        p.put("price", price);
+        p.put("stock", stock);
+        p.put("sales", sales);
+        p.put("status", status);
+        p.put("createdAt", "2026-01-10 09:00:00");
+        return p;
+    }
 
-    @ModelField(
-            name = {"产品名称", "en:Product Name"},
-            info = {"产品名称", "en:Product name"},
-            list = true,
-            search = true,
-            add = true,
-            update = true,
-            required = true)
-    public String name;
+    @Override
+    protected Map<String, Map<String, String>> data() {
+        return db;
+    }
 
-    @ModelField(
-            name = {"价格", "en:Price"},
-            info = {"产品单价", "en:Product price"},
-            list = true,
-            add = true,
-            update = true,
-            input_type = InputType.decimal,
-            min_value = 0,
-            group = "Inventory")
-    public String price;
+    @Override
+    protected String genId(Map<String, String> d) {
+        String id = "P" + nextSeq();
+        d.put("id", id);
+        d.put("sales", "0");
+        d.put("createdAt", DateKit.now());
+        return id;
+    }
 
-    @ModelField(
-            name = {"库存", "en:Stock"},
-            info = {"产品库存数量", "en:Product stock quantity"},
-            list = true,
-            add = true,
-            update = true,
-            input_type = InputType.number,
-            min_value = 0,
-            group = "Inventory")
-    public Integer stock;
+    // ============ 列表行内条件按钮：display 决定按钮何时出现 ============
 
-    @ModelField(
-            name = {"销量", "en:Sales"},
-            info = {"产品销量", "en:Product sales volume"},
-            list = true,
-            add = false,
-            input_type = InputType.number,
-            numeric = true,
-            group = "Inventory")
-    public Integer sales;
-
-    @ModelField(
-            name = {"状态", "en:Status"},
-            info = {"产品状态", "en:Product status"},
-            list = true,
-            add = true,
-            update = true,
-            input_type = InputType.select,
-            options = {"onsale", "offshelf", "discontinued"})
-    public String status = "onsale";
-
-    @ModelField(
-            name = {"创建时间", "en:Created"},
-            info = {"创建时间", "en:Creation time"},
-            list = true,
-            show = true,
-            readonly = true,
-            input_type = InputType.datetime)
-    public String createdAt;
-
+    /** 仅在「未上架」时显示：点击上架。 */
     @ModelAction(code = "onshell", icon = "ArrowUp",
             name = {"上架", "en:On Shelf"},
             info = {"将产品上架销售。非上架状态时显示。", "en:Put product on shelf. Shown when not onsale."},
-            display = "status!=onsale",
-            list = true)
+            display = "status!=onsale", list = true)
     public void onShell(Request request) {
-        String id = request.getId();
-        Map<String, String> product = db.get(id);
-        if (product != null) {
-            product.put("status", "onsale");
-        }
+        Map<String, String> p = db.get(request.getId());
+        if (p != null) p.put("status", "onsale");
     }
 
+    /** 仅在「已上架」时显示：点击下架。 */
     @ModelAction(code = "offshelf", icon = "ArrowDown",
             name = {"下架", "en:Off Shelf"},
             info = {"将产品下架。上架状态时显示。", "en:Take product off shelf. Shown when onsale."},
-            display = "status==onsale",
-            list = true)
+            display = "status==onsale", list = true)
     public void offShell(Request request) {
-        String id = request.getId();
-        Map<String, String> product = db.get(id);
-        if (product != null) {
-            product.put("status", "offshelf");
-        }
+        Map<String, String> p = db.get(request.getId());
+        if (p != null) p.put("status", "offshelf");
     }
 
-    // 演示组合条件（AND）：上架且有库存时才显示"推广"按钮
+    /** 组合条件（AND）：上架且有库存时才显示「推广」。 */
     @ModelAction(code = "promote", icon = "Promotion",
             name = {"推广", "en:Promote"},
             info = {"推广产品。上架且有库存时显示。", "en:Promote product. Shown when onsale and in stock."},
-            display = "status==onsale & stock>0",
-            list = true)
+            display = "status==onsale & stock>0", list = true)
     public void promote(Request request) {
-        // 推广操作示例：不做实际数据变更，仅返回提示
         request.getResponse().data("推广操作已触发");
     }
 
-    // 演示组合条件（OR）：已下架或无库存时才显示"停产"按钮
+    /** 组合条件（OR）：已下架或无库存时才显示「停产」。 */
     @ModelAction(code = "discontinue", icon = "CloseBold",
             name = {"停产", "en:Discontinue"},
             info = {"停产品。已下架或无库存时显示。", "en:Discontinue product. Shown when offshelf or out of stock."},
-            display = "status==offshelf | stock==0",
-            list = true)
+            display = "status==offshelf | stock==0", list = true)
     public void discontinue(Request request) {
-        // 停产操作示例
         request.getResponse().data("停产操作已触发");
     }
 
-    // 演示 toolbar 操作（无 display 条件，始终显示）
+    /** 工具栏批量操作（始终显示、支持多选）。 */
     @ModelAction(code = "batchDelete", icon = "Delete",
             name = {"批量删除", "en:Batch Delete"},
             info = {"批量删除选中的产品。Toolbar操作，始终显示。", "en:Batch delete selected products. Toolbar action, always shown."},
-            list_head = true,
-            batch = true)
+            list_head = true, batch = true)
     public void batchDelete(Request request) {
         String ids = request.getParameter("ids");
         if (ids != null && !ids.isEmpty()) {
-            for (String id : ids.split(",")) {
-                db.remove(id.trim());
-            }
+            for (String id : ids.split(",")) db.remove(id.trim());
         }
     }
 
-    @Override
-    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        List<String[]> result = new ArrayList<>();
-        List<Map<String, String>> filtered = new ArrayList<>();
-
-        for (Map<String, String> product : db.values()) {
-            if (matchesQuery(product, query)) {
-                filtered.add(product);
-            }
-        }
-
-        int fromIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(fromIndex + pageSize, filtered.size());
-
-        for (int i = fromIndex; i < endIndex; i++) {
-            Map<String, String> p = filtered.get(i);
-            String[] data = new String[listFields.length];
-            for (int j = 0; j < listFields.length; j++) {
-                String value = p.get(listFields[j]);
-                data[j] = value != null ? value : "";
-            }
-            result.add(data);
-        }
-
-        return result;
-    }
-
-    private boolean matchesQuery(Map<String, String> data, Map<String, String> query) {
-        if (query == null || query.isEmpty()) return true;
-
-        for (Map.Entry<String, String> entry : query.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value != null && !value.isEmpty()) {
-                String dataValue = data.get(key);
-                if (dataValue == null || !dataValue.toLowerCase().contains(value.toLowerCase())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public int total(Map<String, String> query) {
-        int count = 0;
-        for (Map<String, String> product : db.values()) {
-            if (matchesQuery(product, query)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    @Override
-    public boolean contains(String id) {
-        return db.containsKey(id);
-    }
-
-    @Override
-    public Map<String, String> show(String id) {
-        return db.get(id);
-    }
-
+    /** 监控：返回各产品销量，供前端绘制柱状图。 */
     @Override
     public Map<String, String> monitor(String id) {
-        Map<String, String> monitorData = new HashMap<>();
-        List<Integer> salesData = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-
-        for (Map<String, String> product : db.values()) {
-            labels.add(product.get("name"));
-            salesData.add(Integer.parseInt(product.get("sales")));
+        List<String> sales = new ArrayList<>();
+        for (Map<String, String> p : db.values()) {
+            labels.add(p.get("name"));
+            sales.add(p.get("sales"));
         }
-
-        monitorData.put("labels", String.join(",", labels));
-        monitorData.put("sales", String.join(",", salesData.stream().map(String::valueOf).toArray(String[]::new)));
-        return monitorData;
+        Map<String, String> m = new HashMap<>();
+        m.put("labels", String.join(",", labels));
+        m.put("sales", String.join(",", sales));
+        return m;
     }
 
-    @Override
-    public void add(Map<String, String> data) throws Exception {
-        String newId = "P" + String.format("%03d", idCounter++);
-        data.put("id", newId);
-        data.put("sales", "0");
-        data.put("createdAt", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-        db.put(newId, new HashMap<>(data));
-    }
-
-    @Override
-    public void update(String id, Map<String, String> data) throws Exception {
-        if (db.containsKey(id)) {
-            Map<String, String> existing = db.get(id);
-            existing.putAll(data);
-            existing.put("id", id);
-        }
-    }
-
-    @Override
-    public void delete(String id) throws Exception {
-        db.remove(id);
-    }
+    // ============ 命名空间：模拟多租户/多空间切换 ============
 
     private String currentSpace;
 
@@ -300,4 +147,41 @@ public class Product extends qingzhou.api.ModelBase implements Page, Show, Add, 
     public String current() {
         return currentSpace;
     }
+
+    @ModelField(id = true,
+            name = {"产品ID", "en:Product ID"},
+            info = {"产品唯一标识", "en:Product unique identifier"},
+            list = true, show = true, readonly = true)
+    public String id;
+
+    @ModelField(name = {"产品名称", "en:Product Name"},
+            info = {"产品名称", "en:Product name"},
+            list = true, search = true, add = true, update = true, required = true)
+    public String name;
+
+    @ModelField(name = {"价格", "en:Price"},
+            info = {"产品单价", "en:Product price"},
+            list = true, add = true, update = true, input_type = InputType.decimal, min_value = 0, group = "Inventory")
+    public String price;
+
+    @ModelField(name = {"库存", "en:Stock"},
+            info = {"产品库存数量", "en:Product stock quantity"},
+            list = true, add = true, update = true, input_type = InputType.number, min_value = 0, group = "Inventory")
+    public Integer stock;
+
+    @ModelField(name = {"销量", "en:Sales"},
+            info = {"产品销量", "en:Product sales volume"},
+            list = true, add = false, input_type = InputType.number, numeric = true, group = "Inventory")
+    public Integer sales;
+
+    @ModelField(name = {"状态", "en:Status"},
+            info = {"产品状态", "en:Product status"},
+            list = true, add = true, update = true, input_type = InputType.select,
+            options = {"onsale", "offshelf", "discontinued"})
+    public String status = "onsale";
+
+    @ModelField(name = {"创建时间", "en:Created"},
+            info = {"创建时间", "en:Creation time"},
+            list = true, show = true, readonly = true, input_type = InputType.datetime)
+    public String createdAt;
 }

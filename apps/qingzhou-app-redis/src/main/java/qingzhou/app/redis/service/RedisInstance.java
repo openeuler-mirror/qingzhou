@@ -15,95 +15,80 @@ import qingzhou.app.redis.store.model.AuditEntry;
                 "en:Display Redis connection instances in read-only mode, switch via button or dropdown."})
 public class RedisInstance extends RedisModelBase implements Page, Show, Namespace {
 
-    @ModelField(id = true, show = true, list = true, readonly = true,
-            name = {"ID", "en:ID"},
+    @ModelField(id = true, show = true, list = true, readonly = true, name = {"ID", "en:ID"},
             info = {"实例唯一标识", "en:Unique instance ID"})
     public String id;
 
-    @ModelField(list = true, show = true, search = true, required = true,
-            name = {"实例名称", "en:Instance Name"},
+    @ModelField(list = true, show = true, search = true, required = true, name = {"实例名称", "en:Instance Name"},
             info = {"Redis 实例自定义名称", "en:Redis instance display name"})
     public String instanceName;
 
     @ModelField(list = true, show = true, required = true,
             options = {"standalone", "sentinel", "cluster"},
-            input_type = InputType.select,
-            name = {"连接模式", "en:Mode"},
+            input_type = InputType.select, name = {"连接模式", "en:Mode"},
             info = {"连接模式：standalone 单机、sentinel 哨兵、cluster 集群", "en:Connection mode"})
     public String mode = "standalone";
 
     @ModelField(list = true, show = true, required = true,
-            display = "mode==standalone",
-            name = {"主机地址", "en:Host"},
+            display = "mode==standalone", name = {"主机地址", "en:Host"},
             info = {"单机模式的 Redis 主机地址", "en:Redis host for standalone mode"})
     public String host;
 
     @ModelField(list = true, show = true, numeric = true, required = true,
             input_type = InputType.number,
             min_value = 1, max_value = 65535,
-            display = "mode==standalone",
-            name = {"端口", "en:Port"},
+            display = "mode==standalone", name = {"端口", "en:Port"},
             info = {"单机模式的 Redis 端口（1-65535）", "en:Redis port for standalone mode (1-65535)"})
     public String port = "6379";
 
-    @ModelField(show = true, input_type = InputType.password,
-            name = {"密码", "en:Password"},
+    @ModelField(show = true, input_type = InputType.password, name = {"密码", "en:Password"},
             info = {"Redis 连接密码", "en:Redis connection password"})
     public String password;
 
     @ModelField(show = true, numeric = true,
             input_type = InputType.number,
             min_value = 0, max_value = 15,
-            display = "mode==standalone",
-            name = {"数据库", "en:Database"},
+            display = "mode==standalone", name = {"数据库", "en:Database"},
             info = {"单机模式使用的数据库编号（0-15）", "en:Database index for standalone mode (0-15)"})
     public String database;
 
     @ModelField(show = true, input_type = InputType.textarea,
-            display = "mode==sentinel",
-            name = {"哨兵节点", "en:Sentinel Nodes"},
+            display = "mode==sentinel", name = {"哨兵节点", "en:Sentinel Nodes"},
             info = {"哨兵模式节点列表，每行一个 host:port", "en:Sentinel nodes, one host:port per line"})
     public String sentinelNodes;
 
     @ModelField(show = true,
-            display = "mode==sentinel",
-            name = {"哨兵 Master", "en:Sentinel Master"},
+            display = "mode==sentinel", name = {"哨兵 Master", "en:Sentinel Master"},
             info = {"哨兵模式的 Master 名称", "en:Master name for sentinel mode"})
     public String sentinelMaster;
 
     @ModelField(show = true, input_type = InputType.textarea,
-            display = "mode==cluster",
-            name = {"集群节点", "en:Cluster Nodes"},
+            display = "mode==cluster", name = {"集群节点", "en:Cluster Nodes"},
             info = {"集群模式节点列表，每行一个 host:port", "en:Cluster nodes, one host:port per line"})
     public String clusterNodes;
 
     @ModelField(list = true, show = true, required = true,
             options = {"production", "development", "test"},
             input_type = InputType.select,
-            color = {"production:#F56C6C", "test:#E6A23C", "development:#67C23A"},
-            name = {"环境标识", "en:Environment"},
+            color = {"production:#F56C6C", "test:#E6A23C", "development:#67C23A"}, name = {"环境标识", "en:Environment"},
             info = {"production 生产环境（限制破坏性操作）、development 开发环境、test 测试环境",
                     "en:production (restrict destructive ops), development, test"})
     public String envType;
 
     @ModelField(list = true, show = true, readonly = true,
-            color = {"是:#67C23A", "否:#909399"},
-            name = {"当前活跃", "en:Active"},
+            color = {"是:#67C23A", "否:#909399"}, name = {"当前活跃", "en:Active"},
             info = {"是否为当前活跃连接", "en:Whether this is the active connection"})
     public String active;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"连接状态", "en:Status"},
+    @ModelField(list = true, show = true, readonly = true, name = {"连接状态", "en:Status"},
             info = {"连接状态", "en:Connection status"})
     public String status;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"最大内存", "en:Max Memory"},
+    @ModelField(list = true, show = true, readonly = true, name = {"最大内存", "en:Max Memory"},
             info = {"Redis 最大内存配置（字节）", "en:Redis maxmemory configuration in bytes"})
     public String maxmemory;
 
-    @ModelField(list = true, show = true, readonly = true,
-            name = {"最大客户端数", "en:Max Clients"},
+    @ModelField(list = true, show = true, readonly = true, name = {"最大客户端数", "en:Max Clients"},
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 

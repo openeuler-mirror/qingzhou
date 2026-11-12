@@ -22,52 +22,43 @@ import java.util.*;
         info = {"Redis 问题综合诊断报告", "en:Comprehensive Redis problem diagnosis reports"})
 public class ProblemDiagnosis extends RedisModelBase implements Page, Show {
 
-    @ModelField(id = true, list = true, show = true, readonly = true,
-            name = {"报告 ID", "en:Report ID"},
+    @ModelField(id = true, list = true, show = true, readonly = true, name = {"报告 ID", "en:Report ID"},
             info = {"诊断报告唯一标识", "en:Unique report ID"})
     public String id;
 
-    @ModelField(list = true, show = true,
-            name = {"诊断时间", "en:Diagnosis Time"},
+    @ModelField(list = true, show = true, name = {"诊断时间", "en:Diagnosis Time"},
             info = {"诊断发生时间", "en:Diagnosis time"})
     public String diagnosisTime;
 
     @ModelField(list = true, show = true, search = true,
             options = {"性能", "内存", "连接", "配置"},
-            input_type = InputType.select,
-            name = {"问题分类", "en:Category"},
+            input_type = InputType.select, name = {"问题分类", "en:Category"},
             info = {"问题分类", "en:Problem category"})
     public String category;
 
-    @ModelField(list = true, show = true,
-            name = {"诊断项名称", "en:Diagnosis Name"},
+    @ModelField(list = true, show = true, name = {"诊断项名称", "en:Diagnosis Name"},
             info = {"诊断项名称", "en:Diagnosis name"})
     public String diagnosisName;
 
-    @ModelField(list = true, show = true,
-            name = {"问题描述", "en:Description"},
+    @ModelField(list = true, show = true, name = {"问题描述", "en:Description"},
             info = {"问题描述", "en:Problem description"})
     public String description;
 
-    @ModelField(show = true,
-            name = {"根因", "en:Root Cause"},
+    @ModelField(show = true, name = {"根因", "en:Root Cause"},
             info = {"问题根因", "en:Root cause"})
     public String cause;
 
-    @ModelField(show = true,
-            name = {"建议操作", "en:Suggestion"},
+    @ModelField(show = true, name = {"建议操作", "en:Suggestion"},
             info = {"建议操作", "en:Suggested operation"})
     public String suggestion;
 
     @ModelField(list = true, show = true,
-            color = {"严重:#F56C6C", "警告:#E6A23C", "正常:#67C23A"},
-            name = {"级别", "en:Level"},
+            color = {"严重:#F56C6C", "警告:#E6A23C", "正常:#67C23A"}, name = {"级别", "en:Level"},
             info = {"问题级别", "en:Problem level"})
     public String level;
 
     @ModelField(list = true, show = true,
-            color = {"未处理:#F56C6C", "已处理:#67C23A"},
-            name = {"状态", "en:Status"},
+            color = {"未处理:#F56C6C", "已处理:#67C23A"}, name = {"状态", "en:Status"},
             info = {"处理状态", "en:Handling status"})
     public String status;
 
