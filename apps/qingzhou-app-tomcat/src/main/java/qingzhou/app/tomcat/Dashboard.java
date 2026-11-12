@@ -22,6 +22,13 @@ public class Dashboard extends TomcatModelBase implements Show, Monitor {
     public String id;
 
     @ModelField(
+            name = {"运行状态", "en:Status"},
+            info = {"Tomcat 进程运行状态", "en:Tomcat process running status"},
+            field_type = FieldType.monitor,
+            group = "Basic")
+    public String running;
+
+    @ModelField(
             name = {"统计时间", "en:Stats Time"},
             info = {"监控数据采集时间", "en:Statistics generation time"},
             field_type = FieldType.monitor,
@@ -62,14 +69,19 @@ public class Dashboard extends TomcatModelBase implements Show, Monitor {
 
     @Override
     public Map<String, String> show(String id) {
-        Map<String, String> stats;
         try {
-            stats = TomcatJmx.read(getTomcatBaseDir(), TomcatJmx::stats);
+            Map<String, String> stats = TomcatJmx.read(getTomcatBaseDir(), TomcatJmx::stats);
+            stats.put("path", getAppContext().getDetectedPath());
+            stats.put("running", "运行");
+            return stats;
+        } catch (TomcatNotRunningException e) {
+            Map<String, String> offline = new java.util.LinkedHashMap<>();
+            offline.put("path", getAppContext().getDetectedPath());
+            offline.put("running", "未启动");
+            return offline;
         } catch (Exception e) {
             throw new IllegalStateException("failed to read Tomcat metrics via JMX", e);
         }
-        stats.put("path", getAppContext().getDetectedPath());
-        return stats;
     }
 
     @Override

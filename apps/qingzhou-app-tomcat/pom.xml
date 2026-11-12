@@ -24,7 +24,7 @@
                                 CATALINA_HOME,TOMCAT_HOME
                             </Qingzhou-Detection-Env-Vars>
                             <Qingzhou-Detection-Scan-Roots>
-                                user.home,/usr/local,/opt,/opt/homebrew/opt
+                                user.home,/usr/local,/opt,/opt/homebrew/opt,/Users/fuderong/Desktop/apache-tomcat-9.0.113
                             </Qingzhou-Detection-Scan-Roots>
                             <Qingzhou-Detection-Process-Names>
                                 org.apache.catalina.startup.Bootstrap

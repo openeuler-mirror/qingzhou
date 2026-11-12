@@ -62,6 +62,7 @@ final class TomcatJmx {
 
     /**
      * Tomcat 重启会让缓存的 JMX 连接失效，此处丢弃旧连接并整体重试一次，避免重启后首次访问报错。
+     * TomcatNotRunningException(Error) 会穿透 catch(Exception)，直接上抛给拦截器。
      */
     static <T> T read(String tomcatHome, Reader<T> reader) throws Exception {
         try {
@@ -124,12 +125,10 @@ final class TomcatJmx {
         });
     }
 
-    // 与 TomcatThreadPool 的模型字段一一对应，取自 ThreadPool MBean 实际暴露的属性
+    // 与 TomcatThreadPool 的模型字段一一对应，仅取线程维度；连接维度由 Connector 模型负责
     private static final String[] THREAD_POOL_FIELDS = {
-            "port", "localPort", "maxThreads", "minSpareThreads",
-            "currentThreadCount", "currentThreadsBusy", "connectionCount", "keepAliveCount",
-            "maxConnections", "backlog", "acceptorThreadCount", "pollerThreadCount",
-            "keepAliveTimeout", "maxKeepAliveRequests", "soTimeout", "running", "paused"};
+            "port", "maxThreads", "minSpareThreads",
+            "currentThreadCount", "currentThreadsBusy", "running", "paused"};
 
     /**
      * 首页汇总：Server / Connector / WebModule MBean 的基础信息与数量。
@@ -263,20 +262,19 @@ final class TomcatJmx {
     }
 
     /**
-     * 单个 Connector 的监控项：线程取自同端口 ThreadPool，流量与耗时取自同名 GlobalRequestProcessor。
+     * 单个 Connector 的监控项：连接数取自同端口 ThreadPool，流量与耗时取自同名 GlobalRequestProcessor。
      */
     Map<String, String> connectorStats(String port) throws Exception {
         try {
-            long threads = 0, busy = 0, maxThreads = 0;
             String handler = null;
+            String connections = "0", keepAlive = "0";
             for (ObjectName name : names("Catalina:type=ThreadPool,*")) {
                 if (!port.equals(attribute(name, "port"))) {
                     continue;
                 }
                 handler = ObjectName.unquote(name.getKeyProperty("name"));
-                threads = number(name, "currentThreadCount");
-                busy = number(name, "currentThreadsBusy");
-                maxThreads = number(name, "maxThreads");
+                connections = attribute(name, "connectionCount");
+                keepAlive = attribute(name, "keepAliveCount");
                 break;
             }
 
@@ -293,14 +291,13 @@ final class TomcatJmx {
             }
 
             Map<String, String> stats = new LinkedHashMap<>();
-            stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            stats.put("statsTime", now());
             stats.put("requestCount", String.valueOf(requests));
             stats.put("errorCount", String.valueOf(errors));
             stats.put("bytesSent", mb(sent));
             stats.put("bytesReceived", mb(received));
-            stats.put("threadBusyPercent", String.valueOf(maxThreads == 0 ? 0 : busy * 100 / maxThreads));
-            stats.put("threadBusy", String.valueOf(busy));
-            stats.put("threadIdle", String.valueOf(threads - busy));
+            stats.put("liveConnections", connections);
+            stats.put("keepAliveConnections", keepAlive);
             stats.put("avgProcessingTime", String.valueOf(requests == 0 ? 0 : processing / requests));
             stats.put("maxProcessingTime", String.valueOf(maxTime));
             return stats;
@@ -311,7 +308,7 @@ final class TomcatJmx {
     }
 
     /**
-     * 线程池监视：线程容量与连接占用，取自 ThreadPool MBean。
+     * 线程池监视：线程容量与负载，取自 ThreadPool MBean。
      */
     Map<String, String> threadPoolStats(String poolName) throws Exception {
         try {
@@ -334,8 +331,6 @@ final class TomcatJmx {
             stats.put("busyThreads", String.valueOf(busy));
             stats.put("idleThreads", String.valueOf(threads - busy));
             stats.put("busyPercent", String.valueOf(maxThreads == 0 ? 0 : busy * 100 / maxThreads));
-            stats.put("liveConnections", attribute(target, "connectionCount"));
-            stats.put("keepAliveConnections", attribute(target, "keepAliveCount"));
             return stats;
         } catch (Exception e) {
             invalidate();
@@ -488,7 +483,7 @@ final class TomcatJmx {
                 }
             }
         }
-        throw new IllegalStateException("未找到与安装路径匹配的运行中 Tomcat: " + tomcatHome);
+        throw new TomcatNotRunningException(tomcatHome);
     }
 
     private static boolean samePath(String left, String right) {

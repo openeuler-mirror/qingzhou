@@ -12,7 +12,7 @@ import qingzhou.api.annotations.*;
 
 @Model(code = "threadpool", order = 5, icon = "Coin",
         name = {"线程池", "en:Thread Pools"},
-        info = {"Tomcat线程池监控", "en:Tomcat thread pool monitoring"})
+        info = {"请求处理线程的容量与负载监控", "en:Capacity and load of request processing threads"})
 public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
 
     @ModelField(id = true, list = true, show = true, readonly = true,
@@ -24,11 +24,6 @@ public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
             name = {"端口", "en:Port"},
             info = {"线程池所属 Connector 的端口", "en:Port of the owning connector"})
     public String port;
-
-    @ModelField(list = true, show = true, readonly = true, numeric = true,
-            name = {"本地端口", "en:Local Port"},
-            info = {"实际监听端口", "en:Actual listening port"})
-    public String localPort;
 
     @ModelField(list = true, show = true, readonly = true, numeric = true,
             name = {"最大线程", "en:Max Threads"},
@@ -49,51 +44,6 @@ public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
             name = {"繁忙线程数", "en:Busy Threads"},
             info = {"当前正在处理请求的线程数", "en:Threads currently processing requests"})
     public String currentThreadsBusy;
-
-    @ModelField(list = true, show = true, readonly = true, numeric = true,
-            name = {"连接数", "en:Connections"},
-            info = {"当前打开的连接数", "en:Current number of open connections"})
-    public String connectionCount;
-
-    @ModelField(list = true, show = true, readonly = true, numeric = true,
-            name = {"长连接数", "en:Keep-Alive"},
-            info = {"当前保持的长连接数", "en:Current number of keep-alive connections"})
-    public String keepAliveCount;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"最大连接数", "en:Max Connections"},
-            info = {"允许的最大连接数", "en:Maximum number of connections"})
-    public String maxConnections;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"等待队列", "en:Backlog"},
-            info = {"等待接受的连接队列长度", "en:Accept backlog"})
-    public String backlog;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"接受线程数", "en:Acceptor Threads"},
-            info = {"Acceptor 线程数", "en:Number of acceptor threads"})
-    public String acceptorThreadCount;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"轮询线程数", "en:Poller Threads"},
-            info = {"Poller 线程数", "en:Number of poller threads"})
-    public String pollerThreadCount;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"长连接超时", "en:Keep-Alive Timeout"},
-            info = {"长连接超时时间(毫秒)", "en:Keep-alive timeout in milliseconds"})
-    public String keepAliveTimeout;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"最大长连接请求", "en:Max Keep-Alive Requests"},
-            info = {"单个长连接允许的最大请求数", "en:Max requests per keep-alive connection"})
-    public String maxKeepAliveRequests;
-
-    @ModelField(show = true, readonly = true, numeric = true,
-            name = {"读取超时", "en:Socket Timeout"},
-            info = {"Socket 读取超时时间(毫秒)", "en:Socket read timeout in milliseconds"})
-    public String soTimeout;
 
     @ModelField(show = true, readonly = true,
             name = {"运行状态", "en:Running"},
@@ -139,20 +89,6 @@ public class TomcatThreadPool extends TomcatModelBase implements Page, Show {
             field_type = FieldType.monitor, numeric = true,
             chart_type = ChartType.gauge, group = "Thread")
     public String busyPercent;
-
-    @ModelField(
-            name = {"当前连接数", "en:Live Connections"},
-            info = {"当前打开的连接数", "en:Open connections"},
-            field_type = FieldType.monitor, numeric = true,
-            chart_type = ChartType.stat, group = "Connection")
-    public String liveConnections;
-
-    @ModelField(
-            name = {"长连接数", "en:Keep-Alive Connections"},
-            info = {"当前保持的长连接数", "en:Keep-alive connections"},
-            field_type = FieldType.monitor, numeric = true,
-            chart_type = ChartType.stat, group = "Connection")
-    public String keepAliveConnections;
 
     private List<Map<String, String>> threadPools;
 
