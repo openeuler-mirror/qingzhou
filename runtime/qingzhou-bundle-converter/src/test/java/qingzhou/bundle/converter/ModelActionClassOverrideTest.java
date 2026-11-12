@@ -13,7 +13,7 @@ import org.testng.annotations.Test;
 import qingzhou.api.action.Add;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelActions;
+import qingzhou.api.annotations.OverrideDefaultActions;
 
 public class ModelActionClassOverrideTest {
 
@@ -38,9 +38,9 @@ public class ModelActionClassOverrideTest {
         return (ModelAction) ctClass.getAnnotation(ModelAction.class);
     }
 
-    private ModelActions classContainer(Class<?> clazz) throws Exception {
+    private OverrideDefaultActions classContainer(Class<?> clazz) throws Exception {
         CtClass ctClass = classPool.get(clazz.getName());
-        return (ModelActions) ctClass.getAnnotation(ModelActions.class);
+        return (OverrideDefaultActions) ctClass.getAnnotation(OverrideDefaultActions.class);
     }
 
     @Model(code = "test", name = {"t"})
@@ -148,7 +148,7 @@ public class ModelActionClassOverrideTest {
         Assert.assertEquals(dto.icon, "Check", "非默认 action 不应被类级注解覆盖");
     }
 
-    // —— 多个 @ModelAction 场景：编译器自动打包成 @ModelActions 容器 ——
+    // —— 多个 @ModelAction 场景：编译器自动打包成 @OverrideDefaultActions 容器 ——
 
     @Model(code = "test", name = {"t"})
     @ModelAction(code = "add",    icon = "Star",  name = {"新增"})
@@ -159,11 +159,11 @@ public class ModelActionClassOverrideTest {
     }
 
     @Test
-    public void multiModelAction_compilerPacksIntoModelActions() throws Exception {
-        // 编译器对多个 @ModelAction 自动打包成 @ModelActions 容器
+    public void multiModelAction_compilerPacksIntoOverrideDefaultActions() throws Exception {
+        // 编译器对多个 @ModelAction 自动打包成 @OverrideDefaultActions 容器
         Assert.assertNull(classAnno(MultiClassAnno.class), "多注解场景，ModelAction.class 应返回 null");
-        ModelActions container = classContainer(MultiClassAnno.class);
-        Assert.assertNotNull(container, "多注解场景，应通过 ModelActions 容器获取");
+        OverrideDefaultActions container = classContainer(MultiClassAnno.class);
+        Assert.assertNotNull(container, "多注解场景，应通过 OverrideDefaultActions 容器获取");
         Assert.assertEquals(container.value().length, 2);
         Assert.assertEquals(container.value()[0].code(), "add");
         Assert.assertEquals(container.value()[1].code(), "delete");
@@ -194,7 +194,7 @@ public class ModelActionClassOverrideTest {
         dtos.add(dtoDelete);
         dtos.add(dtoCustom);
 
-        ModelActions container = classContainer(MultiClassAnno.class);
+        OverrideDefaultActions container = classContainer(MultiClassAnno.class);
         Assert.assertNotNull(container);
         for (ModelAction a : container.value()) {
             applyMethod.invoke(converter, a, dtos);
