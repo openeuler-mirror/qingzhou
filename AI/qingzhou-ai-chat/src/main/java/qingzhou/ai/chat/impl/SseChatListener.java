@@ -129,8 +129,8 @@ class SseChatListener implements ChatListener {
                 case "monitor":
                     return "monitor";
                 // 空间切换（非写操作）：联动聚焦到该模型的列表页（空间列表所在），已打开则强制刷新。
-                // currentspace 为纯查询、无状态变化，不联动
-                case "switchspace":
+                // current 为纯查询、无状态变化，不联动
+                case "namespace":
                     return "focus";
                 // 写操作（add/update/delete）不联动：AI 写数据时驱动左侧视图可能与用户当前操作产生数据冲突，联动范围由后端统一控制
                 default:
