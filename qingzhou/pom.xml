@@ -254,11 +254,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-ai-skill-app-builder</artifactId>
-            <groupId>${project.groupId}</groupId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <artifactId>qingzhou-ai-skill-mcp-loader</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>

@@ -20,15 +20,9 @@
             <directory>${project.basedir}/../docs</directory>
             <includes>
                 <include>**/*.md</include>
+                <include>**/*.readme</include>
             </includes>
             <outputDirectory>lib/version/docs</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../modules/qingzhou-api/src/main/java</directory>
-            <includes>
-                <include>**/*.java</include>
-            </includes>
-            <outputDirectory>lib/version/docs/qingzhou-api</outputDirectory>
         </fileSet>
     </fileSets>
 
@@ -141,7 +135,6 @@
                 <include>${project.groupId}:qingzhou-ai-mcp</include>
                 <include>${project.groupId}:qingzhou-ai-chat</include>
                 <include>${project.groupId}:qingzhou-ai-memory</include>
-                <include>${project.groupId}:qingzhou-ai-skill-app-builder</include>
                 <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
                 <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
                 <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>

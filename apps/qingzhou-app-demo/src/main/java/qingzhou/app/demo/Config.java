@@ -3,9 +3,8 @@ package qingzhou.app.demo;
 import java.util.*;
 
 import qingzhou.api.InputType;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelField;
 import qingzhou.api.action.*;
+import qingzhou.api.annotations.*;
 import qingzhou.logger.Logger;
 
 @Model(code = "config", order = 4,
@@ -13,6 +12,11 @@ import qingzhou.logger.Logger;
         info = {"系统配置管理", "en:System configuration management"},
         icon = "Setting",
         menu = "system")
+@OverrideDefaultActions({
+        @ModelAction(code = "delete", name = {"删除配置", "en:Delete Config"}, order = 0),
+        @ModelAction(code = "add", name = {"增加配置", "en:Add Config"}, icon = "Plus", order = 10),
+})
+@ModelAction(code = "show", name = {"显示配置", "en:Show Config"}, icon = "Plus", order = 100)
 public class Config extends qingzhou.api.ModelBase implements Page, Show, Add, Update, Delete, Namespace {
     private static final Map<String, Map<String, String>> db = new HashMap<>();
 

@@ -1,12 +1,4 @@
 {
   "mcpServers": {
-    "demo-server": {
-      "enabled": true,
-      "url": "http://127.0.0.1:7901/ai/mcp",
-      "description": "获取轻舟平台上部署的应用列表信息",
-      "headers": {
-        "Authorization": "Bearer plain:token"
-      }
-    }
   }
 }

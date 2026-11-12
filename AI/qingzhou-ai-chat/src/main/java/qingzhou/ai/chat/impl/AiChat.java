@@ -10,20 +10,17 @@ import org.osgi.service.component.annotations.*;
 import qingzhou.ai.SkillService;
 import qingzhou.ai.ToolCallInterceptionService;
 import qingzhou.ai.chat.ConversationStore;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.common.Configs;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
-import qingzhou.llm.Attachment;
-import qingzhou.llm.ChatModel;
-import qingzhou.llm.ChatModelFactory;
-import qingzhou.llm.Skill;
+import qingzhou.llm.*;
 import qingzhou.logger.Logger;
 
-@Component(property = {
-        HttpHandler.HANDLE_PATH + "=/ai/chat/stream",
-        HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
-        HttpHandler.HANDLE_METHODS + "=POST"})
+@Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = {
+                HttpHandler.HANDLE_PATH + "=/ai/chat/stream",
+                HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
+                HttpHandler.HANDLE_METHODS + "=POST"})
 public class AiChat implements HttpHandler {
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +
@@ -42,6 +39,9 @@ public class AiChat implements HttpHandler {
             "优先使用 bar、line、pie、scatter，根据数据自动选择最合适的图表\n";
 
     private static final int MAX_QUESTION_CHARS = 10_000;
+
+    // 单篇技能说明书/参考文档注入系统提示的字符上限
+    private int maxDocChars;
 
     @Reference
     private Logger logger;
@@ -73,6 +73,12 @@ public class AiChat implements HttpHandler {
         // 刻意停用即关停共享看门狗：在途会话会失去心跳与首字超时（悬挂到客户端超时），
         // 但不关停会让空闲线程经 Worker→Executor→线程工厂持有旧 bundle 的类加载器，导致 bundle 更新后泄漏
         SseWatchdog.getExecutorService().shutdownNow();
+    }
+
+    @Activate
+    public void init(Map<String, String> config) {
+        Configs configs = new Configs(config);
+        maxDocChars = Math.toIntExact(configs.between("chat_max_doc_chars", 1, 1_000_000, 50_000));// 主流 API 梯队：普遍在 100 万 token（1M）左右
     }
 
     @Override
@@ -178,7 +184,6 @@ public class AiChat implements HttpHandler {
         SseChatListener sseListener = null;
         try {
             Collection<Skill> skills = llmConverter.convertSkills(llmSkills, logger); // 只转换一次，开销统计与实际注入同源
-            int maxRefChars = 10000; // 单篇技能说明书/参考文档注入系统提示的字符上限
             ChatModelFactory.ChatModelBuilder builder = chatModelFactory.newChatModelBuilder()
                     .systemPrompt(SYSTEM_PROMPT)
                     .docs(request.refDocs)
@@ -186,9 +191,9 @@ public class AiChat implements HttpHandler {
                     .maxToolResultChars(20480)
                     .enableThinking(true)
                     .interceptor((toolName, argsMap) -> interceptionService.intercept(toolName, argsMap, request.userId, request.userRoles))
-                    .maxDocChars(maxRefChars)
+                    .maxDocChars(maxDocChars)
                     .chatMemory(() -> conversationStore.getMessageList(request.userId, request.conversationId,
-                            overhead(skills, request.refDocs, request.question.length(), maxRefChars)));
+                            overhead(skills, request.refDocs, request.question.length(), maxDocChars)));
             ChatModel chatModel = builder.build();
 
             sseListener = startSseChatListener(request, httpResponse);
