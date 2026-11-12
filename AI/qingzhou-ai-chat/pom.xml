@@ -41,6 +41,7 @@
                             qingzhou.llm,
                             qingzhou.http.server,
                             qingzhou.json,
+                            qingzhou.common,
                             qingzhou.logger
                         </Import-Package>
                     </instructions>

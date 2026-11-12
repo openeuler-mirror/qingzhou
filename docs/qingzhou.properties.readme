@@ -131,6 +131,8 @@ qingzhou-ai.history_max_messages=注入模型的历史消息条数上限，至�
 qingzhou-ai.mcp_worker_threads=MCP 工具执行线程数，范围 1~64，默认 16
 qingzhou-ai.mcp_worker_queue=MCP 工具执行等待队列容量，范围 1~10000，默认 100，池满返回 503
 qingzhou-ai.mcp_queue_timeout_seconds=MCP 任务在队列中的最长等待时间，单位秒，范围 1~600，默认 60，超时不再执行
+qingzhou-ai.chat_max_doc_chars=单次对话可携带的文档内容字符上限，超出截断，默认 50000，范围 1~1000000
+qingzhou-ai.knowledge_doc_max_bytes=知识库单实例文档总字节上限，默认 1048576（1MB），范围 1~10485760
 
 # config
 qingzhou-config.remote.enabled=是否启用远程配置中心，启用后远程配置覆盖同名本地配置

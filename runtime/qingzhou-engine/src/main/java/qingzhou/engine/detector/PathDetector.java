@@ -21,9 +21,9 @@ class PathDetector {
 
         envVarNames = splitCsv(attributes.get("Qingzhou-Detection-Env-Vars"));
 
-        List<String> roots = splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots"));
+        List<String> roots = splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots"));
         // 清单未给出时回落到 JVM 属性，便于部署期覆盖扫描范围
-        scanRootPaths = roots.isEmpty() ? splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots")) : roots;
+        scanRootPaths = roots.isEmpty() ? splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots")) : roots;
 
         List<String> processKeywords = splitCsv(attributes.get("Qingzhou-Detection-Process-Names")).stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
