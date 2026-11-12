@@ -9,7 +9,7 @@ import qingzhou.api.annotations.*;
 
 @Model(code = "connector", order = 4,
         name = {"Connector通道", "en:Connector"},
-        info = {"展示Tomcat Connector配置信息", "en:Display Tomcat Connector configuration"},
+        info = {"连接监听配置与请求流量监控", "en:Connection config and request traffic monitoring"},
         icon = "Fries")
 public class Connector extends TomcatModelBase implements Page, Show {
     @ModelField(id = true,
@@ -39,20 +39,6 @@ public class Connector extends TomcatModelBase implements Page, Show {
             list = true, search = true, host = true,
             show = true)
     public String address;
-
-    @ModelField(
-            name = {"最大线程数", "en:Max Threads"},
-            info = {"最大工作线程数", "en:Maximum number of worker threads"},
-            list = true, numeric = true,
-            show = true)
-    public String maxThreads;
-
-    @ModelField(
-            name = {"最小空闲线程", "en:Min Spare Threads"},
-            info = {"最小空闲线程数", "en:Minimum number of spare threads"},
-            list = true, numeric = true,
-            show = true)
-    public String minSpareThreads;
 
     @ModelField(
             name = {"等待队列", "en:Accept Count"},
@@ -117,31 +103,22 @@ public class Connector extends TomcatModelBase implements Page, Show {
     public String bytesReceived;
 
     @ModelField(
-            name = {"线程繁忙率(%)", "en:Busy Threads (%)"},
-            info = {"繁忙线程数占最大线程数的比例", "en:Busy threads ratio"},
+            name = {"当前连接数", "en:Live Connections"},
+            info = {"该通道当前打开的连接数", "en:Open connections of this connector"},
             field_type = FieldType.monitor,
             numeric = true,
-            chart_type = ChartType.gauge,
-            group = "Thread")
-    public String threadBusyPercent;
+            chart_type = ChartType.stat,
+            group = "Connection")
+    public String liveConnections;
 
     @ModelField(
-            name = {"繁忙线程", "en:Busy Threads"},
-            info = {"当前处理请求的线程数", "en:Threads processing requests"},
+            name = {"长连接数", "en:Keep-Alive Connections"},
+            info = {"该通道当前保持的长连接数", "en:Keep-alive connections of this connector"},
             field_type = FieldType.monitor,
             numeric = true,
-            chart_type = ChartType.bar,
-            group = "Thread")
-    public String threadBusy;
-
-    @ModelField(
-            name = {"空闲线程", "en:Idle Threads"},
-            info = {"当前可用的空闲线程数", "en:Idle threads"},
-            field_type = FieldType.monitor,
-            numeric = true,
-            chart_type = ChartType.bar,
-            group = "Thread")
-    public String threadIdle;
+            chart_type = ChartType.stat,
+            group = "Connection")
+    public String keepAliveConnections;
 
     @ModelField(
             name = {"平均处理时间(ms)", "en:Avg Time (ms)"},

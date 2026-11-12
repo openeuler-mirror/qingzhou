@@ -25,6 +25,23 @@ import qingzhou.api.annotations.I18n;
 public class TomcatApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) {
+        // attach 失败时统一转 response.error()，避免冒泡为 HTTP 500。
+        // Dashboard 首页需渲染"未启动"状态，不走此拦截，由 Dashboard.show() 自行 try-catch。
+        appContext.addActionFilter((request, chain) -> {
+            String model = request.getModel();
+            if ("dashboard".equals(model)) {
+                chain.doFilter();
+                return;
+            }
+            try {
+                chain.doFilter();
+            } catch (TomcatNotRunningException e) {
+                request.getResponse()
+                        .success(false)
+                        .message("Tomcat 未启动，请先启动 Tomcat 后重试")
+                        .messageLevel(qingzhou.api.Response.MessageLevel.warn);
+            }
+        });
     }
 
     @Override

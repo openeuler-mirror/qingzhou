@@ -140,8 +140,6 @@ mvn clean install
 | protocol | select | Connector 使用的协议 |
 | port | port | 监听端口 |
 | address | host | 绑定地址 |
-| maxThreads | numeric | 最大工作线程数 |
-| minSpareThreads | numeric | 最小空闲线程数 |
 | acceptCount | numeric | 等待队列长度 |
 | connectionTimeout | numeric | 连接超时时间（毫秒） |
 | redirectPort | port | SSL 重定向端口 |
@@ -155,13 +153,12 @@ mvn clean install
 | 统计时间 | 文本 | 采集时刻 |
 | 累计请求数 / 累计错误数 | stat | 同名 `GlobalRequestProcessor` 的 `requestCount` / `errorCount` |
 | 已发送 / 已接收 (MB) | stat | 同上 `bytesSent` / `bytesReceived` |
-| 线程繁忙率 | gauge | 同端口 `ThreadPool` 的 `currentThreadsBusy / maxThreads` |
-| 繁忙 / 空闲线程 | bar | `currentThreadsBusy`、`currentThreadCount - currentThreadsBusy` |
+| 当前连接数 / 长连接数 | stat | 同端口 `ThreadPool` 的 `connectionCount` / `keepAliveCount` |
 | 平均 / 最大处理时间 | line | `processingTime / requestCount`、`maxTime` |
 
 ### 线程池（threadpool）
 
-只读运行中 Tomcat 的 ThreadPool MBean，字段与 MBean 实际暴露的属性一一对应。
+只读运行中 Tomcat 的 ThreadPool MBean，仅承载线程维度；连接维度见 Connector 通道。
 
 字段：
 
@@ -169,20 +166,10 @@ mvn clean install
 |------|-----------|------|
 | 池名称 | `name`（ObjectName key） | 线程池名称，作为 id |
 | 端口 | `port` | 所属 Connector 端口 |
-| 本地端口 | `localPort` | 实际监听端口 |
 | 最大线程 | `maxThreads` | 配置的最大线程数 |
 | 最小空闲 | `minSpareThreads` | 最小空闲线程数 |
 | 当前线程数 | `currentThreadCount` | 当前已创建的线程数 |
 | 繁忙线程数 | `currentThreadsBusy` | 正在处理请求的线程数 |
-| 连接数 | `connectionCount` | 当前打开的连接数 |
-| 长连接数 | `keepAliveCount` | 当前保持的长连接数 |
-| 最大连接数 | `maxConnections` | 允许的最大连接数（详情） |
-| 等待队列 | `backlog` | 等待接受的连接队列长度（详情） |
-| 接受线程数 | `acceptorThreadCount` | Acceptor 线程数（详情） |
-| 轮询线程数 | `pollerThreadCount` | Poller 线程数（详情） |
-| 长连接超时 | `keepAliveTimeout` | 长连接超时时间（详情） |
-| 最大长连接请求 | `maxKeepAliveRequests` | 单个长连接允许的最大请求数（详情） |
-| 读取超时 | `soTimeout` | Socket 读取超时时间（详情） |
 | 运行状态 | `running` | 线程池是否运行中（详情） |
 | 暂停状态 | `paused` | 线程池是否已暂停（详情） |
 
@@ -196,7 +183,6 @@ mvn clean install
 | 已创建线程 | stat | `currentThreadCount` |
 | 繁忙 / 空闲线程 | bar | `currentThreadsBusy`、`currentThreadCount - currentThreadsBusy` |
 | 线程繁忙率 | gauge | `currentThreadsBusy / maxThreads` |
-| 当前连接数 / 长连接数 | stat | `connectionCount` / `keepAliveCount` |
 
 ### 日志查看（logs）
 
