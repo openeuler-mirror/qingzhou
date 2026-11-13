@@ -61,7 +61,13 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.jdbc</Export-Package>
-                        <Import-Package>qingzhou.crypto,qingzhou.monitor.api,javax.sql,javax.management</Import-Package>
+                        <Import-Package>
+                            org.osgi.framework,
+                            qingzhou.crypto,
+                            qingzhou.monitor.api,
+                            javax.sql,
+                            javax.management
+                        </Import-Package>
                         <Embed-Dependency>tomcat-jdbc,tomcat-juli</Embed-Dependency>
                     </instructions>
                 </configuration>

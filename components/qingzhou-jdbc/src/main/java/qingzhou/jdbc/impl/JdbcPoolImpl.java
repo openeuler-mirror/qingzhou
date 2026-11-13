@@ -17,6 +17,7 @@ import org.apache.tomcat.jdbc.pool.ConnectionPool;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.apache.tomcat.jdbc.pool.XADataSource;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
 import qingzhou.jdbc.JdbcPool;
@@ -26,14 +27,18 @@ import qingzhou.monitor.api.MetricProvider;
 @Component(configurationPid = "qingzhou-jdbc", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = MetricProvider.PROVIDER_ID + "=jdbc")
 public class JdbcPoolImpl implements JdbcPool, MetricProvider {
+    private static final String POOL_LABEL = "pool";
+
     @Reference
     private Crypto crypto;
 
     private PoolProperties poolConfig;
     private DataSource dsPool;
+    private String poolName;
 
     @Activate
     public void activate(Map<String, String> config) throws Exception {
+        poolName = poolNameOf(config.get(Constants.SERVICE_PID));
         PoolProperties props = new PoolProperties();
         BeanInfo beanInfo = Introspector.getBeanInfo(props.getClass(), Object.class);
         Map<String, PropertyDescriptor> descriptors = new java.util.HashMap<>();
@@ -41,6 +46,8 @@ public class JdbcPoolImpl implements JdbcPool, MetricProvider {
             descriptors.put(pd.getName(), pd);
         }
         for (Map.Entry<String, String> entry : config.entrySet()) {
+            // 契约适配：SCR 与平台注入的 service.*、qingzhou.* 不是池配置项，不参与 PoolProperties 映射
+            if (isFrameworkProperty(entry.getKey())) continue;
             PropertyDescriptor matched = descriptors.get(entry.getKey());
             // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
             if (matched == null || matched.getWriteMethod() == null) {
@@ -73,6 +80,17 @@ public class JdbcPoolImpl implements JdbcPool, MetricProvider {
             // 异常须携带配置项名，否则反射调用栈里无法定位是哪个配置项的值非法
             throw new IllegalArgumentException("invalid value of config item [" + key + "]: " + value, e);
         }
+    }
+
+    // 工厂配置 pid 形如 qingzhou-jdbc~<池名>：池名是唯一可得的实例身份，指标维度、日志定位都依赖它
+    private static String poolNameOf(String pid) {
+        if (pid == null) throw new IllegalStateException("missing config item: " + Constants.SERVICE_PID);
+        int index = pid.indexOf('~');
+        return index < 0 ? pid : pid.substring(index + 1);
+    }
+
+    private static boolean isFrameworkProperty(String key) {
+        return key.startsWith("service.") || key.startsWith("qingzhou.");
     }
 
     @Override
@@ -132,14 +150,16 @@ public class JdbcPoolImpl implements JdbcPool, MetricProvider {
         ConnectionPool stats = pool == null ? null : pool.getPool();
         if (stats == null) return Collections.emptySet();
 
+        // 多池并存：指标族相同，靠 pool 维度区分实例；缺该维度会与其它池构成重复序列
+        Map<String, String> labels = Collections.singletonMap(POOL_LABEL, poolName);
         Set<Metric> metrics = new HashSet<>();
-        metrics.add(Metric.of("pool_active", stats.getActive(), Metric.Type.GAUGE,
+        metrics.add(Metric.of("pool_active", stats.getActive(), Metric.Type.GAUGE, labels,
                 "Connections currently borrowed from the pool"));
-        metrics.add(Metric.of("pool_idle", stats.getIdle(), Metric.Type.GAUGE,
+        metrics.add(Metric.of("pool_idle", stats.getIdle(), Metric.Type.GAUGE, labels,
                 "Idle connections currently held by the pool"));
-        metrics.add(Metric.of("pool_waiters", stats.getWaitCount(), Metric.Type.GAUGE,
+        metrics.add(Metric.of("pool_waiters", stats.getWaitCount(), Metric.Type.GAUGE, labels,
                 "Threads waiting to borrow a connection"));
-        metrics.add(Metric.of("pool_size", stats.getSize(), Metric.Type.GAUGE,
+        metrics.add(Metric.of("pool_size", stats.getSize(), Metric.Type.GAUGE, labels,
                 "Connections currently tracked by the pool"));
         return metrics;
     }
