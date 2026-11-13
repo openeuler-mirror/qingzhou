@@ -4,7 +4,9 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadMXBean;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,17 +43,21 @@ public class JvmMetricProvider implements MetricProvider {
                 ManagementFactory.getClassLoadingMXBean().getTotalLoadedClassCount(), COUNTER,
                 "Total number of classes loaded since JVM start"));
 
-        long gcCount = 0;
-        long gcTime = 0;
-        // MXBean 约定 -1 表示统计不可用，按 0 计入总量
+        // 按回收器分列：Young 与 Full 的耗时量级不同，合并成总量无法定界；label 值取值域由 JVM 实现固定，基数受控
         for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
-            gcCount += Math.max(gc.getCollectionCount(), 0);
-            gcTime += Math.max(gc.getCollectionTime(), 0);
+            Map<String, String> gcLabels = Collections.singletonMap("gc", gc.getName());
+            // MXBean 约定 -1 表示该项统计不可用，按缺失处理不输出样本
+            long count = gc.getCollectionCount();
+            if (count >= 0) {
+                metrics.add(Metric.of("gc_collection_total", count, COUNTER, gcLabels,
+                        "Total garbage collection count of the collector"));
+            }
+            long time = gc.getCollectionTime();
+            if (time >= 0) {
+                metrics.add(Metric.of("gc_time_seconds_total", time / 1000d, COUNTER, gcLabels,
+                        "Total garbage collection time in seconds of the collector"));
+            }
         }
-        metrics.add(Metric.of("gc_collection_total", gcCount, COUNTER,
-                "Total garbage collection count across all collectors"));
-        metrics.add(Metric.of("gc_time_seconds_total", gcTime / 1000d, COUNTER,
-                "Total garbage collection time in seconds across all collectors"));
         metrics.add(Metric.of("uptime_seconds", ManagementFactory.getRuntimeMXBean().getUptime() / 1000d, GAUGE,
                 "JVM uptime in seconds"));
         return metrics;

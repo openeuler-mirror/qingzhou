@@ -12,12 +12,13 @@ final class PrometheusFormat {
     private static final Pattern LABEL_NAME = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
 
     /**
-     * 同名指标类型或说明冲突属编程错误，直接抛出。
+     * 同名指标类型或说明冲突、同一序列重复出现，均属编程错误，直接抛出。
      */
     static String render(Map<String, Collection<Metric>> metricsByProvider) {
         Map<String, Metric.Type> types = new LinkedHashMap<>();
         Map<String, String> descriptions = new LinkedHashMap<>();
         Map<String, StringBuilder> bodies = new LinkedHashMap<>();
+        Set<String> series = new HashSet<>();
         for (Map.Entry<String, Collection<Metric>> entry : metricsByProvider.entrySet()) {
             String id = entry.getKey();
             for (Metric metric : entry.getValue()) {
@@ -31,8 +32,13 @@ final class PrometheusFormat {
                 if (registeredDescription != null && !registeredDescription.equals(description)) {
                     throw new IllegalStateException("conflicting metric description for " + name);
                 }
+                // 同族重复序列会被抓取端判为 duplicate sample 并丢弃整批，须在渲染边界拦下；族名已含 provider 前缀，跨 provider 不会误判
+                Map<String, String> labels = labelsOf(id, metric);
+                if (!series.add(name + labels)) {
+                    throw new IllegalStateException("duplicate metric series: " + name + labels);
+                }
                 bodies.computeIfAbsent(name, key -> new StringBuilder())
-                        .append(line(id, name, metric)).append('\n');
+                        .append(line(name, labels, metric.value())).append('\n');
             }
         }
         StringBuilder out = new StringBuilder();
@@ -55,12 +61,17 @@ final class PrometheusFormat {
                 .toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
     }
 
-    private static String line(String id, String name, Metric metric) {
-        Map<String, String> labels = new LinkedHashMap<>(metric.labels());
+    // 用 TreeMap：标签是集合，判重与输出均不应受插入顺序影响
+    private static Map<String, String> labelsOf(String id, Metric metric) {
+        Map<String, String> labels = new TreeMap<>(metric.labels());
         labels.put(PROVIDER, id);
+        return labels;
+    }
+
+    private static String line(String name, Map<String, String> labels, double value) {
         StringJoiner out = new StringJoiner(",", name + "{", "}");
-        labels.forEach((key, value) -> out.add(labelName(key) + "=\"" + escapeLabelValue(value) + "\""));
-        return out + " " + metric.value();
+        labels.forEach((key, labelValue) -> out.add(labelName(key) + "=\"" + escapeLabelValue(labelValue) + "\""));
+        return out + " " + value;
     }
 
     // 非法 label 名会污染整段 exposition，在渲染边界一次性校验并抛错；不做静默改写以免引发键冲突
