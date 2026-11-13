@@ -76,22 +76,24 @@ qingzhou-agent.advertised_host=反代/NAT 下本实例的对外可达地址，�
 qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6
 
 # logger
-# qingzhou-logger~<名称>.* 可配多个命名日志器，名称仅限字母、数字、下划线；省略 ~<名称> 即单实例默认日志器，不可与 ~default 同存（二者解析为同一日志器，writer 配置会互相覆盖）
-qingzhou-logger~default.writingthread=是否启用异步写日志线程，启用后日志先入队列批量落盘
-qingzhou-logger~default.writer_console=控制台日志输出器定义，取值为 console 或输出器实现类名
-qingzhou-logger~default.writer_console.level=控制台日志的最低输出级别
-qingzhou-logger~default.writer_console.format=控制台日志输出格式模板，{date}、{level}、{message} 为占位符
-qingzhou-logger~default.writer_file=文件日志输出器定义，取值为 rolling file 或输出器实现类名
-qingzhou-logger~default.writer_file.file=日志文件路径模板，相对实例目录，{date:格式} 与 {count} 在滚动时填充
-qingzhou-logger~default.writer_file.level=文件日志的最低输出级别
-qingzhou-logger~default.writer_file.format=文件日志输出格式模板，{date}、{level}、{message} 为占位符
-qingzhou-logger~default.writer_file.policies=日志滚动策略，逗号分隔，如 size: 50MB,daily 表示按大小或按天滚动
-qingzhou-logger~default.writer_file.backups=历史日志文件保留份数，超出后删除最旧的
-qingzhou-logger~default.writer_file.latest=额外维护的最新日志副本路径，为空则不生成
-qingzhou-logger~default.writer_file.buffered=是否缓冲写入日志文件
-qingzhou-logger~default.writer_file.charset=日志文件字符集
-qingzhou-logger~default.writer_file.convert=滚动后历史日志的压缩方式，如 gzip，为空则不压缩
-qingzhou-logger~default.throttle_window_ms=同一失败日志消息的聚合窗口，单位毫秒，默认 30000
+# qingzhou-logger.loggers 声明启用的日志器名称（逗号分隔），必须包含 default；每个日志器以 <名称>.writer_* 配置 writer，
+# 名称仅限字母、数字、下划线。新增访问日志、审计日志等只需追加名称并配置对应 writer，无需改动代码
+qingzhou-logger.loggers=启用的日志器名称列表，逗号分隔，必须包含 default
+qingzhou-logger.default.writingthread=是否启用异步写日志线程，启用后日志先入队列批量落盘
+qingzhou-logger.default.writer_console=控制台日志输出器定义，取值为 console 或输出器实现类名
+qingzhou-logger.default.writer_console.level=控制台日志的最低输出级别
+qingzhou-logger.default.writer_console.format=控制台日志输出格式模板，{date}、{level}、{message} 为占位符
+qingzhou-logger.default.writer_file=文件日志输出器定义，取值为 rolling file 或输出器实现类名
+qingzhou-logger.default.writer_file.file=日志文件路径模板，相对实例目录，{date:格式} 与 {count} 在滚动时填充
+qingzhou-logger.default.writer_file.level=文件日志的最低输出级别
+qingzhou-logger.default.writer_file.format=文件日志输出格式模板，{date}、{level}、{message} 为占位符
+qingzhou-logger.default.writer_file.policies=日志滚动策略，逗号分隔，如 size: 50MB,daily 表示按大小或按天滚动
+qingzhou-logger.default.writer_file.backups=历史日志文件保留份数，超出后删除最旧的
+qingzhou-logger.default.writer_file.latest=额外维护的最新日志副本路径，为空则不生成
+qingzhou-logger.default.writer_file.buffered=是否缓冲写入日志文件
+qingzhou-logger.default.writer_file.charset=日志文件字符集
+qingzhou-logger.default.writer_file.convert=滚动后历史日志的压缩方式，如 gzip，为空则不压缩
+qingzhou-logger.default.throttle_window_ms=同一失败日志消息的聚合窗口，单位毫秒，默认 30000
 
 # jdbc
 qingzhou-jdbc~h2.url=数据源连接地址，h2 为数据源名称，应用按名称获取该数据源

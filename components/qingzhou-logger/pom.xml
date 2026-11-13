@@ -49,10 +49,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>qingzhou.logger,qingzhou.logger.util</Export-Package>
-                        <Import-Package>
-                            qingzhou.common,
-                            org.osgi.framework,org.osgi.service.log,org.osgi.service.cm
-                        </Import-Package>
+                        <Import-Package>qingzhou.common,org.osgi.service.log</Import-Package>
                         <Embed-Dependency>tinylog-api,tinylog-impl</Embed-Dependency>
                     </instructions>
                 </configuration>

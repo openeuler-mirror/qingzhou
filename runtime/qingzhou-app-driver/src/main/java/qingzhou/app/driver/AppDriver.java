@@ -1,19 +1,30 @@
 package qingzhou.app.driver;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import qingzhou.api.*;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
 import qingzhou.common.FileUtil;
-import qingzhou.dto.meta.*;
+import qingzhou.dto.meta.App;
+import qingzhou.dto.meta.AppMeta;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.logger.LoggerProvider;
 
 public class AppDriver implements BundleActivator {
     private BundleContext context;
@@ -43,7 +54,7 @@ public class AppDriver implements BundleActivator {
         String code = appConfig.get("code");
         if (code != null && !code.trim().isEmpty()) appMeta.getApp().code = code.trim();
         if (multiInstance) appMeta.getApp().code += "[" + seq.trim() + "]";
-        
+
         // 探测结果按符号名+序号分键，避免多 bundle 互相覆盖与清除竞态（见 PathDetectionScheduler）
         appContext.detectedPath = context.getProperty("Qingzhou-Detected-Path." + instanceName);
 
@@ -74,16 +85,14 @@ public class AppDriver implements BundleActivator {
     }
 
     private <T> T loadService(Class<T> serviceType, String name) {
-        boolean isLoggerService = serviceType == Logger.class;
-        boolean isAppDefaultLoggerService = isLoggerService && name == null;
-        String lookupName = isAppDefaultLoggerService ? "app_default" : name;
+        if (serviceType == Logger.class) return serviceType.cast(loadAppLogger(name));
 
         ServiceReference<?> serviceReference = null;
-        if (lookupName != null) {
+        if (name != null) {
             try {
                 // name 既可能是服务自身的 service.pid（如共享函数），也可能是工厂配置 qingzhou-jdbc~h2 中 ~ 之后的实例名（此时 SCR 注册的 service.pid 为 qingzhou-jdbc~h2）。
                 // 其中 *~ 是有意的通配前缀，只转义 name 本身
-                String escapedName = escapeFilterValue(lookupName);
+                String escapedName = escapeFilterValue(name);
                 Collection<ServiceReference<T>> serviceReferences = context.getServiceReferences(serviceType,
                         "(|(" + Constants.SERVICE_PID + "=" + escapedName + ")(" + Constants.SERVICE_PID + "=*~" + escapedName + "))");
                 if (!serviceReferences.isEmpty()) serviceReference = serviceReferences.iterator().next();
@@ -93,10 +102,6 @@ public class AppDriver implements BundleActivator {
         } else {
             serviceReference = context.getServiceReference(serviceType);
         }
-
-        // 未配置 qingzhou-logger~app 时回退默认日志器
-        if (isAppDefaultLoggerService && serviceReference == null)
-            serviceReference = context.getServiceReference(serviceType);
         if (serviceReference == null) return null;
 
         serviceReferences.add(serviceReference);
@@ -105,8 +110,17 @@ public class AppDriver implements BundleActivator {
         // 避免把 null 包装成 Logger 交给应用，使其在调用处才以 NPE 暴露
         if (service == null) throw new IllegalStateException("service object unavailable: " + serviceType.getName()
                 + (name == null ? "" : "~" + name));
-        if (isLoggerService) service = new AppLogger(appMeta.getApp().code, (Logger) service);
         return serviceType.cast(service);
+    }
+
+    // 应用日志器是命名日志器：经 LoggerProvider 按名获取，不参与通用服务查找；
+    // 未指定名称时取应用默认日志器，未配置该名称时由 LoggerProvider 回退默认日志器
+    private Logger loadAppLogger(String name) {
+        ServiceReference<LoggerProvider> reference = context.getServiceReference(LoggerProvider.class);
+        serviceReferences.add(reference);
+        LoggerProvider provider = context.getService(reference);
+        // 应用默认日志器名称：qingzhou-logger.loggers 中约定的应用日志器，由本模块维护
+        return new AppLogger(appMeta.getApp().code, provider.getLogger(name == null ? "app" : name));
     }
 
     // OSGi filter 为 LDAP 语法，值中的 \ * ( ) 必须转义：否则会破坏语法，

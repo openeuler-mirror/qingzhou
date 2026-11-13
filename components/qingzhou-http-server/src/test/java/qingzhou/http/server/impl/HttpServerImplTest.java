@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.Constants;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import qingzhou.crypto.Cipher;
@@ -168,10 +167,9 @@ public class HttpServerImplTest {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
         TokenService tokenService = new TokenService();
-        // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE；
-        // 非默认日志器名（~test）跳过启动 banner，避免每个用例刷屏
+        // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE
         Map<String, Object> loggerConfig = new HashMap<>();
-        loggerConfig.put(Constants.SERVICE_PID, "qingzhou-logger~test");
+        loggerConfig.put("loggers", "default");
         logger.init(loggerConfig);
         CryptoImpl crypto = new CryptoImpl();
         crypto.init(new HashMap<String, String>() {{
