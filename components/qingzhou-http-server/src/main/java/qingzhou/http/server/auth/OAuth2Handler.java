@@ -1,4 +1,4 @@
-package qingzhou.auth.oauth2;
+package qingzhou.http.server.auth;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -9,7 +9,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
-import qingzhou.auth.TokenService;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
@@ -21,7 +20,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
                 HttpHandler.HANDLE_NO_AUTH + "=true"})
@@ -61,22 +60,22 @@ public class OAuth2Handler implements HttpHandler {
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        enabled = configs.getOrDefault("oauth2_enabled", false);
+        enabled = configs.getOrDefault("auth_oauth2_enabled", false);
         if (!enabled) return;
 
-        authorizationEndpoint = configs.notBlank("oauth2_authorize_endpoint");
-        clientId = configs.notBlank("oauth2_client_id");
-        clientSecret = configs.notBlank("oauth2_client_secret"); // 安全考虑：此处不要解密
-        tokenEndpoint = configs.notBlank("oauth2_token_endpoint");
-        userinfoEndpoint = configs.notBlank("oauth2_userinfo_endpoint");
-        usernameField = config.get("oauth2_userinfo_username_field");
-        roleField = config.get("oauth2_userinfo_role_field");
-        scope = config.get("oauth2_scope");
-        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
-        grantedRoles = configs.splitList("oauth2_roles");
+        authorizationEndpoint = configs.notBlank("auth_oauth2_authorize_endpoint");
+        clientId = configs.notBlank("auth_oauth2_client_id");
+        clientSecret = configs.notBlank("auth_oauth2_client_secret"); // 安全考虑：此处不要解密
+        tokenEndpoint = configs.notBlank("auth_oauth2_token_endpoint");
+        userinfoEndpoint = configs.notBlank("auth_oauth2_userinfo_endpoint");
+        usernameField = config.get("auth_oauth2_userinfo_username_field");
+        roleField = config.get("auth_oauth2_userinfo_role_field");
+        scope = config.get("auth_oauth2_scope");
+        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 auth_oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
+        grantedRoles = configs.splitList("auth_oauth2_roles");
         // 兼容开关：默认 fail-closed，IdP 未断言角色时不授予；既有部署确需全量授予时显式开启
-        rolesFallback = configs.getOrDefault("oauth2_roles_fallback", false);
-        String thisServerUrl = configs.notBlank("oauth2_this_server");
+        rolesFallback = configs.getOrDefault("auth_oauth2_roles_fallback", false);
+        String thisServerUrl = configs.notBlank("auth_oauth2_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
         tokenCipher = crypto.getGlobalCipher();
@@ -156,7 +155,7 @@ public class OAuth2Handler implements HttpHandler {
         params.put("code", code);
         params.put("client_id", clientId);
         params.put("redirect_uri", callbackUrl); // RFC 6749：token 请求的 redirect_uri 必须与授权请求完全一致
-        params.put("client_secret", tokenCipher.tryDecrypt(clientSecret, "qingzhou-auth.client_secret"));
+        params.put("client_secret", tokenCipher.tryDecrypt(clientSecret, "qingzhou-http-server.auth_client_secret"));
 
         Response tokenResponse = httpClient.send(
                 httpClient.buildRequest(tokenEndpoint).method(HttpMethod.POST).params(params));
@@ -241,9 +240,9 @@ public class OAuth2Handler implements HttpHandler {
     }
 
     /**
-     * 授予角色以本地 oauth2_roles 为准，IdP 提供的角色名只做过滤：
+     * 授予角色以本地 auth_oauth2_roles 为准，IdP 提供的角色名只做过滤：
      * IdP 侧角色可被其用户自行改写，直接采信等于"能通过外部认证即获得任意平台角色"。
-     * IdP 未提供角色时默认不授予；既有部署确需全量授予时由 oauth2_roles_fallback 显式开启。
+     * IdP 未提供角色时默认不授予；既有部署确需全量授予时由 auth_oauth2_roles_fallback 显式开启。
      */
     private String[] resolveRoles(List<String> idpRoles) {
         if (idpRoles.isEmpty()) {

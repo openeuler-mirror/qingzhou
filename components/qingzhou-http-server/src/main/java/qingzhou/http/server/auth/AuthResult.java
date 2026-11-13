@@ -16,11 +16,6 @@ public interface AuthResult {
         return null;
     }
 
-    // 拒绝原因
-    default String getReason() {
-        return null;
-    }
-
     static AuthResult pass(String user, String[] roles) {
         String[] copiedRoles = roles == null ? null : roles.clone(); // 防御性拷贝：外部事后修改不影响认证角色
         return new AuthResult() {
@@ -41,31 +36,11 @@ public interface AuthResult {
         };
     }
 
-    static AuthResult reject(String reason) {
-        return new AuthResult() {
-            @Override
-            public Status status() {
-                return Status.REJECT;
-            }
-
-            @Override
-            public String getReason() {
-                return reason;
-            }
-        };
+    static AuthResult reject() {
+        return () -> Status.REJECT;
     }
 
-    static AuthResult noCredential(String reason) {
-        return new AuthResult() {
-            @Override
-            public Status status() {
-                return Status.NO_CREDENTIAL;
-            }
-
-            @Override
-            public String getReason() {
-                return reason;
-            }
-        };
+    static AuthResult noCredential() {
+        return () -> Status.NO_CREDENTIAL;
     }
 }

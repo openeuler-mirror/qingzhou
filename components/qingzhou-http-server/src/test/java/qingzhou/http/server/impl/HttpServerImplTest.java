@@ -1,18 +1,5 @@
 package qingzhou.http.server.impl;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.osgi.framework.Constants;
-import qingzhou.crypto.Cipher;
-import qingzhou.crypto.impl.CryptoImpl;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Response;
-import qingzhou.http.client.impl.HttpClientImpl;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.auth.impl.AuthManager;
-import qingzhou.logger.impl.LoggerImpl;
-
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.ConnectException;
@@ -21,6 +8,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.osgi.framework.Constants;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.impl.CryptoImpl;
+import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.HttpMethod;
+import qingzhou.http.client.Response;
+import qingzhou.http.client.impl.HttpClientImpl;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.auth.AuthManager;
+import qingzhou.http.server.auth.TokenService;
+import qingzhou.logger.impl.LoggerImpl;
 
 public class HttpServerImplTest {
     private static final String KEYSTORE_PASSWORD = "qingzhou-test";
@@ -166,6 +167,7 @@ public class HttpServerImplTest {
     static HttpServerImpl buildHttpServer(Map<String, String> config, AuthManager authManager) throws Exception {
         HttpServerImpl httpServer = new HttpServerImpl();
         LoggerImpl logger = new LoggerImpl();
+        TokenService tokenService = new TokenService();
         // 与 crypto.init 同模式补齐激活：日志调用依赖 init 初始化的 throttle/tinylog，缺激活则首次日志即 NPE；
         // 非默认日志器名（~test）跳过启动 banner，避免每个用例刷屏
         Map<String, Object> loggerConfig = new HashMap<>();
@@ -191,7 +193,7 @@ public class HttpServerImplTest {
         setField(dispatcherHandler, "authManager", authManager);
         setField(dispatcherHandler, "handlerManager", handlerManager);
 
-        setField(authManager, "logger", logger);
+        setField(authManager, "tokenService", tokenService);
 
         dispatcherHandler.init(config);
         authManager.init(config); // 生产由 OSGi @Activate 触发，手动装配时须补齐

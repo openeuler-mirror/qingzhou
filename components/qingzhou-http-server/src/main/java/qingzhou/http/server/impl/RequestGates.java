@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import io.netty.handler.codec.http.*;
 import org.reactivestreams.Publisher;
 import qingzhou.common.Configs;
-import qingzhou.http.server.auth.impl.AuthManager;
+import qingzhou.http.server.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 

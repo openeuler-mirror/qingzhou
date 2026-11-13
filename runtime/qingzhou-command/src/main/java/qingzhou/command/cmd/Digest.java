@@ -7,7 +7,7 @@ import qingzhou.command.Processor;
 import qingzhou.crypto.impl.CryptoImpl;
 
 /**
- * 生成与登录校验同源的口令摘要，输出可原样写入 qingzhou-auth.password。
+ * 生成与登录校验同源的口令摘要，输出可原样写入 qingzhou-http-server.auth_password。
  * 明文只从终端或 stdin 读：命令行参数会留在 shell 历史与进程列表。
  */
 public class Digest extends Processor {
@@ -18,11 +18,11 @@ public class Digest extends Processor {
 
     @Override
     public String info() {
-        return "Digest a plaintext for qingzhou-auth.password. Usage: digest (text from terminal or stdin)";
+        return "Digest a plaintext for qingzhou-http-server.auth_password. Usage: digest (text from terminal or stdin)";
     }
 
     @Override
-    public void doCommandLine(String[] args) throws Exception {
+    public void doCommandLine(String[] args) {
         if (args.length > 0) throw new IllegalArgumentException("plaintext must come from terminal or stdin, not args");
 
         char[] plaintext = ConsoleInput.readPassword("Text: ");
