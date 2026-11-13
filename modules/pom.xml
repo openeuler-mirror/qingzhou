@@ -17,6 +17,6 @@
         <module>qingzhou-auth</module>
         <module>qingzhou-agent</module>
         <module>qingzhou-web</module>
-        <module>qingzhou-prometheus</module>
+        <module>qingzhou-monitor</module>
     </modules>
 </project>

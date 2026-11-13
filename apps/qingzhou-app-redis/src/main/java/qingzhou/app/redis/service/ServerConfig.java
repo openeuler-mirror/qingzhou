@@ -27,19 +27,13 @@ public class ServerConfig extends RedisModelBase implements Page, Show, Update, 
             "tls-cert-file", "tls-key-file", "tls-ca-cert-file"
     ));
 
-    @ModelField(id = true, list = true, show = true, readonly = true, search = true, add = true, update = false,
-            name = {"参数名", "en:Parameter Name"},
-            info = {"Redis 配置参数名称", "en:Redis configuration parameter name"})
+    @ModelField(id = true, list = true, show = true, readonly = true, search = true, add = true, update = false, name = {"参数名", "en:Parameter Name"}, info = {"Redis 配置参数名称", "en:Redis configuration parameter name"})
     public String paramName;
 
-    @ModelField(list = true, show = true, update = true, add = true, input_type = InputType.textarea,
-            name = {"参数值", "en:Parameter Value"},
-            info = {"Redis 配置参数值", "en:Redis configuration parameter value"})
+    @ModelField(list = true, show = true, update = true, add = true, input_type = InputType.textarea, name = {"参数值", "en:Parameter Value"}, info = {"Redis 配置参数值", "en:Redis configuration parameter value"})
     public String paramValue;
 
-    @ModelField(show = true, readonly = true, add = false, update = false,
-            name = {"只读", "en:Readonly"},
-            info = {"该配置是否为只读（不可修改）", "en:Whether this config is readonly"})
+    @ModelField(show = true, readonly = true, add = false, update = false, name = {"只读", "en:Readonly"}, info = {"该配置是否为只读（不可修改）", "en:Whether this config is readonly"})
     public String readonly;
 
     @Override

@@ -26,6 +26,8 @@ final class TestServerSupport {
         Map<String, String> config = new HashMap<>();
         config.put("port", "0");
         config.put("ssl_enabled", "false");
+        // 关闭全局路径前缀：存量用例按无前缀路径请求，前缀行为由专属用例覆盖
+        config.put("context_path", "/");
         config.putAll(extraConfig);
         HttpServerImpl httpServer = HttpServerImplTest.start(config);
         try {

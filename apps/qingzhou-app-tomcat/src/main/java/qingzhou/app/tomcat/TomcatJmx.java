@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -136,7 +135,7 @@ final class TomcatJmx {
     Map<String, String> stats() throws Exception {
         try {
             Map<String, String> stats = new LinkedHashMap<>();
-            stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            stats.put("statsTime", DateKit.now());
 
             Set<ObjectName> servers = names("Catalina:type=Server,*");
             if (!servers.isEmpty()) {
@@ -156,7 +155,7 @@ final class TomcatJmx {
      */
     Map<String, String> jvmStats() throws Exception {
         Map<String, String> stats = new LinkedHashMap<>();
-        stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        stats.put("statsTime", DateKit.now());
         addJvmStats(stats);
         return stats;
     }
@@ -166,7 +165,7 @@ final class TomcatJmx {
      */
     Map<String, String> systemStats() throws Exception {
         Map<String, String> stats = new LinkedHashMap<>();
-        stats.put("statsTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        stats.put("statsTime", DateKit.now());
         addProcessStats(stats);
         return stats;
     }
@@ -212,7 +211,7 @@ final class TomcatJmx {
     private void addProcessStats(Map<String, String> stats) throws Exception {
         stats.put("pid", pid);
         ObjectName runtime = new ObjectName("java.lang:type=Runtime");
-        stats.put("startTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(number(runtime, "StartTime"))));
+        stats.put("startTime", DateKit.format(new Date(number(runtime, "StartTime"))));
         stats.put("jvmName", attribute(runtime, "VmName") + " " + attribute(runtime, "VmVersion"));
         stats.put("vmArgs", String.join(" ", (String[]) mBeanServer.getAttribute(runtime, "InputArguments")));
 
@@ -291,7 +290,7 @@ final class TomcatJmx {
             }
 
             Map<String, String> stats = new LinkedHashMap<>();
-            stats.put("statsTime", now());
+            stats.put("statsTime", DateKit.now());
             stats.put("requestCount", String.valueOf(requests));
             stats.put("errorCount", String.valueOf(errors));
             stats.put("bytesSent", mb(sent));
@@ -326,7 +325,7 @@ final class TomcatJmx {
             long busy = number(target, "currentThreadsBusy");
             long maxThreads = number(target, "maxThreads");
             Map<String, String> stats = new LinkedHashMap<>();
-            stats.put("statsTime", now());
+            stats.put("statsTime", DateKit.now());
             stats.put("threadCount", String.valueOf(threads));
             stats.put("busyThreads", String.valueOf(busy));
             stats.put("idleThreads", String.valueOf(threads - busy));
@@ -350,7 +349,7 @@ final class TomcatJmx {
                 }
                 long requests = number(name, "requestCount");
                 Map<String, String> stats = new LinkedHashMap<>();
-                stats.put("statsTime", now());
+                stats.put("statsTime", DateKit.now());
                 stats.put("requestCount", String.valueOf(requests));
                 stats.put("errorCount", String.valueOf(number(name, "errorCount")));
                 stats.put("avgProcessingTime", String.valueOf(requests == 0 ? 0 : number(name, "processingTime") / requests));
@@ -376,10 +375,6 @@ final class TomcatJmx {
             }
         }
         return sessions;
-    }
-
-    private static String now() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
     }
 
     private Set<ObjectName> names(String pattern) throws Exception {

@@ -6,9 +6,7 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 令牌端点：授权码、密码、客户端凭证、刷新令牌四种授予方式。
- */
+/** 令牌端点：授权码、密码、客户端凭证、刷新令牌四种授予方式。 */
 public class Token extends ClientEndpoint {
     private final Throttle throttle;
 

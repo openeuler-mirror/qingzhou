@@ -7,9 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * 安全工具：回调地址与授权范围校验、随机串生成、页面内容转义。
- */
+/** 安全工具：回调地址与授权范围校验、随机串生成、页面内容转义。 */
 final class Security {
     private static final SecureRandom RANDOM = new SecureRandom();
 

@@ -1,6 +1,5 @@
 package qingzhou.app.nacos;
 
-
 import java.util.Map;
 
 import qingzhou.api.AppContext;
@@ -18,11 +17,11 @@ public class NacosApp implements QingzhouApp {
     @Override
     public void start(AppContext appContext) {
         Map<String, String> props = appContext.getAppConfig();
-        String nacosServerAddr = props.getOrDefault("nacos.serverAddr", "http://localhost:8848");
-        String nacosUsername = props.getOrDefault("nacos.username", "nacos");
-        String nacosPassword = props.getOrDefault("nacos.password", "nacos");
+        String serverAddr = props.getOrDefault("nacos.serverAddr", "http://localhost:8848");
+        String username = props.getOrDefault("nacos.username", "nacos");
+        String password = props.getOrDefault("nacos.password", "nacos");
         HttpClient httpClient = appContext.getService(HttpClient.class);
         Json json = appContext.getService(Json.class);
-        NacosApp.nacosApi = new NacosApi(httpClient, json, nacosServerAddr, nacosUsername, nacosPassword);
+        nacosApi = new NacosApi(httpClient, json, serverAddr, username, password);
     }
 }

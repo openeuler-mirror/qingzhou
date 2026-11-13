@@ -121,7 +121,7 @@
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-web</include>
                 <include>${project.groupId}:qingzhou-auth</include>
-                <include>${project.groupId}:qingzhou-prometheus</include>
+                <include>${project.groupId}:qingzhou-monitor</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -168,7 +168,7 @@
             <includes>
                 <include>${project.groupId}:qingzhou-common</include>
                 <include>${project.groupId}:qingzhou-config</include>
-                <include>${project.groupId}:qingzhou-monitor</include>
+                <include>${project.groupId}:qingzhou-monitor-api</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

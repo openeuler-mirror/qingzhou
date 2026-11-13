@@ -1,4 +1,4 @@
-package qingzhou.prometheus.collector;
+package qingzhou.monitor.collector;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -8,12 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
-import qingzhou.monitor.Metric;
-import qingzhou.monitor.MetricProvider;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 
-/**
- * 内置进程级 JVM 指标：标准 ManagementFactory 采集内存/线程/类加载/GC/运行时长。
- */
 @Component(property = MetricProvider.PROVIDER_ID + "=jvm")
 public class JvmMetricProvider implements MetricProvider {
     private static final Metric.Type GAUGE = Metric.Type.GAUGE;
@@ -24,30 +21,31 @@ public class JvmMetricProvider implements MetricProvider {
         Set<Metric> metrics = new HashSet<>();
         MemoryUsage heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
         MemoryUsage nonHeap = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
-        metrics.add(Metric.of("process_memory_heap_used_bytes", heap.getUsed(), GAUGE));
+        metrics.add(Metric.of("memory_heap_used_bytes", heap.getUsed(), GAUGE));
         // max 未定义时为 -1，属缺失值而非真实用量，不输出样本
         if (heap.getMax() >= 0) {
-            metrics.add(Metric.of("process_memory_heap_max_bytes", heap.getMax(), GAUGE));
+            metrics.add(Metric.of("memory_heap_max_bytes", heap.getMax(), GAUGE));
         }
-        metrics.add(Metric.of("process_memory_heap_committed_bytes", heap.getCommitted(), GAUGE));
-        metrics.add(Metric.of("process_memory_non_heap_used_bytes", nonHeap.getUsed(), GAUGE));
+        metrics.add(Metric.of("memory_heap_committed_bytes", heap.getCommitted(), GAUGE));
+        metrics.add(Metric.of("memory_non_heap_used_bytes", nonHeap.getUsed(), GAUGE));
 
         ThreadMXBean threads = ManagementFactory.getThreadMXBean();
-        metrics.add(Metric.of("process_threads_live", threads.getThreadCount(), GAUGE));
-        metrics.add(Metric.of("process_threads_daemon", threads.getDaemonThreadCount(), GAUGE));
-        metrics.add(Metric.of("process_threads_peak", threads.getPeakThreadCount(), GAUGE));
-        metrics.add(Metric.of("process_classes_loaded_total",
+        metrics.add(Metric.of("threads_live", threads.getThreadCount(), GAUGE));
+        metrics.add(Metric.of("threads_daemon", threads.getDaemonThreadCount(), GAUGE));
+        metrics.add(Metric.of("threads_peak", threads.getPeakThreadCount(), GAUGE));
+        metrics.add(Metric.of("classes_loaded_total",
                 ManagementFactory.getClassLoadingMXBean().getTotalLoadedClassCount(), COUNTER));
 
         long gcCount = 0;
         long gcTime = 0;
+        // MXBean 约定 -1 表示统计不可用，按 0 计入总量
         for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
             gcCount += Math.max(gc.getCollectionCount(), 0);
             gcTime += Math.max(gc.getCollectionTime(), 0);
         }
-        metrics.add(Metric.of("process_gc_collection_total", gcCount, COUNTER));
-        metrics.add(Metric.of("process_gc_time_milliseconds_total", gcTime, COUNTER));
-        metrics.add(Metric.of("process_uptime_seconds", ManagementFactory.getRuntimeMXBean().getUptime() / 1000d, GAUGE));
+        metrics.add(Metric.of("gc_collection_total", gcCount, COUNTER));
+        metrics.add(Metric.of("gc_time_seconds_total", gcTime / 1000d, COUNTER));
+        metrics.add(Metric.of("uptime_seconds", ManagementFactory.getRuntimeMXBean().getUptime() / 1000d, GAUGE));
         return metrics;
     }
 }

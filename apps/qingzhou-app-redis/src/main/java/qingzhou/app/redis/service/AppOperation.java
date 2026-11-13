@@ -18,24 +18,16 @@ import java.util.*;
         info = {"Redis 实例主动运维操作", "en:Active Redis instance operations"})
 public class AppOperation extends RedisModelBase implements Page {
 
-    @ModelField(id = true, list = true, readonly = true,
-            name = {"运维项 ID", "en:Operation ID"},
-            info = {"运维项唯一标识", "en:Unique operation ID"})
+    @ModelField(id = true, list = true, readonly = true, name = {"运维项 ID", "en:Operation ID"}, info = {"运维项唯一标识", "en:Unique operation ID"})
     public String id;
 
-    @ModelField(list = true,
-            name = {"运维项名称", "en:Operation Name"},
-            info = {"运维项名称", "en:Operation name"})
+    @ModelField(list = true, name = {"运维项名称", "en:Operation Name"}, info = {"运维项名称", "en:Operation name"})
     public String operationName;
 
-    @ModelField(list = true,
-            name = {"当前状态", "en:Current Status"},
-            info = {"当前状态", "en:Current status"})
+    @ModelField(list = true, name = {"当前状态", "en:Current Status"}, info = {"当前状态", "en:Current status"})
     public String currentStatus;
 
-    @ModelField(list = true,
-            name = {"最近检查时间", "en:Last Check Time"},
-            info = {"最近一次检查时间", "en:Last check time"})
+    @ModelField(list = true, name = {"最近检查时间", "en:Last Check Time"}, info = {"最近一次检查时间", "en:Last check time"})
     public String lastCheckTime;
 
     private static final String[] OP_IDS = {"ping", "reconnect"};

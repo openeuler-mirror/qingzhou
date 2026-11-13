@@ -6,9 +6,7 @@ import java.util.Map;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 
-/**
- * 端点响应：JSON 正文、错误码与重定向。
- */
+/** 端点响应：JSON 正文、错误码与重定向。 */
 final class Reply {
     private Reply() {
     }

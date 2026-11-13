@@ -1,88 +1,57 @@
 package qingzhou.app.zookeeper.service;
 
-import qingzhou.app.zookeeper.ZookeeperApp;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Monitor;
-import qingzhou.api.action.Show;
-
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+
+import qingzhou.api.annotations.Model;
+import qingzhou.api.annotations.ModelField;
+import qingzhou.api.action.Monitor;
+import qingzhou.api.action.Page;
+import qingzhou.api.action.Show;
+import qingzhou.app.zookeeper.ZookeeperApp;
 
 @Model(code = "connections", order = 3, icon = "icon icon-minus",
         name = {"连接", "en:Connections"},
-        info = {"关于客户端到服务器连接的信息。",
-                "en:Information on client connections to server."})
+        info = {"关于客户端到服务器连接的信息。", "en:Information on client connections to server."})
 public class Connections extends AbstractZkCommandService implements Monitor, Page, Show {
 
     private static final String ID_KEY = "remote_socket_address";
 
-    @ModelField(
-            name = {"远端连接地址", "en:Remote Socket Address"})
+    @ModelField(name = {"远端连接地址", "en:Remote Socket Address"})
     public String remote_socket_address;
-
-    @ModelField(
-            name = {"会话超时时间", "en:Session Timeout"})
+    @ModelField(name = {"会话超时时间", "en:Session Timeout"})
     public String session_timeout;
-
-    @ModelField(
-            name = {"感兴趣的操作", "en:Interest Ops"})
+    @ModelField(name = {"感兴趣的操作", "en:Interest Ops"})
     public String interest_ops;
-
-    @ModelField(
-            name = {"是否临时", "en:Ephemeral Owner"})
+    @ModelField(name = {"是否临时", "en:Ephemeral Owner"})
     public String ephemeral_owner;
-
-    @ModelField(
-            name = {"最后执行的操作", "en:Last Operation"})
+    @ModelField(name = {"最后执行的操作", "en:Last Operation"})
     public String last_operation;
-
-    @ModelField(
-            name = {"连接开始时间", "en:Session Established"})
+    @ModelField(name = {"连接开始时间", "en:Session Established"})
     public String session_established;
-
-    @ModelField(
-            name = {"最后执行操作时间", "en:Last Operation Time"})
+    @ModelField(name = {"最后执行操作时间", "en:Last Operation Time"})
     public String last_operation_time;
-
-    @ModelField(
-            name = {"连接所在 IP", "en:Local Socket Address"})
+    @ModelField(name = {"连接所在 IP", "en:Local Socket Address"})
     public String local_socket_address;
-
-    @ModelField(
-            name = {"最后执行的响应时间", "en:Last Response Time"})
+    @ModelField(name = {"最后执行的响应时间", "en:Last Response Time"})
     public String last_response_time;
-
-    @ModelField(
-            name = {"最后延迟", "en:Last Latency"})
+    @ModelField(name = {"最后延迟", "en:Last Latency"})
     public String last_latency;
-
-    @ModelField(
-            name = {"连接超时时间", "en:Outstanding Requests"})
+    @ModelField(name = {"连接超时时间", "en:Outstanding Requests"})
     public String outstanding_requests;
-
-    @ModelField(
-            name = {"操作计数", "en:Ops Count"})
+    @ModelField(name = {"操作计数", "en:Ops Count"})
     public String ops_count;
-
-    @ModelField(
-            name = {"最后 Cxid", "en:Last Cxid"})
+    @ModelField(name = {"最后 Cxid", "en:Last Cxid"})
     public String last_cxid;
-
-    @ModelField(
-            name = {"最后 Zxid", "en:Last Zxid"})
+    @ModelField(name = {"最后 Zxid", "en:Last Zxid"})
     public String last_zxid;
-
-    @ModelField(
-            name = {"发送数据量", "en:Sent"})
+    @ModelField(name = {"发送数据量", "en:Sent"})
     public String sent;
-
-    @ModelField(
-            name = {"接收数据量", "en:Received"})
+    @ModelField(name = {"接收数据量", "en:Received"})
     public String received;
 
     @Override
@@ -102,16 +71,16 @@ public class Connections extends AbstractZkCommandService implements Monitor, Pa
     }
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] showFields) throws Exception {
-        java.util.List<String> allIds = allIds();
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] showFields) throws Exception {
+        List<String> allIds = allIds();
         if (allIds.isEmpty()) {
             return new ArrayList<>();
         }
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, allIds.size());
-        java.util.List<String> pageIds = allIds.subList(startIndex, endIndex);
+        List<String> pageIds = allIds.subList(startIndex, endIndex);
 
-        java.util.List<String[]> data = new ArrayList<>();
+        List<String[]> data = new ArrayList<>();
         for (String connectionId : pageIds) {
             Map<String, String> connectionData = show(connectionId);
             String[] row = new String[showFields.length];
@@ -148,9 +117,9 @@ public class Connections extends AbstractZkCommandService implements Monitor, Pa
         }
     }
 
-    private java.util.List<String> allIds() throws Exception {
+    private List<String> allIds() throws Exception {
         checkJetty();
-        java.util.List<String> ids = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
         for (Map<String, Object> connection : listConnections()) {
             Object address = connection.get(ID_KEY);
             if (address != null) {
@@ -171,14 +140,14 @@ public class Connections extends AbstractZkCommandService implements Monitor, Pa
 
     /** 解析 admin server 返回的 connections 列表 */
     @SuppressWarnings("unchecked")
-    private java.util.List<Map<String, Object>> listConnections() throws Exception {
+    private List<Map<String, Object>> listConnections() throws Exception {
         Map<String, Object> response = sendHttp();
         Object connections = response.get("connections");
-        if (!(connections instanceof java.util.List)) {
+        if (!(connections instanceof List)) {
             return Collections.emptyList();
         }
-        java.util.List<Map<String, Object>> result = new ArrayList<>();
-        for (Object item : (java.util.List<?>) connections) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object item : (List<?>) connections) {
             if (item instanceof Map) {
                 result.add((Map<String, Object>) item);
             }

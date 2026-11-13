@@ -5,9 +5,7 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * 从 ZooKeeper 启动命令中提取安装路径与配置文件路径。
- */
+/** 从 ZooKeeper 启动命令中提取安装路径与配置文件路径。 */
 public class ZkPathExtractor {
 
     /** 匹配 -cp / -classpath 参数（支持引号包裹与等号形式），group(1..3) 为 classpath 内容 */
@@ -44,14 +42,7 @@ public class ZkPathExtractor {
     private ZkPathExtractor() {
     }
 
-    /**
-     * 基于 jar 包位置提取安装路径。
-     * 支持 zookeeper-3.8.4.jar、zookeeper-jute-3.8.4.jar 等字面 jar，
-     * 以及 zkServer.sh 默认的 lib/* 通配符 classpath。
-     *
-     * @param command ZooKeeper 进程的启动命令行
-     * @return 安装路径（已解析 .. 并统一分隔符），无法识别时返回 null
-     */
+    /** 基于 jar 包位置提取安装路径（支持字面 jar 与 lib/* 通配符）；无法识别返回 null。 */
     public static String extractInstallPathFromJar(String command) {
         if (command == null || command.isEmpty()) {
             return null;
@@ -69,11 +60,7 @@ public class ZkPathExtractor {
         return findInstallPath(command);
     }
 
-    /**
-     * 在指定文本中查找 zookeeper 安装路径前缀。
-     * 优先字面 jar（主 jar zookeeper-<版本>.jar > 其他 lib/zookeeper-*.jar），
-     * 其次通配符 lib/*（zkServer.sh 二进制安装包默认形式，需跳过源码编译产物目录）。
-     */
+    /** 查找 zookeeper 安装路径前缀：优先字面 jar（主 jar 优先），其次通配符 lib/*（跳过源码编译产物目录）。 */
     private static String findInstallPath(String text) {
         if (text == null) {
             return null;

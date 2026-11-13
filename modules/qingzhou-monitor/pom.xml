@@ -7,12 +7,12 @@
         <artifactId>modules</artifactId>
         <version>${revision}</version>
     </parent>
-    <artifactId>qingzhou-prometheus</artifactId>
+    <artifactId>qingzhou-monitor</artifactId>
     <packaging>bundle</packaging>
 
     <dependencies>
         <dependency>
-            <artifactId>qingzhou-monitor</artifactId>
+            <artifactId>qingzhou-monitor-api</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -31,7 +31,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package/>
-                        <Import-Package>qingzhou.monitor,qingzhou.http.server</Import-Package>
+                        <Import-Package>qingzhou.monitor.api,qingzhou.http.server</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -11,7 +11,6 @@ import qingzhou.api.annotations.ModelField;
 import qingzhou.app.zookeeper.ZookeeperApp;
 import qingzhou.app.zookeeper.util.Util;
 
-
 @Model(code = "config", order = 5, icon = "icon-file-text-o",
         name = {"配置", "en:Config"},
         info = {"zookeeper 配置。", "en:zookeeper Configuration."})
@@ -26,68 +25,27 @@ public class Config extends ModelBase implements Monitor {
             if (Modifier.isStatic(declaredField.getModifiers())) {
                 continue;
             }
-            String name = declaredField.getName();
-            FIELD_NAME_SET.add(name);
+            FIELD_NAME_SET.add(declaredField.getName());
         }
     }
 
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            input_type = InputType.number,
-            min_value = 1,
-            name = {"心跳时间", "en:Tick Time"},
-            info = {"通信心跳时间，Zookeeper服务器与客户端心跳时间，单位毫秒。", "en:Communication heartbeat time， Heartbeat time between the Zookeeper server and the client, in milliseconds."}
-    )
+    @ModelField(group = BASIC, field_type = FieldType.monitor, input_type = InputType.number, min_value = 1,
+            name = {"心跳时间", "en:Tick Time"}, info = {"通信心跳时间，Zookeeper服务器与客户端心跳时间，单位毫秒。", "en:Communication heartbeat time， Heartbeat time between the Zookeeper server and the client, in milliseconds."})
     public int tickTime = 2000;
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            input_type = InputType.number,
-            min_value = 1,
-            name = {"LF初始通信时限", "en:Init Limit"},
-            info = {"Leader和Follower初始连接时能容忍的最多心跳数，单位次（即tickTime的数量）。", "en:The maximum number of heartbeats (tickTime) that the Leader and Follower can tolerate during the initial connection."})
+    @ModelField(group = BASIC, field_type = FieldType.monitor, input_type = InputType.number, min_value = 1,
+            name = {"LF初始通信时限", "en:Init Limit"}, info = {"Leader和Follower初始连接时能容忍的最多心跳数，单位次（即tickTime的数量）。", "en:The maximum number of heartbeats (tickTime) that the Leader and Follower can tolerate during the initial connection."})
     public int initLimit = 10;
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            input_type = InputType.number,
-            min_value = 1,
-            name = {"LF同步通信时限", "en:Sync Limit"},
-            info = {"Leader和Follower初始连接时能容忍的最多心跳数，单位次（即tickTime的数量）。", "en:The maximum number of heartbeats (tickTime) that the Leader and Follower can tolerate during the initial connection."})
+    @ModelField(group = BASIC, field_type = FieldType.monitor, input_type = InputType.number, min_value = 1,
+            name = {"LF同步通信时限", "en:Sync Limit"}, info = {"Leader和Follower初始连接时能容忍的最多心跳数，单位次（即tickTime的数量）。", "en:The maximum number of heartbeats (tickTime) that the Leader and Follower can tolerate during the initial connection."})
     public int syncLimit = 10;
-
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            name = {"快照数据目录", "en:Snapshot Data Dir"}, info = {"快照所在的目录。", "en:the directory where the snapshot is stored."})
+    @ModelField(group = BASIC, field_type = FieldType.monitor, name = {"快照数据目录", "en:Snapshot Data Dir"}, info = {"快照所在的目录。", "en:the directory where the snapshot is stored."})
     public String dataDir;
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            port = true, required = true,
-            name = {"客户端连接端口", "en:Client Port"})
+    @ModelField(group = BASIC, field_type = FieldType.monitor, port = true, required = true, name = {"客户端连接端口", "en:Client Port"})
     public int clientPort;
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            name = {"myid", "en:MyID"}
-    )
+    @ModelField(group = BASIC, field_type = FieldType.monitor, name = {"myid", "en:MyID"})
     public String myid;
-
-
-    @ModelField(
-            group = BASIC,
-            field_type = FieldType.monitor,
-            separator = OTHER_SP, name = {"其他配置信息", "en:Other Config Info"}, info = {"key=value形式，多个换行写。", "en:The value is in the form of key=value, with multiple line breaks."})
+    @ModelField(group = BASIC, field_type = FieldType.monitor, separator = OTHER_SP, name = {"其他配置信息", "en:Other Config Info"}, info = {"key=value形式，多个换行写。", "en:The value is in the form of key=value, with multiple line breaks."})
     public String other;
-
 
     @Override
     public Map<String, String> monitor(String s) throws Exception {
@@ -109,11 +67,9 @@ public class Config extends ModelBase implements Monitor {
 
     public Map<String, String> getZooConfigAsMap() {
         Properties properties = ZookeeperApp.zooProperties;
-
         if (properties == null) {
-            return Collections.emptyMap();  // 防御性处理
+            return Collections.emptyMap();
         }
-
         return Util.prop2Map(properties);
     }
 }

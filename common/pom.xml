@@ -13,6 +13,6 @@
     <modules>
         <module>qingzhou-common</module>
         <module>qingzhou-config</module>
-        <module>qingzhou-monitor</module>
+        <module>qingzhou-monitor-api</module>
     </modules>
 </project>

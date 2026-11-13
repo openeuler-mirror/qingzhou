@@ -1,0 +1,24 @@
+# 统一行尾：跨平台团队根治 CRLF/LF 引发的“每次更新都冲突”
+# 文本文件一律以 LF 存储与检出；Windows 批处理按系统约定保留 CRLF
+* text=auto eol=lf
+*.sh  text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制资源，禁止行尾归一化，避免文件损坏
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.p12 binary
+*.zip binary
+*.jar binary
+*.war binary
+*.gz binary
+*.tar binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

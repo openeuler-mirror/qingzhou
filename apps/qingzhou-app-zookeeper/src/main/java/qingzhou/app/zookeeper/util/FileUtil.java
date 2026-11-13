@@ -10,9 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 文件工具类，仅保留 zookeeper 应用实际使用的方法。
- */
+/** 文件工具类，仅保留 zookeeper 应用实际使用的方法。 */
 public class FileUtil {
 
     public static File newFile(String first, String... more) {

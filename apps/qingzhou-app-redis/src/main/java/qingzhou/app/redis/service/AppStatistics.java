@@ -117,8 +117,8 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
         Map<String, String> info = util.getAggregatedInfo();
         fillBaseMetrics(data, info);
         data.put("currentOps", info.getOrDefault("instantaneous_ops_per_sec", "0"));
-        long usedMemBytes = Long.parseLong(info.getOrDefault("used_memory", "0"));
-        data.put("usedMemory", RedisUtil.formatBytes(usedMemBytes));
+        long usedMemory = Long.parseLong(info.getOrDefault("used_memory", "0"));
+        data.put("usedMemory", RedisUtil.formatBytes(usedMemory));
 
         
         data.put("avgOps5m", String.format("%.2f", avgMetric(metricsStore, "redis.instantaneous_ops_per_sec", 5 * 60 * 1000)));
@@ -159,7 +159,6 @@ public class AppStatistics extends RedisModelBase implements Monitor, Page {
         long maxClients = maxClientsStr != null && !maxClientsStr.isEmpty() ? Long.parseLong(maxClientsStr) : 10000;
         data.put("clientUsageRate", String.format("%.2f", connected * 100.0 / maxClients));
 
-        long usedMemory = Long.parseLong(info.getOrDefault("used_memory", "0"));
         String maxMemoryStr = util.configGetValue("maxmemory");
         long maxMemory = maxMemoryStr != null && !maxMemoryStr.isEmpty() ? Long.parseLong(maxMemoryStr) : 0;
         if (maxMemory > 0) data.put("memoryUsageRate", String.format("%.2f", usedMemory * 100.0 / maxMemory));

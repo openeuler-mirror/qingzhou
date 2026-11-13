@@ -37,7 +37,7 @@ public class HttpServerImpl implements HttpServer {
         Configs configs = new Configs(config);
         // 纯配置校验须先于任何资源创建：激活失败时 @Deactivate 不会被调用，晚校验会泄漏已创建的 EventLoop
         int selectorThreads = configs.atLeast("selector", 1, 1);
-        int workerThreads = configs.atLeast("worker", 1, Runtime.getRuntime().availableProcessors() * 2);
+        int workerThreads = configs.atLeast("worker", 1, Runtime.getRuntime().availableProcessors() * 2L);
         // 默认 60 秒：SSE 等长连接在两个数据包之间可能长时间静默，过低会切断正常业务；0 表示不启用空闲超时
         int idleTimeout = configs.atLeast("idle_timeout", 0, 60);
         String host = configs.getOrDefault("host", "127.0.0.1");
@@ -106,7 +106,9 @@ public class HttpServerImpl implements HttpServer {
 
         // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
         if (!sslEnabled) logger.warn("http server is using plaintext HTTP; enable TLS before remote exposure");
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port() + "/web");
+        // 管控台挂在全局前缀下，url 须含 context_path，否则配置非默认前缀时打印的访问地址打不开
+        String webContext = RequestGates.normalizeContextPath(configs.getOrDefault("context_path", "/qingzhou"));
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port() + webContext + "/web");
     }
 
     @Deactivate

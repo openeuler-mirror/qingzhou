@@ -19,84 +19,37 @@ import java.util.*;
         info = {"记录 Redis 实例相关的关键操作日志", "en:Audit logs for Redis instance operations"})
 public class AppAudit extends RedisModelBase implements Page, Show {
 
-    @ModelField(id = true, list = true, show = true, readonly = true,
-            name = {"审计 ID", "en:Audit ID"},
-            info = {"审计记录唯一标识", "en:Unique audit ID"})
+    @ModelField(id = true, list = true, show = true, readonly = true, name = {"审计 ID", "en:Audit ID"}, info = {"审计记录唯一标识", "en:Unique audit ID"})
     public String id;
-
-    @ModelField(list = true, show = true,
-            name = {"时间", "en:Time"},
-            info = {"操作发生时间", "en:Operation time"})
+    @ModelField(list = true, show = true, name = {"时间", "en:Time"}, info = {"操作发生时间", "en:Operation time"})
     public String timestamp;
-
-    @ModelField(list = true, show = true, search = true,
-            name = {"操作人", "en:Operator"},
-            info = {"操作人标识", "en:Operator identifier"})
+    @ModelField(list = true, show = true, search = true, name = {"操作人", "en:Operator"}, info = {"操作人标识", "en:Operator identifier"})
     public String operator;
-
-    @ModelField(list = true, show = true, search = true,
-            options = {"add", "update", "delete", "execute", "switch", "confirm"},
-            input_type = InputType.select,
-            name = {"操作类型", "en:Operation Type"},
-            info = {"操作类型", "en:Type of operation"})
+    @ModelField(list = true, show = true, search = true, options = {"add", "update", "delete", "execute", "switch", "confirm"}, input_type = InputType.select, name = {"操作类型", "en:Operation Type"}, info = {"操作类型", "en:Type of operation"})
     public String operationType;
-
-    @ModelField(list = true, show = true,
-            name = {"目标类型", "en:Target Type"},
-            info = {"被操作模型或资源", "en:Target model or resource"})
+    @ModelField(list = true, show = true, name = {"目标类型", "en:Target Type"}, info = {"被操作模型或资源", "en:Target model or resource"})
     public String targetType;
-
-    @ModelField(list = true, show = true,
-            name = {"目标 ID", "en:Target ID"},
-            info = {"被操作对象 ID", "en:Target object ID"})
+    @ModelField(list = true, show = true, name = {"目标 ID", "en:Target ID"}, info = {"被操作对象 ID", "en:Target object ID"})
     public String targetId;
-
-    @ModelField(list = true, show = true,
-            name = {"实例名", "en:Instance Name"},
-            info = {"当前 Redis 实例名", "en:Current Redis instance name"})
+    @ModelField(list = true, show = true, name = {"实例名", "en:Instance Name"}, info = {"当前 Redis 实例名", "en:Current Redis instance name"})
     public String instanceName;
-
-    @ModelField(list = true, show = true,
-            name = {"环境", "en:Environment"},
-            info = {"操作发生时的环境", "en:Environment when operation occurred"})
+    @ModelField(list = true, show = true, name = {"环境", "en:Environment"}, info = {"操作发生时的环境", "en:Environment when operation occurred"})
     public String envType;
-
-    @ModelField(list = true, show = true,
-            name = {"结果", "en:Result"},
-            info = {"操作结果", "en:Operation result"})
+    @ModelField(list = true, show = true, name = {"结果", "en:Result"}, info = {"操作结果", "en:Operation result"})
     public String result;
-
-    @ModelField(list = true, show = true,
-            name = {"详情", "en:Detail"},
-            info = {"操作详情", "en:Operation detail"})
+    @ModelField(list = true, show = true, name = {"详情", "en:Detail"}, info = {"操作详情", "en:Operation detail"})
     public String detail;
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public java.util.List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
-        String keyword = query != null ? query.get("operator") : null;
-        String type = query != null ? query.get("operationType") : null;
-        if (type != null && type.isEmpty()) {
-            type = null;
-        }
-        if (keyword != null && keyword.isEmpty()) {
-            keyword = null;
-        }
-        return wrap(RedisApp.getAuditStore().query(keyword, type, pageNum, pageSize));
+    public List<String[]> page(int pageNum, int pageSize, Map<String, String> query, String[] listFields) throws Exception {
+        return wrap(RedisApp.getAuditStore().query(queryParam(query, "operator"), queryParam(query, "operationType"), pageNum, pageSize));
     }
 
     @Override
     public int total(Map<String, String> query) {
-        String keyword = query != null ? query.get("operator") : null;
-        String type = query != null ? query.get("operationType") : null;
-        if (keyword != null && keyword.isEmpty()) {
-            keyword = null;
-        }
-        if (type != null && type.isEmpty()) {
-            type = null;
-        }
-        return RedisApp.getAuditStore().total(keyword, type);
+        return RedisApp.getAuditStore().total(queryParam(query, "operator"), queryParam(query, "operationType"));
     }
 
     @Override
@@ -113,8 +66,19 @@ public class AppAudit extends RedisModelBase implements Page, Show {
         return toMap(entry);
     }
 
-    private java.util.List<String[]> wrap(java.util.List<AuditEntry> entries) {
-        java.util.List<String[]> rows = new ArrayList<>();
+    /** 取查询参数：null 或空串统一归一为 null。 */
+    private static String queryParam(Map<String, String> query, String key) {
+        String value = query != null ? query.get(key) : null;
+        return value != null && value.isEmpty() ? null : value;
+    }
+
+    /** 毫秒时间戳格式化为展示时间；非法值返回 "-"。 */
+    private static String formatTime(long timestamp) {
+        return timestamp > 0 ? Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).format(DATE_FORMAT) : "-";
+    }
+
+    private List<String[]> wrap(List<AuditEntry> entries) {
+        List<String[]> rows = new ArrayList<>();
         for (AuditEntry entry : entries) {
             rows.add(toArray(entry));
         }
@@ -124,7 +88,7 @@ public class AppAudit extends RedisModelBase implements Page, Show {
     private String[] toArray(AuditEntry entry) {
         return new String[]{
                 entry.getId(),
-                entry.getTimestamp() > 0 ? Instant.ofEpochMilli(entry.getTimestamp()).atZone(ZoneId.systemDefault()).format(DATE_FORMAT) : "-",
+                formatTime(entry.getTimestamp()),
                 entry.getOperator(),
                 entry.getOperationType(),
                 entry.getTargetType(),
@@ -139,7 +103,7 @@ public class AppAudit extends RedisModelBase implements Page, Show {
     private Map<String, String> toMap(AuditEntry entry) {
         Map<String, String> data = new LinkedHashMap<>();
         data.put("id", entry.getId());
-        data.put("timestamp", entry.getTimestamp() > 0 ? Instant.ofEpochMilli(entry.getTimestamp()).atZone(ZoneId.systemDefault()).format(DATE_FORMAT) : "-");
+        data.put("timestamp", formatTime(entry.getTimestamp()));
         data.put("operator", entry.getOperator());
         data.put("operationType", entry.getOperationType());
         data.put("targetType", entry.getTargetType());

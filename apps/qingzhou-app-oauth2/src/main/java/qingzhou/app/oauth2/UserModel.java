@@ -22,37 +22,15 @@ import qingzhou.api.action.Update;
         menu = "access")
 public class UserModel extends ModelBase implements Page, Show, Add, Update, Delete {
 
-    @ModelField(id = true,
-            name = {"编号", "en:ID"},
-            info = {"用户记录编号", "en:User record id"},
-            list = true,
-            readonly = true)
+    @ModelField(id = true, name = {"编号", "en:ID"}, info = {"用户记录编号", "en:User record id"}, list = true, readonly = true)
     public String id;
-
-    @ModelField(
-            name = {"用户名", "en:User Name"},
-            info = {"授权页登录用户名", "en:Login name on consent page"},
-            list = true,
-            search = true,
-            required = true)
+    @ModelField(name = {"用户名", "en:User Name"}, info = {"授权页登录用户名", "en:Login name on consent page"}, list = true, search = true, required = true)
     public String userName;
-
-    @ModelField(input_type = InputType.password,
-            name = {"密码", "en:Password"},
-            info = {"授权页登录密码", "en:Login password on consent page"},
-            required = true)
+    @ModelField(input_type = InputType.password, name = {"密码", "en:Password"}, info = {"授权页登录密码", "en:Login password on consent page"}, required = true)
     public String password;
-
-    @ModelField(
-            name = {"昵称", "en:Nickname"},
-            info = {"用户昵称", "en:User nickname"},
-            list = true)
+    @ModelField(name = {"昵称", "en:Nickname"}, info = {"用户昵称", "en:User nickname"}, list = true)
     public String nickname;
-
-    @ModelField(
-            name = {"角色", "en:Role"},
-            info = {"userinfo 返回的角色", "en:Role returned by userinfo"},
-            list = true)
+    @ModelField(name = {"角色", "en:Role"}, info = {"userinfo 返回的角色", "en:Role returned by userinfo"}, list = true)
     public String roleName;
 
     private Store store;
@@ -90,7 +68,6 @@ public class UserModel extends ModelBase implements Page, Show, Add, Update, Del
     public Map<String, String> show(String id) throws Exception {
         Map<String, String> user = store.show(Store.USER_TABLE, id);
         if (user == null) return null;
-
         // 列名在库中折叠为大写、Store 读取时转小写，这里需还原为 @ModelField 的 code
         Map<String, String> result = new HashMap<>();
         result.put("id", user.get("id"));

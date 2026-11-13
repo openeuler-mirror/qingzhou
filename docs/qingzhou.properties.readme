@@ -9,6 +9,7 @@ qingzhou-http-server.ssl_enabled=是否启用 HTTPS，默认 true，启用时须
 qingzhou-http-server.ssl_keystore_path=密钥库文件路径，相对实例目录，可用 qingzhou.sh keystore 命令生成
 qingzhou-http-server.ssl_keystore_password=密钥库口令，plain: 前缀表示明文，否则按密文解密
 qingzhou-http-server.ssl_keystore_type=密钥库类型，仅支持 PKCS12 或 JKS，默认 PKCS12
+qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀
 qingzhou-http-server.auth_fail_max=同一来源 IP 在窗口期内认证失败次数上限，达到后直接返回 401，默认 10
 qingzhou-http-server.auth_fail_window=认证失败计数窗口，单位秒，默认 60
 qingzhou-http-server.idle_timeout=连接空闲超时，单位秒，0 表示不超时，默认 60
@@ -37,9 +38,6 @@ qingzhou-http-server.cors_allowed_origins=跨域来源白名单，逗号分隔�
 
 # http-client
 qingzhou-http-client.allow_ssl_trust_all=是否信任所有 TLS 证书且跳过主机名校验，默认 false；仅受控环境使用，置 true 时注册中心到 agent 链路可被中间人攻击
-
-# monitor
-qingzhou-monitor.scrape_interval_seconds=监控端点的最小采样间隔，单位秒，默认 5，范围 1~600
 
 # crypto
 qingzhou-crypto.global_cipher_key_name=平台全局对称密钥在 secret-key-readme.properties 中的键名，缺省 global；init 与 encrypt 按同一键名读写
