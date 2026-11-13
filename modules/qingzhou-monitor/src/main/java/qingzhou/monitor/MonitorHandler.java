@@ -1,20 +1,26 @@
-package qingzhou.monitor.prometheus;
+package qingzhou.monitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.service.component.annotations.*;
-import qingzhou.http.server.*;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 import qingzhou.monitor.api.Metric;
 import qingzhou.monitor.api.MetricProvider;
 
 /**
  * 仅采集进程内 MetricProvider，无远程 RPC，故同步渲染，由框架统一收尾并兜底 500。
  */
-@Component(property = {HttpHandler.HANDLE_PATH + "=/prometheus"})
-public class PrometheusEndpoint implements HttpHandler {
-    private static final String CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
-
+@Component(property = {HttpHandler.HANDLE_PATH + "=/metrics"})
+public class MonitorHandler implements HttpHandler {
     private final Map<MetricProvider, String> providers = new ConcurrentHashMap<>();
 
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.MULTIPLE)
@@ -32,13 +38,13 @@ public class PrometheusEndpoint implements HttpHandler {
 
     @Override
     public void handle(HttpRequest request, HttpResponse response) {
-        String filter = request.getParameter(MetricFormat.PROVIDER);
+        String filter = request.getParameter(PrometheusFormat.PROVIDER);
         Map<String, Collection<Metric>> metrics = new LinkedHashMap<>();
         for (Map.Entry<MetricProvider, String> entry : providers.entrySet()) {
             String id = entry.getValue();
             if (filter != null && !filter.isEmpty() && !filter.equals(id)) continue;
             metrics.computeIfAbsent(id, key -> new ArrayList<>()).addAll(entry.getKey().collectMetrics());
         }
-        response.contentType(CONTENT_TYPE).send(MetricFormat.render(metrics));
+        response.contentType(PrometheusFormat.CONTENT_TYPE).send(PrometheusFormat.render(metrics));
     }
 }

@@ -14,47 +14,49 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 
 ## 核心能力
 
-| 能力 | 说明 |
-| --- | --- |
-| 模型驱动 | 一个 `ModelBase` 子类加 `@Model`/`@ModelField`/`@ModelAction` 注解，自动生成列表、表单、按钮与接口 |
-| 插件化 | 新增纳管对象只需开发一个轻舟应用 jar，投入 `instances/<实例>/apps` 并重启，不改动框架 |
-| 自动发现 | 应用可在 `MANIFEST.MF` 声明 `Qingzhou-Detection-*` 探测规则，发现目标软件后自动完成自部署 |
-| 集中纳管 | 中心实例内置注册中心，Agent 心跳自注册，支持跨主机统一纳管与跨节点调用 |
-| AI 赋能 | 接入兼容 OpenAI 的模型后，按技能编排调用平台模型操作，内置健康检查等技能；同时以 MCP 对外提供工具调用 |
-| 双协议输出 | 同一业务模型同时输出 REST 与 MCP，兼顾人工操作界面与 AI 工具调用 |
-| 可观测 | `field_type = monitor, numeric = true` 的字段自动成为 Prometheus 指标，内置 `/monitor/prometheus` 抓取端点与自监控指标 |
-| 安全 | 登录态、TOTP、OAuth2 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS |
+| 能力       | 说明                                                                                                  |
+|------------|-------------------------------------------------------------------------------------------------------|
+| 模型驱动   | 一个 `ModelBase` 子类加 `@Model`/`@ModelField`/`@ModelAction` 注解，自动生成列表、表单、按钮与接口    |
+| 插件化     | 新增纳管对象只需开发一个轻舟应用 jar，投入 `instances/<实例>/apps` 并重启，不改动框架                 |
+| 自动发现   | 应用可在 `MANIFEST.MF` 声明 `Qingzhou-Detection-*` 探测规则，发现目标软件后自动完成自部署             |
+| 集中纳管   | 中心实例内置注册中心，Agent 心跳自注册，支持跨主机统一纳管与跨节点调用                                |
+| AI 赋能    | 接入兼容 OpenAI 的模型后，按技能编排调用平台模型操作，内置健康检查等技能；同时以 MCP 对外提供工具调用 |
+| 双协议输出 | 同一业务模型同时输出 REST 与 MCP，兼顾人工操作界面与 AI 工具调用                                      |
+| 可观测     | `field_type = monitor, numeric = true` 的字段自动成为 Prometheus 指标                                 |
+| 安全       | 登录态、TOTP、OAuth2 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS                                 |
 
 ## 内置应用
 
 产品包自带以下应用（位于 `instances/default/apps`），可直接作为开发模板：
 
-| 应用 | 纳管对象 | 能力 |
-| --- | --- | --- |
-| Redis 管理 | Redis | 单机/哨兵/集群日常运维 |
-| Tomcat 管理 | Tomcat | 连接器配置、应用部署、线程池监控、日志查看 |
-| Nacos 应用 | Nacos | 配置中心与服务注册发现 |
-| ZooKeeper 应用 | ZooKeeper | 服务状态、连接、生效参数查看 |
-| OAuth2 授权服务 | — | 授权码、密码、客户端凭证、刷新令牌 |
-| 示例应用 | — | 演示标准开发方式 |
+| 应用            | 纳管对象  | 能力                                       |
+|-----------------|-----------|--------------------------------------------|
+| Redis 管理      | Redis     | 单机/哨兵/集群日常运维                     |
+| Tomcat 管理     | Tomcat    | 连接器配置、应用部署、线程池监控、日志查看 |
+| Nacos 应用      | Nacos     | 配置中心与服务注册发现                     |
+| ZooKeeper 应用  | ZooKeeper | 服务状态、连接、生效参数查看               |
+| OAuth2 授权服务 | —         | 授权码、密码、客户端凭证、刷新令牌         |
+| 示例应用        | —         | 演示标准开发方式                           |
 
 ## 适用场景
 
-轻舟不用于开发交易、订单等业务生产系统，而是开发**管理业务系统的系统**：
+轻舟不用于开发交易、订单等业务生产系统，而是开发 **管理业务系统的系统**：
 
-| 类型 | 典型场景 | 契合点 |
-| --- | --- | --- |
-| 统一 IT 运维管控 | 多云管理、混合云监控、自动化运维 | Agent 跨网络自注册，集中监控与批量操作 |
-| 异构系统聚合门户 | 整合 ERP/CRM/OA 的统一门户、跨系统看板 | 插件适配异构底层，统一模型屏蔽差异 |
-| 物联网与边缘管理 | 边缘网关管控台、分布式设备监控 | Agent 契合边缘接入，插件承载私有协议 |
-| 安全与合规审计 | 统一权限治理、全局策略巡检下发 | 集中下发与审计，标准化接口便于跨系统比对 |
-| 意图驱动智能运营 | AIOps 助手、自然语言配置中心 | 大模型把跨系统巡检操作转为自然语言指令 |
+| 类型             | 典型场景                               | 契合点                                   |
+|------------------|----------------------------------------|------------------------------------------|
+| 统一 IT 运维管控 | 多云管理、混合云监控、自动化运维       | Agent 跨网络自注册，集中监控与批量操作   |
+| 异构系统聚合门户 | 整合 ERP/CRM/OA 的统一门户、跨系统看板 | 插件适配异构底层，统一模型屏蔽差异       |
+| 物联网与边缘管理 | 边缘网关管控台、分布式设备监控         | Agent 契合边缘接入，插件承载私有协议     |
+| 安全与合规审计   | 统一权限治理、全局策略巡检下发         | 集中下发与审计，标准化接口便于跨系统比对 |
+| 意图驱动智能运营 | AIOps 助手、自然语言配置中心           | 大模型把跨系统巡检操作转为自然语言指令   |
 
 ## 快速上手
 
 1. **环境**：JDK 8+、Maven 3.8+（建议版本，构建未强制校验）。
-2. **构建**：源码根目录执行 `mvn clean install -DskipTests`，产物为 `qingzhou/target/qingzhou`。对外发布加 `-Prelease`；默认的开发档 zip 名带构建时间戳。
-3. **初始化**：`cd qingzhou/target/qingzhou && sh bin/init.sh`，按提示设置全局密钥、管理员口令，可选 TOTP、TLS 证书、Agent 域密钥。未初始化直接启动会因缺少必需配置退出。
+2. **构建**：源码根目录执行 `mvn clean install -DskipTests`，产物为 `qingzhou/target/qingzhou`。对外发布加 `-Prelease`
+   ；默认的开发档 zip 名带构建时间戳。
+3. **初始化**：`cd qingzhou/target/qingzhou && sh bin/init.sh`，按提示设置全局密钥、管理员口令，可选 TOTP、TLS 证书、Agent
+   域密钥。未初始化直接启动会因缺少必需配置退出。
 4. **启动**：`sh bin/start.sh`，可追加实例名（默认 `default`）。
 5. **访问**：`http://localhost:7900/web`，账号 `admin`，口令为初始化时设置；若初始化时启用了 TLS，改用 `https://`。
 
@@ -89,7 +91,8 @@ qingzhou/
 
 ### 多实例
 
-`instances` 下每个子目录即一个独立实例。复制 `default` 为新目录（如 `instances/agent`）后，执行 `sh bin/init.sh agent` 完成初始化，`sh bin/start.sh agent` 启动。
+`instances` 下每个子目录即一个独立实例。复制 `default` 为新目录（如 `instances/agent`）后，执行 `sh bin/init.sh agent`
+完成初始化，`sh bin/start.sh agent` 启动。
 同机多实例须在各自 `conf/qingzhou.properties` 中配置不同的 `qingzhou-http-server.port`。
 
 ## 远程管理
@@ -102,7 +105,8 @@ qingzhou/
 ### 一、准备注册中心
 
 1. 按「快速上手」构建、初始化并启动一个实例作为注册中心。
-2. 跨主机纳管须改监听地址：`qingzhou-http-server.host=0.0.0.0`。默认 `127.0.0.1` 仅本机可达，其他主机无法访问管控台，Agent 也无法回连。
+2. 跨主机纳管须改监听地址：`qingzhou-http-server.host=0.0.0.0`。默认 `127.0.0.1` 仅本机可达，其他主机无法访问管控台，Agent
+   也无法回连。
 3. 在 `instances/default/conf/qingzhou.properties` 按需调整：
     - `qingzhou-registry.interval`：检测远端实例状态的周期（秒，默认 6）。
     - `qingzhou-registry.timeout`：远端实例失联判定阈值（秒，默认 12，须明显大于 Agent 心跳周期）。
@@ -110,21 +114,23 @@ qingzhou/
 
 ### 二、部署 Agent
 
-关键是与中心**共享同一条域根密钥**：
+关键是与中心 **共享同一条域根密钥**：
 
 1. 在被纳管主机解压同一份产品包，实例可用自带的 `default`，也可复制独立实例目录（如 `instances/agent`）。
-2. 在 `instances/default/conf/secret-key.properties` 配置与中心**完全相同**的域根密钥（带外分发，切勿经网络传输）：
+2. 在 `instances/default/conf/secret-key.properties` 配置与中心 **完全相同**的域根密钥（带外分发，切勿经网络传输）：
     ```properties
     agent-domain~default=<Base64 编码密钥>
     ```
-    > 格式为 `agent-domain~<域名>`，域名是中心与一组 Agent 共享的信任域标识，一个域可纳管多个实例，两端须同名同值。声明了 `qingzhou-agent.url` 却缺少域根密钥时，实例启动即失败。
+   > 格式为 `agent-domain~<域名>`，域名是中心与一组 Agent 共享的信任域标识，一个域可纳管多个实例，两端须同名同值。声明了
+   `qingzhou-agent.url` 却缺少域根密钥时，实例启动即失败。
 3. 在 `instances/default/conf/qingzhou.properties` 启用并指向中心：
     ```properties
     qingzhou-agent.url=https://<中心地址>:7900
     qingzhou-agent.interval=6
     # qingzhou-agent.advertised_host=反代/NAT 下本机对外可达地址；留空由中心按连接源地址推断
     ```
-    `qingzhou-agent.url` 会自动拼接 `/registry/register` 作为注册接口，启用 Agent 时必填；协议须与中心一致，中心未启用 TLS 时用 `http://`。
+   `qingzhou-agent.url` 会自动拼接 `/registry/register` 作为注册接口，启用 Agent 时必填；协议须与中心一致，中心未启用 TLS
+   时用 `http://`。
 4. 启动：`sh bin/start.sh agent`，Agent 即按 `interval` 周期心跳注册。
 
 ### 三、验证与使用
@@ -143,15 +149,15 @@ qingzhou/
 
 默认监听 7900，接口与认证方式如下：
 
-| 用途 | 方法与路径 | 认证 |
-| --- | --- | --- |
-| 管控台页面 | `/web` | 静态资源免认证 |
-| 管控台数据接口 | `/registry/app/*`、`/registry/instance` | 登录态 |
-| REST 集成 | `/registry/invoke/<实例>/<应用>/<模型>/<操作>[/<id>]` | 登录态 |
-| MCP | `/ai/mcp` | 登录态 |
-| 监控指标 | `/monitor/prometheus` | 登录态 / Bearer 令牌 |
-| 登录与 OAuth2 | `/auth/*`、`/oauth2/*` | 免认证（登录入口） |
-| Agent 链路 | `/registry/register`、`/agent/invoke`、`/agent/upload` | 免登录，域密钥加密保护 |
+| 用途           | 方法与路径                                             | 认证                   |
+|----------------|--------------------------------------------------------|------------------------|
+| 管控台页面     | `/web`                                                 | 静态资源免认证         |
+| 管控台数据接口 | `/registry/app/*`、`/registry/instance`                | 登录态                 |
+| REST 集成      | `/registry/invoke/<实例>/<应用>/<模型>/<操作>[/<id>]`  | 登录态                 |
+| MCP            | `/ai/mcp`                                              | 登录态                 |
+| 监控指标       | `/monitor/metrics`                                     | 登录态 / Bearer 令牌   |
+| 登录与 OAuth2  | `/auth/*`、`/oauth2/*`                                 | 免认证（登录入口）     |
+| Agent 链路     | `/registry/register`、`/agent/invoke`、`/agent/upload` | 免登录，域密钥加密保护 |
 
 ## 更多信息
 
@@ -186,7 +192,7 @@ server {
 
 ### 监控指标抓取
 
-`/monitor/prometheus` 需登录态，与管控台接口共用令牌（Cookie 或 `Authorization: Bearer`）。外部探针须使用长期令牌：
+`/monitor/metrics` 需登录态，与管控台接口共用令牌（Cookie 或 `Authorization: Bearer`）。外部探针须使用长期令牌：
 
 ```sh
 sh bin/token.sh <实例>   # 交互输入账号口令，选择角色与有效天数（默认 30 天，最长 365 天）
@@ -197,7 +203,7 @@ sh bin/token.sh <实例>   # 交互输入账号口令，选择角色与有效天
 ```yaml
 scrape_configs:
   - job_name: qingzhou
-    metrics_path: /monitor/prometheus
+    metrics_path: /monitor/metrics
     authorization:
       type: Bearer
       credentials: <bin/token.sh 生成的令牌>
@@ -217,4 +223,5 @@ scrape_configs:
 - 提示 `!!! WARNING: no interactive terminal`：口令输入不隐藏、可能回显或被记录，`init.sh`、`encrypt.sh` 应在可交互终端中执行。
 - 解压 `version*.zip` 失败：按日志提示手动解压到 `lib/version<版本>`，或删除该目录后重启触发自动解压。
 - 远程实例不出现：确认中心已设 `qingzhou-http-server.host=0.0.0.0`、端口放通、`qingzhou-agent.url` 可达且协议与中心一致、两端域密钥同名同值。
-- 启用 TLS 后浏览器或 Agent 报证书错误：为自签证书补充信任，或在受控内网设置 `qingzhou-http-client.allow_ssl_trust_all=true`。
+- 启用 TLS 后浏览器或 Agent 报证书错误：为自签证书补充信任，或在受控内网设置
+  `qingzhou-http-client.allow_ssl_trust_all=true`。
