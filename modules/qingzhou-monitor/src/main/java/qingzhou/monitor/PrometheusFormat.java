@@ -12,26 +12,39 @@ final class PrometheusFormat {
     private static final Pattern LABEL_NAME = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
 
     /**
-     * 同名指标类型冲突属编程错误，直接抛出。
+     * 同名指标类型或说明冲突属编程错误，直接抛出。
      */
     static String render(Map<String, Collection<Metric>> metricsByProvider) {
         Map<String, Metric.Type> types = new LinkedHashMap<>();
+        Map<String, String> descriptions = new LinkedHashMap<>();
         Map<String, StringBuilder> bodies = new LinkedHashMap<>();
         for (Map.Entry<String, Collection<Metric>> entry : metricsByProvider.entrySet()) {
             String id = entry.getKey();
             for (Metric metric : entry.getValue()) {
                 String name = PREFIX + canonicalName(id + "_" + metric.name());
-                Metric.Type registered = types.putIfAbsent(name, metric.type());
-                if (registered != null && registered != metric.type()) {
+                Metric.Type registeredType = types.putIfAbsent(name, metric.type());
+                if (registeredType != null && registeredType != metric.type()) {
                     throw new IllegalStateException("conflicting metric type for " + name);
+                }
+                String description = metric.description();
+                String registeredDescription = descriptions.putIfAbsent(name, description);
+                if (registeredDescription != null && !registeredDescription.equals(description)) {
+                    throw new IllegalStateException("conflicting metric description for " + name);
                 }
                 bodies.computeIfAbsent(name, key -> new StringBuilder())
                         .append(line(id, name, metric)).append('\n');
             }
         }
         StringBuilder out = new StringBuilder();
-        types.forEach((name, type) -> out.append("# TYPE ").append(name).append(' ')
-                .append(type.name().toLowerCase(Locale.ROOT)).append('\n').append(bodies.get(name)));
+        types.forEach((name, type) -> {
+            // 空说明表示该指标族未提供文档，省略 HELP；HELP 须先于 TYPE 输出
+            String description = descriptions.get(name);
+            if (!description.isEmpty()) {
+                out.append("# HELP ").append(name).append(' ').append(escapeHelp(description)).append('\n');
+            }
+            out.append("# TYPE ").append(name).append(' ').append(type.name().toLowerCase(Locale.ROOT))
+                    .append('\n').append(bodies.get(name));
+        });
         return out.toString();
     }
 
@@ -61,5 +74,10 @@ final class PrometheusFormat {
         // \r 改空格：Prometheus 只接受 \\、\"、\n 三种转义，直接输出 \r 会让样本解析失败
         return value.replace("\\", "\\\\").replace("\"", "\\\"")
                 .replace("\n", "\\n").replace("\r", " ");
+    }
+
+    private static String escapeHelp(String description) {
+        // HELP 文本只接受 \\ 与 \n 两种转义，引号无需转义；\r 改空格以免行内回车破坏解析
+        return description.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", " ");
     }
 }
