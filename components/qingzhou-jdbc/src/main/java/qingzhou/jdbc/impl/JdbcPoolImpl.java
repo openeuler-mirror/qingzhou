@@ -6,19 +6,26 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.sql.CommonDataSource;
 import javax.sql.XAConnection;
 
+import org.apache.tomcat.jdbc.pool.ConnectionPool;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.apache.tomcat.jdbc.pool.XADataSource;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
 import qingzhou.jdbc.JdbcPool;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 
-@Component(configurationPid = "qingzhou-jdbc", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class JdbcPoolImpl implements JdbcPool {
+@Component(configurationPid = "qingzhou-jdbc", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = MetricProvider.PROVIDER_ID + "=jdbc")
+public class JdbcPoolImpl implements JdbcPool, MetricProvider {
     @Reference
     private Crypto crypto;
 
@@ -113,5 +120,27 @@ public class JdbcPoolImpl implements JdbcPool {
     public XAConnection getXAConnection() throws SQLException {
         if (dsPool == null) throw new IllegalStateException("pool not initialized");
         return dsPool.getXAConnection();
+    }
+
+    /**
+     * 直接读 Tomcat 连接池快照：池已关闭 JMX（见 init），指标是唯一的池水位出口。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        DataSource pool = dsPool;
+        // 采集与 deactivate 并发时池可能已置空或关闭，本次不产出样本；正常态下二者非空
+        ConnectionPool stats = pool == null ? null : pool.getPool();
+        if (stats == null) return Collections.emptySet();
+
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("pool_active", stats.getActive(), Metric.Type.GAUGE,
+                "Connections currently borrowed from the pool"));
+        metrics.add(Metric.of("pool_idle", stats.getIdle(), Metric.Type.GAUGE,
+                "Idle connections currently held by the pool"));
+        metrics.add(Metric.of("pool_waiters", stats.getWaitCount(), Metric.Type.GAUGE,
+                "Threads waiting to borrow a connection"));
+        metrics.add(Metric.of("pool_size", stats.getSize(), Metric.Type.GAUGE,
+                "Connections currently tracked by the pool"));
+        return metrics;
     }
 }

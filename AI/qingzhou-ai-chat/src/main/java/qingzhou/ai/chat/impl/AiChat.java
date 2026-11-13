@@ -15,13 +15,16 @@ import qingzhou.http.server.*;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.logger.Logger;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 
 @Component(configurationPid = "qingzhou-ai", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {
                 HttpHandler.HANDLE_PATH + "=/ai/chat/stream",
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
-                HttpHandler.HANDLE_METHODS + "=POST"})
-public class AiChat implements HttpHandler {
+                HttpHandler.HANDLE_METHODS + "=POST",
+                MetricProvider.PROVIDER_ID + "=ai_chat"})
+public class AiChat implements HttpHandler, MetricProvider {
     private static final String SYSTEM_PROMPT = "\n" +
             "## 身份定义\n" +
             "你是轻舟平台智能助手，帮助开发者、运维人员和管理员理解和使用轻舟平台\n" +
@@ -79,6 +82,23 @@ public class AiChat implements HttpHandler {
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
         maxDocChars = Math.toIntExact(configs.between("chat_max_doc_chars", 1, 1_000_000, 50_000));// 主流 API 梯队：普遍在 100 万 token（1M）左右
+    }
+
+    /**
+     * 会话侧健康度：活跃流反映并发压力，超时与客户端断连反映交互质量。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("streams_active", ChatMetrics.streamsActive(), Metric.Type.GAUGE,
+                "Chat sessions currently streaming to a client"));
+        metrics.add(Metric.of("timeouts_total", ChatMetrics.hardTimeouts(), Metric.Type.COUNTER,
+                Collections.singletonMap("kind", "hard"), "Chat sessions terminated by the watchdog"));
+        metrics.add(Metric.of("timeouts_total", ChatMetrics.firstContentTimeouts(), Metric.Type.COUNTER,
+                Collections.singletonMap("kind", "first_content"), "Chat sessions terminated by the watchdog"));
+        metrics.add(Metric.of("client_disconnects_total", ChatMetrics.clientDisconnects(), Metric.Type.COUNTER,
+                "Chat sessions aborted because the client went away"));
+        return metrics;
     }
 
     @Override

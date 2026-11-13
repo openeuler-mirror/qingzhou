@@ -21,6 +21,11 @@
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <artifactId>qingzhou-monitor-api</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -38,7 +43,8 @@
                             qingzhou.json,
                             qingzhou.llm,
                             qingzhou.http.server,
-                            qingzhou.common
+                            qingzhou.common,
+                            qingzhou.monitor.api
                         </Import-Package>
                     </instructions>
                 </configuration>

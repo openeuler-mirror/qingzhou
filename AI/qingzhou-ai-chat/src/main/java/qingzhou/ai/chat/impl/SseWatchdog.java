@@ -42,6 +42,7 @@ class SseWatchdog {
         long elapsed = now - sse.startTime;
         if (elapsed >= HARD_TIMEOUT_MS) {
             // 会话总时长硬上限：无论是否已出内容、连接是否仍存活，都主动收尾并自取消，兜底回收看门狗，杜绝“已出内容后模型静默 + 客户端长连接不关”的无限心跳空转
+            ChatMetrics.hardTimeout();
             sse.finishWithError("MODEL_TIMEOUT", "会话运行已超过 30 分钟上限，已自动终止本次请求，请重试");
             return;
         }
@@ -49,6 +50,7 @@ class SseWatchdog {
         // 首字超时以会话开始时间为基准：心跳同样会刷新 lastEventTime，用 idleMs 判定将永远达不到阈值
         if (!sse.contentStarted && elapsed >= FIRST_CONTENT_TIMEOUT_MS) {
             // 已受理但长时间没有任何模型内容产出：判定无响应，主动收尾
+            ChatMetrics.firstContentTimeout();
             sse.finishWithError("MODEL_TIMEOUT", "模型长时间未响应，已终止本次请求，请重试");
             return;
         }

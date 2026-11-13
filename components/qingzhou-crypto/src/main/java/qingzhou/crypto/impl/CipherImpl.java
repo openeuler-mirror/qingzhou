@@ -3,6 +3,7 @@ package qingzhou.crypto.impl;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,6 +19,8 @@ class CipherImpl implements Cipher {
     private static final int TAG_SIZE = 16;
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    // 跨实例共享：降级事件按进程口径统计，与具体 Cipher 实例（全局/每实例密钥）无关
+    private static final AtomicLong DECRYPT_FALLBACKS = new AtomicLong();
 
     private final Base64Coder base64Coder;
 
@@ -50,6 +53,7 @@ class CipherImpl implements Cipher {
         try {
             return decrypt(s);
         } catch (Exception e) {
+            DECRYPT_FALLBACKS.incrementAndGet(); // 降级须可聚合：单条 error 日志无法反映发生率与波及面
             if (logger == null) return s; // 非 OSGi 场景（命令行 init/单测）logger 未注入：仍按原值降级，不得 NPE
             // 明确告知「密文被当作明文原样使用」：这是敏感配置最危险的静默降级，须以 error 级别留痕；
             // 不需要加密的明文配置应显式加 "plain:" 前缀，避免与损坏的密文无法区分
@@ -122,5 +126,9 @@ class CipherImpl implements Cipher {
 
     private javax.crypto.Cipher getCipher() throws NoSuchAlgorithmException, NoSuchPaddingException {
         return javax.crypto.Cipher.getInstance(ALG_MODE);
+    }
+
+    static long decryptFallbacks() {
+        return DECRYPT_FALLBACKS.get();
     }
 }

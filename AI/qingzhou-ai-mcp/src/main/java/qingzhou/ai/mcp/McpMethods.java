@@ -19,12 +19,15 @@ class McpMethods {
     private final ToolRegistry registry;
     private final ToolCallInterceptionService interceptionService;
     private final Logger logger;
+    private final ToolCallStats stats;
     private final Map<String, Object> initializeResult;
 
-    McpMethods(ToolRegistry registry, ToolCallInterceptionService interceptionService, Logger logger, String version) {
+    McpMethods(ToolRegistry registry, ToolCallInterceptionService interceptionService, Logger logger,
+               ToolCallStats stats, String version) {
         this.registry = registry;
         this.interceptionService = interceptionService;
         this.logger = logger;
+        this.stats = stats;
 
         Map<String, Object> serverInfo = new HashMap<>();
         serverInfo.put("name", "qingzhou-mcp-server");
@@ -72,10 +75,12 @@ class McpMethods {
 
     private Map<String, Object> invokeTool(ToolCache toolCache, Object arguments, HttpRequest request) throws RpcException {
         Map<String, Object> toolArgs = normalizeArguments(arguments);
+        stats.onCall();
 
         // 授权：所有工具调用必须过共享拦截链；未认证请求已在框架闸门拦截
         String denied = interceptionService.intercept(toolCache.toolName, toolArgs, request.getPrincipal(), request.getRoles());
         if (denied != null) {
+            stats.onForbidden();
             // data 带机器可读分类，客户端不必解析文案
             throw new RpcException(RpcException.FORBIDDEN, denied, Collections.singletonMap("reason", "forbidden"));
         }
@@ -88,6 +93,7 @@ class McpMethods {
             Thread.currentThread().interrupt(); // 恢复中断位，避免污染复用的 worker 线程
             throw new RpcException(RpcException.INTERNAL_ERROR, "Tool invocation interrupted");
         } catch (Exception e) {
+            stats.onFailure(toolCache.toolName);
             // 工具业务异常按 MCP 契约以 isError 回传；细节只进服务端日志
             logger.error("mcp tool invoke failed: " + toolCache.toolName, e);
             result = "tool invocation failed";

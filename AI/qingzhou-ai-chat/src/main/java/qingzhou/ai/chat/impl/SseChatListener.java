@@ -41,6 +41,7 @@ class SseChatListener implements ChatListener {
     }
 
     void setStarted(String conversationId, String assistantMessageId, MessageAggregator messageAggregator) {
+        ChatMetrics.streamOpened();
         this.startTime = System.currentTimeMillis();
         this.lastEventTime = System.currentTimeMillis();
         this.watchdogTask = SseWatchdog.watch(this);
@@ -189,6 +190,7 @@ class SseChatListener implements ChatListener {
         synchronized (sendLock) {
             if (finished) return;
             finished = true;
+            ChatMetrics.streamClosed();
 
             if (watchdogTask != null) {
                 watchdogTask.cancel(false);
@@ -221,6 +223,7 @@ class SseChatListener implements ChatListener {
             try {
                 httpResponse.send(toSseText(event));
             } catch (Throwable e) { // 客户端已断开：置位后模型侧停止拉取
+                ChatMetrics.clientDisconnect();
                 finished = true; // 标记结束
                 if (subscription != null) {
                     subscription.cancel(); // 客户端断开：通知模型停止拉取

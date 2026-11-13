@@ -69,12 +69,14 @@ class SyncSender {
     }
 
     private Response sendSync(List<Object> messages, List<Object> toolDefs, int attempt) throws Exception {
+        LlmMetrics.request(); // 同步路径（会话摘要）与流式共用调用量口径
         Response response;
         try {
             Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, false), false, builder, httpClient, json, crypto);
             response = httpClient.send(request);
         } catch (Exception e) {
             if (attempt < builder.getMaxRetries()) {
+                LlmMetrics.retry();
                 Utils.sleepBackoff(attempt);
                 return sendSync(messages, toolDefs, attempt + 1);
             }
@@ -84,9 +86,11 @@ class SyncSender {
         if (status != 200) {
             // 同步响应体已读完并关闭流，连接可直接复用，无需 cancel（cancel 仅用于中止流式响应）
             if (Utils.isRetryableStatus(status) && attempt < builder.getMaxRetries()) {
+                LlmMetrics.retry();
                 Utils.sleepBackoff(attempt);
                 return sendSync(messages, toolDefs, attempt + 1);
             }
+            LlmMetrics.failure(String.valueOf(status));
             throw new IllegalStateException("API error " + status + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         }
         return response;

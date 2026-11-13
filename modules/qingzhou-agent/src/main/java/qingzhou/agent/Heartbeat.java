@@ -5,9 +5,12 @@ import java.net.ConnectException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
@@ -19,11 +22,14 @@ import qingzhou.http.client.Request;
 import qingzhou.http.client.Response;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 
-@Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class Heartbeat {
+@Component(configurationPid = "qingzhou-agent", configurationPolicy = ConfigurationPolicy.REQUIRE,
+        property = MetricProvider.PROVIDER_ID + "=agent")
+public class Heartbeat implements MetricProvider {
     @Reference
     private HttpClient httpClient;
     @Reference
@@ -40,8 +46,15 @@ public class Heartbeat {
     private String registerUrl;
 
     private Timer timer;
-    // 是否已被中心登记（当前 instanceId + secret 已上报且中心返回 200/304）
-    private boolean registered;
+    // 是否已被中心登记（当前 instanceId + secret 已上报且中心返回 200/304）；由监控抓取线程读取，须 volatile
+    private volatile boolean registered;
+
+    // 心跳结果与失败原因分列：区分"中心拒绝"与"网络不可达"是定位注册问题的关键
+    private final AtomicLong renewed = new AtomicLong();
+    private final AtomicLong registeredCount = new AtomicLong();
+    private final AtomicLong errorResponses = new AtomicLong();
+    private final AtomicLong connectFailures = new AtomicLong();
+    private final AtomicLong networkFailures = new AtomicLong();
 
     @Activate
     public void start(Map<String, String> config) {
@@ -77,6 +90,27 @@ public class Heartbeat {
         }
     }
 
+    /**
+     * 注册状态是实例是否被中心纳管的一手信号：registered 为 0 且心跳持续失败即通道中断。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("registered", registered ? 1 : 0, Metric.Type.GAUGE,
+                "Whether this instance is currently registered with the registry"));
+        metrics.add(Metric.of("heartbeat_total", renewed.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("result", "renew"), "Heartbeats sent, by result"));
+        metrics.add(Metric.of("heartbeat_total", registeredCount.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("result", "registered"), "Heartbeats sent, by result"));
+        metrics.add(Metric.of("heartbeat_total", errorResponses.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("result", "error"), "Heartbeats sent, by result"));
+        metrics.add(Metric.of("heartbeat_failures_total", connectFailures.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("reason", "connect"), "Heartbeats that failed, by reason"));
+        metrics.add(Metric.of("heartbeat_failures_total", networkFailures.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("reason", "exception"), "Heartbeats that failed, by reason"));
+        return metrics;
+    }
+
     private void send() {
         try {
             Payload payload = getPayload();
@@ -91,6 +125,7 @@ public class Heartbeat {
             Response response = httpClient.send(request);
 
             if (response.getStatus() == 304) {
+                renewed.incrementAndGet();
                 registered = true;
                 return;
             }
@@ -98,6 +133,7 @@ public class Heartbeat {
             // 200 只对应新实例登记（续期成功恒为 304）：最小心跳在实例已失效时会被解密拒绝回 400，
             // 走下面的失败分支重置 registered，下一个周期重发完整注册
             if (response.getStatus() != 200) {
+                errorResponses.incrementAndGet();
                 logger.error("response code error [ " + response.getStatus() + " ] : " + registerUrl);
                 registered = false;
                 return;
@@ -108,10 +144,13 @@ public class Heartbeat {
             byte[] registeredInstanceId = payload.cipher.decrypt(response.getBody(), responseAad);
             cachedInstance.setId(new String(registeredInstanceId, StandardCharsets.UTF_8));
             registered = true;
+            registeredCount.incrementAndGet();
             logger.info(cachedInstance.getAppMetas().size() + " apps registered");
         } catch (ConnectException e) {
+            connectFailures.incrementAndGet();
             logger.error("failed to connect to the URL: " + registerUrl + ", msg: " + e.getMessage());
         } catch (Exception e) {
+            networkFailures.incrementAndGet();
             logger.error(e.getMessage(), e);
         }
     }

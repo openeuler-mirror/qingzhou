@@ -2,6 +2,8 @@ package qingzhou.registry.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
@@ -13,6 +15,8 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 import qingzhou.registry.Registry;
@@ -21,8 +25,10 @@ import qingzhou.registry.Registry;
         property = {
                 HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_REGISTER_URI,
                 HttpHandler.HANDLE_NO_AUTH + "=true",
-                HttpHandler.HANDLE_METHODS + "=POST"})
-public class Register implements HttpHandler {
+                HttpHandler.HANDLE_METHODS + "=POST",
+                MetricProvider.PROVIDER_ID + "=registry"},
+        service = {HttpHandler.class, MetricProvider.class})
+public class Register implements HttpHandler, MetricProvider {
     // 注册报文上限：需容纳全部应用的 models/fields/actions/menus/i18ns 元数据，取 1MB 兜底解析前内存消耗
     private static final int MAX_REGISTER_BODY = 1024 * 1024;
     // 实例 ID 与实例密钥都是契约级令牌（分别作注册表键/AAD 上下文、每实例密钥派生输入）：限定安全字符集与长度
@@ -42,6 +48,12 @@ public class Register implements HttpHandler {
     private Timer timer;
     // 是否采信 agent 自报地址：仅反代/NAT 部署需要，默认关闭以免域内成员把流量导向任意地址
     private boolean trustAdvertisedHost;
+
+    // 注册结果口径：成功按新登记/续期分列，拒绝按原因分列，超时剔除单列
+    private final AtomicLong newInstances = new AtomicLong();
+    private final AtomicLong renewedInstances = new AtomicLong();
+    private final AtomicLong expiredInstances = new AtomicLong();
+    private final Map<String, AtomicLong> rejections = new ConcurrentHashMap<>();
 
     @Activate
     public void start(Map<String, String> config) {
@@ -64,6 +76,7 @@ public class Register implements HttpHandler {
                     }
                 }
                 toRemove.forEach(registry::removeRemoteInstance);
+                expiredInstances.addAndGet(toRemove.size());
             }
         }, interval, interval);
     }
@@ -75,14 +88,39 @@ public class Register implements HttpHandler {
         }
     }
 
+    /**
+     * 集群入网口径：拒绝原因直接指向配置错配（decrypt_failed/illegal_domain）或容量与输入问题。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("register_total", newInstances.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("type", "new"), "Instance registrations handled, by type"));
+        metrics.add(Metric.of("register_total", renewedInstances.get(), Metric.Type.COUNTER,
+                Collections.singletonMap("type", "renew"), "Instance registrations handled, by type"));
+        metrics.add(Metric.of("instances_expired_total", expiredInstances.get(), Metric.Type.COUNTER,
+                "Remote instances evicted because their heartbeat timed out"));
+        for (Map.Entry<String, AtomicLong> rejection : rejections.entrySet()) {
+            metrics.add(Metric.of("register_rejected_total", rejection.getValue().get(), Metric.Type.COUNTER,
+                    Collections.singletonMap("reason", rejection.getKey()), "Registrations rejected, by reason"));
+        }
+        return metrics;
+    }
+
+    private void reject(String reason) {
+        rejections.computeIfAbsent(reason, key -> new AtomicLong()).incrementAndGet();
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         byte[] requestBody = httpRequest.getBody();
         if (requestBody == null || requestBody.length == 0) {
+            reject("empty_body");
             httpResponse.status(400);
             return;
         }
         if (requestBody.length > MAX_REGISTER_BODY) {
+            reject("body_too_large");
             httpResponse.status(413);
             return;
         }
@@ -91,6 +129,7 @@ public class Register implements HttpHandler {
         String domainId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_DOMAIN_ID);
         if (domainId == null || !agentDomainService.getAllAgentDomains().contains(domainId)) {
             logger.warn("illegal agent-domain: " + forLog(domainId));
+            reject("illegal_domain");
             httpResponse.status(400); // 统一 400：不回显配置状态差异，防域名枚举
             return;
         }
@@ -99,6 +138,7 @@ public class Register implements HttpHandler {
         String renewInstanceId = httpRequest.getParameter(Constants.REMOTE_PARAMETER_INSTANCE_ID);
         if (renewInstanceId != null && isInvalidToken(renewInstanceId)) {
             logger.warn("illegal instance id: " + forLog(renewInstanceId));
+            reject("illegal_instance_id");
             httpResponse.status(400);
             return;
         }
@@ -119,6 +159,7 @@ public class Register implements HttpHandler {
                 // 报文由请求方控制：密钥失配、时间窗、重放等解密失败属调用方问题，按 warn 记录并统一 400，
                 // 不以 error+栈放大不可信输入造成的日志（agent 侧同策略）
                 logger.warn("failed to decrypt registration: " + e.getMessage());
+                reject("decrypt_failed");
                 httpResponse.status(400);
                 return;
             }
@@ -126,12 +167,14 @@ public class Register implements HttpHandler {
             // 已存在只续期、不覆盖：即使同域成员冒名续期也已被上面的每实例密钥解密拦截
             if (exists != null) {
                 exists.refreshTime();
+                renewedInstances.incrementAndGet();
                 httpResponse.status(304);
                 return;
             }
 
             if (registry.getAllRemoteInstances().size() >= MAX_REMOTE_INSTANCES) {
                 logger.warn("remote instance quota exceeded: " + MAX_REMOTE_INSTANCES);
+                reject("quota_exceeded");
                 httpResponse.status(503); // 容量不足：仅拒新实例，已注册实例仍可续期
                 return;
             }
@@ -142,17 +185,20 @@ public class Register implements HttpHandler {
             } catch (Exception e) {
                 // 解密后报文的解析异常不得外泄：Jackson 异常消息携带报文原文（含 instanceSecret），只记类型
                 logger.warn("invalid registration payload: " + e.getClass().getSimpleName());
+                reject("invalid_payload");
                 httpResponse.status(400);
                 return;
             }
             if (instanceInfo.getPort() < 1 || instanceInfo.getPort() > 65535) {
                 logger.warn("illegal agent port: " + instanceInfo.getPort());
+                reject("illegal_port");
                 httpResponse.status(400);
                 return;
             }
             // 实例密钥是 center→agent 方向的认证因子：缺失即无法安全下发指令，直接拒绝注册
             if (isInvalidToken(instanceInfo.getInstanceSecret())) {
                 logger.warn("missing or illegal instance secret");
+                reject("invalid_secret");
                 httpResponse.status(400);
                 return;
             }
@@ -162,6 +208,7 @@ public class Register implements HttpHandler {
                 if (appMeta == null || appMeta.getApp() == null
                         || appMeta.getApp().code == null || appMeta.getApp().code.isEmpty()) {
                     logger.warn("illegal app meta in registration payload");
+                    reject("invalid_app_meta");
                     httpResponse.status(400);
                     return;
                 }
@@ -171,11 +218,13 @@ public class Register implements HttpHandler {
             // 反之若先响应，落表失败会让 agent 在下一周期内处于"自认为已注册"的错误状态
             String registeredInstanceId = UUID.randomUUID().toString();
             addRemoteInstance(instanceInfo, domainId, registeredInstanceId, httpRequest);
+            newInstances.incrementAndGet();
             byte[] responseAad = agentDomainService.responseAad(aad);
             httpResponse.send(cipher.encrypt(registeredInstanceId.getBytes(StandardCharsets.UTF_8), responseAad));
         } catch (Exception e) {
             // 兜底仅剩内部错误（落表/加密/发送）：解密、解析、参数校验均已在各自分支内以 400 收敛
             logger.error("failed to finalize registration", e);
+            reject("internal");
             httpResponse.status(500);
         }
     }

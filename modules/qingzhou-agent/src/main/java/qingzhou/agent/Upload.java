@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,6 +23,8 @@ import qingzhou.common.TempFiles;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 import qingzhou.registry.AgentDomainService;
 import qingzhou.registry.Constants;
 
@@ -27,9 +32,10 @@ import qingzhou.registry.Constants;
         property = {
                 HttpHandler.HANDLE_PATH + "=" + Constants.REMOTE_UPLOAD_URI,
                 HttpHandler.HANDLE_NO_AUTH + "=true",
-                HttpHandler.HANDLE_METHODS + "=POST"},
-        service = {Upload.class, HttpHandler.class})
-public class Upload extends AbstractAgentHandler {
+                HttpHandler.HANDLE_METHODS + "=POST",
+                MetricProvider.PROVIDER_ID + "=agent"},
+        service = {Upload.class, HttpHandler.class, MetricProvider.class})
+public class Upload extends AbstractAgentHandler implements MetricProvider {
     // 单上传总量上限：分片追加若无总量约束，攻击者可持续上传写满磁盘（DoS）
     private static final long MAX_UPLOAD_BYTES = 1024L * 1024 * 1024;
 
@@ -48,6 +54,8 @@ public class Upload extends AbstractAgentHandler {
     private final AtomicLong pendingBytes = new AtomicLong();
     // 每个上传目录累计预留的字节数：release 按此扣减而非 sizeOf——文件被业务 move 走后 sizeOf 为 0，会导致配额虚高
     private final Map<String, Long> reservedBytes = new ConcurrentHashMap<>();
+    // 拒绝原因取值域为固定枚举，基数受控
+    private final Map<String, AtomicLong> rejections = new ConcurrentHashMap<>();
 
     @Reference
     public void setAgentDomainKeys(AgentDomainService agentDomainService) {
@@ -78,6 +86,28 @@ public class Upload extends AbstractAgentHandler {
         recount(); // 清理后初始化配额计数，避免重启后计数虚低
     }
 
+    /**
+     * 上传额度与拒绝原因：临时目录占用是磁盘风险的直接表征，拒绝原因反映配额水位与非法请求。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("upload_pending_dirs", pendingDirs.get(), Metric.Type.GAUGE,
+                "Upload directories currently holding temp files"));
+        metrics.add(Metric.of("upload_pending_bytes", pendingBytes.get(), Metric.Type.GAUGE,
+                "Bytes currently reserved by pending uploads"));
+        for (Map.Entry<String, AtomicLong> rejection : rejections.entrySet()) {
+            metrics.add(Metric.of("upload_rejected_total", rejection.getValue().get(), Metric.Type.COUNTER,
+                    Collections.singletonMap("reason", rejection.getKey()), "Upload chunks rejected, by reason"));
+        }
+        return metrics;
+    }
+
+    // 拒绝计数只在拒绝分支累加：分片正常路径无额外开销
+    private void reject(String reason) {
+        rejections.computeIfAbsent(reason, key -> new AtomicLong()).incrementAndGet();
+    }
+
     @Override
     protected String uriName() {
         return Constants.REMOTE_UPLOAD_URI;
@@ -98,6 +128,7 @@ public class Upload extends AbstractAgentHandler {
         File data = dir == null ? null : dataFile(dir);
         // 参数合法性：偏移量受 AAD 保护，须与落盘长度一致，否则丢片或乱序；空键等价于长度 0
         if ((data == null ? 0 : data.length()) != offset) {
+            reject("out_of_order");
             throw new IllegalArgumentException("upload chunk out of order");
         }
 
@@ -131,12 +162,15 @@ public class Upload extends AbstractAgentHandler {
         File dir = new File(uploadBase, uploadId);
         try {
             if (!dir.getCanonicalPath().startsWith(uploadBasePath + File.separator)) {
+                reject("illegal_id"); // 路径穿越尝试：安全信号，须可聚合
                 throw new IllegalArgumentException("illegal upload id");
             }
         } catch (IOException e) {
+            reject("illegal_id");
             throw new IllegalArgumentException("illegal upload id", e);
         }
         if (!dir.isDirectory()) {
+            reject("unknown_id");
             throw new IllegalArgumentException("unknown upload id");
         }
         return dir;
@@ -150,14 +184,17 @@ public class Upload extends AbstractAgentHandler {
     private QuotaReservation reserveQuota(long len, long offset, boolean newUpload, File dir) {
         if (newUpload && pendingDirs.incrementAndGet() > MAX_UPLOAD_FILES) {
             rollback(0, dir);
+            reject("too_many_uploads");
             throw new IllegalArgumentException("too many pending uploads");
         }
         if (offset + len > MAX_UPLOAD_BYTES) {
             rollback(offset, dir);
+            reject("file_too_large");
             throw new IllegalArgumentException("upload exceeds size limit");
         }
         if (pendingBytes.addAndGet(len) > MAX_UPLOAD_TOTAL_BYTES) {
             rollback(len + offset, dir);
+            reject("total_too_large");
             throw new IllegalArgumentException("upload dir exceeds size limit");
         }
         reservedBytes.merge(dir.getName(), len, Long::sum); // 三项超限判断均通过后记录，回退路径靠 remove 清理

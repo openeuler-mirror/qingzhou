@@ -14,9 +14,10 @@ import java.util.Set;
 final class ConversationCatalog {
     private final Map<String, CatalogEntry> entries = new HashMap<>();
     private final Map<String, Integer> activeByUser = new HashMap<>();
-    private long totalBytes;
-    private int activeCount;
-    private int archivedCount;
+    // 监控抓取线程无锁读取，故对外暴露的三个计数须 volatile；变更仍只发生在会话读写的同步块内
+    private volatile long totalBytes;
+    private volatile int activeCount;
+    private volatile int archivedCount;
     private long writeSequence;
 
     void clear() {
