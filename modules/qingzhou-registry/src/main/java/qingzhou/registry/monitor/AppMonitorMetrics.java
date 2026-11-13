@@ -16,18 +16,23 @@ import qingzhou.monitor.api.Metric;
 import qingzhou.monitor.api.MetricProvider;
 import qingzhou.registry.AppStub;
 import qingzhou.registry.Constants;
+import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
 /**
  * 本地应用监视数据（Monitor SPI）的指标出口：随 /metrics 抓取同步拉取，不维护后台轮询。
- * 数值项出 monitor_value 样本；路径、版本等非数值项按 Prometheus info-metric 惯例写进 label。
+ * 仅数值型监视项出 monitor_value 样本，字段的显示名与说明随样本以 label 带出。
  */
 @Component(property = MetricProvider.PROVIDER_ID + "=app")
 public class AppMonitorMetrics implements MetricProvider {
+    private static final String VALUE_DESC = "Application monitoring values, by app, model and field";
+
     @Reference
     private Registry registry;
     @Reference
     private Logger logger;
+    @Reference
+    private I18nService i18nService;
 
     // 采集失败按阶段计数：抓取是只读观测面，单目标失败不得打断整次抓取，失败以 counter 暴露而非静默
     private final Map<String, AtomicLong> errors = new ConcurrentHashMap<>();
@@ -90,29 +95,38 @@ public class AppMonitorMetrics implements MetricProvider {
         for (ModelField field : target.model.fields) {
             if (field.field_type != FieldType.monitor) continue;
             Object value = values.get(field.code);
-            if (value != null) {
-                metrics.add(sample(target, field.code, String.valueOf(value)));
+            if (value == null) continue;
+            Double number = toNumber(String.valueOf(value));
+            if (number != null) {
+                metrics.add(sample(target, field, number));
             }
         }
         return metrics;
     }
 
-    // Prometheus 只有数值样本：可解析的按 gauge 上报，其余按 info-metric 惯例以 label 承载
-    private static Metric sample(Target target, String field, String value) {
+    // 非数值监视项（路径、版本、标志等）不导出：Prometheus 无字符串样本
+    private static Double toNumber(String value) {
+        try {
+            double number = Double.parseDouble(value);
+            return Double.isFinite(number) ? number : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Metric sample(Target target, ModelField field, double value) {
         Map<String, String> labels = new HashMap<>();
         labels.put("app", target.app);
         labels.put("model", target.model.code);
-        labels.put("field", field);
-        try {
-            double number = Double.parseDouble(value);
-            // 非有限值不受 Prometheus 文本格式支持，与字符串项同归 info
-            if (Double.isFinite(number)) {
-                return Metric.of("monitor_value", number, Metric.Type.GAUGE, labels);
-            }
-        } catch (NumberFormatException ignored) {
-        }
-        labels.put("value", value);
-        return Metric.of("monitor_info", 1, Metric.Type.GAUGE, labels);
+        labels.put("field", field.code);
+        // 字段显示名与说明来自应用元数据；抓取无请求语言上下文，取元数据的默认语言
+        labels.put("field_name", localized(field.name));
+        return Metric.of("monitor_value", value, Metric.Type.GAUGE, labels, VALUE_DESC);
+    }
+
+    private String localized(String[] text) {
+        String value = i18nService.getI18n(text, null);
+        return value == null ? "" : value; // 同一指标族的 label 集须固定，无文案时留空值
     }
 
     private void failed(String stage) {

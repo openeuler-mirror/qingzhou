@@ -18,23 +18,26 @@ import qingzhou.logger.Logger;
 import qingzhou.monitor.api.Metric;
 import qingzhou.registry.AppStubLocal;
 import qingzhou.registry.Constants;
+import qingzhou.registry.I18nService;
 import qingzhou.registry.Registry;
 
 public class AppMonitorMetricsTest {
 
     @Test
-    public void monitorableModel_collect_emitNumericAndTextSamples() throws Exception {
+    public void monitorableModel_collect_emitOnlyNumericSamples() throws Exception {
         Map<String, String> data = new HashMap<>();
         data.put("count", "42");
         data.put("home", "/usr/lib/jvm");
         data.put("name", "ignored");
         AppMonitorMetrics provider = provider(new LocalStub(app(model(true)), data, false));
         Set<Metric> metrics = provider.collectMetrics();
-        Assert.assertEquals(find(metrics, "monitor_value", "field", "count").value(), 42d);
-        Assert.assertEquals(find(metrics, "monitor_info", "field", "home").labels().get("value"), "/usr/lib/jvm");
+        Assert.assertEquals(metrics.size(), 2); // monitor_targets + 数值样本
+        Metric count = find(metrics, "monitor_value", "field", "count");
+        Assert.assertEquals(count.value(), 42d);
+        Assert.assertEquals(count.labels().get("field_name"), "节点数");
+        Assert.assertEquals(count.labels().get("field_info"), "当前节点总数");
+        Assert.assertNull(find(metrics, "monitor_value", "field", "home")); // 非数值项不导出
         Assert.assertNull(find(metrics, "monitor_value", "field", "name")); // 非监视字段不采集
-        Assert.assertNull(find(metrics, "monitor_info", "field", "name"));
-        Assert.assertEquals(find(metrics, "monitor_targets").value(), 1d);
     }
 
     @Test
@@ -76,6 +79,8 @@ public class AppMonitorMetricsTest {
         AppMonitorMetrics provider = new AppMonitorMetrics();
         setField(provider, "registry", registryStub(localApp));
         setField(provider, "logger", loggerStub());
+        // 与 I18nServiceImpl 的默认语言一致：取元数据首项，无文案返回 null
+        setField(provider, "i18nService", (I18nService) (text, lang, args) -> text == null || text.length == 0 ? null : text[0]);
         return provider;
     }
 
@@ -107,16 +112,9 @@ public class AppMonitorMetricsTest {
         ModelField field = new ModelField();
         field.code = code;
         field.field_type = type;
+        field.name = new String[]{"count".equals(code) ? "节点数" : code + "-name"};
+        field.info = new String[]{"count".equals(code) ? "当前节点总数" : code + "-info"};
         return field;
-    }
-
-    private static Metric find(Set<Metric> metrics, String name) {
-        for (Metric metric : metrics) {
-            if (metric.name().equals(name)) {
-                return metric;
-            }
-        }
-        return null;
     }
 
     private static Metric find(Set<Metric> metrics, String name, String labelKey, String labelValue) {
@@ -136,7 +134,12 @@ public class AppMonitorMetricsTest {
 
     private static Logger loggerStub() {
         return (Logger) Proxy.newProxyInstance(AppMonitorMetricsTest.class.getClassLoader(), new Class<?>[]{Logger.class},
-                (proxy, method, args) -> method.getReturnType() == boolean.class ? false : null);
+                (proxy, method, args) -> {
+                    Class<?> type = method.getReturnType();
+                    if (type == boolean.class) return false;
+                    if (type == int.class) return 0; // Object#hashCode 也经由此出口
+                    return null;
+                });
     }
 
     private static final class LocalStub implements AppStubLocal {
@@ -161,7 +164,7 @@ public class AppMonitorMetricsTest {
         }
 
         @Override
-        public void invokeApp(RequestImpl request) throws Throwable {
+        public void invokeApp(RequestImpl request) {
             if (fail) throw new IllegalStateException("app unavailable");
             request.getResponse().data(data);
         }
