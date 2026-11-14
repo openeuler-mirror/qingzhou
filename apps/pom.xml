@@ -17,6 +17,7 @@
         <module>qingzhou-app-nacos</module>
         <module>qingzhou-app-zookeeper</module>
         <module>qingzhou-app-oauth2</module>
+        <module>qingzhou-app-nginx</module>
     </modules>
 
     <dependencies>

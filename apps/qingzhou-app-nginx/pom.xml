@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>apps</artifactId>
+        <version>${revision}</version>
+    </parent>
+    <artifactId>qingzhou-app-nginx</artifactId>
+
+    <properties>
+        <!-- 默认启用轻舟自动发现；需要以 app~qingzhou-app-nginx.path 显式配置时应使用 -Pno-detection 构建 -->
+        <qingzhou.detection.enabled>true</qingzhou.detection.enabled>
+    </properties>
+
+    <build>
+        <finalName>qingzhou-app-nginx</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Qingzhou-Detection-Enabled>${qingzhou.detection.enabled}</Qingzhou-Detection-Enabled>
+                            <Qingzhou-Detection-Feature-Files>conf/nginx.conf,bin/nginx,bin/nginx.exe,sbin/nginx,sbin/nginx.exe,nginx.exe</Qingzhou-Detection-Feature-Files>
+                            <Qingzhou-Detection-Env-Vars>NGINX_HOME,NGINX_PREFIX</Qingzhou-Detection-Env-Vars>
+                            <Qingzhou-Detection-Scan-Roots>user.home,/usr,/usr/local,/opt,/opt/homebrew/opt,/opt/homebrew,/usr/share,/etc,C:\nginx,C:\Program Files\nginx,C:\Program Files (x86)\nginx,C:\ProgramData\nginx</Qingzhou-Detection-Scan-Roots>
+                            <Qingzhou-Detection-Process-Names>sbin/nginx,bin/nginx,nginx.exe</Qingzhou-Detection-Process-Names>
+                            <Qingzhou-Detection-Process-Home-Regex>-p\s+(\S+)</Qingzhou-Detection-Process-Home-Regex>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>no-detection</id>
+            <properties>
+                <qingzhou.detection.enabled>false</qingzhou.detection.enabled>
+            </properties>
+        </profile>
+    </profiles>
+</project>
