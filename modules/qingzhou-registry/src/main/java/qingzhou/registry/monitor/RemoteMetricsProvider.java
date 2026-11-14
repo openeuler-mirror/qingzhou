@@ -104,7 +104,8 @@ public class RemoteMetricsProvider implements MetricProvider {
                 Map<String, String> labels = new LinkedHashMap<>(source.getLabels());
                 labels.put("instance", instanceId);
                 // provider 维度不带在 Metric 里，并入 name 才能在渲染后区分来源
-                metrics.add(Metric.of(entry.getKey() + "_" + source.getName(), // todo: key 是不是乱啦？
+                // 示例：qingzhou_remote_jvm_memory_used{provider="remote",instance="<instanceId>",...}
+                metrics.add(Metric.of(entry.getKey() + "_" + source.getName(),
                         source.getValue(), source.getType(), labels, source.getDescription()));
             }
         }

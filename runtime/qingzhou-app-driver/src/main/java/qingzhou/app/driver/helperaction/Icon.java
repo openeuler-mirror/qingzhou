@@ -1,29 +1,27 @@
-package qingzhou.app.driver.systemcall;
+package qingzhou.app.driver.helperaction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import qingzhou.app.driver.AppContextImpl;
+import qingzhou.app.driver.HelperAction;
 import qingzhou.common.FileUtil;
-import qingzhou.app.driver.SystemCall;
-import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
 
-public class Icon implements SystemCall {
-    private final AppContextImpl appContext;
+public class Icon implements HelperAction {
+    private final Crypto crypto;
     private final String iconPath;
     private volatile String iconCache;
 
-    public Icon(AppContextImpl appContext, String iconPath) {
-        this.appContext = appContext;
+    public Icon(Crypto crypto, String iconPath) {
+        this.crypto = crypto;
         this.iconPath = iconPath;
     }
 
     @Override
-    public void call(RequestImpl request) throws Exception {
+    public void execute(RequestImpl request) throws Exception {
         if (iconCache == null) {
             synchronized (this) {
                 if (iconCache == null) {
@@ -49,10 +47,7 @@ public class Icon implements SystemCall {
             if (resource == null) return null;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             FileUtil.copyStream(resource, bos);
-            byte[] bytes = bos.toByteArray();
-            Crypto crypto = appContext.getService(Crypto.class);
-            Base64Coder base64Coder = crypto.getBase64Coder();
-            return base64Coder.encode(bytes);
+            return crypto.getBase64Coder().encode(bos.toByteArray());
         }
     }
 }

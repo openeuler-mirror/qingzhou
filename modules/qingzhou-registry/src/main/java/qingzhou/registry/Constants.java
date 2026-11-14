@@ -1,7 +1,7 @@
 package qingzhou.registry;
 
 public interface Constants {
-    String SYSTEM_MODEL_CODE = "-";
+    String HELPER_ACTION_MODEL_CODE = "-";
 
     // 平台内部动作码
     String ACTION_CODE_ADD = "add";

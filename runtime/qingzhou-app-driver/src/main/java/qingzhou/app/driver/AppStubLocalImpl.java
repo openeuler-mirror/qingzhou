@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
-import qingzhou.app.driver.systemcall.Icon;
+import qingzhou.app.driver.helperaction.Icon;
+import qingzhou.crypto.Crypto;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.AppMeta;
@@ -25,7 +26,7 @@ class AppStubLocalImpl implements AppStubLocal {
     // 持有实时列表而非构造期快照：应用在启动之后新增的拦截器不应静默失效
     private final List<ActionFilter> appFilters;
 
-    private final Map<String, SystemCall> systemCallMap;
+    private final Map<String, HelperAction> helperActionMap;
 
     // 默认 action 由转换器按 DefaultAction 方法名生成，按名索引一次即可
     private static final Map<String, Method> DEFAULT_ACTION_METHODS = Arrays.stream(DefaultAction.class.getMethods())
@@ -39,7 +40,7 @@ class AppStubLocalImpl implements AppStubLocal {
         systemFilters = Collections.singletonList(new Validation(i18nService));
         appFilters = appContext.actionFilters; // 应用拦截器：排在系统拦截器之后、最终 action 之前
 
-        systemCallMap = Collections.singletonMap("icon", new Icon(appContext, appContext.appMeta.getApp().icon));
+        helperActionMap = Collections.singletonMap("icon", new Icon(appContext.getService(Crypto.class), appContext.appMeta.getApp().icon));
     }
 
     @Override
@@ -54,8 +55,8 @@ class AppStubLocalImpl implements AppStubLocal {
 
     @Override
     public void invokeApp(RequestImpl request) throws Throwable {
-        if (Constants.SYSTEM_MODEL_CODE.equals(request.getModel())) {
-            systemCall(request);
+        if (Constants.HELPER_ACTION_MODEL_CODE.equals(request.getModel())) {
+            invokeHelperAction(request);
             return;
         }
 
@@ -122,11 +123,11 @@ class AppStubLocalImpl implements AppStubLocal {
     }
 
     // 轻舟系统内部通信，不进入 模块
-    private void systemCall(RequestImpl request) throws Exception {
-        SystemCall systemCall = systemCallMap.get(request.getAction());
-        if (systemCall == null) return;
+    private void invokeHelperAction(RequestImpl request) throws Exception {
+        HelperAction helper = helperActionMap.get(request.getAction());
+        if (helper == null) return;
 
         request.getResponse().setActionInvoked(true);
-        systemCall.call(request);
+        helper.execute(request);
     }
 }
