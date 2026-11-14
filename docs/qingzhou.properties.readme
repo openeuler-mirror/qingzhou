@@ -71,9 +71,9 @@ qingzhou-registry.timeout=远端实例失联判定阈值，单位秒，默认 12
 qingzhou-registry.trust_advertised_host=是否采信 agent 自报的对外地址，默认 false；仅反代/NAT 部署开启，开启后持域密钥者可把注册中心流量导向任意内网 host:port（SSRF），谨慎启用
 
 # agent
-qingzhou-agent.url=注册中心访问地址，尾部拼上 /registry/register 作为注册接口，启用 agent 时必填；中心配置非 / 的 context_path 时须自带该前缀（如 https://中心:7900/qingzhou）
+qingzhou-agent.url=注册中心访问地址列表，逗号分隔，按书写顺序作为主备优先级；每轮心跳只向首个可用中心注册，主连接失败或返回错误响应时转向下一个，主恢复后自动回切；尾部拼上 /registry/register 作为注册接口，启用 agent 时必填；中心配置非 / 的 context_path 时须自带该前缀（如 https://中心:7900/qingzhou）
 qingzhou-agent.advertised_host=反代/NAT 下本实例的对外可达地址，留空则由注册中心按连接源地址推断；需注册中心同时开启 trust_advertised_host 才生效
-qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6
+qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6，最小 2；主备切换耗时约为「interval + 2s 故障探测 + 2s 接管注册」，默认配置下 ≤10s，缩短 interval 可更快接管
 
 # logger
 # qingzhou-logger.loggers 声明启用的日志器名称（逗号分隔），必须包含 default；每个日志器以 <名称>.writer_* 配置 writer，

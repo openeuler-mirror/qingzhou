@@ -1,4 +1,4 @@
-package qingzhou.http.server;
+package qingzhou.common;
 
 /**
  * 全站挂载前缀的归一化契约：启动期配置归一化与注册边界校验共用同一份合法形态。
@@ -11,10 +11,11 @@ public final class ContextPath {
     private ContextPath() {
     }
 
-    // 配置入口：剥离尾斜杠后须已是归一化形态，非法即 fail-fast（激活失败而非全站 404）
+    // 配置入口：只剥一个尾斜杠；剥多个会把 "//" 变成空串、静默关闭前缀。非法即 fail-fast（激活失败而非全站 404）
     public static String normalize(String configured) {
-        String path = configured == null ? null : configured.replaceAll("/+$", "");
-        if (configured == null || !configured.startsWith("/") || !isNormalized(path)) {
+        String path = configured == null ? null : configured.replaceAll("/$", "");
+        // null 由 isNormalized 拒绝；空配置须显式拒绝，否则与配置 "/" 不可区分
+        if (!isNormalized(path) || configured.isEmpty()) {
             throw new IllegalArgumentException("qingzhou-http-server.context_path must be a normalized path starting with /, got: " + configured);
         }
         return path;

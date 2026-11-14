@@ -2,6 +2,7 @@ package qingzhou.http.server;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.common.ContextPath;
 
 public class ContextPathTest {
     @Test
@@ -14,7 +15,7 @@ public class ContextPathTest {
 
     @Test
     public void normalize_illegalConfigurations_failsFast() {
-        for (String illegal : new String[]{"api/v1", "", "/a//b", "/a/../b", "/a?b", "/a#b", "/a%2fb", "/中文", null,
+        for (String illegal : new String[]{"api/v1", "", "/a//b", "//", "///", "/api//", "/a/../b", "/a?b", "/a#b", "/a%2fb", "/中文", null,
                 "/" + new String(new char[ContextPath.MAX_CHARS]).replace('\0', 'a')}) {
             try {
                 ContextPath.normalize(illegal);

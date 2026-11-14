@@ -16,7 +16,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import qingzhou.common.Configs;
-import qingzhou.http.server.ContextPath;
+import qingzhou.common.ContextPath;
 import qingzhou.http.server.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;

@@ -7,10 +7,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
+import qingzhou.common.ContextPath;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
-import qingzhou.http.server.ContextPath;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
