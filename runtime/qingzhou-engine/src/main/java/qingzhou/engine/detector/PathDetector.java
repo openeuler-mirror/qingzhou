@@ -21,8 +21,11 @@ class PathDetector {
 
         envVarNames = splitCsv(attributes.get("Qingzhou-Detection-Env-Vars"));
 
-        scanRootPaths = splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots"));
-        scanRootPaths.addAll(splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots")));
+        // 清单声明应用自身的常用路径，JVM 属性用于部署期追加扫描范围；两者合并，
+        // 避免全局 -DQingzhou-Detection-Scan-Roots 把应用清单里的路径整体覆盖掉
+        Set<String> roots = new LinkedHashSet<>(splitCsv(attributes.get("Qingzhou-Detection-Scan-Roots")));
+        roots.addAll(splitCsv(System.getProperty("Qingzhou-Detection-Scan-Roots")));
+        scanRootPaths = new ArrayList<>(roots);
 
         List<String> processKeywords = splitCsv(attributes.get("Qingzhou-Detection-Process-Names")).stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))

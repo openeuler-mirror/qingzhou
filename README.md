@@ -33,6 +33,7 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 | --- | --- | --- |
 | Redis 管理 | Redis | 单机/哨兵/集群日常运维 |
 | Tomcat 管理 | Tomcat | 连接器配置、应用部署、线程池监控、日志查看 |
+| Nginx 管理 | Nginx | 状态、启停重载、配置校验与编辑、日志查看 |
 | Nacos 应用 | Nacos | 配置中心与服务注册发现 |
 | ZooKeeper 应用 | ZooKeeper | 服务状态、连接、生效参数查看 |
 | OAuth2 / OIDC 授权服务 | — | 授权码、PKCE、ID Token、内省与撤销 |
