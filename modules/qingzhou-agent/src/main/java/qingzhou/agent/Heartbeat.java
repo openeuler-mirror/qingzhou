@@ -70,7 +70,7 @@ public class Heartbeat implements MetricProvider {
             @Override
             public void run() {
                 try {
-                    if (agentInstanceManager.appChanged()) {
+                    if (agentInstanceManager.instanceChanged()) {
                         agentInstanceManager.reCacheInstanceInfo();
                         registered = false; // 新 id + 新 secret，需重新完整注册
                     }

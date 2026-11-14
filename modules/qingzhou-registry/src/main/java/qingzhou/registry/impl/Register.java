@@ -10,6 +10,7 @@ import qingzhou.common.Configs;
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.server.ContextPath;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
@@ -192,6 +193,13 @@ public class Register implements HttpHandler, MetricProvider {
             if (instanceInfo.getPort() < 1 || instanceInfo.getPort() > 65535) {
                 logger.warn("illegal agent port: " + instanceInfo.getPort());
                 reject("illegal_port");
+                httpResponse.status(400);
+                return;
+            }
+            // 该值由远端自报且直接拼进回连 URL：解密只保证完整性，须按服务端同一份归一化契约 fail-closed
+            if (!ContextPath.isNormalized(instanceInfo.getContextPath())) {
+                logger.warn("illegal agent context path");
+                reject("illegal_context_path");
                 httpResponse.status(400);
                 return;
             }

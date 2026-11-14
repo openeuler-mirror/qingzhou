@@ -61,6 +61,7 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     @Test
     public void nestedContextPath_multiSegment_routedAndStripped() throws Exception {
         startServer(Collections.singletonMap("context_path", "/api/v1"));
+        Assert.assertEquals(testServer.server.getContextPath(), "/api/v1");
         testServer.server.registerHttpHandler((request, response) ->
                 response.send(request.getPath()).finish(), "/test", true);
 
@@ -73,6 +74,7 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     @Test
     public void contextPathWithTrailingSlash_normalizedAndRouted() throws Exception {
         startServer(Collections.singletonMap("context_path", "/api/"));
+        Assert.assertEquals(testServer.server.getContextPath(), "/api");
         testServer.server.registerHttpHandler((request, response) ->
                 response.send(request.getPath()).finish(), "/test", true);
 

@@ -107,8 +107,8 @@ public class HttpServerImpl implements HttpServer {
         // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
         if (!sslEnabled) logger.warn("http server is using plaintext HTTP; enable TLS before remote exposure");
         // 管控台挂在全局前缀下，url 须含 context_path，否则配置非默认前缀时打印的访问地址打不开
-        String webContext = RequestGates.normalizeContextPath(configs.getOrDefault("context_path", "/qingzhou"));
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port() + webContext + "/web");
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port()
+                + dispatcherHandler.getContextPath() + "/web");
     }
 
     @Deactivate
@@ -121,6 +121,11 @@ public class HttpServerImpl implements HttpServer {
     public int getPort() {
         if (disposableServer == null) throw new IllegalStateException("http server is not started");
         return disposableServer.port();
+    }
+
+    @Override
+    public String getContextPath() {
+        return dispatcherHandler.getContextPath();
     }
 
     // 释放失败不得掩盖真正的启动失败原因，否则排障看到的是释放异常而非端口/密钥库问题

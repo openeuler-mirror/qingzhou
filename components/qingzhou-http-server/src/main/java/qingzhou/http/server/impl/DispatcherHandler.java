@@ -16,6 +16,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reactivestreams.Publisher;
 import qingzhou.common.Configs;
+import qingzhou.http.server.ContextPath;
 import qingzhou.http.server.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.core.publisher.Flux;
@@ -36,15 +37,17 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
     @Reference
     private HandlerManager handlerManager;
 
+    // 归一化后的全局前缀：启动日志与 Agent 上报共用，避免多处解析 config 造成默认值漂移
+    private volatile String contextPath;
     // 全局聚合配额计数：final 引用跨配置更新共享，热更新重建闸门时在途预留仍归还到同一计数
     private final AtomicLong aggregatedBytes = new AtomicLong();
-
     // 由 OSGi 激活线程整体替换、Netty EventLoop 一次读取：各字段分别替换会让在途请求混用新旧配置
     private volatile HotConfig hotConfig;
 
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
+        contextPath = ContextPath.normalize(configs.getOrDefault("context_path", ContextPath.DEFAULT));
         int maxConcurrentRequests = configs.atLeast("max_concurrent_requests", 1, 1000);
         Semaphore concurrentSemaphore = new Semaphore(maxConcurrentRequests);
         // 流式上传不占堆内存配额，须单独限并发：否则大量并发上传会同时占满临时文件与连接
@@ -62,7 +65,7 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
         // （每秒 1 字节连接永远"活跃"），却可长期占住并发许可。0 表示不启用
         int intakeTimeoutSeconds = configs.atLeast("request_timeout_seconds", 0, 10);
         ResponseHeaders responseHeaders = new ResponseHeaders(config);
-        RequestGates requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, sourceLimiter, authManager, handlerManager, logger, aggregatedBytes);
+        RequestGates requestGates = new RequestGates(config, maxBodyBytes, maxStreamBytes, sourceLimiter, authManager, handlerManager, logger, aggregatedBytes, contextPath);
         BodyProcessors bodyProcessors = new BodyProcessors(maxBodyBytes, maxStreamBytes, logger);
 
         hotConfig = new HotConfig(concurrentSemaphore, streamSemaphore, intakeTimeoutSeconds,
@@ -155,5 +158,9 @@ public class DispatcherHandler implements BiFunction<HttpServerRequest, HttpServ
             ctx.sourceReservation.limiter.release(ctx.sourceReservation.key); // 归还到取得许可时的限制器实例
         }
         if (ctx.reservedBytes > 0) aggregatedBytes.addAndGet(-ctx.reservedBytes);
+    }
+
+    String getContextPath() {
+        return contextPath;
     }
 }

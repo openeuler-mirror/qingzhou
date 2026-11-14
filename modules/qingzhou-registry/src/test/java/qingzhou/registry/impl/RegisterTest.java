@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -19,8 +20,13 @@ import org.testng.annotations.Test;
 
 import qingzhou.crypto.EpochKeyRotatingCipher;
 import qingzhou.crypto.impl.CryptoImpl;
+import qingzhou.dto.RequestImpl;
+import qingzhou.dto.meta.App;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.client.HttpClient;
+import qingzhou.http.client.Request;
+import qingzhou.http.client.Response;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
@@ -94,7 +100,62 @@ public class RegisterTest {
         Assert.assertEquals(registered.getInstanceSecret(), agentSide.getInstanceSecret());
         Assert.assertEquals(registered.getDomain(), DOMAIN);
         Assert.assertEquals(registered.getHost(), REMOTE_HOST); // 未开启 trust_advertised_host：不采信自报地址
+        Assert.assertEquals(registered.getContextPath(), agentSide.getContextPath());
         Assert.assertTrue(registered.getRefreshTime() > 0);
+    }
+
+    @Test
+    public void firstRegistration_legacyPayloadWithoutContextPath_isRegisteredAsNoPrefix() throws Exception {
+        // 旧版 Agent 报文无 contextPath：按无前缀处理，避免中心拼出 null 前缀
+        String legacy = "{\"instanceSecret\":\"" + UUID.randomUUID() + "\",\"host\":\"agent.local\","
+                + "\"port\":7900,\"sslEnabled\":false,\"platformVersion\":\"test\",\"appMetas\":[]}";
+        byte[] body = agentDomainService.getDomainCipher(DOMAIN).encrypt(legacy.getBytes(StandardCharsets.UTF_8),
+                agentDomainService.aadForRegistry(DOMAIN, null));
+
+        CapturedResponse response = handle(null, body);
+
+        Assert.assertEquals(response.status, 200);
+        Assert.assertEquals(registry.getRemoteInstance(registeredInstanceId(response.body)).getContextPath(), "");
+    }
+
+    @Test
+    public void firstRegistration_withIllegalContextPath_isRejectedBeforeRegistration() throws Exception {
+        for (String illegal : new String[]{"/a//b", "/../x", "/x?y", "/x#y", "/x%2fy", "/中文", "api/v1", "/x/", null}) {
+            InstanceInfo agentSide = newInstanceInfo();
+            agentSide.setContextPath(illegal);
+
+            CapturedResponse response = handle(null, firstRegistrationBody(agentSide));
+
+            // 该值直拼回连 URL：畸形前缀必须在落表前拒绝，否则中心被导向错误端点
+            Assert.assertEquals(response.status, 400, "contextPath=" + illegal);
+        }
+        Assert.assertTrue(registry.getAllRemoteInstances().isEmpty());
+    }
+
+    @Test
+    public void remoteInvoke_withContextPath_buildsPrefixedAgentUrl() throws Throwable {
+        InstanceInfo agentSide = newInstanceInfo();
+        agentSide.setContextPath("/api/v1");
+        AppMeta appMeta = new AppMeta();
+        App app = new App();
+        app.code = "app-one";
+        appMeta.setApp(app);
+        agentSide.getAppMetas().add(appMeta);
+
+        CapturedResponse response = handle(null, firstRegistrationBody(agentSide));
+        Assert.assertEquals(response.status, 200);
+        String instanceId = registeredInstanceId(response.body);
+
+        AtomicReference<String> requestedUrl = new AtomicReference<>();
+        setField(registry, "httpClient", httpClientStub(requestedUrl));
+        setField(registry, "json", json);
+        setField(registry, "agentDomainService", agentDomainService);
+        setField(registry, "logger", newLoggerStub());
+
+        registry.getRemoteApp(instanceId, "app-one").invokeApp(new RequestImpl());
+
+        Assert.assertEquals(requestedUrl.get(),
+                "http://" + REMOTE_HOST + ":7900/api/v1/agent" + Constants.REMOTE_INVOKE_URI);
     }
 
     @Test
@@ -201,8 +262,28 @@ public class RegisterTest {
         instanceInfo.setInstanceSecret(UUID.randomUUID().toString());
         instanceInfo.setHost("agent.local");
         instanceInfo.setPort(7900);
+        instanceInfo.setContextPath("/qingzhou");
         instanceInfo.setPlatformVersion("test");
         return instanceInfo;
+    }
+
+    // 捕获出站 URL：仅注入 @Reference 协作者，业务路径与生产一致
+    private static HttpClient httpClientStub(AtomicReference<String> requestedUrl) {
+        Request requestStub = (Request) Proxy.newProxyInstance(RegisterTest.class.getClassLoader(),
+                new Class<?>[]{Request.class},
+                (proxy, method, args) -> method.getReturnType() == Request.class ? proxy : null);
+        Response responseStub = (Response) Proxy.newProxyInstance(RegisterTest.class.getClassLoader(),
+                new Class<?>[]{Response.class},
+                (proxy, method, args) -> "getStatus".equals(method.getName()) ? 200 : null);
+        return (HttpClient) Proxy.newProxyInstance(RegisterTest.class.getClassLoader(),
+                new Class<?>[]{HttpClient.class}, (proxy, method, args) -> {
+                    if ("buildRequest".equals(method.getName())) {
+                        requestedUrl.set((String) args[0]);
+                        return requestStub;
+                    }
+                    if ("send".equals(method.getName())) return responseStub;
+                    return null;
+                });
     }
 
     private static Logger newLoggerStub() {

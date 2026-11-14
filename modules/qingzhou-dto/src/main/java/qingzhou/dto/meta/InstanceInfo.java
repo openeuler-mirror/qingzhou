@@ -17,6 +17,8 @@ public class InstanceInfo {
     private String host;
     private int port;
     private boolean sslEnabled;
+    // 旧版 Agent 报文无此字段：空串表示无前缀，属跨版本边界契约而非进程内兜底
+    private String contextPath = "";
     private String platformVersion;
     private final List<AppMeta> appMetas = new ArrayList<>();
 
@@ -58,6 +60,14 @@ public class InstanceInfo {
 
     public void setSslEnabled(boolean sslEnabled) {
         this.sslEnabled = sslEnabled;
+    }
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
     }
 
     public String getPlatformVersion() {

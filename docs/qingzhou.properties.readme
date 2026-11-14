@@ -9,7 +9,7 @@ qingzhou-http-server.ssl_enabled=是否启用 HTTPS，默认 true，启用时须
 qingzhou-http-server.ssl_keystore_path=密钥库文件路径，相对实例目录，可用 qingzhou.sh keystore 命令生成
 qingzhou-http-server.ssl_keystore_password=密钥库口令，plain: 前缀表示明文，否则按密文解密
 qingzhou-http-server.ssl_keystore_type=密钥库类型，仅支持 PKCS12 或 JKS，默认 PKCS12
-qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀
+qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀；被纳管实例上报该值供中心回连，须由字母、数字、- _ . ~ 及 / 组成
 qingzhou-http-server.auth_fail_max=同一来源 IP 在窗口期内认证失败次数上限，达到后直接返回 401，默认 10
 qingzhou-http-server.auth_fail_window=认证失败计数窗口，单位秒，默认 60
 qingzhou-http-server.idle_timeout=连接空闲超时，单位秒，0 表示不超时，默认 60
@@ -71,7 +71,7 @@ qingzhou-registry.timeout=远端实例失联判定阈值，单位秒，默认 12
 qingzhou-registry.trust_advertised_host=是否采信 agent 自报的对外地址，默认 false；仅反代/NAT 部署开启，开启后持域密钥者可把注册中心流量导向任意内网 host:port（SSRF），谨慎启用
 
 # agent
-qingzhou-agent.url=注册中心访问地址，尾部拼上 /registry/register 作为注册接口，启用 agent 时必填
+qingzhou-agent.url=注册中心访问地址，尾部拼上 /registry/register 作为注册接口，启用 agent 时必填；中心配置非 / 的 context_path 时须自带该前缀（如 https://中心:7900/qingzhou）
 qingzhou-agent.advertised_host=反代/NAT 下本实例的对外可达地址，留空则由注册中心按连接源地址推断；需注册中心同时开启 trust_advertised_host 才生效
 qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6
 

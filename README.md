@@ -130,7 +130,8 @@ qingzhou/
     # qingzhou-agent.advertised_host=反代/NAT 下本机对外可达地址；留空由中心按连接源地址推断
     ```
    `qingzhou-agent.url` 会自动拼接 `/registry/register` 作为注册接口，启用 Agent 时必填；协议须与中心一致，中心未启用 TLS
-   时用 `http://`。
+   时用 `http://`。中心配置了非 `/` 的 `qingzhou-http-server.context_path` 时，该地址须自带前缀（如
+   `https://<中心地址>:7900/qingzhou`）；两端前缀互相独立，Agent 自身的前缀由注册报文自动上报，供中心回连。
 4. 启动：`sh bin/start.sh agent`，Agent 即按 `interval` 周期心跳注册。
 
 ### 三、验证与使用

@@ -296,6 +296,7 @@ public class RegistryImplTest {
         info.setId(instanceId);
         info.setHost("remote-host");
         info.setPort(7900);
+        info.setContextPath("/qingzhou");
         info.setDomain("remote-domain");
         info.setPlatformVersion("version1.0");
         for (String code : appCodes) {
