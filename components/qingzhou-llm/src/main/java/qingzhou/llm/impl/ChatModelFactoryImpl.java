@@ -9,7 +9,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.Configs;
-import qingzhou.common.Hosts;
+import qingzhou.common.IpUtil;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.client.HttpClient;
 import qingzhou.json.Json;
@@ -67,7 +67,7 @@ public class ChatModelFactoryImpl implements ChatModelFactory {
             throw new IllegalArgumentException("Unsupported LLM baseUrl protocol: " + scheme);
         }
         // 明文 HTTP 会让 apiKey 暴露在网络上：非回环端点须显式确认，避免误配置后静默泄露
-        if ("http".equalsIgnoreCase(scheme) && !Hosts.isLoopback(url.getHost()) && !allowInsecureHttp) {
+        if ("http".equalsIgnoreCase(scheme) && !IpUtil.isLoopback(url.getHost()) && !allowInsecureHttp) {
             throw new IllegalArgumentException("the LLM baseUrl uses plaintext HTTP, which exposes your apiKey: " + baseUrl
                     + "; use https, or set qingzhou-llm.allow_insecure_http=true to accept the risk");
         }

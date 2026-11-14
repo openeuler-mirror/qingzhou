@@ -9,7 +9,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.Configs;
-import qingzhou.common.FailureLockout;
+import qingzhou.common.CounterLockout;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
@@ -44,9 +44,9 @@ public class AuthHandler implements HttpHandler {
     private boolean totpEnabled;
     private String totpSecret;
 
-    private FailureLockout ipUserLockout;
+    private CounterLockout ipUserLockout;
     // 独立按来源计数：仅按「来源+用户名」计数时，轮换用户名即可重置预算
-    private FailureLockout ipLockout;
+    private CounterLockout ipLockout;
 
     @Activate
     public AuthHandler(@Reference Crypto crypto, Map<String, String> config) {
@@ -67,10 +67,10 @@ public class AuthHandler implements HttpHandler {
 
         int maxFailures = configs.atLeast("auth_max_failures", 1, 5);
         long lockMillis = configs.atLeast("auth_lock_seconds", 1, 300) * 1000L;
-        ipUserLockout = new FailureLockout(maxFailures, lockMillis, 10_000);
+        ipUserLockout = new CounterLockout(maxFailures, lockMillis, 10_000);
         // 来源级阈值放宽：NAT 下多用户共享出口地址，过严会误锁正常用户
         int maxIpFailures = configs.atLeast("auth_ip_max_failures", 1, 20);
-        ipLockout = new FailureLockout(maxIpFailures, lockMillis, 10_000);
+        ipLockout = new CounterLockout(maxIpFailures, lockMillis, 10_000);
     }
 
     @Override
@@ -119,8 +119,8 @@ public class AuthHandler implements HttpHandler {
         String reqPass = request.getParameter("password");
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
-            ipUserLockout.recordFailure(lockKey);
-            ipLockout.recordFailure(ip);
+            ipUserLockout.record(lockKey);
+            ipLockout.record(ip);
             response.status(401).send("invalid username or password");
             return;
         }
@@ -132,8 +132,8 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
             if (!verifyCode(code, response)) {
-                ipUserLockout.recordFailure(lockKey);
-                ipLockout.recordFailure(ip);
+                ipUserLockout.record(lockKey);
+                ipLockout.record(ip);
                 return;
             }
         }

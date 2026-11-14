@@ -70,7 +70,7 @@ public class LoggerImpl implements Logger, LoggerProvider {
         return logger != null ? logger : defaultLogger; // 未配置该名称时回退默认日志器
     }
 
-    // 契约适配：CM 属性值为 Object，非 String 项（如 service.ranking）不属于日志配置
+    // 契约适配：CM 属性值为 Object，框架注入项（如 component.id）不属于日志配置
     private static Map<String, String> toStringMap(Map<String, Object> config) {
         Map<String, String> props = new HashMap<>();
         for (Map.Entry<String, Object> entry : config.entrySet()) {

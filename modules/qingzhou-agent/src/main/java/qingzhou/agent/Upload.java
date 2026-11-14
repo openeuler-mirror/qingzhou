@@ -19,7 +19,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.FileUtil;
-import qingzhou.common.TempFiles;
+import qingzhou.common.ExpiredFileCleaner;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.logger.Logger;
@@ -82,7 +82,7 @@ public class Upload extends AbstractAgentHandler implements MetricProvider {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", "agent-upload").toFile();
         FileUtil.mkdirs(uploadBase);
         uploadBasePath = uploadBase.getCanonicalPath();
-        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
+        ExpiredFileCleaner.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
         recount(); // 清理后初始化配额计数，避免重启后计数虚低
     }
 
@@ -236,9 +236,9 @@ public class Upload extends AbstractAgentHandler implements MetricProvider {
         FileUtil.forceDeleteQuietly(dir);
     }
 
-    // 新建上传低频清理过期目录：TempFiles 内置节流，删除前经回调扣减配额计数
+    // 新建上传低频清理过期目录：ExpiredFileCleaner 内置节流，删除前经回调扣减配额计数
     private void cleanExpiredUploadDirs() {
-        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS, this::deductQuota);
+        ExpiredFileCleaner.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS, this::deductQuota);
     }
 
     // 目录配额计数扣减：删除前调用，按预留字节扣减（文件可能已被业务 move 走，sizeOf 会少算）

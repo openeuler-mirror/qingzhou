@@ -9,7 +9,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
-import qingzhou.common.Hosts;
+import qingzhou.common.IpUtil;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;
@@ -46,7 +46,7 @@ public class HttpServerImpl implements HttpServer {
         int maxConnections = configs.atLeast("max_connections", 0, 10_000);
         boolean sslEnabled = configs.getOrDefault("ssl_enabled", true);
         boolean allowPlaintext = configs.getOrDefault("allow_plaintext", false);
-        if (!sslEnabled && !Hosts.isLoopback(host) && !allowPlaintext) {
+        if (!sslEnabled && !IpUtil.isLoopback(host) && !allowPlaintext) {
             // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
             throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
                     + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");

@@ -7,7 +7,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.Configs;
-import qingzhou.common.FailureLockout;
+import qingzhou.common.CounterLockout;
 import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.http.server.impl.HandlerManager;
@@ -19,7 +19,7 @@ public class AuthManager {
     @Reference
     private TokenService tokenService;
 
-    private FailureLockout lockout;
+    private CounterLockout lockout;
 
     @Activate
     public void init(Map<String, String> config) {
@@ -27,7 +27,7 @@ public class AuthManager {
         int maxAuthFailures = configs.atLeast("auth_fail_max", 1, 10);
         long authFailWindowSeconds = configs.between("auth_fail_window", 1L, 86400L, 60);
         long authFailWindowMillis = authFailWindowSeconds * 1000L;
-        lockout = new FailureLockout(maxAuthFailures, authFailWindowMillis, 10_000);
+        lockout = new CounterLockout(maxAuthFailures, authFailWindowMillis, 10_000);
     }
 
     /**
@@ -53,7 +53,7 @@ public class AuthManager {
         // 仅当请求确实携带了凭据却失败（REJECT）才计入锁定并告警；
         // 未出示凭据（NO_CREDENTIAL）的匿名访问（NAT 下大量正常请求）不应消耗锁定计数，也不应逐条刷日志，否则会误锁并淹没同 IP 下的全部正常用户
         if (authResult.status() != AuthResult.Status.NO_CREDENTIAL) {
-            lockout.recordFailure(host);
+            lockout.record(host);
         }
         return false;
     }

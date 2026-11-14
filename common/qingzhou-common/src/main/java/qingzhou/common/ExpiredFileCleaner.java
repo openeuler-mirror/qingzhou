@@ -6,10 +6,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * 临时目录清理工具：平台各模块上传、缓存残留文件的清理入口。
+ * 按 TTL 清理目录过期子项的工具：平台各模块上传、缓存残留文件的清理入口。
  * 只做"清空目录"与"按 TTL 清理过期项"，不含任何业务策略（TTL 由调用方给出）。
  */
-public final class TempFiles {
+public final class ExpiredFileCleaner {
     // 清理最小间隔：避免每个请求都扫描上传目录（高并发下重复 IO）
     private static final long CLEAN_MIN_INTERVAL_MILLIS = 60_000;
     // 按目录限流：不同目录互不抑制，避免低流量目录长期得不到清理
