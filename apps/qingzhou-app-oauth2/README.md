@@ -1,254 +1,267 @@
 # qingzhou-app-oauth2
 
-轻舟平台的 OAuth 2.0 授权服务器应用：提供授权码、密码、客户端凭证、刷新令牌与隐式五种授权能力，
-并内置接入客户端、资源拥有者的管理界面。
+轻舟平台的 OAuth 2.0 / OpenID Connect 1.0 授权服务器应用。支持授权码（含 PKCE）、密码、客户端凭证、
+刷新令牌、隐式模式，OIDC ID Token、OIDC Discovery、JWKS、用户信息、令牌内省、令牌撤销和 RFC 8414 元数据；
+同时提供接入客户端与资源拥有者管理界面。
 
 - 应用 code：`qingzhou-app-oauth2`
 - 端点前缀：`/oauth2-server`
-- 依赖：平台 `qingzhou-jdbc` 组件提供的 `JdbcPool`、`qingzhou-crypto` 组件提供的凭据摘要能力
-  （应用自身不含任何第三方依赖）
+- 默认存储：**内存**（无需数据库，进程重启后数据清空）
+- 可选存储：JDBC（默认 H2；其他数据库需在应用 `pom.xml` 中添加对应驱动后重新构建）
+- 依赖：平台 `qingzhou-http-server`、`qingzhou-json`、`qingzhou-crypto`；JDBC 模式额外使用平台 `qingzhou-jdbc`
 
-## 1. 前置条件
+## 1. 存储模式
 
-本应用本身不含数据库驱动，运行时需要平台先具备可用的 JDBC 连接池。以下三处需要你**自行修改**
-实例配置文件 `instances/<实例>/conf/qingzhou.properties`（默认实例为 `instances/default`），
-本项目的默认配置**未启用**这些项。
-
-### 1.1 启用 qingzhou-jdbc 特性
-
-> 说明：`qingzhou-jdbc` 是本应用连接数据库所必需的组件，禁用时应用取不到 `JdbcPool`，只会记录
-> 一条“数据源不可用”日志并跳过 `/oauth2-server/*` 端点注册（不会影响平台与其他应用启动）。
-
-### 1.2 配置 JDBC 连接池
-
-取消 `jdbc` 段落的注释并按需填写。`qingzhou-jdbc~h2` 中 `~` 之后的名字（这里是 `h2`）就是连接池实例名：
+### 1.1 内存模式（默认）
 
 ```properties
-qingzhou-jdbc~h2.url=jdbc:h2:mem:oauth2db;DATABASE_TO_LOWER=TRUE;IGNORECASE=TRUE
-qingzhou-jdbc~h2.username=sa
-qingzhou-jdbc~h2.password=
-qingzhou-jdbc~h2.maxActive=20
-qingzhou-jdbc~h2.testWhileIdle=true
+# 可省略，默认就是 memory
+app~qingzhou-app-oauth2.storage=memory
 ```
 
-- `jdbc:h2:mem:oauth2db` 为内存库，连接池释放全部空闲连接后数据会丢失；需要持久化请改为文件库，
-  例如 `jdbc:h2:file:./data/oauth2db;DATABASE_TO_LOWER=TRUE;IGNORECASE=TRUE`。
-- 使用其它数据库时同理：配置 `qingzhou-jdbc~<池名>.*`。
+- 不需要数据库、不需要 `qingzhou-jdbc`，应用启动即可用。
+- 客户端、用户、授权码、令牌都保存在进程内；重启后清空。
+- 可用 `seed_demo=true` 写入演示客户端与用户；演示客户端 scope 含 `openid profile email read write`，
+  演示口令仅用于试用环境。
 
-### 1.3 驱动位置
+### 1.2 JDBC 模式
 
-JDBC 驱动由平台从 `instances/<实例>/lib/` 加载。发行包默认不包含驱动包，请把 h2 驱动包放在
-`instances/default/lib/h2-2.2.222.jar`；若使用其它数据库，把对应驱动 jar 放入该目录即可。
+应用整体默认仍是内存模式；切到 JDBC 后默认使用 H2（`jdbc_name=h2`），H2 驱动已包含在应用 fatjar 中。
+
+```properties
+app~qingzhou-app-oauth2.storage=jdbc
+app~qingzhou-app-oauth2.jdbc_name=h2
+
+# 平台 JDBC 连接池：~ 后的名字对应 jdbc_name
+qingzhou-jdbc~h2.url=jdbc:h2:file:./data/oauth2;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
+qingzhou-jdbc~h2.username=sa
+qingzhou-jdbc~h2.password=
+```
+
+应用使用标准 JDBC `DataSource` 与平台 `JdbcPool` 对接，不绑定任何厂商实现。建表脚本位于
+`src/main/resources/sql/schema.sql`，首次启动按表存在性自动初始化，使用字符串主键和标准 SQL，
+不依赖 `IDENTITY`/`AUTO_INCREMENT`，以兼容多种数据库。
+
+**应用默认只声明 H2 驱动**。如需 PostgreSQL/MySQL/MariaDB/SQLite/SQL Server 等数据库，先在
+[apps/qingzhou-app-oauth2/pom.xml](pom.xml) 添加对应驱动依赖，再重新执行构建；fatjar 会把新依赖一起打包。
+常用驱动坐标：
+
+```xml
+<dependency>
+  <groupId>org.postgresql</groupId>
+  <artifactId>postgresql</artifactId>
+  <version>42.7.4</version>
+</dependency>
+<!-- MySQL：com.mysql:mysql-connector-j；MariaDB：org.mariadb.jdbc:mariadb-java-client；
+     SQLite：org.xerial:sqlite-jdbc；SQL Server：com.microsoft.sqlserver:mssql-jdbc -->
+```
+
+常见数据库连接示例（记得先在上面的 pom 中添加驱动）：
+
+```properties
+# PostgreSQL
+qingzhou-jdbc~pg.url=jdbc:postgresql://127.0.0.1:5432/oauth2
+qingzhou-jdbc~pg.username=oauth2
+qingzhou-jdbc~pg.password=******
+
+# MySQL
+qingzhou-jdbc~mysql.url=jdbc:mysql://127.0.0.1:3306/oauth2?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+qingzhou-jdbc~mysql.username=oauth2
+qingzhou-jdbc~mysql.password=******
+
+# MariaDB
+qingzhou-jdbc~maria.url=jdbc:mariadb://127.0.0.1:3306/oauth2
+qingzhou-jdbc~maria.username=oauth2
+qingzhou-jdbc~maria.password=******
+
+# SQLite（文件型，注意并发写限制）
+qingzhou-jdbc~sqlite.url=jdbc:sqlite:./data/oauth2.db
+
+# SQL Server
+qingzhou-jdbc~mssql.url=jdbc:sqlserver://127.0.0.1:1433;databaseName=oauth2
+qingzhou-jdbc~mssql.username=sa
+qingzhou-jdbc~mssql.password=******
+```
+
+- 驱动类通常按 URL 自动推断；自定义驱动可配置 `app~qingzhou-app-oauth2.jdbc_driver`。
+- 没有加入 pom 的数据库驱动不会出现在 fatjar 中，运行时加载驱动会失败。
+- 如果应用侧需要覆盖 URL/账号（例如平台连接池未配置），可使用 `jdbc_url`、`jdbc_username`、
+  `jdbc_password`；平台连接池配置优先。
+- 从旧版 H2 表结构升级时，旧表的 `IDENTITY` 主键与新脚本不兼容；OIDC 还新增了
+  `oauth_auth_code.nonce`、`oauth_auth_code.auth_time`、`oauth_user.email` 三列，请新建库或手工迁移，
+  本应用不做自动迁移。
+- `jdbc_name` 默认 `h2`，对应 `qingzhou-jdbc~h2.*`。
 
 ## 2. 应用配置项
 
-应用级配置同样写在 `qingzhou.properties`，前缀为 `app~qingzhou-app-oauth2.`：
+前缀：`app~qingzhou-app-oauth2.`
 
-| 配置项                                        | 默认值     | 说明                                                                |
-|--------------------------------------------|---------|-------------------------------------------------------------------|
-| `app~qingzhou-app-oauth2.jdbc_name`        | `h2`    | 使用哪个 `JdbcPool` 实例，取值即 `qingzhou-jdbc~<name>.*` 中 `~` 之后的名字       |
-| `app~qingzhou-app-oauth2.implicit_enabled` | `false` | 是否允许隐式模式（`response_type=token`），客户端 `grant_types` 还需包含 `implicit` |
-| `app~qingzhou-app-oauth2.seed_demo`        | `false` | 是否写入演示客户端与用户；演示口令为公开的固定值，仅限试用环境                                   |
+| 配置项 | 默认 | 说明 |
+| --- | --- | --- |
+| `storage` | `memory` | `memory` 或 `jdbc` |
+| `jdbc_name` | `h2` | JDBC 模式下平台连接池实例名 |
+| `jdbc_url` / `jdbc_username` / `jdbc_password` | 空 | 应用侧 JDBC 兜底配置 |
+| `jdbc_driver` | 空 | 自定义 JDBC 驱动类；留空按 URL 推断 |
+| `seed_demo` | `false` | 写入 `test_client/test_secret`、`admin/admin123`、`test/test123` |
+| `implicit_enabled` | `false` | 是否允许 `response_type=token/id_token/id_token token` |
+| `pkce_required` | `false` | 是否全局强制 PKCE（客户端也可单独开启） |
+| `revoke_allow_anonymous` | `true` | 允许仅携带 token 的匿名注销；设为 `false` 则严格校验客户端凭据 |
+| `issuer` | 空 | 授权服务器 issuer；为空时按请求 Host 推导；OIDC 需保持稳定 |
+| `scopes_supported` | `read,write,openid,profile,email` | 发现端点公布的 scope |
+| `oidc_private_key` | 空 | 可选，PKCS#8 RSA 私钥（PEM）；为空时启动生成临时密钥 |
+| `oidc_key_id` | 空 | 可选，JWKS/ID Token 的 kid；为空时按公钥摘要生成 |
+| `default_scope` | `read` | 未申请 scope 时的默认值 |
+| `access_token_ttl` | `7200` | 访问令牌默认有效期（秒） |
+| `refresh_token_ttl` | `604800` | 刷新令牌默认有效期（秒） |
+| `auth_code_ttl` | `600` | 授权码有效期（秒） |
 
-示例：
-
-```properties
-#app~qingzhou-app-oauth2.jdbc_name=h2
-#app~qingzhou-app-oauth2.implicit_enabled=true
-#app~qingzhou-app-oauth2.seed_demo=true
-```
+客户端可单独设置 `access_token_ttl`、`refresh_token_ttl`，覆盖全局默认值。
 
 ## 3. HTTP 端点
 
-端点由应用以“免登录”方式注册在 HTTP 服务上，默认地址形如 `https://<host>:7900/oauth2-server/...`
-（默认开启 SSL，自签证书场景可用 `curl -k`）。
+端点以“免登录”方式注册；协议错误返回 JSON，授权端点错误在 redirect_uri 合法时按 OAuth 规范回跳。
 
-| 端点                          | 方法                     | 调用方身份                                | 用途           |
-|-----------------------------|------------------------|--------------------------------------|--------------|
-| `/oauth2-server/authorize`  | GET（展示授权页）/ POST（提交授权） | 资源拥有者登录                              | 签发授权码或隐式令牌   |
-| `/oauth2-server/token`      | POST                   | 客户端凭据（`client_id` + `client_secret`） | 换取、刷新令牌      |
-| `/oauth2-server/userinfo`   | GET / POST             | 访问令牌                                 | 返回资源拥有者信息    |
-| `/oauth2-server/introspect` | POST                   | 客户端凭据                                | 查询访问令牌是否有效   |
-| `/oauth2-server/revoke`     | POST                   | 客户端凭据                                | 撤销访问令牌及其刷新令牌 |
+| 端点 | 方法 | 用途 |
+| --- | --- | --- |
+| `/oauth2-server/authorize` | GET/POST | 登录授权页，签发授权码或隐式令牌；支持 PKCE |
+| `/oauth2-server/token` | POST | 授权码、密码、客户端凭证、刷新令牌 |
+| `/oauth2-server/userinfo` | GET/POST | Bearer 访问令牌换取用户信息 |
+| `/oauth2-server/introspect` | POST | 令牌内省（RFC 7662） |
+| `/oauth2-server/revoke` | POST | 令牌撤销（RFC 7009） |
+| `/oauth2-server/.well-known/oauth-authorization-server` | GET | OAuth 授权服务器元数据（RFC 8414） |
+| `/oauth2-server/.well-known/openid-configuration` | GET | OIDC Discovery 元数据 |
+| `/oauth2-server/jwks.json` | GET | ID Token 验签公钥（JWKS） |
 
-成功响应为 JSON；协议错误统一返回 HTTP 400（`invalid_token` 为 401），正文形如：
+客户端认证支持：
 
-```json
-{
-  "error": "invalid_client",
-  "error_description": "客户端验证失败"
-}
-```
+- `client_secret_basic`（`Authorization: Basic ...`，凭据按表单规则编码）
+- `client_secret_post`（表单 `client_id` + `client_secret`）
+- `none`（公开客户端；授权码流程必须配合 PKCE，建议同时设置 `require_pkce=true`）
 
-### 3.1 `/oauth2-server/authorize`
+授权码流程支持 PKCE `plain` 与 `S256`；授权码一次性使用、默认 10 分钟过期。刷新令牌默认轮换，
+旧刷新令牌立即失效；`client_credentials` 与隐式模式不签发刷新令牌。
 
-请求参数：
+### OIDC 支持
 
-| 参数              | 必填 | 说明                                                                |
-|-----------------|----|-------------------------------------------------------------------|
-| `response_type` | 是  | `code`（授权码）或 `token`（隐式，需开启 `implicit_enabled` 且客户端登记 `implicit`） |
-| `client_id`     | 是  | 接入客户端 ID                                                          |
-| `redirect_uri`  | 否  | 必须与客户端登记的 `redirect_uri` 完全一致；不传时使用登记值                            |
-| `scope`         | 否  | 申请的授权范围，不得超出客户端登记的 `scope`                                        |
-| `state`         | 否  | 原样回传，用于防 CSRF                                                     |
+客户端 `scope` 包含 `openid` 时启用 OIDC；`profile` 返回昵称/用户名/角色，`email` 返回邮箱。
+已有客户端需把 `openid`（以及 `profile`/`email`）加入客户端 scope 后重新保存；服务端
+`scopes_supported` 也建议包含这些 scope。
+授权码流程在 `/token` 响应中增加 `id_token`；隐式流程支持：
 
-- `GET`：校验参数后返回登录授权页。
-- `POST`：在页面上提交 `userName`、`password`、`action`（`approve` / `deny`）。
-    - 同意且 `response_type=code`：携带授权码回跳 `redirect_uri?code=<code>&state=<state>`。
-    - 同意且 `response_type=token`：以 URL fragment 回跳
-      `redirect_uri#access_token=...&token_type=bearer&expires_in=...&scope=...&state=...`。
-    - 拒绝：回跳 `redirect_uri?error=access_denied&state=<state>`。
+- `response_type=id_token`：只返回 ID Token；
+- `response_type=id_token token`：返回 Access Token 与 ID Token；
+- 隐式 ID Token 必须携带 `nonce`。
 
-### 3.2 `/oauth2-server/token`
+ID Token 使用 RS256 签名，Claims 包括 `iss/sub/aud/exp/iat/auth_time/nonce/at_hash`，按 scope 附带
+`name/preferred_username/email/role/roles`。客户端通过 `jwks_uri` 获取公钥验签。
 
-公共参数：`client_id`、`client_secret`（必填并校验）、`grant_type`（必须在该客户端登记的
-`grant_types` 内）。
-
-| `grant_type`         | 额外参数                              | 说明                  |
-|----------------------|-----------------------------------|---------------------|
-| `authorization_code` | `code`、`redirect_uri`（可选，需与授权时一致） | 授权码换取令牌，授权码一次性使用    |
-| `password`           | `userName`、`password`、`scope`     | 资源拥有者密码模式           |
-| `client_credentials` | `scope`                           | 客户端凭证模式，不关联用户       |
-| `refresh_token`      | `refresh_token`                   | 刷新令牌，刷新即轮换（旧令牌立即失效） |
-
-`scope` 不得超出客户端登记的 `scope`，超出时返回 `invalid_scope`。
-
-成功响应：
-
-```json
-{
-  "access_token": "...",
-  "token_type": "bearer",
-  "expires_in": 7200,
-  "refresh_token": "...",
-  "scope": "read"
-}
-```
-
-### 3.3 `/oauth2-server/userinfo`
-
-访问令牌可通过请求头 `Authorization: Bearer <access_token>` 或参数 `access_token` 传递。
-
-```json
-{
-  "sub": "admin",
-  "userName": "admin",
-  "nickname": "管理员",
-  "role": "system",
-  "client_id": "test_client",
-  "scope": "read"
-}
-```
-
-### 3.4 `/oauth2-server/introspect`
-
-参数：`token`，另需 `client_id`、`client_secret`；只能校验该客户端自己签发的令牌。
-
-```json
-{
-  "active": true,
-  "client_id": "test_client",
-  "userName": "admin",
-  "scope": "read",
-  "token_type": "bearer",
-  "exp": 1730000000
-}
-```
-
-无效、已过期或不属于该客户端时返回 `{"active": false}`。
-
-### 3.5 `/oauth2-server/revoke`
-
-参数：`token`（或 `access_token`），另需 `client_id`、`client_secret`；只能注销该客户端自己签发的令牌。
-撤销成功返回 `{"success": true}`。
+默认每次启动生成临时 RSA 密钥，重启后旧 ID Token 将无法用新 JWKS 验签；生产环境建议通过
+`oidc_private_key` 配置固定的 PKCS#8 RSA 私钥（PEM），并用稳定的 `issuer`。properties 中可将私钥
+写成单行并把换行写成 `\n`；`oidc_key_id` 可固定 `kid`，便于密钥轮换时区分。
 
 ## 4. 快速开始
 
-先开启演示数据（`app~qingzhou-app-oauth2.seed_demo=true` 并重启），即得到客户端
-`test_client` / `test_secret`，用户 `admin` / `admin123`。
-
-```bash
-BASE=https://localhost:7900/oauth2-server
-CRED='client_id=test_client&client_secret=test_secret'
-
-# 1) 客户端凭证模式
-curl -k -X POST "$BASE/token" \
-  -d "grant_type=client_credentials&$CRED&scope=read"
-
-# 2) 密码模式
-TOKEN_JSON=$(curl -k -s -X POST "$BASE/token" \
-  -d "grant_type=password&$CRED&userName=admin&password=admin123&scope=read")
-echo "$TOKEN_JSON"
-
-ACCESS=$(echo "$TOKEN_JSON" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
-REFRESH=$(echo "$TOKEN_JSON" | sed -n 's/.*"refresh_token":"\([^"]*\)".*/\1/p')
-
-# 3) 查询用户信息
-curl -k "$BASE/userinfo" -H "Authorization: Bearer $ACCESS"
-
-# 4) 校验令牌
-curl -k -X POST "$BASE/introspect" -d "token=$ACCESS&$CRED"
-
-# 5) 刷新令牌
-curl -k -X POST "$BASE/token" \
-  -d "grant_type=refresh_token&$CRED&refresh_token=$REFRESH"
-
-# 6) 注销令牌
-curl -k -X POST "$BASE/revoke" -d "token=$ACCESS&$CRED"
+```properties
+app~qingzhou-app-oauth2.storage=memory
+app~qingzhou-app-oauth2.seed_demo=true
 ```
 
-授权码模式：浏览器访问 `$BASE/authorize?response_type=code&client_id=test_client&scope=read&state=abc`
-（`redirect_uri` 省略时使用登记值 `https://localhost:7900/oauth2/callback`），
-登录并同意后回调地址会带上 `code`，再用该 `code` 调用 `/oauth2-server/token` 换取令牌。
+```bash
+BASE=http://127.0.0.1:7900/oauth2-server
+AUTH='-u test_client:test_secret'
+
+# 客户端凭证（test_client 默认使用 client_secret_basic）
+curl -s $AUTH -X POST "$BASE/token" -d 'grant_type=client_credentials&scope=read'
+
+# 密码模式
+TOKEN=$(curl -s $AUTH -X POST "$BASE/token" \
+  -d 'grant_type=password&userName=admin&password=admin123&scope=read')
+
+# 用户信息
+curl -s "$BASE/userinfo" -H "Authorization: Bearer <access_token>"
+
+# 内省 / 撤销
+curl -s $AUTH -X POST "$BASE/introspect" -d "token=<access_token>"
+curl -s $AUTH -X POST "$BASE/revoke" -d "token=<access_token>"
+
+# 发现
+curl -s "$BASE/.well-known/oauth-authorization-server"
+curl -s "$BASE/.well-known/openid-configuration"
+curl -s "$BASE/jwks.json"
+```
+
+OIDC 授权码 + PKCE 流程（scope 必须含 `openid`，建议带 `nonce`）：
+
+1. 浏览器访问
+   `/oauth2-server/authorize?response_type=code&client_id=test_client&redirect_uri=...&scope=read&state=...&code_challenge=...&code_challenge_method=S256`
+2. 登录并同意后，回调地址带 `code`；
+3. `POST /oauth2-server/token` 使用 `grant_type=authorization_code`、`code`、`redirect_uri`、`code_verifier` 换取令牌；
+   当 scope 含 `openid` 时响应中同时返回 `id_token`。
+
+OIDC 隐式示例（需 `implicit_enabled=true` 且客户端登记 `implicit`）：
+
+```text
+/oauth2-server/authorize?response_type=id_token&client_id=test_client&redirect_uri=...&scope=openid%20profile%20email&state=...&nonce=...
+```
 
 ## 5. 管理控制台
 
-应用在轻舟控制台“接入管理”菜单下提供两个模型：
+“接入管理”菜单下提供两个模型：
 
-- **接入客户端**（`client`）：维护 `client_id`、`client_secret`、`client_name`、`redirect_uri`、
-  `grant_types`、`scope`。
-- **资源拥有者**（`user`）：维护登录授权页的 `userName`、`password`、`nickname`、`roleName`。
+- **接入客户端**（`client`）：`client_id`、`client_secret`、`client_name`、多个 `redirect_uri`、
+  `grant_types`、`scope`、`token_endpoint_auth_method`、`require_pkce`、令牌 TTL、`enabled`。
+- **资源拥有者**（`user`）：`userName`、`password`、`nickname`、`email`、`roleName`、`enabled`。
 
-`client_secret` 与 `password` 只落库加盐迭代摘要（`SHA-256$salt$iterations$digest`），
-新增/修改时填写明文，编辑时留空即保留原值，界面也不会回显摘要。升级前写入的明文记录无法再用于
-认证，需在控制台重新保存。
+**接入客户端与资源拥有者是两套账号，不能混用：**
 
-首次访问数据库时会自动建表：
+- 授权页登录、密码模式使用“资源拥有者”的 `userName` / `password`；
+- `client_id` / `client_secret` 只用于 OAuth 客户端认证，不是登录账号；
+- 默认 `seed_demo=false`，新建应用后必须在“资源拥有者”中先创建用户，否则授权页会提示尚未创建资源拥有者账号；
+- 新增用户时密码必填；编辑用户时密码留空表示保留原密码，填写新值即重置密码；
+- 演示模式创建的用户为 `admin/admin123` 与 `test/test123`。
 
-| 表                 | 说明                   |
-|-------------------|----------------------|
-| `oauth_client`    | 接入客户端                |
-| `oauth_user`      | 资源拥有者                |
-| `oauth_auth_code` | 授权码（10 分钟过期、一次性使用）   |
-| `oauth_token`     | 访问令牌（2 小时）与刷新令牌（7 天） |
+`client_secret` 与 `password` 新写入只保存加盐迭代摘要；新增/修改时填写明文，编辑时留空保留原值，界面不回显摘要。
+为兼容历史数据库/外部导入数据，校验时还接受平台全局密钥 AES 密文与早期明文值；密文/明文不会进入 PBKDF2，
+只有摘要格式才做摘要校验，并对口令长度与盐长度设上限，避免异常历史值造成长时间计算。建议在升级后重置一次历史客户端密钥，使存储恢复为摘要。
+授予类型为多选下拉（无默认值，需操作人明确选择）；客户端认证方式为单选下拉（默认 `client_secret_basic`）；`启用`、`强制 PKCE` 为开关；字段说明中给出了各标准值的中文含义。
 
-种子数据仅在 `seed_demo=true` 时写入：客户端 `test_client` / `test_secret`；用户 `admin` / `admin123`
-（role `system`）、`test` / `test123`（role `auditor`）。这些口令是公开的固定值，
-**只能在试用环境开启**；生产环境请在控制台自行创建客户端与用户。
+每个接入客户端行提供 **“接入示例”** 操作，打开该客户端独立的接入说明页：
 
-## 6. 安全说明
+```text
+/oauth2-server/guide?client_id=<client_id>
+```
 
-- 所有 `/oauth2-server/*` 端点对平台免登录，协议安全依赖客户端凭据与访问令牌本身。
-- `redirect_uri` 必须与客户端登记值完全一致，且仅允许 `http`/`https`、拦截 CRLF 注入，
-  避免授权码或令牌被投递到攻击者地址。
-- `client_secret` 与用户口令以平台 `qingzhou-crypto` 的加盐迭代摘要
-  （`SHA-256$salt$iterations$digest`）落库，校验时比对摘要而非明文，明文不入库、不写日志。
-- `/oauth2-server/token`、`/oauth2-server/introspect`、`/oauth2-server/revoke` 仅接受 POST（避免凭据进入 URL 与访问日志），
-  且 `introspect`/`revoke` 必须出示客户端凭据并只能操作自己名下的令牌。
-- 授予方式与授权范围都受客户端登记值约束：`grant_type` 必须在 `grant_types` 内，
-  `scope` 不得超出客户端 `scope`。
-- 授权码一次性使用、刷新令牌刷新即轮换，二者均以带条件的原子更新核销，并发重复提交只有一次生效。
-- 授权页登录与密码模式按来源限流，连续 5 次失败锁定 5 分钟。
-- 令牌与用户信息响应带 `Cache-Control: no-store`，授权页额外带 `X-Frame-Options: DENY`。
-- 生产环境仍建议叠加网关、网络隔离与 HTTPS 证书校验。
+页面包含端点、授权模式、scope、回调地址和可复制的 curl 示例，适合直接发给客户端开发方。页面为只读 HTML，
+**不包含 client_secret**，命令中使用 `<YOUR_CLIENT_SECRET>` 占位；如客户端是 `none` 公开客户端则显示“无需密钥”。
+示例页是公开只读页面，可按 client_id 分享；如不希望暴露客户端配置，请不要对外发布该链接。
+管理端点击“接入示例”时优先在新标签打开；浏览器拦截弹窗时回退到当前标签打开，操作提示中也会给出页面路径。
 
-## 7. 排错
+## 6. 构建
 
-| 现象                                                      | 排查方向                                                         |
-|---------------------------------------------------------|--------------------------------------------------------------|
-| 日志出现“oauth2 数据源不可用”，`/oauth2-server/*` 未注册              | 确认已按第 1 节启用 `qingzhou-jdbc` 并放开 `qingzhou-jdbc~h2.*`         |
-| 报 `ClassNotFoundException: org.h2.jdbcx.JdbcDataSource` | 驱动不在 `instances/<实例>/lib/`，放入对应驱动 jar 后重启                    |
-| 报 `JdbcPool[h2] 不可用`                                    | 池实例名不匹配：`jdbc_name` 要与 `qingzhou-jdbc~<name>.*` 中 `~` 后的名字一致 |
-| 授权回调报 `invalid_client` / `invalid_request`              | 检查 `client_id` 是否存在、`redirect_uri` 是否与登记值完全一致                |
-| 报 `invalid_scope` / `unauthorized_client`               | 申请的 `scope` 或 `grant_type` 超出了客户端登记范围，在控制台补齐                 |
-| 客户端或用户始终验证失败                                            | 凭据为升级前的明文记录，在控制台重新保存一次                                       |
+```bash
+mvn -pl apps/qingzhou-app-oauth2 -am clean package -DskipTests
+```
+
+产物 `apps/qingzhou-app-oauth2/target/qingzhou-app-oauth2.jar` 是包含**当前 pom 声明的 JDBC 驱动**
+的 fatjar（默认只有 H2）。放入 `<实例>/apps/` 后重启轻舟即可；其他数据库驱动按上面说明加入
+`pom.xml` 后重新构建，不依赖实例 `lib/` 中的驱动。
+
+## 7. 安全与兼容性
+
+- 授权码、刷新令牌一次性/轮换；客户端密钥与用户口令只存摘要。
+- `redirect_uri` 精确匹配，支持多个登记值；授权码/隐式模式必填，仅客户端凭证/密码模式可留空；拒绝 CRLF 与 fragment。
+- 接入客户端新增/更新的校验错误会以 400 + 可读消息返回表单，不再表现为无说明的“操作失败”。
+- 接入示例页为只读 HTML，不包含 client_secret；公开客户端无需密钥。
+- 登录失败按来源+客户端限流；授权页禁止被 iframe 嵌入，响应禁止缓存。
+- 授权页表单是同源 POST；反向代理必须保留浏览器 `Host`，否则平台跨站写保护会返回 403。
+- 在 sandboxed iframe/WebView 等不透明来源中，浏览器会发送字面量 `Origin: null`；本应用仅对授权端点
+  `/oauth2-server/authorize` 显式允许该来源，其他端点仍返回 403。该例外不适用于携带 Cookie 会话的接口。
+- 授权页登录使用“资源拥有者”账号；`client_id`/`client_secret` 不是用户账号。
+- 注销端点默认允许 token-only 调用（不携带客户端凭据）；严格 RFC 7009 部署可设
+  `app~qingzhou-app-oauth2.revoke_allow_anonymous=false`，此时客户端必须使用 Basic 或
+  `client_id`+`client_secret`。注销只销毁令牌，不签发令牌；token 建议放 POST body。
+- 访问令牌不透明，内省返回 `iss/aud/sub/exp/iat/nbf` 等标准字段。
+- ID Token 为 RS256 JWT，通过公开 JWKS 验签；授权码流程的 `nonce` 会原样写入 ID Token。
+- SQL 使用标准类型与字符串主键；分页按数据库方言适配 `LIMIT/OFFSET` 或 `OFFSET/FETCH`。
+- OIDC 当前支持授权码、隐式 ID Token 与 Discovery/JWKS；暂不支持动态客户端注册、OIDC Session Management、
+  Front-Channel/Back-Channel Logout、ID Token 加密与设备码流程。

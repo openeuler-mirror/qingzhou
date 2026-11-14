@@ -12,7 +12,8 @@ final class Reply {
     }
 
     static void send(HttpResponse response, Json json, Map<String, Object> body) throws Exception {
-        response.header("Cache-Control", "no-store") // 令牌等信息禁止被浏览器或代理缓存
+        response.header("Cache-Control", "no-store")
+                .header("Pragma", "no-cache")
                 .contentTypeJsonUtf8().send(json.toJson(body));
     }
 
@@ -22,18 +23,31 @@ final class Reply {
     }
 
     static void sendUnauthorized(HttpResponse response, Json json, String code, String description) throws Exception {
-        response.status(401);
+        response.status(401)
+                .header("WWW-Authenticate", "Bearer error=\"" + code + "\"");
         send(response, json, error(code, description));
     }
 
-    static void methodNotAllowed(HttpResponse response) {
-        response.status(405).header("Allow", "POST").send("method not allowed");
+    static void sendClientUnauthorized(HttpResponse response, Json json) throws Exception {
+        response.status(401)
+                .header("WWW-Authenticate", "Basic realm=\"oauth2\"");
+        send(response, json, error("invalid_client", "客户端验证失败"));
+    }
+
+    static void tooManyRequests(HttpResponse response, Json json) throws Exception {
+        response.status(429).header("Retry-After", "300");
+        send(response, json, error("temporarily_unavailable", "客户端认证失败次数过多，请稍后再试"));
+    }
+
+    static void methodNotAllowed(HttpResponse response, String allow) {
+        response.status(405).header("Allow", allow).send("method not allowed");
     }
 
     static void redirect(HttpResponse response, String location) {
         response.status(302)
                 .header("Location", location)
                 .header("Cache-Control", "no-store")
+                .header("Pragma", "no-cache")
                 .send("redirecting");
     }
 

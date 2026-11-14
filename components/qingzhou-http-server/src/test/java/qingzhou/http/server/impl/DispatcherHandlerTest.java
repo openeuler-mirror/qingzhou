@@ -819,6 +819,33 @@ public class DispatcherHandlerTest extends HttpServerTestBase {
     }
 
     @Test
+    public void opaqueOrigin_defaultRoute_returns403() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.send("ok").finish(), "/write", true);
+
+        // 字面量 Origin: null 来自不透明来源，默认不得按同源放行
+        Assert.assertEquals(statusOfRawRequest(testServer.port, "POST /write HTTP/1.1\r\n"
+                + "Host: localhost\r\n"
+                + "Origin: null\r\n"
+                + "Content-Length: 0\r\n"
+                + "Connection: close\r\n\r\n"), 403);
+    }
+
+    @Test
+    public void opaqueOrigin_explicitlyAllowedRoute_returns200() throws Exception {
+        startServer();
+        testServer.server.registerHttpHandler((request, response) -> response.send("ok").finish(),
+                "/opaque-form", true, true);
+
+        // 仅显式 opt-in 的公开表单端点接受不透明来源
+        Assert.assertEquals(statusOfRawRequest(testServer.port, "POST /opaque-form HTTP/1.1\r\n"
+                + "Host: localhost\r\n"
+                + "Origin: null\r\n"
+                + "Content-Length: 0\r\n"
+                + "Connection: close\r\n\r\n"), 200);
+    }
+
+    @Test
     public void perSourceConcurrency_concurrentRequestFromSameSource_returns503() throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("max_concurrent_per_source", "1");

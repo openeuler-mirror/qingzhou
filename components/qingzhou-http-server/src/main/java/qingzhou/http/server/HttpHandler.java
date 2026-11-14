@@ -7,6 +7,8 @@ public interface HttpHandler {
     String HANDLE_PATH = "HANDLE_PATH";
     String HANDLE_PATH_ABSOLUTE = "HANDLE_PATH_ABSOLUTE";
     String HANDLE_NO_AUTH = "HANDLE_NO_AUTH";
+    // 仅对明确接受不透明来源（Origin: null）的公开表单端点开启；不得用于携带 Cookie 会话的写接口
+    String HANDLE_ALLOW_OPAQUE_ORIGIN = "HANDLE_ALLOW_OPAQUE_ORIGIN";
     // 该路径允许的 HTTP 方法（逗号分隔，如 POST）；缺省表示允许全部方法
     String HANDLE_METHODS = "HANDLE_METHODS";
 

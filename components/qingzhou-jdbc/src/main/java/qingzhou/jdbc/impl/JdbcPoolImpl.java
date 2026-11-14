@@ -34,6 +34,10 @@ public class JdbcPoolImpl implements JdbcPool {
             descriptors.put(pd.getName(), pd);
         }
         for (Map.Entry<String, String> entry : config.entrySet()) {
+            // SCR 会把 osgi.ds.*、component.*、service.* 等框架属性注入配置 Map，它们不是连接池参数
+            String key = entry.getKey();
+            if (key.startsWith("osgi.") || key.startsWith("component.") || key.startsWith("service.")
+                    || key.startsWith("qingzhou.") || key.equals("objectClass")) continue;
             PropertyDescriptor matched = descriptors.get(entry.getKey());
             // 未知配置项 fail-fast：拼写错误（如 maxActiv）静默失效会掩盖真实的池配置
             if (matched == null || matched.getWriteMethod() == null) {

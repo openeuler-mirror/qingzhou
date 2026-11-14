@@ -115,6 +115,29 @@ public class MessageDigestImplTest {
     }
 
     @Test
+    public void oversizedSalt_matches_returnsFalseWithoutPbkdf2() {
+        MessageDigest digest = newDigest();
+        StringBuilder salt = new StringBuilder();
+        for (int i = 0; i < 1000; i++) salt.append('A');
+        String stored = "PBKDF2WithHmacSHA256$" + salt + "$1$" + "A";
+        Assert.assertFalse(digest.matches("pwd", stored));
+    }
+
+    @Test
+    public void oversizedPassword_matches_returnsFalse() {
+        MessageDigest digest = newDigest();
+        String stored = digest.digest("pwd", "PBKDF2WithHmacSHA256", 16, 1);
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < 1025; i++) password.append('a');
+        Assert.assertFalse(digest.matches(password.toString(), stored));
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void oversizedSaltLength_digest_rejected() {
+        newDigest().digest("pwd", "PBKDF2WithHmacSHA256", 65, 1);
+    }
+
+    @Test
     public void digest_resultFormat_containsAlgorithmSaltIterationsHash() {
         String result = newDigest().digest("pwd", "SHA-256", 8, 3);
         String[] parts = result.split("\\$");
