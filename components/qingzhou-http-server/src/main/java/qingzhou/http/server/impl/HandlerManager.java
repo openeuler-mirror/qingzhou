@@ -29,11 +29,13 @@ public class HandlerManager {
     public static final class HandlerEntry {
         public final HttpHandler handler;
         public final boolean noAuth;
+        public final boolean allowOpaqueOrigin; // 仅显式配置的公开端点允许 Origin: null
         public final List<String> methods; // 允许的方法；空表示全部允许
 
-        HandlerEntry(HttpHandler handler, boolean noAuth, List<String> methods) {
+        HandlerEntry(HttpHandler handler, boolean noAuth, List<String> methods, boolean allowOpaqueOrigin) {
             this.handler = handler;
             this.noAuth = noAuth;
+            this.allowOpaqueOrigin = allowOpaqueOrigin;
             // 只读视图：防止外部绕过注册期校验篡改方法白名单
             this.methods = methods == null ? Collections.emptyList() : Collections.unmodifiableList(methods);
         }
@@ -85,12 +87,14 @@ public class HandlerManager {
 
         boolean isNoAuth = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_NO_AUTH));
         List<String> methods = parseMethods(properties.get(HttpHandler.HANDLE_METHODS), component);
-        handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth, methods));
+        boolean allowOpaqueOrigin = Boolean.parseBoolean(properties.get(HttpHandler.HANDLE_ALLOW_OPAQUE_ORIGIN));
+        handlerMap.put(path, new HandlerEntry(httpHandler, isNoAuth, methods, allowOpaqueOrigin));
 
         // 免认证路径对外可直接访问，来源 bundle 须留痕以便审计
         String source = reference != null ? reference.getBundle().getSymbolicName() : component;
         pendingLogs.info(logger, "registered: [" + path + "] by [" + source + "]"
-                + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : ""));
+                + (methods.isEmpty() ? "" : " methods=" + methods) + (isNoAuth ? " (no auth)" : "")
+                + (allowOpaqueOrigin ? " (opaque-origin allowed)" : ""));
     }
 
     // 注册专用：方法须属框架白名单，非法值在注册期即暴露，避免运行期静默放行

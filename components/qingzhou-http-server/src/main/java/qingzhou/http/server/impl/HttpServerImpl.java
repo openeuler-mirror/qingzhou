@@ -161,11 +161,20 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth, String... methods) {
+        registerHttpHandler(httpHandler, handlePath, noAuth, false, methods);
+    }
+
+    @Override
+    public void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth,
+                                    boolean allowOpaqueOrigin, String... methods) {
         Map<String, String> properties = new HashMap<>();
         properties.put(HttpHandler.HANDLE_PATH, handlePath);
         properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");
         if (noAuth) {
             properties.put(HttpHandler.HANDLE_NO_AUTH, "true");
+        }
+        if (allowOpaqueOrigin) {
+            properties.put(HttpHandler.HANDLE_ALLOW_OPAQUE_ORIGIN, "true");
         }
         if (methods != null && methods.length > 0) {
             properties.put(HttpHandler.HANDLE_METHODS, String.join(",", methods));
