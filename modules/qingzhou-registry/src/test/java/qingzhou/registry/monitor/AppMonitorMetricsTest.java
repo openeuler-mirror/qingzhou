@@ -33,9 +33,9 @@ public class AppMonitorMetricsTest {
         Set<Metric> metrics = provider.collectMetrics();
         Assert.assertEquals(metrics.size(), 2); // monitor_targets + 数值样本
         Metric count = find(metrics, "monitor_value", "field", "count");
-        Assert.assertEquals(count.value(), 42d);
-        Assert.assertEquals(count.labels().get("field_name"), "节点数");
-        Assert.assertEquals(count.labels().get("field_info"), "当前节点总数");
+        Assert.assertEquals(count.getValue(), 42d);
+        Assert.assertEquals(count.getLabels().get("field_name"), "节点数");
+        Assert.assertEquals(count.getLabels().get("field_info"), "当前节点总数");
         Assert.assertNull(find(metrics, "monitor_value", "field", "home")); // 非数值项不导出
         Assert.assertNull(find(metrics, "monitor_value", "field", "name")); // 非监视字段不采集
     }
@@ -45,14 +45,14 @@ public class AppMonitorMetricsTest {
         AppMonitorMetrics provider = provider(new LocalStub(app(model(false)), Collections.emptyMap(), false));
         Set<Metric> metrics = provider.collectMetrics();
         Assert.assertEquals(metrics.size(), 1); // 仅 monitor_targets
-        Assert.assertEquals(metrics.iterator().next().value(), 0d);
+        Assert.assertEquals(metrics.iterator().next().getValue(), 0d);
     }
 
     @Test
     public void failingInvoke_collect_countErrorAndKeepServing() throws Exception {
         AppMonitorMetrics provider = provider(new LocalStub(app(model(true)), Collections.emptyMap(), true));
         Set<Metric> metrics = provider.collectMetrics();
-        Assert.assertEquals(find(metrics, "monitor_errors_total", "stage", "invoke").value(), 1d);
+        Assert.assertEquals(find(metrics, "monitor_errors_total", "stage", "invoke").getValue(), 1d);
     }
 
     private static Registry registryStub(AppStubLocal localApp) {
@@ -119,7 +119,7 @@ public class AppMonitorMetricsTest {
 
     private static Metric find(Set<Metric> metrics, String name, String labelKey, String labelValue) {
         for (Metric metric : metrics) {
-            if (metric.name().equals(name) && labelValue.equals(metric.labels().get(labelKey))) {
+            if (metric.getName().equals(name) && labelValue.equals(metric.getLabels().get(labelKey))) {
                 return metric;
             }
         }

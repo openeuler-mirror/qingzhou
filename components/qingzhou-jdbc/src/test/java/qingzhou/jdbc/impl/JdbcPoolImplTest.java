@@ -102,7 +102,7 @@ public class JdbcPoolImplTest {
             Set<Metric> metrics = pool.collectMetrics();
             Assert.assertEquals(metrics.size(), 4);
             for (Metric metric : metrics) {
-                Assert.assertEquals(metric.labels().get("pool"), "h2");
+                Assert.assertEquals(metric.getLabels().get("pool"), "h2");
             }
         } finally {
             closePool(pool);

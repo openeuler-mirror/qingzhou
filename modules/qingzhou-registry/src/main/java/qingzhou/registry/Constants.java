@@ -21,6 +21,7 @@ public interface Constants {
     String REMOTE_REGISTER_URI = "/register";
     String REMOTE_INVOKE_URI = "/invoke";
     String REMOTE_UPLOAD_URI = "/upload";
+    String REMOTE_METRICS_URI = "/metrics";
     String REMOTE_PARAMETER_DOMAIN_ID = "d";
     String REMOTE_PARAMETER_INSTANCE_ID = "i";
     String REMOTE_PARAMETER_FILE_KEY = "f";

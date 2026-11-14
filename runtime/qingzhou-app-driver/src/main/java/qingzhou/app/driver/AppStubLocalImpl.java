@@ -2,15 +2,22 @@ package qingzhou.app.driver;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import qingzhou.api.*;
 import qingzhou.app.driver.systemcall.Icon;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
-import qingzhou.dto.meta.*;
-import qingzhou.registry.*;
+import qingzhou.dto.meta.AppMeta;
+import qingzhou.dto.meta.Model;
+import qingzhou.dto.meta.ModelAction;
+import qingzhou.registry.AppStubLocal;
+import qingzhou.registry.Constants;
+import qingzhou.registry.I18nService;
 
 class AppStubLocalImpl implements AppStubLocal {
     private final AppContextImpl appContext;
@@ -90,9 +97,6 @@ class AppStubLocalImpl implements AppStubLocal {
         ModelBase modelBase = appContext.modelInstances.get(model);
         if (action.isDefaultAction) { // 执行默认 action
             Method method = DEFAULT_ACTION_METHODS.get(action.methodName);
-            if (method == null) {
-                throw new IllegalStateException("unknown default action: " + action.methodName);
-            }
             invokeMethod(request, method, null, modelBase, request);
         } else { // 执行自定义 action
             Method method = appContext.actionMethods.get(AppDriver.resolveActionKey(model, action));

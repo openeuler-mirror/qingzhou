@@ -13,6 +13,12 @@ public interface MetricProvider {
     String PROVIDER_ID = "METRIC_PROVIDER_ID";
 
     /**
+     * 组件属性键：是否为本实例本地采集。未声明即本地；跨实例聚合出口须显式声明 false，
+     * 端点以 OSGi target 决定是否纳入该出口。
+     */
+    String PROVIDER_LOCAL = "METRIC_PROVIDER_LOCAL";
+
+    /**
      * @return 当前指标快照，不得为 null（无指标时返回空集合）；由端点单一抓取线程串行调用
      */
     Set<Metric> collectMetrics();
