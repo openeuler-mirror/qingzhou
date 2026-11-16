@@ -5,31 +5,24 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.HttpMethod;
-import qingzhou.http.client.Response;
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.client.*;
+import qingzhou.http.server.*;
 import qingzhou.json.Json;
 
 @Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
-        property = {HttpHandler.HANDLE_PATH + "=" + OAuth2Handler.ROOT_PATH,
+        property = {HttpHandler.HANDLE_PATH + "=" + OAuthHandler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
                 HttpHandler.HANDLE_NO_AUTH + "=true"})
-public class OAuth2Handler implements HttpHandler {
-    public static final String ROOT_PATH = "/oauth2";
+public class OAuthHandler implements HttpHandler {
+    public static final String ROOT_PATH = "/oauth";
     private static final String AUTHORIZE_PATH = ROOT_PATH + "/authorize";
     private static final String CALLBACK_PATH = ROOT_PATH + "/callback";
 
-    private static final String CSRF_COOKIE_NAME = "oauth2_csrf";
+    private static final String CSRF_COOKIE_NAME = "oauth_csrf";
     private static final int CSRF_COOKIE_EXPIRE_SECONDS = 60;
     private static final String COOKIE_SAME_SITE = "Lax";
 
@@ -60,22 +53,22 @@ public class OAuth2Handler implements HttpHandler {
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        enabled = configs.getOrDefault("auth_oauth2_enabled", false);
+        enabled = configs.getOrDefault("auth_oauth_enabled", false);
         if (!enabled) return;
 
-        authorizationEndpoint = configs.notBlank("auth_oauth2_authorize_endpoint");
-        clientId = configs.notBlank("auth_oauth2_client_id");
-        clientSecret = configs.notBlank("auth_oauth2_client_secret"); // 安全考虑：此处不要解密
-        tokenEndpoint = configs.notBlank("auth_oauth2_token_endpoint");
-        userinfoEndpoint = configs.notBlank("auth_oauth2_userinfo_endpoint");
-        usernameField = config.get("auth_oauth2_userinfo_username_field");
-        roleField = config.get("auth_oauth2_userinfo_role_field");
-        scope = config.get("auth_oauth2_scope");
-        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 auth_oauth2_roles 后 OAuth2 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
-        grantedRoles = configs.splitList("auth_oauth2_roles");
+        authorizationEndpoint = configs.notBlank("auth_oauth_authorize_endpoint");
+        clientId = configs.notBlank("auth_oauth_client_id");
+        clientSecret = configs.notBlank("auth_oauth_client_secret"); // 安全考虑：此处不要解密
+        tokenEndpoint = configs.notBlank("auth_oauth_token_endpoint");
+        userinfoEndpoint = configs.notBlank("auth_oauth_userinfo_endpoint");
+        usernameField = config.get("auth_oauth_userinfo_username_field");
+        roleField = config.get("auth_oauth_userinfo_role_field");
+        scope = config.get("auth_oauth_scope");
+        // 角色 fail-closed：默认不授予任何角色，须由管理员显式配置 auth_oauth_roles 后 OAuth 用户才有权限，防止"能通过外部 IdP 认证即获得平台管理权限"
+        grantedRoles = configs.splitList("auth_oauth_roles");
         // 兼容开关：默认 fail-closed，IdP 未断言角色时不授予；既有部署确需全量授予时显式开启
-        rolesFallback = configs.getOrDefault("auth_oauth2_roles_fallback", false);
-        String thisServerUrl = configs.notBlank("auth_oauth2_this_server");
+        rolesFallback = configs.getOrDefault("auth_oauth_roles_fallback", false);
+        String thisServerUrl = configs.notBlank("auth_oauth_this_server");
         callbackUrl = thisServerUrl + CALLBACK_PATH;
 
         tokenCipher = crypto.getGlobalCipher();
@@ -89,7 +82,7 @@ public class OAuth2Handler implements HttpHandler {
         }
 
         String path = request.getPath();
-        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth2/authorize 之类误命中
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1); // 精确匹配，避免 /x/oauth/authorize 之类误命中
         if (path.equals(AUTHORIZE_PATH)) {
             String state = UUID.randomUUID().toString().replace("-", ""); // state 随每次授权请求随机生成并存入 Cookie，回调时比对，借用此机制防登录 CSRF
             // state Cookie 必须 Lax：回调是 IdP 发起的跨站顶级 GET 导航，Strict 不会被携带，登录必然失败
@@ -121,7 +114,7 @@ public class OAuth2Handler implements HttpHandler {
     }
 
     private void callback(HttpRequest request, HttpResponse response) throws Exception {
-        String csrfToken = request.getParameter("state"); // OAUTH2 协议要求 state 必须传递
+        String csrfToken = request.getParameter("state"); // OAUTH 协议要求 state 必须传递
         if (csrfToken == null || !csrfToken.equals(request.getCookie(CSRF_COOKIE_NAME))) {
             response.status(400); // 拦截 csrf 攻击
             return;
@@ -240,9 +233,9 @@ public class OAuth2Handler implements HttpHandler {
     }
 
     /**
-     * 授予角色以本地 auth_oauth2_roles 为准，IdP 提供的角色名只做过滤：
+     * 授予角色以本地 auth_oauth_roles 为准，IdP 提供的角色名只做过滤：
      * IdP 侧角色可被其用户自行改写，直接采信等于"能通过外部认证即获得任意平台角色"。
-     * IdP 未提供角色时默认不授予；既有部署确需全量授予时由 auth_oauth2_roles_fallback 显式开启。
+     * IdP 未提供角色时默认不授予；既有部署确需全量授予时由 auth_oauth_roles_fallback 显式开启。
      */
     private String[] resolveRoles(List<String> idpRoles) {
         if (idpRoles.isEmpty()) {

@@ -1,9 +1,7 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
@@ -15,12 +13,12 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 @App(icon = "Key", roles = "admin",
-        name = {"OAuth2 授权服务", "en:OAuth2 Server"},
+        name = {"OAuth 授权服务", "en:OAuth Server"},
         info = {"提供 OAuth 2.0 / OpenID Connect 1.0 授权码、PKCE、ID Token、发现、JWKS、内省与撤销能力。",
                 "en:OAuth 2.0 / OpenID Connect 1.0 server with authorization code, PKCE, ID Token, discovery, JWKS, introspection and revocation."})
 @Menu(name = {"接入管理", "en:Access Management"}, code = "access", icon = "Grid", order = 1)
-public class OAuth2App implements QingzhouApp {
-    private static final String PATH_PREFIX = "/oauth2-server";
+public class OAuthApp implements QingzhouApp {
+    private static final String PATH_PREFIX = "/oauth-server";
     private static final String[] ENDPOINT_PATHS = {
             "/authorize", "/token", "/userinfo", "/introspect", "/revoke", "/guide", "/jwks.json",
             "/.well-known/oauth-authorization-server", "/.well-known/openid-configuration"
@@ -35,7 +33,7 @@ public class OAuth2App implements QingzhouApp {
         Logger logger = appContext.getService(Logger.class);
         Json json = appContext.getService(Json.class);
         if (json == null) {
-            if (logger != null) logger.error("Json 不可用，oauth2 端点未注册");
+            if (logger != null) logger.error("Json 不可用，oauth 端点未注册");
             return;
         }
 
@@ -43,7 +41,7 @@ public class OAuth2App implements QingzhouApp {
         try {
             store = Store.get(appContext);
         } catch (Throwable e) {
-            if (logger != null) logger.error("oauth2 存储初始化失败，端点未注册", e);
+            if (logger != null) logger.error("oauth 存储初始化失败，端点未注册", e);
             return;
         }
 
@@ -69,11 +67,11 @@ public class OAuth2App implements QingzhouApp {
         try {
             httpServer = appContext.getService(HttpServer.class);
         } catch (Exception e) {
-            if (logger != null) logger.error("HttpServer 不可用，oauth2 端点未注册", e);
+            if (logger != null) logger.error("HttpServer 不可用，oauth 端点未注册", e);
             return;
         }
         if (httpServer == null) {
-            if (logger != null) logger.error("HttpServer 不可用，oauth2 端点未注册");
+            if (logger != null) logger.error("HttpServer 不可用，oauth 端点未注册");
             return;
         }
 
@@ -85,7 +83,7 @@ public class OAuth2App implements QingzhouApp {
         }
 
         cleanupExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread thread = new Thread(r, "oauth2-cleanup");
+            Thread thread = new Thread(r, "oauth-cleanup");
             thread.setDaemon(true);
             return thread;
         });
@@ -93,12 +91,12 @@ public class OAuth2App implements QingzhouApp {
             try {
                 store.cleanup();
             } catch (Throwable e) {
-                if (logger != null) logger.warn("oauth2 过期数据清理失败", e);
+                if (logger != null) logger.warn("oauth 过期数据清理失败", e);
             }
         }, 5, 5, TimeUnit.MINUTES);
 
         if (logger != null) {
-            logger.info("oauth2 授权服务已就绪：" + PATH_PREFIX
+            logger.info("oauth 授权服务已就绪：" + PATH_PREFIX
                     + "（storage=" + store.storageMode() + ", implicit=" + implicitEnabled
                     + ", pkce_required=" + pkceRequired + ", revoke_anonymous=" + revokeAllowAnonymous
                     + ", oidc=true）");

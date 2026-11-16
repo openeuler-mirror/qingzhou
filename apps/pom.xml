@@ -12,12 +12,12 @@
     <packaging>pom</packaging>
     <modules>
         <module>qingzhou-app-demo</module>
+        <module>qingzhou-app-oauth</module>
         <module>qingzhou-app-redis</module>
         <module>qingzhou-app-tomcat</module>
-        <module>qingzhou-app-nacos</module>
-        <module>qingzhou-app-zookeeper</module>
-        <module>qingzhou-app-oauth2</module>
         <module>qingzhou-app-nginx</module>
+        <module>qingzhou-app-zookeeper</module>
+        <module>qingzhou-app-nacos</module>
     </modules>
 
     <dependencies>
@@ -89,4 +89,43 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.0</version>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/versions/**</exclude>
+                                    <exclude>META-INF/maven/**</exclude>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                    <exclude>META-INF/LICENSE*</exclude>
+                                    <exclude>META-INF/NOTICE*</exclude>
+                                    <exclude>META-INF/native-image/**</exclude>
+                                    <exclude>about.html</exclude>
+                                    <exclude>**/pom.properties</exclude>
+                                    <exclude>module-info.class</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

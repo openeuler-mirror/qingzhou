@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -268,7 +268,7 @@ public abstract class Store {
         if (findClient("test_client") != null) return;
 
         insert(CLIENT_TABLE, row("client_id", "test_client", "client_secret", "test_secret",
-                "client_name", "测试客户端", "redirect_uri", "https://localhost:7900/oauth2/callback",
+                "client_name", "测试客户端", "redirect_uri", "https://localhost:7900/oauth/callback",
                 "grant_types", DEFAULT_GRANT_TYPES, "scope", "openid profile email read write",
                 "token_endpoint_auth_method", DEFAULT_AUTH_METHOD, "enabled", "true"));
         insert(USER_TABLE, row("username", "admin", "password", "admin123",

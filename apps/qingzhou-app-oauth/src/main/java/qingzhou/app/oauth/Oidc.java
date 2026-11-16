@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +30,7 @@ import qingzhou.json.Json;
  * 默认每次启动生成 RSA 密钥；生产环境可通过 oidc_private_key 固定密钥。
  */
 final class Oidc {
-    private static final String PREFIX = "/oauth2-server";
+    private static final String PREFIX = "/oauth-server";
     private static final String ALG = "RS256";
 
     private final Json json;

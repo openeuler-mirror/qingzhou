@@ -183,7 +183,7 @@
                 <include>${project.groupId}:qingzhou-app-tomcat</include>
                 <include>${project.groupId}:qingzhou-app-nacos</include>
                 <include>${project.groupId}:qingzhou-app-zookeeper</include>
-                <include>${project.groupId}:qingzhou-app-oauth2</include>
+                <include>${project.groupId}:qingzhou-app-oauth</include>
                 <include>${project.groupId}:qingzhou-app-nginx</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

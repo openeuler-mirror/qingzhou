@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

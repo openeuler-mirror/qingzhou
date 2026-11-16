@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -72,7 +72,7 @@ public class UserModel extends ModelBase implements Page, Show, Delete {
             store = Store.get(getAppContext());
         } catch (Throwable e) {
             Logger logger = getAppContext().getService(Logger.class);
-            if (logger != null) logger.error("failed to init oauth2 store", e);
+            if (logger != null) logger.error("failed to init oauth store", e);
         }
     }
 

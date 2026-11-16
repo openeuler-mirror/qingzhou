@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -68,7 +68,7 @@ public final class DriverManagerDataSource implements DataSource {
             String className = driverClass;
             if (className == null || className.trim().isEmpty()) className = inferDriver(url);
             if (className == null || className.trim().isEmpty()) {
-                throw new SQLException("无法推断 JDBC 驱动，请设置 app~qingzhou-app-oauth2.jdbc_driver");
+                throw new SQLException("无法推断 JDBC 驱动，请设置 app~qingzhou-app-oauth.jdbc_driver");
             }
             try {
                 Class<?> type = Class.forName(className.trim(), true, DriverManagerDataSource.class.getClassLoader());
@@ -112,7 +112,7 @@ public final class DriverManagerDataSource implements DataSource {
 
     @Override
     public Logger getParentLogger() {
-        return Logger.getLogger("qingzhou.oauth2.jdbc");
+        return Logger.getLogger("qingzhou.oauth.jdbc");
     }
 
     @Override
