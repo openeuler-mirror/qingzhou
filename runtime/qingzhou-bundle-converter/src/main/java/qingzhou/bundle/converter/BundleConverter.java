@@ -302,7 +302,10 @@ public class BundleConverter {
                 if (dtoModelAction.code == null || dtoModelAction.code.isEmpty()) {
                     dtoModelAction.code = ctMethod.getName();
                 }
-                dtoModel.actions.remove(dtoModelAction); // 若已经添加了默认的 Action，允许应用自定义覆盖
+                boolean removed = dtoModel.actions.remove(dtoModelAction);
+                if (removed) { // 只有默认的 Action 会返回true，允许应用自定义覆盖
+                    dtoModelAction.isDefaultAction = true;
+                }
                 dtoModel.actions.add(dtoModelAction);
             }
         }
