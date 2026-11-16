@@ -6,10 +6,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import qingzhou.monitor.api.Metric;
 
 public class JdbcPoolImplTest {
 
@@ -93,6 +95,20 @@ public class JdbcPoolImplTest {
         }
     }
 
+    @Test
+    public void initializedPool_collectMetrics_labeledByPoolName() throws Exception {
+        JdbcPoolImpl pool = createPool(createConfig(1, 1, 1000));
+        try {
+            Set<Metric> metrics = pool.collectMetrics();
+            Assert.assertEquals(metrics.size(), 4);
+            for (Metric metric : metrics) {
+                Assert.assertEquals(metric.getLabels().get("pool"), "h2");
+            }
+        } finally {
+            closePool(pool);
+        }
+    }
+
     private JdbcPoolImpl createPool(Map<String, String> config) throws Exception {
         JdbcPoolImpl pool = new JdbcPoolImpl();
         pool.activate(config);
@@ -102,6 +118,10 @@ public class JdbcPoolImplTest {
 
     private Map<String, String> createConfig(int initialSize, int maxActive, int maxWait) {
         Map<String, String> config = new LinkedHashMap<>();
+        config.put("service.pid", "qingzhou-jdbc~h2");
+        config.put("service.factoryPid", "qingzhou-jdbc");
+        config.put("qingzhou.instance", "default");
+        config.put("qingzhou.version", "1.0.0");
         config.put("url", "jdbc:h2:mem:" + UUID.randomUUID().toString().replace("-", ""));
         config.put("username", "sa");
         config.put("password", "");

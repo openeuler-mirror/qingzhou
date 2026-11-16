@@ -35,7 +35,8 @@ class AppStubRemoteImpl implements AppStubRemote {
         this.appMeta = appMeta;
 
         String protocol = instanceInfo.isSslEnabled() ? "https" : "http";
-        String agentBaseUrl = protocol + "://" + instanceInfo.getHost() + ":" + instanceInfo.getPort() + "/agent";
+        String agentBaseUrl = protocol + "://" + instanceInfo.getHost() + ":" + instanceInfo.getPort()
+                + instanceInfo.getContextPath() + "/agent";
         invokeUrl = agentBaseUrl + Constants.REMOTE_INVOKE_URI;
         uploadUrl = agentBaseUrl + Constants.REMOTE_UPLOAD_URI;
     }

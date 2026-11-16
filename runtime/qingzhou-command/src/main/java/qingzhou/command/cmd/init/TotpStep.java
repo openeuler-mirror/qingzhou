@@ -9,7 +9,11 @@ import qingzhou.image.impl.QrCodeImpl;
 final class TotpStep {
     void init(Init init) throws Exception {
         String props = init.readProps();
-        if (Init.hasValue(props, "qingzhou-auth.totp_secret")) return; // 已有值则静默跳过
+
+        boolean hasKey = Init.value(props, "qingzhou-http-server.auth_password") != null;
+        if (!hasKey) return;
+
+        if (Init.hasValue(props, "qingzhou-http-server.auth_totp_secret")) return; // 已有值则静默跳过
 
         if (!init.confirm("Enable TOTP two-factor login? (optional, needs an authenticator app) [y/N] ")) return;
 
@@ -28,9 +32,9 @@ final class TotpStep {
             return;
         }
 
-        props = Init.putValue(props, "qingzhou-auth.totp_secret",
+        props = Init.putValue(props, "qingzhou-http-server.auth_totp_secret",
                 init.getCrypto().getGlobalCipher().encrypt(secret));
-        props = Init.putValue(props, "qingzhou-auth.totp_enabled", "true");
+        props = Init.putValue(props, "qingzhou-http-server.auth_totp_enabled", "true");
         init.writeProps(props);
         init.log("TOTP two-factor login enabled.");
     }

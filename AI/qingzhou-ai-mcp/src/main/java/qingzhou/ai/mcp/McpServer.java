@@ -1,6 +1,10 @@
 package qingzhou.ai.mcp;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.ai.Constants;
@@ -13,6 +17,8 @@ import qingzhou.http.server.HttpRequest;
 import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.monitor.api.Metric;
+import qingzhou.monitor.api.MetricProvider;
 
 /**
  * MCP over Streamable HTTP（POST /mcp）：OSGi 生命周期、工具注册与异步响应收尾。
@@ -22,8 +28,9 @@ import qingzhou.logger.Logger;
         property = {
                 HttpHandler.HANDLE_PATH + "=/ai/mcp",
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
-                HttpHandler.HANDLE_METHODS + "=POST"})
-public class McpServer implements HttpHandler {
+                HttpHandler.HANDLE_METHODS + "=POST",
+                MetricProvider.PROVIDER_ID + "=mcp"})
+public class McpServer implements HttpHandler, MetricProvider {
     @Reference
     private Json json;
     @Reference
@@ -34,6 +41,8 @@ public class McpServer implements HttpHandler {
     private ToolParameterParser parameterParser;
 
     private final ToolRegistry toolRegistry = new ToolRegistry();
+    private final ToolCallStats toolStats = new ToolCallStats();
+    private final AtomicLong rejected = new AtomicLong();
     private volatile WorkerPool workers;
     private volatile JsonRpc jsonRpc;
 
@@ -41,7 +50,7 @@ public class McpServer implements HttpHandler {
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
         workers = new WorkerPool(configs);
-        jsonRpc = new JsonRpc(json, logger, new McpMethods(toolRegistry, interceptionService, logger,
+        jsonRpc = new JsonRpc(json, logger, new McpMethods(toolRegistry, interceptionService, logger, toolStats,
                 configs.getOrDefault("qingzhou.version", "unknown")));
     }
 
@@ -54,6 +63,34 @@ public class McpServer implements HttpHandler {
         }
     }
 
+    /**
+     * 工具执行池与调用口径：池满拒绝、单工具失败是先于用户投诉出现的劣化信号。
+     */
+    @Override
+    public Set<Metric> collectMetrics() {
+        WorkerPool pool = workers;
+        Set<Metric> metrics = new HashSet<>();
+        metrics.add(Metric.of("worker_active", pool.activeCount(), Metric.Type.GAUGE,
+                "Worker threads currently executing tool calls"));
+        metrics.add(Metric.of("worker_queue_size", pool.queueSize(), Metric.Type.GAUGE,
+                "Tool requests waiting in the worker queue"));
+        metrics.add(Metric.of("worker_completed_total", pool.completedCount(), Metric.Type.COUNTER,
+                "Tool requests completed by the worker pool"));
+        metrics.add(Metric.of("requests_rejected_total", rejected.get(), Metric.Type.COUNTER,
+                "Requests rejected because the worker pool was full"));
+        metrics.add(Metric.of("tools_registered", toolRegistry.size(), Metric.Type.GAUGE,
+                "MCP tools currently registered"));
+        metrics.add(Metric.of("tool_calls_total", toolStats.calls(), Metric.Type.COUNTER,
+                "Tool calls received over MCP"));
+        metrics.add(Metric.of("tool_forbidden_total", toolStats.forbidden(), Metric.Type.COUNTER,
+                "Tool calls denied by the authorization chain"));
+        for (Map.Entry<String, Long> failure : toolStats.failures().entrySet()) {
+            metrics.add(Metric.of("tool_failures_total", failure.getValue(), Metric.Type.COUNTER,
+                    Collections.singletonMap("tool", failure.getKey()), "Tool calls that failed inside the tool"));
+        }
+        return metrics;
+    }
+
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
         byte[] requestBody = httpRequest.getBody();
@@ -61,6 +98,7 @@ public class McpServer implements HttpHandler {
         httpResponse.async(); // 工具执行可能长时间阻塞，响应由业务线程写并收尾
         if (workers.submit(() -> respond(httpRequest, httpResponse, requestBody, enqueuedAt))) return;
 
+        rejected.incrementAndGet(); // 仅在池满分支计数，正常投递路径无额外开销
         logger.error("mcp worker pool is exhausted, request rejected");
         write(httpResponse, JsonRpc.failure(503, "Server busy"));
         httpResponse.finish();

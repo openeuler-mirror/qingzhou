@@ -9,7 +9,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import org.osgi.service.component.annotations.*;
 import qingzhou.common.Configs;
-import qingzhou.common.Hosts;
+import qingzhou.common.IpUtil;
 import qingzhou.crypto.Crypto;
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpServer;
@@ -46,7 +46,7 @@ public class HttpServerImpl implements HttpServer {
         int maxConnections = configs.atLeast("max_connections", 0, 10_000);
         boolean sslEnabled = configs.getOrDefault("ssl_enabled", true);
         boolean allowPlaintext = configs.getOrDefault("allow_plaintext", false);
-        if (!sslEnabled && !Hosts.isLoopback(host) && !allowPlaintext) {
+        if (!sslEnabled && !IpUtil.isLoopback(host) && !allowPlaintext) {
             // 非环回地址上的明文会让口令与令牌暴露在链路上；经 TLS 反代暴露时用 allow_plaintext 显式确认
             throw new IllegalStateException("ssl_enabled must be true when host is not loopback: " + host
                     + " (or set qingzhou-http-server.allow_plaintext=true when served only via a trusted TLS proxy)");
@@ -107,8 +107,8 @@ public class HttpServerImpl implements HttpServer {
         // 用实际端口：port=0 时由操作系统分配，配置里的 0 无法用于排障
         if (!sslEnabled) logger.warn("http server is using plaintext HTTP; enable TLS before remote exposure");
         // 管控台挂在全局前缀下，url 须含 context_path，否则配置非默认前缀时打印的访问地址打不开
-        String webContext = RequestGates.normalizeContextPath(configs.getOrDefault("context_path", "/qingzhou"));
-        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port() + webContext + "/web");
+        logger.info("http server started: " + (sslEnabled ? "https" : "http") + "://" + host + ":" + disposableServer.port()
+                + dispatcherHandler.getContextPath() + "/web");
     }
 
     @Deactivate
@@ -121,6 +121,11 @@ public class HttpServerImpl implements HttpServer {
     public int getPort() {
         if (disposableServer == null) throw new IllegalStateException("http server is not started");
         return disposableServer.port();
+    }
+
+    @Override
+    public String getContextPath() {
+        return dispatcherHandler.getContextPath();
     }
 
     // 释放失败不得掩盖真正的启动失败原因，否则排障看到的是释放异常而非端口/密钥库问题
@@ -156,7 +161,7 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
-        registerHttpHandler(httpHandler, handlePath, false);
+        registerHttpHandler(httpHandler, handlePath, false, false);
     }
 
     @Override
@@ -165,8 +170,8 @@ public class HttpServerImpl implements HttpServer {
     }
 
     @Override
-    public void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth,
-                                    boolean allowOpaqueOrigin, String... methods) {
+    public void registerHttpHandler(HttpHandler httpHandler, String handlePath,
+                                    boolean noAuth, boolean allowOpaqueOrigin, String... methods) {
         Map<String, String> properties = new HashMap<>();
         properties.put(HttpHandler.HANDLE_PATH, handlePath);
         properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");

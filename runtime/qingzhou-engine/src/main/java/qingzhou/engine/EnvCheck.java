@@ -16,8 +16,8 @@ class EnvCheck {
         Properties scProps = load(scFile);
 
         // 该键声明了（含值为空）就必须有值；被注释或删除表示该能力未启用（如仅作 agent 的实例关闭登录），交由使用方按未配置处理
-        String password = qzProps.getProperty("qingzhou-auth.password");
-        if (password != null) require(password, "qingzhou-auth.password", qzFile);
+        String password = qzProps.getProperty("qingzhou-http-server.auth_password");
+        if (password != null) require(password, "qingzhou-http-server.auth_password", qzFile);
 
         String cipherKeyName = qzProps.getProperty("qingzhou-crypto.global_cipher_key_name", "global");
         require(scProps.getProperty(cipherKeyName), cipherKeyName, scFile);

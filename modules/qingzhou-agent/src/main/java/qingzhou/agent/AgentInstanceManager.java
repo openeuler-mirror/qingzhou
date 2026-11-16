@@ -10,6 +10,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import qingzhou.dto.meta.AppMeta;
 import qingzhou.dto.meta.InstanceInfo;
+import qingzhou.http.server.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.registry.Registry;
 
@@ -22,6 +23,8 @@ public class AgentInstanceManager {
     private Registry registry;
     @Reference
     private Json json;
+    @Reference
+    private HttpServer httpServer;
 
     private String qzVersion;
     // 反代/NAT 部署下本实例的对外可达地址：未配置则由 registry 按连接源地址推断
@@ -50,6 +53,7 @@ public class AgentInstanceManager {
     }
 
     void reCacheInstanceInfo() throws Exception {
+        String contextPath = httpServer.getContextPath();
         InstanceInfo instanceInfo = new InstanceInfo();
         // 每实例独立密钥：与实例同生命周期，仅存内存并随首次注册上报；用于派生每实例密钥
         // （registry→agent 报文加密 + 心跳续期认证），仅真实实例可凭它刷新自身
@@ -60,18 +64,21 @@ public class AgentInstanceManager {
         // 实例端口
         instanceInfo.setPort(serverPort);
         instanceInfo.setSslEnabled(serverSslEnabled);
+        instanceInfo.setContextPath(contextPath);
         // 实例部署的应用（按 appCode 排序，保证注册报文与指纹比对的稳定性）
         List<AppMeta> appMetas = currentAppMetas();
         instanceInfo.getAppMetas().addAll(appMetas);
 
-        cachedInstanceInfo = new CachedInstanceInfo(instanceInfo, fingerprints(appMetas));
+        cachedInstanceInfo = new CachedInstanceInfo(instanceInfo, fingerprints(appMetas), contextPath);
     }
 
-    boolean appChanged() throws Exception {
+    boolean instanceChanged() throws Exception {
         if (cachedInstanceInfo == null) return true;
 
         // 按内容比较而非引用：AppMeta 的默认值等字段可能被就地修改而引用不变
-        return !fingerprints(currentAppMetas()).equals(cachedInstanceInfo.fingerprints);
+        // 前缀变更也须重注册：续期报文只带 id，中心无从得知新的回连路径
+        return !fingerprints(currentAppMetas()).equals(cachedInstanceInfo.fingerprints)
+                || !httpServer.getContextPath().equals(cachedInstanceInfo.contextPath);
     }
 
     // 以 appCode 排序收集本地应用：注册报文、实例 ID 与指纹的稳定性由此保证
@@ -95,10 +102,12 @@ public class AgentInstanceManager {
     private static class CachedInstanceInfo {
         final InstanceInfo instanceInfo;
         final List<String> fingerprints;
+        final String contextPath;
 
-        CachedInstanceInfo(InstanceInfo instanceInfo, List<String> fingerprints) {
+        CachedInstanceInfo(InstanceInfo instanceInfo, List<String> fingerprints, String contextPath) {
             this.instanceInfo = instanceInfo;
             this.fingerprints = fingerprints;
+            this.contextPath = contextPath;
         }
     }
 }

@@ -9,7 +9,7 @@ public class InstanceInfo {
     private transient String domain;
     private transient volatile String id; // agent注册不带，由registry生成返回；心跳线程写、请求线程读算AAD，须保证可见性
 
-    // 每实例随机密钥：agent 生成、仅随首次注册报文上报一次（已登记后心跳不再携带）。
+    // 每实例随机密钥：agent 生成、仅在完整注册报文（首次注册或切换/回切注册中心）中上报；续期心跳不携带。
     // 用于派生每实例加密密钥（见 AgentDomainService#getInstanceCipher）；
     private String instanceSecret;
 
@@ -17,6 +17,8 @@ public class InstanceInfo {
     private String host;
     private int port;
     private boolean sslEnabled;
+    // 旧版 Agent 报文无此字段：空串表示无前缀，属跨版本边界契约而非进程内兜底
+    private String contextPath = "";
     private String platformVersion;
     private final List<AppMeta> appMetas = new ArrayList<>();
 
@@ -58,6 +60,14 @@ public class InstanceInfo {
 
     public void setSslEnabled(boolean sslEnabled) {
         this.sslEnabled = sslEnabled;
+    }
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
     }
 
     public String getPlatformVersion() {

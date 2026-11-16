@@ -88,6 +88,7 @@ class OpenAiChatModel implements ChatModel {
      */
     private void sendWithRetry(List<Object> messages, List<Object> toolDefs, ChatListener chatListener,
                                LlmCallingListener llmCallingListener, int attempt) {
+        LlmMetrics.request(); // 每次实际发送计一次，重发由 retries_total 单列
         try {
             Request request = Utils.newLlmRequest(builder.buildLlmRequest(messages, toolDefs, true), true, builder, httpClient, json, crypto);
             Response response = httpClient.send(request, llmCallingListener);
@@ -95,18 +96,22 @@ class OpenAiChatModel implements ChatModel {
             if (response.getStatus() == 200) return;
 
             if (Utils.isRetryableStatus(response.getStatus()) && attempt < builder.getMaxRetries()) {
+                LlmMetrics.retry();
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, llmCallingListener, attempt + 1);
                 return;
             }
+            LlmMetrics.failure(String.valueOf(response.getStatus()));
             chatListener.onError("API error " + response.getStatus() + ": " + Utils.truncate(new String(response.getBody(), StandardCharsets.UTF_8), 200));
         } catch (Exception e) {
             // 网络异常（连接失败/超时等）同样属于瞬时故障，参与指数退避重试
             if (attempt < builder.getMaxRetries()) {
+                LlmMetrics.retry();
                 Utils.sleepBackoff(attempt);
                 sendWithRetry(messages, toolDefs, chatListener, llmCallingListener, attempt + 1);
                 return;
             }
+            LlmMetrics.failure("exception");
             chatListener.onError(Utils.errorMessage(e));
         }
     }
@@ -208,9 +213,10 @@ class OpenAiChatModel implements ChatModel {
         public void onComplete() {
             try {
                 if (usage != null) {
-                    chatListener.onUsage(
-                            ((Number) usage.getOrDefault("prompt_tokens", 0)).intValue(),
-                            ((Number) usage.getOrDefault("completion_tokens", 0)).intValue(),
+                    int promptTokens = ((Number) usage.getOrDefault("prompt_tokens", 0)).intValue();
+                    int completionTokens = ((Number) usage.getOrDefault("completion_tokens", 0)).intValue();
+                    LlmMetrics.usage(promptTokens, completionTokens);
+                    chatListener.onUsage(promptTokens, completionTokens,
                             ((Number) usage.getOrDefault("total_tokens", 0)).intValue());
                 }
 
@@ -238,6 +244,7 @@ class OpenAiChatModel implements ChatModel {
 
         @Override
         public void onError(Throwable t) {
+            LlmMetrics.streamInterruption(); // 无论是否重发都计入：这是上游流式稳定性的直接信号
             // 流式读取中断（如网络抖动）：若尚未输出任何内容（无正文、无工具调用），静默重发一次
             if (!streamRetried && content.length() == 0 && toolCalls.isEmpty()) {
                 streamRetried = true;

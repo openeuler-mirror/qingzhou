@@ -21,7 +21,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-auth</artifactId>
+            <artifactId>qingzhou-http-server</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

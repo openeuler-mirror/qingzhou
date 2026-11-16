@@ -5,7 +5,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import qingzhou.common.Hosts;
+import qingzhou.common.IpUtil;
 import qingzhou.config.impl.Config;
 import qingzhou.config.remote.RemoteConfigSource;
 
@@ -41,7 +41,7 @@ public final class EtcdConfigSource implements RemoteConfigSource {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("invalid etcd endpoint: " + endpoint, e);
         }
-        if (!allowInsecureHttp && "http".equalsIgnoreCase(url.getProtocol()) && !Hosts.isLoopback(url.getHost())) {
+        if (!allowInsecureHttp && "http".equalsIgnoreCase(url.getProtocol()) && !IpUtil.isLoopback(url.getHost())) {
             throw new IllegalArgumentException("etcd endpoint over plaintext HTTP exposes credentials: " + endpoint
                     + "; use https, or set qingzhou-config.remote.allow_insecure_http=true to accept the risk");
         }

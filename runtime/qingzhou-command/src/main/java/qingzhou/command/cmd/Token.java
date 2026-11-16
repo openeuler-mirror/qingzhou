@@ -8,11 +8,11 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import qingzhou.auth.AuthHandler;
 import qingzhou.command.ConsoleInput;
 import qingzhou.command.Processor;
 import qingzhou.common.Configs;
 import qingzhou.crypto.Crypto;
+import qingzhou.http.server.auth.AuthHandler;
 
 public class Token extends Processor {
     private static final int DEFAULT_EXPIRE_DAYS = 30;
@@ -45,12 +45,12 @@ public class Token extends Processor {
 
         Configs configs = new Configs(parseConfig(instanceDir.toPath().resolve("conf/qingzhou.properties")));
         crypto = createCrypto(instanceDir, globalCipherKeyName(instanceDir));
-        authHandler = new AuthHandler(crypto, configs.parseConfigAsPrefix("qingzhou-auth."));
+        authHandler = new AuthHandler(crypto, configs.parseConfigAsPrefix("qingzhou-http-server."));
         if (!verifyPassword()) return;
 
-        String[] roles = selectRoles(configs.splitList("qingzhou-auth.roles").toArray(new String[0]));
+        String[] roles = selectRoles(configs.splitList("qingzhou-http-server.auth_roles").toArray(new String[0]));
         long expireAt = readExpireAt();
-        String user = configs.get("qingzhou-auth.username");
+        String user = configs.get("qingzhou-http-server.auth_username");
         log("Token (user: " + user + ", roles: " + String.join(",", roles) + ") expires at "
                 + EXPIRE_TIME.format(Instant.ofEpochMilli(expireAt).atZone(ZoneId.systemDefault())));
         log(createToken(user, roles, expireAt) + "\nUse it in the remote client as header [Authorization: Bearer <token>].");

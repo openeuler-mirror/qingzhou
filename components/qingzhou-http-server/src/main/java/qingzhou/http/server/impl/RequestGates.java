@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import io.netty.handler.codec.http.*;
 import org.reactivestreams.Publisher;
 import qingzhou.common.Configs;
-import qingzhou.http.server.auth.impl.AuthManager;
+import qingzhou.http.server.auth.AuthManager;
 import qingzhou.logger.Logger;
 import reactor.netty.http.server.HttpServerRequest;
 
@@ -40,12 +40,12 @@ final class RequestGates {
     private final long maxBodyBytes; // 单个请求体聚合进内存的上限
     private final long maxAggregatedBytes; // 同时在途的聚合请求体总量上限
     private final Set<String> corsAllowedOrigins; // 显式允许的跨域来源，跨站写请求据此放行
-    private final String globalPrefix; // 全站挂载前缀；空串表示不启用（配置 "/"）
+    private final String contextPath; // 全站挂载前缀；空串表示不启用（配置 "/"）
     private final String prefixBoundary; // 预拼「前缀 + /」，每请求复用，免去重复拼接
     private final List<RequestGate> gates;
 
     RequestGates(Map<String, String> config, long maxBodyBytes, long maxStreamBytes, SourceLimiter sourceLimiter, AuthManager authManager, HandlerManager handlerManager,
-                 Logger logger, AtomicLong aggregatedBytes) {
+                 Logger logger, AtomicLong aggregatedBytes, String contextPath) {
         Configs configs = new Configs(config);
         this.authManager = authManager;
         this.handlerManager = handlerManager;
@@ -56,8 +56,8 @@ final class RequestGates {
         this.maxBodyBytes = maxBodyBytes;
         this.maxAggregatedBytes = configs.atLeast("max_aggregated_bytes", 1L, 64L * 1024 * 1024);
         this.corsAllowedOrigins = new HashSet<>(configs.splitList("cors_allowed_origins"));
-        this.globalPrefix = normalizeContextPath(configs.getOrDefault("context_path", "/qingzhou"));
-        this.prefixBoundary = this.globalPrefix.isEmpty() ? "" : this.globalPrefix + "/";
+        this.contextPath = contextPath;
+        this.prefixBoundary = this.contextPath.isEmpty() ? "" : this.contextPath + "/";
         // 否则长度未知的请求恒被拒，服务不可用却无明确报错
         if (this.maxBodyBytes > this.maxAggregatedBytes) {
             throw new IllegalArgumentException("qingzhou-http-server.max_body_bytes must not exceed max_aggregated_bytes");
@@ -288,21 +288,12 @@ final class RequestGates {
         return upper.contains("%2E") || upper.contains("%2F") || upper.contains("%5C") || upper.contains("%00");
     }
 
-    // 前缀在激活期一次性校验：非 "/" 开头或含 "//" 则永不匹配任何规范化路径，须 fail-fast 而非全站 404
-    static String normalizeContextPath(String configured) {
-        if (!configured.startsWith("/") || configured.contains("//")) {
-            throw new IllegalArgumentException("qingzhou-http-server.context_path must be a normalized path starting with /, got: " + configured);
-        }
-        String stripped = configured.replaceAll("/+$", "");
-        return stripped.isEmpty() ? "" : stripped; // 配置 "/" 即关闭前缀
-    }
-
     // 全站请求必须挂载在全局前缀之下：未挂或仅前缀相似（非其子路径）返回 null，由调用方回 404；
     // 命中后剥离前缀，路由表与 handler 保持无前缀语义，注册侧无需感知。前缀为空（配置 "/"）时原样放行
     private String stripGlobalPrefix(String path) {
-        if (globalPrefix.isEmpty()) return path;
-        if (path.equals(globalPrefix)) return "/";
-        return path.startsWith(prefixBoundary) ? path.substring(globalPrefix.length()) : null;
+        if (contextPath.isEmpty()) return path;
+        if (path.equals(contextPath)) return "/";
+        return path.startsWith(prefixBoundary) ? path.substring(contextPath.length()) : null;
     }
 
     private Publisher<Void> denyUnroutedPath(RequestContext ctx) {

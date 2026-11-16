@@ -39,7 +39,7 @@ public class PermissionCheckerImpl implements PermissionChecker {
             return false;
         }
 
-        return Constants.SYSTEM_MODEL_CODE.equals(targetModel);
+        return Constants.HELPER_ACTION_MODEL_CODE.equals(targetModel);
     }
 
     // 返回第一个已声明的角色（fail-closed：全未声明则返回 null，由 matchesRoles 拒绝）。

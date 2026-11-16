@@ -1,16 +1,23 @@
-package qingzhou.auth;
+package qingzhou.http.server.auth;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 import qingzhou.common.Configs;
-import qingzhou.common.FailureLockout;
+import qingzhou.common.CounterLockout;
 import qingzhou.crypto.Crypto;
-import qingzhou.http.server.*;
+import qingzhou.http.server.HttpHandler;
+import qingzhou.http.server.HttpRequest;
+import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         property = {HttpHandler.HANDLE_PATH + "=" + AuthHandler.ROOT_PATH,
                 HttpHandler.HANDLE_PATH_ABSOLUTE + "=true",
                 HttpHandler.HANDLE_NO_AUTH + "=true"})
@@ -37,9 +44,9 @@ public class AuthHandler implements HttpHandler {
     private boolean totpEnabled;
     private String totpSecret;
 
-    private FailureLockout ipUserLockout;
+    private CounterLockout ipUserLockout;
     // 独立按来源计数：仅按「来源+用户名」计数时，轮换用户名即可重置预算
-    private FailureLockout ipLockout;
+    private CounterLockout ipLockout;
 
     @Activate
     public AuthHandler(@Reference Crypto crypto, Map<String, String> config) {
@@ -49,21 +56,21 @@ public class AuthHandler implements HttpHandler {
 
     private void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        username = configs.notBlank("username");
-        passwordDigest = configs.get("password"); // null 表示 agent 进程，拒绝一切登录
-        roles = configs.splitList("roles").toArray(new String[0]);
+        username = configs.notBlank("auth_username");
+        passwordDigest = configs.get("auth_password"); // null 表示 agent 进程，拒绝一切登录
+        roles = configs.splitList("auth_roles").toArray(new String[0]);
 
-        totpEnabled = configs.getOrDefault("totp_enabled", false);
+        totpEnabled = configs.getOrDefault("auth_totp_enabled", false);
         if (totpEnabled) {
-            totpSecret = configs.notBlank("totp_secret"); // 安全考虑：此处不要解密
+            totpSecret = configs.notBlank("auth_totp_secret"); // 安全考虑：此处不要解密
         }
 
-        int maxFailures = configs.atLeast("max_failures", 1, 5);
-        long lockMillis = configs.atLeast("lock_seconds", 1, 300) * 1000L;
-        ipUserLockout = new FailureLockout(maxFailures, lockMillis, 10_000);
+        int maxFailures = configs.atLeast("auth_max_failures", 1, 5);
+        long lockMillis = configs.atLeast("auth_lock_seconds", 1, 300) * 1000L;
+        ipUserLockout = new CounterLockout(maxFailures, lockMillis, 10_000);
         // 来源级阈值放宽：NAT 下多用户共享出口地址，过严会误锁正常用户
-        int maxIpFailures = configs.atLeast("ip_max_failures", 1, 20);
-        ipLockout = new FailureLockout(maxIpFailures, lockMillis, 10_000);
+        int maxIpFailures = configs.atLeast("auth_ip_max_failures", 1, 20);
+        ipLockout = new CounterLockout(maxIpFailures, lockMillis, 10_000);
     }
 
     @Override
@@ -96,7 +103,7 @@ public class AuthHandler implements HttpHandler {
         }
     }
 
-    private void login(HttpRequest request, HttpResponse response) throws Exception {
+    private void login(HttpRequest request, HttpResponse response) {
         String reqUser = request.getParameter("username");
         String ip = request.getRemoteHost();
         if (reqUser != null && reqUser.length() > 128) {
@@ -112,8 +119,8 @@ public class AuthHandler implements HttpHandler {
         String reqPass = request.getParameter("password");
         boolean verified = verifyUserPassword(reqUser, reqPass);
         if (!verified) {
-            ipUserLockout.recordFailure(lockKey);
-            ipLockout.recordFailure(ip);
+            ipUserLockout.record(lockKey);
+            ipLockout.record(ip);
             response.status(401).send("invalid username or password");
             return;
         }
@@ -125,8 +132,8 @@ public class AuthHandler implements HttpHandler {
                 return;
             }
             if (!verifyCode(code, response)) {
-                ipUserLockout.recordFailure(lockKey);
-                ipLockout.recordFailure(ip);
+                ipUserLockout.record(lockKey);
+                ipLockout.record(ip);
                 return;
             }
         }
@@ -168,7 +175,7 @@ public class AuthHandler implements HttpHandler {
     private boolean verifyCode(String code, HttpResponse response) {
         try {
             if (crypto.getTotp().verifyCodeWithReplayGuard(
-                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-auth.totp_secret"), code)) {
+                    crypto.getGlobalCipher().tryDecrypt(totpSecret, "qingzhou-http-server.auth_totp_secret"), code)) {
                 return true;
             }
         } catch (Exception e) {

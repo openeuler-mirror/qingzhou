@@ -38,6 +38,10 @@ class ToolRegistry {
         return toolSchemas;
     }
 
+    int size() {
+        return tools.size();
+    }
+
     private void rebuild() {
         List<Map<String, Object>> schemas = new ArrayList<>(tools.size());
         for (ToolCache toolCache : tools.values()) {

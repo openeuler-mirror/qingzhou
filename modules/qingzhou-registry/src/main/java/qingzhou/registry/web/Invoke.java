@@ -7,7 +7,7 @@ import java.util.*;
 
 import org.osgi.service.component.annotations.*;
 import qingzhou.api.InputType;
-import qingzhou.common.TempFiles;
+import qingzhou.common.ExpiredFileCleaner;
 import qingzhou.dto.RequestImpl;
 import qingzhou.dto.ResponseImpl;
 import qingzhou.dto.meta.Model;
@@ -42,12 +42,12 @@ public class Invoke implements HttpHandler {
     @Activate
     public void init(Map<String, String> config) {
         uploadBase = Paths.get(config.get("qingzhou.instance"), "temp", UPLOAD_TEMP_NAME).toFile();
-        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
+        ExpiredFileCleaner.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS); // 只清过期残留：配置刷新重激活不得删除在途上传
     }
 
     @Override
     public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
-        TempFiles.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
+        ExpiredFileCleaner.cleanExpired(uploadBase, TEMP_FILE_TTL_MILLIS);
 
         Prepared prepared = prepare(httpRequest, httpResponse);
         if (prepared == null) return;

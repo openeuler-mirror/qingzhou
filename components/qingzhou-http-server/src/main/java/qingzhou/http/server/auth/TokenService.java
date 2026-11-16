@@ -1,4 +1,4 @@
-package qingzhou.auth;
+package qingzhou.http.server.auth;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +17,7 @@ import qingzhou.http.server.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
-@Component(configurationPid = "qingzhou-auth", configurationPolicy = ConfigurationPolicy.REQUIRE,
+@Component(configurationPid = "qingzhou-http-server", configurationPolicy = ConfigurationPolicy.REQUIRE,
         service = TokenService.class)
 public class TokenService {
     private static final String TOKEN_COOKIE_NAME = "auth_token";
@@ -46,10 +46,10 @@ public class TokenService {
     @Activate
     public void init(Map<String, String> config) {
         Configs configs = new Configs(config);
-        tokenExpireMillis = configs.getOrDefault("token_expire_seconds", 30 * 60) * 1000L;
-        cookieSecure = configs.enumValue("cookie_secure", new String[]{"true", "false", "auto"}, "auto");
+        tokenExpireMillis = configs.getOrDefault("auth_token_expire_seconds", 30 * 60) * 1000L;
+        cookieSecure = configs.enumValue("auth_cookie_secure", new String[]{"true", "false", "auto"}, "auto");
         // 跨站分离部署须配置 None（浏览器强制要求配合 Secure，即 HTTPS）
-        cookieSamesite = configs.enumValue("cookie_samesite", new String[]{"Lax", "Strict", "None"}, "Strict");
+        cookieSamesite = configs.enumValue("auth_cookie_samesite", new String[]{"Lax", "Strict", "None"}, "Strict");
 
         tokenCipher = crypto.getGlobalCipher();
     }
@@ -83,7 +83,7 @@ public class TokenService {
         cookie += "; Max-Age=" + age;
 
         // Secure 须依实际连接下发：配置写成 http 但经 TLS 反代访问时按 scheme 判定会漏发，
-        // 可用 cookie_secure=true/false 显式覆盖（auto 按请求 scheme）
+        // 可用 auth_cookie_secure=true/false 显式覆盖（auto 按请求 scheme）
         if ("true".equals(this.cookieSecure)) {
             cookie += "; Secure";
         } else if ("auto".equals(this.cookieSecure)) {

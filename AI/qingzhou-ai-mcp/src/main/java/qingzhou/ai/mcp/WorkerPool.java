@@ -37,6 +37,18 @@ class WorkerPool {
         }
     }
 
+    int activeCount() {
+        return executor.getActiveCount();
+    }
+
+    int queueSize() {
+        return executor.getQueue().size();
+    }
+
+    long completedCount() {
+        return executor.getCompletedTaskCount();
+    }
+
     // 排队过久的请求已无意义：工具通常有超时预算，放行只会让客户端空等
     boolean isExpired(long enqueuedAt) {
         return System.nanoTime() - enqueuedAt > queueTimeoutNanos;

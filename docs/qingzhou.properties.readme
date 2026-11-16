@@ -9,7 +9,7 @@ qingzhou-http-server.ssl_enabled=是否启用 HTTPS，默认 true，启用时须
 qingzhou-http-server.ssl_keystore_path=密钥库文件路径，相对实例目录，可用 qingzhou.sh keystore 命令生成
 qingzhou-http-server.ssl_keystore_password=密钥库口令，plain: 前缀表示明文，否则按密文解密
 qingzhou-http-server.ssl_keystore_type=密钥库类型，仅支持 PKCS12 或 JKS，默认 PKCS12
-qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀
+qingzhou-http-server.context_path=全站请求的路径前缀（挂载点），默认 /qingzhou，配置 / 表示不启用前缀；被纳管实例上报该值供中心回连，须由字母、数字、- _ . ~ 及 / 组成
 qingzhou-http-server.auth_fail_max=同一来源 IP 在窗口期内认证失败次数上限，达到后直接返回 401，默认 10
 qingzhou-http-server.auth_fail_window=认证失败计数窗口，单位秒，默认 60
 qingzhou-http-server.idle_timeout=连接空闲超时，单位秒，0 表示不超时，默认 60
@@ -35,6 +35,29 @@ qingzhou-http-server.csp=Content-Security-Policy 响应头取值，为空或 non
 qingzhou-http-server.coop=Cross-Origin-Opener-Policy 响应头取值，为空则不下发该头
 qingzhou-http-server.corp=Cross-Origin-Resource-Policy 响应头取值，为空则不下发该头
 qingzhou-http-server.cors_allowed_origins=跨域来源白名单，逗号分隔，为空表示不开放跨域，星号表示放开全部
+qingzhou-http-server.auth_username=管理员登录用户名，启动前必须配置
+qingzhou-http-server.auth_password=管理员登录密码的摘要值而非明文，由 init 命令或 sh bin/digest.sh 生成
+qingzhou-http-server.auth_roles=管理员角色列表，逗号分隔
+qingzhou-http-server.auth_totp_enabled=是否开启登录双因子校验，默认 false
+qingzhou-http-server.auth_totp_secret=双因子校验使用的 TOTP 密钥，plain: 前缀表示明文，开启双因子时必填
+qingzhou-http-server.auth_max_failures=同一 IP 加同一用户名的登录失败次数上限，超出锁定并返回 429，默认 5
+qingzhou-http-server.auth_lock_seconds=登录失败锁定时长，单位秒，默认 300
+qingzhou-http-server.auth_ip_max_failures=同一来源 IP 的登录失败次数上限（不区分用户名），超出锁定并返回 429，锁定时长同 auth_lock_seconds，默认 20；NAT 共享出口地址时应放宽
+qingzhou-http-server.auth_token_expire_seconds=登录令牌有效期，单位秒，同时作为 Cookie 的 Max-Age，默认 1800
+qingzhou-http-server.auth_cookie_secure=登录 Cookie 是否带 Secure 标记，取值 true、false 或 auto，默认 auto 表示按请求协议自动判断
+qingzhou-http-server.auth_cookie_samesite=登录 Cookie 的 SameSite 取值，可选 Lax、Strict、None，默认 Strict
+qingzhou-http-server.auth_oauth2_enabled=是否开启 OAuth2 单点登录，关闭时 /oauth2 相关接口返回 404，默认 false
+qingzhou-http-server.auth_oauth2_authorize_endpoint=OAuth2 授权端点地址，开启后必填
+qingzhou-http-server.auth_oauth2_token_endpoint=OAuth2 用授权码换取访问令牌的端点地址，开启后必填
+qingzhou-http-server.auth_oauth2_userinfo_endpoint=OAuth2 获取用户身份的端点地址，开启后必填
+qingzhou-http-server.auth_oauth2_scope=OAuth2 授权请求的 scope 取值，为空则不带该参数
+qingzhou-http-server.auth_oauth2_client_id=OAuth2 客户端标识，开启后必填
+qingzhou-http-server.auth_oauth2_client_secret=OAuth2 客户端密钥，plain: 前缀表示明文，开启后必填
+qingzhou-http-server.auth_oauth2_this_server=本服务对外访问基址，用于拼接回调地址 /oauth2/callback，开启后必填
+qingzhou-http-server.auth_oauth2_userinfo_username_field=从用户信息响应中取用户名的字段名，为空时依次回退 userName、preferred_username、name、sub
+qingzhou-http-server.auth_oauth2_userinfo_role_field=从用户信息响应中取角色名的字段名，为空时依次回退 roleName、role、roles
+qingzhou-http-server.auth_oauth2_roles=OAuth2 登录用户授予的角色列表，逗号分隔，为空表示不授予任何角色；用户信息带角色时仅授予同时命中该列表的角色
+qingzhou-http-server.auth_oauth2_roles_fallback=用户信息未带角色时是否改授予 auth_oauth2_roles 的全部角色，默认 false 表示不授予任何角色；开启后等同放行外部认证用户的角色，须谨慎
 
 # http-client
 qingzhou-http-client.allow_ssl_trust_all=是否信任所有 TLS 证书且跳过主机名校验，默认 false；仅受控环境使用，置 true 时注册中心到 agent 链路可被中间人攻击
@@ -42,58 +65,35 @@ qingzhou-http-client.allow_ssl_trust_all=是否信任所有 TLS 证书且跳过�
 # crypto
 qingzhou-crypto.global_cipher_key_name=平台全局对称密钥在 secret-key-readme.properties 中的键名，缺省 global；init 与 encrypt 按同一键名读写
 
-# auth
-qingzhou-auth.username=管理员登录用户名，启动前必须配置
-qingzhou-auth.password=管理员登录密码的摘要值而非明文，由 init 命令或 sh bin/digest.sh 生成
-qingzhou-auth.roles=管理员角色列表，逗号分隔
-qingzhou-auth.totp_enabled=是否开启登录双因子校验，默认 false
-qingzhou-auth.totp_secret=双因子校验使用的 TOTP 密钥，plain: 前缀表示明文，开启双因子时必填
-qingzhou-auth.max_failures=同一 IP 加同一用户名的登录失败次数上限，超出锁定并返回 429，默认 5
-qingzhou-auth.lock_seconds=登录失败锁定时长，单位秒，默认 300
-qingzhou-auth.ip_max_failures=同一来源 IP 的登录失败次数上限（不区分用户名），超出锁定并返回 429，锁定时长同 lock_seconds，默认 20；NAT 共享出口地址时应放宽
-qingzhou-auth.token_expire_seconds=登录令牌有效期，单位秒，同时作为 Cookie 的 Max-Age，默认 1800
-qingzhou-auth.cookie_secure=登录 Cookie 是否带 Secure 标记，取值 true、false 或 auto，默认 auto 表示按请求协议自动判断
-qingzhou-auth.cookie_samesite=登录 Cookie 的 SameSite 取值，可选 Lax、Strict、None，默认 Strict
-qingzhou-auth.oauth2_enabled=是否开启 OAuth2 单点登录，关闭时 /oauth2 相关接口返回 404，默认 false
-qingzhou-auth.oauth2_authorize_endpoint=OAuth2 授权端点地址，开启后必填
-qingzhou-auth.oauth2_token_endpoint=OAuth2 用授权码换取访问令牌的端点地址，开启后必填
-qingzhou-auth.oauth2_userinfo_endpoint=OAuth2 获取用户身份的端点地址，开启后必填
-qingzhou-auth.oauth2_scope=OAuth2 授权请求的 scope 取值，为空则不带该参数
-qingzhou-auth.oauth2_client_id=OAuth2 客户端标识，开启后必填
-qingzhou-auth.oauth2_client_secret=OAuth2 客户端密钥，plain: 前缀表示明文，开启后必填
-qingzhou-auth.oauth2_this_server=本服务对外访问基址，用于拼接回调地址 /oauth2/callback，开启后必填
-qingzhou-auth.oauth2_userinfo_username_field=从用户信息响应中取用户名的字段名，为空时依次回退 userName、preferred_username、name、sub
-qingzhou-auth.oauth2_userinfo_role_field=从用户信息响应中取角色名的字段名，为空时依次回退 roleName、role、roles
-qingzhou-auth.oauth2_roles=OAuth2 登录用户授予的角色列表，逗号分隔，为空表示不授予任何角色；用户信息带角色时仅授予同时命中该列表的角色
-qingzhou-auth.oauth2_roles_fallback=用户信息未带角色时是否改授予 oauth2_roles 的全部角色，默认 false 表示不授予任何角色；开启后等同放行外部认证用户的角色，须谨慎
-
 # registry
 qingzhou-registry.interval=注册中心检测远端实例状态的周期，单位秒，默认 6
 qingzhou-registry.timeout=远端实例失联判定阈值，单位秒，默认 12，应明显大于 agent 的心跳周期
 qingzhou-registry.trust_advertised_host=是否采信 agent 自报的对外地址，默认 false；仅反代/NAT 部署开启，开启后持域密钥者可把注册中心流量导向任意内网 host:port（SSRF），谨慎启用
 
 # agent
-qingzhou-agent.url=注册中心访问地址，尾部拼上 /registry/register 作为注册接口，启用 agent 时必填
+qingzhou-agent.url=注册中心访问地址列表，逗号分隔，按书写顺序作为主备优先级；每轮心跳只向首个可用中心注册，主连接失败或返回错误响应时转向下一个，主恢复后自动回切；尾部拼上 /registry/register 作为注册接口，启用 agent 时必填；中心配置非 / 的 context_path 时须自带该前缀（如 https://中心:7900/qingzhou）
 qingzhou-agent.advertised_host=反代/NAT 下本实例的对外可达地址，留空则由注册中心按连接源地址推断；需注册中心同时开启 trust_advertised_host 才生效
-qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6
+qingzhou-agent.interval=向注册中心发送心跳的周期，单位秒，默认 6，最小 2；主备切换耗时约为「interval + 2s 故障探测 + 2s 接管注册」，默认配置下 ≤10s，缩短 interval 可更快接管
 
 # logger
-# qingzhou-logger~<名称>.* 可配多个命名日志器，名称仅限字母、数字、下划线；省略 ~<名称> 即单实例默认日志器，不可与 ~default 同存（二者解析为同一日志器，writer 配置会互相覆盖）
-qingzhou-logger~default.writingthread=是否启用异步写日志线程，启用后日志先入队列批量落盘
-qingzhou-logger~default.writer_console=控制台日志输出器定义，取值为 console 或输出器实现类名
-qingzhou-logger~default.writer_console.level=控制台日志的最低输出级别
-qingzhou-logger~default.writer_console.format=控制台日志输出格式模板，{date}、{level}、{message} 为占位符
-qingzhou-logger~default.writer_file=文件日志输出器定义，取值为 rolling file 或输出器实现类名
-qingzhou-logger~default.writer_file.file=日志文件路径模板，相对实例目录，{date:格式} 与 {count} 在滚动时填充
-qingzhou-logger~default.writer_file.level=文件日志的最低输出级别
-qingzhou-logger~default.writer_file.format=文件日志输出格式模板，{date}、{level}、{message} 为占位符
-qingzhou-logger~default.writer_file.policies=日志滚动策略，逗号分隔，如 size: 50MB,daily 表示按大小或按天滚动
-qingzhou-logger~default.writer_file.backups=历史日志文件保留份数，超出后删除最旧的
-qingzhou-logger~default.writer_file.latest=额外维护的最新日志副本路径，为空则不生成
-qingzhou-logger~default.writer_file.buffered=是否缓冲写入日志文件
-qingzhou-logger~default.writer_file.charset=日志文件字符集
-qingzhou-logger~default.writer_file.convert=滚动后历史日志的压缩方式，如 gzip，为空则不压缩
-qingzhou-logger~default.throttle_window_ms=同一失败日志消息的聚合窗口，单位毫秒，默认 30000
+# qingzhou-logger.loggers 声明启用的日志器名称（逗号分隔），必须包含 default；每个日志器以 <名称>.writer_* 配置 writer，
+# 名称仅限字母、数字、下划线。新增访问日志、审计日志等只需追加名称并配置对应 writer，无需改动代码
+qingzhou-logger.loggers=启用的日志器名称列表，逗号分隔，必须包含 default
+qingzhou-logger.default.writingthread=是否启用异步写日志线程，启用后日志先入队列批量落盘
+qingzhou-logger.default.writer_console=控制台日志输出器定义，取值为 console 或输出器实现类名
+qingzhou-logger.default.writer_console.level=控制台日志的最低输出级别
+qingzhou-logger.default.writer_console.format=控制台日志输出格式模板，{date}、{level}、{message} 为占位符
+qingzhou-logger.default.writer_file=文件日志输出器定义，取值为 rolling file 或输出器实现类名
+qingzhou-logger.default.writer_file.file=日志文件路径模板，相对实例目录，{date:格式} 与 {count} 在滚动时填充
+qingzhou-logger.default.writer_file.level=文件日志的最低输出级别
+qingzhou-logger.default.writer_file.format=文件日志输出格式模板，{date}、{level}、{message} 为占位符
+qingzhou-logger.default.writer_file.policies=日志滚动策略，逗号分隔，如 size: 50MB,daily 表示按大小或按天滚动
+qingzhou-logger.default.writer_file.backups=历史日志文件保留份数，超出后删除最旧的
+qingzhou-logger.default.writer_file.latest=额外维护的最新日志副本路径，为空则不生成
+qingzhou-logger.default.writer_file.buffered=是否缓冲写入日志文件
+qingzhou-logger.default.writer_file.charset=日志文件字符集
+qingzhou-logger.default.writer_file.convert=滚动后历史日志的压缩方式，如 gzip，为空则不压缩
+qingzhou-logger.default.throttle_window_ms=同一失败日志消息的聚合窗口，单位毫秒，默认 30000
 
 # jdbc
 qingzhou-jdbc~h2.url=数据源连接地址，h2 为数据源名称，应用按名称获取该数据源
