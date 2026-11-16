@@ -119,8 +119,13 @@ final class RequestGates {
 
         String origin = ctx.request.requestHeaders().get(HttpHeaderNames.ORIGIN);
         // 仅「无 Origin 头」视为非浏览器/服务端调用而放行；字面量 "null"（sandboxed iframe、data: 等不透明源）
-        // 必须按跨站源校验，否则攻击者可借此绕过同源 CSRF 防线
+        // 不能按同源处理。只有显式声明接受不透明来源的公开表单端点（如 OAuth 登录页）才放行，
+        // 其余路径一律拒绝，避免用 sandboxed iframe 绕过同源 CSRF 防线。
         if (origin == null) return null;
+        if ("null".equalsIgnoreCase(origin)) {
+            if (ctx.entry != null && ctx.entry.allowOpaqueOrigin) return null;
+            return ctx.respond(HttpResponseStatus.FORBIDDEN);
+        }
         String host = ctx.request.requestHeaders().get(HttpHeaderNames.HOST);
         if (host != null && !host.isEmpty() && isSameOrigin(origin, host, ctx.request.scheme())) return null;
         // 跨站写仅认精确列举的来源：白名单含 "*" 时通配语义只作用于 ResponseHeaders 的 CORS 读响应，

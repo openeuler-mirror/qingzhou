@@ -15,6 +15,8 @@ class MessageDigestImpl implements MessageDigest {
     private static final String SALT_SEPARATOR = "$";
     // 迭代数上限：来自被校验串，不设上界会被恶意摘要用超大迭代数拖垮 CPU（CPU DoS）
     private static final int MAX_ITERATIONS = 1_000_000;
+    private static final int MAX_PASSWORD_CHARS = 1024; // 与登录入口上限一致，避免超长口令拖垮 PBKDF2
+    private static final int MAX_SALT_BYTES = 64; // 正常盐 16 字节；上限防止异常摘要触发超长 PBKDF2
     // 算法白名单：外部可指定算法生成口令摘要，放行 MD5/SHA-1 等弱算法会被用于弱口令存储
     private static final java.util.Set<String> ALLOWED_ALGORITHMS = new java.util.HashSet<>(java.util.Arrays.asList(
             "SHA-256", "SHA-384", "SHA-512", "PBKDF2WithHmacSHA256", "PBKDF2WithHmacSHA512"));
@@ -35,8 +37,8 @@ class MessageDigestImpl implements MessageDigest {
         if (!ALLOWED_ALGORITHMS.contains(algorithm)) {
             throw new IllegalArgumentException("digest algorithm not allowed: " + algorithm);
         }
-        if (saltLength < 0) {
-            throw new IllegalArgumentException("saltLength must not be negative: " + saltLength);
+        if (saltLength < 0 || saltLength > MAX_SALT_BYTES) {
+            throw new IllegalArgumentException("saltLength must be within 0~" + MAX_SALT_BYTES + ": " + saltLength);
         }
         if (iterations < 1 || iterations > MAX_ITERATIONS) { // 与校验侧同一上界：生成侧同样不得被超大迭代数拖垮
             throw new IllegalArgumentException("iterations must be within 1~" + MAX_ITERATIONS + ": " + iterations);
@@ -55,6 +57,8 @@ class MessageDigestImpl implements MessageDigest {
             return false;
         }
 
+        if (text.length() > MAX_PASSWORD_CHARS) return false;
+
         try {
             String[] splitPwd = msgDigest.split("\\" + SALT_SEPARATOR);
             if (splitPwd.length != 4) return false; // 格式非法的摘要直接判定不匹配
@@ -62,6 +66,7 @@ class MessageDigestImpl implements MessageDigest {
             String algorithm = splitPwd[0];
             if (!ALLOWED_ALGORITHMS.contains(algorithm)) return false; // 与 digest 同一白名单：MD5/SHA-1 等弱算法摘要不接受校验
             byte[] salt = decode(splitPwd[1]);
+            if (salt.length > MAX_SALT_BYTES) return false;
             int iterations = Integer.parseInt(splitPwd[2]);
             if (iterations < 1 || iterations > MAX_ITERATIONS) return false;
             String digest = mutate(text, algorithm, salt, iterations);
