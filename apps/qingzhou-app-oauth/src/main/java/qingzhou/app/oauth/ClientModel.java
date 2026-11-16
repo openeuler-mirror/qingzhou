@@ -1,19 +1,11 @@
 package qingzhou.app.oauth;
 
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import qingzhou.api.InputType;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.Delete;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
+import qingzhou.api.*;
+import qingzhou.api.action.*;
+import qingzhou.api.annotations.*;
 import qingzhou.logger.Logger;
 
 @Model(code = "client", order = 1,
@@ -22,13 +14,17 @@ import qingzhou.logger.Logger;
                 "en:OAuth 2.0 / OIDC client credentials, redirect uris and policy"},
         icon = "Grid",
         menu = "access")
-public class ClientModel extends ModelBase implements Page, Show, Delete {
+@OverrideDefaultActions({
+        @ModelAction(code = "add", icon = "Check", order = 1, add = true,
+                name = {"保存", "en:Save"},
+                info = {"保存新建的接入客户端；校验失败时直接返回可读错误", "en:Create the client; validation errors are returned to the form"}),
+        @ModelAction(code = "update", icon = "Check", order = 1, update = true,
+                name = {"更新", "en:Update"},
+                info = {"更新接入客户端；校验失败时直接返回可读错误", "en:Update the client; validation errors are returned to the form"})
+})
+public class ClientModel extends ModelBase implements Page, Show, Delete, Add, Update {
     private static final String GRANTS = "authorization_code,password,client_credentials,refresh_token,implicit";
     private static final String AUTH_METHODS = "client_secret_basic,client_secret_post,none";
-    private static final String[] FORM_FIELDS = {
-            "client_id", "client_secret", "client_name", "redirect_uri", "grant_types", "scope",
-            "token_endpoint_auth_method", "require_pkce", "access_token_ttl", "refresh_token_ttl", "enabled"
-    };
 
     @ModelField(id = true, list = true, readonly = true,
             name = {"编号", "en:ID"},
@@ -147,20 +143,6 @@ public class ClientModel extends ModelBase implements Page, Show, Delete {
         return client;
     }
 
-    @ModelAction(code = "add", icon = "Check", order = 1, add = true,
-            name = {"保存", "en:Save"},
-            info = {"保存新建的接入客户端；校验失败时直接返回可读错误", "en:Create the client; validation errors are returned to the form"})
-    public void addClient(Request request) throws Exception {
-        FormSupport.save(request, () -> add(FormSupport.collect(request, FORM_FIELDS)));
-    }
-
-    @ModelAction(code = "update", icon = "Check", order = 1, update = true,
-            name = {"更新", "en:Update"},
-            info = {"更新接入客户端；校验失败时直接返回可读错误", "en:Update the client; validation errors are returned to the form"})
-    public void updateClient(Request request) throws Exception {
-        FormSupport.save(request, () -> update(request.getId(), FormSupport.collect(request, FORM_FIELDS)));
-    }
-
     @ModelAction(code = "guide", icon = "Document", order = 2, list = true,
             name = {"接入示例", "en:Integration Guide"},
             info = {"打开该客户端的接入示例页，包含端点、授权方式和可复制的 curl 示例",
@@ -181,38 +163,44 @@ public class ClientModel extends ModelBase implements Page, Show, Delete {
         }
     }
 
-    private void add(Map<String, String> data) throws Exception {
-        String clientId = data.get("client_id");
-        if (Security.isEmpty(clientId)) throw new IllegalArgumentException("client_id 不能为空");
-        if (Security.isEmpty(data.get("client_name"))) throw new IllegalArgumentException("client_name 不能为空");
-        if (store.findClient(clientId) != null) throw new IllegalArgumentException("client_id 已存在: " + clientId);
+    @Override
+    public void add(Map<String, String> data) throws Exception {
+        FormSupport.save(getCurrentRequest(), (FormSupport.Operation) () -> {
+            String clientId = data.get("client_id");
+            if (Security.isEmpty(clientId)) throw new IllegalArgumentException("client_id 不能为空");
+            if (Security.isEmpty(data.get("client_name"))) throw new IllegalArgumentException("client_name 不能为空");
+            if (store.findClient(clientId) != null) throw new IllegalArgumentException("client_id 已存在: " + clientId);
 
-        // 公开客户端（none）可以没有密钥，但列 NOT NULL，显式落空串
-        data.putIfAbsent("client_secret", "");
-        validate(data);
-        if (Security.isEmpty(data.get("enabled"))) data.put("enabled", "true");
-        if (Security.isEmpty(data.get("require_pkce"))) data.put("require_pkce", "false");
-        store.insert(Store.CLIENT_TABLE, data);
+            // 公开客户端（none）可以没有密钥，但列 NOT NULL，显式落空串
+            data.putIfAbsent("client_secret", "");
+            validate(data);
+            if (Security.isEmpty(data.get("enabled"))) data.put("enabled", "true");
+            if (Security.isEmpty(data.get("require_pkce"))) data.put("require_pkce", "false");
+            store.insert(Store.CLIENT_TABLE, data);
+        });
     }
 
-    private void update(String id, Map<String, String> data) throws Exception {
-        Map<String, String> existing = store.show(Store.CLIENT_TABLE, id);
-        if (existing == null) throw new IllegalArgumentException("客户端不存在: " + id);
+    @Override
+    public void update(String id, Map<String, String> data) throws Exception {
+        FormSupport.save(getCurrentRequest(), (FormSupport.Operation) () -> {
+            Map<String, String> existing = store.show(Store.CLIENT_TABLE, id);
+            if (existing == null) throw new IllegalArgumentException("客户端不存在: " + id);
 
-        String clientId = data.get("client_id");
-        if (!Security.isEmpty(clientId) && !clientId.equals(existing.get("client_id"))
-                && store.findClient(clientId) != null) {
-            throw new IllegalArgumentException("client_id 已存在: " + clientId);
-        }
-        if (Security.isEmpty(data.get("client_secret"))) data.remove("client_secret");
+            String clientId = data.get("client_id");
+            if (!Security.isEmpty(clientId) && !clientId.equals(existing.get("client_id"))
+                    && store.findClient(clientId) != null) {
+                throw new IllegalArgumentException("client_id 已存在: " + clientId);
+            }
+            if (Security.isEmpty(data.get("client_secret"))) data.remove("client_secret");
 
-        Map<String, String> candidate = new LinkedHashMap<>(existing);
-        candidate.putAll(data);
-        if (Security.isEmpty(candidate.get("client_secret"))) {
-            candidate.put("client_secret", existing.get("client_secret"));
-        }
-        validate(candidate);
-        store.update(Store.CLIENT_TABLE, id, data);
+            Map<String, String> candidate = new LinkedHashMap<>(existing);
+            candidate.putAll(data);
+            if (Security.isEmpty(candidate.get("client_secret"))) {
+                candidate.put("client_secret", existing.get("client_secret"));
+            }
+            validate(candidate);
+            store.update(Store.CLIENT_TABLE, id, data);
+        });
     }
 
     @Override
@@ -238,7 +226,8 @@ public class ClientModel extends ModelBase implements Page, Show, Delete {
         java.util.Set<String> grants = Security.split(data.get("grant_types"));
         if (grants.isEmpty()) throw new IllegalArgumentException("请至少选择一个授予类型");
         for (String grant : grants) {
-            if (!Security.split(GRANTS).contains(grant)) throw new IllegalArgumentException("不支持的授予类型: " + grant);
+            if (!Security.split(GRANTS).contains(grant))
+                throw new IllegalArgumentException("不支持的授予类型: " + grant);
         }
         if (allowsNone && grants.contains("client_credentials")) {
             throw new IllegalArgumentException("公开客户端（none）不能使用 client_credentials 授予");

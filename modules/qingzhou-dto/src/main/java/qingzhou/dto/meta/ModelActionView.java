@@ -25,4 +25,6 @@ public class ModelActionView extends Base {
 
     // 确认提示信息，国际化数组。非空时前端在执行操作前弹出确认对话框。
     public String[] confirm = new String[0];
+
+    public boolean popup;
 }

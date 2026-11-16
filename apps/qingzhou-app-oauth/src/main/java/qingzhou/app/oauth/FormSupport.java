@@ -1,8 +1,5 @@
 package qingzhou.app.oauth;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import qingzhou.api.Request;
 
 /**
@@ -10,15 +7,6 @@ import qingzhou.api.Request;
  */
 final class FormSupport {
     private FormSupport() {
-    }
-
-    static Map<String, String> collect(Request request, String[] fields) {
-        Map<String, String> data = new LinkedHashMap<>();
-        for (String field : fields) {
-            String value = request.getParameter(field);
-            if (value != null) data.put(field, value);
-        }
-        return data;
     }
 
     static void save(Request request, Operation operation) throws Exception {
