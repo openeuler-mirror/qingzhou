@@ -13,6 +13,12 @@ import qingzhou.app.redis.store.model.AuditEntry;
         name = {"实例管理", "en:Instance Manager"},
         info = {"只读展示 Redis 连接实例，支持通过切换按钮或下拉框选择当前使用的实例。",
                 "en:Display Redis connection instances in read-only mode, switch via button or dropdown."})
+
+@OverrideDefaultActions(@ModelAction(code = "namespace", icon = "Switch",
+        name = {"切换", "en:Switch"}, list = true,
+        confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
+        info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"}))
+
 public class RedisInstance extends RedisModelBase implements Page, Show, Namespace {
 
     @ModelField(id = true, show = true, list = true, readonly = true, name = {"ID", "en:ID"},
@@ -92,10 +98,6 @@ public class RedisInstance extends RedisModelBase implements Page, Show, Namespa
             info = {"Redis 最大客户端连接数", "en:Redis maxclients configuration"})
     public String maxclients;
 
-    @ModelAction(code = "namespace", icon = "Switch",
-            name = {"切换", "en:Switch"}, list = true,
-            confirm = {"确认切换到该 Redis 实例？", "en:Confirm switch to this Redis instance?"},
-            info = {"切换到该 Redis 实例连接", "en:Switch to this Redis instance connection"})
     @Override
     public void namespace(String id) throws Exception {
         String previousName = RedisApp.getCurrentInstanceName();

@@ -20,7 +20,7 @@ import qingzhou.api.action.Update;
 import qingzhou.logger.Logger;
 
 /**
- * 产品管理：演示 CRUD + 监控（Monitor）+ 命名空间（Namespace）+ 条件按钮（display）+ 批量操作。
+ * 产品管理：演示 CRUD + 监控（Monitor）+ 命名空间（Namespace）+ 条件按钮（display）+ 批量操作 + 结果弹出层（popup）。
  */
 @Model(code = "product", order = 3,
         name = {"产品", "en:Product"},
@@ -116,6 +116,30 @@ public class Product extends AbstractCrudModel implements Page, Show, Add, Updat
         if (ids != null && !ids.isEmpty()) {
             for (String id : ids.split(",")) db.remove(id.trim());
         }
+    }
+
+    /** 弹出层展示 Markdown 内容。 */
+    @ModelAction(code = "mdTips", icon = "InfoFilled", order = 5,
+            name = {"使用说明", "en:Usage"},
+            info = {"以弹出层展示 Markdown 内容。", "en:Show markdown content in a popup."},
+            list_head = true, popup = true)
+    public void mdTips(Request request) {
+        request.getResponse().contentType("text/markdown").data("## 产品管理使用说明\n\n"
+                + "- 工具栏按钮支持批量删除\n"
+                + "- 行内按钮随 `status` 变化：`onsale` 可下架，`offshelf` 可上架\n\n"
+                + "> 本模块数据仅用于演示，重启后恢复初始值。");
+    }
+
+    /** 弹出层展示 HTML 内容；只拼数字，避免把用户可编辑字段直接写进 HTML。 */
+    @ModelAction(code = "stockReport", icon = "DataAnalysis", order = 6,
+            name = {"库存简报", "en:Stock Report"},
+            info = {"以弹出层展示 HTML 内容。", "en:Show html content in a popup."},
+            list_head = true, popup = true)
+    public void stockReport(Request request) {
+        long onSale = db.values().stream().filter(p -> "onsale".equals(p.get("status"))).count();
+        request.getResponse().contentType("text/html").data("<h3>库存简报</h3>"
+                + "<p>产品总数：<b>" + db.size() + "</b></p>"
+                + "<p>在售产品：<b>" + onSale + "</b></p>");
     }
 
     /** 监控：返回各产品销量，供前端绘制柱状图。 */

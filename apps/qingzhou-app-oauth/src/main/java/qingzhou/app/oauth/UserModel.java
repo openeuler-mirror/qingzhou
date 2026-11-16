@@ -1,19 +1,12 @@
 package qingzhou.app.oauth;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.Delete;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
+import qingzhou.api.action.*;
+import qingzhou.api.annotations.*;
 import qingzhou.logger.Logger;
 
 @Model(code = "user", order = 2,
@@ -22,9 +15,13 @@ import qingzhou.logger.Logger;
                 "en:Resource owner accounts for consent-page/password login, independent of OAuth clients"},
         icon = "User",
         menu = "access")
-public class UserModel extends ModelBase implements Page, Show, Delete {
-    private static final String[] FORM_FIELDS = {"userName", "password", "nickname", "email", "roleName", "enabled"};
-
+@OverrideDefaultActions({@ModelAction(code = "add", icon = "Check", order = 1, add = true,
+        name = {"保存", "en:Save"},
+        info = {"保存新建用户；校验失败时直接返回可读错误", "en:Create the user; validation errors are returned to the form"}),
+        @ModelAction(code = "update", icon = "Check", order = 1, update = true,
+                name = {"更新", "en:Update"},
+                info = {"更新用户；校验失败时直接返回可读错误", "en:Update the user; validation errors are returned to the form"})})
+public class UserModel extends ModelBase implements Page, Show, Delete, Add, Update {
     @ModelField(id = true, list = true, readonly = true,
             name = {"编号", "en:ID"},
             info = {"用户记录编号", "en:User record id"})
@@ -116,40 +113,32 @@ public class UserModel extends ModelBase implements Page, Show, Delete {
         return result; // 不含 password：编辑时不回传摘要，留空即保留原值
     }
 
-    @ModelAction(code = "add", icon = "Check", order = 1, add = true,
-            name = {"保存", "en:Save"},
-            info = {"保存新建用户；校验失败时直接返回可读错误", "en:Create the user; validation errors are returned to the form"})
-    public void addUser(Request request) throws Exception {
-        FormSupport.save(request, () -> add(FormSupport.collect(request, FORM_FIELDS)));
+    @Override
+    public void add(Map<String, String> data) throws Exception {
+        FormSupport.save(getCurrentRequest(), (FormSupport.Operation) () -> {
+            String userName = data.get("userName");
+            if (Security.isEmpty(userName)) throw new IllegalArgumentException("userName 不能为空");
+            if (store.findUser(userName) != null) throw new IllegalArgumentException("userName 已存在: " + userName);
+            if (Security.isEmpty(data.get("password"))) throw new IllegalArgumentException("password 不能为空");
+            if (Security.isEmpty(data.get("enabled"))) data.put("enabled", "true");
+            store.insert(Store.USER_TABLE, data);
+        });
     }
 
-    @ModelAction(code = "update", icon = "Check", order = 1, update = true,
-            name = {"更新", "en:Update"},
-            info = {"更新用户；校验失败时直接返回可读错误", "en:Update the user; validation errors are returned to the form"})
-    public void updateUser(Request request) throws Exception {
-        FormSupport.save(request, () -> update(request.getId(), FormSupport.collect(request, FORM_FIELDS)));
-    }
+    @Override
+    public void update(String id, Map<String, String> data) throws Exception {
+        FormSupport.save(getCurrentRequest(), (FormSupport.Operation) () -> {
+            Map<String, String> existing = store.show(Store.USER_TABLE, id);
+            if (existing == null) throw new IllegalArgumentException("用户不存在: " + id);
 
-    private void add(Map<String, String> data) throws Exception {
-        String userName = data.get("userName");
-        if (Security.isEmpty(userName)) throw new IllegalArgumentException("userName 不能为空");
-        if (store.findUser(userName) != null) throw new IllegalArgumentException("userName 已存在: " + userName);
-        if (Security.isEmpty(data.get("password"))) throw new IllegalArgumentException("password 不能为空");
-        if (Security.isEmpty(data.get("enabled"))) data.put("enabled", "true");
-        store.insert(Store.USER_TABLE, data);
-    }
-
-    private void update(String id, Map<String, String> data) throws Exception {
-        Map<String, String> existing = store.show(Store.USER_TABLE, id);
-        if (existing == null) throw new IllegalArgumentException("用户不存在: " + id);
-
-        String userName = data.get("userName");
-        if (!Security.isEmpty(userName) && !userName.equals(existing.get("username"))
-                && store.findUser(userName) != null) {
-            throw new IllegalArgumentException("userName 已存在: " + userName);
-        }
-        if (Security.isEmpty(data.get("password"))) data.remove("password");
-        store.update(Store.USER_TABLE, id, data);
+            String userName = data.get("userName");
+            if (!Security.isEmpty(userName) && !userName.equals(existing.get("username"))
+                    && store.findUser(userName) != null) {
+                throw new IllegalArgumentException("userName 已存在: " + userName);
+            }
+            if (Security.isEmpty(data.get("password"))) data.remove("password");
+            store.update(Store.USER_TABLE, id, data);
+        });
     }
 
     @Override

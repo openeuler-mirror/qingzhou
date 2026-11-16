@@ -1,23 +1,21 @@
 package qingzhou.app.nginx;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
-import qingzhou.api.annotations.Model;
-import qingzhou.api.annotations.ModelAction;
-import qingzhou.api.annotations.ModelField;
+import qingzhou.api.action.*;
+import qingzhou.api.annotations.*;
 
 @Model(code = "config", order = 2, icon = "Document",
         name = {"配置管理", "en:Configuration"},
         info = {"查看和编辑 nginx 配置文件，保存时执行完整 nginx -t，失败回滚",
                 "en:View and edit nginx configuration; full nginx -t runs on save with rollback"})
-public class Config extends NginxModelBase implements Page, Show {
+@OverrideDefaultActions(@ModelAction(code = "update", icon = "Check", order = 1, update = true,
+        name = {"保存", "en:Save"},
+        info = {"保存前对完整主配置执行 nginx -t，校验失败自动回滚。",
+                "en:Full nginx -t runs before saving; invalid content is rolled back."}))
+public class Config extends NginxModelBase implements Page, Show, Update {
 
     @ModelField(id = true, list = true, search = true, readonly = true,
             name = {"文件", "en:File"},
@@ -105,23 +103,6 @@ public class Config extends NginxModelBase implements Page, Show {
         return data;
     }
 
-    @ModelAction(code = "update", icon = "Check", order = 1, update = true,
-            name = {"保存", "en:Save"},
-            info = {"保存前对完整主配置执行 nginx -t，校验失败自动回滚。",
-                    "en:Full nginx -t runs before saving; invalid content is rolled back."})
-    public void save(Request request) {
-        execute(request, () -> {
-            NginxInstall install = install();
-            NginxFiles.Entry entry = NginxFiles.find(NginxFiles.listConfigs(install), request.getId());
-            if (entry == null) throw new IllegalArgumentException("配置文件不存在: " + request.getId());
-
-            String newContent = request.getParameter("content");
-            if (newContent == null) throw new IllegalArgumentException("缺少配置内容");
-            NginxFiles.updateConfig(new NginxService(install), entry, newContent, backupDir().toPath());
-            request.getResponse().success(true).message("配置已保存，重载 nginx 后生效");
-        });
-    }
-
     @ModelAction(code = "test", icon = "CircleCheck", order = 1, list_head = true,
             name = {"校验配置", "en:Test Config"},
             info = {"执行 nginx -t 校验当前配置。",
@@ -148,4 +129,18 @@ public class Config extends NginxModelBase implements Page, Show {
         return files;
     }
 
+    @Override
+    public void update(String id, Map<String, String> data) throws Exception {
+        Request request = getCurrentRequest();
+        execute(request, () -> {
+            NginxInstall install = install();
+            NginxFiles.Entry entry = NginxFiles.find(NginxFiles.listConfigs(install), request.getId());
+            if (entry == null) throw new IllegalArgumentException("配置文件不存在: " + request.getId());
+
+            String newContent = request.getParameter("content");
+            if (newContent == null) throw new IllegalArgumentException("缺少配置内容");
+            NginxFiles.updateConfig(new NginxService(install), entry, newContent, backupDir().toPath());
+            request.getResponse().success(true).message("配置已保存，重载 nginx 后生效");
+        });
+    }
 }

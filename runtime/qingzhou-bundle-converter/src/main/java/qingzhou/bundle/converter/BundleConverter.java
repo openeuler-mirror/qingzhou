@@ -303,8 +303,8 @@ public class BundleConverter {
                     dtoModelAction.code = ctMethod.getName();
                 }
                 boolean removed = dtoModel.actions.remove(dtoModelAction);
-                if (removed) { // 只有默认的 Action 会返回true，允许应用自定义覆盖
-                    dtoModelAction.isDefaultAction = true;
+                if (removed) { // 只有默认的 Action 会返回 true，允许应用自定义覆盖
+                    dtoModelAction.isDefaultAction = true; // 重新设回 isDefaultAction 为 true，否则会导致查找 action 404
                 }
                 dtoModel.actions.add(dtoModelAction);
             }
