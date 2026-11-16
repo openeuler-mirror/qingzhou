@@ -429,21 +429,51 @@ final class TomcatJmx {
         if (attachClass != null) {
             return attachClass;
         }
-        File toolsJar = new File(System.getProperty("java.home"), "../lib/tools.jar");
-        if (toolsJar.isFile()) {
+        ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
+        File toolsJar = toolsJar();
+        if (toolsJar != null) {
             // 多个 Tomcat 实例（bundle :0/:1）各有独立类加载器，若各自新建 URLClassLoader 加载 tools.jar，
             // 原生库 libattach 会在第二个实例加载时抛出 already loaded in another classloader。
             // 须把 tools.jar 注入系统类加载器，所有实例共享同一个 VirtualMachine 类与 libattach。
-            ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
-            java.lang.reflect.Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            addURL.setAccessible(true);
-            addURL.invoke(systemLoader, toolsJar.toURI().toURL());
-            attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, systemLoader);
+            if (systemLoader instanceof URLClassLoader) {
+                java.lang.reflect.Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+                addURL.setAccessible(true);
+                addURL.invoke(systemLoader, toolsJar.toURI().toURL());
+                attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, systemLoader);
+            } else {
+                // 系统类加载器非 URLClassLoader（自定义 launcher / 服务包装器），退回独立 loader
+                attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true,
+                        new URLClassLoader(new URL[]{toolsJar.toURI().toURL()}, null));
+            }
         } else {
-            // JDK 9+ 的 attach 类在 jdk.attach 模块内，Bundle 类加载器不可见，须由系统类加载器加载
-            attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, ClassLoader.getSystemClassLoader());
+            try {
+                // JDK 9+ 的 attach 类在 jdk.attach 模块内，Bundle 类加载器不可见，须由系统类加载器加载
+                attachClass = Class.forName("com.sun.tools.attach.VirtualMachine", true, systemLoader);
+            } catch (ClassNotFoundException e) {
+                // JDK 8 的 attach 类只存在于 tools.jar，缺失说明当前是 JRE（或精简 JDK），无法 attach
+                throw new IllegalStateException("未找到 tools.jar，当前 Java 运行环境不是完整 JDK，无法 attach Tomcat 进程：java.home="
+                        + System.getProperty("java.home"), e);
+            }
         }
         return attachClass;
+    }
+
+    /**
+     * JDK 8 的 tools.jar 可能在 java.home 下（java.home 为 JDK 根目录）或其上级 lib 下（java.home 为 jre 子目录），
+     * 也可能只存在于 JAVA_HOME。JDK 9+ 无 tools.jar，返回 null。
+     */
+    private static File toolsJar() {
+        File[] candidates = {
+                new File(System.getProperty("java.home"), "lib/tools.jar"),
+                new File(System.getProperty("java.home"), "../lib/tools.jar"),
+                System.getenv("JAVA_HOME") == null ? null : new File(System.getenv("JAVA_HOME"), "lib/tools.jar")
+        };
+        for (File candidate : candidates) {
+            if (candidate != null && candidate.isFile()) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     /**
