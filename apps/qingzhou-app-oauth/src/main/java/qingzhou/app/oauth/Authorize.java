@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

@@ -343,7 +343,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-app-oauth2</artifactId>
+            <artifactId>qingzhou-app-oauth</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import qingzhou.http.server.HttpHandler;
 import qingzhou.http.server.HttpRequest;

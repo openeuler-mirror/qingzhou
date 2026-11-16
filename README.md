@@ -23,7 +23,7 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 | AI 赋能    | 接入兼容 OpenAI 的模型后，按技能编排调用平台模型操作，内置健康检查等技能                           |
 | 双协议输出 | REST 与 MCP 复用同一执行链路，管控台与 AI 调用无需二次适配                                         |
 | 可观测     | 数值型监控字段自动暴露为 Prometheus 指标，观测能力与模型定义同源                                   |
-| 安全       | 登录态、TOTP、OAuth2 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS                              |
+| 安全       | 登录态、TOTP、OAuth 单点登录、登录失败锁定、域密钥链路加密、CSP/HSTS                              |
 
 ## 内置应用
 
@@ -36,7 +36,7 @@ Qingzhou（轻舟）是基于 Java 的轻量级管理平台，用于对多品类
 | Nginx 管理 | Nginx | 状态、启停重载、配置校验与编辑、日志查看 |
 | Nacos 应用 | Nacos | 配置中心与服务注册发现 |
 | ZooKeeper 应用 | ZooKeeper | 服务状态、连接、生效参数查看 |
-| OAuth2 / OIDC 授权服务 | — | 授权码、PKCE、ID Token、内省与撤销 |
+| OAuth / OIDC 授权服务 | — | 授权码、PKCE、ID Token、内省与撤销 |
 | 示例应用 | — | 演示标准开发方式 |
 
 ## 适用场景

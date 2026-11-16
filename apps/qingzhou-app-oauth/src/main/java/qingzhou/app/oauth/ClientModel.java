@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
@@ -113,7 +113,7 @@ public class ClientModel extends ModelBase implements Page, Show, Delete {
             store = Store.get(getAppContext());
         } catch (Throwable e) {
             Logger logger = getAppContext().getService(Logger.class);
-            if (logger != null) logger.error("failed to init oauth2 store", e);
+            if (logger != null) logger.error("failed to init oauth store", e);
         }
     }
 
@@ -173,7 +173,7 @@ public class ClientModel extends ModelBase implements Page, Show, Delete {
             return;
         }
         try {
-            String path = "/oauth2-server/guide?client_id="
+            String path = "/oauth-server/guide?client_id="
                     + java.net.URLEncoder.encode(client.get("client_id"), "UTF-8");
             request.getResponse().data(path).message("已生成接入示例：" + path);
         } catch (java.io.UnsupportedEncodingException e) {

@@ -1,6 +1,5 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 

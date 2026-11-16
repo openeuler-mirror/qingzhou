@@ -1,20 +1,18 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
-import qingzhou.http.server.HttpHandler;
-import qingzhou.http.server.HttpRequest;
-import qingzhou.http.server.HttpResponse;
+import qingzhou.http.server.*;
 
 /**
  * 每个接入客户端独立的接入示例页，方便客户端开发方直接照着调用。
  * 页面不含 client_secret，只使用占位符，因此可以安全地分享链接。
  */
 public final class GuidePage implements HttpHandler {
-    private static final String PREFIX = "/oauth2-server";
+    private static final String PREFIX = "/oauth-server";
     private static final String STYLE = ""
             + "body{margin:0;background:#f4f7fb;color:#273142;font:14px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}"
             + ".wrap{max-width:1080px;margin:0 auto;padding:28px 20px 48px}"
@@ -166,7 +164,7 @@ public final class GuidePage implements HttpHandler {
                     + "  -d \"redirect_uri=" + redirect + "\" \\\n"
                     + "  -d \"code_verifier=$VERIFIER\"";
             html.append(section("授权码 + PKCE", "推荐的 Web/移动应用流程；授权码一次性使用，默认 10 分钟过期。"
-                    + (oidc ? " 响应中的 id_token 可用 JWKS 验签。" : ""),
+                            + (oidc ? " 响应中的 id_token 可用 JWKS 验签。" : ""),
                     code, "authorization_code", true));
         }
         if (oidc) {
@@ -265,28 +263,39 @@ public final class GuidePage implements HttpHandler {
         Set<String> values = Security.split(csv);
         if (values.isEmpty()) return "<span class=\"muted\">未配置</span>";
         StringBuilder html = new StringBuilder();
-        for (String value : values) html.append("<span class=\"badge\">").append(text(label.apply(value))).append("</span>");
+        for (String value : values)
+            html.append("<span class=\"badge\">").append(text(label.apply(value))).append("</span>");
         return html.toString();
     }
 
     private static String grantLabel(String grant) {
         switch (grant) {
-            case "authorization_code": return "授权码模式";
-            case "password": return "密码模式";
-            case "client_credentials": return "客户端凭证";
-            case "refresh_token": return "刷新令牌";
-            case "implicit": return "隐式模式";
-            default: return grant;
+            case "authorization_code":
+                return "授权码模式";
+            case "password":
+                return "密码模式";
+            case "client_credentials":
+                return "客户端凭证";
+            case "refresh_token":
+                return "刷新令牌";
+            case "implicit":
+                return "隐式模式";
+            default:
+                return grant;
         }
     }
 
     private static String authLabel(String method) {
         if (Security.isEmpty(method)) return "client_secret_basic（默认）";
         switch (method) {
-            case "client_secret_basic": return "client_secret_basic（HTTP Basic）";
-            case "client_secret_post": return "client_secret_post（表单）";
-            case "none": return "none（公开客户端）";
-            default: return method;
+            case "client_secret_basic":
+                return "client_secret_basic（HTTP Basic）";
+            case "client_secret_post":
+                return "client_secret_post（表单）";
+            case "none":
+                return "none（公开客户端）";
+            default:
+                return method;
         }
     }
 
@@ -296,12 +305,18 @@ public final class GuidePage implements HttpHandler {
 
     private static String scopeDescription(String scope) {
         switch (scope) {
-            case "read": return "只读访问";
-            case "write": return "读写访问";
-            case "openid": return "OIDC 身份标识";
-            case "profile": return "用户资料";
-            case "email": return "邮箱信息";
-            default: return "自定义权限范围";
+            case "read":
+                return "只读访问";
+            case "write":
+                return "读写访问";
+            case "openid":
+                return "OIDC 身份标识";
+            case "profile":
+                return "用户资料";
+            case "email":
+                return "邮箱信息";
+            default:
+                return "自定义权限范围";
         }
     }
 
@@ -343,6 +358,6 @@ public final class GuidePage implements HttpHandler {
                 .header("Cache-Control", "no-store")
                 .send("<!DOCTYPE html><html lang=\"zh-CN\"><meta charset=\"UTF-8\"><title>客户端不存在</title>"
                         + "<body style=\"font-family:sans-serif;padding:40px\"><h1>客户端不存在或已禁用</h1>"
-                        + "<p>请检查 client_id，或联系管理员在 OAuth2 接入管理中确认客户端状态。</p></body></html>");
+                        + "<p>请检查 client_id，或联系管理员在 OAuth 接入管理中确认客户端状态。</p></body></html>");
     }
 }

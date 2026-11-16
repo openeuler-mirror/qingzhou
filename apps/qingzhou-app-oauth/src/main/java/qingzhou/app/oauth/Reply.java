@@ -1,4 +1,4 @@
-package qingzhou.app.oauth2;
+package qingzhou.app.oauth;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ final class Reply {
 
     static void sendClientUnauthorized(HttpResponse response, Json json) throws Exception {
         response.status(401)
-                .header("WWW-Authenticate", "Basic realm=\"oauth2\"");
+                .header("WWW-Authenticate", "Basic realm=\"oauth\"");
         send(response, json, error("invalid_client", "客户端验证失败"));
     }
 

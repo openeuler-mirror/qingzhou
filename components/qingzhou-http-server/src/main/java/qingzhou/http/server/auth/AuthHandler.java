@@ -145,7 +145,7 @@ public class AuthHandler implements HttpHandler {
 
     /**
      * 会话探测：前端路由守卫与用户名展示的唯一依据
-     * （会话 cookie 为 HttpOnly，前端无法自行判断登录态，OAuth2 回调后更是如此）
+     * （会话 cookie 为 HttpOnly，前端无法自行判断登录态，OAuth 回调后更是如此）
      */
     private void session(HttpRequest request, HttpResponse response) throws Exception {
         Object[] userRoles = tokenService.verifyToken(tokenService.retrieveToken(request), request, response);
