@@ -161,7 +161,7 @@ public class HttpServerImpl implements HttpServer {
 
     @Override
     public void registerHttpHandler(HttpHandler httpHandler, String handlePath) {
-        registerHttpHandler(httpHandler, handlePath, false);
+        registerHttpHandler(httpHandler, handlePath, false, false);
     }
 
     @Override
@@ -170,8 +170,8 @@ public class HttpServerImpl implements HttpServer {
     }
 
     @Override
-    public void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth,
-                                    boolean allowOpaqueOrigin, String... methods) {
+    public void registerHttpHandler(HttpHandler httpHandler, String handlePath,
+                                    boolean noAuth, boolean allowOpaqueOrigin, String... methods) {
         Map<String, String> properties = new HashMap<>();
         properties.put(HttpHandler.HANDLE_PATH, handlePath);
         properties.put(HttpHandler.HANDLE_PATH_ABSOLUTE, "true");

@@ -1,22 +1,15 @@
 package qingzhou.jdbc.impl;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.beans.*;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 import javax.sql.CommonDataSource;
 import javax.sql.XAConnection;
 
-import org.apache.tomcat.jdbc.pool.ConnectionPool;
-import org.apache.tomcat.jdbc.pool.DataSource;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
-import org.apache.tomcat.jdbc.pool.XADataSource;
+import org.apache.tomcat.jdbc.pool.*;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.*;
 import qingzhou.crypto.Crypto;
@@ -90,7 +83,8 @@ public class JdbcPoolImpl implements JdbcPool, MetricProvider {
     }
 
     private static boolean isFrameworkProperty(String key) {
-        return key.startsWith("service.") || key.startsWith("qingzhou.");
+        return "objectClass".equals(key)
+                || Stream.of("osgi.", "component.", "service.", "qingzhou.").anyMatch(key::startsWith);
     }
 
     @Override

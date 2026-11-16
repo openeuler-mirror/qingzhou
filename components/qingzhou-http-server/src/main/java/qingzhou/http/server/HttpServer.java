@@ -12,10 +12,7 @@ public interface HttpServer {
      * 注册并指定是否允许不透明来源（浏览器发送的字面量 Origin: null）执行写请求。
      * 仅应授予不依赖 Cookie 会话的公开端点；默认实现保持拒绝。
      */
-    default void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth,
-                                     boolean allowOpaqueOrigin, String... methods) {
-        registerHttpHandler(httpHandler, handlePath, noAuth, methods);
-    }
+    void registerHttpHandler(HttpHandler httpHandler, String handlePath, boolean noAuth, boolean allowOpaqueOrigin, String... methods);
 
     void unregisterHttpHandler(HttpHandler httpHandler);
 
