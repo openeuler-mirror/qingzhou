@@ -1,16 +1,11 @@
 package qingzhou.app.demo;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import qingzhou.api.InputType;
+import qingzhou.api.action.*;
 import qingzhou.api.annotations.Model;
 import qingzhou.api.annotations.ModelField;
-import qingzhou.api.action.Add;
-import qingzhou.api.action.Delete;
-import qingzhou.api.action.Page;
-import qingzhou.api.action.Show;
-import qingzhou.api.action.Update;
 
 /**
  * 学生管理：演示完整 CRUD 能力与表单组件的丰富用法。
@@ -67,6 +62,18 @@ public class Student extends AbstractCrudModel implements Page, Show, Add, Updat
         d.put("id", id);
         d.put("createdAt", DateKit.now());
         return id;
+    }
+
+    /**
+     * 批量删除示例：整批主键一次到达，先整体校验再一次性移除，避免出现"部分成功"。
+     * 真实业务可在此用单条 SQL 或事务实现；不覆写则退化为逐条调用 {@link #delete(String)}。
+     */
+    @Override
+    public void delete(List<String> ids) {
+        for (String id : ids) {
+            if (!db.containsKey(id)) throw new IllegalArgumentException("记录不存在：" + id);
+        }
+        db.keySet().removeAll(ids);
     }
 
     @ModelField(id = true,

@@ -124,21 +124,25 @@ public class DefaultAction {
         String id = request.getId();
         if (id != null && !id.isEmpty()) {
             delete.delete(id);
+            return;
         }
 
+        // 批量删除
         String ids = request.getParameter("ids");
-        if (ids != null && !ids.isEmpty()) {
-            String[] idArray = ids.split(",");
-            if (idArray.length > 1000) {
-                request.getResponse().error("too many ids");
-                return;
-            }
-            for (String itemId : idArray) {
-                if (itemId != null && !itemId.isEmpty()) {
-                    delete.delete(itemId);
-                }
-            }
+        if (ids == null || ids.isEmpty()) return;
+
+        String[] idArray = ids.split(",");
+        if (idArray.length > 1000) {
+            request.getResponse().error("too many ids");
+            return;
         }
+        List<String> batch = new ArrayList<>(idArray.length);
+        for (String itemId : idArray) {
+            String trimmed = itemId.trim();
+            if (!trimmed.isEmpty()) batch.add(trimmed);
+        }
+        // 整批一次性交给应用：默认实现仍逐条删除，覆写后可单条语句/事务完成
+        if (!batch.isEmpty()) delete.delete(batch);
     }
 
     @ModelAction(

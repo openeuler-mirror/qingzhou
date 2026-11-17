@@ -23,6 +23,7 @@ import qingzhou.api.action.Update;
  * <h2>设计约定</h2>
  * 内存表为各子类自己的静态字段（见 {@link #data()}），保证不同模型的数据相互隔离；
  * 主键计数器为实例字段，轻舟应用模型为单例，足以保证新增主键唯一。
+ * 批量删除默认逐条回调 {@link #delete(String)}，子类可覆写 {@link Delete#delete(List)} 整批处理（示例见 {@link Student}）。
  */
 public abstract class AbstractCrudModel extends AbstractPageModel implements Show, Add, Update, Delete {
 
