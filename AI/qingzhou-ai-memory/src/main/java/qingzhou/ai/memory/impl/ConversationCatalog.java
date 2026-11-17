@@ -107,12 +107,17 @@ final class ConversationCatalog {
         return archivedCount;
     }
 
+    /**
+     * 全局容量快速判定：常态写入只做计数比较，超限才触发需要全表排序的淘汰
+     */
+    boolean withinGlobalQuota(MemoryLimits limits) {
+        return totalBytes <= limits.maxBytes
+                && activeCount <= limits.maxConversations
+                && archivedCount <= limits.maxArchived;
+    }
+
     boolean overQuota(MemoryLimits limits) {
-        if (totalBytes > limits.maxBytes
-                || activeCount > limits.maxConversations
-                || archivedCount > limits.maxArchived) {
-            return true;
-        }
+        if (!withinGlobalQuota(limits)) return true;
         for (Map.Entry<String, Integer> entry : activeByUser.entrySet()) {
             if (entry.getValue() > limits.activeLimit(entry.getKey())) return true;
         }

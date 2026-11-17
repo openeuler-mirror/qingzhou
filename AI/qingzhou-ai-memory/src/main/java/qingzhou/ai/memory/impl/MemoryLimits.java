@@ -5,7 +5,8 @@ import java.util.Map;
 import qingzhou.common.Configs;
 
 /**
- * 容量与预算阈值：全部可配置，memory 与 file 两种存储后端共用同一套数值
+ * 容量与历史窗口阈值：全部可配置，memory 与 file 两种存储后端共用同一套数值。
+ * 上下文总预算与输出预留归对话侧（决定给历史多少），此处只保留窗口保底与条数上限
  */
 final class MemoryLimits {
     final long maxBytes;
@@ -15,12 +16,11 @@ final class MemoryLimits {
     final int maxArchived;
     final int messageMaxChars;
     final int summaryMaxChars;
+    final int titleMaxChars;
     final int softMessages;
     final int hardMessages;
     final int keepMessages;
     final int compactionInputMaxChars;
-    final int historyTotalBudget;
-    final int historyOutputReserve;
     final int historyMinChars;
     final int historyMaxMessages;
 
@@ -35,27 +35,23 @@ final class MemoryLimits {
         maxArchived = configs.atLeast("memory_max_archived", 1, 2000);
         messageMaxChars = configs.atLeast("message_max_chars", 1, 8000);
         summaryMaxChars = configs.atLeast("summary_max_chars", 1, 2000);
+        titleMaxChars = Math.toIntExact(configs.between("conversation_title_max_chars", 1L, 1000L, 200L));
         softMessages = configs.atLeast("conversation_soft_messages", 1, 80);
         hardMessages = configs.atLeast("conversation_hard_messages", 1, 150);
-        keepMessages = configs.atLeast("conversation_keep_messages", 1, 80);
+        // keep 默认取 soft 的一半：两者相等时稳态下压缩队列恒为 1 条消息，每条消息都会触发一次模型调用
+        keepMessages = configs.atLeast("conversation_keep_messages", 1, 40);
         compactionInputMaxChars = configs.atLeast("compaction_input_max_chars", 1, 24000);
-        historyTotalBudget = configs.atLeast("history_total_budget", 1, 20000);
-        historyOutputReserve = configs.atLeast("history_output_reserve", 0, 4000); // 0 表示不预留输出预算
         historyMinChars = configs.atLeast("history_min_chars", 1, 2000);
         historyMaxMessages = configs.atLeast("history_max_messages", 1, 20);
         if (keepMessages > softMessages || softMessages > hardMessages) {
             throw new IllegalArgumentException("conversation_keep_messages must be <= soft <= hard, got: "
                     + keepMessages + "/" + softMessages + "/" + hardMessages);
         }
-    }
-
-    /**
-     * 历史注入预算：总预算减去固定开销与输出预留；开销为负时不反向放大，且不低于下限
-     */
-    int historyBudget(int overhead) {
-        int budget = historyTotalBudget - overhead - historyOutputReserve;
-        if (budget > historyTotalBudget) budget = historyTotalBudget;
-        return Math.max(budget, historyMinChars);
+        // 与压缩批量的关系：keep 越接近 soft，单次压缩覆盖的消息越少、模型调用越频繁
+        if (keepMessages * 2L > softMessages) {
+            throw new IllegalArgumentException("conversation_keep_messages must be <= half of "
+                    + "conversation_soft_messages, got: " + keepMessages + "/" + softMessages);
+        }
     }
 
     int activeLimit(String userId) {

@@ -154,7 +154,7 @@ final class McpClient {
         }
     }
 
-    private Response send(String method, Map<String, Object> params, Long id, ClientListener listener) throws Exception {
+    private Response send(String method, Map<String, Object> params, Long id, HttpListener listener) throws Exception {
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("jsonrpc", "2.0");
         if (id != null) envelope.put("id", id);

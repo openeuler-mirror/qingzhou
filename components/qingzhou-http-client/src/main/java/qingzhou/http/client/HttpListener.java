@@ -1,6 +1,6 @@
 package qingzhou.http.client;
 
-public interface ClientListener {
+public interface HttpListener {
     void onBody(String line);
 
     void onComplete();

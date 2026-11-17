@@ -5,14 +5,14 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import qingzhou.http.client.ClientListener;
+import qingzhou.http.client.HttpListener;
 import qingzhou.json.Json;
 
 /**
  * 收集单个请求的响应：回调只由流式读取线程触发，countDown 之后不再写字段，
  * 可见性由 CountDownLatch 的 happens-before 保证，故不加 volatile。
  */
-public class McpResponse implements ClientListener {
+public class McpResponse implements HttpListener {
     private static final String SSE_DATA = "data:";
     private static final int AWAIT_TIMEOUT = McpClient.READ_TIMEOUT + 5_000;
 

@@ -5,7 +5,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 
-import qingzhou.http.client.ClientListener;
+import qingzhou.http.client.HttpListener;
 import qingzhou.http.client.Response;
 
 class ResponseImpl implements Response {
@@ -19,7 +19,7 @@ class ResponseImpl implements Response {
     // cancel() 由调用线程写、流式读取线程读，volatile 保证取消状态及时可见
     private volatile boolean cancelled;
 
-    ResponseImpl(HttpURLConnection conn, ClientListener listener, int maxBodySize, Executor executor) throws IOException {
+    ResponseImpl(HttpURLConnection conn, HttpListener listener, int maxBodySize, Executor executor) throws IOException {
         this.maxBodySize = maxBodySize;
         this.conn = conn;
         this.code = conn.getResponseCode();
@@ -40,7 +40,7 @@ class ResponseImpl implements Response {
         return stream != null ? stream : new ByteArrayInputStream(new byte[0]);
     }
 
-    private void readStreaming(ClientListener listener) {
+    private void readStreaming(HttpListener listener) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream(), StandardCharsets.UTF_8))) {
             long received = 0;
             for (String line; !cancelled && (line = reader.readLine()) != null; ) {
