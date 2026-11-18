@@ -2,17 +2,11 @@ package qingzhou.engine.detector;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.*;
 import qingzhou.engine.QingzhouMain;
 
 public class PathDetectionScheduler {
@@ -33,6 +27,7 @@ public class PathDetectionScheduler {
     // 序号只作为本进程内的 bundle 身份：同路径跨拍复用同一序号，路径消失即回收该序号，
     // 重启后重新探测、重新取号即可（实例隔离靠不同 bundle 的类加载器，与重启前后序号是否一致无关）
     private final Map<String, Integer> running = new HashMap<>();
+    private boolean isAbsenceLogged;
 
     public PathDetectionScheduler(Bundle bundle) {
         this.detector = new PathDetector(bundle.getHeaders());
@@ -56,6 +51,7 @@ public class PathDetectionScheduler {
     private void detectOnce() {
         try {
             Set<String> detected = detector.detect();
+            logAbsence(detected);
 
             List<String> gone = new ArrayList<>(running.keySet());
             gone.removeAll(detected);
@@ -82,6 +78,17 @@ public class PathDetectionScheduler {
             // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
             System.err.println(DETECTOR_NAME + " task error: " + e.getMessage());
         }
+    }
+
+    // 只在"未探测到 → 探测到"的状态切换处记一条，避免按探测周期重复刷屏；引导期日志体系未就绪，直写 stdout
+    private void logAbsence(Set<String> detected) {
+        if (!detected.isEmpty()) {
+            isAbsenceLogged = false;
+            return;
+        }
+        if (isAbsenceLogged) return;
+        isAbsenceLogged = true;
+        System.out.println(DETECTOR_NAME + ": no instance of " + symbolicName + " detected, keep probing");
     }
 
     private void stopInstance(String path) {

@@ -12,9 +12,9 @@
     <packaging>pom</packaging>
     <modules>
         <module>qingzhou-ai-skill-health-check</module>
-        <module>qingzhou-ai-skill-mcp-loader</module>
+        <module>qingzhou-ai-skill-mcp-connector</module>
         <module>qingzhou-ai-skill-platform-knowledge</module>
-        <module>qingzhou-ai-skill-zip-loader</module>
+        <module>qingzhou-ai-skill-registry</module>
     </modules>
 
     <dependencies>

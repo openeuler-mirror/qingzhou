@@ -35,40 +35,6 @@
 
         <plugins>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-frame</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>frame</directory>
-                                    <filtering>false</filtering>
-                                    <excludes>
-                                        <exclude>**/*.json</exclude>
-                                        <exclude>**/.empty</exclude>
-                                        <exclude>**/.gitkeep</exclude>
-                                    </excludes>
-                                </resource>
-                                <resource>
-                                    <directory>frame</directory>
-                                    <filtering>true</filtering>
-                                    <includes>
-                                        <include>**/*.json</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
@@ -254,7 +220,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-ai-skill-mcp-loader</artifactId>
+            <artifactId>qingzhou-ai-skill-mcp-connector</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
@@ -269,7 +235,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <artifactId>qingzhou-ai-skill-zip-loader</artifactId>
+            <artifactId>qingzhou-ai-skill-registry</artifactId>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
         </dependency>
