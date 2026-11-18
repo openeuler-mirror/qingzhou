@@ -137,6 +137,7 @@
                 <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
                 <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
                 <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>
+                <include>${project.groupId}:qingzhou-ai-skill-zip-loader</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
