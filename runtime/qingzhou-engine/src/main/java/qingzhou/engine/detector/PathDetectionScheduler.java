@@ -59,29 +59,43 @@ public class PathDetectionScheduler {
 
             List<String> gone = new ArrayList<>(running.keySet());
             gone.removeAll(detected);
-            for (String path : gone) stopInstance(running.remove(path));
+            for (String path : gone) stopInstance(path);
 
-            // 探测结果顺序不稳定（listFiles 与 ps 输出顺序均未定义），新增路径按字典序取号，使分配结果与探测顺序无关
-            List<String> added = new ArrayList<>(detected);
-            added.removeAll(running.keySet());
-            Collections.sort(added);
-            Set<Integer> used = new HashSet<>(running.values());
-            for (String path : added) startInstance(path, used);
+            if (detected.size() == 1 && running.isEmpty()) {
+                String path = detected.iterator().next();
+                int seq = 0;
+                startInstance(path, seq);
+            } else {
+                // 探测结果顺序不稳定（listFiles 与 ps 输出顺序均未定义），新增路径按字典序取号，使分配结果与探测顺序无关
+                List<String> added = new ArrayList<>(detected);
+                added.removeAll(running.keySet());
+                Collections.sort(added);
+                Set<Integer> used = new HashSet<>(running.values());
+                for (String path : added) {
+                    int seq = 1;
+                    while (used.contains(seq)) seq++;
+                    used.add(seq);
+                    startInstance(path, seq);
+                }
+            }
         } catch (Exception e) {
             // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
             System.err.println(DETECTOR_NAME + " task error: " + e.getMessage());
         }
     }
 
-    private void stopInstance(int seq) throws BundleException {
-        System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
-        QingzhouMain.getBundleContext().getBundle(addSeq(bundleLocation, seq)).stop();
+    private void stopInstance(String path) {
+        try {
+            Integer seq = running.get(path);
+            QingzhouMain.getBundleContext().getBundle(addSeq(bundleLocation, seq)).stop();
+            System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
+            running.remove(path);
+        } catch (BundleException e) {
+            System.err.println("App " + symbolicName + " failed to stop, path: " + path + " : " + e.getMessage());
+        }
     }
 
-    private void startInstance(String path, Set<Integer> used) {
-        int seq = 0;
-        while (used.contains(seq)) seq++;
-        used.add(seq);
+    private void startInstance(String path, int seq) {
         String seqLocation = addSeq(bundleLocation, seq);
         System.setProperty(addSeq(detectedPathKeyPrefix, seq), path);
         BundleContext bundleContext = QingzhouMain.getBundleContext();
@@ -95,10 +109,21 @@ public class PathDetectionScheduler {
             // 启动失败不留半成品：清掉探测标记，下一拍按新序号重试
             System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
             System.err.println("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
+            Bundle bundle = bundleContext.getBundle(seqLocation);
+            if (bundle != null) {
+                try {
+                    bundle.uninstall();
+                } catch (BundleException ex) {
+                    System.err.println("App " + symbolicName + " failed to uninstall, path: " + path + " : " + e.getMessage());
+                }
+            }
         }
     }
 
     private static String addSeq(String str, int seq) {
+        if (seq == 0) {
+            return str;
+        }
         return str + "[" + seq + "]";
     }
 }
