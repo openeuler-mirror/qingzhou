@@ -2,6 +2,7 @@ package qingzhou.ai.memory.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -14,8 +15,6 @@ import qingzhou.llm.ChatMemory;
  * 轮询注入上下文的消息列表（1 条摘要 + 保留的历史）断言结果，不深入压缩器内部方法。
  */
 public class ConversationCompactorTest {
-    private static final long AWAIT_TIMEOUT_MS = 5000L;
-
     @AfterMethod
     public void tearDown() {
         MemoryTestSupport.shutdownAll();
@@ -60,6 +59,18 @@ public class ConversationCompactorTest {
         Assert.assertTrue(summary.contains("第4个回答"), "分批压缩须覆盖完全部待压缩消息");
     }
 
+    @Test
+    public void messagesBelowSoftThreshold_notCompacted() throws Exception {
+        ConversationStoreImpl store = compactableStore(2, 24000, 9);
+        appendTurns(store, "conv-quiet", 3); // 6 条，未到软阈值
+
+        Thread.sleep(200); // 后台任务若误触发，应在此窗口内完成
+        List<ChatMemory.Message> injected = store.getMessageList("admin", "conv-quiet", 0);
+
+        Assert.assertEquals(injected.size(), 6, "未达软阈值不应启动压缩");
+        Assert.assertFalse(injected.get(0) instanceof ChatMemory.SummaryMessage);
+    }
+
     /**
      * 外部配置驱动：调低 soft 阈值使写入自动触发压缩，keep 与批预算决定压缩行为
      */
@@ -73,8 +84,8 @@ public class ConversationCompactorTest {
 
     private static void appendTurns(ConversationStoreImpl store, String conversationId, int turns) {
         for (int i = 1; i <= turns; i++) {
-            store.storeUserMessage(conversationId, "admin", "第" + i + "个问题");
-            store.storeAssistantMessage(conversationId, "admin", "第" + i + "个回答", "a-" + i);
+            store.storeUserMessage("admin", conversationId, "第" + i + "个问题", "u-" + i);
+            store.storeAssistantMessage("admin", conversationId, "第" + i + "个回答", "a-" + i);
         }
     }
 
@@ -83,15 +94,15 @@ public class ConversationCompactorTest {
      */
     private static List<ChatMemory.Message> awaitInjected(ConversationStoreImpl store, String conversationId,
                                                           int expectedMessages) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + AWAIT_TIMEOUT_MS;
-        while (System.currentTimeMillis() < deadline) {
+        AtomicReference<List<ChatMemory.Message>> holder = new AtomicReference<>();
+        MemoryTestSupport.awaitUntil(() -> {
             List<ChatMemory.Message> injected = store.getMessageList("admin", conversationId, 0);
             if (injected.size() == expectedMessages + 1 && injected.get(0) instanceof ChatMemory.SummaryMessage) {
-                return injected;
+                holder.set(injected);
+                return true;
             }
-            Thread.sleep(50);
-        }
-        Assert.fail("压缩未在期限内完成：期望 1 条摘要 + " + expectedMessages + " 条历史");
-        return null; // 不可达：Assert.fail 必然抛出
+            return false;
+        }, "压缩未在期限内完成：期望 1 条摘要 + " + expectedMessages + " 条历史");
+        return holder.get();
     }
 }

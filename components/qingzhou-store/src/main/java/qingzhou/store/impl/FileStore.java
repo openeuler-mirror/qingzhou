@@ -15,7 +15,8 @@ public class FileStore implements Store {
     private final Path dir;
 
     public FileStore(File baseDir) {
-        this.dir = baseDir.toPath();
+        // 统一为绝对规范路径：key 越界校验以同一基准比较，否则含 ./ 或 .. 的基目录会把合法 key 判为越界
+        this.dir = baseDir.toPath().toAbsolutePath().normalize();
         try {
             Files.createDirectories(dir);
         } catch (Exception e) {

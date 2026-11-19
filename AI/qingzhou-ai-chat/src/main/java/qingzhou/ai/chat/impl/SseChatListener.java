@@ -9,6 +9,8 @@ import qingzhou.llm.ChatListener;
 import qingzhou.logger.Logger;
 
 class SseChatListener implements ChatListener {
+    private static final String PERSIST_FAILED = "failed to persist assistant message";
+
     private final Set<SseEvent.Type> CONTENT_EVENT_TYPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             SseEvent.Type.REASONING_START, SseEvent.Type.REASONING_CONTENT, SseEvent.Type.REASONING_PAUSE,
             SseEvent.Type.TEXT_MESSAGE_START, SseEvent.Type.TEXT_MESSAGE_CONTENT,
@@ -175,15 +177,15 @@ class SseChatListener implements ChatListener {
 
     @Override
     public void onComplete() {
-        finish(SseEvent.of(SseEvent.Type.RUN_FINISHED));
-
-        // 客户端在首字前即断开：无内容可落库，跳过以免留下空回答
-        if (messageAggregator != null) {
-            if (messageAggregator.allContent.length() > 0) {
-                messageAggregator.aggregatedMessage(messageAggregator.allContent.toString());
-                messageAggregator.allContent.setLength(0);
-            }
+        // 先落库再收尾：落库失败必须以错误事件告知，不能先宣告成功
+        try {
+            messageAggregator.persist();
+        } catch (RuntimeException e) {
+            logger.error(PERSIST_FAILED, e);
+            finishWithError("PERSIST_ERROR", PERSIST_FAILED);
+            return;
         }
+        finish(SseEvent.of(SseEvent.Type.RUN_FINISHED));
     }
 
     private void finish(SseEvent event) {
@@ -248,5 +250,15 @@ class SseChatListener implements ChatListener {
         private final StringBuilder allContent = new StringBuilder();
 
         abstract void aggregatedMessage(String content);
+
+        /**
+         * 有内容才落库：客户端在首字前断开时 allContent 为空，跳过以免留下空回答
+         */
+        void persist() {
+            if (allContent.length() == 0) return;
+            String content = allContent.toString();
+            allContent.setLength(0);
+            aggregatedMessage(content);
+        }
     }
 }

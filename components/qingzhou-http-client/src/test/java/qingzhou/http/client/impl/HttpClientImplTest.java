@@ -20,7 +20,7 @@ import org.testng.annotations.Test;
 import qingzhou.http.client.HttpClient;
 import qingzhou.http.client.HttpMethod;
 import qingzhou.http.client.Response;
-import qingzhou.http.client.ClientListener;
+import qingzhou.http.client.HttpListener;
 
 public class HttpClientImplTest {
     static HttpClientImpl buildHttpClientImpl() {
@@ -148,7 +148,7 @@ public class HttpClientImplTest {
         }, url -> {
             HttpClient client = buildHttpClientImpl();
             try {
-                Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ClientListener() {
+                Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new HttpListener() {
                     @Override
                     public void onBody(String line) {
                         receivedLine.set(line);
@@ -184,7 +184,7 @@ public class HttpClientImplTest {
         AtomicReference<Throwable> error = new AtomicReference<>();
         withServer(exchange -> writeResponse(exchange, 500, "server-error"), url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ClientListener() {
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new HttpListener() {
                 @Override
                 public void onBody(String line) {
                     Assert.fail("非 2xx 不应回调 onBody");
@@ -275,7 +275,7 @@ public class HttpClientImplTest {
             }
         }, url -> {
             HttpClient client = buildHttpClientImpl();
-            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new ClientListener() {
+            Response response = client.send(client.buildRequest(url).method(HttpMethod.GET), new HttpListener() {
                 @Override
                 public void onBody(String line) {
                     firstLine.countDown();

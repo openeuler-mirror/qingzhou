@@ -2,21 +2,18 @@ package qingzhou.engine.detector;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.*;
 import qingzhou.engine.QingzhouMain;
 
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // 所有 bundle 的探测任务共用单线程，任务间天然串行
     private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, DETECTOR_NAME);
@@ -33,6 +30,7 @@ public class PathDetectionScheduler {
     // 序号只作为本进程内的 bundle 身份：同路径跨拍复用同一序号，路径消失即回收该序号，
     // 重启后重新探测、重新取号即可（实例隔离靠不同 bundle 的类加载器，与重启前后序号是否一致无关）
     private final Map<String, Integer> running = new HashMap<>();
+    private boolean isAbsenceLogged;
 
     public PathDetectionScheduler(Bundle bundle) {
         this.detector = new PathDetector(bundle.getHeaders());
@@ -56,6 +54,7 @@ public class PathDetectionScheduler {
     private void detectOnce() {
         try {
             Set<String> detected = detector.detect();
+            logAbsence(detected);
 
             List<String> gone = new ArrayList<>(running.keySet());
             gone.removeAll(detected);
@@ -80,8 +79,19 @@ public class PathDetectionScheduler {
             }
         } catch (Exception e) {
             // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
-            System.err.println(DETECTOR_NAME + " task error: " + e.getMessage());
+            logWarn(DETECTOR_NAME + " task error: " + e.getMessage());
         }
+    }
+
+    // 只在"未探测到 → 探测到"的状态切换处记一条，避免按探测周期重复刷屏；引导期日志体系未就绪，直写 stdout
+    private void logAbsence(Set<String> detected) {
+        if (!detected.isEmpty()) {
+            isAbsenceLogged = false;
+            return;
+        }
+        if (isAbsenceLogged) return;
+        isAbsenceLogged = true;
+        logInfo(DETECTOR_NAME + ": no instance of " + symbolicName + " detected, keep probing");
     }
 
     private void stopInstance(String path) {
@@ -91,7 +101,7 @@ public class PathDetectionScheduler {
             System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
             running.remove(path);
         } catch (BundleException e) {
-            System.err.println("App " + symbolicName + " failed to stop, path: " + path + " : " + e.getMessage());
+            logWarn("App " + symbolicName + " failed to stop, path: " + path + " : " + e.getMessage());
         }
     }
 
@@ -108,13 +118,13 @@ public class PathDetectionScheduler {
         } catch (Exception e) {
             // 启动失败不留半成品：清掉探测标记，下一拍按新序号重试
             System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
-            System.err.println("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
+            logWarn("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
             Bundle bundle = bundleContext.getBundle(seqLocation);
             if (bundle != null) {
                 try {
                     bundle.uninstall();
                 } catch (BundleException ex) {
-                    System.err.println("App " + symbolicName + " failed to uninstall, path: " + path + " : " + e.getMessage());
+                    logWarn("App " + symbolicName + " failed to uninstall, path: " + path + " : " + e.getMessage());
                 }
             }
         }
@@ -125,5 +135,13 @@ public class PathDetectionScheduler {
             return str;
         }
         return str + "[" + seq + "]";
+    }
+
+    private static void logInfo(String message) {
+        System.out.println(LocalDateTime.now().format(TIME_FORMAT) + " [INFO] " + message);
+    }
+
+    private static void logWarn(String message) {
+        System.err.println(LocalDateTime.now().format(TIME_FORMAT) + " [WARN] " + message);
     }
 }

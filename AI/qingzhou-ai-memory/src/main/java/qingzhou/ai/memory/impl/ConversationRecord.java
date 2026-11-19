@@ -14,6 +14,5 @@ final class ConversationRecord {
     public long updatedAt;
     public List<StoredMessage> messages;
     public String summary;
-    public String summaryUpTo;
     public boolean archived;
 }

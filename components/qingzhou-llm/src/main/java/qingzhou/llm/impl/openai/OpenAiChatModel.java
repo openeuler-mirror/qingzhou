@@ -5,10 +5,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import qingzhou.crypto.Crypto;
-import qingzhou.http.client.ClientListener;
-import qingzhou.http.client.HttpClient;
-import qingzhou.http.client.Request;
-import qingzhou.http.client.Response;
+import qingzhou.http.client.*;
 import qingzhou.json.Json;
 import qingzhou.llm.*;
 import qingzhou.llm.impl.ToolCallInfo;
@@ -58,8 +55,7 @@ class OpenAiChatModel implements ChatModel {
 
             List<Object> messages = new ArrayList<>();
             messages.add(systemMessage);
-            // 多轮对话历史：拼接在 system 与本次 user 消息之间，条数/长度由调用方截断
-            builder.addChatMemory(messages);
+            builder.addChatMemory(messages); // 多轮对话历史：拼接在 system 与本次 user 消息之间，条数/长度由调用方截断
             messages.add(userMessage);
             // RUN_STARTED 已由 HTTP 层在受理请求时发出（见 AiChat），LLM 层不再负责会话生命周期
             doChat(messages, toolDefinitions, chatListener, activeTools, 0);
@@ -116,7 +112,7 @@ class OpenAiChatModel implements ChatModel {
         }
     }
 
-    private class LlmCallingListener implements ClientListener {
+    private class LlmCallingListener implements HttpListener {
         private final List<Object> messages;
         private final List<Object> toolDefs;
         private final ChatListener chatListener;

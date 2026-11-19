@@ -10,11 +10,18 @@
 
     <fileSets>
         <fileSet>
+            <directory>${project.basedir}/frame</directory>
+            <excludes>
+                <exclude>**/.gitkeep</exclude>
+            </excludes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/..</directory>
             <includes>
                 <include>README.md</include>
             </includes>
-            <outputDirectory>lib/version/docs</outputDirectory>
+            <outputDirectory>/lib/version/docs</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/../docs</directory>
@@ -22,7 +29,7 @@
                 <include>**/*.md</include>
                 <include>**/*.readme</include>
             </includes>
-            <outputDirectory>lib/version/docs</outputDirectory>
+            <outputDirectory>/lib/version/docs</outputDirectory>
         </fileSet>
     </fileSets>
 
@@ -45,7 +52,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/command</outputDirectory>
+            <outputDirectory>/lib/version/command</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -56,7 +63,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime</outputDirectory>
+            <outputDirectory>/lib/version/runtime</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -66,7 +73,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime/app-driver</outputDirectory>
+            <outputDirectory>/lib/version/runtime/app-driver</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -77,7 +84,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime/bundle-converter</outputDirectory>
+            <outputDirectory>/lib/version/runtime/bundle-converter</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -90,7 +97,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime/features/scr</outputDirectory>
+            <outputDirectory>/lib/version/runtime/features/scr</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -100,7 +107,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime/features/cm</outputDirectory>
+            <outputDirectory>/lib/version/runtime/features/cm</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -110,7 +117,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/runtime/features/log</outputDirectory>
+            <outputDirectory>/lib/version/runtime/features/log</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -126,7 +133,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/modules</outputDirectory>
+            <outputDirectory>/lib/version/modules</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -135,15 +142,15 @@
                 <include>${project.groupId}:qingzhou-ai-chat</include>
                 <include>${project.groupId}:qingzhou-ai-memory</include>
                 <include>${project.groupId}:qingzhou-ai-skill-health-check</include>
-                <include>${project.groupId}:qingzhou-ai-skill-mcp-loader</include>
+                <include>${project.groupId}:qingzhou-ai-skill-mcp-connector</include>
                 <include>${project.groupId}:qingzhou-ai-skill-platform-knowledge</include>
-                <include>${project.groupId}:qingzhou-ai-skill-zip-loader</include>
+                <include>${project.groupId}:qingzhou-ai-skill-registry</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/AI</outputDirectory>
+            <outputDirectory>/lib/version/AI</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -162,7 +169,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/components</outputDirectory>
+            <outputDirectory>/lib/version/components</outputDirectory>
         </dependencySet>
         <dependencySet>
             <includes>
@@ -174,7 +181,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/common</outputDirectory>
+            <outputDirectory>/lib/version/common</outputDirectory>
         </dependencySet>
 
         <dependencySet>

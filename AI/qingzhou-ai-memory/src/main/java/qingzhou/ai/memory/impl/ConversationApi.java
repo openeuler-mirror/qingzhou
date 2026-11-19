@@ -67,10 +67,6 @@ public class ConversationApi implements HttpHandler {
 
         String[] segments = rest.substring(1).split("/", -1);
         String conversationId = segments[0];
-        if (conversationId.isEmpty()) {
-            sendError(httpResponse, 404, "NOT_FOUND");
-            return;
-        }
 
         // PATCH/DELETE /conversations/{id}
         if (segments.length == 1) {
@@ -139,9 +135,9 @@ public class ConversationApi implements HttpHandler {
         }
 
         Object title = params.get("title");
-        // 空串/非字符串归一为 null（未命名）
+        // 空串/非字符串归一为 null（未命名）；标题是请求体里唯一无上限的用户输入，须在入口截断
         String titleStr = title instanceof String && !((String) title).trim().isEmpty()
-                ? ((String) title).trim() : null;
+                ? MemoryTexts.truncate(((String) title).trim(), store.titleMaxChars()) : null;
         if (!store.rename(userId, conversationId, titleStr)) {
             sendError(httpResponse, 404, "NOT_FOUND");
             return;

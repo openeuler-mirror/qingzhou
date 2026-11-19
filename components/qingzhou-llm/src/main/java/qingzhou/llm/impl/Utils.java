@@ -1,6 +1,8 @@
 package qingzhou.llm.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,11 +19,13 @@ import qingzhou.llm.Skill;
 import qingzhou.llm.Tool;
 
 public class Utils {
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private Utils() {
     }
 
     public static void println(String msg) {
-        System.err.println(msg); // 方便TW等集成，不用 Logger 对象
+        System.err.println(LocalDateTime.now().format(TIME_FORMAT) + " [WARN] " + msg); // 方便TW等集成，不用 Logger 对象
     }
 
     public static String errorMessage(Throwable t) {

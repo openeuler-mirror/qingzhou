@@ -26,6 +26,10 @@ public class MemoryMetricProvider implements MetricProvider {
                 "Archived conversations tracked by the index"));
         metrics.add(Metric.of("store_bytes", catalog.totalBytes(), Metric.Type.GAUGE,
                 "Total bytes of the conversation records"));
+        metrics.add(Metric.of("persist_failures_total", store.persistFailures(), Metric.Type.COUNTER,
+                "Maintenance writes rejected by the conversation store"));
+        metrics.add(Metric.of("parse_failures_total", store.parseFailures(), Metric.Type.COUNTER,
+                "Conversation records skipped because they could not be parsed"));
         return metrics;
     }
 }

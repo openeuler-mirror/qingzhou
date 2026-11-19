@@ -8,5 +8,5 @@ public interface HttpClient {
     /**
      * 2xx 响应通过 listener 流式回调 onBody/onComplete；非 2xx 不触发任何回调，响应体通过 getBody() 获取，由调用方根据 getStatus() 处理。
      */
-    Response send(Request request, ClientListener listener) throws Exception;
+    Response send(Request request, HttpListener listener) throws Exception;
 }
