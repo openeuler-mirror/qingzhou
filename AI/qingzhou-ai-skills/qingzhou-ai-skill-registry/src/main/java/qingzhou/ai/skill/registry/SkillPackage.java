@@ -1,6 +1,8 @@
 package qingzhou.ai.skill.registry;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -18,6 +20,8 @@ import qingzhou.ai.ToolService;
 final class SkillPackage implements SkillService {
     private static final String MANIFEST = "SKILL.md";
     private static final String READ_TOOL_SUFFIX = "-read-file";
+    private static final String PARAMETER_PATH = "path";
+    private static final String PARAMETER_OFFSET = "offset";
     private static final int READ_PAGE_CHARS = 8000; // 单次返回上限：文本页过大时模型无法消化，剩余部分由 offset 续读
 
     private final String name;
@@ -102,7 +106,7 @@ final class SkillPackage implements SkillService {
     private String buildInstruction(String body) {
         StringBuilder instruction = new StringBuilder(body);
         instruction.append("\n\n需要参考其他文档时，调用工具 ").append(name).append(READ_TOOL_SUFFIX)
-                .append(" 按路径读取（单次最多 ").append(READ_PAGE_CHARS).append(" 字符，未读完用 offset 续读）。")
+                .append(" 按路径读取（单次最多 ").append(READ_PAGE_CHARS).append(" 字符，未读完用 ").append(PARAMETER_OFFSET).append(" 续读）。")
                 .append("包根与一级子目录文件如下，深层文件（如 API 源码）未列出但可按需读取：");
         files.forEach((path, text) -> {
             if (path.indexOf('/', path.indexOf('/') + 1) < 0) {
@@ -115,25 +119,25 @@ final class SkillPackage implements SkillService {
     private Map<ToolService, Map<String, Object>> buildTools() {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put(ToolService.TOOL_NAME, name + READ_TOOL_SUFFIX);
-        properties.put(ToolService.TOOL_DESCRIPTION, "读取本技能包内的参考文档；path 为相对路径，含未在文件列表中列出的深层文件");
-        properties.put(ToolService.PARAMETER_NAME + ".1", "path");
+        properties.put(ToolService.TOOL_DESCRIPTION, "读取本技能包内的参考文档；" + PARAMETER_PATH + " 为相对路径，含未在文件列表中列出的深层文件");
+        properties.put(ToolService.PARAMETER_NAME + ".1", PARAMETER_PATH);
         properties.put(ToolService.PARAMETER_DESCRIPTION + ".1", "参考文档的相对路径");
         properties.put(ToolService.PARAMETER_REQUIRED + ".1", "true");
         properties.put(ToolService.PARAMETER_TYPE + ".1", "string");
-        properties.put(ToolService.PARAMETER_NAME + ".2", "offset");
-        properties.put(ToolService.PARAMETER_DESCRIPTION + ".2", "起始字符位置，默认 0；返回内容末尾会给出下次续读的 offset");
+        properties.put(ToolService.PARAMETER_NAME + ".2", PARAMETER_OFFSET);
+        properties.put(ToolService.PARAMETER_DESCRIPTION + ".2", "起始字符位置，默认 0；返回内容末尾会给出下次续读的 " + PARAMETER_OFFSET);
         properties.put(ToolService.PARAMETER_REQUIRED + ".2", "false");
         properties.put(ToolService.PARAMETER_TYPE + ".2", "integer");
         return Collections.singletonMap(this::readFile, properties);
     }
 
     private String readFile(Map<String, Object> args) {
-        String content = files.get(args.get("path"));
+        String content = files.get(args.get(PARAMETER_PATH));
         if (content == null) {
-            throw new IllegalArgumentException("unknown file: " + args.get("path"));
+            throw new IllegalArgumentException("unknown file: " + args.get(PARAMETER_PATH));
         }
 
-        int offset = args.get("offset") == null ? 0 : Integer.parseInt(args.get("offset").toString().trim());
+        int offset = args.get(PARAMETER_OFFSET) == null ? 0 : Integer.parseInt(args.get(PARAMETER_OFFSET).toString().trim());
         if (offset < 0 || offset >= content.length()) {
             throw new IllegalArgumentException("offset must be in [0, " + content.length() + "): " + offset);
         }
@@ -141,7 +145,7 @@ final class SkillPackage implements SkillService {
         int end = Math.min(content.length(), offset + READ_PAGE_CHARS);
         String page = content.substring(offset, end);
         return end < content.length()
-                ? page + "\n\n[已返回字符 " + offset + "~" + end + "，共 " + content.length() + "，续读请传 offset=" + end + "]"
+                ? page + "\n\n[已返回字符 " + offset + "~" + end + "，共 " + content.length() + "，续读请传 " + PARAMETER_OFFSET + "=" + end + "]"
                 : page;
     }
 

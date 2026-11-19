@@ -3,6 +3,8 @@ package qingzhou.engine.detector;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -11,6 +13,7 @@ import qingzhou.engine.QingzhouMain;
 
 public class PathDetectionScheduler {
     private static final String DETECTOR_NAME = "qz-path-detector";
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // 所有 bundle 的探测任务共用单线程，任务间天然串行
     private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, DETECTOR_NAME);
@@ -76,7 +79,7 @@ public class PathDetectionScheduler {
             }
         } catch (Exception e) {
             // 捕获并打印，保证任务不被取消；引导模块先于日志体系启动，只能直写 stderr
-            System.err.println(DETECTOR_NAME + " task error: " + e.getMessage());
+            logWarn(DETECTOR_NAME + " task error: " + e.getMessage());
         }
     }
 
@@ -88,7 +91,7 @@ public class PathDetectionScheduler {
         }
         if (isAbsenceLogged) return;
         isAbsenceLogged = true;
-        System.out.println(DETECTOR_NAME + ": no instance of " + symbolicName + " detected, keep probing");
+        logInfo(DETECTOR_NAME + ": no instance of " + symbolicName + " detected, keep probing");
     }
 
     private void stopInstance(String path) {
@@ -98,7 +101,7 @@ public class PathDetectionScheduler {
             System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
             running.remove(path);
         } catch (BundleException e) {
-            System.err.println("App " + symbolicName + " failed to stop, path: " + path + " : " + e.getMessage());
+            logWarn("App " + symbolicName + " failed to stop, path: " + path + " : " + e.getMessage());
         }
     }
 
@@ -115,13 +118,13 @@ public class PathDetectionScheduler {
         } catch (Exception e) {
             // 启动失败不留半成品：清掉探测标记，下一拍按新序号重试
             System.clearProperty(addSeq(detectedPathKeyPrefix, seq));
-            System.err.println("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
+            logWarn("App " + symbolicName + " failed to start, path: " + path + " : " + e.getMessage());
             Bundle bundle = bundleContext.getBundle(seqLocation);
             if (bundle != null) {
                 try {
                     bundle.uninstall();
                 } catch (BundleException ex) {
-                    System.err.println("App " + symbolicName + " failed to uninstall, path: " + path + " : " + e.getMessage());
+                    logWarn("App " + symbolicName + " failed to uninstall, path: " + path + " : " + e.getMessage());
                 }
             }
         }
@@ -132,5 +135,13 @@ public class PathDetectionScheduler {
             return str;
         }
         return str + "[" + seq + "]";
+    }
+
+    private static void logInfo(String message) {
+        System.out.println(LocalDateTime.now().format(TIME_FORMAT) + " [INFO] " + message);
+    }
+
+    private static void logWarn(String message) {
+        System.err.println(LocalDateTime.now().format(TIME_FORMAT) + " [WARN] " + message);
     }
 }
