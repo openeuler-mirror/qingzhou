@@ -190,7 +190,8 @@ class OpenAiChatModel implements ChatModel {
                         }
                         Map<String, Object> dfn = (Map<String, Object>) dtc.get("function");
                         if (dfn != null) {
-                            if (dfn.get("name") != null) {
+                            // 空串须忽略：GLM 系流式会用收尾增量发 {id:null, name:"", arguments:"{}"}，覆盖会抹掉已到的工具名
+                            if (dfn.get("name") != null && !String.valueOf(dfn.get("name")).isEmpty()) {
                                 toolCallInfo.setName(String.valueOf(dfn.get("name")));
                             }
                             if (dfn.get("arguments") != null) {
